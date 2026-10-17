@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Solving systems of equations</title>
+<style>
+  :root{--bg:#EEF1F6;--ink:#1B2433;--plus:#2F5BEA;--plus-hover:#1E44C4;--no:#D2432F;box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181F;--ink:#E8ECF4;--plus:#7C9CFF;--plus-hover:#A3B8FF;--no:#FF7A66}}
+  :root[data-theme="dark"]{--bg:#14181F;--ink:#E8ECF4;--plus:#7C9CFF;--plus-hover:#A3B8FF;--no:#FF7A66}
+  :root[data-mode="demo"]{--bg:#0B0D12;--ink:#F1F4FA;--plus:#8FA9FF;--plus-hover:#B7C8FF;--no:#FF7A66}
+  :root[data-mode="sequence"]{--bg:#C9EBD3;--ink:#0F2A1B;--plus:#0B6E3A;--plus-hover:#07522B;--no:#C0301E}
+  :root[data-mode="solo"]{--bg:#E1D4F6;--ink:#24113D;--plus:#6A2FB8;--plus-hover:#4E1F8C;--no:#C0301E}
+  :root[data-mode="create"]{--bg:#F8E7B9;--ink:#3A2A05;--plus:#9A5B00;--plus-hover:#704200;--no:#C0301E}
+  :root[data-mode="calculate"]{--bg:#C7DBFB;--ink:#0E1B38;--plus:#1F43B8;--plus-hover:#152F8A;--no:#C0301E}
+  body{transition:background-color .5s,color .5s}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+  body{margin:0;height:100%;display:grid;grid-template-columns:minmax(0,1fr) min(19rem,32vw);background:var(--bg);color:var(--ink);font-family:"Fraunces",Georgia,"Times New Roman",serif}
+  .stage{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:auto;padding:.8rem 1rem}
+  .wrap{margin:auto;display:flex;flex-direction:column;align-items:center;gap:1.2rem;padding:1rem 0;max-width:100%}
+  .vals{display:flex;gap:1rem;justify-content:center;min-height:2.6rem;font-size:clamp(1.3rem,3.4vw,2rem);font-weight:600;padding:.4rem 0}
+  .chip{display:inline-flex;gap:.3em;padding:.2em .8em;border-radius:999px;background:color-mix(in srgb,var(--ink) 8%,var(--bg))}
+  select{font:600 .95rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:999px;padding:.55em 1em}
+  .eqs{display:grid;grid-template-columns:repeat(var(--nc,7),auto);column-gap:.12em;row-gap:.7rem;justify-content:center;font-weight:600;max-width:100%}
+  .orig{font-size:clamp(1rem,2.6vw,1.6rem)}
+  .top{display:flex;gap:2.2rem;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+  .top .vals{flex-direction:column;align-items:flex-start;gap:.5rem;min-height:0;padding:0;font-size:clamp(1rem,2.2vw,1.5rem)}
+  .vals:empty{display:none}
+  #party{position:fixed;inset:0;z-index:100;pointer-events:none;overflow:hidden}
+  .pe{position:absolute;line-height:1;will-change:transform}
+  .slay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:1rem;text-transform:uppercase;color:#fff;
+    font:900 clamp(2.5rem,11vw,7rem)/1.05 Impact,"Arial Black",system-ui,sans-serif;text-shadow:0 .06em 0 #ff2d95,0 .12em 0 #6a2fb8,0 0 .5em rgba(255,255,255,.6)}
+  .chip.grab{cursor:grab;touch-action:none}
+  .top .orig{font-size:clamp(.85rem,1.9vw,1.35rem)}
+  .work{font-size:clamp(1.5rem,4.6vw,2.8rem)}
+  .eqn{display:grid;grid-column:1/-1;grid-template-columns:subgrid;align-items:center;justify-items:end;padding:.3em .5em;border-radius:.4em;
+    line-height:1.2;white-space:nowrap;position:relative;background:color-mix(in srgb,var(--ink) 7%,var(--bg));transition:transform .3s}
+  .eqn>:nth-child(even){justify-self:center}
+  .eqn i{font-style:italic}
+  .eqn[data-m]::before{content:attr(data-m);position:absolute;right:100%;margin-right:.35em;top:50%;transform:translateY(-50%);font:700 .7em system-ui,sans-serif;color:var(--plus);white-space:nowrap}
+  .co,.var,.eqn>span{display:inline-block}
+  .eqn>.opc{cursor:pointer;color:var(--plus);font-weight:800;border-radius:6px;transition:transform .25s,color .25s}
+  .eqn>.opc:hover,.eqn>.opc.hl{color:var(--plus-hover);transform:scale(1.5);background:color-mix(in srgb,var(--plus) 20%,transparent)}
+  .eqn>.opc.hl{transform:scale(1.9);text-shadow:0 0 .4em var(--plus)}
+  .eqn>.hl{background:color-mix(in srgb,var(--plus) 30%,transparent);border-radius:6px;transform:scale(1.3)}
+  #modeSel{background:#fff}
+  #modeSel option[value=demo]{color:#111}#modeSel option[value=sequence]{color:#1E8A4C}#modeSel option[value=calculate]{color:#2F5BEA}#modeSel option[value=solo]{color:#7B3FBF}#modeSel option[value=create]{color:#B26A00}
+  .afield{font:600 1.5rem Georgia,serif;display:inline-flex;gap:.3em;align-items:center}
+  .afield input,#crIn{font:600 1.2rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:12px;padding:.4em .6em}
+  .afield input{width:5em}
+  #crIn{width:min(24rem,70vw)}
+  .panel{display:flex;flex-direction:column;align-items:center;gap:.8rem;margin:1rem auto;font-family:system-ui,sans-serif}
+  .panel[hidden]{display:none}
+  .ok{color:var(--plus);font-weight:700}.bad{color:var(--no);font-weight:700}
+  .grab{cursor:grab;touch-action:none;border-radius:6px}
+  .grab:hover{background:color-mix(in srgb,var(--plus) 20%,transparent)}
+  .pend{cursor:pointer;border-bottom:2px dashed var(--plus)}
+  .drag{z-index:5;position:relative;transition:none;background:var(--bg);box-shadow:0 .3em 1em rgba(0,0,0,.3)}
+  .slide{transition:transform 1.1s ease-in-out;z-index:5}
+  .drop{outline:3px solid var(--plus)}
+  .asking{outline:3px dashed var(--plus)}
+  .var.tgt{background:color-mix(in srgb,var(--plus) 35%,transparent);border-radius:6px;transform:scale(1.5)}
+  .eq{font:inherit;font-size:1.5em;font-weight:700;line-height:1;color:var(--plus);background:none;border:0;padding:0 .1em;cursor:grab;touch-action:none;transition:transform .25s,color .25s}
+  .eq:hover,.eq.target{color:var(--plus-hover);transform:scale(1.5)}
+  .eq.target{transform:scale(1.8);text-shadow:0 0 .4em var(--plus)}
+  .eq:focus-visible{outline:3px solid var(--plus);outline-offset:4px;border-radius:8px}
+  .pop{animation:pop .4s ease-out}
+  .shake{animation:shake .6s ease-in-out;color:var(--no)}
+  @keyframes pop{from{transform:scale(.8);opacity:.3}to{transform:scale(1);opacity:1}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  .row{display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center}
+  .btn{font:600 1rem/1 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:999px;padding:.8em 1.4em;cursor:pointer}
+  .btn:hover:not(:disabled){background:var(--ink);color:var(--bg)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .btn[hidden]{display:none}
+  .btn:focus-visible,.link:focus-visible,select:focus-visible{outline:3px solid var(--plus);outline-offset:3px}
+  .link{font:600 .85rem system-ui,sans-serif;color:var(--ink);background:none;border:0;cursor:pointer;text-decoration:underline;opacity:.75}
+  .chat{display:flex;flex-direction:column;min-height:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:color-mix(in srgb,var(--ink) 5%,var(--bg));border-left:2px solid color-mix(in srgb,var(--ink) 18%,transparent)}
+  .chat-h{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.8rem 1rem;font-weight:700;border-bottom:2px solid color-mix(in srgb,var(--ink) 12%,transparent)}
+  .log{flex:1;min-height:0;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.6rem}
+  .msg{align-self:flex-start;max-width:88%;padding:.6rem .85rem;border-radius:14px;font-size:.98rem;line-height:1.4;background:color-mix(in srgb,var(--ink) 11%,var(--bg))}
+  .composer{display:flex;flex-direction:column;gap:.4rem;padding:.7rem;border-top:2px solid color-mix(in srgb,var(--ink) 12%,transparent)}
+  .composer[hidden],.sheet[hidden]{display:none}
+  .composer input{flex:1;min-width:0;padding:.6em .9em;font:600 1.1rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:999px}
+  .composer .btn{padding:.6em 1em}
+  .err{min-height:1.1em;color:var(--no);font-size:.85rem}
+  .sheet{position:fixed;inset:0;z-index:30;overflow:auto;padding:1.5rem;background:var(--bg);font:1.2rem ui-monospace,Menlo,monospace}
+  .sheet section{border-bottom:1px solid color-mix(in srgb,var(--ink) 25%,transparent);padding:.7rem 0}
+  .r{display:flex;gap:.8em}
+  .r .m{min-width:3.4em;text-align:right;color:var(--plus);font-size:.85em}
+  @media (max-width:760px){
+    body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 14rem}
+    .chat{border-left:0;border-top:2px solid color-mix(in srgb,var(--ink) 18%,transparent)}
+    .work{font-size:clamp(1.3rem,5.6vw,2.4rem)}
+  }
+  @media (prefers-reduced-motion:reduce){.pop,.shake{animation:none}.eqn,.slide,.eq{transition:none}}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <header style="display:flex;justify-content:space-between;align-items:center;gap:.6rem"><label class="sr" for="lesson" style="position:absolute;left:-9999px">Lesson</label>
+      <span class="row" style="flex-wrap:nowrap"><select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 systems</option><option value="3">3&times;3 systems</option></select>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></span>
+      <span class="row" style="flex-wrap:nowrap">
+        <button class="btn" id="hint">Hint</button>
+        <button class="btn" id="undo">Undo</button>
+        <button class="btn" id="show">Show work</button>
+      </span>
+    </header>
+    <div class="top" id="top"><section class="eqs orig" id="origEl" aria-label="Original equations"></section><section class="eqs orig" id="sysEl" aria-label="Two-variable equations"></section><section class="vals" id="vals" aria-label="Solved values"></section></div>
+    <div class="wrap">
+      <main class="eqs work" id="wsEl"></main>
+      <section class="panel" id="creator" hidden>
+        <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
+        <div class="row" style="flex-wrap:nowrap"><input id="crIn" autocomplete="off" aria-label="Equation"><button class="btn" id="crAdd">Add</button></div>
+        <div class="err" id="crErr"></div>
+      </section>
+      <section class="panel" id="answer" hidden>
+        <div id="ansT" style="font-weight:700">Your answer:</div>
+        <select id="ansKind" aria-label="Type of answer"><option value="one">One solution</option><option value="inf">Infinitely many solutions</option><option value="none">No solution</option></select>
+        <div class="row" id="ansFields"></div>
+        <button class="btn" id="ansGo">Check answer</button>
+        <div id="ansMsg" style="min-height:1.4em;font-weight:700"></div>
+      </section>
+      <div class="row">
+        <button class="btn" id="next">Next step</button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="chat" aria-label="Tutor chat">
+    <div class="log" id="log" role="log" aria-live="polite"></div>
+    <div class="composer" id="ask" hidden>
+      <div id="askT" style="font-weight:600"></div>
+      <div class="err" id="askErr"></div>
+      <div class="row" style="flex-wrap:nowrap">
+        <input id="askIn" autocomplete="off" aria-label="Your answer">
+        <button class="btn" id="askOk">Send</button>
+        <button class="btn" id="askNo" aria-label="Cancel">&#10005;</button>
+      </div>
+    </div>
+  </aside>
+  <div class="sheet" id="sheet" hidden><button class="btn" id="sheetX">Close</button><div id="sheetBody"></div></div>
+
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+  var logEl = $("log");
+  var orig = [], ws = [], rows = [], orows = [], srows = [], sys = [], sysV = [], elim = "", elimInfo = null;
+  var vals = {}, hist = [], steps = [], ops = 0, locked = false, busy = false, colMin = [];
+  var result = null, ansTouched = false, credited = false, lesson = 1, demoN = 0, curDm = 1, pend = null, mode = "demo", demoTimer = null, gen = null, askIdx = 0, askK = 0, askC = null, askKind = "mul", calc = null, hinted = false, mulNote = null;
+  var CK = { x: "a", y: "b", z: "e", p: "b", s: "b" };  // p and s are the constant slots before and after x in the one-variable lesson
+
+  var MODES = { demo: "Demo", sequence: "Sequence", calculate: "Calculate", solo: "Solo", create: "Create" };
+  var MCOL = { demo: "#111", sequence: "#1E8A4C", calculate: "#2F5BEA", solo: "#7B3FBF", create: "#B26A00" };
+
+  // ---- fractions: {n, d} ----
+  function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = a % b; a = b; b = t; } return a || 1; }
+  function mk(n, d) { d = d || 1; if (d < 0) { n = -n; d = -d; } var g = gcd(n, d); return { n: n / g, d: d / g }; }
+  function mul(p, q) { return mk(p.n * q.n, p.d * q.d); }
+  function add(p, q) { return mk(p.n * q.d + q.n * p.d, p.d * q.d); }
+  function inv(p) { return mk(p.d, p.n); }
+  function neg(p) { return mk(-p.n, p.d); }
+  function ab(p) { return mk(Math.abs(p.n), p.d); }
+  function isOne(p) { return p.n === 1 && p.d === 1; }
+  function same(p, q) { return p.n === q.n && p.d === q.d; }
+  function sg(p) { return (p.n < 0 ? "−" : "") + Math.abs(p.n) + (p.d > 1 ? "/" + p.d : ""); }
+  function wrap(p) { return p.n < 0 || p.d > 1 ? "(" + sg(p) + ")" : sg(p); }
+  function tm(p, first) {
+    var t = isOne(ab(p)) ? "" : (p.d > 1 ? "(" + Math.abs(p.n) + "/" + p.d + ")" : String(Math.abs(p.n)));
+    return (first && p.n < 0 ? "−" : "") + t;
+  }
+  function parse(s) {
+    s = s.trim().replace("−", "-");
+    var m = s.match(/^(-?\d+)\s*\/\s*(\d+)$/);
+    if (m && +m[2]) return mk(+m[1], +m[2]);
+    if (/^-?\d+(\.\d+)?$/.test(s)) return mk(Math.round(parseFloat(s) * 1000), 1000);
+    return null;
+  }
+
+  // ---- typed equations: "6x+9y-z=21", "y=3" ----
+  function parseSide(s) {
+    var t = s.match(/[+-]?[^+-]+/g), o = { x: mk(0), y: mk(0), z: mk(0), k: mk(0) };
+    if (!t || t.join("") !== s) return null;
+    for (var j = 0; j < t.length; j++) {
+      var ng = t[j].charAt(0) === "-", body = t[j].replace(/^[+-]/, ""), m = body.match(/^(\d+(?:\.\d+)?(?:\/\d+)?)?([xyz])?$/);
+      if (!m || (!m[1] && !m[2])) return null;
+      var c = m[1] ? parse(m[1]) : mk(1);
+      if (!c) return null;
+      if (ng) c = neg(c);
+      if (m[2]) o[m[2]] = add(o[m[2]], c); else o.k = add(o.k, c);
+    }
+    return o;
+  }
+  function parseEq(s) {
+    s = String(s).toLowerCase().replace(/−/g, "-").replace(/\s+/g, "");
+    var p = s.split("=");
+    if (p.length !== 2) return null;
+    var L = parseSide(p[0]), R = parseSide(p[1]);
+    if (!L || !R || R.x.n || R.y.n || R.z.n || L.k.n) return null;
+    return { a: L.x, b: L.y, e: L.z, c: R.k };
+  }
+  function sameEq(e, w) { return same(e.a, w.a) && same(e.b, w.b) && same(e.e, w.e) && same(e.c, w.c); }
+
+  // ---- problems ----
+  // an equation: a x + b y + e z (+ substituted constants in ks) = c
+  function rnd(n) { return Math.floor(Math.random() * n); }
+  function nz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
+  function mkEq(a, b, e, c) { return { a: mk(a), b: mk(b), e: mk(e), ks: [], c: mk(c) }; }
+  function allV() { return lesson === 3 ? ["x", "y", "z"] : lesson === 1 ? ["x"] : ["x", "y"]; }
+  function dv() { return lesson === 1 ? curVs() : allV(); }
+  function generate2(level, demo) {
+    var m = level ? 7 : 4, sm = level ? 9 : 5, x, y, a1, b1, a2, b2;
+    do {
+      x = nz(sm); y = nz(sm); a1 = nz(m); b1 = nz(m); a2 = nz(m); b2 = nz(m);
+    } while (a1 * b2 - a2 * b1 === 0 || (level && (Math.abs(b1) === Math.abs(b2) || b1 % b2 === 0 || b2 % b1 === 0)) ||
+             (demo === 1 && (Math.abs(a1) === Math.abs(a2) || need(a1, a2) !== 1 || need(b1, b2) !== 2)) ||
+             (demo === 2 && (need(a1, a2) !== 2 || need(b1, b2) !== 2)));
+    return [[a1, b1], [a2, b2]].map(function (p) { return mkEq(p[0], p[1], 0, p[0] * x + p[1] * y); });
+  }
+  // one variable, two steps: a x + k = c, k before or after the x, sometimes written + (−k)
+  function generate1() {
+    var a = nz(5), x = nz(9), k = nz(9), form = rnd(3);
+    if (Math.abs(a) < 2) a = a < 0 ? -2 : 2;
+    if (form === 2 && k > 0) k = -k;
+    var q = mkEq(a, 0, 0, a * x + k);
+    q.ks = [{ v: form === 1 ? "p" : "s", k: mk(k), pa: form === 2 }];
+    return [q];
+  }
+  // how many solutions: "one", "inf" (infinitely many) or "none" (checked behind the scenes, never shown as a method)
+  function rankOf(M) {
+    var A = M.map(function (r) { return r.slice(); }), rk = 0;
+    for (var c = 0; c < A[0].length && rk < A.length; c++) {
+      var pv = -1;
+      for (var i = rk; i < A.length; i++) if (A[i][c].n) { pv = i; break; }
+      if (pv < 0) continue;
+      var t = A[pv]; A[pv] = A[rk]; A[rk] = t;
+      for (var r = 0; r < A.length; r++) {
+        if (r === rk || !A[r][c].n) continue;
+        var f = mul(A[r][c], inv(A[rk][c]));
+        A[r] = A[r].map(function (x, j) { return add(x, neg(mul(f, A[rk][j]))); });
+      }
+      rk++;
+    }
+    return rk;
+  }
+  function classify(E) {
+    if (lesson === 1) return "one";
+    var vs = allV(), M = E.map(function (q) { return vs.map(function (v) { return q[CK[v]]; }); });
+    var r1 = rankOf(M), r2 = rankOf(M.map(function (r, i) { return r.concat([E[i].c]); }));
+    return r1 === vs.length ? "one" : r2 > r1 ? "none" : "inf";
+  }
+  // a system with infinitely many solutions or none: one equation is built from the others
+  function generateDeg(kind) {
+    var d = nz(5);
+    if (lesson === 2) {
+      var a = nz(4), b = nz(4), c = nz(9), m = [2, 3, -1, -2][rnd(4)];
+      return [mkEq(a, b, 0, c), mkEq(a * m, b * m, 0, c * m + (kind === "none" ? d : 0))];
+    }
+    for (;;) {
+      var r1 = [nz(3), nz(3), nz(3), nz(9)], r2 = [nz(3), nz(3), nz(3), nz(9)], p = [1, 2, -1, -2][rnd(4)], q = [1, 2, -1, -2][rnd(4)];
+      var r3 = r1.map(function (x, j) { return p * x + q * r2[j]; });
+      if (kind === "none") r3[3] += d;
+      var E = [r1, r2, r3].map(function (r) { return mkEq(r[0], r[1], r[2], r[3]); });
+      if (classify(E) === kind) return E;
+    }
+  }
+  function makeProblem() {
+    if (lesson === 1) return generate1();
+    var dm = mode === "demo" ? curDm : 0;
+    if (!dm && mode !== "create" && Math.random() < 0.2) return generateDeg(Math.random() < 0.5 ? "inf" : "none");
+    return lesson === 3 ? generate3(dm) : generate2(0, dm);
+  }
+  function det3(M) {
+    return M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]) - M[0][1] * (M[1][0] * M[2][2] - M[1][2] * M[2][0]) + M[0][2] * (M[1][0] * M[2][1] - M[1][1] * M[2][0]);
+  }
+  // 3x3 step one: equations 1&2 and 1&3 each lose the same variable. Pick the cheapest variable that gives two proper 2-variable equations.
+  function bestElim(E) {
+    var best = null;
+    ["x", "y", "z"].forEach(function (v) {
+      var rest = ["x", "y", "z"].filter(function (w) { return w !== v; }), res = [];
+      for (var p = 1; p <= 2; p++) {
+        var ms = elimMuls(E[0][CK[v]].n, E[p][CK[v]].n), m0 = mk(1), mp = mk(1);
+        ms.forEach(function (m) { if (m[0] === 0) m0 = m[1]; else mp = m[1]; });
+        res.push({ p: p, ms: ms, u: rest.map(function (w) { return add(mul(E[0][CK[w]], m0), mul(E[p][CK[w]], mp)); }) });
+      }
+      if (res.some(function (r) { return !r.u[0].n || !r.u[1].n; })) return;
+      if (!(res[0].u[0].n * res[1].u[1].n - res[0].u[1].n * res[1].u[0].n)) return;
+      var cost = res[0].ms.length + res[1].ms.length;
+      if (!best || cost < best.cost) best = { v: v, pairs: res, cost: cost };
+    });
+    return best;
+  }
+  function generate3(demo) {
+    for (;;) {
+      var sol = [nz(4), nz(4), nz(4)], M = [0, 1, 2].map(function () { return [nz(3), nz(3), nz(3)]; });
+      if (!det3(M)) continue;
+      var E = M.map(function (r) { return mkEq(r[0], r[1], r[2], r[0] * sol[0] + r[1] * sol[1] + r[2] * sol[2]); });
+      var b = bestElim(E);
+      if (b && (demo !== 1 || b.cost <= 2)) return E;
+    }
+  }
+  // a solved equation: one variable, coefficient 1, nothing else
+  function valName(q) {
+    if (q.raw || q.ks.length) return "";
+    var n = allV().filter(function (v) { return q[CK[v]].n; });
+    return n.length === 1 && isOne(q[CK[n[0]]]) ? n[0] : "";
+  }
+
+  function say(t, cls) {
+    var d = document.createElement("div");
+    d.className = "msg" + (cls ? " " + cls : ""); d.textContent = t;
+    logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight;
+    return d;
+  }
+  function note(t) { logEl.innerHTML = ""; return say(t); }
+  function head() {}
+  function updUndo() { $("undo").hidden = !(mode === "create" ? orig.length : mode === "solo" ? ansTouched : hist.length); $("undo").disabled = false; }
+
+  // ---- display ----
+  // which variables the workspace shows: all three, or just the two left after the first step
+  function sysDone() { return sys.length === 2 && sysV.every(function (v) { return vals[v]; }); }
+  function curVs() { return lesson === 1 ? ["p", "x", "s"] : lesson === 2 ? ["x", "y"] : (sys.length === 2 && !sysDone() ? sysV : ["x", "y", "z"]); }
+
+  // columns: one term + operator per variable, then =, then the right side
+  // a substituted value sits in the slot of the variable it replaced
+  function kslot(q, k, vs) { var i = vs.indexOf(k.v); return 2 * (i < 0 ? vs.length : i); }
+  function isFirst(q, k, vs) {
+    for (var m = 0; m < vs.indexOf(k.v); m++) {
+      var v = vs[m];
+      if (q[CK[v]].n || q.ks.some(function (z) { return z.v === v; })) return false;
+    }
+    return true;
+  }
+  // how a substituted constant reads. A subtraction whose result is positive is rewritten as
+  // adding the opposite, so 3x − 2(−5) becomes 3x + (−2)(−5) and the student calculates −2(−5).
+  function kview(q, k, vs) {
+    var first = isFirst(q, k, vs), v = { first: first };
+    if (!k.r) {
+      if (k.pa && !first) { v.text = "(" + sg(k.k) + ")"; v.plus = true; }
+      else { v.lead = k.k.n < 0 ? "−" : ""; v.text = sg(ab(k.k)); v.plus = k.k.n > 0; }
+      v.target = k.k; v.prompt = sg(k.k); return v;
+    }
+    var co = k.r.co, val = k.r.val, base = tm(ab(co), 0) + "(" + sg(val) + ")";
+    if (first) { v.lead = co.n < 0 ? "−" : ""; v.text = base; v.prompt = v.lead + base; v.target = k.k; }
+    else if (co.n < 0 && k.k.n > 0) { v.text = "(" + sg(co) + ")(" + sg(val) + ")"; v.plus = true; v.prompt = sg(co) + "(" + sg(val) + ")"; v.target = k.k; }
+    else { v.text = base; v.plus = co.n > 0; v.prompt = base; v.target = co.n < 0 ? neg(k.k) : k.k; }
+    return v;
+  }
+  function kTarget(q, k, vs) { return kview(q, k, vs).target; }
+  function kPrompt(q, k, vs) { return kview(q, k, vs).prompt; }
+  // neighbouring constants with nothing left to calculate can be combined: [ks index, ks index, op slot]
+  function adjKs(q, vs) {
+    vs = vs || curVs();
+    var seq = [], out = [];
+    vs.forEach(function (v, i) {
+      if (q[CK[v]].n) seq.push({ x: -1, slot: 2 * i });
+      else { var idx = q.ks.findIndex(function (z) { return z.v === v; }); if (idx >= 0) seq.push({ x: idx, slot: 2 * i }); }
+    });
+    for (var m = 0; m + 1 < seq.length; m++) {
+      var A = seq[m].x, B = seq[m + 1].x;
+      if (A >= 0 && B >= 0 && !q.ks[A].r && !q.ks[B].r && !q.raw) out.push([A, B, seq[m + 1].slot - 1]);
+    }
+    return out;
+  }
+  function term(p, v, first) { return "<span class=\"co\">" + tm(p, first) + "</span><i class=\"var\">" + v + "</i>"; }
+  function cells(q, vs) {
+    vs = vs || curVs();
+    var N = 2 * vs.length + 3, o = [], first = true, by = {};
+    for (var z = 0; z < N; z++) o.push("");
+    o[N - 2] = "=";
+    q.ks.forEach(function (k) { by[kslot(q, k, vs)] = k; });
+    vs.forEach(function (v, i) {
+      var c = 2 * i, p = q[CK[v]], k = by[c], h, plus;
+      if (p.n) { h = term(first ? p : ab(p), v, first); plus = p.n > 0; }
+      else if (k) { var kv = kview(q, k, vs); h = (first ? kv.lead : "") + kv.text; plus = kv.plus; }
+      else return;
+      if (!first) o[c - 1] = plus ? "+" : "−";
+      o[c] = h; first = false;
+    });
+    if (first) o[0] = "0";
+    o[N - 1] = q.raw || sg(q.c);
+    return o;
+  }
+  function fmt(q, vs) { return cells(q, vs).join(" ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
+
+  function mkRow(q, live, vs) {
+    var r = document.createElement("div"), N = 2 * vs.length + 3; r.className = "eqn";
+    r.innerHTML = cells(q, vs).map(function (h, j) {
+      return j === N - 2 && live && lesson !== 1 ? "<button class=\"eq\" aria-label=\"Equals sign: click to multiply, drag onto another equation to add\">=</button>" : "<span>" + h + "</span>";
+    }).join("");
+    return r;
+  }
+  // an original (or 2-variable) row: each variable is a place to drop a solved value
+  function dropRow(q, j, vs, set) {
+    var r = mkRow(q, false, vs);
+    vs.forEach(function (v, i) { if (q[CK[v]].n) r.children[2 * i].dataset.drop = "sub:" + set + ":" + j + ":" + v; });
+    return r;
+  }
+
+  function render(pop) {
+    var W = $("wsEl"), O = $("origEl"), S = $("sysEl"), vs = curVs(), ov = dv();
+    W.innerHTML = ""; O.innerHTML = ""; S.innerHTML = ""; rows = []; orows = []; srows = [];
+    O.style.setProperty("--nc", 2 * ov.length + 3); S.style.setProperty("--nc", 2 * sysV.length + 3);
+    orig.forEach(function (q, j) { var r = dropRow(q, j, ov, "o"); O.appendChild(r); orows.push(r); });
+    sys.forEach(function (q, j) { var r = dropRow(q, j, sysV, "s"); S.appendChild(r); srows.push(r); });
+    S.style.display = sys.length ? "" : "none";
+    $("top").style.visibility = ops ? "visible" : "hidden";
+    var plain = mode === "solo" || mode === "create";
+    ws.forEach(function (q, i) {
+      if (plain) { var pr = mkRow(q, false, vs); W.appendChild(pr); rows.push(pr); return; }
+      var r = mkRow(q, true, vs); r.dataset.drop = "row:" + i;
+      vs.forEach(function (v, k) { if (q[CK[v]].n) r.children[2 * k].dataset.drop = "sub:w:" + i + ":" + v; });
+      if (i === pop) r.classList.add("pop");
+      wire(r, q, i); W.appendChild(r); rows.push(r);
+    });
+    lockCols();
+    renderVals();
+    $("show").hidden = steps.length < 2;
+  }
+
+  // solved values live at the bottom; drag one up onto a matching variable in an equation
+  function renderVals() {
+    var V = $("vals"); V.innerHTML = "";
+    allV().forEach(function (n) {
+      if (!vals[n]) return;
+      var s = document.createElement("span"); s.className = "chip"; s.dataset.v = n;
+      s.className = "chip grab"; s.innerHTML = "<i class=\"var\">" + n + "</i> = " + sg(vals[n]);
+      s.addEventListener("pointerdown", function (e) {
+        drag(e, s, null, function (t) { var p = t.dataset.drop.split(":"); substitute(n, p[1], +p[2], p[3]); }, "sub:");
+      });
+      V.appendChild(s);
+    });
+    if (result) {
+      var rc = document.createElement("span"); rc.className = "chip"; rc.textContent = result === "inf" ? "Infinitely many solutions" : "No solution"; V.appendChild(rc);
+    }
+  }
+
+  // columns never shrink while working on one equation, so a replaced term stays where it was
+  function lockCols() {
+    var W = $("wsEl"), N = 2 * curVs().length + 3, css = function () { return colMin.map(function (m) { return "minmax(" + m + "px,auto)"; }).join(" "); };
+    W.style.setProperty("--nc", N);
+    if (colMin.length && colMin.length !== N) colMin = [];
+    if (!rows.length) return;
+    // a lone equation has nothing to line up with, so its terms sit snug
+    if (rows.length === 1) { colMin = []; W.style.gridTemplateColumns = ""; return; }
+    W.style.gridTemplateColumns = css();
+    var cs = getComputedStyle(W).gridTemplateColumns.split(" ").map(parseFloat);
+    if (cs.length !== N || cs.some(isNaN)) return;
+    colMin = cs.map(function (w, j) { return Math.max(w, colMin[j] || 0); });
+    W.style.gridTemplateColumns = css();
+  }
+
+  function wire(r, q, i) {
+    var c = r.children, vs = curVs(), N = c.length, eq = c[N - 2];
+    eq.addEventListener("pointerdown", function (e) {
+      drag(e, r, function () { openAsk(i, "mul"); }, function (t) { var j = +t.dataset.drop.slice(4); if (j !== i) addEq(i, j); });
+    });
+    eq.addEventListener("click", function (e) { if (e.detail === 0 && mode !== "demo") openAsk(i, "mul"); });
+    function sameRowRight(t, ev) { return t.dataset.drop.indexOf("row:") === 0 && +t.dataset.drop.slice(4) === i && ev.clientX > eq.getBoundingClientRect().right; }
+    vs.forEach(function (v, k) {
+      var co = c[2 * k].querySelector(".co");
+      if (!co || !q[CK[v]].n) return;
+      co.classList.add("grab");
+      co.addEventListener("pointerdown", function (e) { drag(e, co, null, function (t, ev) { if (sameRowRight(t, ev)) coefDrop(i); }, "row:"); });
+    });
+    q.ks.forEach(function (k, idx) {
+      var cell = c[kslot(q, k, vs)];
+      if (k.r) {
+        cell.classList.add("pend"); cell.title = mode === "sequence" ? "Click to multiply" : "";
+        cell.addEventListener("click", function () { if (locked || busy) return; if (mode === "sequence" || mode === "demo") simpSub(i, idx); else openAsk(i, "ksimp", idx); });
+      }
+      else {
+        cell.classList.add("grab");
+        cell.addEventListener("pointerdown", function (e) { drag(e, cell, null, function (t, ev) { if (sameRowRight(t, ev)) constDrop(i, idx); }, "row:"); });
+      }
+    });
+    adjKs(q, vs).forEach(function (m) {
+      var op = c[m[2]]; op.classList.add("opc"); op.title = "Combine like terms";
+      op.addEventListener("click", function () {
+        if (locked || calc || busy) return;
+        if (mode === "calculate") openAsk(i, "comb", m); else combineK(i, m[0], m[1]);
+      });
+    });
+    q.ks.forEach(function (k, idx) {
+      if (!k.pa || k.r || isFirst(q, k, vs)) return;
+      var op = c[kslot(q, k, vs) - 1]; op.classList.add("opc"); op.title = "Rewrite as subtraction";
+      op.addEventListener("click", function () { if (!locked && !busy && !calc) convertK(i, idx); });
+    });
+    if (q.raw) { c[N - 1].classList.add("pend"); c[N - 1].addEventListener("click", function () { if (busy) return; if (mode === "demo") doCalc(i); else openAsk(i, "simp"); }); }
+  }
+
+  // ---- generic drag: the dragged element follows the pointer; drop zones carry data-drop ----
+  function under(ev, el, prefix) {
+    var l = document.elementsFromPoint(ev.clientX, ev.clientY);
+    for (var i = 0; i < l.length; i++) {
+      var t = l[i].closest("[data-drop^=\"" + prefix + "\"]");
+      if (t && !el.contains(t)) return t;
+    }
+    return null;
+  }
+  function drag(e, el, onClick, onDrop, prefix) {
+    if (busy || locked || calc || e.button > 0) return;
+    prefix = prefix || "row:";
+    var cap = e.currentTarget, sx = e.clientX, sy = e.clientY, moved = false, hot = null;
+    cap.setPointerCapture(e.pointerId); e.preventDefault();
+    function mv(ev) {
+      var dx = ev.clientX - sx, dy = ev.clientY - sy;
+      if (!moved && Math.hypot(dx, dy) < 6) return;
+      moved = true; el.classList.add("drag"); el.style.transform = "translate(" + dx + "px," + dy + "px)";
+      var t = under(ev, el, prefix);
+      if (hot !== t) { if (hot) hot.classList.remove("drop"); hot = t; if (t) t.classList.add("drop"); }
+    }
+    function up(ev) {
+      cap.removeEventListener("pointermove", mv); cap.removeEventListener("pointerup", up); cap.removeEventListener("pointercancel", up);
+      var t = moved ? under(ev, el, prefix) : null;
+      el.classList.remove("drag"); el.style.transform = ""; if (hot) hot.classList.remove("drop");
+      if (!moved) { if (onClick) onClick(); } else if (t) onDrop(t, ev);
+    }
+    cap.addEventListener("pointermove", mv); cap.addEventListener("pointerup", up); cap.addEventListener("pointercancel", up);
+  }
+
+  // ---- operations ----
+  function snap() { hist.push([JSON.stringify([ws, vals, sys, sysV, elim]), steps.length, ops]); updUndo(); }
+  function vlines() { return allV().filter(function (n) { return vals[n]; }).map(function (n) { return n + " = " + sg(vals[n]); }); }
+  function lines() {
+    var L = ws.map(function (q) { return fmt(q); });
+    if (sys.length < 2) L = L.concat(sys.map(function (q) { return fmt(q, sysV); }));
+    return L.concat(vlines());
+  }
+  // a solved equation (x = 3) moves down to the values bar
+  function done(pop, from, src) {
+    ops++;
+    var fa = from && from.getBoundingClientRect();
+    var keep = ws[pop], sr = rows[src != null ? src : pop], a = sr && sr.getBoundingClientRect(), fresh = [];
+    ws = ws.filter(function (q) { var n = valName(q); if (n) { vals[n] = q.c; fresh.push(n); return false; } return true; });
+    pop = ws.indexOf(keep);
+    var L = lines(), M = L.map(function () { return ""; });
+    if (mulNote && pop >= 0) M[pop] = "⋅ " + mulNote;
+    mulNote = null;
+    steps.push({ eqs: L, ms: M }); logEl.innerHTML = ""; render(pop);
+    // a solved value drops from the workspace down to the values bar
+    fresh.forEach(function (n) { var chip = $("vals").querySelector("[data-v=\"" + n + "\"]"); if (a && chip) dropIn(chip, a); });
+    if (fa && rows[pop]) { rows[pop].classList.remove("pop"); flyIn(rows[pop], { getBoundingClientRect: function () { return fa; } }); }
+    var dead = ws.filter(function (q) { return !q.ks.length && !q.raw && allV().every(function (n) { return !q[CK[n]].n; }); })[0];
+    if (dead) {
+      var cl = classify(orig);
+      if (cl === "one") note("Those equations only repeated each other, so nothing new appeared. Press Undo and try a different move.");
+      else { report(cl, dead); return; }
+    }
+    if (allV().every(function (n) { return vals[n]; })) { locked = true; updUndo(); head(); onSolved(); } else { head(); if (mode === "demo" && !busy) peekNext(); }
+  }
+  // everything cancelled: 0 = 0 (infinitely many solutions) or 0 = a number that isn't 0 (no solution)
+  function report(cl, row) {
+    result = cl; locked = true; renderVals(); updUndo();
+    note(cl === "inf" ? "Every variable cancelled and we got 0 = 0. That is always true, so this system has infinitely many solutions."
+      : row.c.n ? "Every variable cancelled and we got 0 = " + sg(row.c) + ". That can never be true, so this system has no solution."
+      : "These equations don't fit together, so this system has no solution.");
+    onSolved();
+  }
+  // a pending calculation (x = 6/2) becomes its answer
+  function doCalc(i) {
+    if (locked || !ws[i] || !ws[i].raw) return;
+    snap(); var n = JSON.parse(JSON.stringify(ws[i])); delete n.raw; ws[i] = n; done(i);
+  }
+  // + (−1) can be rewritten as − 1
+  function convertK(i, idx) {
+    if (locked) return; snap();
+    var n = JSON.parse(JSON.stringify(ws[i])); n.ks[idx].pa = false; ws[i] = n; done(i);
+  }
+  function bad(i) {
+    var r = rows[i]; if (!r) return;
+    r.classList.remove("shake"); void r.offsetWidth; r.classList.add("shake");
+  }
+
+  function mulEq(i, k, ready) {
+    if (locked) return; var q = ws[i];
+    if (q.ks.length || q.raw) { bad(i); return; }
+    var nq = { a: mul(q.a, k), b: mul(q.b, k), e: mul(q.e, k), ks: [], c: mul(q.c, k) };
+    if (mode === "calculate" && !ready) {
+      runCalc([{ q: "Multiply equation " + (i + 1) + " by " + wrap(k) + ". Type the new equation:", eq: nq }], [i], function () { mulEq(i, k, true); });
+      return;
+    }
+    snap(); ws[i] = nq; mulNote = wrap(k); done(i);
+  }
+  // adding two equations leaves just one equation in the workspace
+  // (in the 3x3, a sum with exactly two variables is a new 2x2 equation and moves to the top)
+  function addEq(f, t) {
+    if (locked) return; var A = ws[f], B = ws[t];
+    var s = { a: add(A.a, B.a), b: add(A.b, B.b), e: add(A.e, B.e), ks: A.ks.concat(B.ks), c: add(A.c, B.c) };
+    if (lesson === 3 && sys.length < 2) {
+      var n = allV().filter(function (v) { return s[CK[v]].n; }).length;
+      if (n === 0 && !s.c.n) { bad(f); bad(t); note("Every variable disappeared, so those two equations don't tell you anything new. Try a different pair."); return; }
+      if (n === 2 && !s.ks.length) { found(s, f, t); return; }
+    }
+    snap(); ws[t] = s; ws.splice(f, 1);
+    done(f < t ? t - 1 : t, null, t);
+  }
+  // a new 2x2 equation: it flies to the top, the 3x3 originals slide left, and the workspace starts fresh
+  function found(s, f, t) {
+    var miss = allV().filter(function (v) { return !s[CK[v]].n; })[0];
+    if (sys.length === 1) {
+      if (miss !== elim) { bad(f); bad(t); note("Make " + elim + " disappear again, so both new equations have the same two variables."); return; }
+      var p = sys[0], u = sysV[0], w = sysV[1];
+      if (!(p[CK[u]].n * s[CK[w]].n - p[CK[w]].n * s[CK[u]].n) && classify(orig) === "one") { bad(f); bad(t); note("That is the same equation as your first one. Try a different pair of equations."); return; }
+    }
+    snap();
+    var a = rows[t].getBoundingClientRect(), o0 = $("origEl").getBoundingClientRect().left;
+    if (!sys.length) { elim = miss; sysV = allV().filter(function (v) { return v !== miss; }); }
+    sys.push(s); ops++; mulNote = null;
+    ws = JSON.parse(JSON.stringify(sys.length === 2 ? sys : orig));
+    steps.push({ eqs: lines(), ms: lines().map(function () { return ""; }) });
+    logEl.innerHTML = ""; render(-1);
+    flyIn(srows[srows.length - 1], { getBoundingClientRect: function () { return a; } });
+    var O = $("origEl"), o1 = O.getBoundingClientRect().left;
+    if (o0 !== o1) {
+      O.style.transition = "none"; O.style.transform = "translateX(" + (o0 - o1) + "px)"; void O.offsetWidth;
+      O.style.transition = "transform 1.4s ease-in-out"; O.style.transform = "";
+    }
+    head(); if (mode === "demo" && !busy) peekNext();
+  }
+  // drag the coefficient over to the other side: divide the right side by it
+  function coefDrop(i) {
+    if (locked) return; var q = ws[i], vn = allV().filter(function (v) { return q[CK[v]].n; });
+    if (vn.length !== 1 || q.ks.length || q.raw) { bad(i); return; }
+    snap();
+    var key = CK[vn[0]], co = q[key], n = { a: mk(0), b: mk(0), e: mk(0), ks: [], c: mul(q.c, inv(co)) };
+    n[key] = mk(1);
+    if (mode === "calculate" || mode === "demo") n.raw = sg(q.c) + "/" + wrap(co);
+    ws[i] = n; done(i);
+    if (mode === "calculate") openAsk(ws.indexOf(n), "simp");
+  }
+  // drag a constant over to the other side: combine it into the right side
+  function constDrop(i, idx) {
+    if (locked) return; var q = ws[i], k = q.ks[idx];
+    if (!k || k.r || q.raw) { bad(i); return; }
+    snap();
+    var n = JSON.parse(JSON.stringify(q)); n.ks.splice(idx, 1); n.c = add(q.c, neg(k.k));
+    if (mode === "calculate" || mode === "demo") n.raw = sg(q.c) + (k.k.n > 0 ? " − " : " + ") + sg(ab(k.k));
+    ws[i] = n; done(i);
+    if (mode === "calculate") openAsk(ws.indexOf(n), "simp");
+  }
+  // drag a solved value (y = 3) up onto its letter in an equation:
+  // the value takes the variable's place, so the other terms keep their positions
+  // sets: o = the original equations, s = the new 2-variable equations, w = an equation in the workspace
+  function substitute(name, set, j, pv) {
+    if (locked || pv !== name) return;
+    if (lesson === 3) {
+      var solve = sys.length === 2 && !sysDone();
+      if ((set === "o" && solve) || (set === "s" && !(solve && sysV.indexOf(name) >= 0))) {
+        note(set === "s" ? "The new equations aren't ready for that value yet." : "Use the two new equations first."); return;
+      }
+    }
+    var src = set === "o" ? orig[j] : set === "s" ? sys[j] : ws[j];
+    if (!src || !src[CK[name]].n) return;
+    snap();
+    var val = vals[name], co = src[CK[name]], q = JSON.parse(JSON.stringify(src)), k = { v: name, k: mul(co, val) };
+    q[CK[name]] = mk(0);
+    // a positive number replacing a bare variable (4x − y, y = 3) needs no calculation
+    if (!(isOne(ab(co)) && val.n > 0)) k.r = { co: co, val: val };
+    q.ks.push(k);
+    var at;
+    if (set === "w") { ws[j] = q; at = j; done(j); }
+    else {
+      colMin = []; ws.push(q); at = ws.length - 1;
+      done(at, set === "o" ? orows[j] : srows[j]);
+    }
+    if (mode === "calculate" && k.r && ws[at]) openAsk(at, "ksimp", ws[at].ks.length - 1);
+  }
+  // click the + between two constants: they combine into one (3x + 2 + 1 = 9 becomes 3x + 3 = 9)
+  function combineK(i, a, b) {
+    if (locked) return; var q = ws[i]; if (!q.ks[a] || !q.ks[b]) return;
+    snap();
+    var n = JSON.parse(JSON.stringify(q)), ka = n.ks[a], kb = n.ks[b];
+    ka.k = add(ka.k, kb.k); n.ks.splice(b, 1);
+    if (!ka.k.n) n.ks.splice(n.ks.indexOf(ka), 1);
+    ws[i] = n; done(i);
+  }
+  function combText(q, a, b) { var A = q.ks[a].k, B = q.ks[b].k; return sg(A) + (B.n < 0 ? " − " : " + ") + sg(ab(B)); }
+  // show the inserted value, e.g. 2(3) + 4y = 14, then simplify it to 6 + 4y = 14
+  function simpSub(i, idx, ns) {
+    if (locked) return; if (!ns) snap();
+    var q = JSON.parse(JSON.stringify(ws[i])); delete q.ks[idx].r; ws[i] = q;
+    done(i);
+  }
+  function undo() {
+    if (busy || calc) return;
+    var nx = $("next");
+    if (mode === "solo") { buildAnswer(); nx.hidden = true; updUndo(); return; }
+    if (mode === "create") {
+      if (!orig.length) return;
+      orig.pop(); ws = JSON.parse(JSON.stringify(orig)); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }];
+      render(-1); $("answer").hidden = true; $("creator").hidden = false; nx.hidden = true; crPrompt(); updUndo(); return;
+    }
+    if (!hist.length) return;
+    var h = hist.pop(), st = JSON.parse(h[0]); ws = st[0]; vals = st[1]; sys = st[2]; sysV = st[3]; elim = st[4]; steps.length = h[1]; ops = h[2];
+    locked = false; result = null; mulNote = null; closeAsk(false); logEl.innerHTML = "";
+    if (mode === "demo") nx.textContent = "Next step"; else nx.hidden = true;
+    render(-1); updUndo();
+    if (mode === "demo") peekNext();
+  }
+
+  // ---- solo: the student types the whole new equation. items = [{ q: prompt, eq: expected equation }] ----
+  function runCalc(items, marks, finish) {
+    calc = { items: items, i: 0, marks: marks, finish: finish };
+    nextCalc();
+  }
+  function nextCalc() {
+    var c = calc, it = c.items[c.i];
+    if (!it) { var f = c.finish; calc = null; closeAsk(false); f(); return; }
+    askKind = "calc"; $("askT").textContent = it.q;
+    rows.forEach(function (r) { r.classList.remove("asking"); });
+    c.marks.forEach(function (r) { if (rows[r]) rows[r].classList.add("asking"); });
+    showInput();
+  }
+  function showInput() {
+    $("askIn").value = ""; $("askErr").textContent = "";
+    $("askIn").placeholder = askKind === "calc" ? (lesson === 3 ? "e.g. 2x+3y-z=12" : "e.g. 2x+3y=12") : "e.g. 3";
+    $("ask").hidden = false; $("askIn").focus();
+  }
+
+  // ---- chat prompts: a multiplier, a calculation, or a whole equation ----
+  function openAsk(i, kind, idx) {
+    if (locked || busy || calc || !rows[i]) return;
+    if (!$("ask").hidden) closeAsk(true);
+    askIdx = i; askKind = kind; askK = typeof idx === "number" ? idx : 0; askC = Array.isArray(idx) ? idx : null;
+    var q = ws[i];
+    $("askT").textContent = kind === "mul" ? "Multiply the outlined equation by:" : kind === "comb" ? "Combine " + combText(q, askC[0], askC[1]) + ":" : kind === "ksimp" ? "Calculate " + kPrompt(q, q.ks[askK], curVs()) + ":" : "Simplify " + q.raw + ":";
+    rows[i].classList.add("asking");
+    showInput();
+  }
+  function closeAsk(cancel) {
+    if (cancel) calc = null;
+    $("ask").hidden = true;
+    rows.forEach(function (r) { r.classList.remove("asking"); });
+  }
+  function confirmAsk() {
+    var i = askIdx, txt = $("askIn").value, err = function (t) { $("askErr").textContent = t; };
+    if (askKind === "mul") {
+      var k = parse(txt);
+      if (!k) { err("Enter a number like 2, -3 or 1/2."); return; }
+      closeAsk(false);
+      if (!k.n) { bad(i); return; }
+      mulEq(i, k); return;
+    }
+    // one calculation (simplifying, or a substituted term): just type the number
+    if (askKind === "comb") {
+      var q2 = ws[i], n2 = parse(txt);
+      if (!q2 || !q2.ks[askC[0]] || !q2.ks[askC[1]]) { closeAsk(false); return; }
+      if (!n2) { err("Type a number, like 3 or -1."); return; }
+      if (!same(n2, add(q2.ks[askC[0]].k, q2.ks[askC[1]].k))) { err("Not quite. Try again."); $("askIn").select(); return; }
+      closeAsk(false); combineK(i, askC[0], askC[1]); return;
+    }
+    if (askKind === "simp" || askKind === "ksimp") {
+      var q1 = ws[i];
+      if (!q1) { closeAsk(false); return; }
+      var n1 = parse(txt), kk = askKind === "ksimp" ? q1.ks[askK] : null;
+      if (!n1) { err("Type a number, like 6 or 3/2."); return; }
+      if (!same(n1, kk ? kTarget(q1, kk, curVs()) : q1.c)) { err("Not quite. Try again."); $("askIn").select(); return; }
+      closeAsk(false);
+      if (kk) { simpSub(i, askK, true); return; }
+      delete q1.raw; done(i); return;
+    }
+    var got = parseEq(txt);
+    if (!got) { err("Type the whole equation, like " + (lesson === 3 ? "2x+3y-z=12." : "2x+3y=12.")); return; }
+    if (!sameEq(got, calc.items[calc.i].eq)) { err("Not quite. Try again."); $("askIn").select(); return; }
+    calc.i++; nextCalc();
+  }
+
+
+  // ---- hint ----
+  function mulHint(ms, rowOf) {
+    return ms.length === 1 ? "Multiply equation " + (rowOf(ms[0][0]) + 1) + " by " + wrap(ms[0][1]) : "Multiply both equations";
+  }
+  function hintText() {
+    if (locked) return "You solved it!";
+    if (calc) return "Multiply every term by the number, then type the whole new equation.";
+    if (ws.some(function (q) { return q.ks.some(function (k) { return k.r; }); })) return mode === "sequence" ? "Click the multiplication to calculate it." : "Do the multiplication in the parentheses and type the result.";
+    if (ws.some(function (q) { return q.raw; })) return "Work out the calculation on the right side and type the result.";
+    if (lesson === 3 && sys.length < 2) {
+      if (!elimInfo) return "Choose a variable, make its terms opposites in two of the equations, then add them.";
+      var b = elimInfo, pr = b.pairs[sys.length], p = pr.p;
+      if (!sys.length) return "Start with two equations and make one variable disappear. Try eliminating " + b.v + " using equations 1 and " + (p + 1) + ". " +
+        (pr.ms.length ? mulHint(pr.ms, function (m) { return m === 0 ? 0 : p; }) + " so the " + b.v + " terms are opposites, then add." : "The " + b.v + " terms are already opposites, so add the equations.");
+      return "Now make " + elim + " disappear again, this time with equations 1 and " + (p + 1) + ". " +
+        (pr.ms.length ? mulHint(pr.ms, function (m) { return m === 0 ? 0 : p; }) + " so the " + elim + " terms are opposites, then add." : "Add the equations.");
+    }
+    if (!ws.length) {
+      var open = sysDone() || lesson === 2 ? "" : "";
+      var n = allV().filter(function (v) { return vals[v] && (lesson === 2 || sysDone() || sysV.indexOf(v) >= 0); })[0] || "y";
+      return "Drag the " + n + " at the bottom up onto an " + n + " in one of the " + (lesson === 3 && sysDone() ? "original" : lesson === 3 ? "new" : "original") + " equations.";
+    }
+    var vs = curVs();
+    if (ws.length === 2) {
+      var full = ws.every(function (q) { return vs.every(function (v) { return q[CK[v]].n && q[CK[v]].d === 1; }); });
+      if (!full) return "Look for a variable whose terms you can make opposites, then add the equations.";
+      var cx = elimMuls(ws[0][CK[vs[0]]].n, ws[1][CK[vs[0]]].n), cy = elimMuls(ws[0][CK[vs[1]]].n, ws[1][CK[vs[1]]].n), px = cx.length <= cy.length, ms = px ? cx : cy, v = px ? vs[0] : vs[1];
+      if (!ms.length) return "The " + v + " terms are opposites. Drag the = of one equation onto the other to add them.";
+      return "Try eliminating " + v + ". " + mulHint(ms, function (m) { return m; }) + (ms.length === 1 ? "" : "") + " so the " + v + " terms are opposites, then add the equations.";
+    }
+    var q0 = ws[0], nv = vs.filter(function (v) { return q0[CK[v]].n; }).length;
+    if (adjKs(q0, vs).length) return "Click the + between the two numbers to combine like terms.";
+    if (nv === 1 && q0.ks.length) return "Drag the constant over to the other side of the = to get the variable by itself.";
+    if (nv === 1) return "Drag the number in front of the variable over to the other side to divide.";
+    if (nv === 2 && q0.ks.length && lesson === 3) return "Drag the other solved value up onto its letter in this equation.";
+    return "Make one variable disappear: get opposite terms, then add the equations.";
+  }
+
+  // ---- demo: one step per click of the button ----
+  // the multiplications needed to make two coefficients opposites: one if either divides the other, else two
+  function elimMuls(p, q) {
+    if (p + q === 0) return [];
+    if (q % p === 0) return [[0, mk(-q / p)]];
+    if (p % q === 0) return [[1, mk(-p / q)]];
+    var g = gcd(p, q);
+    return [[0, mk(q / g)], [1, mk(-p / g)]];
+  }
+  function need(p, q) { return elimMuls(p, q).length; }
+  // the demo's next move, worked out from what is on the screen (so Undo and the demo always agree)
+  function scaledEq(q, k) { return { a: mul(q.a, k), b: mul(q.b, k), e: mul(q.e, k), c: mul(q.c, k) }; }
+  // multiplications still to do before adding two equations: ["show"|"mul", row, k], or null when they are done
+  function mulStep(ms, base, rowOf) {
+    for (var n = 0; n < ms.length; n++) {
+      var rw = rowOf(ms[n][0]), k = ms[n][1];
+      if (ws[rw] && !sameEq(ws[rw], scaledEq(base[rw], k))) return [rows[rw] && rows[rw].dataset.m ? "mul" : "show", rw, k];
+    }
+    return null;
+  }
+  function nextStep() {
+    var q = ws[0], v, m, ri = ws.findIndex(function (r) { return r.raw; });
+    if (ri >= 0) return ["calc", ri];
+    if (lesson === 1) return !q ? null : q.ks.length ? ["const", 0, 0] : isOne(q.a) ? null : ["coef", 0];
+    // 3x3 step one: two equations without one variable (equations 1&2, then 1&3)
+    if (lesson === 3 && sys.length < 2 && elimInfo) {
+      var P = elimInfo.pairs[sys.length];
+      return mulStep(P.ms, orig, function (r) { return r === 0 ? 0 : P.p; }) || ["add", 0, P.p];
+    }
+    var base = lesson === 3 ? sys : orig, vs = lesson === 3 ? sysV : ["x", "y"], set = lesson === 3 ? "s" : "o";
+    if (ws.length === 2) {
+      var cx = elimMuls(base[0][CK[vs[0]]].n, base[1][CK[vs[0]]].n), cy = elimMuls(base[0][CK[vs[1]]].n, base[1][CK[vs[1]]].n);
+      // fewer multiplications wins; on a tie, take turns
+      var i0 = cx.length !== cy.length ? (cx.length < cy.length ? 0 : 1) : curDm - 1;
+      return mulStep(i0 ? cy : cx, base, function (r) { return r; }) || ["add", 0, 1];
+    }
+    if (!q) {
+      if (lesson === 3 && sysDone()) return ["sub", sysV[0], "o", 0];
+      v = Object.keys(vals).filter(function (n) { return lesson === 2 || sysV.indexOf(n) >= 0; })[0];
+      return v ? ["sub", v, set, 0] : null;
+    }
+    // a second known value goes into the same equation (3x3 last step)
+    v = allV().filter(function (n) { return q[CK[n]].n && vals[n]; })[0];
+    if (v && q.ks.length) return ["sub", v, "w", 0];
+    m = q.ks.findIndex(function (z) { return z.r; });
+    if (m >= 0) return ["simp", 0, m];
+    var cb = adjKs(q); if (cb.length) return ["comb", 0, cb[0][0], cb[0][1]];
+    if (q.ks.length) return ["const", 0, 0];
+    return allV().some(function (n) { return q[CK[n]].n && !isOne(q[CK[n]]); }) ? ["coef", 0] : null;
+  }
+  // a copy of src, enlarged, glides to dst, then cb runs
+  function fly(src, dst, cb, hide) {
+    var a = src.getBoundingClientRect(), b = dst.getBoundingClientRect(), g = src.cloneNode(true), cs = getComputedStyle(src);
+    g.style.cssText = "position:fixed;left:" + a.left + "px;top:" + a.top + "px;margin:0;z-index:40;pointer-events:none;background:var(--bg);border-radius:6px;box-shadow:0 .2em .8em rgba(0,0,0,.35);transform:scale(1.7);transition:transform 1.4s ease-in-out;font-size:" + cs.fontSize + ";font-weight:" + cs.fontWeight + ";font-family:" + cs.fontFamily + ";color:" + cs.color;
+    document.body.appendChild(g); if (hide) src.style.visibility = "hidden"; void g.offsetWidth;
+    g.style.transform = "translate(" + (b.left - a.left + (b.width - a.width) / 2) + "px," + (b.top - a.top + (b.height - a.height) / 2) + "px) scale(1.7)";
+    setTimeout(function () { g.remove(); cb(); }, 1450);
+  }
+  // a new equation slides from its original down into the workspace
+  function flyIn(row, from) {
+    var a = from.getBoundingClientRect(), b = row.getBoundingClientRect();
+    var sc = a.width / b.width, dx = a.left + a.width / 2 - (b.left + b.width / 2), dy = a.top + a.height / 2 - (b.top + b.height / 2);
+    row.style.transition = "none"; row.style.transform = "translate(" + dx + "px," + dy + "px) scale(" + sc + ")";
+    void row.offsetWidth; row.style.transition = "transform 1.4s ease-in-out"; row.style.transform = "";
+  }
+  // a newly solved value glides down from where its equation was into the values bar
+  function dropIn(chip, a) {
+    var b = chip.getBoundingClientRect(), g = chip.cloneNode(true), cs = getComputedStyle(chip);
+    var l = a.left + a.width / 2 - b.width / 2, tp = a.top + a.height / 2 - b.height / 2;
+    g.style.cssText = "position:fixed;left:" + l + "px;top:" + tp + "px;margin:0;z-index:40;pointer-events:none;box-shadow:0 .2em .8em rgba(0,0,0,.35);transform:scale(1.5);transition:transform 1.4s ease-in-out;font-size:" + cs.fontSize + ";font-weight:" + cs.fontWeight + ";font-family:" + cs.fontFamily + ";color:" + cs.color + ";background:" + cs.backgroundColor;
+    chip.style.visibility = "hidden"; document.body.appendChild(g); void g.offsetWidth;
+    g.style.transform = "translate(" + (b.left - l) + "px," + (b.top - tp) + "px) scale(1.5)";
+    setTimeout(function () { g.remove(); chip.style.visibility = ""; }, 1450);
+  }
+  function stopDemo() { clearTimeout(demoTimer); demoTimer = null; }
+  function later(fn, ms) { demoTimer = setTimeout(fn, ms); }
+
+
+  function demoStep() {
+    if (busy || locked) return;
+    var s = pend; if (!s) return;
+    busy = true; $("next").disabled = true;
+    var t = s[0], i = s[1], act;
+    function release(ms) { setTimeout(function () { busy = false; $("next").disabled = false; peekNext(); }, ms || 0); }
+    // the "=" grows to show what to click or drag
+    function cue(r) { var e = rows[r] && rows[r].querySelector(".eq"); if (e) e.classList.add("target"); }
+    function rhs(r) { return rows[r].children[rows[r].children.length - 1]; }
+    if (t === "show") {
+      rows[i].dataset.m = "⋅ " + wrap(s[2]); cue(i);
+      act = function () {};
+    } else if (t === "mul") {
+      cue(i); act = function () { mulEq(i, s[2]); };
+    } else if (t === "add") {
+      var to = s[2];
+      cue(i);
+      act = function () {
+        var dy = rows[to].getBoundingClientRect().top - rows[i].getBoundingClientRect().top;
+        rows[i].classList.add("slide"); rows[i].style.transform = "translateY(" + dy + "px)";
+        later(function () { addEq(i, to); release(1500); }, 1250); return true;
+      };
+    } else if (t === "coef") {
+      act = function () { fly(rows[i].querySelector(".co"), rhs(i), function () { coefDrop(i); release(1500); }, true); return true; };
+    } else if (t === "const") {
+      act = function () { fly(rows[i].children[kslot(ws[i], ws[i].ks[s[2]], curVs())], rhs(i), function () { constDrop(i, s[2]); release(1500); }, true); return true; };
+    } else if (t === "calc") {
+      rows[i].lastElementChild.classList.add("hl");
+      act = function () { doCalc(i); };
+    } else if (t === "comb") {
+      var pr = adjKs(ws[i]).filter(function (m) { return m[0] === s[2] && m[1] === s[3]; })[0], cr = rows[i].children, vz = curVs();
+      cr[pr[2]].classList.add("opc", "hl"); cr[kslot(ws[i], ws[i].ks[s[2]], vz)].classList.add("hl"); cr[kslot(ws[i], ws[i].ks[s[3]], vz)].classList.add("hl");
+      act = function () { combineK(i, s[2], s[3]); };
+    } else if (t === "simp") {
+      rows[i].children[kslot(ws[i], ws[i].ks[s[2]], curVs())].classList.add("hl");
+      act = function () { simpSub(i, s[2]); };
+    } else {
+      var n = s[1], set = s[2], j = s[3];
+      var row = set === "o" ? orows[j] : set === "s" ? srows[j] : rows[j], vl = set === "o" ? allV() : set === "s" ? sysV : curVs();
+      var cell = row.children[2 * vl.indexOf(n)], dest = cell.querySelector(".var") || cell;
+      dest.classList.add("tgt");
+      act = function () {
+        fly($("vals").querySelector("[data-v=\"" + n + "\"] .var"), dest, function () { substitute(n, set, j, n); release(1500); });
+        return true;
+      };
+    }
+    later(function () { if (act() !== true) release(); }, t === "add" || t === "mul" ? 900 : t === "comb" || t === "simp" || t === "calc" ? 1300 : 450);
+  }
+
+  // ---- show work: "Make One Change And Recopy" (just the equations) ----
+  function workHTML() {
+    return steps.map(function (w) {
+      return "<section>" + w.eqs.map(function (e, j) { return "<div class=\"r\"><span class=\"m\">" + ((w.ms && w.ms[j]) || "") + "</span><span>" + e + "</span></div>"; }).join("") + "</section>";
+    }).join("");
+  }
+  function showWork() {
+    var body = workHTML(), w = null;
+    var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>body{font:1.3rem ui-monospace,Menlo,monospace;max-width:34rem;margin:2rem auto;padding:0 1rem}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}</style>" + body;
+    try { w = window.open("", "_blank"); } catch (e) {}
+    if (w) { w.document.write(doc); w.document.close(); }
+    else { $("sheetBody").innerHTML = body; $("sheet").hidden = false; }
+  }
+
+  var NEXTMODE = { demo: "sequence", sequence: "calculate", calculate: "solo" }, counts = {};
+  // ---- celebration: five seconds of fun, then it fades away (pointer-events are off, so the page stays usable) ----
+  var party = null, partyTimer = null, lastParty = -1;
+  function stopParty() { clearTimeout(partyTimer); if (party) { party.remove(); party = null; } }
+  function celebrate() {
+    stopParty();
+    var P = document.createElement("div"); P.id = "party"; P.setAttribute("aria-hidden", "true"); document.body.appendChild(P); party = P;
+    var W = innerWidth, H = innerHeight, reduce = matchMedia("(prefers-reduced-motion: reduce)").matches, k;
+    function em(ch, x, y, size) { var e = document.createElement("div"); e.className = "pe"; e.textContent = ch; e.style.cssText = "left:" + x + "px;top:" + y + "px;font-size:" + size + "px"; P.appendChild(e); return e; }
+    function go(e, frames, dur, delay, ease) { return e.animate(frames, { duration: dur, delay: delay || 0, fill: "both", easing: ease || "ease-out" }); }
+    do { k = rnd(8); } while (k === lastParty);
+    lastParty = k;
+    var PH = ["LET'S GOOOOO!", "WHAT A SLAY!", "SLAY!", "FIRE!", "AMAZING!", "NOW THAT'S SOME RIZZ", "SO CHILL", "NO CAP, YOU ATE THAT", "SHEEEESH!", "W RIZZ", "YOU'RE COOKING!", "GOATED!", "LOCKED IN 🔒", "BUSSIN'!", "PERIODT 💅", "LIKE A BOSS!", "LET'S GOOOOOOO!", "THAT HAD AURA", "GLAZING!", "THAT STANDS ON BUSINESS", "BUSSIN!", "YOU'RE GIVING GENIUS", "MARK IT A W!"];
+    function banner(txt) {
+      var b = document.createElement("div"); b.className = "slay"; b.style.alignItems = "flex-start"; b.style.paddingTop = "5vh"; b.style.fontSize = "clamp(2rem,8vw,5rem)"; b.textContent = txt; P.appendChild(b);
+      go(b, [{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1)", offset: .12 }, { opacity: 1, transform: "scale(1)", offset: .85 }, { opacity: 0 }], 5000, 0, "linear");
+    }
+    if (reduce) k = 3;
+    var i, j, e;
+    if (k === 0) {            // fireworks of emojis
+      var fw = ["🎆", "🎇", "✨", "🎉", "🎊", "⭐", "💥"];
+      for (i = 0; i < 6; i++) {
+        var bx = W * (.15 + .7 * Math.random()), by = H * (.15 + .45 * Math.random());
+        for (j = 0; j < 14; j++) {
+          var a = j / 14 * 2 * Math.PI, r = 90 + Math.random() * 110, cx = Math.cos(a) * r, cy = Math.sin(a) * r;
+          go(em(fw[rnd(fw.length)], bx, by, 30), [{ transform: "translate(0,0) scale(.3)", opacity: 0 }, { opacity: 1, offset: .15 },
+            { transform: "translate(" + cx + "px," + cy + "px) scale(1.2)", opacity: 1, offset: .6 }, { transform: "translate(" + cx * 1.1 + "px," + (cy + 90) + "px) scale(.8)", opacity: 0 }], 1700, i * 650);
+        }
+      }
+    } else if (k === 1) {     // a parade of bouncing emojis
+      var cast = ["🦄", "🐘", "🤹", "🎺", "🥁", "🐒", "🤡", "🦒", "🎪", "🕺"];
+      for (i = 0; i < 10; i++) {
+        var fr = [];
+        for (j = 0; j <= 24; j++) { var f = j / 24; fr.push({ transform: "translate(" + (-100 + f * (W + 200)) + "px," + (-Math.abs(Math.sin(f * Math.PI * 7)) * 55) + "px)" }); }
+        go(em(cast[i], 0, H * (.2 + .6 * (i % 5) / 4), 56), fr, 3300, (i % 5) * 250 + (i > 4 ? 600 : 0), "linear");
+      }
+    } else if (k === 2) {     // everybody sinks the three
+      var hx = W * .72, hy = H * .3, pl = ["⛹️‍♂️", "⛹️‍♀️", "⛹🏽‍♂️", "⛹🏾‍♀️", "⛹🏻‍♂️"];
+      var net = document.createElement("div");
+      net.innerHTML = "<svg viewBox=\"0 0 160 140\" width=\"180\" style=\"position:absolute;left:" + (hx - 90) + "px;top:" + (hy - 92) + "px\"><rect x=\"30\" y=\"0\" width=\"100\" height=\"70\" rx=\"6\" fill=\"#fff\" stroke=\"#c0301e\" stroke-width=\"5\"/><rect x=\"62\" y=\"30\" width=\"36\" height=\"26\" fill=\"none\" stroke=\"#c0301e\" stroke-width=\"4\"/><path d=\"M44 84 L62 130 M62 86 L70 130 M80 88 L80 130 M98 86 L90 130 M116 84 L98 130 M48 100 H112 M54 115 H106\" stroke=\"#fff\" stroke-width=\"3\" fill=\"none\"/><ellipse cx=\"80\" cy=\"82\" rx=\"38\" ry=\"9\" fill=\"none\" stroke=\"#e8590c\" stroke-width=\"6\"/></svg>";
+      P.appendChild(net);
+      for (i = 0; i < 5; i++) go(em(pl[i], W * (.06 + .09 * i), H * .74, 58), [{ transform: "translateY(60px)", opacity: 0 }, { transform: "translateY(0)", opacity: 1 }], 500, i * 80);
+      for (i = 0; i < 10; i++) {
+        var x0 = W * (.06 + .09 * (i % 5)) + 10, y0 = H * .74, fr2 = [];
+        for (j = 0; j <= 16; j++) { var g = j / 16; fr2.push({ transform: "translate(" + (hx - x0 - 14) * g + "px," + ((hy - y0) * g - 4 * H * .28 * g * (1 - g)) + "px)", opacity: 1 }); }
+        fr2.push({ transform: "translate(" + (hx - x0 - 14) + "px," + (hy - y0 + 90) + "px)", opacity: 0 });
+        go(em("🏀", x0, y0, 34), fr2, 1100, 500 + i * 400, "linear");
+      }
+      e = document.createElement("div"); e.className = "slay"; e.style.alignItems = "flex-start"; e.style.paddingTop = "6vh"; e.style.fontSize = "clamp(2rem,8vw,5rem)"; e.textContent = "🏀 " + ["BUCKETS!", "SWISH!"].concat(PH.slice(0, 7))[rnd(9)] + " 🏀"; P.appendChild(e);
+      go(e, [{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 1, offset: .85 }, { opacity: 0 }], 5000, 0, "linear");
+    } else if (k === 4) {     // ground fireworks spitting emojis skyward
+      var sp = ["🎉", "🎊", "⭐", "✨", "🌟", "💫", "🎈", "🥳", "🎁", "🪅"];
+      for (i = 0; i < 6; i++) {
+        var gx = W * (.12 + .76 * Math.random()), dly = i * 700;
+        go(em("💥", gx - 20, H - 50, 40), [{ transform: "scale(.2)", opacity: 1 }, { transform: "scale(1.5)", opacity: 1, offset: .3 }, { transform: "scale(1.8)", opacity: 0 }], 600, dly);
+        for (j = 0; j < 18; j++) {
+          var pk = H * (.45 + .45 * Math.random()), dx = (Math.random() - .5) * W * .45, sz = 26 + rnd(20), fr3 = [];
+          for (var q = 0; q <= 12; q++) { var u = q / 12; fr3.push({ transform: "translate(" + dx * u + "px," + (-pk * 4 * u * (1 - u) * (1 - .0 * u)) + "px) rotate(" + (u * (rnd(2) ? 540 : -540)) + "deg)", opacity: q > 10 ? 0 : 1 }); }
+          go(em(sp[rnd(sp.length)], gx, H - 60, sz), fr3, 1500 + rnd(500), dly + rnd(150), "linear");
+        }
+      }
+    } else if (k === 5) {     // pour a bucket of emojis; they bounce off screen
+      var bx0 = W * .1, by0 = H * .05;
+      var bk = em("🪣", bx0, by0, 80);
+      go(bk, [{ transform: "rotate(0deg)", opacity: 0 }, { transform: "rotate(0deg)", opacity: 1, offset: .05 }, { transform: "rotate(105deg)", opacity: 1, offset: .12 }, { transform: "rotate(105deg)", opacity: 1, offset: .7 }, { transform: "rotate(0deg)", opacity: 0 }], 4500, 0, "ease-in-out");
+      var pour = ["😀", "🥳", "🎉", "🏀", "⚽", "🍭", "🎈", "🍩", "⭐", "🧸", "🪙", "🍕"], floor = H - 70;
+      for (i = 0; i < 30; i++) {
+        var px = 0, py = 0, vx = 260 + rnd(260), vy = -rnd(120), fr4 = [{ transform: "translate(0,0)", offset: 0 }], t = 0, dt = .04, sx = bx0 + 70, sy = by0 + 50;
+        while (t < 3.6 && sx + px < W + 60) {
+          vy += 1900 * dt; px += vx * dt; py += vy * dt; t += dt;
+          if (sy + py > floor) { py = floor - sy; vy = -Math.abs(vy) * .72; if (Math.abs(vy) < 90) vy = -90; }
+          fr4.push({ transform: "translate(" + px + "px," + py + "px)", offset: Math.min(1, t / 3.6) });
+        }
+        fr4[fr4.length - 1].offset = 1;
+        for (q = 0; q < fr4.length; q++) fr4[q].offset = q === fr4.length - 1 ? 1 : q / (fr4.length - 1);
+        go(em(pour[rnd(pour.length)], sx, sy, 38), fr4, t * 1000, 500 + i * 110, "linear");
+      }
+    } else if (k === 6) {     // hearts multiply from the center into one giant heart
+      var S = Math.min(W, H * 1.15) * .42, ps = [], tries = 0;
+      while (ps.length < 95 && tries++ < 6000) {
+        var hx2 = (Math.random() * 2 - 1) * 1.3, hy2 = (Math.random() * 2 - 1) * 1.3, tt = hx2 * hx2 + hy2 * hy2 - 1;
+        if (tt * tt * tt - hx2 * hx2 * hy2 * hy2 * hy2 <= 0) {
+          var okp = true; for (q = 0; q < ps.length; q++) if (Math.hypot(ps[q][0] - hx2, ps[q][1] - hy2) < .21) { okp = false; break; }
+          if (okp) ps.push([hx2, hy2]);
+        }
+      }
+      ps.sort(function (a, b) { return Math.hypot(a[0], a[1] - .3) - Math.hypot(b[0], b[1] - .3); });
+      var hs = Math.max(28, S * .2);
+      for (i = 0; i < ps.length; i++) {
+        var tx = ps[i][0] * S, ty = -ps[i][1] * S + S * .1, hd = 150 + i * (3000 / ps.length);
+        go(em("❤️", W / 2 - hs / 2, H / 2 - hs / 2, hs), [{ transform: "translate(0,0) scale(0)", opacity: 0 }, { transform: "translate(" + tx * .5 + "px," + ty * .5 + "px) scale(1.5)", opacity: 1, offset: .45 }, { transform: "translate(" + tx + "px," + ty + "px) scale(1)", opacity: 1, offset: .7 }, { transform: "translate(" + tx + "px," + ty + "px) scale(1.12)", opacity: 1, offset: .8 }, { transform: "translate(" + tx + "px," + ty + "px) scale(1)", opacity: 1, offset: .9 }, { transform: "translate(" + tx + "px," + ty + "px) scale(1)", opacity: 0 }], 5000 - hd, hd, "ease-out");
+      }
+    } else if (k === 7) {     // swirl of one happy emoji that merges into a giant one
+      var hap = ["😀", "🥳", "😎", "🤩", "😂", "🥰", "😁", "🤗"], ch = hap[rnd(hap.length)], N = 36;
+      for (i = 0; i < N; i++) {
+        var a0 = i / N * 2 * Math.PI, R0 = Math.min(W, H) * (.25 + .3 * (i % 3) / 2), fr5 = [];
+        for (q = 0; q <= 40; q++) {
+          var u2 = q / 40, ang = a0 + u2 * 9, rr = R0 * (1 - Math.pow(u2, 1.6)) + 5;
+          fr5.push({ transform: "translate(" + Math.cos(ang) * rr + "px," + Math.sin(ang) * rr * .8 + "px) rotate(" + u2 * 720 + "deg) scale(" + (1 - .6 * u2) + ")", opacity: u2 > .93 ? 0 : 1 });
+        }
+        go(em(ch, W / 2 - 24, H / 2 - 24, 48), fr5, 3000, i * 30, "linear");
+      }
+      var gs = Math.min(W, H) * .8, ge = em(ch, W / 2 - gs / 2, H / 2 - gs * .55, gs);
+      go(ge, [{ transform: "scale(0) rotate(-360deg)", opacity: 0, offset: 0 }, { transform: "scale(0) rotate(-360deg)", opacity: 0, offset: .5 }, { transform: "scale(1.1) rotate(0deg)", opacity: 1, offset: .65 }, { transform: "scale(1) rotate(0deg)", opacity: 1, offset: .75 }, { transform: "scale(1.05) rotate(0deg)", opacity: 1, offset: .88 }, { transform: "scale(1.3) rotate(0deg)", opacity: 0 }], 5000, 0, "ease-out");
+    } else {                  // full-screen brain rot
+      var words = PH;
+      e = document.createElement("div"); e.className = "slay"; e.textContent = words[rnd(words.length)]; P.appendChild(e);
+      go(P, [{ background: "rgba(20,10,40,0)" }, { background: "rgba(20,10,40,.8)", offset: .1 }, { background: "rgba(20,10,40,.8)", offset: .85 }, { background: "rgba(20,10,40,0)" }], 5000, 0, "linear");
+      if (reduce) go(e, [{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 1, offset: .85 }, { opacity: 0 }], 5000, 0, "linear");
+      else {
+        go(e, [{ opacity: 0, transform: "scale(.4) rotate(-6deg)" }, { opacity: 1, transform: "scale(1) rotate(2deg)", offset: .12 }, { transform: "scale(1.08) rotate(-2deg)", offset: .3 },
+          { transform: "scale(1) rotate(2deg)", offset: .5 }, { transform: "scale(1.08) rotate(-2deg)", offset: .7 }, { opacity: 1, transform: "scale(1) rotate(0)", offset: .85 }, { opacity: 0, transform: "scale(1.25)" }], 5000, 0, "linear");
+        var rot = ["🔥", "💅", "✨", "💀", "😭", "🫶", "🗿"];
+        for (i = 0; i < 14; i++) go(em(rot[rnd(rot.length)], W * Math.random(), H, 44), [{ transform: "translateY(0) rotate(0)", opacity: 1 }, { transform: "translateY(" + -(H + 100) + "px) rotate(" + (rnd(2) ? 360 : -360) + "deg)", opacity: 1 }], 2600, rnd(2300), "ease-in");
+      }
+    }
+    if (k !== 2 && k !== 3 && !reduce) banner(PH[rnd(PH.length)]);
+    partyTimer = setTimeout(stopParty, 5000);
+  }
+  function tally() {
+    celebrate();
+    var k = lesson + ":" + mode, nx = NEXTMODE[mode];
+    counts[k] = (counts[k] || 0) + 1;
+    if (!nx || counts[k] < 2) return;
+    var d = say("Nice work! You've finished " + counts[k] + " problems here. Ready for a new challenge? Try " + MODES[nx] + " mode, or keep practicing this one.");
+    var b = document.createElement("button"); b.className = "link"; b.textContent = "Switch to " + MODES[nx];
+    b.addEventListener("click", function () { setMode(nx); });
+    d.appendChild(document.createElement("br")); d.appendChild(b);
+  }
+  function onSolved() {
+    var nx = $("next"); nx.textContent = "Finished! Another?";
+    nx.hidden = false; nx.disabled = false; if (mode !== "demo") nx.focus();
+    tally();
+  }
+  var useCustom = null;
+  function ints(E) { return E.every(function (q) { return allV().every(function (v) { return q[CK[v]].d === 1; }); }); }
+  // can the demo walk through this system? (whole-number coefficients, and no zero coefficients to eliminate)
+  function demoOK(E) {
+    if (!ints(E)) return false;
+    return lesson === 1 ? !!E[0].a.n : lesson === 3 ? !!bestElim(E) : E.every(function (q) { return q.a.n && q.b.n; });
+  }
+  function setMode(m) {
+    var sel = $("modeSel");
+    // equations typed in Create carry over to the mode the student picks
+    if (mode === "create" && m !== "create" && orig.length === allV().length) {
+      if (m === "demo" && !demoOK(orig)) { sel.value = "create"; note("The demo can't walk through this one: a coefficient is zero or not a whole number. Try Calculate or Sequence."); return; }
+      useCustom = JSON.parse(JSON.stringify(orig));
+    }
+    mode = m; document.documentElement.dataset.mode = m;
+    sel.value = m; sel.style.color = MCOL[m];
+    newProblem();
+  }
+
+  function newProblem() {
+    calc = null; hinted = false; mulNote = null; pend = null; stopParty(); stopDemo(); closeAsk(false); busy = false;
+    var plain = mode === "solo" || mode === "create";
+    if (mode === "demo") { curDm = demoN % 2 + 1; demoN++; }
+    if (mode === "create") orig = [];
+    else if (useCustom) { orig = useCustom; useCustom = null; }
+    else orig = makeProblem();
+    ws = JSON.parse(JSON.stringify(orig));
+    sys = []; sysV = []; elim = ""; elimInfo = lesson === 3 && orig.length === 3 && ints(orig) ? bestElim(orig) : null;
+    hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = [];
+    steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }];
+    logEl.innerHTML = "";
+    var nx = $("next"); nx.disabled = false; nx.hidden = mode !== "demo"; nx.textContent = "Next step";
+    $("hint").hidden = plain; $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; updUndo();
+    $("top").style.display = plain ? "none" : ""; $("vals").style.display = plain ? "none" : "";
+    var building = mode === "create" && orig.length < allV().length;
+    $("creator").hidden = !building; $("answer").hidden = !plain || building;
+    render(-1); head();
+    if (mode === "demo") peekNext();
+    if (plain) buildAnswer();
+    if (mode === "solo") note("Work this out on your own, then type your answer.");
+    if (building) crPrompt();
+  }
+
+  // ---- solo and create: no help, just the problem and an answer ----
+  function dt2(a, b, c, d) { return add(mul(a, d), neg(mul(b, c))); }
+  function dt3(M) {
+    return add(add(mul(M[0][0], dt2(M[1][1], M[1][2], M[2][1], M[2][2])), neg(mul(M[0][1], dt2(M[1][0], M[1][2], M[2][0], M[2][2])))), mul(M[0][2], dt2(M[1][0], M[1][1], M[2][0], M[2][1])));
+  }
+  // the unique solution (as fractions, in x, y, z order), or null
+  function solveSys(E) {
+    if (lesson === 1) { var q1 = E[0], kk = q1.ks.reduce(function (t, k) { return add(t, k.k); }, mk(0)); return q1.a.n ? [mul(add(q1.c, neg(kk)), inv(q1.a))] : null; }
+    var vs = allV(), M = E.map(function (q) { return vs.map(function (v) { return q[CK[v]]; }); });
+    var dd = function (A) { return vs.length === 3 ? dt3(A) : dt2(A[0][0], A[0][1], A[1][0], A[1][1]); }, D = dd(M);
+    if (!D.n) return null;
+    return vs.map(function (v, j) { return mul(dd(M.map(function (r, i) { var r2 = r.slice(); r2[j] = E[i].c; return r2; })), inv(D)); });
+  }
+  function buildAnswer() {
+    $("ansFields").innerHTML = allV().map(function (v) { return "<label class=\"afield\"><i>" + v + "</i> = <input id=\"ans_" + v + "\" autocomplete=\"off\" aria-label=\"" + v + "\"></label>"; }).join("");
+    $("ansKind").value = "one"; $("ansKind").hidden = lesson === 1; $("ansFields").hidden = false;
+    $("ansMsg").textContent = ""; $("ansMsg").className = ""; ansTouched = false; credited = false;
+  }
+  function checkAnswer() {
+    var cl = classify(orig), kind = lesson === 1 ? "one" : $("ansKind").value, ok = false, miss = false, m = $("ansMsg");
+    ansTouched = true; updUndo();
+    if (kind !== "one") ok = kind === cl;
+    else if (cl === "one") {
+      var sol = solveSys(orig); ok = true;
+      allV().forEach(function (v, j) { var t = parse($("ans_" + v).value); if (!t) miss = true; else if (!same(t, sol[j])) ok = false; });
+    }
+    if (miss) { m.className = "bad"; m.textContent = "Enter a number for each variable, like 3, -2 or 1/2."; return; }
+    if (!ok) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
+    m.className = "ok"; m.textContent = "Correct!";
+    var nx = $("next"); nx.textContent = "Finished! Another?"; nx.hidden = false; nx.disabled = false;
+    if (!credited) { credited = true; tally(); }
+  }
+  // an equation as written in a book: variables and numbers on either side, collected into a x + b y + e z = c
+  function parseOne(s) {
+    var pa = /\(/.test(s), t = s.replace(/[()]/g, "").replace(/\+-/g, "-").replace(/--/g, "+"), p = t.split("=");
+    var bad = "Write it with x on the left and a number on the right, like 3x-2=10.";
+    if (p.length !== 2 || !p[0] || !p[1]) return bad;
+    var L = parseSide(p[0]), R = parse(p[1]), first = (p[0].match(/[+-]?[^+-]+/) || [""])[0];
+    if (!L || !R || L.y.n || L.z.n || !L.x.n) return bad;
+    var q = { a: L.x, b: mk(0), e: mk(0), ks: [], c: R };
+    if (L.k.n) { var pre = !/x/.test(first); q.ks = [{ v: pre ? "p" : "s", k: L.k, pa: pa && !pre && L.k.n < 0 }]; }
+    return q;
+  }
+  function parseAny(s) {
+    s = String(s).toLowerCase().replace(/−/g, "-").replace(/[\s*·⋅]/g, "");
+    if (lesson === 1) return parseOne(s);
+    var p = s.split("=");
+    if (p.length !== 2 || !p[0] || !p[1]) return "Type an equation with one = sign, like " + (lesson === 3 ? "2x+3y-z=12." : "2x+3y=12.");
+    var L = parseSide(p[0]), R = parseSide(p[1]);
+    if (!L || !R) return "I couldn't read that. Use numbers, " + (lesson === 3 ? "x, y, z" : "x, y") + ", + and −.";
+    if (lesson === 2 && (L.z.n || R.z.n)) return "This lesson uses x and y. Use the dropdown to switch to 3×3 if your equation has z.";
+    var q = { a: add(L.x, neg(R.x)), b: add(L.y, neg(R.y)), e: add(L.z, neg(R.z)), ks: [], c: add(R.k, neg(L.k)) };
+    if (!allV().some(function (v) { return q[CK[v]].n; })) return "That equation needs at least one variable.";
+    return q;
+  }
+  function crPrompt() {
+    $("crT").textContent = (lesson === 1 ? "Type your equation" : "Equation " + (orig.length + 1) + " of " + allV().length) + ": type it the way it's written, like " + (lesson === 3 ? "2x+3y-z=12" : lesson === 1 ? "3x-2=10" : "2x+3y=12");
+    $("crIn").value = ""; $("crErr").textContent = ""; $("crIn").focus();
+  }
+  function crAdd() {
+    var r = parseAny($("crIn").value), err = $("crErr");
+    if (typeof r === "string") { err.textContent = r; return; }
+    var E = orig.concat([r]);
+    orig = E; ws = JSON.parse(JSON.stringify(orig)); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }];
+    render(-1); updUndo();
+    if (orig.length < allV().length) { crPrompt(); return; }
+    elimInfo = lesson === 3 && ints(orig) ? bestElim(orig) : null;
+    $("creator").hidden = true; $("answer").hidden = false; buildAnswer();
+    note("Your equations are in. Type your solution to check it, or choose Demo, Sequence or Calculate from the mode menu to work through them.");
+  }
+
+  // the demo button names the step it is about to do
+  function peekNext() { pend = locked ? null : nextStep(); if (mode === "demo" && !locked) $("next").textContent = pend ? stepLabel(pend) : "Next step"; }
+  // why the next step makes sense (the demo's Explain button)
+  function explain(s) {
+    var t = s[0], q = ws[s[1]], k = q && q.ks[s[2]];
+    if (t === "show") return "We want one variable to cancel when we add the equations. Multiplying equation " + (s[1] + 1) + " by " + wrap(s[2]) + " makes its coefficient the opposite of the matching coefficient in the other equation.";
+    if (t === "mul") return "Multiply every term, on both sides of the equation, so it stays balanced.";
+    if (t === "add") return "One variable now has opposite coefficients, so adding the two equations makes it disappear. That leaves a simpler equation.";
+    if (t === "coef") return "The variable is being multiplied by a number. Dividing both sides by that number undoes the multiplication and leaves the variable by itself. Whatever we do to one side, we do to the other.";
+    if (t === "const") return k && k.k.n < 0
+      ? "There is a negative number, " + sg(k.k) + ", on the variable's side. Adding " + sg(ab(k.k)) + " to both sides cancels it, because adding the opposite makes 0."
+      : "There is a + " + (k ? sg(k.k) : "number") + " on the variable's side. Subtracting it from both sides cancels it and leaves the variable's term alone.";
+    if (t === "calc") return "Now do the arithmetic to turn it into a single number.";
+    if (t === "comb") return "Two plain numbers sit side by side, so we can combine them into one number. That is called combining like terms.";
+    if (t === "simp") return "Putting a value in for a variable made a multiplication" + (k ? ", " + kview(q, k, curVs()).prompt : "") + ". Multiplying gives a single number.";
+    return "We found " + s[1] + " = " + (vals[s[1]] ? sg(vals[s[1]]) : "a number") + ". Putting that value in place of " + s[1] + " in an equation leaves one fewer unknown, so we can solve for the next variable.";
+  }
+  function stepLabel(s) {
+    var t = s[0], q = ws[s[1]];
+    if (t === "show") return "Multiply equation " + (s[1] + 1) + " by " + wrap(s[2]);
+    if (t === "mul") return "Do the multiplication";
+    if (t === "add") return "Add equations";
+    if (t === "coef") return "Divide both sides";
+    if (t === "const") return q && q.ks[s[2]] && q.ks[s[2]].k.n < 0 ? "Add to both sides" : "Subtract from both sides";
+    if (t === "comb") return "Combine like terms";
+    if (t === "calc") return "Calculate " + (q ? q.raw : "");
+    if (t === "simp") return q && q.ks[s[2]] ? "Calculate " + kview(q, q.ks[s[2]], curVs()).prompt : "Calculate";
+    return "Substitute " + s[1];
+  }
+
+  $("lesson").addEventListener("change", function () { lesson = +this.value; if (mode === "create") orig = []; useCustom = null; setMode("demo"); });
+  $("crAdd").addEventListener("click", crAdd);
+  $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
+  $("ansGo").addEventListener("click", checkAnswer);
+  $("ansKind").addEventListener("change", function () { $("ansFields").hidden = this.value !== "one"; });
+  $("answer").addEventListener("input", function () { ansTouched = true; updUndo(); });
+  $("answer").addEventListener("keydown", function (e) { if (e.key === "Enter") checkAnswer(); });
+  $("modeSel").addEventListener("change", function () { setMode(this.value); });
+  $("undo").addEventListener("click", undo);
+  $("show").addEventListener("click", showWork);
+  $("hint").addEventListener("click", function () {
+    if (mode === "demo") { note(pend ? explain(pend) : "This problem is solved. Nice work!"); return; }
+    if (!locked) hinted = true;
+    note(hintText());
+  });
+  $("sheetX").addEventListener("click", function () { $("sheet").hidden = true; });
+  $("next").addEventListener("click", function () {
+    if (mode === "demo" && !locked) demoStep(); else newProblem();
+  });
+  $("askOk").addEventListener("click", confirmAsk);
+  $("askNo").addEventListener("click", function () { closeAsk(true); });
+  $("askIn").addEventListener("keydown", function (e) { if (e.key === "Enter") confirmAsk(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (!$("ask").hidden) closeAsk(true); else if (!$("sheet").hidden) $("sheet").hidden = true;
+  });
+
+  window.addEventListener("resize", function () { colMin = []; if (ws.length) render(-1); });
+  setMode("demo");
+</script>
+</body>
+</html>
