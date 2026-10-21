@@ -237,10 +237,8 @@
   .pgCap{min-height:1.2em;max-width:12rem;text-align:center;font:500 .9rem/1.35 system-ui,sans-serif;margin-bottom:1.2rem}
   .pgCap:empty{margin-bottom:.8rem}
   .pgCtl .lbl{font:700 .78rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-bottom:.1rem}
-  .tog{box-sizing:border-box;width:10.5em;display:flex;align-items:center;gap:.6em;font:600 .92rem system-ui,sans-serif;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:999px;padding:.55em .9em;cursor:pointer;text-align:left}
-  .tog::before{content:"";flex:none;width:1.05em;height:1.05em;box-sizing:border-box;border:2px solid currentColor;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.85em;line-height:1}
+  .tog{box-sizing:border-box;width:10.5em;display:flex;align-items:center;justify-content:center;gap:.6em;font:600 .92rem system-ui,sans-serif;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:999px;padding:.55em .9em;cursor:pointer;text-align:center}
   .tog[aria-pressed="true"]{background:var(--plus);border-color:var(--plus);color:#fff}
-  .tog[aria-pressed="true"]::before{content:"✓";background:#fff;border-color:#fff;color:var(--plus);font-weight:900}
   .tog:focus-visible{outline:3px solid var(--plus);outline-offset:3px}
   .play .ctl-sel select,.play .ctl-sel label,.play .ctl-btn,.play .composer,.play .log{display:none!important}
   @media (max-width:760px){
