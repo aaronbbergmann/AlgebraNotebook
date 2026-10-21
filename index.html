@@ -2560,6 +2560,19 @@
       if (PG.show.graph) curvePts(g).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#C74440", "stroke-width": ".13", "stroke-linejoin": "round" })); });
       if (PG.show.graph) for (var v = -2; v <= 2; v++) { var y = g(v + H()); if (Math.abs(y) <= 10) S.appendChild(svgEl("circle", { cx: v + H(), cy: -y, r: .2, fill: "#C74440" })); }
     }
+    // the two transformation handles sit underneath every other dot
+    // the two points are always there to drag, even with the graph hidden
+    var vx = H(), vy = K();
+    var vg = svgEl("g", { "data-pt": "v", style: "cursor:grab" });
+    vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .62, fill: "#2E9E4F", "fill-opacity": ".3" }));
+    vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .2, fill: "#2E9E4F" }));
+    S.appendChild(vg);
+    if (stretches()) {
+      var ag = svgEl("g", { "data-pt": "a", style: "cursor:grab" });
+      ag.appendChild(svgEl("circle", { cx: PG.pa[0], cy: -PG.pa[1], r: .62, fill: "#6042A6", "fill-opacity": ".3" }));
+      ag.appendChild(svgEl("circle", { cx: PG.pa[0], cy: -PG.pa[1], r: .2, fill: "#6042A6" }));
+      S.appendChild(ag);
+    }
     TB.targets.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .34, fill: "#E0402F" })); });
     PG.pts.forEach(function (p, j) {
       var sg2 = svgEl("g", { "data-sp": j, style: "cursor:pointer" });
@@ -2573,18 +2586,6 @@
       });
     }
     PG.clk.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .3, fill: "none", stroke: "#2D70B3", "stroke-width": ".1" })); });
-    // the two points are always there to drag, even with the graph hidden
-    var vx = H(), vy = K();
-    var vg = svgEl("g", { "data-pt": "v", style: "cursor:grab" });
-    vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .62, fill: "#C74440", "fill-opacity": ".3" }));
-    vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .2, fill: "#C74440" }));
-    S.appendChild(vg);
-    if (stretches()) {
-      var ag = svgEl("g", { "data-pt": "a", style: "cursor:grab" });
-      ag.appendChild(svgEl("circle", { cx: PG.pa[0], cy: -PG.pa[1], r: .62, fill: "#6042A6", "fill-opacity": ".3" }));
-      ag.appendChild(svgEl("circle", { cx: PG.pa[0], cy: -PG.pa[1], r: .2, fill: "#6042A6" }));
-      S.appendChild(ag);
-    }
   }
   function dialOn() { return !!(PG.show.table || PG.subd); }
   function posDial() {
@@ -2865,7 +2866,7 @@
       function (n) { cap("Start with the equation. It names the family and every transformation."); tap(tog("eq"), n); },
       function (n) { cap("Change Family steps through the four families. Let's choose quadratic."); tap($("pgFam"), function () { tap($("pgFam"), function () { tap($("pgFam"), n); }); }); },
       function (n) { cap("Press Graph to see the curve while we change it."); tap(tog("graph"), n); },
-      function (n) { cap("Drag the red point to move the vertex. The equation changes."); drag("v", [-2, 2], n); },
+      function (n) { cap("Drag the green point to move the vertex. The equation changes."); drag("v", [-2, 2], n); },
       function (n) { cap("Drag the purple point to change the stretch or shrink."); drag("a", [PG.pa[0], .5], n); },
       function (n) { cap("Every drag changes the equation again."); drag("v", [1, -3], n); },
       function (n) { drag("a", [PG.pa[0], 3], n); },
