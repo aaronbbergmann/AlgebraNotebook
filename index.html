@@ -2439,6 +2439,11 @@
       document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); document.addEventListener("pointercancel", up);
     }
     function canSub() { var m = TB.mode(); return m === "quiz" ? QZ.step === 1 : m === "play" ? fillMode() : false; }
+    function rowAlert(i) {
+      var td = T.querySelector("tbody tr[data-r=\"" + i + "\"] td.yv"); if (!td) return; var rc = td.getBoundingClientRect();
+      rvMark("bad", rc.left + 18, rc.top + rc.height / 2);
+      td.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
+    }
     function yAt(ev) { var l = document.elementsFromPoint(ev.clientX, ev.clientY); for (var k = 0; k < l.length; k++) { var t = l[k].closest && l[k].closest("tbody td.yv"); if (t) return t; } return null; }
     function yDrag(e, i) {
       var val = String(TB.y(TB.rows()[i])), hot = null;
@@ -2468,11 +2473,16 @@
     });
     T.addEventListener("pointerdown", function (e) {
       var tr = e.target.closest("tbody tr[data-r]"), m = TB.mode(); if (!tr || !m || e.target.closest("input") || (m === "play" && e.target.closest("td:first-child"))) return;
-      var i = +tr.dataset.r, p, ok;
+      var i = +tr.dataset.r, p, ok, fillRow = null;
       // while the table is being filled in, a finished y-value can be dragged onto another y cell to copy it there
       if (e.target.closest("td.yv") && canSub() && TB.rows()[i] && TB.rows()[i].done) { yDrag(e, i); return; }
       if (m === "quiz") { ok = QZ.step === 2 && TB.rows()[i] && TB.rows()[i].done; if (ok) p = TB.pt(i); }
-      else if (fillMode()) { ok = TB.rows()[i] && TB.rows()[i].done; if (ok) p = TB.pt(i); }
+      else if (fillMode()) {
+        // a row can be dragged to the graph before its y-value is worked out (it is then checked by where it lands), but a wrong y-value already typed in stops the drag and raises the alert
+        var r0 = TB.rows()[i]; if (!r0 || !PG.subd) return;
+        if (!r0.done && String(r0.tv || "").trim()) { rowAlert(i); return; }
+        ok = true; p = TB.pt(i); fillRow = r0;
+      }
       else if (PG.show.table) { ok = true; var x = i - 2 + (PG.off || 0); p = [x, g(x)]; }
       if (!ok) return;
       start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { TB.targets = [p]; drawPlay(); } }, null, function (ev) {
@@ -2484,6 +2494,7 @@
           if (m === "quiz") { var y = gridTo(q[1], p[1]); if (!QZ.pts.some(function (z) { return same(z, x, y); })) QZ.pts.push([x, y]); qzDraw(); return; }
           var y2 = gridTo(q[1], p[1]);
           if (!PG.pts.some(function (z) { return same(z, x, y2); })) PG.pts.push([x, y2]);
+          if (fillRow && !fillRow.done) { fillRow.sub = true; fillRow.done = true; fillRow.tv = ""; }
         }
         if (m === "play") drawPlay();
       });
