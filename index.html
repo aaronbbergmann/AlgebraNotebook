@@ -2663,7 +2663,7 @@
       if (ptOpen && ptIdx === j) sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .8, fill: "none", stroke: "#2D70B3", "stroke-width": ".12" }));
       sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .5, fill: "#111", "fill-opacity": ".1" })); sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .24, fill: "#111" })); S.appendChild(sg2);
     });
-    if (PG.shape) {
+    if (PG.shape && !PG.show.graph) {
       S.appendChild(svgEl("polyline", { points: shapePts(PG.shape), fill: "none", stroke: "#2D70B3", "stroke-width": ".12", "stroke-linejoin": "round" }));
       handles(PG.shape).forEach(function (h) {
         var hg = svgEl("g", { "data-qh": h.id, style: "cursor:grab" });
