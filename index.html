@@ -2831,15 +2831,25 @@
   function pgReveal(part) {
     if (part === "table") {
       var rows = TB.rows(), trs = $("pgTable").querySelectorAll("tbody tr"), info = [];
+      // a V or a parabola whose table is not centered on the vertex: the x-values get a red "!" and the table scrolls to the vertex
+      var needScroll = fillMode() && PG.subd && shifts() && (PG.off || 0) !== H(), oldX = null;
+      if (needScroll) oldX = [].map.call(trs, function (tr) { var td = tr.firstElementChild; return { txt: td.textContent, rc: td.getBoundingClientRect() }; });
       rows.forEach(function (r, i) {
+        if (needScroll) return;
         var td = trs[i] && trs[i].lastElementChild; if (!td) return;
         if (r.done) info.push({ i: i, ok: true });
         else if (String(r.tv || "").trim()) info.push({ i: i, ok: false, txt: r.tv, rc: td.getBoundingClientRect() });
       });
-      if (!info.length) return null;
+      if (!info.length && !needScroll) return null;
       info.forEach(function (o) { if (!o.ok) { var r = rows[o.i]; r.sub = true; r.done = true; r.tv = ""; } });
+      if (needScroll) PG.off = H();
       return function () {
         var t2 = $("pgTable").querySelectorAll("tbody tr");
+        if (needScroll) oldX.forEach(function (o, i) {
+          var td = t2[i] && t2[i].firstElementChild; if (!td) return; var rc = td.getBoundingClientRect();
+          var d = document.createElement("div"); d.className = "rvOld cell"; d.textContent = o.txt; d.style.cssText = "left:" + rc.left + "px;top:" + rc.top + "px;width:" + rc.width + "px;height:" + rc.height + "px"; rvFadeOut(d);
+          rvFadeIn(td, [{ color: "rgba(27,36,51,0)" }, { color: "rgba(27,36,51,0)", offset: .3 }, { color: "rgb(27,36,51)" }]); rvMark("bad", rc.left + rc.width / 2, rc.top + rc.height / 2);
+        });
         info.forEach(function (o) {
           var td = t2[o.i] && t2[o.i].lastElementChild; if (!td) return; var rc = td.getBoundingClientRect(), cx = rc.left + 18, cy = rc.top + rc.height / 2;
           if (o.ok) rvMark("ok", cx, cy);
