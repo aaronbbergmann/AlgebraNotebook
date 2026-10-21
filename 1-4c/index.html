@@ -2160,7 +2160,13 @@
   });
   $("qzAgain").addEventListener("click", qzStart);
   $("qzIn").addEventListener("keydown", function (e) { if (e.key === "Enter" && mode !== "demo") qzCheck(); });
-  $("pgTable").addEventListener("keydown", function (e) { if (e.key === "Enter" && mode !== "demo" && e.target.classList.contains("qzCell")) qzCheck(); });
+  $("pgTable").addEventListener("keydown", function (e) {
+    if (mode === "demo" || !e.target.classList.contains("qzCell")) return;
+    var c = [].slice.call(document.querySelectorAll(".qzCell")), i = c.indexOf(e.target);
+    if (e.key === "ArrowDown" || (e.key === "Enter" && i < c.length - 1)) { e.preventDefault(); c[Math.min(i + 1, c.length - 1)].focus(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); c[Math.max(i - 1, 0)].focus(); }
+    else if (e.key === "Enter") qzCheck();   // Enter in the last cell checks the table
+  });
   function enterQuiz() {
     stopDemo(); stopParty(); closeAsk(false);
     document.body.classList.add("quiz"); document.body.classList.remove("play");
