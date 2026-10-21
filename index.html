@@ -2869,6 +2869,7 @@
       function (n) { cap("Drag the green point to move the vertex. The equation changes."); drag("v", [-2, 2], n); },
       function (n) { cap("Drag the purple point to change the stretch or shrink."); drag("a", [PG.pa[0], .5], n); },
       function (n) { cap("Every drag changes the equation again."); drag("v", [1, -3], n); },
+      function (n) { cap("Drag the purple point below the x-axis: a negative stretch flips the graph upside down."); drag("a", [PG.pa[0], -2], n); },
       function (n) { drag("a", [PG.pa[0], 3], n); },
       function (n) { cap("Let's aim for g(x) = 2(x \u2212 3)\u00b2 + 1. First the vertex..."); drag("v", [3, 1], n); },
       function (n) { cap("...and then the stretch of 2."); drag("a", [PG.pa[0], 2], n); },
