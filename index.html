@@ -2571,7 +2571,8 @@
   function fname() { return A() === 1 && H() === 0 && K() === 0 ? "f" : "g"; }
   function eqHTML() { return "<i>" + fname() + "</i>(<i>x</i>) = " + rhsHTML(); }
   var TMG = "#2E9E4F", TMP = "#6042A6";
-  function tmVals() { var T = PG.tm; if (!T) return null; if (T.stage === 0) return T.cur ? [T.cur[0], T.cur[1], 1] : null; var y = T.stage === 1 ? (T.cur ? T.cur[1] : T.g[1]) : T.p; return [T.g[0], T.g[1], y - T.g[1]]; }
+  function tmO() { return [0, pf(0)]; }   // where the parent crosses the y-axis: the origin, or (0, 1) for the constant function
+  function tmVals() { var T = PG.tm, O = tmO(); if (!T) return null; if (T.stage === 0) return T.cur ? [T.cur[0] - O[0], T.cur[1] - O[1], 1] : null; var y = T.stage === 1 ? (T.cur ? T.cur[1] : T.g[1]) : T.p; return [T.g[0] - O[0], T.g[1] - O[1], y - T.g[1]]; }
   function pgDescUpd() { var v = tmVals(); $("pgDesc").innerHTML = PG.tm ? (v ? descHTML(v[0], v[1], v[2]) : descHTML(0, 0, 1)) : PG.show.desc ? descHTML() : PG.tAns ? descHTML(PG.tAns.h, PG.tAns.k, PG.tAns.a) : ""; }
   function tmRefresh() { drawGraph(); pgDescUpd(); }
   function tmMove(p) {
@@ -2579,7 +2580,7 @@
     var x = shifts() ? Math.max(-10, Math.min(10, Math.round(p[0]))) : 0, y = Math.max(-10, Math.min(10, Math.round(p[1])));
     if (T.cur && T.cur[0] === x && T.cur[1] === y) return; T.cur = [x, y]; tmRefresh();
   }
-  function tmDone() { var v = tmVals(), T = PG.tm; PG.tm = null; if (T && T.g) PG.tAns = { h: T.g[0], k: T.g[1], a: stretches() ? v[2] : 1 }; drawPlay(); }
+  function tmDone() { var v = tmVals(), T = PG.tm; PG.tm = null; if (T && T.g) PG.tAns = { h: v[0], k: v[1], a: stretches() ? v[2] : 1 }; drawPlay(); }
   function tmClick() {
     var T = PG.tm; if (!T) return;
     if (T.stage === 0) { if (!T.cur) return; T.g = T.cur.slice(); T.stage = 1; if (!stretches()) { tmDone(); return; } }
@@ -2641,7 +2642,7 @@
     // the two points are always there to drag, even with the graph hidden
     if (PG.tm) {
       var T = PG.tm, gp = T.stage >= 1 ? T.g : T.cur;
-      if (T.stage === 0 && gp) { tmArrow(S, 0, 0, gp[0], 0, TMG); tmArrow(S, gp[0], 0, gp[0], gp[1], TMG); }
+      if (T.stage === 0 && gp) { var O = tmO(); tmArrow(S, O[0], O[1], gp[0], O[1], TMG); tmArrow(S, gp[0], O[1], gp[0], gp[1], TMG); }
       if (T.stage >= 1) tmArrow(S, T.g[0] + 1, T.g[1], T.g[0] + 1, T.stage === 1 ? (T.cur ? T.cur[1] : T.g[1]) : T.p, TMP);
       PG.pts.forEach(function (p, j) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .24, fill: "#111" })); });
       return;
