@@ -2712,7 +2712,7 @@
     [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part] ? "true" : "false"); });
     TB.sync(); $("qzTools").hidden = false; posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
-    { var sepr = [-2, -1, 0, 1, 2].some(function (u) { return Math.abs(g(u) - pf(u)) > 1e-9; }), tv = !!(PG.show.graph && PG.show.parent && sepr), tb = document.querySelector(".qzTools [data-tool=tr]"); if (!tv) PG.tm = null; tb.hidden = !tv; tb.classList.toggle("on", !!PG.tm); }
+    { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = false; tb.classList.toggle("on", !!PG.tm); }
   }
   // ---- editing a point's coordinates: double-click a plotted point (or the dot button) and a small panel opens below the Show buttons ----
   var ptOpen = false, ptIdx = -1, ptTimer = 0;
