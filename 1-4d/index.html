@@ -1929,6 +1929,7 @@
       S.appendChild(g);
     });
     if (QZ.clk.length) QZ.clk.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .3, fill: "none", stroke: blue, "stroke-width": ".1" })); });
+    drawGhost(S, QZ, blue);
   }
   function shapePts(sh) {
     if (sh.t === "line") {
@@ -2112,6 +2113,15 @@
   function gRef() { if (G_() === PG) drawPlay(); else qzRender(); }
   function gDraw() { if (G_() === PG) drawPlay(); else qzDraw(); }
   function gSnap() { var G = G_(); (G.hist = G.hist || []).push(JSON.stringify([G.pts, G.shape, G.clk])); if (G.hist.length > 60) G.hist.shift(); }
+  // with a tool picked, a ghost of the shape rides along with the cursor: first it is placed (a point on the line, or the vertex), then its dilation follows the cursor
+  function toolGhost(G) {
+    if (!G.tool || !G.hv) return null; var h = G.hv, t = G.tool;
+    if (t === "line") { if (!G.clk.length) return { t: "line", p1: h, p2: [h[0] + 1, h[1] + 1] }; var p = G.clk[0]; return { t: "line", p1: p, p2: h[0] === p[0] && h[1] === p[1] ? [p[0] + 1, p[1] + 1] : h }; }
+    if (!G.clk.length) return { t: t, h: h[0], k: h[1], a: 1 };
+    var v = G.clk[0], dx = h[0] - v[0], a = dx ? Math.round((h[1] - v[1]) / (t === "V" ? Math.abs(dx) : dx * dx) * 4) / 4 || .25 : 1;
+    return { t: t, h: v[0], k: v[1], a: a };
+  }
+  function drawGhost(S, G, col) { var sh = toolGhost(G); if (sh) S.appendChild(svgEl("polyline", { points: shapePts(sh), fill: "none", stroke: col, "stroke-width": ".12", "stroke-linejoin": "round", "stroke-opacity": ".45", "stroke-dasharray": ".3 .2" })); }
   function qzPlace(tool, x, y) {
     var G = G_(); gSnap();
     x = snap(x); y = snap(y);
@@ -2145,8 +2155,10 @@
       if (h && !G.tool) { gSnap(); dragH = h.dataset.qh; S.setPointerCapture(e.pointerId); e.preventDefault(); return; }
       if (G.tool) { var p = qAt(e); qzPlace(G.tool, p[0], p[1]); }
     });
+    S.addEventListener("pointerleave", function () { var G = G_(); if (G.hv) { G.hv = null; gDraw(); } });
     S.addEventListener("pointermove", function (e) {
       if (PG.tm && G_() === PG) { tmMove(qAt(e)); return; }
+      { var G0 = G_(); if (G0.tool && !dragH) { var q0 = qAt(e), hv = [snap(q0[0]), snap(q0[1])]; if (!G0.hv || G0.hv[0] !== hv[0] || G0.hv[1] !== hv[1]) { G0.hv = hv; gDraw(); } return; } }
       if (!dragH) return; var p = qAt(e), x = snap(p[0]), y = snap(p[1]), G = G_(), sh = G.shape;
       if (dragH.indexOf("pt:") === 0) { var j = +dragH.slice(3); G.pts[j] = [x, y]; }
       else if (dragH === "l1") sh.p1 = [x, y]; else if (dragH === "l2") sh.p2 = [x, y];
@@ -2672,6 +2684,7 @@
       });
     }
     PG.clk.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .3, fill: "none", stroke: "#2D70B3", "stroke-width": ".1" })); });
+    drawGhost(S, PG, "#2D70B3");
   }
   function dialOn() { return !!(PG.show.table || PG.subd); }
   function posDial() {
@@ -3126,6 +3139,25 @@
       pgWait(600, function () { b.classList.add("simHover"); });
       pgWait(800, function () { handTap(); b.classList.add("simPress"); pgWait(180, function () { b.classList.remove("simPress"); b.classList.remove("simHover"); pgWait(1, then); pgPause(); }); });
     }
+    // click a tool button instead of dragging it: a ghost of the shape follows the cursor, click 1 places the point or vertex, click 2 sets the dilation
+    function hoverTo(a, b, ms, then) {
+      var t0 = null;
+      function step(ts) {
+        if (pgRun !== run) return;
+        if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, x = a[0] + (b[0] - a[0]) * e, y = a[1] + (b[1] - a[1]) * e;
+        PG.hv = [Math.round(x), Math.round(y)]; drawPlay(); handAt(svgPt(x, y));
+        if (u < 1) pgRaf(step); else pgWait(450, then);
+      }
+      pgRaf(step);
+    }
+    function clickTool(tool, p1, p2, then) {
+      var b = document.querySelector(".qzTools [data-tool=" + tool + "]"), st = [-7, -6];
+      handGo(ctr(b), 650);
+      pgWait(800, function () { handTap(); qzTool(tool); handGo(svgPt(st[0], st[1]), 700); pgWait(900, function () {
+        hoverTo(st, p1, 1000, function () { handTap(); qzPlace(tool, p1[0], p1[1]);
+          hoverTo(p1, p2, 1100, function () { handTap(); qzPlace(tool, p2[0], p2[1]); PG.hv = null; drawPlay(); pgWait(1000, then); }); });
+      }); });
+    }
     function trDemo(then) {
       var b = document.querySelector(".qzTools [data-tool=tr]"), h = H(), k = K(), a = A();
       function path(pts, done) { if (!pts.length) { pgWait(300, done); return; } var p = pts.shift(); handGo(svgPt(p[0], p[1]), 650); pgWait(380, function () { tmMove(p); }); pgWait(700, function () { path(pts, done); }); }
@@ -3178,7 +3210,11 @@
       function (n) { cap("The line button drops a line..."); dropShape("line", -4, 2, n); },
       function (n) { cap("...the V button drops an absolute value graph..."); dropShape("V", -4, -2, n); },
       function (n) { cap("...and the \u00d7 button clears the graph."); tapClear(n); },
-      function (n) { cap("Drag each row onto the graph to plot its point. The red dot shows where it belongs."); dragRows(0, n); },
+      function (n) { cap("A button can also be clicked: a ghost of the line follows the cursor. Click once for a point on the line, and again to set its slope."); clickTool("line", [-4, -3], [0, 1], n); },
+      function (n) { cap("The V works the same way: click the vertex, then click to set the stretch."); clickTool("V", [2, -2], [4, 2], n); },
+      function (n) { cap("...and so does the parabola button."); clickTool("U", [-3, 3], [-1, -1], n); },
+      function (n) { cap("Clear the graph again."); tapClear(n); },
+      function (n) { cap("Drag each row onto the graph to plot its point. The yellow dot shows where it belongs."); dragRows(0, n); },
       function (n) { cap("Now drag the parabola button onto the graph, with its vertex on (3, 1)."); dropShape("U", 3, 1, n); },
       function (n) { cap("Drag its side point to set the stretch of 2."); stretch(2, n, 1); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
