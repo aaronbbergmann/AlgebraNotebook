@@ -146,9 +146,35 @@
   .actList li.sel{font-weight:700;background:color-mix(in srgb,var(--plus) 18%,transparent)}
   .actList li:not(.soon):hover,.actList li:not(.soon):focus{background:color-mix(in srgb,var(--plus) 28%,transparent);outline:none}
   .actList li.soon{cursor:default;opacity:.45;text-decoration:line-through}
+  /* ---- Playground: Equation Table Graph Description ---- */
+  :root[data-mode="playground"]{--bg:#FFFFFF;--ink:#1B2433;--plus:#8E2465;--plus-hover:#6E1A4E;--no:#C0301E}
+  .pg{flex:1 0 auto;display:flex;align-items:flex-start;justify-content:center;gap:1.2rem;flex-wrap:wrap;padding:1.2rem .4rem;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
+  .pg[hidden],.frame[hidden]{display:none}
+  .pgGraph{position:relative;flex:1 1 18rem;max-width:30rem;width:100%;aspect-ratio:1;border:1px solid #9AA0A8;background:#fff;box-sizing:border-box;touch-action:none}
+  .pgGraph svg{display:block;width:100%;height:100%}
+  .pgFam{position:absolute;top:.5rem;right:.5rem;font:500 .95rem system-ui,sans-serif;color:#fff;background:#3D6FC1;border:0;border-radius:3px;padding:.55em .9em;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+  .pgFam:hover{background:#2F5BA6}.pgFam:focus-visible{outline:3px solid #1B2433;outline-offset:2px}
+  .pgSide{flex:1 1 16rem;max-width:26rem;display:flex;flex-direction:column;gap:.9rem}
+  .pgTable{border-collapse:collapse;table-layout:fixed;width:100%;font:400 1.05rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;text-align:center}
+  .pgTable th{font-style:italic;font-weight:400;background:#F2F2F2;padding:.55em 0;border-bottom:1px solid #B8BCC2}
+  .pgTable td{background:#E7E7E7;height:2.15em;border-bottom:1px solid #D2D2D2}
+  .pgTable th+th,.pgTable td+td{border-left:1.5px solid #222}
+  .pgEq{font:400 1.45rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;min-height:1.6em}
+  .pgEq i{font-style:italic}
+  .pgDesc{font-size:1.08rem;line-height:1.45}
+  .pgDesc i{font-family:"LM",Georgia,serif;font-style:italic}
+  .pgCtl{display:flex;flex-direction:column;align-items:center;gap:.5rem}
+  .pgCtl[hidden]{display:none}
+  .pgCtl .lbl{font:700 .78rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-bottom:.1rem}
+  .tog{box-sizing:border-box;width:10.5em;display:flex;align-items:center;gap:.6em;font:600 .92rem system-ui,sans-serif;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:999px;padding:.55em .9em;cursor:pointer;text-align:left}
+  .tog::before{content:"";flex:none;width:1.05em;height:1.05em;box-sizing:border-box;border:2px solid currentColor;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.85em;line-height:1}
+  .tog[aria-pressed="true"]{background:var(--plus);border-color:var(--plus);color:#fff}
+  .tog[aria-pressed="true"]::before{content:"✓";background:#fff;border-color:#fff;color:var(--plus);font-weight:900}
+  .tog:focus-visible{outline:3px solid var(--plus);outline-offset:3px}
+  .play .ctl-sel select,.play .ctl-sel label,.play .ctl-btn,.play .composer,.play .log{display:none!important}
   @media (max-width:760px){
     .chat .composer{position:static;border-radius:0;box-shadow:none}
-    body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 20rem}.ctlbox{flex-direction:row;flex-wrap:wrap;gap:.5rem;padding:.5rem .7rem}.ctl-sel{flex-direction:row}.ctl-sel select,.actBtn{width:auto}.actList li{white-space:normal}.ctl-btn{flex-direction:row;flex-wrap:wrap}.ctl-btn .btn{width:auto}
+    body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 20rem}.ctlbox{flex-direction:row;flex-wrap:wrap;gap:.5rem;padding:.5rem .7rem}.ctl-sel{flex-direction:row}.ctl-sel select,.actBtn{width:auto}.actList li{white-space:normal}.ctl-btn{flex-direction:row;flex-wrap:wrap}.ctl-btn .btn{width:auto}.pgCtl{flex-direction:row;flex-wrap:wrap;justify-content:center}.pgCtl .lbl{width:100%;text-align:center}.tog{width:auto}
     .chat{border-left:0;border-top:2px solid color-mix(in srgb,var(--ink) 18%,transparent)}
     .work{font-size:clamp(1.3rem,5.6vw,2.4rem)}
   }
@@ -157,6 +183,14 @@
 </head>
 <body>
   <div class="stage">
+    <section class="pg" id="pg" hidden aria-label="Playground">
+      <div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg><button class="pgFam" id="pgFam" type="button">Change Family</button></div>
+      <div class="pgSide">
+        <table class="pgTable" id="pgTable" aria-label="Table"><thead><tr><th>x</th><th>x</th><th>y</th><th>y</th><th>y</th></tr></thead><tbody></tbody></table>
+        <div class="pgEq" id="pgEq" aria-live="polite"></div>
+        <div class="pgDesc" id="pgDesc" aria-live="polite"></div>
+      </div>
+    </section>
     <div class="frame">
     <div class="center">
     <div class="top" id="top"><section class="eqs orig" id="origEl" aria-label="Original equations"></section><section class="eqs orig" id="sysEl" aria-label="Two-variable equations"></section><section class="vals" id="vals" aria-label="Solved values"></section></div>
@@ -187,7 +221,7 @@
   <aside class="chat" aria-label="Controls and tutor chat">
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Lesson</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
-      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="pgCtl" hidden><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
@@ -1105,6 +1139,7 @@
 
   // ---- activities: AlgebraNotebook is a collection; each built activity sets its top lesson and its progress levels ----
   var ACTS = [
+    ["Playground", "Equation Table Graph Description"],
     ["1.1A", "Parent Functions and Transformations"],
     ["1.1B", "Parent Functions and Transformations: Desmos"],
     ["1.1C", "Parent Functions and Transformations: Shrink Stretch"],
@@ -1120,6 +1155,7 @@
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   var BUILT = {
+    "Playground": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
     "1.4C": { top: 2, key: "algebraProgress:1.4C", levels: [
       [1, "demo", 5, "Demo Mode"], [1, "sequence", 10, "Sequence Mode"],
       [1, "calculate", 15, "Calculate Mode"], [1, "solo", 20, "Solo Mode"],
@@ -1378,7 +1414,7 @@
     $("actLbl").textContent = act; $("actBtn").setAttribute("aria-label", "Activity: " + act + " " + ACTS.filter(function (a) { return a[0] === act; })[0][1]);
     $("actList").innerHTML = ACTS.map(function (a) {
       var ok = !!BUILT[a[0]], sel = a[0] === act;
-      return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? a[0] + " " + a[1] : a[0] + " (coming soon)") + "</li>";
+      return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? a[0] + (BUILT[a[0]].play ? ": " : " ") + a[1] : a[0] + " (coming soon)") + "</li>";
     }).join("");
   }
   function placeActs() {
@@ -1397,7 +1433,8 @@
     if (!BUILT[id] || id === act) return;
     act = id; try { localStorage.setItem("algebraActivity", id); } catch (e) {}
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
-    if (mode === "create") orig = []; useCustom = null; setMode("demo");
+    if (mode === "create") orig = []; useCustom = null;
+    if (BUILT[act].play) enterPlay(); else { leavePlay(); setMode("demo"); }
   }
   $("actBtn").addEventListener("click", function () { if ($("actList").hidden) openActs(); else closeActs(); });
   $("actBtn").addEventListener("keydown", function (e) { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); openActs(); } });
@@ -1412,7 +1449,122 @@
   document.addEventListener("pointerdown", function (e) { if (!$("actList").hidden && !e.target.closest(".act")) closeActs(); });
   window.addEventListener("resize", function () { if (!$("actList").hidden) placeActs(); });
 
-  buildActs(); buildLessons(); updProg(); setMode("demo");
+  // ---- Playground: Equation Table Graph Description (no goals, no progress: just show/hide and drag) ----
+  var PG = { fam: 0, a: 2.25, h: 0, k: 0, pa: [-5, 2.25], show: { eq: false, table: false, graph: false, desc: false, parent: false } };
+  var FAMS = ["constant", "linear", "absolute value", "quadratic"];
+  function pf(x) { var f = FAMS[PG.fam]; return f === "constant" ? 1 : f === "linear" ? x : f === "absolute value" ? Math.abs(x) : x * x; }
+  function shifts() { return PG.fam >= 2; }                 // vertex point moves the graph
+  function stretches() { return PG.fam >= 1; }              // purple point changes a
+  function H() { return shifts() ? PG.h : 0; }
+  function K() { return shifts() ? PG.k : 0; }
+  function A() { return stretches() ? PG.a : 1; }
+  function g(x) { return A() * pf(x - H()) + K(); }
+  function nf(v) { v = Math.round(v * 10000) / 10000; if (Object.is(v, -0)) v = 0; return (v < 0 ? "−" : "") + Math.abs(v); }
+  function eqHTML() {
+    var f = FAMS[PG.fam], a = A(), h = H(), k = K(), co = a === 1 ? "" : a === -1 ? "−" : nf(a);
+    var inner = h === 0 ? "<i>x</i>" : "<i>x</i> " + (h > 0 ? "−" : "+") + " " + nf(Math.abs(h));
+    var body = f === "constant" ? "1" : f === "linear" ? co + "<i>x</i>" : f === "absolute value" ? co + "|" + inner + "|" : (h === 0 ? co + "<i>x</i><sup>2</sup>" : co + "(" + inner + ")<sup>2</sup>");
+    if (f !== "constant" && k) body += " " + (k > 0 ? "+" : "−") + " " + nf(Math.abs(k));
+    return "<i>g</i>(<i>x</i>) = " + body;
+  }
+  function descHTML() {
+    var L = ["Family: " + FAMS[PG.fam]], a = A(), h = H(), k = K(), m = Math.abs(a);
+    if (m !== 1) L.push((m > 1 ? "Vertical stretch" : "Vertical shrink") + " by factor of " + nf(m));
+    if (a < 0) L.push("Reflection over the <i>x</i>-axis");
+    if (h || k) { var t = []; if (h) t.push((h > 0 ? "→ " : "← ") + nf(Math.abs(h))); if (k) t.push((k > 0 ? "↑ " : "↓ ") + nf(Math.abs(k))); L.push("Translation " + t.join(" and ")); }
+    return L.join("<br>");
+  }
+  // table columns: x | parent x | parent y | stretched y | g(x). With Parent off only the first x and the final y show.
+  function tableHTML() {
+    var h = H(), k = K(), a = A(), par = PG.show.parent, rows = "";
+    var on = par ? [h !== 0, true, true, a !== 1, k !== 0] : [true, false, false, false, true];
+    for (var u = -2; u <= 2; u++) {
+      var c = [u + h, u, pf(u), a * pf(u), a * pf(u) + k];
+      if (!par) { c = [u + h, "", "", "", g(u + h)]; }
+      rows += "<tr>" + c.map(function (v, j) { return "<td>" + (PG.show.table && on[j] && v !== "" ? nf(v) : "") + "</td>"; }).join("") + "</tr>";
+    }
+    return rows;
+  }
+  function svgEl(t, at) { var e = document.createElementNS("http://www.w3.org/2000/svg", t); for (var k in at) e.setAttribute(k, at[k]); return e; }
+  // polylines for a curve (a quadratic is cut into pieces where it leaves the window)
+  function curvePts(fn) {
+    var f = FAMS[PG.fam], segs = [], cur = [];
+    if (f === "quadratic") {
+      for (var x = -10.5; x <= 10.501; x += .05) { var y = fn(x); if (y > -12 && y < 12) cur.push(x.toFixed(3) + "," + (-y).toFixed(3)); else if (cur.length) { segs.push(cur); cur = []; } }
+      if (cur.length) segs.push(cur);
+    } else {
+      var xs = f === "absolute value" ? [-10.5, fn === pf ? 0 : H(), 10.5] : [-10.5, 10.5];
+      segs.push(xs.map(function (x) { return x + "," + (-fn(x)); }));
+    }
+    return segs.filter(function (c) { return c.length > 1; }).map(function (c) { return c.join(" "); });
+  }
+  function drawGraph() {
+    var S = $("pgSvg"); S.innerHTML = "";
+    if (PG.show.graph) {
+      var gr = svgEl("g", { stroke: "#E3E5E8", "stroke-width": ".05" });
+      for (var i = -10; i <= 10; i++) { gr.appendChild(svgEl("line", { x1: i, y1: -10, x2: i, y2: 10 })); gr.appendChild(svgEl("line", { x1: -10, y1: i, x2: 10, y2: i })); }
+      S.appendChild(gr);
+      S.appendChild(svgEl("line", { x1: -10, y1: 0, x2: 10, y2: 0, stroke: "#222", "stroke-width": ".09" }));
+      S.appendChild(svgEl("line", { x1: 0, y1: -10, x2: 0, y2: 10, stroke: "#222", "stroke-width": ".09" }));
+      if (PG.show.parent) {
+        curvePts(pf).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#222", "stroke-width": ".07", "stroke-dasharray": ".3 .25" })); });
+        for (var u = -2; u <= 2; u++) S.appendChild(svgEl("circle", { cx: u, cy: -pf(u), r: .13, fill: "#222" }));
+      }
+      curvePts(g).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#C74440", "stroke-width": ".13", "stroke-linejoin": "round" })); });
+      for (var v = -2; v <= 2; v++) { var y = g(v + H()); if (Math.abs(y) <= 10) S.appendChild(svgEl("circle", { cx: v + H(), cy: -y, r: .2, fill: "#C74440" })); }
+    }
+    // the two points are always there to drag, even with the graph hidden
+    var vx = H(), vy = shifts() ? K() : 0;
+    var vg = svgEl("g", { "data-pt": "v", style: "cursor:" + (shifts() ? "grab" : "default") });
+    vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .62, fill: "#C74440", "fill-opacity": ".3" }));
+    vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .2, fill: "#C74440" }));
+    S.appendChild(vg);
+    if (stretches()) {
+      var ag = svgEl("g", { "data-pt": "a", style: "cursor:grab" });
+      ag.appendChild(svgEl("circle", { cx: PG.pa[0], cy: -PG.pa[1], r: .62, fill: "#6042A6", "fill-opacity": ".3" }));
+      ag.appendChild(svgEl("circle", { cx: PG.pa[0], cy: -PG.pa[1], r: .2, fill: "#6042A6" }));
+      S.appendChild(ag);
+    }
+  }
+  function drawPlay() {
+    drawGraph();
+    $("pgTable").querySelector("tbody").innerHTML = tableHTML();
+    $("pgEq").innerHTML = PG.show.eq ? eqHTML() : "";
+    $("pgDesc").innerHTML = PG.show.desc ? descHTML() : "";
+    [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part] ? "true" : "false"); });
+  }
+  // drag: the red point snaps to whole numbers; the purple point's height is the stretch factor a (steps of 0.25, never 0)
+  (function () {
+    var S = $("pgSvg"), which = null;
+    function at(e) { var m = S.getScreenCTM().inverse(), p = S.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; p = p.matrixTransform(m); return { x: p.x, y: -p.y }; }
+    S.addEventListener("pointerdown", function (e) {
+      var t = e.target.closest("[data-pt]"); if (!t) return;
+      which = t.dataset.pt; if (which === "v" && !shifts()) { which = null; return; }
+      S.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    S.addEventListener("pointermove", function (e) {
+      if (!which) return; var p = at(e), cl = function (v) { return Math.max(-10, Math.min(10, v)); };
+      if (which === "v") { var h = Math.round(cl(p.x)), k = Math.round(cl(p.y)); if (h === PG.h && k === PG.k) return; PG.h = h; PG.k = k; }
+      else { var y = Math.round(cl(p.y) * 4) / 4; if (!y) y = p.y < 0 ? -.25 : .25; PG.pa = [Math.round(cl(p.x) * 4) / 4, y]; PG.a = y; }
+      drawPlay();
+    });
+    function end() { which = null; }
+    S.addEventListener("pointerup", end); S.addEventListener("pointercancel", end);
+  })();
+  $("pgFam").addEventListener("click", function () { PG.fam = (PG.fam + 1) % FAMS.length; drawPlay(); });
+  [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function () { PG.show[b.dataset.part] = !PG.show[b.dataset.part]; drawPlay(); }); });
+  function enterPlay() {
+    stopDemo(); stopParty(); closeAsk(false); busy = false; calc = null;
+    document.documentElement.dataset.mode = "playground"; document.body.classList.add("play");
+    $("pg").hidden = false; document.querySelector(".frame").hidden = true; $("pgCtl").hidden = false; $("prog").hidden = true; logEl.innerHTML = "";
+    drawPlay();
+  }
+  function leavePlay() {
+    document.body.classList.remove("play"); $("pg").hidden = true; document.querySelector(".frame").hidden = false; $("pgCtl").hidden = true;
+  }
+
+  buildActs(); buildLessons(); updProg();
+  if (BUILT[act].play) { setMode("demo"); enterPlay(); } else setMode("demo");
 </script>
 </body>
 </html>
