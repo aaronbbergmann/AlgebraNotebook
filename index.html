@@ -2469,6 +2469,14 @@
       rvMark("bad", rc.left + 18, rc.top + rc.height / 2);
       td.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
     }
+    // a y-value that has not been checked is checked the moment its row leaves the table; a wrong one is replaced by the right answer with the red "!"
+    function checkOff(i, r0) {
+      var td = T.querySelector("tbody tr[data-r=\"" + i + "\"] td.yv"), txt = String(r0.tv || "").trim(), rc = td ? td.getBoundingClientRect() : null;
+      r0.sub = true; r0.done = true; r0.tv = ""; drawPlay();
+      var td2 = T.querySelector("tbody tr[data-r=\"" + i + "\"] td.yv"); if (!rc || !td2) return;
+      var d = document.createElement("div"); d.className = "rvOld cell"; d.textContent = txt; d.style.cssText = "left:" + rc.left + "px;top:" + rc.top + "px;width:" + rc.width + "px;height:" + rc.height + "px"; rvFadeOut(d);
+      rvFadeIn(td2, [{ color: "rgba(27,36,51,0)" }, { color: "rgba(27,36,51,0)", offset: .3 }, { color: "rgb(27,36,51)" }]); rvMark("bad", rc.left + 18, rc.top + rc.height / 2);
+    }
     function yAt(ev) { var l = document.elementsFromPoint(ev.clientX, ev.clientY); for (var k = 0; k < l.length; k++) { var t = l[k].closest && l[k].closest("tbody td.yv"); if (t) return t; } return null; }
     function yDrag(e, i) {
       var val = String(TB.y(TB.rows()[i])), hot = null;
@@ -2505,14 +2513,13 @@
       else if (fillMode()) {
         // a row can be dragged to the graph before its y-value is worked out (it is then checked by where it lands), but a wrong y-value already typed in stops the drag and raises the alert
         var r0 = TB.rows()[i]; if (!r0 || !PG.subd) return;
-        if (!r0.done && String(r0.tv || "").trim()) { rowAlert(i); return; }
         ok = true; p = TB.pt(i); fillRow = r0;
       }
       else if (PG.show.table) { ok = true; var x = i - 2 + (PG.off || 0); p = [x, g(x)]; }
       if (!ok) return;
       var added = false, near = function (a, b) { return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9; };
       // the red target stays on the graph until a plotted point sits on it: a miss leaves it there to be corrected
-      start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { if (!TB.targets.some(function (t) { return near(t, p); })) { TB.targets.push(p); added = true; } drawPlay(); } }, null, function (ev) {
+      start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { if (fillRow && !fillRow.done && String(fillRow.tv || "").trim()) checkOff(i, fillRow); if (!TB.targets.some(function (t) { return near(t, p); })) { TB.targets.push(p); added = true; } drawPlay(); } }, null, function (ev) {
         var r = $("pgGraph").getBoundingClientRect();
         if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
           // the dropped point locks to the grid: whole units, or the smallest fraction of a unit that the point itself needs (1/2, 1/3, 1/4 ...)
