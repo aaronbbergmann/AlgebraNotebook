@@ -64,6 +64,9 @@
   #hand svg{display:block;transform-origin:19px 3px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
   #hand.tap svg{animation:tap .35s ease-in-out}
   @keyframes tap{50%{transform:scale(.8) translateY(3px)}}
+  body.play #hand svg{transform:rotate(-90deg)}
+  body.play #hand.tap svg{animation:tapR .35s ease-in-out}
+  @keyframes tapR{50%{transform:rotate(-90deg) scale(.8) translateY(3px)}}
   .modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:1rem}
   .modal[hidden]{display:none}
   .card{background:var(--bg);color:var(--ink);border-radius:18px;max-width:36rem;width:100%;max-height:90vh;overflow:auto;padding:1.2rem 1.4rem;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 1rem 3rem rgba(0,0,0,.4)}
