@@ -1457,7 +1457,7 @@
   function shifts() { return PG.fam >= 2; }                 // vertex point moves the graph
   function stretches() { return PG.fam >= 1; }              // purple point changes a
   function H() { return shifts() ? PG.h : 0; }
-  function K() { return shifts() ? PG.k : 0; }
+  function K() { return PG.k; }
   function A() { return stretches() ? PG.a : 1; }
   function g(x) { return A() * pf(x - H()) + K(); }
   function nf(v) { v = Math.round(v * 10000) / 10000; if (Object.is(v, -0)) v = 0; return (v < 0 ? "−" : "") + Math.abs(v); }
@@ -1470,7 +1470,7 @@
       : f === "linear" ? co + (co && v != null ? Xp : X)
       : f === "absolute value" ? co + "|" + inner + "|"
       : (h === 0 ? co + (v != null && (co || v < 0) ? Xp : X) + "<sup>2</sup>" : co + "(" + inner + ")<sup>2</sup>");
-    if (f !== "constant" && k) body += " " + (k > 0 ? "+" : "−") + " " + nf(Math.abs(k));
+    if (k) body += " " + (k > 0 ? "+" : "−") + " " + nf(Math.abs(k));
     return body;
   }
   // f(x) for the parent itself, g(x) once it has been transformed
@@ -1521,8 +1521,8 @@
       for (var v = -2; v <= 2; v++) { var y = g(v + H()); if (Math.abs(y) <= 10) S.appendChild(svgEl("circle", { cx: v + H(), cy: -y, r: .2, fill: "#C74440" })); }
     }
     // the two points are always there to drag, even with the graph hidden
-    var vx = H(), vy = shifts() ? K() : 0;
-    var vg = svgEl("g", { "data-pt": "v", style: "cursor:" + (shifts() ? "grab" : "default") });
+    var vx = H(), vy = K();
+    var vg = svgEl("g", { "data-pt": "v", style: "cursor:grab" });
     vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .62, fill: "#C74440", "fill-opacity": ".3" }));
     vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .2, fill: "#C74440" }));
     S.appendChild(vg);
@@ -1536,7 +1536,7 @@
   function drawPlay() {
     drawGraph();
     $("pgTable").querySelector("tbody").innerHTML = tableHTML();
-    $("pgTable").querySelector(".pgMid").innerHTML = PG.show.table ? eqHTML() : "";
+    $("pgTable").querySelector(".pgMid").innerHTML = PG.show.eq ? eqHTML() : "";
     $("pgEq").innerHTML = PG.show.eq ? eqHTML() : "";
     $("pgDesc").innerHTML = PG.show.desc ? descHTML() : "";
     [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part] ? "true" : "false"); });
@@ -1547,12 +1547,13 @@
     function at(e) { var m = S.getScreenCTM().inverse(), p = S.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; p = p.matrixTransform(m); return { x: p.x, y: -p.y }; }
     S.addEventListener("pointerdown", function (e) {
       var t = e.target.closest("[data-pt]"); if (!t) return;
-      which = t.dataset.pt; if (which === "v" && !shifts()) { which = null; return; }
+      which = t.dataset.pt;
       S.setPointerCapture(e.pointerId); e.preventDefault();
     });
     S.addEventListener("pointermove", function (e) {
       if (!which) return; var p = at(e), cl = function (v) { return Math.max(-10, Math.min(10, v)); };
-      if (which === "v") { var h = Math.round(cl(p.x)), k = Math.round(cl(p.y)); if (h === PG.h && k === PG.k) return; PG.h = h; PG.k = k; }
+      // the red point moves by whole units: up and down only for constant and linear, any direction for absolute value and quadratic
+      if (which === "v") { var h = shifts() ? Math.round(cl(p.x)) : PG.h, k = Math.round(cl(p.y)); if (h === PG.h && k === PG.k) return; PG.h = h; PG.k = k; }
       else { var y = Math.round(cl(p.y) * 4) / 4; if (!y) y = p.y < 0 ? -.25 : .25; PG.pa = [PG.pa[0], y]; PG.a = y; }
       drawPlay();
     });
