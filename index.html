@@ -199,7 +199,8 @@
   .pgGraph{position:relative;flex:1 1 18rem;max-width:30rem;width:100%;aspect-ratio:1;border:1px solid #9AA0A8;background:#fff;box-sizing:border-box;touch-action:none}
   .pgGraph svg{display:block;width:100%;height:100%}
   .pgFam{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;margin-bottom:.2rem}
-  .pgCtl .pgFam:active{background:var(--plus);border-color:var(--plus);color:#fff}
+  .btn.simHover:not(:disabled){background:var(--ink);color:var(--bg)}
+  .pgCtl .pgFam:active,.pgCtl .pgFam.simPress{background:var(--plus);border-color:var(--plus);color:#fff}
   .dial{display:none;position:absolute;left:3px;top:0;width:15px;height:15px;border-radius:50%;background:#1B2433;box-shadow:0 0 0 2px #fff,0 1px 4px rgba(0,0,0,.4);cursor:ns-resize;touch-action:none;transition:transform .25s ease-out;z-index:5}
   .dial::after{content:"";position:absolute;inset:-9px}.dial.drag{transition:none}
   body.play .dial{display:block}body.play .pgTable tbody td:first-child{cursor:ns-resize;touch-action:none}
@@ -2733,7 +2734,7 @@
   function handAt(pt) { var h = hand(); h.style.transition = "none"; h.style.opacity = "1"; h.dataset.on = "1"; h.style.transform = "translate(" + (pt.x - HX) + "px," + (pt.y - HY) + "px)"; }
   function pgWait(ms, fn) { var id = setTimeout(function () { pgTimers.splice(pgTimers.indexOf(id), 1); fn(); }, ms); pgTimers.push(id); }
   function pgStop() {
-    pgRun = 0; pgTimers.forEach(clearTimeout); pgTimers = []; handHide(); [].forEach.call(document.querySelectorAll(".tbg,.ghost"), function (g) { g.remove(); }); TB.targets = [];
+    pgRun = 0; pgTimers.forEach(clearTimeout); pgTimers = []; handHide(); [].forEach.call(document.querySelectorAll(".tbg,.ghost"), function (g) { g.remove(); }); [].forEach.call(document.querySelectorAll(".simHover,.simPress"), function (g) { g.classList.remove("simHover", "simPress"); }); TB.targets = [];
     $("pgDemo").textContent = "Start Demo"; $("pgDemo").classList.remove("on"); $("pgCap").textContent = "";
   }
   function pgDemo() {
@@ -2744,7 +2745,12 @@
     function cap(t) { $("pgCap").textContent = t; }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
-    function tap(el, then) { handGo(ctr(el), 650); pgWait(800, function () { handTap(); pgWait(180, function () { el.click(); pgWait(650, then); }); }); }
+    // the demo's hand makes a button look hovered when it arrives and pressed when it taps, just as for a real pointer
+    function tap(el, then) {
+      handGo(ctr(el), 650);
+      pgWait(600, function () { el.classList.add("simHover"); });
+      pgWait(800, function () { handTap(); el.classList.add("simPress"); pgWait(180, function () { el.classList.remove("simPress"); el.click(); pgWait(650, function () { el.classList.remove("simHover"); then(); }); }); });
+    }
     // drag a point: the hand grabs it and moves it smoothly; values snap like a student's drag
     function drag(which, to, then) {
       var from = which === "v" ? [H(), K()] : [PG.pa[0], PG.pa[1]], ms = 1500, t0 = null;
