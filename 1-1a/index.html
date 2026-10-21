@@ -2558,7 +2558,7 @@
   function eqHTML() { return "<i>" + fname() + "</i>(<i>x</i>) = " + rhsHTML(); }
   var TMG = "#2E9E4F", TMP = "#6042A6";
   function tmVals() { var T = PG.tm; if (!T) return null; if (T.stage === 0) return T.cur ? [T.cur[0], T.cur[1], 1] : null; var y = T.stage === 1 ? (T.cur ? T.cur[1] : T.g[1]) : T.p; return [T.g[0], T.g[1], y - T.g[1]]; }
-  function pgDescUpd() { var v = tmVals(); $("pgDesc").innerHTML = PG.tm ? (v ? descHTML(v[0], v[1], v[2]) : descHTML(0, 0, 1)) : PG.show.desc ? descHTML() : ""; }
+  function pgDescUpd() { var v = tmVals(); $("pgDesc").innerHTML = PG.tm ? (v ? descHTML(v[0], v[1], v[2]) : descHTML(0, 0, 1)) : PG.show.desc ? descHTML() : PG.tAns ? descHTML(PG.tAns.h, PG.tAns.k, PG.tAns.a) : ""; }
   function tmRefresh() { drawGraph(); pgDescUpd(); }
   function tmMove(p) {
     var T = PG.tm; if (!T || T.stage >= 2) return;
