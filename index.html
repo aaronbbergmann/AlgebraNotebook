@@ -2362,19 +2362,19 @@
       return r; });
   };
   TB.par = function () { return TB.mode() === "quiz" ? { f: FAMS[qFam()], a: 1, h: 0, k: 0 } : { f: FAMS[PG.fam], a: A(), h: H(), k: K() }; };
-  TB.x = function (r) { return TB.mode() === "quiz" ? r.u : r.u + H(); };
+  TB.x = function (r) { return r.u; };
   TB.st = function (r) { var p = TB.par(); return sstep(p.f, p.a, p.h, p.k, TB.x(r)); };
   TB.y = function (r) { var p = TB.par(); return gval(p.f, p.a, p.h, p.k, TB.x(r)); };
   TB.pt = function (i) { var r = TB.rows()[i]; return [TB.x(r), TB.y(r)]; };
   TB.html = function () {
     return TB.rows().map(function (r, i) {
       var st = TB.st(r), mid = !r.sub ? "" : r.done ? st[0] : st[Math.min(r.idx, st.length - 1)];
-      return "<tr data-r=\"" + i + "\"" + (r.done ? " class=\"rdone\"" : "") + "><td>" + nf(TB.x(r)) + "</td><td class=\"mid" + (r.sub && !r.done ? " live" : "") + "\" data-r=\"" + i + "\"><span class=\"cv\">" + mid + "</span></td><td class=\"yv" + (TB.pop === i ? " pop" : "") + "\">" + (r.done ? nf(TB.y(r)) : "<input class=\"qzCell\" id=\"qzY" + i + "\" data-r=\"" + i + "\" autocomplete=\"off\" inputmode=\"decimal\" aria-label=\"y when x = " + nf(TB.x(r)) + "\" value=\"" + (r.tv || "").replace(/[^0-9.\-−]/g, "") + "\">") + "</td></tr>";
+      return "<tr data-r=\"" + i + "\"" + (r.done ? " class=\"rdone\"" : "") + "><td>" + (TB.mode() === "play" && !PG.subd ? "" : nf(TB.x(r))) + "</td><td class=\"mid" + (r.sub && !r.done ? " live" : "") + "\" data-r=\"" + i + "\"><span class=\"cv\">" + mid + "</span></td><td class=\"yv" + (TB.pop === i ? " pop" : "") + "\">" + (r.done ? nf(TB.y(r)) : "<input class=\"qzCell\" id=\"qzY" + i + "\" data-r=\"" + i + "\" autocomplete=\"off\" inputmode=\"decimal\" aria-label=\"y when x = " + nf(TB.x(r)) + "\" value=\"" + (r.tv || "").replace(/[^0-9.\-−]/g, "") + "\">") + "</td></tr>";
     }).join("");
   };
   TB.draw = function () {
     var fa = document.activeElement, fid = fa && fa.classList && fa.classList.contains("qzCell") ? fa.id : null;
-    $("pgTable").querySelector("tbody").innerHTML = TB.html(); TB.pop = -1;
+    $("pgTable").querySelector("tbody").innerHTML = TB.html(); TB.pop = -1; if (TB.mode() === "play") posDial();
     if (fid) { var e = $(fid); if (e) e.focus(); }
   };
   // the student can type the y-value instead of simplifying: a right answer completes the row
@@ -2457,7 +2457,7 @@
       var i = +tr.dataset.r, p, ok;
       if (m === "quiz") { ok = QZ.step === 2 && TB.rows()[i] && TB.rows()[i].done; if (ok) p = TB.pt(i); }
       else if (fillMode()) { ok = TB.rows()[i] && TB.rows()[i].done; if (ok) p = TB.pt(i); }
-      else if (PG.show.table) { ok = true; var u = i - 2 + (PG.off || 0), x = u + H(); p = [x, g(x)]; }
+      else if (PG.show.table) { ok = true; var x = i - 2 + (PG.off || 0); p = [x, g(x)]; }
       if (!ok) return;
       start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { TB.targets = [p]; drawPlay(); } }, null, function (ev) {
         if (m === "play") { TB.targets = []; }
@@ -2511,7 +2511,7 @@
   function tableHTML() {
     var rows = "", h = H();
     for (var u = -2; u <= 2; u++) {
-      var x = u + (PG.off || 0) + h, c = PG.show.table ? [nf(x), rhsHTML(x), nf(g(x))] : ["", "", ""];
+      var x = u + (PG.off || 0), c = PG.show.table ? [nf(x), rhsHTML(x), nf(g(x))] : ["", "", ""];
       rows += "<tr data-r=\"" + (u + 2) + "\">" + c.map(function (t) { return "<td>" + t + "</td>"; }).join("") + "</tr>";
     }
     return rows;
@@ -2570,8 +2570,9 @@
       S.appendChild(ag);
     }
   }
+  function dialOn() { return !!(PG.show.table || PG.subd); }
   function posDial() {
-    var D = $("pgDial"), tr = $("pgTable").querySelectorAll("tbody tr")[2]; if (!tr) return;
+    var D = $("pgDial"); D.style.display = dialOn() ? "" : "none"; var tr = $("pgTable").querySelectorAll("tbody tr")[2]; if (!tr) return;
     var a = tr.getBoundingClientRect(), b = D.parentNode.getBoundingClientRect(); D.style.top = (a.top - b.top + a.height / 2 - 7.5) + "px";
   }
   window.addEventListener("resize", function () { if (document.body.classList.contains("play")) posDial(); });
@@ -2695,7 +2696,7 @@
     var D = $("pgDial"), T = $("pgTable");
     function rowH() { var tr = T.querySelector("tbody tr"); return tr ? tr.getBoundingClientRect().height : 38; }
     function begin(e) {
-      if (e.button > 0 || !document.body.classList.contains("play")) return;
+      if (e.button > 0 || !document.body.classList.contains("play") || !dialOn()) return;
       if (pgRun) pgStop(); e.preventDefault();
       var y0 = e.clientY, off0 = PG.off || 0, rh = rowH(); D.classList.add("drag");
       function mv(ev) {
@@ -2707,7 +2708,7 @@
       document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); document.addEventListener("pointercancel", up);
     }
     D.addEventListener("pointerdown", begin);
-    T.addEventListener("pointerdown", function (e) { if (e.target.closest("tbody td:first-child")) begin(e); });
+    T.addEventListener("pointerdown", function (e) { if (dialOn() && e.target.closest("tbody td:first-child")) begin(e); });
   })();
   $("pgFam").addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); PG.fam = (PG.fam + 1) % FAMS.length; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.off = 0; TB.targets = []; drawPlay(); });
   [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); var part = b.dataset.part, on = !PG.show[part], rv = on ? pgReveal(part) : null; PG.show[part] = on; drawPlay(); if (rv) rv(); }); });
@@ -2802,7 +2803,7 @@
           }
           requestAnimationFrame(step);
         }
-        run1(0, steps, function () { run1(steps, 0, function () { D.classList.remove("drag"); D.style.transform = ""; pgWait(500, then); }); });
+        run1(0, steps, function () { D.classList.remove("drag"); D.style.transform = ""; pgWait(700, then); });
       });
     }
     function tapClear(then) { var b = document.querySelector(".qzTools [data-tool=clear]"); handGo(ctr(b), 650); pgWait(800, function () { handTap(); qzTool("clear"); pgWait(700, then); }); }
@@ -2844,6 +2845,7 @@
       function (n) { cap("...and then the stretch of 2."); drag("a", [PG.pa[0], 2], n); },
       function (n) { cap("With Table off, the table is empty for you to complete yourself."); pgWait(1800, n); },
       function (n) { cap("Drag the equation onto any center cell. One drop puts each row's x-value into the equation."); dragEq(0, n); },
+      function (n) { cap("The x-values appear, centered at 0. Drag the dot up or down to scroll the table like a wheel until the vertex, x = 3, is in the middle row."); dialDemo(-3, n); },
       function (n) { cap("You can type the y-value yourself..."); typeRow(0, n); },
       function (n) { cap("...or click the calculation to simplify it one step at a time. The answer moves into the y column."); clickRow(1, n); },
       function (n) { cap("Let's do a third row, but type a wrong answer on purpose."); typeRow(2, n, "4"); },
@@ -2859,7 +2861,6 @@
       function (n) { cap("Hide the equation, then reveal it to check the guess."); tap(tog("eq"), function () { tap(tog("eq"), function () { pgWait(2300, n); }); }); },
       function (n) { cap("It was wrong, so the answer faded into the correct one. Adjust the stretch to 2."); stretch(2, n); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
-      function (n) { cap("Drag the dot beside the table (or any x-value) up or down to scroll it like a wheel. New x-values appear as others leave."); dialDemo(3, n); },
       function (n) { cap("Your turn: try every button, drag both points and plot your own graph."); pgWait(2500, n); }
     ];
     var k = 0;
