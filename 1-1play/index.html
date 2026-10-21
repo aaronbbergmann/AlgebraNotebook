@@ -178,6 +178,7 @@
   body.quiz .qzTools{align-self:flex-start;margin-top:.2rem}
   .qzTools button,.ghost{width:2.7rem;height:2.7rem;border-radius:10px;border:2px solid #1B2433;background:#fff;color:#1B2433;font:700 1.25rem/1 system-ui,sans-serif;cursor:grab;touch-action:none;padding:0}
   .qzTools button[hidden]{display:none}
+  .qzTools button:not([data-tool=pt]){cursor:pointer}
   .qzTools button[data-tool=undo]{margin-bottom:1.4rem}
   @media (max-width:760px){.qzTools button[data-tool=undo]{margin-bottom:0;margin-right:1rem}}
   .qzTools button.on{background:#2D70B3;border-color:#2D70B3;color:#fff}
@@ -275,7 +276,7 @@
   <div class="stage">
     <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
-      <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click two points, or drag onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click the vertex, then a point on one side, or drag onto the graph" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click the vertex, then a point on one side, or drag onto the graph" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
+      <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex, then click again to set the stretch" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex, then click again to set the stretch" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
       <div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div>
       <div class="pgSide">
         <div class="dial" id="pgDial" role="slider" aria-label="Scroll the table" title="Drag up or down to scroll the table"></div>
@@ -2176,6 +2177,7 @@
         var tool = b.dataset.tool, sx = e.clientX, sy = e.clientY, ghost = null;
         b.setPointerCapture(e.pointerId); e.preventDefault();
         function mv(ev) {
+          if (tool !== "pt") return;   // the line, V and parabola buttons are clicked, not dragged
           if (!ghost && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
           if (!ghost) { ghost = b.cloneNode(true); ghost.classList.add("ghost"); document.body.appendChild(ghost); }
           ghost.style.left = ev.clientX - 20 + "px"; ghost.style.top = ev.clientY - 20 + "px";
@@ -2253,9 +2255,11 @@
       } else {
         var tool = QSHAPE[fam];
         after(700, function () { handGo(ctr(document.querySelector(".qzTools [data-tool=" + tool + "]")), 650); });
-        after(750, function () { handTap(); });
+        after(750, function () { handTap(); qzTool(tool); });
         after(50, function () { handGo(svgPt(0, 0), 1200); });
-        after(1300, function () { qzDrop(tool, 0, 0); });
+        after(1300, function () { handTap(); qzPlace(tool, 0, 0); });
+        after(600, function () { handGo(svgPt(1, 1), 700); });
+        after(900, function () { handTap(); qzPlace(tool, 1, 1); });
       }
       tapEl(function () { return $("qzGo"); }, chk);
     } else { tapEl(function () { return $("qzNext"); }, function () { qzNextParent(); }); }
@@ -3207,16 +3211,12 @@
       function (n) { cap("Type an x and a y, and the point appears."); typeBox("pgPtX", "3", function () { typeBox("pgPtY", "-2", n); }); },
       function (n) { cap("Drag the point and the panel updates too."); drag2(n); },
       function (n) { cap("Close the panel."); tap($("pgPtX0"), n); },
-      function (n) { cap("The line button drops a line..."); dropShape("line", -4, 2, n); },
-      function (n) { cap("...the V button drops an absolute value graph..."); dropShape("V", -4, -2, n); },
-      function (n) { cap("...and the \u00d7 button clears the graph."); tapClear(n); },
-      function (n) { cap("A button can also be clicked: a ghost of the line follows the cursor. Click once for a point on the line, and again to set its slope."); clickTool("line", [-4, -3], [0, 1], n); },
+      function (n) { cap("The line, V and parabola buttons are clicked, not dragged: a ghost of the line follows the cursor. Click once for a point on the line, and again to set its slope."); clickTool("line", [-4, -3], [0, 1], n); },
       function (n) { cap("The V works the same way: click the vertex, then click to set the stretch."); clickTool("V", [2, -2], [4, 2], n); },
       function (n) { cap("...and so does the parabola button."); clickTool("U", [-3, 3], [-1, -1], n); },
       function (n) { cap("Clear the graph again."); tapClear(n); },
       function (n) { cap("Drag each row onto the graph to plot its point. The yellow dot shows where it belongs."); dragRows(0, n); },
-      function (n) { cap("Now drag the parabola button onto the graph, with its vertex on (3, 1)."); dropShape("U", 3, 1, n); },
-      function (n) { cap("Drag its side point to set the stretch of 2."); stretch(2, n, 1); },
+      function (n) { cap("Now click the parabola button, put its vertex on (3, 1), and click (4, 3) to set the stretch of 2."); clickTool("U", [3, 1], [4, 3], n); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
       function (n) { cap("Your turn: try every button, drag both points and plot your own graph."); pgWait(2500, n); }
     ];
