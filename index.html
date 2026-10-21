@@ -1872,7 +1872,7 @@
     var T = $("pgTable"); T.style.display = si >= 1 ? "" : "none";
     T.querySelector(".pgMid").innerHTML = si >= 1 ? "<i>f</i>(<i>x</i>) = " + qEqHTML(fam) : "";
     var rows = ""; for (var x = -2; x <= 2; x++) rows += "<tr><td>" + nf(x) + "</td><td>" + qEqHTML(fam, x) + "</td><td>" + (si >= 2 ? nf(qf(fam, x)) : st === "table" ? "<input class=\"qzCell\" id=\"qzY" + (x + 2) + "\" autocomplete=\"off\" inputmode=\"numeric\" aria-label=\"y when x = " + nf(x) + "\"" + "" + ">" : "") + "</td></tr>";
-    T.querySelector("tbody").innerHTML = (mode === "sequence" && si >= 1) ? TB.html() : rows;
+    T.querySelector("tbody").innerHTML = ((mode === "sequence" || mode === "demo") && si >= 1) ? TB.html() : rows;
     $("pgGraph").style.display = si >= 2 ? "" : "none";
     $("qzTools").hidden = !(si === 2 || si === 3);
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === QZ.tool); });
@@ -1904,7 +1904,7 @@
         S.appendChild(g);
       });
     }
-    if (mode === "sequence" && QZ.step === 2) for (var xx = -2; xx <= 2; xx++) S.appendChild(svgEl("circle", { cx: xx, cy: -qf(fam, xx), r: .34, fill: "#E0402F" }));
+    if ((mode === "sequence" || mode === "demo") && QZ.step === 2) for (var xx = -2; xx <= 2; xx++) S.appendChild(svgEl("circle", { cx: xx, cy: -qf(fam, xx), r: .34, fill: "#E0402F" }));
     QZ.pts.forEach(function (p, j) {
       var g = svgEl("g", { "data-qh": "pt:" + j, style: "cursor:grab" });
       g.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .55, fill: "#111", "fill-opacity": ".12" }));
@@ -1933,8 +1933,8 @@
     var fam = qFam(), st = qStep(), demo = mode === "demo", h = "", inp = $("qzIn");
     var T = {
       eq: "What is the parent function of the " + QFAM[fam] + " family? Type its equation.",
-      table: mode === "sequence" ? "Drag the equation (from the top of the table or from under it) onto a center cell. Then click the calculation until the y-value appears." : "Click each empty y cell in the table and type its y-value.",
-      points: mode === "sequence" ? "Drag each row of the table onto the graph to plot its point. The red dots show where they belong." : "Plot the five points from the table. Choose the ● tool, then click the graph at each point.",
+      table: mode === "sequence" || mode === "demo" ? "Drag the equation (from the top of the table or from under it) onto a center cell. Then click the calculation to simplify it step by step, or type the y-value yourself." : "Click each empty y cell in the table and type its y-value.",
+      points: mode === "sequence" || mode === "demo" ? "Drag each row of the table onto the graph to plot its point. The red dots show where they belong." : "Plot the five points from the table. Choose the ● tool, then click the graph at each point.",
       graph: "Now draw the parent graph. Use the / tool (a line), the V tool or the U tool.",
       done: QZ.pi < 3 ? "That's the " + QFAM[fam] + " parent!" : "You have all four parents!"
     };
@@ -1998,7 +1998,7 @@
     if (mode !== "demo" || busy || QZ.locked || !quiz()) return;
     var fam = qFam(), st = qStep();
     if (st === "eq") { var t = qNorm(($("qzEq") || {}).value || ""); if (t === QEQ[fam]) qzAdvance(); }
-    else if (st === "table") { if ([0, 1, 2, 3, 4].every(function (i) { return cellOK(i); })) qzAdvance(); }
+    else if (st === "table") { if (TB.rows().every(function (r) { return r.done; })) qzAdvance(); }
     else if (st === "points") {
       var want = []; for (var x = -2; x <= 2; x++) want.push(x + "," + qf(fam, x));
       var have = QZ.pts.map(function (p) { return p[0] + "," + p[1]; });
@@ -2015,7 +2015,7 @@
   document.addEventListener("input", function (e) {
     if (mode !== "demo" || busy || !quiz()) return;
     if (e.target.id === "qzEq") qzAuto();
-    else if (e.target.classList && e.target.classList.contains("qzCell")) {
+    else if (!TB.mode() && e.target.classList && e.target.classList.contains("qzCell")) {
       var i = +e.target.id.slice(3);
       if (cellOK(i)) {
         var nx = [0, 1, 2, 3, 4].filter(function (j) { return !cellOK(j); })[0];
@@ -2057,7 +2057,7 @@
     var fam = qFam(), st = qStep(), n = QZ.hn++;
     if (QZ.locked || st === "done") return "Press the button below to keep going.";
     if (st === "eq") return n === 0 ? "A parent function is the simplest equation in its family, with nothing added to it or multiplied by it." : "The " + QFAM[fam] + " parent is f(x) = " + plain(qEqHTML(fam)) + ".";
-    if (st === "table" && mode === "sequence") return n === 0 ? "Drag the equation onto a center cell of the table." : "Click the calculation in the center cell to simplify it one step at a time.";
+    if (st === "table" && mode === "sequence") return n === 0 ? "Drag the equation onto a center cell of the table." : "Click the calculation in the center cell to simplify it one step at a time, or type the y-value yourself.";
     if (st === "points" && mode === "sequence") return "Drag a row of the table onto the graph and drop it on the red dot.";
     if (st === "table") {
       if (n === 0) return "Put each x-value into f(x) = " + plain(qEqHTML(fam)) + " to get its y-value. The middle column shows the calculation.";
@@ -2076,7 +2076,7 @@
   function qzExplain() {
     var fam = qFam(), st = qStep();
     if (st === "eq") return "Every family of functions has a parent: its simplest equation. The " + QFAM[fam] + " parent is f(x) = " + plain(qEqHTML(fam)) + ".";
-    if (st === "table") return "To fill the table, put each x into the equation. For example, when x = −2, f(−2) = " + plain(qEqHTML(fam, -2)) + " = " + nf(qf(fam, -2)) + ".";
+    if (st === "table") return "To fill the table, put each x into the equation. For example, when x = −2, f(−2) = " + plain(qEqHTML(fam, -2)) + " = " + nf(qf(fam, -2)) + ". You can click the calculation to simplify it one step at a time, or type the y-value yourself.";
     if (st === "points") return "Each row of the table is a point (x, y) on the graph. Plotting them shows the shape of the parent.";
     if (st === "graph") return "The points make a " + (fam < 2 ? "straight line" : fam === 2 ? "V" : "U") + ", so we draw the " + (fam < 2 ? "/ (line)" : QSHAPE[fam]) + " shape through them.";
     return QZ.pi < 3 ? "On to the next parent." : "That's all four parents.";
@@ -2174,7 +2174,30 @@
     function chk() { if (QZ.step === st0 && !QZ.locked) qzCheck(); }
     function tapPt(x, y, fn) { after(550, function () { handGo(svgPt(x, y), 500); }); after(560, function () { handTap(); }); after(150, fn); }
     if (st === "eq") { typeInto($("qzEq"), "f(x)=" + QEQ[fam].replace("^2", "²")); tapEl(function () { return $("qzGo"); }, chk); }
-    else if (st === "table") { for (var x = -2; x <= 2; x++) typeInto($("qzY" + (x + 2)), String(qf(fam, x))); tapEl(function () { return $("qzGo"); }, chk); }
+    else if (st === "table") {
+      // first row: drag the equation, then tap the calculation until the answer moves over. second row: drag the equation, then type the answer. the rest fill in.
+      var R = TB.rows(), todo = R.map(function (r, i) { return i; }).filter(function (i) { return !R[i].done; });
+      var midC = function (i) { return document.querySelector("td.mid[data-r=\"" + i + "\"]"); }, inpY = function (i) { return document.querySelector("input.qzCell[data-r=\"" + i + "\"]"); };
+      var dragEqQ = function (i) {
+        if (R[i].sub) return; var se = $("pgEq");
+        after(700, function () { handGo(ctr(se), 650); }); after(750, function () { handTap(); });
+        after(250, function () { var d = midC(i); handGo(ctr(d), 1300); fly(se, d, function () {}, false); }); after(1500, function () { TB.sub(i); });
+      };
+      var clickQ = function (i) {
+        var n = TB.st(R[i]).length, k = n === 1 ? 1 : n - 1;
+        for (var c = 0; c < k; c++) tapEl(function () { return midC(i); }, function () { TB.click(i); });
+        after(2500, function () {});
+      };
+      var typeQ = function (i) {
+        var text = String(TB.y(R[i]));
+        after(650, function () { var e = inpY(i); if (e) handGo(ctr(e), 600); }); after(700, function () { handTap(); var e = inpY(i); if (e) e.focus(); });
+        for (var c = 1; c <= text.length; c++) (function (c) { after(130, function () { var e = inpY(i); if (!e) return; e.value = text.slice(0, c); e.dispatchEvent(new Event("input", { bubbles: true })); }); })(c);
+        after(500, function () {});
+      };
+      if (todo.length) { dragEqQ(todo[0]); clickQ(todo[0]); }
+      if (todo.length > 1) { dragEqQ(todo[1]); typeQ(todo[1]); }
+      after(500, function () { TB.autofill(); TB.after(); });
+    }
     else if (st === "points") {
       // a student may already have plotted some of the points: keep the right ones, drop the wrong ones, add the missing ones
       QZ.pts = QZ.pts.filter(function (p) { return p[0] >= -2 && p[0] <= 2 && p[1] === qf(fam, p[0]); });
@@ -2212,7 +2235,7 @@
     var c = [].slice.call(document.querySelectorAll(".qzCell")), i = c.indexOf(e.target);
     if (e.key === "ArrowDown" || (e.key === "Enter" && i < c.length - 1)) { e.preventDefault(); var n1 = c[Math.min(i + 1, c.length - 1)]; n1.focus(); n1.select(); }
     else if (e.key === "ArrowUp") { e.preventDefault(); var n2 = c[Math.max(i - 1, 0)]; n2.focus(); n2.select(); }
-    else if (e.key === "Enter") qzCheck();   // Enter in the last cell checks the table
+    else if (e.key === "Enter" && !TB.mode()) qzCheck();   // Enter in the last cell checks the table
   });
   function enterQuiz() {
     stopDemo(); stopParty(); closeAsk(false);
@@ -2307,7 +2330,7 @@
     return out.filter(function (t, i) { return i === 0 || t !== out[i - 1]; });
   }
   var TB = { busy: false, targets: [], pop: -1 };
-  TB.mode = function () { return document.body.classList.contains("play") ? "play" : quiz() && mode === "sequence" ? "quiz" : ""; };
+  TB.mode = function () { return document.body.classList.contains("play") ? "play" : quiz() && (mode === "sequence" || mode === "demo") ? "quiz" : ""; };
   TB.rows = function () {
     var mk5 = function () { return [-2, -1, 0, 1, 2].map(function (u) { return { u: u, sub: false, idx: 0, done: false }; }); };
     if (TB.mode() === "quiz") return QZ.tbl || (QZ.tbl = mk5());
@@ -2321,10 +2344,22 @@
   TB.html = function () {
     return TB.rows().map(function (r, i) {
       var st = TB.st(r), mid = !r.sub ? "" : r.done ? st[0] : st[Math.min(r.idx, st.length - 1)];
-      return "<tr data-r=\"" + i + "\"" + (r.done ? " class=\"rdone\"" : "") + "><td>" + nf(TB.x(r)) + "</td><td class=\"mid" + (r.sub && !r.done ? " live" : "") + "\" data-r=\"" + i + "\"><span class=\"cv\">" + mid + "</span></td><td class=\"yv" + (TB.pop === i ? " pop" : "") + "\">" + (r.done ? nf(TB.y(r)) : "") + "</td></tr>";
+      return "<tr data-r=\"" + i + "\"" + (r.done ? " class=\"rdone\"" : "") + "><td>" + nf(TB.x(r)) + "</td><td class=\"mid" + (r.sub && !r.done ? " live" : "") + "\" data-r=\"" + i + "\"><span class=\"cv\">" + mid + "</span></td><td class=\"yv" + (TB.pop === i ? " pop" : "") + "\">" + (r.done ? nf(TB.y(r)) : "<input class=\"qzCell\" id=\"qzY" + i + "\" data-r=\"" + i + "\" autocomplete=\"off\" inputmode=\"decimal\" aria-label=\"y when x = " + nf(TB.x(r)) + "\" value=\"" + (r.tv || "").replace(/[^0-9.\-−]/g, "") + "\">") + "</td></tr>";
     }).join("");
   };
-  TB.draw = function () { $("pgTable").querySelector("tbody").innerHTML = TB.html(); TB.pop = -1; };
+  TB.draw = function () {
+    var fa = document.activeElement, fid = fa && fa.classList && fa.classList.contains("qzCell") ? fa.id : null;
+    $("pgTable").querySelector("tbody").innerHTML = TB.html(); TB.pop = -1;
+    if (fid) { var e = $(fid); if (e) e.focus(); }
+  };
+  // the student can type the y-value instead of simplifying: a right answer completes the row
+  TB.typed = function (i, v) {
+    var r = TB.rows()[i]; if (!r || r.done || r.fl) return;
+    r.tv = v; var n = parse(String(v).replace(/−/g, "-")); if (!n || Math.abs(n.n / n.d - TB.y(r)) > 1e-6) return;
+    r.sub = true; r.done = true; r.tv = ""; TB.pop = i; TB.draw();
+    var nx = TB.rows().findIndex(function (q) { return !q.done; }); if (nx >= 0) { var el = $("qzY" + nx); if (el) { el.focus(); el.select(); } }
+    TB.after();
+  };
   TB.sync = function () { var m = TB.mode(); document.body.classList.toggle("tbon", m === "quiz" ? QZ.step === 1 : m === "play" ? !!PG.show.build : false); };
   // drop the equation on a center cell: that row now shows the equation with its x-value put in
   TB.sub = function (i) {
@@ -2348,7 +2383,7 @@
     fly(src, dst, function () { r.fl = false; r.done = true; TB.busy = false; TB.pop = i; TB.draw(); TB.after(); }, true);
   };
   TB.after = function () {
-    if (TB.mode() === "quiz") { if (QZ.step === 1 && TB.rows().every(function (r) { return r.done; })) setTimeout(function () { if (QZ.step === 1 && mode === "sequence") qzAdvance(); }, 700); }
+    if (TB.mode() === "quiz") { if (QZ.step === 1 && TB.rows().every(function (r) { return r.done; })) setTimeout(function () { if (QZ.step === 1 && (mode === "sequence" || mode === "demo")) qzAdvance(); }, 700); }
     else if (TB.mode() === "play") drawPlay();
   };
   TB.autofill = function () { TB.rows().forEach(function (r) { r.sub = true; r.done = true; r.fl = false; }); TB.draw(); };
@@ -2379,6 +2414,7 @@
         if (hot !== t) { if (hot) hot.classList.remove("drop"); hot = t; if (t) t.classList.add("drop"); }
       }, function (ev) { if (hot) hot.classList.remove("drop"); var t = midAt(ev); if (t) TB.sub(+t.dataset.r); });
     }
+    T.addEventListener("input", function (e) { if (TB.mode() && e.target.classList && e.target.classList.contains("qzCell")) TB.typed(+e.target.dataset.r, e.target.value); });
     T.querySelector(".pgMid").addEventListener("pointerdown", eqDrag);
     $("pgEq").addEventListener("pointerdown", eqDrag);
     T.addEventListener("click", function (e) {
@@ -2578,6 +2614,16 @@
         pgWait(750, function () { handTap(); pgWait(200, function () { TB.click(i); pgWait(1100, again); }); });
       })();
     }
+    // the hand types the y-value into the table
+    function typeRow(i, then) {
+      var text = String(TB.y(TB.rows()[i])); function inp() { return $("pgTable").querySelector("input.qzCell[data-r=\"" + i + "\"]"); }
+      var e0 = inp(); if (!e0) { then(); return; }
+      handGo(ctr(e0), 600);
+      pgWait(750, function () {
+        handTap(); var e1 = inp(); if (e1) e1.focus(); var c = 0;
+        (function nx() { if (pgRun !== run) return; c++; var e = inp(); if (!e) { pgWait(500, then); return; } e.value = text.slice(0, c); e.dispatchEvent(new Event("input", { bubbles: true })); if (c < text.length) pgWait(180, nx); else pgWait(900, then); })();
+      });
+    }
     // the hand drags a finished row onto the graph as a dot
     function dragRow(i, then) {
       var tr = $("pgTable").querySelector("tr[data-r=\"" + i + "\"]"), p = TB.pt(i), a = ctr(tr), b = svgPt(p[0], p[1]);
@@ -2595,8 +2641,8 @@
       function (n) { cap("Each button on the right shows or hides one part. The graph is hidden, so we will build it. Start with the equation."); tap(tog("eq"), n); },
       function (n) { cap("Fill table gives you an empty table to complete yourself."); tap(tog("build"), n); },
       function (n) { cap("Drag the equation onto a center cell to substitute that x-value."); dragEq(0, n); },
-      function (n) { cap("Click the calculation to simplify it one step at a time. The answer moves into the y column."); clickRow(0, n); },
-      function (n) { cap("Do the same for the next row."); dragEq(1, function () { clickRow(1, n); }); },
+      function (n) { cap("Click the calculation to simplify it one step at a time. The answer moves into the y column. (You can also type it.)"); clickRow(0, n); },
+      function (n) { cap("Or type the y-value yourself. A right answer completes the row."); dragEq(1, function () { typeRow(1, n); }); },
       function (n) { cap("The other rows are filled in the same way."); TB.autofill(); pgWait(1400, n); },
       function (n) { cap("Drag a finished row onto the graph to plot its point. The red dot shows where it belongs."); dragRow(0, n); },
       function (n) { cap("Plot every row. The points create the graph, even though the graph is hidden."); PG.pts = [0, 1, 2, 3, 4].map(function (i) { return TB.pt(i); }); drawPlay(); pgWait(1800, n); },
