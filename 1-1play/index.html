@@ -293,6 +293,17 @@
     return null;
   }
 
+  // a number, or the same number written as the finished equation ("5" or "x=5"; "26" or "11x=26").
+  // L is the left side the equation must have: {x, y, z, k} as fractions (missing parts are 0)
+  function numOrEq(txt, L) {
+    txt = String(txt).toLowerCase().replace(/−/g, "-").replace(/\s+/g, "");
+    var i = txt.indexOf("=");
+    if (i < 0) return parse(txt);
+    var lp = parseSide(txt.slice(0, i)), r = parse(txt.slice(i + 1));
+    if (!lp || !r) return null;
+    return ["x", "y", "z", "k"].every(function (k) { return same(lp[k], L[k] || mk(0)); }) ? r : null;
+  }
+  function leftOf(q) { return { x: q.a, y: q.b, z: q.e, k: q.ks.reduce(function (t, k) { return add(t, k.k); }, mk(0)) }; }
   // ---- typed equations: "6x+9y-z=21", "y=3" ----
   function parseSide(s) {
     var t = s.match(/[+-]?[^+-]+/g), o = { x: mk(0), y: mk(0), z: mk(0), k: mk(0) };
@@ -878,7 +889,7 @@
   }
   function showInput() {
     $("askIn").value = ""; $("askErr").textContent = "";
-    $("askIn").placeholder = askKind === "calc" ? (lesson === 3 ? "e.g. 2x+3y-z=12" : "e.g. 2x+3y=12") : "e.g. 3";
+    $("askIn").placeholder = askKind === "calc" ? (lesson === 3 ? "e.g. 2x+3y-z=12" : "e.g. 2x+3y=12") : askKind === "simp" ? "e.g. 3 or x = 3" : "e.g. 3";
     $("ask").hidden = false; placeAsk(); $("askIn").focus();
   }
 
@@ -920,8 +931,8 @@
     if (askKind === "simp" || askKind === "ksimp") {
       var q1 = ws[i];
       if (!q1) { closeAsk(false); return; }
-      var n1 = parse(txt), kk = askKind === "ksimp" ? q1.ks[askK] : null;
-      if (!n1) { err("Type a number, like 6 or 3/2."); return; }
+      var kk = askKind === "ksimp" ? q1.ks[askK] : null, n1 = kk ? parse(txt) : numOrEq(txt, leftOf(q1));
+      if (!n1) { err(kk ? "Type a number, like 6 or 3/2." : "Type a number, like 6, or the equation, like " + plain(fmt(q1)).split("=")[0].trim() + " = 6."); return; }
       if (!same(n1, kk ? kTarget(q1, kk, curVs()) : q1.c)) { err("Not quite. Try again."); $("askIn").select(); return; }
       closeAsk(false);
       if (kk) { simpSub(i, askK, true); return; }
@@ -1330,7 +1341,7 @@
     if (kind !== "one") ok = kind === cl;
     else if (cl === "one") {
       var sol = solveSys(orig); ok = true;
-      allV().forEach(function (v, j) { var t = parse($("ans_" + v).value); if (!t) miss = true; else if (!same(t, sol[j])) ok = false; });
+      allV().forEach(function (v, j) { var Lv = {}; Lv[v] = mk(1); var t = numOrEq($("ans_" + v).value, Lv); if (!t) miss = true; else if (!same(t, sol[j])) ok = false; });
     }
     if (miss) { m.className = "bad"; m.textContent = "Enter a number for each variable, like 3, -2 or 1/2."; return; }
     if (!ok) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
@@ -1551,7 +1562,12 @@
   }
   function subRawAsk(i) {
     var q = ws[i]; if (!q || !q.raw) return;
-    subAsk(i, "Simplify " + q.raw + ":", "e.g. 26", numCheck(q.R[0].c), function () { var n = cp(ws[i]); delete n.raw; ws[i] = n; subDone(i); });
+    var L = { x: mk(0), y: mk(0), z: mk(0), k: mk(0) }; q.L.forEach(function (t) { var key = t.v || "k"; L[key] = add(L[key], t.c); });
+    var left = plain(sideHTML(q.L));
+    subAsk(i, "Simplify " + q.raw + ":", "e.g. 26 or " + left + " = 26", function (txt) {
+      var n = numOrEq(txt, L); if (!n) return "Type a number, like 26, or the equation, like " + left + " = 26.";
+      return same(n, q.R[0].c) ? true : "Not quite. Try again.";
+    }, function () { var n = cp(ws[i]); delete n.raw; ws[i] = n; subDone(i); });
   }
   function subCalcRaw(i) { if (!ws[i] || !ws[i].raw) return; snap(); var n = cp(ws[i]); delete n.raw; ws[i] = n; subDone(i); }
   // a solved value dropped onto its letter becomes a multiplication to work out (a bare positive value goes straight in)
