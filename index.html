@@ -245,6 +245,8 @@
   .rvDot{position:fixed;z-index:55;pointer-events:none;width:16px;height:16px;border-radius:50%;background:#111;transform:translate(-50%,-50%)}
   .pgEq{font:400 1.45rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;min-height:1.6em}
   .pgEq i{font-style:italic}
+  .eqIn{width:100%;box-sizing:border-box;border:0;border-bottom:2px solid transparent;background:transparent;font:inherit;text-align:center;color:inherit;outline:0;padding:.1em .2em;min-height:1.5em}
+  .eqIn:hover,.eqIn:focus{border-bottom-color:#9AA4B2}
   .pgDesc{font-size:1.08rem;line-height:1.45}
   .pgDesc i{font-family:"LM",Georgia,serif;font-style:italic}
   .pgCtl{display:flex;flex-direction:column;align-items:center;gap:.5rem}
@@ -2471,6 +2473,7 @@
       });
     }
     function eqDrag(e) {
+      if (e.target.closest && e.target.closest("input")) return;
       if (!canSub()) return;
       var src = e.currentTarget, hot = null;
       start(e, "<span>" + src.innerHTML + "</span>", null, function (ev) {
@@ -2664,11 +2667,36 @@
     var a = tr.getBoundingClientRect(), b = D.parentNode.getBoundingClientRect(); D.style.top = (a.top - b.top + a.height / 2 - 7.5) + "px";
   }
   window.addEventListener("resize", function () { if (document.body.classList.contains("play")) posDial(); });
+  var EQIN = "<input class=\"eqIn\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Type the equation\">";
+  // with the equation hidden, either space can be typed in; what is typed is copied into the other space
+  document.addEventListener("input", function (e) {
+    var el = e.target; if (!el.classList || !el.classList.contains("eqIn")) return;
+    PG.eqTxt = el.value; [].forEach.call(document.querySelectorAll(".eqIn"), function (o) { if (o !== el) o.value = el.value; });
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("eqIn")) e.target.blur(); });
+  // is a typed equation the same function as the real one? (tested at several x-values, so any equivalent form counts)
+  function eqTypedOK(t) {
+    t = t.replace(/[\u2212\u2013]/g, "-").replace(/[\u00d7\u00b7\u22c5]/g, "*").replace(/\u00b2/g, "^2").replace(/\s+/g, "").toLowerCase();
+    var i = t.lastIndexOf("="); if (i >= 0) { var L = t.slice(0, i); if (!/^([a-z])?(\(x\))?$/.test(L)) return false; t = t.slice(i + 1); }
+    if (!t || !/^[0-9x+\-*\/().^|]+$/.test(t)) return false;
+    var bars = 0; t = t.replace(/\|/g, function () { return bars++ % 2 ? ")" : "abs("; }); if (bars % 2) return false;
+    for (var k = 0; k < 4; k++) t = t.replace(/(x|\d+\.?\d*|\([^()]*\))\^(-?\d+\.?\d*|x)/g, "pow($1,$2)");
+    if (t.indexOf("^") >= 0) return false;
+    t = t.replace(/(\d|x|\))(?=\(|x|abs|pow)/g, "$1*");
+    var f; try { f = new Function("x", "abs", "pow", "return " + t); } catch (e) { return false; }
+    for (var x = -3; x <= 3; x++) { var v; try { v = f(x, Math.abs, Math.pow); } catch (e) { return false; } if (typeof v !== "number" || !isFinite(v) || Math.abs(v - g(x)) > 1e-6) return false; }
+    return true;
+  }
   function drawPlay() {
     drawGraph();
     $("pgTable").querySelector("tbody").innerHTML = fillMode() ? TB.html() : tableHTML();
-    $("pgTable").querySelector(".pgMid").innerHTML = PG.show.eq ? eqHTML() : "";
-    $("pgEq").innerHTML = PG.show.eq ? eqHTML() : "";
+    var fe = document.activeElement, fw = fe && fe.classList && fe.classList.contains("eqIn") ? (fe.closest("#pgEq") ? "pgEq" : "mid") : null;
+    $("pgTable").querySelector(".pgMid").innerHTML = PG.show.eq ? eqHTML() : EQIN;
+    $("pgEq").innerHTML = PG.show.eq ? eqHTML() : EQIN;
+    if (!PG.show.eq) {
+      [].forEach.call(document.querySelectorAll(".eqIn"), function (el) { el.value = PG.eqTxt || ""; });
+      if (fw) { var re = fw === "pgEq" ? $("pgEq").querySelector(".eqIn") : $("pgTable").querySelector(".pgMid .eqIn"); if (re) { re.focus(); re.setSelectionRange(re.value.length, re.value.length); } }
+    }
     pgDescUpd();
     [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part] ? "true" : "false"); });
     TB.sync(); $("qzTools").hidden = false; posDial();
@@ -2826,6 +2854,14 @@
         else { var d = document.createElement("div"); d.className = "pgDesc rvOld"; d.innerHTML = oldD; d.style.cssText = "left:" + rr.left + "px;top:" + rr.top + "px;margin:0;padding:0"; rvFadeOut(d); rvFadeIn(el); rvMark("bad", mx, my); }
       };
     }
+    if (part === "eq" && String(PG.eqTxt || "").trim()) {
+      var txtE = String(PG.eqTxt).trim(), okT = eqTypedOK(txtE); PG.eqTxt = "";
+      return function () {
+        var el = $("pgEq"), rg = document.createRange(); rg.selectNodeContents(el); var rr = rg.getBoundingClientRect(), cy = rr.top + rr.height / 2;
+        if (okT) rvMark("ok", rr.right + 26, cy);
+        else { var d = document.createElement("div"); d.className = "pgEq rvOld"; d.textContent = txtE; d.style.cssText = "left:" + rr.left + "px;top:" + rr.top + "px;margin:0;padding:0"; rvFadeOut(d); rvFadeIn(el); rvMark("bad", rr.right + 26, cy); }
+      };
+    }
     if (part === "eq") {
       var sh2 = PG.shape; if (!sh2) return null;
       var okE = shapeOK(sh2), txt = shapeText(sh2);
@@ -2868,7 +2904,7 @@
       document.addEventListener("pointermove", mv); document.addEventListener("pointerup", off); document.addEventListener("pointercancel", off);
     });
   })();
-  $("pgFam").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); PG.fam = (PG.fam + 1) % FAMS.length; PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; drawPlay(); });
+  $("pgFam").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); PG.fam = (PG.fam + 1) % FAMS.length; PG.eqTxt = ""; PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; drawPlay(); });
   [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (e.isTrusted) pgUser(); closePt(); var part = b.dataset.part, on = !PG.show[part], rv = on ? pgReveal(part) : null; PG.show[part] = on; drawPlay(); if (rv) rv(); }); });
   // ---- 1.1 Play demo: the hand shows every control, one at a time ----
   var pgRun = 0, pgQ = [], pgPaused = false, pgShift = 0, pgPauseAt = 0, pgHeld = [], pgSnap = null, pgHandOp = "1";
