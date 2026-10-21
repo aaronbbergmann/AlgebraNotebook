@@ -2511,7 +2511,7 @@
   })();
 
   // ---- Playground: Equation Table Graph Description (no goals, no progress: just show/hide and drag) ----
-  var PG = { fam: 0, a: 1, h: 0, k: 0, pa: [-5, 1], pts: [], tbl: null, off: 0, shape: null, tool: null, clk: [], show: { eq: true, table: false, graph: false, desc: false, parent: false } };
+  var PG = { fam: 0, a: 1, h: 0, k: 0, pa: [1, 1], pts: [], tbl: null, off: 0, shape: null, tool: null, clk: [], show: { eq: true, table: false, graph: false, desc: false, parent: false } };
   var FAMS = ["constant", "linear", "absolute value", "quadratic"];
   function pf(x) { var f = FAMS[PG.fam]; return f === "constant" ? 1 : f === "linear" ? x : f === "absolute value" ? Math.abs(x) : x * x; }
   function shifts() { return PG.fam >= 2; }                 // vertex point moves the graph
@@ -2590,8 +2590,8 @@
     S.appendChild(vg);
     if (stretches()) {
       var ag = svgEl("g", { "data-pt": "a", style: "cursor:grab" });
-      ag.appendChild(svgEl("circle", { cx: PG.pa[0], cy: -PG.pa[1], r: .62, fill: "#6042A6", "fill-opacity": ".3" }));
-      ag.appendChild(svgEl("circle", { cx: PG.pa[0], cy: -PG.pa[1], r: .2, fill: "#6042A6" }));
+      ag.appendChild(svgEl("circle", { cx: H() + 1, cy: -(K() + PG.a), r: .62, fill: "#6042A6", "fill-opacity": ".3" }));
+      ag.appendChild(svgEl("circle", { cx: H() + 1, cy: -(K() + PG.a), r: .2, fill: "#6042A6" }));
       S.appendChild(ag);
     }
     TB.targets.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .34, fill: "#E0402F" })); });
@@ -2687,7 +2687,7 @@
       if (!which) return; var p = at(e), cl = function (v) { return Math.max(-10, Math.min(10, v)); };
       // the red point moves by whole units: up and down only for constant and linear, any direction for absolute value and quadratic
       if (which === "v") { var h = shifts() ? Math.round(cl(p.x)) : PG.h, k = Math.round(cl(p.y)); if (h === PG.h && k === PG.k) return; PG.h = h; PG.k = k; }
-      else { var y = Math.round(cl(p.y) * 4) / 4; if (!y) y = p.y < 0 ? -.25 : .25; PG.pa = [PG.pa[0], y]; PG.a = y; }
+      else { var a = Math.round((cl(p.y) - K()) * 4) / 4; if (!a) a = p.y < K() ? -.25 : .25; PG.a = a; PG.pa = [H() + 1, K() + a]; }
       drawPlay();
     });
     // a plain click on a plotted point removes it (after a beat, so that a double-click can open the editor instead)
@@ -2813,7 +2813,7 @@
   function pgDemo() {
     if (pgRun) { pgStop(); return; }
     closePt(); var run = ++pgRun; $("pgDemo").textContent = "Stop demo"; $("pgDemo").classList.add("on");
-    PG.fam = 0; PG.a = 1; PG.pa = [-5, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
+    PG.fam = 0; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); PG.show.eq = true; drawPlay();
     function cap(t) { $("pgCap").textContent = t; }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
@@ -2826,7 +2826,7 @@
     }
     // drag a point: the hand grabs it and moves it smoothly; values snap like a student's drag
     function drag(which, to, then) {
-      var from = which === "v" ? [H(), K()] : [PG.pa[0], PG.pa[1]], ms = 1500, t0 = null;
+      var from = which === "v" ? [H(), K()] : [0, PG.a], ms = 1500, t0 = null; // for the purple point, from/to[1] is the stretch a itself (the dot sits at x = h + 1, y = k + a)
       handGo(svgPt(from[0], from[1]), 650);
       pgWait(800, function () {
         handTap();
@@ -2835,8 +2835,8 @@
           if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
           var x = from[0] + (to[0] - from[0]) * e, y = from[1] + (to[1] - from[1]) * e;
           if (which === "v") { PG.h = shifts() ? Math.round(x) : PG.h; PG.k = Math.round(y); }
-          else { var a = Math.round(y * 4) / 4; if (!a) a = y < 0 ? -.25 : .25; PG.a = a; PG.pa = [PG.pa[0], a]; }
-          drawPlay(); handAt(svgPt(which === "v" ? x : PG.pa[0], y));
+          else { var a = Math.round(y * 4) / 4; if (!a) a = y < 0 ? -.25 : .25; PG.a = a; PG.pa = [H() + 1, K() + a]; }
+          drawPlay(); handAt(which === "v" ? svgPt(x, y) : svgPt(H() + 1, K() + y));
           if (u < 1) requestAnimationFrame(step); else pgWait(500, then);
         }
         requestAnimationFrame(step);
@@ -2969,12 +2969,12 @@
       function (n) { cap("Change Family steps through the four families. Let's choose quadratic."); tap($("pgFam"), function () { tap($("pgFam"), function () { tap($("pgFam"), n); }); }); },
       function (n) { cap("Press Graph to see the curve while we change it."); tap(tog("graph"), n); },
       function (n) { cap("Drag the green point to move the vertex. The equation changes."); drag("v", [-2, 2], n); },
-      function (n) { cap("Drag the purple point to change the stretch or shrink."); drag("a", [PG.pa[0], .5], n); },
+      function (n) { cap("Drag the purple point to change the stretch or shrink."); drag("a", [0, .5], n); },
       function (n) { cap("Every drag changes the equation again."); drag("v", [1, -3], n); },
-      function (n) { cap("Drag the purple point below the x-axis: a negative stretch flips the graph upside down."); drag("a", [PG.pa[0], -2], n); },
-      function (n) { drag("a", [PG.pa[0], 3], n); },
+      function (n) { cap("Drag the purple point below the x-axis: a negative stretch flips the graph upside down."); drag("a", [0, -2], n); },
+      function (n) { drag("a", [0, 3], n); },
       function (n) { cap("Let's aim for g(x) = 2(x \u2212 3)\u00b2 + 1. First the vertex..."); drag("v", [3, 1], n); },
-      function (n) { cap("...and then the stretch of 2."); drag("a", [PG.pa[0], 2], n); },
+      function (n) { cap("...and then the stretch of 2."); drag("a", [0, 2], n); },
       function (n) { cap("Now hide the graph again: we will rebuild it from the table."); tap(tog("graph"), n); },
       function (n) { cap("With Table off, the table is empty for you to complete yourself."); pgWait(1800, n); },
       function (n) { cap("Drag the equation onto any center cell. One drop puts each row's x-value into the equation."); dragEq(0, n); },
