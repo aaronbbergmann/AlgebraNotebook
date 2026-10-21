@@ -1308,7 +1308,7 @@
   function pct() { var p = 0; LEVELS.forEach(function (l) { if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }
   function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; }
   function openProg() {
-    var p = pct(), h = "<h2 id=\"progT\">" + act + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = 0;
+    var p = pct(), h = "<h2 id=\"progT\">" + shortOf(act) + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = 0;
     var names = { 1: lessonName(1), 2: "2×2 Systems", 3: "3×3 Systems" };
     LEVELS.forEach(function (l, i) {
       if (l[0] !== last) { if (last) h += "</ul>"; last = l[0]; h += "<h3>Exercise: " + names[last] + "</h3><ul>"; }
@@ -2282,16 +2282,17 @@
   function buildLessons() {
     if (lesson > topLesson()) lesson = topLesson();
     var h = "", sh = BUILT[act].short; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\" title=\"" + lessonName(l) + "\">" + (sh && sh[l - 1] || lessonName(l)) + "</option>";
-    if (!BUILT[act].sub) subx = false; else h += "<option value=\"s\" title=\"2\u00d72 Systems: Substitution\">2\u00d72 Substitution</option>";
+    if (!BUILT[act].sub) subx = false; else { var k1 = h.indexOf("</option>") + 9; h = h.slice(0, k1) + "<option value=\"s\" title=\"Substitution\">Substitution</option>" + h.slice(k1); }
     $("lesson").innerHTML = h; $("lesson").value = subx ? "s" : String(lesson);
     var ms = BUILT[act].modes || ["demo", "sequence", "calculate", "solo", "create"];
     $("modeSel").innerHTML = ms.map(function (m) { return "<option value=\"" + m + "\">" + MODES[m] + "</option>"; }).join("");
     if (ms.indexOf(mode) < 0) mode = "demo"; $("modeSel").value = mode;
   }
   // the full title shown in the list (an activity can give its own, otherwise code + name)
+  function shortOf(id) { return id === "1.4D" ? "1.4 Algebra" : id; }
   function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
   function buildActs() {
-    $("actLbl").textContent = welcome ? "Choose an activity" : act; $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
+    $("actLbl").textContent = welcome ? "Choose an activity" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
     if (fixedAct) document.title = fullTitle(act) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(act));
     $("actList").innerHTML = ACTS.map(function (a) {
       var ok = !!BUILT[a[0]], sel = !welcome && a[0] === act;
