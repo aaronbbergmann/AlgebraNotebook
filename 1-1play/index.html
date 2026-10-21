@@ -1921,7 +1921,7 @@
         S.appendChild(g);
       });
     }
-    if ((mode === "sequence" || mode === "demo") && QZ.step === 2) for (var xx = -2; xx <= 2; xx++) S.appendChild(svgEl("circle", { cx: xx, cy: -qf(fam, xx), r: .34, fill: "#E0402F" }));
+    if ((mode === "sequence" || mode === "demo") && QZ.step === 2) for (var xx = -2; xx <= 2; xx++) S.appendChild(svgEl("circle", { cx: xx, cy: -qf(fam, xx), r: .34, fill: "#FFD400", stroke: "#B58900", "stroke-width": ".07" }));
     QZ.pts.forEach(function (p, j) {
       var g = svgEl("g", { "data-qh": "pt:" + j, style: "cursor:grab" });
       g.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .55, fill: "#111", "fill-opacity": ".12" }));
@@ -2658,7 +2658,7 @@
       ag.appendChild(svgEl("circle", { cx: H() + 1, cy: -(K() + PG.a), r: .2, fill: "#6042A6" }));
       S.appendChild(ag);
     }
-    TB.targets.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .34, fill: "#E0402F" })); });
+    TB.targets.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .34, fill: "#FFD400", stroke: "#B58900", "stroke-width": ".07" })); });
     PG.pts.forEach(function (p, j) {
       var sg2 = svgEl("g", { "data-sp": j, style: "cursor:pointer" });
       if (ptOpen && ptIdx === j) sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .8, fill: "none", stroke: "#2D70B3", "stroke-width": ".12" }));
