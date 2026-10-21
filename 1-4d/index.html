@@ -1141,6 +1141,13 @@
     }
     return handEl;
   }
+  // a spot inside a center-column cell that leaves its text uncovered (any click in the cell simplifies it)
+  function cellSpot(td) {
+    var r = td.getBoundingClientRect(), cv = td.querySelector(".cv"), t = cv ? cv.getBoundingClientRect() : null;
+    if (!t || !t.width) return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    var x = r.right - t.right >= 30 ? (t.right + r.right) / 2 : t.left - r.left >= 30 ? (r.left + t.left) / 2 : r.right - 10;
+    return { x: x, y: r.top + r.height / 2 };
+  }
   function ctr(el) { var r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }
   function dotPt(row) { var r = row.getBoundingClientRect(), fs = parseFloat(getComputedStyle(row).fontSize); return { x: r.right + .675 * fs, y: r.top + r.height / 2 }; }
   function handGo(pt, ms) {
@@ -2197,7 +2204,7 @@
     function after(ms, fn) { q.push([ms, fn]); }
     function run() { if (!q.length) { busy = false; $("qzNext").disabled = false; setTimeout(handHide, 400); qzPanel(); return; } var s = q.shift(); later(function () { s[1](); run(); }, s[0]); }
     function typeInto(el, text) { after(650, function () { handGo(ctr(el), 600); }); after(700, function () { handTap(); el.focus(); }); for (var c = 1; c <= text.length; c++) (function (c) { after(110, function () { el.value = text.slice(0, c); }); })(c); }
-    function tapEl(get, fn) { if (get().hidden) { after(600, fn); return; } after(700, function () { handGo(ctr(get()), 650); }); after(750, function () { handTap(); }); after(200, fn); }
+    function tapEl(get, fn) { if (get().hidden) { after(600, fn); return; } after(700, function () { handGo(get().matches && get().matches("td.mid") ? cellSpot(get()) : ctr(get()), 650); }); after(750, function () { handTap(); }); after(200, fn); }
     var st0 = QZ.step;
     function chk() { if (QZ.step === st0 && !QZ.locked) qzCheck(); }
     function tapPt(x, y, fn) { after(550, function () { handGo(svgPt(x, y), 500); }); after(560, function () { handTap(); }); after(150, fn); }
@@ -2853,7 +2860,7 @@
       (function again() {
         if (pgRun !== run) return;
         if (TB.rows()[i].done) { pgWait(500, then); return; }
-        handGo(ctr(tbEl(i)), 600);
+        handGo(cellSpot(tbEl(i)), 600);
         pgWait(750, function () { handTap(); pgWait(200, function () { TB.click(i); pgWait(1100, again); }); });
       })();
     }
