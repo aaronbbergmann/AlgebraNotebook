@@ -1553,7 +1553,7 @@
     S.addEventListener("pointermove", function (e) {
       if (!which) return; var p = at(e), cl = function (v) { return Math.max(-10, Math.min(10, v)); };
       if (which === "v") { var h = Math.round(cl(p.x)), k = Math.round(cl(p.y)); if (h === PG.h && k === PG.k) return; PG.h = h; PG.k = k; }
-      else { var y = Math.round(cl(p.y) * 4) / 4; if (!y) y = p.y < 0 ? -.25 : .25; PG.pa = [Math.round(cl(p.x) * 4) / 4, y]; PG.a = y; }
+      else { var y = Math.round(cl(p.y) * 4) / 4; if (!y) y = p.y < 0 ? -.25 : .25; PG.pa = [PG.pa[0], y]; PG.a = y; }
       drawPlay();
     });
     function end() { which = null; }
