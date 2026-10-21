@@ -147,6 +147,14 @@
   .actList li.sel{font-weight:700;background:color-mix(in srgb,var(--plus) 18%,transparent)}
   .actList li:not(.soon):hover,.actList li:not(.soon):focus{background:color-mix(in srgb,var(--plus) 28%,transparent);outline:none}
   .actList li.soon{cursor:default;opacity:.45;text-decoration:line-through}
+  /* ---- welcome page (no activity chosen yet) ---- */
+  :root[data-mode="welcome"]{--bg:#F6F4EE;--ink:#1B2433;--plus:#2F5BEA;--plus-hover:#1E44C4;--no:#C0301E}
+  .welcome{flex:1 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem 1rem;min-height:100%;box-sizing:border-box}
+  .welcome[hidden]{display:none}
+  .wsmall{font:400 clamp(1.2rem,2.6vw,1.8rem) "LM","Latin Modern Roman","CMU Serif",Georgia,serif;font-style:italic;opacity:.75;margin-bottom:.2em}
+  .wbig{font:400 clamp(2.6rem,7.5vw,5.4rem)/1.05 "LM","Latin Modern Roman","CMU Serif",Georgia,serif;letter-spacing:-.01em}
+  body.wel .frame,body.wel .pg,body.wel .ctl-sel select,body.wel .ctl-sel label,body.wel .ctl-btn,body.wel .pgCtl,body.wel .composer,body.wel .log{display:none!important}
+  body.wel .actBtn{width:auto;min-width:10.5em}
   .eqn.free{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap}
   .eqn.free>*{padding:0 .16em!important;justify-self:auto}
   .eqn.free .raw{border-bottom:2px dashed var(--plus);cursor:pointer}
@@ -188,6 +196,7 @@
 </head>
 <body>
   <div class="stage">
+    <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
       <div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg><button class="pgFam" id="pgFam" type="button">Change Family</button></div>
       <div class="pgSide">
@@ -1193,7 +1202,6 @@
     ] }
   };
   var act = "1.4D";
-  try { var sa = localStorage.getItem("algebraActivity"); if (sa === "Playground") sa = "1.1 Play"; if (BUILT[sa]) act = sa; } catch (e) {}
   // each activity also lives at its own address: …/algebranotebook/1-4b/ opens 1.4B and stays there
   function slugOf(id) { return id.toLowerCase().replace(/\./g, "-").replace(/\s+/g, ""); }
   var fixedAct = null;
@@ -1202,6 +1210,8 @@
     for (var id in BUILT) if (slugOf(id) === seg) fixedAct = id;
     if (fixedAct) act = fixedAct;
   })();
+  // with no activity in the address, show the welcome page until one is chosen
+  var welcome = !fixedAct, hub = /github\.io$/i.test(location.hostname);
   var LEVELS = BUILT[act].levels, MORD = ["demo", "sequence", "calculate", "solo"];
   function topLesson() { return BUILT[act].top; }
   function loadProg() { try { prog = JSON.parse(localStorage.getItem(BUILT[act].key) || "{}") || {}; } catch (e) { prog = {}; } }
@@ -1756,10 +1766,10 @@
   // the full title shown in the list (an activity can give its own, otherwise code + name)
   function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
   function buildActs() {
-    $("actLbl").textContent = act; $("actBtn").classList.toggle("fixed", !!fixedAct); $("actBtn").title = fixedAct ? ACTS.filter(function (a) { return a[0] === act; })[0][1] : "Activity";
+    $("actLbl").textContent = welcome ? "Choose an activity" : act; $("actBtn").classList.toggle("fixed", !!fixedAct); $("actBtn").title = fixedAct ? ACTS.filter(function (a) { return a[0] === act; })[0][1] : "Activity";
     if (fixedAct) document.title = fullTitle(act) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(act));
     $("actList").innerHTML = ACTS.map(function (a) {
-      var ok = !!BUILT[a[0]], sel = a[0] === act;
+      var ok = !!BUILT[a[0]], sel = !welcome && a[0] === act;
       return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? fullTitle(a[0]) : a[0] + " (coming soon)") + "</li>";
     }).join("");
   }
@@ -1772,13 +1782,20 @@
   function openActs() {
     if (fixedAct) return;
     buildActs(); $("actList").hidden = false; $("actBtn").setAttribute("aria-expanded", "true"); placeActs();
-    var cur = $("actList").querySelector("li.sel"); if (cur) cur.focus();
+    var cur = $("actList").querySelector("li.sel") || $("actList").querySelector("li:not(.soon)"); if (cur) cur.focus();
   }
   function closeActs(back) { if ($("actList").hidden) return; $("actList").hidden = true; $("actBtn").setAttribute("aria-expanded", "false"); if (back) $("actBtn").focus(); }
   function setActivity(id) {
     closeActs(true);
-    if (!BUILT[id] || id === act) return;
-    act = id; if (!fixedAct) try { localStorage.setItem("algebraActivity", id); } catch (e) {}
+    if (!BUILT[id]) return;
+    if (welcome) {
+      // on the website each activity has its own page; elsewhere (a preview) it opens right here
+      if (hub) { location.href = slugOf(id) + "/"; return; }
+      welcome = false; document.body.classList.remove("wel"); $("welcome").hidden = true;
+      if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else { leavePlay(); setMode("demo"); } return; }
+    }
+    if (id === act) return;
+    act = id;
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     if (BUILT[act].play) enterPlay(); else { leavePlay(); setMode("demo"); }
@@ -1920,6 +1937,7 @@
 
   buildActs(); buildLessons(); updProg();
   if (BUILT[act].play) { setMode("demo"); enterPlay(); } else setMode("demo");
+  if (welcome) { document.body.classList.add("wel"); document.documentElement.dataset.mode = "welcome"; $("welcome").hidden = false; }
 </script>
 </body>
 </html>
