@@ -2532,6 +2532,9 @@
           var q = qAt(ev), x = gridTo(q[0], p[0]), same = function (z, a, b) { return Math.abs(z[0] - a) < 1e-9 && Math.abs(z[1] - b) < 1e-9; };
           if (m === "quiz") { var y = gridToY(q[1], p[1]); if (!QZ.pts.some(function (z) { return same(z, x, y); })) QZ.pts.push([x, y]); qzDraw(); return; }
           var y2 = gridToY(q[1], p[1]);
+          // a drop within one unit of a red target snaps onto that target
+          var tg = null, bd = 1; TB.targets.forEach(function (t) { var d = Math.hypot(q[0] - t[0], q[1] - t[1]); if (d <= bd) { bd = d; tg = t; } });
+          if (tg) { x = tg[0]; y2 = tg[1]; }
           if (!PG.pts.some(function (z) { return same(z, x, y2); })) PG.pts.push([x, y2]);
           if (fillRow && !fillRow.done) { fillRow.sub = true; fillRow.done = true; fillRow.tv = ""; }
         }
