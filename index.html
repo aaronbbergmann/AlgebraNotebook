@@ -3098,6 +3098,22 @@
         pgRaf(step);
       });
     }
+    // type the equation into one of the two spaces (the other copies it), then Equation checks it
+    function typeEq(text, then) {
+      var el = $("pgEq").querySelector(".eqIn"); if (!el) { then(); return; }
+      var rc = el.getBoundingClientRect(); handGo({ x: rc.right - 24, y: rc.top + rc.height / 2 }, 650);
+      pgWait(800, function () {
+        handTap(); el.focus();
+        (function put(c) { if (c > text.length) { pgWait(900, function () { el.blur(); then(); }); return; } el.value = text.slice(0, c); el.dispatchEvent(new Event("input", { bubbles: true })); pgWait(110, function () { put(c + 1); }); })(1);
+      });
+    }
+    // the demo stops itself now and then: the hand presses Pause demo, and the student resumes when ready
+    function pauseHere(then) {
+      var b = $("pgDemo"); cap("Paused. Take your time, then press Resume demo.");
+      handGo(ctr(b), 650);
+      pgWait(600, function () { b.classList.add("simHover"); });
+      pgWait(800, function () { handTap(); b.classList.add("simPress"); pgWait(180, function () { b.classList.remove("simPress"); b.classList.remove("simHover"); pgWait(1, then); pgPause(); }); });
+    }
     function trDemo(then) {
       var b = document.querySelector(".qzTools [data-tool=tr]"), h = H(), k = K(), a = A();
       function path(pts, done) { if (!pts.length) { pgWait(300, done); return; } var p = pts.shift(); handGo(svgPt(p[0], p[1]), 650); pgWait(380, function () { tmMove(p); }); pgWait(700, function () { path(pts, done); }); }
@@ -3121,20 +3137,26 @@
       function (n) { drag("a", [0, 3], n); },
       function (n) { cap("Let's aim for g(x) = 2(x \u2212 3)\u00b2 + 1. First the vertex..."); drag("v", [3, 1], n); },
       function (n) { cap("...and then the stretch of 2."); drag("a", [0, 2], n); },
+      function (n) { pauseHere(n); },
+      function (n) { cap("Hide the equation: now you type it yourself. Click the space below the table and type; the table's top cell copies it."); tap(tog("eq"), function () { typeEq("g(x) = 2(x-3)^2+1", n); }); },
+      function (n) { cap("Press Equation to check it. A correct equation gets a green check; a wrong one is replaced by the real equation with a red !."); tap(tog("eq"), function () { pgWait(2200, n); }); },
       function (n) { cap("Hide the description, then describe the transformation with the Transformation button."); tap(tog("desc"), n); },
       function (n) { cap("Press Transformation, then click where the vertex is: green arrows measure the move from the origin. Click again at the stretch point: a purple arrow measures it."); trDemo(n); },
       function (n) { cap("Show the description to check the answer."); tap(tog("desc"), n); },
       function (n) { cap("Hide the description and the parent."); tap(tog("desc"), function () { tap(tog("parent"), n); }); },
+      function (n) { pauseHere(n); },
       function (n) { cap("Now hide the graph again: we will rebuild it from the table."); tap(tog("graph"), n); },
       function (n) { cap("With Table off, the table is empty for you to complete yourself."); pgWait(1800, n); },
       function (n) { cap("Drag the equation onto any center cell. One drop puts each row's x-value into the equation."); dragEq(0, n); },
       function (n) { cap("The x-values appear, centered at 0. Drag the dot up or down to scroll the table like a wheel until the vertex, x = 3, is in the middle row."); dialDemo(-3, n); },
+      function (n) { pauseHere(n); },
       function (n) { cap("Three ways to get a y-value. First: click a y cell and type the answer yourself."); typeRow(0, n); },
       function (n) { cap("Second: click the expression in the middle column. Each click simplifies one step, and the answer slides into the y column."); clickRow(1, n); },
       function (n) { cap("Third: drag a finished y-value onto another y cell. A parabola is symmetric, so x = 4 has the same y as x = 2."); dragY(1, 3, n); },
       function (n) { cap("The same works for x = 5: copy the 9 from x = 1."); dragY(0, 4, n); },
       function (n) { cap("Now the middle row, but type a wrong answer on purpose."); typeRow(2, n, "4"); },
       function (n) { cap("Press Table to reveal the real table. Right answers get a green check; a wrong one fades into the correct value."); tap(tog("table"), function () { pgWait(2200, n); }); },
+      function (n) { pauseHere(n); },
       function (n) { cap("The buttons beside the graph place things by hand. The dot button plots a point."); dropShape("pt", -3, -3, n); },
       function (n) { cap("Double-click a point to edit it exactly. A panel opens with its x and y."); dbl(ptEl(PG.pts.length - 1), n); },
       function (n) { cap("Type new values and the point follows along."); typeBox("pgPtX", "-4", function () { typeBox("pgPtY", "2", n); }); },
