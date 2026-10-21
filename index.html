@@ -2657,6 +2657,7 @@
         pgWait(1400, function () { g.remove(); TB.targets = []; if (!PG.pts.some(function (z) { return z[0] === p[0] && z[1] === p[1]; })) PG.pts.push(p); drawPlay(); pgWait(600, then); });
       });
     }
+    function tapClear(then) { var b = document.querySelector(".qzTools [data-tool=clear]"); handGo(ctr(b), 650); pgWait(800, function () { handTap(); qzTool("clear"); pgWait(700, then); }); }
     function dragRows(i, then) { if (i > 4) { then(); return; } dragRow(i, function () { dragRows(i + 1, then); }); }
     // the hand drags a tool button onto the graph
     function dropShape(tool, x, y, then) {
@@ -2700,6 +2701,10 @@
       function (n) { cap("...or click the calculation to simplify it one step at a time. The answer moves into the y column."); clickRow(1, n); },
       function (n) { cap("The other rows are filled in the same way."); TB.autofill(); pgWait(1400, n); },
       function (n) { cap("Turn off Fill table and press Table to see the whole finished table."); tap(tog("build"), function () { tap(tog("table"), n); }); },
+      function (n) { cap("The buttons beside the graph place things by hand. The dot button plots a point."); dropShape("pt", -3, -3, n); },
+      function (n) { cap("The line button drops a line..."); dropShape("line", -4, 2, n); },
+      function (n) { cap("...the V button drops an absolute value graph..."); dropShape("V", -4, -2, n); },
+      function (n) { cap("...and the \u00d7 button clears the graph."); tapClear(n); },
       function (n) { cap("Drag each row onto the graph to plot its point. The red dot shows where it belongs."); dragRows(0, n); },
       function (n) { cap("Now drag the parabola button onto the graph, with its vertex on (3, 1)."); dropShape("U", 3, 1, n); },
       function (n) { cap("Drag its side point to adjust the stretch until the parabola passes through your points."); stretch(2, n); },
