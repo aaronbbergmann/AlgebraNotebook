@@ -284,7 +284,7 @@
   <aside class="chat" aria-label="Controls and tutor chat">
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Exercise</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
-      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Demo</button><div class="pgCap" id="pgCap" aria-live="polite"></div><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="build" aria-pressed="false" title="Fill the table in yourself, then plot it">Fill table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><div class="pgCap" id="pgCap" aria-live="polite"></div><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="build" aria-pressed="false" title="Fill the table in yourself, then plot it">Fill table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
@@ -1452,7 +1452,7 @@
   }
 
   // the demo button names the step it is about to do
-  function peekNext() { pend = locked ? null : nextStep(); if (mode === "demo" && !locked) $("next").textContent = pend ? stepLabel(pend) : "Next step"; logExplain(); }
+  function peekNext() { pend = locked ? null : nextStep(); if (mode === "demo" && !locked) $("next").textContent = pend ? (ops === 0 ? "Start Demo" : stepLabel(pend)) : "Next step"; logExplain(); }
   // why the next step makes sense (the demo's Explain button)
   function explain(s) {
     if (s[0].indexOf("s_") === 0) return subExplain(s);
@@ -1947,8 +1947,9 @@
     $("qzAgain").hidden = !(st === "done" && QZ.pi === 3 && up);
     if (!demo) { var f = st === "table" ? $("qzY0") : inp.querySelector("input"); if (f) f.focus(); }
   }
-  function qzLabel() {
+  function qzLabel(real) {
     var st = qStep();
+    if (!real && mode === "demo" && QZ.pi === 0 && QZ.step === 0 && !QZ.started) return "Start Demo";
     return st === "eq" ? "Type the equation" : st === "table" ? "Fill in the table" : st === "points" ? "Plot the points" : st === "graph" ? "Draw the graph" : QZ.pi < 3 ? "Next parent" : "Finish";
   }
 
@@ -2052,7 +2053,7 @@
   function logQzExplain() {
     if (!explainOn || mode !== "demo" || QZ.locked) return;
     var d = document.createElement("div"), b = document.createElement("b");
-    d.className = "msg"; b.textContent = qzLabel(); d.appendChild(b); d.appendChild(document.createElement("br")); d.appendChild(document.createTextNode(qzExplain()));
+    d.className = "msg"; b.textContent = qzLabel(true); d.appendChild(b); d.appendChild(document.createElement("br")); d.appendChild(document.createTextNode(qzExplain()));
     logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight;
   }
 
@@ -2132,7 +2133,7 @@
   // ---- demo: the hand answers each question ----
   function qzDemoStep() {
     if (busy || QZ.locked) return;
-    var fam = qFam(), st = qStep(); busy = true; $("qzNext").disabled = true;
+    var fam = qFam(), st = qStep(); busy = true; QZ.started = true; $("qzNext").disabled = true;
     var q = [];
     function after(ms, fn) { q.push([ms, fn]); }
     function run() { if (!q.length) { busy = false; $("qzNext").disabled = false; setTimeout(handHide, 400); qzPanel(); return; } var s = q.shift(); later(function () { s[1](); run(); }, s[0]); }
@@ -2495,7 +2496,7 @@
   function pgWait(ms, fn) { var id = setTimeout(function () { pgTimers.splice(pgTimers.indexOf(id), 1); fn(); }, ms); pgTimers.push(id); }
   function pgStop() {
     pgRun = 0; pgTimers.forEach(clearTimeout); pgTimers = []; handHide();
-    $("pgDemo").textContent = "Demo"; $("pgDemo").classList.remove("on"); $("pgCap").textContent = "";
+    $("pgDemo").textContent = "Start Demo"; $("pgDemo").classList.remove("on"); $("pgCap").textContent = "";
   }
   function pgDemo() {
     if (pgRun) { pgStop(); return; }
