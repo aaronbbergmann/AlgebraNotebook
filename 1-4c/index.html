@@ -1172,9 +1172,10 @@
   var NEXTMODE = { demo: "sequence", sequence: "calculate", calculate: "solo" }, LNAME = { 2: "2×2 Systems", 3: "3×3 Systems" };
   // ---- celebration: one congratulatory phrase over the screen for 3 seconds (clicks pass through) ----
   var party = null, partyTimer = null, lastPhrase = "";
-  var PHRASES = ["Tasty!", "Cool!", "Nice!", "Stands on business!", "It's a W!", "Hundo!", "Great job!", "Well done!", "Yeeesss!", "Sooo good!", "Goated!"];
+  var PHRASES = ["Tasty!", "Cool!", "Nice!", "Stands on business!", "It's a W!", "Hundo!", "Great job!", "Well done!", "Yeeesss!", "Sooo good!", "Goated!", "Pro status unlocked!"];
   function stopParty() { clearTimeout(partyTimer); if (party) { party.remove(); party = null; } }
   function celebrate() {
+    if (mode === "demo") return;   // no celebration for watching a demo
     stopParty();
     var t; do { t = PHRASES[rnd(PHRASES.length)]; } while (t === lastPhrase);
     lastPhrase = t;
