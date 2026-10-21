@@ -2163,8 +2163,8 @@
   $("pgTable").addEventListener("keydown", function (e) {
     if (mode === "demo" || !e.target.classList.contains("qzCell")) return;
     var c = [].slice.call(document.querySelectorAll(".qzCell")), i = c.indexOf(e.target);
-    if (e.key === "ArrowDown" || (e.key === "Enter" && i < c.length - 1)) { e.preventDefault(); c[Math.min(i + 1, c.length - 1)].focus(); }
-    else if (e.key === "ArrowUp") { e.preventDefault(); c[Math.max(i - 1, 0)].focus(); }
+    if (e.key === "ArrowDown" || (e.key === "Enter" && i < c.length - 1)) { e.preventDefault(); var n1 = c[Math.min(i + 1, c.length - 1)]; n1.focus(); n1.select(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); var n2 = c[Math.max(i - 1, 0)]; n2.focus(); n2.select(); }
     else if (e.key === "Enter") qzCheck();   // Enter in the last cell checks the table
   });
   function enterQuiz() {
