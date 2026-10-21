@@ -2474,7 +2474,7 @@
   })();
 
   // ---- Playground: Equation Table Graph Description (no goals, no progress: just show/hide and drag) ----
-  var PG = { fam: 0, a: 1, h: 0, k: 0, pa: [-5, 1], pts: [], tbl: null, off: 0, shape: null, tool: null, clk: [], show: { eq: false, table: false, graph: false, desc: false, parent: false } };
+  var PG = { fam: 0, a: 1, h: 0, k: 0, pa: [-5, 1], pts: [], tbl: null, off: 0, shape: null, tool: null, clk: [], show: { eq: true, table: false, graph: false, desc: false, parent: false } };
   var FAMS = ["constant", "linear", "absolute value", "quadratic"];
   function pf(x) { var f = FAMS[PG.fam]; return f === "constant" ? 1 : f === "linear" ? x : f === "absolute value" ? Math.abs(x) : x * x; }
   function shifts() { return PG.fam >= 2; }                 // vertex point moves the graph
