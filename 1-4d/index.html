@@ -178,6 +178,9 @@
   .pgDesc i{font-family:"LM",Georgia,serif;font-style:italic}
   .pgCtl{display:flex;flex-direction:column;align-items:center;gap:.5rem}
   .pgCtl[hidden]{display:none}
+  .pgDemo{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;margin-bottom:.2rem}
+  .pgCap{min-height:1.2em;max-width:12rem;text-align:center;font:500 .9rem/1.35 system-ui,sans-serif;margin-bottom:1.2rem}
+  .pgCap:empty{margin-bottom:.8rem}
   .pgCtl .lbl{font:700 .78rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-bottom:.1rem}
   .tog{box-sizing:border-box;width:10.5em;display:flex;align-items:center;gap:.6em;font:600 .92rem system-ui,sans-serif;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:999px;padding:.55em .9em;cursor:pointer;text-align:left}
   .tog::before{content:"";flex:none;width:1.05em;height:1.05em;box-sizing:border-box;border:2px solid currentColor;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.85em;line-height:1}
@@ -187,7 +190,7 @@
   .play .ctl-sel select,.play .ctl-sel label,.play .ctl-btn,.play .composer,.play .log{display:none!important}
   @media (max-width:760px){
     .chat .composer{position:static;border-radius:0;box-shadow:none}
-    body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 20rem}.ctlbox{flex-direction:row;flex-wrap:wrap;gap:.5rem;padding:.5rem .7rem}.ctl-sel{flex-direction:row}.ctl-sel select,.actBtn{width:auto}.actList li{white-space:normal}.ctl-btn{flex-direction:row;flex-wrap:wrap}.ctl-btn .btn{width:auto}.pgCtl{flex-direction:row;flex-wrap:wrap;justify-content:center}.pgCtl .lbl{width:100%;text-align:center}.tog{width:auto}
+    body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 20rem}.ctlbox{flex-direction:row;flex-wrap:wrap;gap:.5rem;padding:.5rem .7rem}.ctl-sel{flex-direction:row}.ctl-sel select,.actBtn{width:auto}.actList li{white-space:normal}.ctl-btn{flex-direction:row;flex-wrap:wrap}.ctl-btn .btn{width:auto}.pgCtl{flex-direction:row;flex-wrap:wrap;justify-content:center}.pgCtl .lbl,.pgCap{width:100%;max-width:none;text-align:center}.tog{width:auto}
     .chat{border-left:0;border-top:2px solid color-mix(in srgb,var(--ink) 18%,transparent)}
     .work{font-size:clamp(1.3rem,5.6vw,2.4rem)}
   }
@@ -235,7 +238,7 @@
   <aside class="chat" aria-label="Controls and tutor chat">
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Lesson</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
-      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="pgCtl" hidden><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Demo</button><div class="pgCap" id="pgCap" aria-live="polite"></div><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
@@ -1909,6 +1912,7 @@
     var S = $("pgSvg"), which = null;
     function at(e) { var m = S.getScreenCTM().inverse(), p = S.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; p = p.matrixTransform(m); return { x: p.x, y: -p.y }; }
     S.addEventListener("pointerdown", function (e) {
+      if (pgRun) return;
       var t = e.target.closest("[data-pt]"); if (!t) return;
       which = t.dataset.pt;
       S.setPointerCapture(e.pointerId); e.preventDefault();
@@ -1923,8 +1927,67 @@
     function end() { which = null; }
     S.addEventListener("pointerup", end); S.addEventListener("pointercancel", end);
   })();
-  $("pgFam").addEventListener("click", function () { PG.fam = (PG.fam + 1) % FAMS.length; drawPlay(); });
-  [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function () { PG.show[b.dataset.part] = !PG.show[b.dataset.part]; drawPlay(); }); });
+  $("pgFam").addEventListener("click", function (e) { if (pgRun && e.isTrusted) return; PG.fam = (PG.fam + 1) % FAMS.length; drawPlay(); });
+  [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (pgRun && e.isTrusted) return; PG.show[b.dataset.part] = !PG.show[b.dataset.part]; drawPlay(); }); });
+  // ---- 1.1 Play demo: the hand shows every control, one at a time ----
+  var pgRun = 0, pgTimers = [];
+  function svgPt(x, y) { var S = $("pgSvg"), m = S.getScreenCTM(), p = S.createSVGPoint(); p.x = x; p.y = -y; p = p.matrixTransform(m); return { x: p.x, y: p.y }; }
+  function handAt(pt) { var h = hand(); h.style.transition = "none"; h.style.opacity = "1"; h.dataset.on = "1"; h.style.transform = "translate(" + (pt.x - HX) + "px," + (pt.y - HY) + "px)"; }
+  function pgWait(ms, fn) { var id = setTimeout(function () { pgTimers.splice(pgTimers.indexOf(id), 1); fn(); }, ms); pgTimers.push(id); }
+  function pgStop() {
+    pgRun = 0; pgTimers.forEach(clearTimeout); pgTimers = []; handHide();
+    $("pgDemo").textContent = "Demo"; $("pgDemo").classList.remove("on"); $("pgCap").textContent = "";
+  }
+  function pgDemo() {
+    if (pgRun) { pgStop(); return; }
+    var run = ++pgRun; $("pgDemo").textContent = "Stop demo"; $("pgDemo").classList.add("on");
+    PG.fam = 0; PG.a = 2.25; PG.pa = [-5, 2.25]; PG.h = 0; PG.k = 0;
+    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); drawPlay();
+    function cap(t) { $("pgCap").textContent = t; }
+    function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
+    // tap a button: the hand travels to it, taps, then the button acts
+    function tap(el, then) { handGo(ctr(el), 650); pgWait(800, function () { handTap(); pgWait(180, function () { el.click(); pgWait(650, then); }); }); }
+    // drag a point: the hand grabs it and moves it smoothly; values snap like a student's drag
+    function drag(which, to, then) {
+      var from = which === "v" ? [H(), K()] : [PG.pa[0], PG.pa[1]], ms = 1500, t0 = null;
+      handGo(svgPt(from[0], from[1]), 650);
+      pgWait(800, function () {
+        handTap();
+        function step(ts) {
+          if (pgRun !== run) return;
+          if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+          var x = from[0] + (to[0] - from[0]) * e, y = from[1] + (to[1] - from[1]) * e;
+          if (which === "v") { PG.h = shifts() ? Math.round(x) : PG.h; PG.k = Math.round(y); }
+          else { var a = Math.round(y * 4) / 4; if (!a) a = y < 0 ? -.25 : .25; PG.a = a; PG.pa = [PG.pa[0], a]; }
+          drawPlay(); handAt(svgPt(which === "v" ? x : PG.pa[0], y));
+          if (u < 1) requestAnimationFrame(step); else pgWait(500, then);
+        }
+        requestAnimationFrame(step);
+      });
+    }
+    var steps = [
+      function (n) { cap("Each button on the right shows or hides one part. Start with the graph."); tap(tog("graph"), n); },
+      function (n) { cap("The table lists x-values and their y-values."); tap(tog("table"), n); },
+      function (n) { cap("The equation appears under the table and at the top of the table."); tap(tog("eq"), n); },
+      function (n) { cap("The description names the family and its transformations."); tap(tog("desc"), n); },
+      function (n) { cap("Drag the red point. In the constant family it moves up and down only."); drag("v", [0, 3], n); },
+      function (n) { cap("Change Family steps through the four families."); tap($("pgFam"), n); },
+      function (n) { cap("The purple point sets the vertical stretch. Below the x-axis, the graph reflects."); drag("a", [PG.pa[0], -2], n); },
+      function (n) { cap("Next family: absolute value."); tap($("pgFam"), n); },
+      function (n) { cap("Now the red point moves the vertex left, right, up and down."); drag("v", [3, 2], n); },
+      function (n) { cap("Parent shows the original graph as a dashed line."); tap(tog("parent"), n); },
+      function (n) { cap("Next family: quadratic."); tap($("pgFam"), n); },
+      function (n) { cap("A stretch between −1 and 1 is a vertical shrink."); drag("a", [PG.pa[0], .5], n); },
+      function (n) { cap("Move the vertex and watch the equation, table and description change together."); drag("v", [-2, -3], n); },
+      function (n) { cap("Hide the graph and use the other parts to picture it."); tap(tog("graph"), n); },
+      function (n) { cap("Then show it again to check."); tap(tog("graph"), n); },
+      function (n) { cap("Your turn: try every button and drag both points."); pgWait(2200, n); }
+    ];
+    var k = 0;
+    (function next() { if (pgRun !== run) return; if (k >= steps.length) { pgStop(); return; } steps[k++](next); })();
+  }
+  $("pgDemo").addEventListener("click", pgDemo);
+
   function enterPlay() {
     stopDemo(); stopParty(); closeAsk(false); busy = false; calc = null;
     document.documentElement.dataset.mode = "playground"; document.body.classList.add("play");
@@ -1932,6 +1995,7 @@
     drawPlay();
   }
   function leavePlay() {
+    if (pgRun) pgStop();
     document.body.classList.remove("play"); $("pg").hidden = true; document.querySelector(".frame").hidden = false; $("pgCtl").hidden = true;
   }
 
