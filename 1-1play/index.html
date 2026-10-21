@@ -266,7 +266,7 @@
   <div class="modal" id="prog" hidden><div class="card" role="dialog" aria-modal="true" aria-labelledby="progT"><div id="progBody"></div><div style="text-align:right;margin-top:1rem"><button class="btn" id="progX">Close</button></div></div></div>
 
   <aside class="chat" aria-label="Controls and tutor chat">
-    <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Lesson</label>
+    <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Exercise</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
       <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Demo</button><div class="pgCap" id="pgCap" aria-live="polite"></div><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="hint">Hint</button>
@@ -1281,7 +1281,7 @@
     var p = pct(), h = "<h2 id=\"progT\">" + act + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = 0;
     var names = { 1: lessonName(1), 2: "2×2 Systems", 3: "3×3 Systems" };
     LEVELS.forEach(function (l, i) {
-      if (l[0] !== last) { if (last) h += "</ul>"; last = l[0]; h += "<h3>" + names[last] + "</h3><ul>"; }
+      if (l[0] !== last) { if (last) h += "</ul>"; last = l[0]; h += "<h3>Exercise: " + names[last] + "</h3><ul>"; }
       var d = lvDone(l);
       h += "<li class=\"lv" + (d ? " done" : "") + "\"><span class=\"ck\">" + (d ? "✓" : "○") + "</span><span class=\"pc\">" + l[2] + "%</span><span>" + l[3] + "</span></li>";
     });
@@ -1413,7 +1413,7 @@
     if (p.length !== 2 || !p[0] || !p[1]) return "Type an equation with one = sign, like " + (lesson === 3 ? "2x+3y-z=12." : "2x+3y=12.");
     var L = parseSide(p[0]), R = parseSide(p[1]);
     if (!L || !R) return "I couldn't read that. Use numbers, " + (lesson === 3 ? "x, y, z" : "x, y") + ", + and −.";
-    if (lesson === 2 && (L.z.n || R.z.n)) return "This lesson uses x and y." + (topLesson() >= 3 ? " Use the dropdown to switch to 3×3 if your equation has z." : "");
+    if (lesson === 2 && (L.z.n || R.z.n)) return "This exercise uses x and y." + (topLesson() >= 3 ? " Use the dropdown to switch to 3×3 if your equation has z." : "");
     var q = { a: add(L.x, neg(R.x)), b: add(L.y, neg(R.y)), e: add(L.z, neg(R.z)), ks: [], c: add(R.k, neg(L.k)) };
     ["x", "y"].forEach(function (v) { if (lesson === 2 && /^[xy]$/.test(p[0]) && p[0] === v && !R[v].n) q.sol = v; });
     if (!allV().some(function (v) { return q[CK[v]].n; })) return "That equation needs at least one variable.";
