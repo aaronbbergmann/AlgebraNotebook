@@ -2505,8 +2505,21 @@
       TB.click(+td.dataset.r);
     });
     T.addEventListener("pointerdown", function (e) {
-      var tr = e.target.closest("tbody tr[data-r]"), m = TB.mode(); if (!tr || !m || e.target.closest("input") || (m === "play" && e.target.closest("td:first-child"))) return;
-      var i = +tr.dataset.r, p, ok, fillRow = null;
+      var tr = e.target.closest("tbody tr[data-r]"), m = TB.mode(); if (!tr || !m) return;
+      if (e.target.closest("input")) {
+        // a y cell being typed in: a click types, a drag carries the row to the graph
+        var ii = +tr.dataset.r, sx0 = e.clientX, sy0 = e.clientY;
+        var mv0 = function (ev) { if (Math.hypot(ev.clientX - sx0, ev.clientY - sy0) < 6) return; dn0(); var sel = window.getSelection && window.getSelection(); if (sel) sel.removeAllRanges(); rowDrag(e, ii, m); };
+        var dn0 = function () { document.removeEventListener("pointermove", mv0); document.removeEventListener("pointerup", dn0); document.removeEventListener("pointercancel", dn0); };
+        document.addEventListener("pointermove", mv0); document.addEventListener("pointerup", dn0); document.addEventListener("pointercancel", dn0);
+        return;
+      }
+      if (m === "play" && e.target.closest("td:first-child")) return;
+      rowDrag(e, +tr.dataset.r, m);
+    });
+    window.pgRowDrag = function (e, i) { rowDrag(e, i, TB.mode()); };
+    function rowDrag(e, i, m) {
+      var p, ok, fillRow = null;
       // while the table is being filled in, a finished y-value can be dragged onto another y cell to copy it there
       if (e.target.closest("td.yv") && canSub() && TB.rows()[i] && TB.rows()[i].done) { yDrag(e, i); return; }
       if (m === "quiz") { ok = QZ.step === 2 && TB.rows()[i] && TB.rows()[i].done; if (ok) p = TB.pt(i); }
@@ -2532,7 +2545,7 @@
         else if (m === "play" && added) TB.targets = TB.targets.filter(function (t) { return !near(t, p); });
         if (m === "play") drawPlay();
       });
-    });
+    }
   })();
 
   // ---- Playground: Equation Table Graph Description (no goals, no progress: just show/hide and drag) ----
@@ -2862,7 +2875,17 @@
       document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); document.addEventListener("pointercancel", up);
     }
     D.addEventListener("pointerdown", begin);
-    T.addEventListener("pointerdown", function (e) { if (dialOn() && e.target.closest("tbody td:first-child")) begin(e); });
+    T.addEventListener("pointerdown", function (e) {
+      var td = e.target.closest("tbody td:first-child"); if (!dialOn() || !td) return;
+      // an x-value: a vertical drag turns the wheel, a sideways drag carries the row to the graph
+      var sx = e.clientX, sy = e.clientY, ri = +td.parentNode.dataset.r;
+      function off() { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", off); document.removeEventListener("pointercancel", off); }
+      function mv(ev) {
+        var dx = ev.clientX - sx, dy = ev.clientY - sy; if (Math.hypot(dx, dy) < 6) return; off();
+        if (Math.abs(dx) > Math.abs(dy) && window.pgRowDrag) window.pgRowDrag(e, ri); else begin(e);
+      }
+      document.addEventListener("pointermove", mv); document.addEventListener("pointerup", off); document.addEventListener("pointercancel", off);
+    });
   })();
   $("pgFam").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); PG.fam = (PG.fam + 1) % FAMS.length; PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; drawPlay(); });
   [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (e.isTrusted) pgUser(); closePt(); var part = b.dataset.part, on = !PG.show[part], rv = on ? pgReveal(part) : null; PG.show[part] = on; drawPlay(); if (rv) rv(); }); });
