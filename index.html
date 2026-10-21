@@ -1151,7 +1151,7 @@
 
   // ---- activities: AlgebraNotebook is a collection; each built activity sets its top lesson and its progress levels ----
   var ACTS = [
-    ["1.1 Play", "Playground: Equation Table Graph Description"],
+    ["1.1 Play", "Playground: Equation Table Graph Description", "1.1 Playground: Equation Table Graph Description"],
     ["1.1A", "Parent Functions and Transformations"],
     ["1.1B", "Parent Functions and Transformations: Desmos"],
     ["1.1C", "Parent Functions and Transformations: Shrink Stretch"],
@@ -1753,12 +1753,14 @@
     var h = ""; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\">" + LONAME[l] + "</option>";
     $("lesson").innerHTML = h; $("lesson").value = String(lesson);
   }
+  // the full title shown in the list (an activity can give its own, otherwise code + name)
+  function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
   function buildActs() {
     $("actLbl").textContent = act; $("actBtn").classList.toggle("fixed", !!fixedAct); $("actBtn").title = fixedAct ? ACTS.filter(function (a) { return a[0] === act; })[0][1] : "Activity";
-    if (fixedAct) document.title = act + " " + ACTS.filter(function (a) { return a[0] === act; })[0][1] + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + act + " " + ACTS.filter(function (a) { return a[0] === act; })[0][1]);
+    if (fixedAct) document.title = fullTitle(act) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(act));
     $("actList").innerHTML = ACTS.map(function (a) {
       var ok = !!BUILT[a[0]], sel = a[0] === act;
-      return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? a[0] + " " + a[1] : a[0] + " (coming soon)") + "</li>";
+      return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? fullTitle(a[0]) : a[0] + " (coming soon)") + "</li>";
     }).join("");
   }
   function placeActs() {
