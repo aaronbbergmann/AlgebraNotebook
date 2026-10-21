@@ -201,6 +201,13 @@
   .pgFam{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;margin-bottom:.2rem}
   .btn.simHover:not(:disabled){background:var(--ink);color:var(--bg)}
   .pgCtl .pgFam:active,.pgCtl .pgFam.simPress{background:var(--plus);border-color:var(--plus);color:#fff}
+  .ptEdit{position:relative;box-sizing:border-box;width:10.5em;margin-top:.6rem;padding:.7em .8em .8em;background:#fff;border:1px solid #B8BCC2;border-radius:12px;display:flex;flex-direction:column;gap:.45em;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .ptEdit[hidden]{display:none}
+  .ptEdit label{display:flex;align-items:center;gap:.4em;font:italic 400 1.05rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;color:#1B2433}
+  .ptEdit input{box-sizing:border-box;width:100%;min-width:0;font:400 1rem system-ui,sans-serif;text-align:center;padding:.3em .2em;border:1.5px solid #9AA0A8;border-radius:6px;background:#fff;color:#1B2433}
+  .ptEdit input:focus{outline:2px solid #2D70B3;outline-offset:1px}
+  .ptX{align-self:flex-end;width:1.5rem;height:1.5rem;margin:-.3rem -.4rem 0 0;border:0;border-radius:50%;background:transparent;font:600 1.2rem/1 system-ui,sans-serif;color:#1B2433;cursor:pointer}
+  .ptX:hover{background:#E7E7E7}
   .dial{display:none;position:absolute;left:3px;top:0;width:15px;height:15px;border-radius:50%;background:#1B2433;box-shadow:0 0 0 2px #fff,0 1px 4px rgba(0,0,0,.4);cursor:ns-resize;touch-action:none;transition:transform .25s ease-out;z-index:5}
   .dial::after{content:"";position:absolute;inset:-9px}.dial.drag{transition:none}
   body.play .dial{display:block}body.play .pgTable tbody td:first-child{cursor:ns-resize;touch-action:none}
@@ -298,7 +305,7 @@
   <aside class="chat" aria-label="Controls and tutor chat">
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Exercise</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
-      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button><div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
@@ -2485,8 +2492,9 @@
       }
       else if (PG.show.table) { ok = true; var x = i - 2 + (PG.off || 0); p = [x, g(x)]; }
       if (!ok) return;
-      start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { TB.targets = [p]; drawPlay(); } }, null, function (ev) {
-        if (m === "play") { TB.targets = []; }
+      var added = false, near = function (a, b) { return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9; };
+      // the red target stays on the graph until a plotted point sits on it: a miss leaves it there to be corrected
+      start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { if (!TB.targets.some(function (t) { return near(t, p); })) { TB.targets.push(p); added = true; } drawPlay(); } }, null, function (ev) {
         var r = $("pgGraph").getBoundingClientRect();
         if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
           // the dropped point locks to the grid: whole units, or the smallest fraction of a unit that the point itself needs (1/2, 1/3, 1/4 ...)
@@ -2496,6 +2504,7 @@
           if (!PG.pts.some(function (z) { return same(z, x, y2); })) PG.pts.push([x, y2]);
           if (fillRow && !fillRow.done) { fillRow.sub = true; fillRow.done = true; fillRow.tv = ""; }
         }
+        else if (m === "play" && added) TB.targets = TB.targets.filter(function (t) { return !near(t, p); });
         if (m === "play") drawPlay();
       });
     });
@@ -2558,6 +2567,7 @@
   }
   function drawGraph() {
     var S = $("pgSvg"); S.innerHTML = "";
+    TB.targets = TB.targets.filter(function (t) { return !PG.pts.some(function (z) { return Math.abs(z[0] - t[0]) < 1e-9 && Math.abs(z[1] - t[1]) < 1e-9; }); });
     { // the grid and both axes are always there; Graph only reveals the curve
       var gr = svgEl("g", { stroke: "#E3E5E8", "stroke-width": ".05" });
       for (var i = -10; i <= 10; i++) { gr.appendChild(svgEl("line", { x1: i, y1: -10, x2: i, y2: 10 })); gr.appendChild(svgEl("line", { x1: -10, y1: i, x2: 10, y2: i })); }
@@ -2587,6 +2597,7 @@
     TB.targets.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .34, fill: "#E0402F" })); });
     PG.pts.forEach(function (p, j) {
       var sg2 = svgEl("g", { "data-sp": j, style: "cursor:pointer" });
+      if (ptOpen && ptIdx === j) sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .8, fill: "none", stroke: "#2D70B3", "stroke-width": ".12" }));
       sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .5, fill: "#111", "fill-opacity": ".1" })); sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .24, fill: "#111" })); S.appendChild(sg2);
     });
     if (PG.shape) {
@@ -2614,26 +2625,76 @@
     TB.sync(); $("qzTools").hidden = false; posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
   }
+  // ---- editing a point's coordinates: double-click a plotted point (or the dot button) and a small panel opens below the Show buttons ----
+  var ptOpen = false, ptIdx = -1, ptTimer = 0;
+  function ptNum(t) {
+    t = String(t).replace(/−/g, "-").trim(); if (!t) return NaN;
+    var m = /^(-?\d+)\s*\/\s*(\d+)$/.exec(t); if (m) return +m[2] ? +m[1] / +m[2] : NaN;
+    return /^-?(\d+\.?\d*|\.\d+)$/.test(t) ? +t : NaN;
+  }
+  function ptStr(v) { return String(Math.round(v * 1000) / 1000); }
+  function ptFill() { var p = ptIdx >= 0 ? PG.pts[ptIdx] : null; $("pgPtX").value = p ? ptStr(p[0]) : ""; $("pgPtY").value = p ? ptStr(p[1]) : ""; }
+  function selectPt(j) {
+    if (!document.body.classList.contains("play") || PG.tool) return;
+    if (j >= 0 && !PG.pts[j]) return;
+    ptOpen = true; ptIdx = j; ptFill(); $("pgPt").hidden = false; drawPlay();
+  }
+  function closePt() { if (!ptOpen) return; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; if (document.body.classList.contains("play")) drawPlay(); }
+  // typing in either box moves the point at once (a new point is added once both boxes hold numbers)
+  function ptTyped() {
+    if (!ptOpen) return;
+    var x = ptNum($("pgPtX").value), y = ptNum($("pgPtY").value);
+    if (!(Math.abs(x) <= 10) || !(Math.abs(y) <= 10)) return;
+    if (ptIdx < 0) { PG.pts.push([x, y]); ptIdx = PG.pts.length - 1; } else PG.pts[ptIdx] = [x, y];
+    drawPlay();
+  }
+  $("pgPtX").addEventListener("input", ptTyped); $("pgPtY").addEventListener("input", ptTyped);
+  $("pgPtX0").addEventListener("click", closePt);
+  // anything else the student touches closes the panel
+  document.addEventListener("pointerdown", function (e) {
+    if (!ptOpen) return; var t = e.target; if (!t.closest) return;
+    if (t.closest("#pgPt") || t.closest("[data-sp]") || t.closest(".qzTools [data-tool=pt]")) return;
+    closePt();
+  }, true);
+  $("pgSvg").addEventListener("dblclick", function (e) {
+    // the svg holds the pointer capture, so find the point under the cursor rather than trusting e.target
+    var sp = e.target.closest && e.target.closest("[data-sp]"), l = sp ? [] : document.elementsFromPoint(e.clientX, e.clientY);
+    for (var k = 0; k < l.length && !sp; k++) sp = l[k].closest && l[k].closest("[data-sp]");
+    if (!sp) return; clearTimeout(ptTimer); selectPt(+sp.dataset.sp);
+  });
+  document.querySelector(".qzTools [data-tool=pt]").addEventListener("dblclick", function () { if (document.body.classList.contains("play")) selectPt(-1); });
   // drag: the red point snaps to whole numbers; the purple point's height is the stretch factor a (steps of 0.25, never 0)
   (function () {
-    var S = $("pgSvg"), which = null;
+    var S = $("pgSvg"), which = null, pd = null;
     function at(e) { var m = S.getScreenCTM().inverse(), p = S.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; p = p.matrixTransform(m); return { x: p.x, y: -p.y }; }
     S.addEventListener("pointerdown", function (e) {
       if (pgRun) pgStop();
       if (PG.tool) return;
-      var sp = e.target.closest("[data-sp]"); if (sp) { PG.pts.splice(+sp.dataset.sp, 1); drawPlay(); return; }
+      var sp = e.target.closest("[data-sp]");
+      if (sp) { clearTimeout(ptTimer); pd = { j: +sp.dataset.sp, x: e.clientX, y: e.clientY, moved: false }; S.setPointerCapture(e.pointerId); e.preventDefault(); return; }
       var t = e.target.closest("[data-pt]"); if (!t) return;
       which = t.dataset.pt;
       S.setPointerCapture(e.pointerId); e.preventDefault();
     });
     S.addEventListener("pointermove", function (e) {
+      if (pd) {
+        // a plotted point can be dragged; it keeps to the grid (whole units, or the fractions it already uses)
+        if (!pd.moved && Math.hypot(e.clientX - pd.x, e.clientY - pd.y) < 5) return; pd.moved = true;
+        var q = at(e), cur = PG.pts[pd.j]; if (!cur) return;
+        var nx = gridTo(q.x, cur[0]), ny = gridTo(q.y, cur[1]); if (nx === cur[0] && ny === cur[1]) return;
+        PG.pts[pd.j] = [nx, ny]; if (ptOpen && ptIdx === pd.j) ptFill(); drawPlay(); return;
+      }
       if (!which) return; var p = at(e), cl = function (v) { return Math.max(-10, Math.min(10, v)); };
       // the red point moves by whole units: up and down only for constant and linear, any direction for absolute value and quadratic
       if (which === "v") { var h = shifts() ? Math.round(cl(p.x)) : PG.h, k = Math.round(cl(p.y)); if (h === PG.h && k === PG.k) return; PG.h = h; PG.k = k; }
       else { var y = Math.round(cl(p.y) * 4) / 4; if (!y) y = p.y < 0 ? -.25 : .25; PG.pa = [PG.pa[0], y]; PG.a = y; }
       drawPlay();
     });
-    function end() { which = null; }
+    // a plain click on a plotted point removes it (after a beat, so that a double-click can open the editor instead)
+    function end() {
+      if (pd && !pd.moved) { var j = pd.j; clearTimeout(ptTimer); ptTimer = setTimeout(function () { if (!PG.pts[j]) return; PG.pts.splice(j, 1); if (ptOpen) { if (ptIdx === j) { closePt(); return; } if (ptIdx > j) ptIdx--; } drawPlay(); }, 380); }
+      pd = null; which = null;
+    }
     S.addEventListener("pointerup", end); S.addEventListener("pointercancel", end);
   })();
   // ---- revealing hidden work: a green check when it was right, or the student's answer fading into the right one with a red !
@@ -2738,20 +2799,20 @@
     D.addEventListener("pointerdown", begin);
     T.addEventListener("pointerdown", function (e) { if (dialOn() && e.target.closest("tbody td:first-child")) begin(e); });
   })();
-  $("pgFam").addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); PG.fam = (PG.fam + 1) % FAMS.length; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.off = 0; TB.targets = []; drawPlay(); });
-  [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); var part = b.dataset.part, on = !PG.show[part], rv = on ? pgReveal(part) : null; PG.show[part] = on; drawPlay(); if (rv) rv(); }); });
+  $("pgFam").addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); PG.fam = (PG.fam + 1) % FAMS.length; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; drawPlay(); });
+  [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); closePt(); var part = b.dataset.part, on = !PG.show[part], rv = on ? pgReveal(part) : null; PG.show[part] = on; drawPlay(); if (rv) rv(); }); });
   // ---- 1.1 Play demo: the hand shows every control, one at a time ----
   var pgRun = 0, pgTimers = [];
   function svgPt(x, y) { var S = $("pgSvg"), m = S.getScreenCTM(), p = S.createSVGPoint(); p.x = x; p.y = -y; p = p.matrixTransform(m); return { x: p.x, y: p.y }; }
   function handAt(pt) { var h = hand(); h.style.transition = "none"; h.style.opacity = "1"; h.dataset.on = "1"; h.style.transform = "translate(" + (pt.x - HX) + "px," + (pt.y - HY) + "px)"; }
   function pgWait(ms, fn) { var id = setTimeout(function () { pgTimers.splice(pgTimers.indexOf(id), 1); fn(); }, ms); pgTimers.push(id); }
   function pgStop() {
-    pgRun = 0; pgTimers.forEach(clearTimeout); pgTimers = []; handHide(); [].forEach.call(document.querySelectorAll(".tbg,.ghost"), function (g) { g.remove(); }); [].forEach.call(document.querySelectorAll(".simHover,.simPress"), function (g) { g.classList.remove("simHover", "simPress"); }); TB.targets = [];
+    pgRun = 0; pgTimers.forEach(clearTimeout); pgTimers = []; closePt(); handHide(); [].forEach.call(document.querySelectorAll(".tbg,.ghost"), function (g) { g.remove(); }); [].forEach.call(document.querySelectorAll(".simHover,.simPress"), function (g) { g.classList.remove("simHover", "simPress"); }); TB.targets = [];
     $("pgDemo").textContent = "Start Demo"; $("pgDemo").classList.remove("on"); $("pgCap").textContent = "";
   }
   function pgDemo() {
     if (pgRun) { pgStop(); return; }
-    var run = ++pgRun; $("pgDemo").textContent = "Stop demo"; $("pgDemo").classList.add("on");
+    closePt(); var run = ++pgRun; $("pgDemo").textContent = "Stop demo"; $("pgDemo").classList.add("on");
     PG.fam = 0; PG.a = 1; PG.pa = [-5, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); PG.show.eq = true; drawPlay();
     function cap(t) { $("pgCap").textContent = t; }
@@ -2845,7 +2906,37 @@
         run1(0, steps, function () { D.classList.remove("drag"); D.style.transform = ""; pgWait(700, then); });
       });
     }
-    function tapClear(then) { var b = document.querySelector(".qzTools [data-tool=clear]"); handGo(ctr(b), 650); pgWait(800, function () { handTap(); qzTool("clear"); pgWait(700, then); }); }
+    // the hand double-clicks an element (a plotted point or the dot button): the point editor opens
+    function dbl(el, then) {
+      handGo(ctr(el), 650);
+      pgWait(800, function () { handTap(); pgWait(230, function () { handTap(); el.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true })); pgWait(900, then); }); });
+    }
+    // the hand clicks a box of the point editor and types into it, one key at a time
+    function typeBox(id, text, then) {
+      var e0 = $(id); handGo(ctr(e0), 600);
+      pgWait(750, function () {
+        handTap(); e0.focus(); e0.value = ""; e0.dispatchEvent(new Event("input", { bubbles: true })); var c = 0;
+        (function nx() { if (pgRun !== run) return; c++; e0.value = text.slice(0, c); e0.dispatchEvent(new Event("input", { bubbles: true })); if (c < text.length) pgWait(220, nx); else pgWait(900, then); })();
+      });
+    }
+    // the hand drags the selected point up two units; the panel follows
+    function drag2(then) {
+      var p = PG.pts[ptIdx], from = p.slice(), to = [from[0], from[1] + 2], ms = 1200, t0 = null;
+      handGo(svgPt(from[0], from[1]), 650);
+      pgWait(800, function () {
+        handTap();
+        function step(ts) {
+          if (pgRun !== run) return;
+          if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / ms), y = Math.round(from[1] + (to[1] - from[1]) * u);
+          if (PG.pts[ptIdx] && PG.pts[ptIdx][1] !== y) { PG.pts[ptIdx] = [from[0], y]; ptFill(); drawPlay(); }
+          handAt(svgPt(from[0], from[1] + (to[1] - from[1]) * u));
+          if (u < 1) requestAnimationFrame(step); else pgWait(800, then);
+        }
+        requestAnimationFrame(step);
+      });
+    }
+    function ptEl(j) { return document.querySelector("#pgSvg [data-sp=\"" + j + "\"]"); }
+    function tapClear(then) { var b = document.querySelector(".qzTools [data-tool=clear]"); handGo(ctr(b), 650); pgWait(800, function () { handTap(); closePt(); qzTool("clear"); pgWait(700, then); }); }
     function dragRows(i, then) { if (i > 4) { then(); return; } dragRow(i, function () { dragRows(i + 1, then); }); }
     // the hand drags a tool button onto the graph
     function dropShape(tool, x, y, then) {
@@ -2895,6 +2986,13 @@
       function (n) { cap("Now the middle row, but type a wrong answer on purpose."); typeRow(2, n, "4"); },
       function (n) { cap("Press Table to reveal the real table. Right answers get a green check; a wrong one fades into the correct value."); tap(tog("table"), function () { pgWait(2200, n); }); },
       function (n) { cap("The buttons beside the graph place things by hand. The dot button plots a point."); dropShape("pt", -3, -3, n); },
+      function (n) { cap("Double-click a point to edit it exactly. A panel opens with its x and y."); dbl(ptEl(PG.pts.length - 1), n); },
+      function (n) { cap("Type new values and the point follows along."); typeBox("pgPtX", "-4", function () { typeBox("pgPtY", "2", n); }); },
+      function (n) { cap("Press \u00d7 to close the panel."); tap($("pgPtX0"), n); },
+      function (n) { cap("Double-clicking the dot button opens the same panel, blank, to make a new point from its coordinates."); dbl(document.querySelector(".qzTools [data-tool=pt]"), n); },
+      function (n) { cap("Type an x and a y, and the point appears."); typeBox("pgPtX", "3", function () { typeBox("pgPtY", "-2", n); }); },
+      function (n) { cap("Drag the point and the panel updates too."); drag2(n); },
+      function (n) { cap("Close the panel."); tap($("pgPtX0"), n); },
       function (n) { cap("The line button drops a line..."); dropShape("line", -4, 2, n); },
       function (n) { cap("...the V button drops an absolute value graph..."); dropShape("V", -4, -2, n); },
       function (n) { cap("...and the \u00d7 button clears the graph."); tapClear(n); },
@@ -2916,7 +3014,7 @@
     drawPlay();
   }
   function leavePlay() {
-    if (pgRun) pgStop();
+    if (pgRun) pgStop(); closePt();
     document.body.classList.remove("play"); $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false; $("pgCtl").hidden = true;
   }
 
