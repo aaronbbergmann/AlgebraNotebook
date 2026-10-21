@@ -2685,7 +2685,7 @@
     var el = e.target; if (!el.classList || !el.classList.contains("eqIn")) return;
     PG.eqTxt = el.value; [].forEach.call(document.querySelectorAll(".eqIn"), function (o) { if (o !== el) o.value = el.value; });
   });
-  document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("eqIn")) e.target.blur(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("eqIn")) { e.target.blur(); if (!PG.show.eq && String(PG.eqTxt || "").trim()) document.querySelector(".tog[data-part=eq]").click(); } });
   // is a typed equation the same function as the real one? (tested at several x-values, so any equivalent form counts)
   function eqTypedOK(t) {
     t = t.replace(/[\u2212\u2013]/g, "-").replace(/[\u00d7\u00b7\u22c5]/g, "*").replace(/\u00b2/g, "^2").replace(/\s+/g, "").toLowerCase();
