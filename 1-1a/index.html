@@ -2647,7 +2647,7 @@
       PG.pts.forEach(function (p, j) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .24, fill: "#111" })); });
       return;
     }
-    var vx = H(), vy = K();
+    var vx = H(), vy = g(H());   // the constant function sits at y = 1 when its shift is 0
     var vg = svgEl("g", { "data-pt": "v", style: "cursor:grab" });
     vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .62, fill: "#2E9E4F", "fill-opacity": ".3" }));
     vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .2, fill: "#2E9E4F" }));
@@ -2776,7 +2776,7 @@
       }
       if (!which) return; var p = at(e), cl = function (v) { return Math.max(-10, Math.min(10, v)); };
       // the red point moves by whole units: up and down only for constant and linear, any direction for absolute value and quadratic
-      if (which === "v") { var h = shifts() ? Math.round(cl(p.x)) : PG.h, k = Math.round(cl(p.y)); if (h === PG.h && k === PG.k) return; PG.h = h; PG.k = k; }
+      if (which === "v") { var h = shifts() ? Math.round(cl(p.x)) : PG.h, k = Math.round(cl(p.y)) - A() * pf(0); if (h === PG.h && k === PG.k) return; PG.h = h; PG.k = k; }
       else { var a = Math.round((cl(p.y) - K()) * 4) / 4; if (!a) a = p.y < K() ? -.25 : .25; PG.a = a; PG.pa = [H() + 1, K() + a]; }
       drawPlay();
     });
