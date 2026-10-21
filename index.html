@@ -146,6 +146,9 @@
   .actList li.sel{font-weight:700;background:color-mix(in srgb,var(--plus) 18%,transparent)}
   .actList li:not(.soon):hover,.actList li:not(.soon):focus{background:color-mix(in srgb,var(--plus) 28%,transparent);outline:none}
   .actList li.soon{cursor:default;opacity:.45;text-decoration:line-through}
+  .eqn.free{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap}
+  .eqn.free>*{padding:0 .16em!important;justify-self:auto}
+  .eqn.free .raw{border-bottom:2px dashed var(--plus);cursor:pointer}
   /* ---- Playground: Equation Table Graph Description ---- */
   :root[data-mode="playground"]{--bg:#FFFFFF;--ink:#1B2433;--plus:#8E2465;--plus-hover:#6E1A4E;--no:#C0301E}
   .pg{flex:1 0 auto;display:flex;align-items:flex-start;justify-content:center;gap:1.2rem;flex-wrap:wrap;padding:1.2rem .4rem;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
@@ -362,6 +365,7 @@
     }
   }
   function makeProblem() {
+    if (SUB()) return generateSub(mode === "demo" ? 1 : 0);
     if (lesson === 1) return generate1();
     var dm = mode === "demo" ? curDm : 0;
     if (!dm && mode !== "create" && Math.random() < 0.2) return generateDeg(Math.random() < 0.5 ? "inf" : "none");
@@ -489,7 +493,7 @@
     o[N - 1] = q.raw || sg(q.c);
     return o;
   }
-  function fmt(q, vs) { return cells(q, vs).join(" ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
+  function fmt(q, vs) { if (SUB()) return fmtSub(toExpr(q)); return cells(q, vs).join(" ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
 
   function mkRow(q, live, vs) {
     var r = document.createElement("div"), N = 2 * vs.length + 3; r.className = "eqn";
@@ -506,6 +510,7 @@
   }
 
   function render(pop) {
+    if (SUB()) { subRender(pop); return; }
     var W = $("wsEl"), O = $("origEl"), S = $("sysEl"), vs = curVs(), ov = dv();
     W.innerHTML = ""; O.innerHTML = ""; S.innerHTML = ""; rows = []; orows = []; srows = [];
     O.style.setProperty("--nc", 2 * ov.length + 3); S.style.setProperty("--nc", 2 * sysV.length + 3);
@@ -778,6 +783,7 @@
   // the value takes the variable's place, so the other terms keep their positions
   // sets: o = the original equations, s = the new 2-variable equations, w = an equation in the workspace
   function substitute(name, set, j, pv) {
+    if (SUB()) { subValue(name, set, j, pv); return; }
     if (locked || pv !== name) return;
     if (lesson === 3) {
       var solve = sys.length === 2 && !sysDone();
@@ -823,7 +829,7 @@
     if (mode === "solo") { buildAnswer(); nx.hidden = true; updUndo(); return; }
     if (mode === "create") {
       if (!orig.length) return;
-      orig.pop(); ws = JSON.parse(JSON.stringify(orig)); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }];
+      orig.pop(); ws = wsFromOrig(); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }];
       render(-1); $("answer").hidden = true; $("creator").hidden = false; nx.hidden = true; crPrompt(); updUndo(); return;
     }
     if (!hist.length) return;
@@ -879,6 +885,7 @@
   }
   function confirmAsk() {
     var i = askIdx, txt = $("askIn").value, err = function (t) { $("askErr").textContent = t; };
+    if (askKind === "subfn") { var cr = subCb.check(txt); if (cr !== true) { err(cr); $("askIn").select(); return; } closeAsk(false); subCb.ok(); return; }
     if (askKind === "mul") {
       var k = parse(txt);
       if (!k) { err("Enter a number like 2, -3 or 1/2."); return; }
@@ -916,6 +923,7 @@
     return ms.length === 1 ? "Multiply the " + eqName(rowOf(ms[0][0]), ws.length) + " by " + wrap(ms[0][1]) : "Multiply both equations";
   }
   function hintText() {
+    if (SUB()) return subHint();
     if (locked) return "You solved it!";
     if (calc) return "Multiply every term by the number, then type the whole new equation.";
     if (ws.some(function (q) { return q.ks.some(function (k) { return k.r; }); })) return mode === "sequence" ? "Click the multiplication to calculate it." : "Do the multiplication in the parentheses and type the result.";
@@ -970,6 +978,7 @@
     return null;
   }
   function nextStep() {
+    if (SUB()) return subNext();
     var q = ws[0], v, m, ri = ws.findIndex(function (r) { return r.raw; });
     if (ri >= 0) return ["calc", ri];
     if (lesson === 1) return !q ? null : q.ks.length ? ["const", 0, 0] : isOne(q.a) ? null : ["coef", 0];
@@ -1049,6 +1058,7 @@
   function demoStep() {
     if (busy || locked) return;
     var s = pend; if (!s) return;
+    if (s[0].indexOf("s_") === 0) { subDemoStep(s); return; }
     busy = true; $("next").disabled = true;
     var t = s[0], i = s[1], act;
     function release(ms) { setTimeout(function () { busy = false; $("next").disabled = false; peekNext(); }, ms || 0); setTimeout(handHide, (ms || 0) + 350); }
@@ -1140,7 +1150,7 @@
 
   // ---- activities: AlgebraNotebook is a collection; each built activity sets its top lesson and its progress levels ----
   var ACTS = [
-    ["Playground", "Equation Table Graph Description"],
+    ["1.1 Play", "Playground: Equation Table Graph Description"],
     ["1.1A", "Parent Functions and Transformations"],
     ["1.1B", "Parent Functions and Transformations: Desmos"],
     ["1.1C", "Parent Functions and Transformations: Shrink Stretch"],
@@ -1156,7 +1166,14 @@
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   var BUILT = {
-    "Playground": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
+    "1.1 Play": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
+    "1.4B": { top: 2, key: "algebraProgress:1.4B", levels: [
+      [1, "demo", 5, "Demo Mode"], [1, "sequence", 10, "Sequence Mode"],
+      [1, "calculate", 15, "Calculate Mode"], [1, "solo", 20, "Solo Mode"],
+      [2, "demo", 30, "Demo Mode"], [2, "sequence", 40, "Sequence Mode"],
+      [2, "calculate", 55, "Calculate Mode"], [2, "solo", 70, "Solo Mode"],
+      [2, "solo", 85, "Solo Mode, 2nd problem", 2], [2, "solo", 100, "Solo Mode, 3rd problem", 3]
+    ] },
     "1.4C": { top: 2, key: "algebraProgress:1.4C", levels: [
       [1, "demo", 5, "Demo Mode"], [1, "sequence", 10, "Sequence Mode"],
       [1, "calculate", 15, "Calculate Mode"], [1, "solo", 20, "Solo Mode"],
@@ -1175,7 +1192,7 @@
     ] }
   };
   var act = "1.4D";
-  try { var sa = localStorage.getItem("algebraActivity"); if (BUILT[sa]) act = sa; } catch (e) {}
+  try { var sa = localStorage.getItem("algebraActivity"); if (sa === "Playground") sa = "1.1 Play"; if (BUILT[sa]) act = sa; } catch (e) {}
   var LEVELS = BUILT[act].levels, MORD = ["demo", "sequence", "calculate", "solo"];
   function topLesson() { return BUILT[act].top; }
   function loadProg() { try { prog = JSON.parse(localStorage.getItem(BUILT[act].key) || "{}") || {}; } catch (e) { prog = {}; } }
@@ -1220,11 +1237,13 @@
   // can the demo walk through this system? (whole-number coefficients, and no zero coefficients to eliminate)
   function demoOK(E) {
     if (!ints(E)) return false;
+    if (SUB()) return E.some(function (q) { return q.sol; });
     return lesson === 1 ? !!E[0].a.n : lesson === 3 ? !!bestElim(E) : E.every(function (q) { return q.a.n && q.b.n; });
   }
   function setMode(m) {
     var sel = $("modeSel");
     // equations typed in Create carry over to the mode the student picks
+    if (mode === "create" && m !== "create" && m !== "solo" && SUB() && orig.length === allV().length && !orig.some(function (q) { return q.sol; })) { sel.value = "create"; note("For substitution, one equation has to be solved for a variable, like y = 2x - 6. Press Undo and type it that way."); return; }
     if (mode === "create" && m !== "create" && orig.length === allV().length) {
       if (m === "demo" && !demoOK(orig)) { sel.value = "create"; note("The demo can't walk through this one: a coefficient is zero or not a whole number. Try Calculate or Sequence."); return; }
       useCustom = JSON.parse(JSON.stringify(orig));
@@ -1241,7 +1260,7 @@
     if (mode === "create") orig = [];
     else if (useCustom) { orig = useCustom; useCustom = null; }
     else orig = makeProblem();
-    ws = JSON.parse(JSON.stringify(orig));
+    ws = wsFromOrig();
     sys = []; sysV = []; elim = ""; elimInfo = lesson === 3 && orig.length === 3 && ints(orig) ? bestElim(orig) : null;
     hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = [];
     steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }];
@@ -1318,6 +1337,7 @@
     if (!L || !R) return "I couldn't read that. Use numbers, " + (lesson === 3 ? "x, y, z" : "x, y") + ", + and −.";
     if (lesson === 2 && (L.z.n || R.z.n)) return "This lesson uses x and y." + (topLesson() >= 3 ? " Use the dropdown to switch to 3×3 if your equation has z." : "");
     var q = { a: add(L.x, neg(R.x)), b: add(L.y, neg(R.y)), e: add(L.z, neg(R.z)), ks: [], c: add(R.k, neg(L.k)) };
+    ["x", "y"].forEach(function (v) { if (lesson === 2 && /^[xy]$/.test(p[0]) && p[0] === v && !R[v].n) q.sol = v; });
     if (!allV().some(function (v) { return q[CK[v]].n; })) return "That equation needs at least one variable.";
     return q;
   }
@@ -1329,7 +1349,7 @@
     var r = parseAny($("crIn").value), err = $("crErr");
     if (typeof r === "string") { err.textContent = r; return; }
     var E = orig.concat([r]);
-    orig = E; ws = JSON.parse(JSON.stringify(orig)); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }];
+    orig = E; ws = wsFromOrig(); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }];
     render(-1); updUndo();
     if (orig.length < allV().length) { crPrompt(); return; }
     elimInfo = lesson === 3 && ints(orig) ? bestElim(orig) : null;
@@ -1341,6 +1361,7 @@
   function peekNext() { pend = locked ? null : nextStep(); if (mode === "demo" && !locked) $("next").textContent = pend ? stepLabel(pend) : "Next step"; logExplain(); }
   // why the next step makes sense (the demo's Explain button)
   function explain(s) {
+    if (s[0].indexOf("s_") === 0) return subExplain(s);
     var t = s[0], q = ws[s[1]], k = q && q.ks[s[2]];
     if (t === "show") return "We want one variable to cancel when we add the equations. Multiplying the " + eqName(s[1], ws.length) + " by " + wrap(s[2]) + " makes its coefficient the opposite of the matching coefficient in the other equation.";
     if (t === "mul") return "We want one variable to cancel when we add the equations. Multiplying the " + eqName(s[1], ws.length) + " by " + wrap(s[2]) + " makes its coefficient the opposite of the matching coefficient in the other equation. Every term, on both sides, gets multiplied so the equation stays balanced.";
@@ -1355,6 +1376,7 @@
     return "We found " + s[1] + " = " + (vals[s[1]] ? sg(vals[s[1]]) : "a number") + ". Putting that value in place of " + s[1] + " in an equation leaves one fewer unknown, so we can solve for the next variable.";
   }
   function stepLabel(s) {
+    if (s[0].indexOf("s_") === 0) return subLabel(s);
     var t = s[0], q = ws[s[1]];
     if (t === "show") return "Multiply " + eqName(s[1], ws.length) + " by " + wrap(s[2]);
     if (t === "mul") return "Multiply " + eqName(s[1], ws.length) + " by " + wrap(s[2]);
@@ -1404,6 +1426,317 @@
   });
 
   window.addEventListener("resize", function () { colMin = []; if (ws.length) render(-1); if (!$("ask").hidden) placeAsk(); });
+  // ---- 1.4B substitution: equations are lists of terms on each side ----
+  // a term is {k:"t", c, v} (v "" for a number), {k:"g", c, in:[terms]} (c times parentheses) or {k:"p", c, val} (c times a substituted value)
+  function SUB() { return act === "1.4B" && lesson === 2; }
+  function T(c, v) { return { k: "t", c: c, v: v || "" }; }
+  function cp(o) { return JSON.parse(JSON.stringify(o)); }
+  function toExpr(q) {
+    if (q.L) return cp(q);
+    var L = [], R = [];
+    if (q.sol === "y" || q.sol === "x") {
+      var o = q.sol === "y" ? "x" : "y", oc = q.sol === "y" ? q.a : q.b;
+      L = [T(mk(1), q.sol)]; if (oc.n) R.push(T(neg(oc), o)); if (q.c.n || !R.length) R.push(T(q.c));
+    } else { if (q.a.n) L.push(T(q.a, "x")); if (q.b.n) L.push(T(q.b, "y")); if (!L.length) L.push(T(mk(0))); R = [T(q.c)]; }
+    return { L: L, R: R };
+  }
+  function wsFromOrig() { return SUB() ? orig.map(toExpr) : cp(orig); }
+  function hasVar(ts) { return ts.some(function (t) { return t.k !== "t" || t.v; }); }
+  function fixSide(ts) { ts = ts.filter(function (t) { return !(t.k === "t" && !t.c.n); }); return ts.length ? ts : [T(mk(0))]; }
+  function termHTML(t, first) {
+    var c = t.c;
+    if (t.k === "t") return t.v ? "<span class=\"co\">" + tm(first ? c : ab(c), first) + "</span><i class=\"var\">" + t.v + "</i>" : (first ? sg(c) : sg(ab(c)));
+    if (t.k === "g") return "<span class=\"co\">" + tm(first ? c : ab(c), first) + "</span>(" + sideHTML(t.in) + ")";
+    return (first && c.n < 0 ? "−" : "") + (isOne(ab(c)) ? "" : sg(ab(c))) + "(" + sg(t.val) + ")";
+  }
+  function sideHTML(ts) { return ts.map(function (t, i) { return (i ? " " + (t.c.n < 0 ? "−" : "+") + " " : "") + termHTML(t, i === 0); }).join(""); }
+  function plain(h) { return h.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
+  function fmtSub(q) { return plain(sideHTML(q.L) + " = " + (q.raw ? q.raw : sideHTML(q.R))); }
+  // the value shown in a product, as the student reads it (the sign in front belongs to the operator unless it comes first)
+  function prodShown(t, first) { return mul(first ? t.c : ab(t.c), t.val); }
+  function srcVar(q) { return !q.raw && q.L.length === 1 && q.L[0].k === "t" && q.L[0].v && isOne(q.L[0].c) && hasVar(q.R) ? q.L[0].v : ""; }
+  function isSolved(q) { return !q.raw && q.L.length === 1 && q.L[0].k === "t" && q.L[0].v && isOne(q.L[0].c) && q.R.length === 1 && q.R[0].k === "t" && !q.R[0].v; }
+  function isDead(q) { return !q.raw && !hasVar(q.L) && !hasVar(q.R) && q.L.length === 1 && q.R.length === 1; }
+  function findVar(q, v) { var s = null; ["L", "R"].forEach(function (sd) { if (s) return; var i = q[sd].findIndex(function (t) { return t.k === "t" && t.v === v; }); if (i >= 0) s = [sd, i]; }); return s; }
+  function likePair(ts) {
+    for (var a = 0; a < ts.length; a++) for (var b = a + 1; b < ts.length; b++)
+      if (ts[a].k === "t" && ts[b].k === "t" && ts[a].v === ts[b].v) return [a, b];
+    return null;
+  }
+
+  // ---- the operations (each records a step; Calculate mode asks the student to type the result first) ----
+  function subAsk(i, prompt, ph, check, ok) {
+    if (!$("ask").hidden) closeAsk(true);
+    askIdx = i; askKind = "subfn"; subCb = { check: check, ok: ok };
+    $("askT").textContent = prompt; if (rows[i]) rows[i].classList.add("asking");
+    showInput(); $("askIn").placeholder = ph;
+  }
+  var subCb = null;
+  function numCheck(want) { return function (txt) { var n = parse(txt); if (!n) return "Type a number, like 6 or -3/2."; return same(n, want) ? true : "Not quite. Try again."; }; }
+  function exprCheck(want) {
+    return function (txt) {
+      var o = parseSide(String(txt).toLowerCase().replace(/−/g, "-").replace(/[\s*·⋅]/g, ""));
+      if (!o) return "Type it like 8x-24.";
+      var w = { x: mk(0), y: mk(0), k: mk(0) }; want.forEach(function (t) { var key = t.v || "k"; w[key] = add(w[key], t.c); });
+      return same(o.x, w.x) && same(o.y, w.y) && same(o.k, w.k) && !o.z.n ? true : "Not quite. Try again.";
+    };
+  }
+  function subSubst(from, to, side, idx) {
+    if (locked) return; var s = ws[from], q = cp(ws[to]), t = q[side][idx], v = srcVar(s);
+    if (!v || !t || t.k !== "t" || t.v !== v) { bad(to); return; }
+    snap(); q[side][idx] = { k: "g", c: t.c, in: cp(s.R) };
+    ws[to] = q; ws.splice(from, 1); subDone(ws.indexOf(q));
+  }
+  function subDist(i, side, idx, ready) {
+    if (locked) return; var q = cp(ws[i]), g = q[side][idx]; if (!g || g.k !== "g") return;
+    var out = g.in.map(function (t) { return T(mul(t.c, g.c), t.v); });
+    if (mode === "calculate" && !ready) { subAsk(i, "Distribute " + plain(termHTML(g, true)) + ":", "e.g. 8x-24", exprCheck(out), function () { subDist(i, side, idx, true); }); return; }
+    snap(); q[side].splice.apply(q[side], [idx, 1].concat(out)); q[side] = fixSide(q[side]); ws[i] = q; subDone(i);
+  }
+  function subComb(i, side, a, b, ready) {
+    if (locked) return; var q = cp(ws[i]), A = q[side][a], B = q[side][b];
+    if (!A || !B || A.k !== "t" || B.k !== "t" || A.v !== B.v || a === b) return;
+    if (a > b) { var t0 = a; a = b; b = t0; A = q[side][a]; B = q[side][b]; }
+    var sum = T(add(A.c, B.c), A.v);
+    if (mode === "calculate" && !ready) {
+      subAsk(i, "Combine " + plain(termHTML(A, true) + " " + (B.c.n < 0 ? "−" : "+") + " " + termHTML(B, false)) + ":", A.v ? "e.g. 11" + A.v : "e.g. 3", exprCheck([sum]), function () { subComb(i, side, a, b, true); }); return;
+    }
+    snap(); q[side][a] = sum; q[side].splice(b, 1); q[side] = fixSide(q[side]); ws[i] = q; subDone(i);
+  }
+  function subMove(i, idx) {
+    if (locked) return; var q = cp(ws[i]), k = q.L[idx];
+    if (!k || k.k !== "t" || k.v || !hasVar(q.L) || q.R.length !== 1 || hasVar(q.R)) { bad(i); return; }
+    snap(); var r = q.R[0].c; q.L.splice(idx, 1); q.L = fixSide(q.L); q.R = [T(add(r, neg(k.c)))];
+    if (mode === "calculate") q.raw = sg(r) + (k.c.n > 0 ? " − " + sg(k.c) : " + " + sg(ab(k.c)));
+    ws[i] = q; subDone(i);
+    if (mode === "calculate") subRawAsk(ws.indexOf(q));
+  }
+  function subDiv(i) {
+    if (locked) return; var q = cp(ws[i]), L = q.L[0];
+    if (q.L.length !== 1 || L.k !== "t" || !L.v || isOne(L.c) || q.R.length !== 1 || hasVar(q.R)) { bad(i); return; }
+    snap(); var d = q.R[0].c; q.L = [T(mk(1), L.v)]; q.R = [T(mul(d, inv(L.c)))];
+    if (mode === "calculate") q.raw = sg(d) + "/" + wrap(L.c);
+    ws[i] = q; subDone(i);
+    if (mode === "calculate") subRawAsk(ws.indexOf(q));
+  }
+  function subProd(i, side, idx, ready) {
+    if (locked) return; var q = cp(ws[i]), p = q[side][idx]; if (!p || p.k !== "p") return;
+    if (mode === "calculate" && !ready) { subAsk(i, "Calculate " + plain(termHTML(p, idx === 0)) + ":", "e.g. 8", numCheck(prodShown(p, idx === 0)), function () { subProd(i, side, idx, true); }); return; }
+    snap(); q[side][idx] = T(mul(p.c, p.val)); ws[i] = q; subDone(i);
+  }
+  function subRawAsk(i) {
+    var q = ws[i]; if (!q || !q.raw) return;
+    subAsk(i, "Simplify " + q.raw + ":", "e.g. 26", numCheck(q.R[0].c), function () { var n = cp(ws[i]); delete n.raw; ws[i] = n; subDone(i); });
+  }
+  function subCalcRaw(i) { if (!ws[i] || !ws[i].raw) return; snap(); var n = cp(ws[i]); delete n.raw; ws[i] = n; subDone(i); }
+  // a solved value dropped onto its letter becomes a multiplication to work out (a bare positive value goes straight in)
+  function subValue(name, set, j, pv) {
+    if (locked || pv !== name || !vals[name]) return;
+    var q = set === "o" ? toExpr(orig[j]) : cp(ws[j]); if (!q) return;
+    var at = findVar(q, name); if (!at) return;
+    snap();
+    var t = q[at[0]][at[1]], val = vals[name];
+    q[at[0]][at[1]] = isOne(t.c) && val.n > 0 ? T(val) : { k: "p", c: t.c, val: val };
+    var pos;
+    if (set === "w") { ws[j] = q; pos = j; } else { ws.push(q); pos = ws.length - 1; }
+    subDone(pos, set === "o" ? orows[j] : null);
+    var nq = ws[pos]; if (mode === "calculate" && nq) { var pi = nq[at[0]].findIndex(function (u) { return u.k === "p"; }); if (pi >= 0) subProd(pos, at[0], pi); }
+  }
+  function subDone(pop, from) {
+    ops++; mulNote = null;
+    var fa = from && from.getBoundingClientRect(), keep = ws[pop], sr = rows[pop], a = sr && sr.getBoundingClientRect(), fresh = [];
+    ws = ws.filter(function (q) { if (isSolved(q)) { vals[q.L[0].v] = q.R[0].c; fresh.push(q.L[0].v); return false; } return true; });
+    pop = ws.indexOf(keep);
+    var L = ws.map(fmtSub).concat(vlines());
+    steps.push({ eqs: L, ms: L.map(function () { return ""; }) }); clearLog(); subRender(pop);
+    fresh.forEach(function (n) { var chip = $("vals").querySelector("[data-v=\"" + n + "\"]"); if (a && chip) dropIn(chip, a); });
+    if (fa && rows[pop]) { rows[pop].classList.remove("pop"); flyIn(rows[pop], { getBoundingClientRect: function () { return fa; } }); }
+    var dead = ws.filter(isDead)[0];
+    if (dead) {
+      var l = dead.L[0].c, r = dead.R[0].c, cl = same(l, r) ? "inf" : "none";
+      result = cl; locked = true; renderVals(); updUndo();
+      note(cl === "inf" ? "Every variable cancelled and we got " + sg(l) + " = " + sg(r) + ". That is always true, so this system has infinitely many solutions."
+        : "Every variable cancelled and we got " + sg(l) + " = " + sg(r) + ". That can never be true, so this system has no solution.");
+      onSolved(); return;
+    }
+    if (allV().every(function (n) { return vals[n]; })) { locked = true; updUndo(); onSolved(); } else if (mode === "demo" && !busy) peekNext();
+  }
+
+  // ---- drawing ----
+  function subRowEl(q, set, i, live) {
+    var r = document.createElement("div"), h = "", src = live ? srcVar(q) : "";
+    r.className = "eqn free";
+    ["L", "R"].forEach(function (sd) {
+      if (sd === "R") { h += "<span class=\"eqc\">" + (src ? "<button class=\"eq\" aria-label=\"Equals sign: drag this equation onto its letter in the other equation\">=</button>" : "=") + "</span>"; if (q.raw) { h += "<span class=\"raw\">" + q.raw + "</span>"; return; } }
+      q[sd].forEach(function (t, j) {
+        if (j) h += "<span class=\"op\" data-side=\"" + sd + "\" data-at=\"" + j + "\">" + (t.c.n < 0 ? "−" : "+") + "</span>";
+        var drop = t.k === "t" ? " data-drop=\"sub:" + set + ":" + i + ":" + t.v + ":" + sd + ":" + j + "\"" : "";
+        h += "<span class=\"tm\" data-side=\"" + sd + "\" data-idx=\"" + j + "\"" + drop + ">" + termHTML(t, j === 0) + "</span>";
+      });
+    });
+    r.innerHTML = h;
+    if (set === "w") r.dataset.drop = "row:" + i;
+    if (live) subWire(r, q, i, src);
+    return r;
+  }
+  function subRender(pop) {
+    var W = $("wsEl"), O = $("origEl"), S = $("sysEl");
+    W.innerHTML = ""; O.innerHTML = ""; S.innerHTML = ""; rows = []; orows = []; srows = [];
+    W.style.setProperty("--nc", 1); W.style.gridTemplateColumns = ""; O.style.setProperty("--nc", 1); S.style.display = "none";
+    orig.forEach(function (q, j) { var r = subRowEl(toExpr(q), "o", j, false); O.appendChild(r); orows.push(r); });
+    O.style.visibility = ops ? "visible" : "hidden";
+    var live = mode !== "solo" && mode !== "create";
+    ws.forEach(function (q, i) { var r = subRowEl(q, "w", i, live); if (i === pop) r.classList.add("pop"); W.appendChild(r); rows.push(r); });
+    renderVals();
+    $("show").hidden = steps.length < 2;
+  }
+  function tEl(i, side, idx) { return rows[i] && rows[i].querySelector(".tm[data-side=\"" + side + "\"][data-idx=\"" + idx + "\"]"); }
+  function opEl(i, side, at) { return rows[i] && rows[i].querySelector(".op[data-side=\"" + side + "\"][data-at=\"" + at + "\"]"); }
+  function rhsEl(i) { var r = rows[i]; return r && (r.querySelector(".raw") || r.querySelector(".tm[data-side=\"R\"]")); }
+  function subWire(r, q, i, src) {
+    var eqc = r.querySelector(".eqc");
+    function rightOfEq(t, ev) { return r.contains(t) && ev.clientX > eqc.getBoundingClientRect().right; }
+    function dropTerm(t) { var p = t.dataset.drop.split(":"); return p[0] === "sub" && p[1] === "w" ? { i: +p[2], v: p[3], side: p[4], idx: +p[5] } : null; }
+    if (src) {
+      r.classList.add("dots");
+      var go = function (e) {
+        if (mode === "demo") return;
+        drag(e, r, function () { note("Drag this equation onto the " + src + " in the other equation."); }, function (t) { var d = dropTerm(t); if (d && d.i !== i && d.v === src) subSubst(i, d.i, d.side, d.idx); }, "sub:w:");
+      };
+      r.querySelector(".eq").addEventListener("pointerdown", go);
+      r.addEventListener("pointerdown", function (e) { if (e.target === r) go(e); });
+    }
+    if (q.raw) { var rw = r.querySelector(".raw"); rw.classList.add("pend"); rw.addEventListener("click", function () { if (mode !== "demo" && !busy) subRawAsk(i); }); return; }
+    ["L", "R"].forEach(function (sd) {
+      q[sd].forEach(function (t, j) {
+        var el = r.querySelector(".tm[data-side=\"" + sd + "\"][data-idx=\"" + j + "\"]");
+        if (t.k === "g") { el.classList.add("pend"); el.title = "Click to distribute"; el.addEventListener("click", function () { if (mode !== "demo" && !busy && !locked) subDist(i, sd, j); }); return; }
+        if (t.k === "p") { el.classList.add("pend"); el.title = "Click to multiply"; el.addEventListener("click", function () { if (mode !== "demo" && !busy && !locked) subProd(i, sd, j); }); return; }
+        // a term can be dragged onto a like term (same side) to combine, or across the = (a number moves; a lone coefficient divides)
+        if (src) return;
+        el.classList.add("grab");
+        el.addEventListener("pointerdown", function (e) {
+          if (mode === "demo") return;
+          drag(e, el, null, function (tg, ev) {
+            var d = dropTerm(tg);
+            if (d && d.i === i && d.side === sd && d.idx !== j) { subComb(i, sd, j, d.idx); return; }
+            if (sd === "L" && rightOfEq(tg, ev)) { if (!t.v) subMove(i, j); else subDiv(i); }
+          }, ["sub:w:", "row:"]);
+        });
+      });
+      // the sign between two like terms side by side combines them
+      q[sd].forEach(function (t, j) {
+        if (!j) return; var A = q[sd][j - 1];
+        if (A.k === "t" && t.k === "t" && A.v === t.v) {
+          var op = r.querySelector(".op[data-side=\"" + sd + "\"][data-at=\"" + j + "\"]"); op.classList.add("opc"); op.title = "Combine like terms";
+          op.addEventListener("click", function () { if (mode !== "demo" && !busy && !locked) subComb(i, sd, j - 1, j); });
+        }
+      });
+    });
+  }
+
+  // ---- the next step (for the demo and for hints) ----
+  function subNext() {
+    var ri = ws.findIndex(function (q) { return q.raw; }); if (ri >= 0) return ["s_calc", ri];
+    if (ws.length > 1) {
+      for (var f = 0; f < ws.length; f++) { var v = srcVar(ws[f]); if (!v) continue;
+        for (var g2 = 0; g2 < ws.length; g2++) { if (g2 === f) continue; var at = findVar(ws[g2], v); if (at) return ["s_subst", f, g2, at[0], at[1], v]; } }
+    }
+    for (var i = 0; i < ws.length; i++) {
+      var q = ws[i], sides = ["L", "R"];
+      for (var s = 0; s < 2; s++) { var sd = sides[s], gi = q[sd].findIndex(function (t) { return t.k === "g"; }); if (gi >= 0) return ["s_dist", i, sd, gi]; }
+      for (s = 0; s < 2; s++) { sd = sides[s]; var pi = q[sd].findIndex(function (t) { return t.k === "p"; }); if (pi >= 0) return ["s_prod", i, sd, pi]; }
+      for (s = 0; s < 2; s++) { sd = sides[s]; var lp = likePair(q[sd]); if (lp) return ["s_comb", i, sd, lp[0], lp[1]]; }
+      if (hasVar(q.L)) { var ci = q.L.findIndex(function (t) { return t.k === "t" && !t.v; }); if (ci >= 0 && q.R.length === 1) return ["s_move", i, ci]; }
+      if (q.L.length === 1 && q.L[0].v && !isOne(q.L[0].c) && q.R.length === 1 && !hasVar(q.R)) return ["s_div", i];
+    }
+    if (!ws.length) {
+      var known = allV().filter(function (n) { return vals[n]; }), unk = allV().filter(function (n) { return !vals[n]; });
+      if (known.length && unk.length) {
+        var n0 = known[0], j = orig.findIndex(function (o) { return o.sol === unk[0]; });
+        if (j < 0) j = orig.findIndex(function (o) { return findVar(toExpr(o), n0); });
+        if (j >= 0) return ["s_subv", n0, "o", j];
+      }
+    }
+    return null;
+  }
+  function subLabel(s) {
+    var t = s[0], q = ws[s[1]];
+    if (t === "s_subst") return "Substitute for " + s[5];
+    if (t === "s_dist") return "Distribute";
+    if (t === "s_comb") return "Combine like terms";
+    if (t === "s_move") return q && q.L[s[2]] && q.L[s[2]].c.n < 0 ? "Add to both sides" : "Subtract from both sides";
+    if (t === "s_div") return "Divide both sides";
+    if (t === "s_prod") return "Calculate " + plain(termHTML(q[s[2]][s[3]], s[3] === 0));
+    if (t === "s_calc") return "Calculate " + (q ? q.raw : "");
+    return "Substitute " + s[1];
+  }
+  function subExplain(s) {
+    var t = s[0], q = ws[s[1]];
+    if (t === "s_subst") { var src = ws[s[1]]; return "This equation says " + s[5] + " = " + plain(sideHTML(src.R)) + ". So in the other equation we can replace " + s[5] + " with (" + plain(sideHTML(src.R)) + "). That leaves an equation with only one variable."; }
+    if (t === "s_dist") return "Multiply the number in front of the parentheses by every term inside them. This is the distributive property.";
+    if (t === "s_comb") { var A = q[s[2]][s[3]]; return A.v ? "These are like terms: both have " + A.v + ". Add their coefficients to combine them into one term." : "Two plain numbers on the same side can be combined into one number. That is combining like terms."; }
+    if (t === "s_move") { var k = q.L[s[2]].c; return k.n < 0 ? "There is a " + sg(k) + " on the variable's side. Adding " + sg(ab(k)) + " to both sides cancels it." : "There is a + " + sg(k) + " on the variable's side. Subtracting it from both sides cancels it and leaves the variable's term alone."; }
+    if (t === "s_div") return "The variable is being multiplied by a number. Dividing both sides by that number leaves the variable by itself.";
+    if (t === "s_prod") return "We put the value in place of the variable, which made a multiplication. Multiplying gives a single number.";
+    if (t === "s_calc") return "Now do the arithmetic to turn it into a single number.";
+    return "We found " + s[1] + " = " + sg(vals[s[1]]) + ". Putting that value into the equation that is already solved for the other variable gives us the other value.";
+  }
+  function subHint() {
+    if (locked) return "You solved it!";
+    var s = subNext(); if (!s) return "Keep going: get one variable by itself.";
+    var t = s[0], q = ws[s[1]];
+    if (t === "s_subst") return "Drag the equation " + fmtSub(ws[s[1]]) + " (grab its = sign or the dot beside it) onto the " + s[5] + " in the other equation.";
+    if (t === "s_dist") return mode === "calculate" ? "Click the parentheses and type what you get when you distribute." : "Click the parentheses to distribute the number in front to each term inside.";
+    if (t === "s_comb") return "Combine like terms: click the sign between them, or drag one onto the other.";
+    if (t === "s_move") return "Drag " + sg(q.L[s[2]].c) + " across the = to the other side.";
+    if (t === "s_div") return "Drag the number in front of " + q.L[0].v + " across the = to divide both sides.";
+    if (t === "s_prod") return mode === "calculate" ? "Click the multiplication and type the result." : "Click the multiplication to calculate it.";
+    if (t === "s_calc") return "Click the calculation on the right side and type the result.";
+    return "Drag the " + s[1] + " at the bottom up onto the " + s[1] + " in " + fmtSub(toExpr(orig[s[3]])) + ".";
+  }
+  function subDemoStep(s) {
+    busy = true; $("next").disabled = true;
+    function release(ms) { setTimeout(function () { busy = false; $("next").disabled = false; peekNext(); }, ms || 0); setTimeout(handHide, (ms || 0) + 350); }
+    var t = s[0], i = s[1];
+    if (t === "s_subst") {
+      var src = rows[i], dst = tEl(s[2], s[3], s[4]); dst.classList.add("tgt"); handGo(dotPt(src), 600);
+      later(function () { handGo(ctr(dst), 1400); fly(src, dst, function () { subSubst(i, s[2], s[3], s[4]); release(1200); }, true); }, 800); return;
+    }
+    if (t === "s_move" || t === "s_div") {
+      var el = t === "s_move" ? tEl(i, "L", s[2]) : (tEl(i, "L", 0).querySelector(".co") || tEl(i, "L", 0)), rr = rhsEl(i);
+      handGo(ctr(el), 600);
+      later(function () { handGo(ctr(rr), 1400); fly(el, rr, function () { if (t === "s_move") subMove(i, s[2]); else subDiv(i); release(1200); }, true); }, 750); return;
+    }
+    if (t === "s_subv") {
+      var chip = $("vals").querySelector("[data-v=\"" + s[1] + "\"] .var"), row = orows[s[3]], at = findVar(toExpr(orig[s[3]]), s[1]);
+      var d2 = row.querySelector(".tm[data-side=\"" + at[0] + "\"][data-idx=\"" + at[1] + "\"]"); d2 = d2.querySelector(".var") || d2; d2.classList.add("tgt");
+      handGo(ctr(chip), 600);
+      later(function () { handGo(ctr(d2), 1400); fly(chip, d2, function () { subValue(s[1], "o", s[3], s[1]); release(1200); }); }, 750); return;
+    }
+    var hl = t === "s_comb" ? (s[4] === s[3] + 1 ? opEl(i, s[2], s[4]) : tEl(i, s[2], s[3])) : t === "s_calc" ? rhsEl(i) : tEl(i, s[2], s[3]);
+    if (t === "s_comb") { var e1 = tEl(i, s[2], s[3]), e2 = tEl(i, s[2], s[4]); if (e1) e1.classList.add("hl"); if (e2) e2.classList.add("hl"); if (hl) hl.classList.add("opc"); }
+    if (hl) { hl.classList.add("hl"); handGo(ctr(hl), 600); }
+    setTimeout(function () { if (busy) handTap(); }, 1000);
+    later(function () {
+      if (t === "s_dist") subDist(i, s[2], s[3]); else if (t === "s_prod") subProd(i, s[2], s[3]);
+      else if (t === "s_comb") subComb(i, s[2], s[3], s[4]); else subCalcRaw(i);
+      release();
+    }, 1300);
+  }
+  // a system for substitution: one equation already solved for y (y = mx + n), the other in standard form
+  function generateSub(demo) {
+    var deg = !demo && mode !== "create" && Math.random() < 0.2 ? (Math.random() < 0.5 ? "inf" : "none") : "";
+    for (;;) {
+      var m = nz(4), x0 = nz(5), y0 = nz(6), n = y0 - m * x0, a, b, c;
+      if (!n || Math.abs(n) > 12) continue;
+      if (deg) { var t = [2, 3, -1, -2, 4][rnd(5)]; a = -m * t; b = t; c = n * t + (deg === "none" ? nz(5) : 0); }
+      else { a = nz(5); b = nz(5); if (a + b * m === 0 || Math.abs(b) === 1 && a === -m) continue; c = a * x0 + b * y0; }
+      var E1 = mkEq(a, b, 0, c), E2 = mkEq(-m, 1, 0, n); E2.sol = "y";
+      return rnd(2) ? [E1, E2] : [E2, E1];
+    }
+  }
+
   // ---- the Activity menu: the button shows the short code, the list shows every full title ----
   var LONAME = { 1: "One Variable", 2: "2&times;2 Systems", 3: "3&times;3 Systems" };
   function buildLessons() {
@@ -1415,7 +1748,7 @@
     $("actLbl").textContent = act; $("actBtn").setAttribute("aria-label", "Activity: " + act + " " + ACTS.filter(function (a) { return a[0] === act; })[0][1]);
     $("actList").innerHTML = ACTS.map(function (a) {
       var ok = !!BUILT[a[0]], sel = a[0] === act;
-      return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? a[0] + (BUILT[a[0]].play ? ": " : " ") + a[1] : a[0] + " (coming soon)") + "</li>";
+      return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? a[0] + " " + a[1] : a[0] + " (coming soon)") + "</li>";
     }).join("");
   }
   function placeActs() {
