@@ -3075,8 +3075,8 @@
     }
     var steps = [
       function (n) { cap("Start with the equation. It names the family and every transformation."); pgWait(2200, n); },
+      function (n) { cap("Press Graph to see the curve first."); tap(tog("graph"), n); },
       function (n) { cap("Change Family steps through the four families. Let's choose quadratic."); tap($("pgFam"), function () { tap($("pgFam"), function () { tap($("pgFam"), n); }); }); },
-      function (n) { cap("Press Graph to see the curve while we change it."); tap(tog("graph"), n); },
       function (n) { cap("Description explains the transformations in words."); tap(tog("desc"), n); },
       function (n) { cap("Drag the green point to move the vertex. The equation changes."); drag("v", [-2, 2], n); },
       function (n) { cap("Now that the graph has moved, Parent shows the parent graph, dashed, for comparison."); tap(tog("parent"), n); },
