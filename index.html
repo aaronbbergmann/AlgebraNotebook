@@ -337,7 +337,7 @@
   var orig = [], ws = [], rows = [], orows = [], srows = [], sys = [], sysV = [], elim = "", elimInfo = null;
   var counted = false, introV = false, explainOn = false, lastExp = "", up = null, prog = {}, handEl = null;
   var vals = {}, hist = [], steps = [], ops = 0, locked = false, busy = false, colMin = [];
-  var result = null, ansTouched = false, credited = false, lesson = 1, demoN = 0, curDm = 1, pend = null, mode = "demo", demoTimer = null, gen = null, askIdx = 0, askK = 0, askC = null, askKind = "mul", calc = null, hinted = false, mulNote = null;
+  var result = null, ansTouched = false, credited = false, lesson = 1, subx = false, demoN = 0, curDm = 1, pend = null, mode = "demo", demoTimer = null, gen = null, askIdx = 0, askK = 0, askC = null, askKind = "mul", calc = null, hinted = false, mulNote = null;
   var CK = { x: "a", y: "b", z: "e", p: "b", s: "b" };  // p and s are the constant slots before and after x in the one-variable lesson
 
   var MODES = { demo: "Demo", sequence: "Sequence", calculate: "Calculate", solo: "Solo", create: "Create" };
@@ -468,7 +468,7 @@
   // a "no solution" or "infinitely many" system only comes after the student has solved a regular problem in this mode,
   // and never twice in a row, so every level-up includes a problem with a real solution
   var lastDeg = false;
-  function degOK() { return !lastDeg && (prog[lesson + ":" + mode + ":one"] || 0) >= 1; }
+  function degOK() { return !lastDeg && (prog[LK() + ":" + mode + ":one"] || 0) >= 1; }
   function makeProblem() {
     if (SUB()) return generateSub(mode === "demo" ? 1 : 0);
     if (lesson === 1) return generate1();
@@ -1265,18 +1265,11 @@
   // ---- activities: AlgebraNotebook is a collection; each built activity sets its top lesson and its progress levels ----
   var ACTS = [
     ["1.1 Play", "Playground: Equation Table Graph Description", "1.1 Playground: Equation Table Graph Description"],
-    ["1.1A", "Parent Functions and Transformations"],
-    ["1.1B", "Parent Functions and Transformations: Desmos"],
-    ["1.1C", "Parent Functions and Transformations: Shrink Stretch"],
-    ["1.2A", "Transformations of Linear and Absolute Value Functions"],
-    ["1.2B", "Transformations of Linear and AbsVal Functions: Reflections"],
-    ["1.2C", "Transformations of Linear and AbsVal Functions: Combinations"],
-    ["1.3A", "Modeling with Linear Functions"],
-    ["1.3B", "Modeling with Linear Functions (Day 2)"],
-    ["1.4A", "Solve Linear Systems: Graphing"],
-    ["1.4B", "Solve Linear Systems Algebraically (Substitution)"],
-    ["1.4C", "Solve Linear Systems Algebraically (Elimination)"],
-    ["1.4D", "Solve Systems of Linear Equations in 3 Variables"]
+    ["1.1A", "Parent Functions and Transformations", "1.1 Parent Functions and Transformations"],
+    ["1.2", "Transformations of Linear and Absolute Value Functions", "1.2 Transformations of Linear and Absolute Value Functions"],
+    ["1.3", "Modeling with Linear Functions", "1.3 Modeling with Linear Functions"],
+    ["1.4A", "Solve Linear Systems: Graphing", "1.4 Solve Linear Systems: Graphing"],
+    ["1.4D", "Solve Systems of Linear Equations in 3 Variables", "1.4 Solve Systems of Linear Equations in 3 Variables"]
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   var BUILT = {
@@ -1285,21 +1278,7 @@
       [1, "solo", 70, "Solo Mode, 2nd round", 2], [1, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
     "1.1 Play": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
-    "1.4B": { top: 2, key: "algebraProgress:1.4B", levels: [
-      [1, "demo", 5, "Demo Mode"], [1, "sequence", 10, "Sequence Mode"],
-      [1, "calculate", 15, "Calculate Mode"], [1, "solo", 20, "Solo Mode"],
-      [2, "demo", 30, "Demo Mode"], [2, "sequence", 40, "Sequence Mode"],
-      [2, "calculate", 55, "Calculate Mode"], [2, "solo", 70, "Solo Mode"],
-      [2, "solo", 85, "Solo Mode, 2nd problem", 2], [2, "solo", 100, "Solo Mode, 3rd problem", 3]
-    ] },
-    "1.4C": { top: 2, key: "algebraProgress:1.4C", levels: [
-      [1, "demo", 5, "Demo Mode"], [1, "sequence", 10, "Sequence Mode"],
-      [1, "calculate", 15, "Calculate Mode"], [1, "solo", 20, "Solo Mode"],
-      [2, "demo", 30, "Demo Mode"], [2, "sequence", 40, "Sequence Mode"],
-      [2, "calculate", 55, "Calculate Mode"], [2, "solo", 70, "Solo Mode"],
-      [2, "solo", 85, "Solo Mode, 2nd problem", 2], [2, "solo", 100, "Solo Mode, 3rd problem", 3]
-    ] },
-    "1.4D": { top: 3, key: "algebraProgress", levels: [
+    "1.4D": { top: 3, sub: true, key: "algebraProgress", levels: [
       [1, "demo", 5, "Demo Mode"], [1, "sequence", 10, "Sequence Mode"],
       [1, "calculate", 15, "Calculate Mode"], [1, "solo", 20, "Solo Mode"],
       [2, "demo", 25, "Demo Mode"], [2, "sequence", 30, "Sequence Mode"],
@@ -1310,7 +1289,7 @@
     ] }
   };
   var act = "1.4D";
-  // each activity also lives at its own address: …/algebranotebook/1-4b/ opens 1.4B and stays there
+  // each activity also lives at its own address: …/algebranotebook/1-4b/ opens that activity and stays there
   function slugOf(id) { return id.toLowerCase().replace(/\./g, "-").replace(/\s+/g, ""); }
   var fixedAct = null;
   (function () {
@@ -1340,16 +1319,16 @@
   }
   // after two finished problems in a mode, the main button offers the next mode (or the next topic after Solo)
   function levelUp() {
-    up = null; var c = prog[lesson + ":" + mode] || 0;
+    up = null; var c = prog[LK() + ":" + mode] || 0;
     if (mode === "create" || c < 2) return;
     var ml = BUILT[act].modes || ["demo", "sequence", "calculate", "solo"], nx = ml[ml.indexOf(mode) + 1];
     if (nx) up = { label: "Level up: " + MODES[nx] + " mode", go: function () { setMode(nx); } };
-    else if (mode === "solo" && lesson < topLesson()) up = { label: "Level up: " + LNAME[lesson + 1], go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
+    else if (mode === "solo" && !subx && lesson < topLesson()) up = { label: "Level up: " + LNAME[lesson + 1], go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
   }
   function tally() {
     celebrate();
     // progress counts a problem once, and only when it is truly finished (or a full demo has been watched)
-    if (mode !== "create" && !counted) { counted = true; var k = lesson + ":" + mode; prog[k] = (prog[k] || 0) + 1; if (classify(orig) === "one") prog[k + ":one"] = (prog[k + ":one"] || 0) + 1; saveProg(); updProg(); }
+    if (mode !== "create" && !counted) { counted = true; var k = LK() + ":" + mode; prog[k] = (prog[k] || 0) + 1; if (classify(orig) === "one") prog[k + ":one"] = (prog[k + ":one"] || 0) + 1; saveProg(); updProg(); }
     levelUp();
   }
   function onSolved() {
@@ -1518,7 +1497,7 @@
     return "Substitute " + s[1];
   }
 
-  $("lesson").addEventListener("change", function () { lesson = +this.value; if (mode === "create") orig = []; useCustom = null; setMode("demo"); });
+  $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; if (mode === "create") orig = []; useCustom = null; setMode("demo"); });
   $("crAdd").addEventListener("click", crAdd);
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
   $("ansGo").addEventListener("click", checkAnswer);
@@ -1562,7 +1541,8 @@
   window.addEventListener("resize", function () { colMin = []; if (ws.length) render(-1); if (!$("ask").hidden) placeAsk(); });
   // ---- 1.4B substitution: equations are lists of terms on each side ----
   // a term is {k:"t", c, v} (v "" for a number), {k:"g", c, in:[terms]} (c times parentheses) or {k:"p", c, val} (c times a substituted value)
-  function SUB() { return act === "1.4B" && lesson === 2; }
+  function SUB() { return act === "1.4D" && subx && lesson === 2; }
+  function LK() { return subx ? 4 : lesson; }
   function T(c, v) { return { k: "t", c: c, v: v || "" }; }
   function cp(o) { return JSON.parse(JSON.stringify(o)); }
   function toExpr(q) {
@@ -2302,7 +2282,8 @@
   function buildLessons() {
     if (lesson > topLesson()) lesson = topLesson();
     var h = "", sh = BUILT[act].short; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\" title=\"" + lessonName(l) + "\">" + (sh && sh[l - 1] || lessonName(l)) + "</option>";
-    $("lesson").innerHTML = h; $("lesson").value = String(lesson);
+    if (!BUILT[act].sub) subx = false; else h += "<option value=\"s\" title=\"2\u00d72 Systems: Substitution\">2\u00d72 Substitution</option>";
+    $("lesson").innerHTML = h; $("lesson").value = subx ? "s" : String(lesson);
     var ms = BUILT[act].modes || ["demo", "sequence", "calculate", "solo", "create"];
     $("modeSel").innerHTML = ms.map(function (m) { return "<option value=\"" + m + "\">" + MODES[m] + "</option>"; }).join("");
     if (ms.indexOf(mode) < 0) mode = "demo"; $("modeSel").value = mode;
@@ -2314,7 +2295,7 @@
     if (fixedAct) document.title = fullTitle(act) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(act));
     $("actList").innerHTML = ACTS.map(function (a) {
       var ok = !!BUILT[a[0]], sel = !welcome && a[0] === act;
-      return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? fullTitle(a[0]) : a[0] + " (coming soon)") + "</li>";
+      return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? fullTitle(a[0]) : fullTitle(a[0]) + " (coming soon)") + "</li>";
     }).join("");
   }
   function placeActs() {
