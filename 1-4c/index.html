@@ -2834,7 +2834,7 @@
     // drag a point: the hand grabs it and moves it smoothly; values snap like a student's drag
     function drag(which, to, then) {
       var from = which === "v" ? [H(), K()] : [0, PG.a], ms = 1500, t0 = null; // for the purple point, from/to[1] is the stretch a itself (the dot sits at x = h + 1, y = k + a)
-      handGo(svgPt(from[0], from[1]), 650);
+      handGo(which === "v" ? svgPt(from[0], from[1]) : svgPt(H() + 1, K() + from[1]), 650); // the purple dot is one unit right of the green one
       pgWait(800, function () {
         handTap();
         function step(ts) {
