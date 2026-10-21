@@ -2742,7 +2742,7 @@
     if (pgRun) { pgStop(); return; }
     var run = ++pgRun; $("pgDemo").textContent = "Stop demo"; $("pgDemo").classList.add("on");
     PG.fam = 0; PG.a = 1; PG.pa = [-5, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
-    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); drawPlay();
+    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); PG.show.eq = true; drawPlay();
     function cap(t) { $("pgCap").textContent = t; }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
@@ -2863,7 +2863,7 @@
       });
     }
     var steps = [
-      function (n) { cap("Start with the equation. It names the family and every transformation."); tap(tog("eq"), n); },
+      function (n) { cap("Start with the equation. It names the family and every transformation."); pgWait(2200, n); },
       function (n) { cap("Change Family steps through the four families. Let's choose quadratic."); tap($("pgFam"), function () { tap($("pgFam"), function () { tap($("pgFam"), n); }); }); },
       function (n) { cap("Press Graph to see the curve while we change it."); tap(tog("graph"), n); },
       function (n) { cap("Drag the green point to move the vertex. The equation changes."); drag("v", [-2, 2], n); },
@@ -2877,9 +2877,9 @@
       function (n) { cap("With Table off, the table is empty for you to complete yourself."); pgWait(1800, n); },
       function (n) { cap("Drag the equation onto any center cell. One drop puts each row's x-value into the equation."); dragEq(0, n); },
       function (n) { cap("The x-values appear, centered at 0. Drag the dot up or down to scroll the table like a wheel until the vertex, x = 3, is in the middle row."); dialDemo(-3, n); },
-      function (n) { cap("You can type the y-value yourself..."); typeRow(0, n); },
-      function (n) { cap("...or click the calculation to simplify it one step at a time. The answer moves into the y column."); clickRow(1, n); },
-      function (n) { cap("A parabola is symmetric, so x = 4 has the same y as x = 2. Drag a finished y-value onto another y cell to copy it."); dragY(1, 3, n); },
+      function (n) { cap("Three ways to get a y-value. First: click a y cell and type the answer yourself."); typeRow(0, n); },
+      function (n) { cap("Second: click the expression in the middle column. Each click simplifies one step, and the answer slides into the y column."); clickRow(1, n); },
+      function (n) { cap("Third: drag a finished y-value onto another y cell. A parabola is symmetric, so x = 4 has the same y as x = 2."); dragY(1, 3, n); },
       function (n) { cap("The same works for x = 5: copy the 9 from x = 1."); dragY(0, 4, n); },
       function (n) { cap("Now the middle row, but type a wrong answer on purpose."); typeRow(2, n, "4"); },
       function (n) { cap("Press Table to reveal the real table. Right answers get a green check; a wrong one fades into the correct value."); tap(tog("table"), function () { pgWait(2200, n); }); },
@@ -2889,9 +2889,7 @@
       function (n) { cap("...and the \u00d7 button clears the graph."); tapClear(n); },
       function (n) { cap("Drag each row onto the graph to plot its point. The red dot shows where it belongs."); dragRows(0, n); },
       function (n) { cap("Now drag the parabola button onto the graph, with its vertex on (3, 1)."); dropShape("U", 3, 1, n); },
-      function (n) { cap("Drag its side point to set the stretch. Suppose we guess 3."); stretch(3, n, 1); },
-      function (n) { cap("Hide the equation, then reveal it to check the guess."); tap(tog("eq"), function () { tap(tog("eq"), function () { pgWait(2300, n); }); }); },
-      function (n) { cap("It was wrong, so the answer faded into the correct one. Adjust the stretch to 2."); stretch(2, n); },
+      function (n) { cap("Drag its side point to set the stretch of 2."); stretch(2, n, 1); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
       function (n) { cap("Your turn: try every button, drag both points and plot your own graph."); pgWait(2500, n); }
     ];
