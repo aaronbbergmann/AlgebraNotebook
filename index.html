@@ -139,6 +139,7 @@
   .act{position:relative}
   .actBtn{box-sizing:border-box;width:10.5em;display:flex;align-items:center;justify-content:space-between;gap:.4em;font:600 .92rem system-ui,sans-serif;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:999px;padding:.6em .8em;cursor:pointer;text-align:left}
   .actBtn::after{content:"";width:.45em;height:.45em;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-.15em) rotate(45deg);flex:none}
+  .actBtn.fixed{cursor:default;justify-content:center}.actBtn.fixed::after{display:none}
   .actBtn:focus-visible{outline:3px solid var(--plus);outline-offset:3px}
   .actList{position:fixed;z-index:70;margin:0;padding:.35rem;list-style:none;background:var(--bg);color:var(--ink);border:2px solid var(--ink);border-radius:14px;box-shadow:0 .8rem 2rem rgba(0,0,0,.35);max-width:min(34rem,calc(100vw - 16px));max-height:min(28rem,calc(100vh - 16px));overflow:auto;font:500 .95rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif}
   .actList[hidden]{display:none}
@@ -1193,6 +1194,14 @@
   };
   var act = "1.4D";
   try { var sa = localStorage.getItem("algebraActivity"); if (sa === "Playground") sa = "1.1 Play"; if (BUILT[sa]) act = sa; } catch (e) {}
+  // each activity also lives at its own address: …/algebranotebook/1-4b/ opens 1.4B and stays there
+  function slugOf(id) { return id.toLowerCase().replace(/\./g, "-").replace(/\s+/g, ""); }
+  var fixedAct = null;
+  (function () {
+    var seg = decodeURIComponent(location.pathname).replace(/\/index\.html$/i, "").replace(/\/+$/, "").split("/").pop().toLowerCase();
+    for (var id in BUILT) if (slugOf(id) === seg) fixedAct = id;
+    if (fixedAct) act = fixedAct;
+  })();
   var LEVELS = BUILT[act].levels, MORD = ["demo", "sequence", "calculate", "solo"];
   function topLesson() { return BUILT[act].top; }
   function loadProg() { try { prog = JSON.parse(localStorage.getItem(BUILT[act].key) || "{}") || {}; } catch (e) { prog = {}; } }
@@ -1745,7 +1754,8 @@
     $("lesson").innerHTML = h; $("lesson").value = String(lesson);
   }
   function buildActs() {
-    $("actLbl").textContent = act; $("actBtn").setAttribute("aria-label", "Activity: " + act + " " + ACTS.filter(function (a) { return a[0] === act; })[0][1]);
+    $("actLbl").textContent = act; $("actBtn").classList.toggle("fixed", !!fixedAct); $("actBtn").title = fixedAct ? ACTS.filter(function (a) { return a[0] === act; })[0][1] : "Activity";
+    if (fixedAct) document.title = act + " " + ACTS.filter(function (a) { return a[0] === act; })[0][1] + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + act + " " + ACTS.filter(function (a) { return a[0] === act; })[0][1]);
     $("actList").innerHTML = ACTS.map(function (a) {
       var ok = !!BUILT[a[0]], sel = a[0] === act;
       return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? a[0] + " " + a[1] : a[0] + " (coming soon)") + "</li>";
@@ -1758,6 +1768,7 @@
     L.style.left = left + "px"; L.style.top = Math.max(8, Math.min(top, H - h - 8)) + "px";
   }
   function openActs() {
+    if (fixedAct) return;
     buildActs(); $("actList").hidden = false; $("actBtn").setAttribute("aria-expanded", "true"); placeActs();
     var cur = $("actList").querySelector("li.sel"); if (cur) cur.focus();
   }
@@ -1765,7 +1776,7 @@
   function setActivity(id) {
     closeActs(true);
     if (!BUILT[id] || id === act) return;
-    act = id; try { localStorage.setItem("algebraActivity", id); } catch (e) {}
+    act = id; if (!fixedAct) try { localStorage.setItem("algebraActivity", id); } catch (e) {}
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     if (BUILT[act].play) enterPlay(); else { leavePlay(); setMode("demo"); }
