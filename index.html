@@ -178,7 +178,7 @@
   body.quiz .qzTools{align-self:flex-start;margin-top:.2rem}
   .qzTools button,.ghost{width:2.7rem;height:2.7rem;border-radius:10px;border:2px solid #1B2433;background:#fff;color:#1B2433;font:700 1.25rem/1 system-ui,sans-serif;cursor:grab;touch-action:none;padding:0}
   .qzTools button[hidden]{display:none}
-  .qzTools button:not([data-tool=pt]){cursor:pointer}
+  .qzTools button:not([data-tool=pt]):not([data-tool=line]):not([data-tool=V]):not([data-tool=U]){cursor:pointer}
   .qzTools button[data-tool=undo]{margin-bottom:1.4rem}
   @media (max-width:760px){.qzTools button[data-tool=undo]{margin-bottom:0;margin-right:1rem}}
   .qzTools button.on{background:#2D70B3;border-color:#2D70B3;color:#fff}
@@ -276,7 +276,7 @@
   <div class="stage">
     <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
-      <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex, then click again to set the stretch" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex, then click again to set the stretch" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
+      <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope. Or drag it onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex, then click again to set the stretch. Or drag it onto the graph" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex, then click again to set the stretch. Or drag it onto the graph" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
       <div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div>
       <div class="pgSide">
         <div class="dial" id="pgDial" role="slider" aria-label="Scroll the table" title="Drag up or down to scroll the table"></div>
@@ -2177,15 +2177,20 @@
         var tool = b.dataset.tool, sx = e.clientX, sy = e.clientY, ghost = null;
         b.setPointerCapture(e.pointerId); e.preventDefault();
         function mv(ev) {
-          if (tool !== "pt") return;   // the line, V and parabola buttons are clicked, not dragged
           if (!ghost && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
           if (!ghost) { ghost = b.cloneNode(true); ghost.classList.add("ghost"); document.body.appendChild(ghost); }
           ghost.style.left = ev.clientX - 20 + "px"; ghost.style.top = ev.clientY - 20 + "px";
+          // a dragged shape button hangs the shape from the point being held; it lands wherever it is let go
+          if (tool === "line" || tool === "V" || tool === "U") {
+            var G1 = G_(), r1 = S.getBoundingClientRect(), over = ev.clientX >= r1.left && ev.clientX <= r1.right && ev.clientY >= r1.top && ev.clientY <= r1.bottom;
+            if (over) { var q1 = qAt(ev); G1.tool = tool; G1.clk = []; G1.hv = [snap(q1[0]), snap(q1[1])]; ghost.style.display = "none"; } else { G1.tool = null; G1.hv = null; ghost.style.display = ""; }
+            gDraw();
+          }
         }
         function upH(ev) {
           b.removeEventListener("pointermove", mv); b.removeEventListener("pointerup", upH); b.removeEventListener("pointercancel", upH);
           if (ghost) {
-            ghost.remove(); var r = S.getBoundingClientRect();
+            ghost.remove(); var r = S.getBoundingClientRect(); { var G2 = G_(); if (tool === "line" || tool === "V" || tool === "U") { G2.tool = null; G2.hv = null; } }
             if (tool !== "clear" && tool !== "undo" && tool !== "tr" && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) { var p = qAt(ev); qzDrop(tool, p[0], p[1]); }
             return;
           }
@@ -3109,7 +3114,8 @@
         handTap(); var g = btn.cloneNode(true); g.classList.add("ghost"); g.style.left = (a.x - 20) + "px"; g.style.top = (a.y - 20) + "px"; document.body.appendChild(g);
         g.animate([{ transform: "translate(0,0)" }, { transform: "translate(" + (b.x - a.x) + "px," + (b.y - a.y) + "px)" }], { duration: 1300, easing: "ease-in-out", fill: "forwards" });
         handGo(b, 1300);
-        pgWait(1400, function () { g.remove(); qzDrop(tool, x, y); pgWait(600, then); });
+        if (tool === "line" || tool === "V" || tool === "U") pgWait(1000, function () { g.style.display = "none"; PG.tool = tool; PG.clk = []; PG.hv = [x, y]; drawPlay(); });   // over the graph the shape hangs from the held point
+        pgWait(1400, function () { g.remove(); PG.hv = null; qzDrop(tool, x, y); pgWait(600, then); });
       });
     }
     // the hand drags the side point of the shape to change its stretch
@@ -3211,7 +3217,8 @@
       function (n) { cap("Type an x and a y, and the point appears."); typeBox("pgPtX", "3", function () { typeBox("pgPtY", "-2", n); }); },
       function (n) { cap("Drag the point and the panel updates too."); drag2(n); },
       function (n) { cap("Close the panel."); tap($("pgPtX0"), n); },
-      function (n) { cap("The line, V and parabola buttons are clicked, not dragged: a ghost of the line follows the cursor. Click once for a point on the line, and again to set its slope."); clickTool("line", [-4, -3], [0, 1], n); },
+      function (n) { cap("Drag a shape button onto the graph: the shape hangs from the point you hold and lands where you let go."); dropShape("V", -4, -2, n); },
+      function (n) { cap("Or click the button instead: a ghost of the line follows the cursor. Click once for a point on the line, and again to set its slope."); clickTool("line", [-4, -3], [0, 1], n); },
       function (n) { cap("The V works the same way: click the vertex, then click to set the stretch."); clickTool("V", [2, -2], [4, 2], n); },
       function (n) { cap("...and so does the parabola button."); clickTool("U", [-3, 3], [-1, -1], n); },
       function (n) { cap("Clear the graph again."); tapClear(n); },
