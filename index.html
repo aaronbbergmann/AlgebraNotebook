@@ -1466,11 +1466,11 @@
     var f = FAMS[PG.fam], a = A(), h = H(), k = K(), co = a === 1 ? "" : a === -1 ? "−" : nf(a);
     var X = v == null ? "<i>x</i>" : nf(v), Xp = v == null ? X : "(" + X + ")";
     var inner = h === 0 ? X : X + " " + (h > 0 ? "−" : "+") + " " + nf(Math.abs(h));
-    var body = f === "constant" ? "1"
+    var body = f === "constant" ? nf(1 + k)
       : f === "linear" ? co + (co && v != null ? Xp : X)
       : f === "absolute value" ? co + "|" + inner + "|"
       : (h === 0 ? co + (v != null && (co || v < 0) ? Xp : X) + "<sup>2</sup>" : co + "(" + inner + ")<sup>2</sup>");
-    if (k) body += " " + (k > 0 ? "+" : "−") + " " + nf(Math.abs(k));
+    if (k && f !== "constant") body += " " + (k > 0 ? "+" : "−") + " " + nf(Math.abs(k));
     return body;
   }
   // f(x) for the parent itself, g(x) once it has been transformed
