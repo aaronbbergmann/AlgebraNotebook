@@ -1940,7 +1940,7 @@
     var fam = qFam(), st = qStep(), demo = mode === "demo", h = "", inp = $("qzIn");
     var T = {
       eq: "What is the parent function of the " + QFAM[fam] + " family? Type its equation.",
-      table: mode === "sequence" || mode === "demo" ? "Drag the equation (from the top of the table or from under it) onto a center cell. Then click the calculation to simplify it step by step, or type the y-value yourself." : "Click each empty y cell in the table and type its y-value.",
+      table: mode === "sequence" || mode === "demo" ? "Drag the equation (from the top of the table or from under it) onto any center cell to fill them all. Then click the calculation to simplify it step by step, or type the y-value yourself." : "Click each empty y cell in the table and type its y-value.",
       points: mode === "sequence" || mode === "demo" ? "Drag each row of the table onto the graph to plot its point. The red dots show where they belong." : "Plot the five points from the table. Choose the ● tool, then click the graph at each point.",
       graph: "Now draw the parent graph. Use the / tool (a line), the V tool or the U tool.",
       done: QZ.pi < 3 ? "That's the " + QFAM[fam] + " parent!" : "You have all four parents!"
@@ -2378,7 +2378,8 @@
   // drop the equation on a center cell: that row now shows the equation with its x-value put in
   TB.sub = function (i) {
     var r = TB.rows()[i]; if (!r || r.sub || r.done) return;
-    r.sub = true; r.idx = 0; TB.draw();
+    // one drop is enough: every row shows the equation with its own x-value put in
+    TB.rows().forEach(function (q) { if (!q.done && !q.sub) { q.sub = true; q.idx = 0; } }); TB.draw();
     var c = $("pgTable").querySelector("td.mid[data-r=\"" + i + "\"]"); if (c) c.classList.add("pop");
   };
   // each click simplifies one step; at the last step the y-value flies into the y column
@@ -2787,11 +2788,10 @@
       function (n) { cap("Let's aim for g(x) = 2(x \u2212 3)\u00b2 + 1. First the vertex..."); drag("v", [3, 1], n); },
       function (n) { cap("...and then the stretch of 2."); drag("a", [PG.pa[0], 2], n); },
       function (n) { cap("Fill table gives an empty table to complete yourself."); tap(tog("build"), n); },
-      function (n) { cap("Drag the equation onto a center cell to put that x-value in."); dragEq(0, n); },
+      function (n) { cap("Drag the equation onto any center cell. One drop puts each row's x-value into the equation."); dragEq(0, n); },
       function (n) { cap("You can type the y-value yourself..."); typeRow(0, n); },
-      function (n) { cap("Drag the equation onto another center cell."); dragEq(1, n); },
       function (n) { cap("...or click the calculation to simplify it one step at a time. The answer moves into the y column."); clickRow(1, n); },
-      function (n) { cap("Let's do a third row, but type a wrong answer on purpose."); dragEq(2, function () { typeRow(2, n, "4"); }); },
+      function (n) { cap("Let's do a third row, but type a wrong answer on purpose."); typeRow(2, n, "4"); },
       function (n) { cap("The last two rows are done quickly."); TB.rows().forEach(function (r, i) { if (i > 2) { r.sub = true; r.done = true; r.fl = false; } }); TB.draw(); pgWait(1200, n); },
       function (n) { cap("Press Table to reveal the real table. Right answers get a green check; a wrong one fades into the correct value."); tap(tog("table"), function () { pgWait(2200, n); }); },
       function (n) { cap("The buttons beside the graph place things by hand. The dot button plots a point."); dropShape("pt", -3, -3, n); },
