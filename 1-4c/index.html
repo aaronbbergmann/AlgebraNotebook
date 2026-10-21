@@ -1878,6 +1878,7 @@
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === QZ.tool); });
     qzDraw();
     qzPanel(); TB.sync();
+    if (mode === "demo") setTimeout(qzAuto, 0);
   }
   function qzDraw() {
     var S = $("pgSvg"); S.innerHTML = ""; if (QZ.step < 2) return;
@@ -1941,7 +1942,7 @@
     if (st === "eq") h = "<input id=\"qzEq\" autocomplete=\"off\" aria-label=\"Parent equation\" placeholder=\"f(x) = ...\">";
     inp.innerHTML = h; $("qzErr").textContent = ""; $("qzErr").className = "err";
     var go = $("qzGo"), nx = $("qzNext");
-    go.hidden = st === "done" || (mode === "sequence" && st === "table"); go.textContent = st === "points" || st === "graph" ? "Check graph" : "Check";
+    go.hidden = demo || st === "done" || (mode === "sequence" && st === "table"); go.textContent = st === "points" || st === "graph" ? "Check graph" : "Check";
     nx.hidden = !(demo || st === "done");
     if (QZ.locked) nx.textContent = up ? up.label : "Another round"; else if (demo) nx.textContent = qzLabel(); else if (st === "done") nx.textContent = "Next parent";
     $("qzAgain").hidden = !(st === "done" && QZ.pi === 3 && up);
@@ -1992,6 +1993,36 @@
       qzFail("Right shape! Now make it go through all five of your points.");
     }
   }
+  // Demo mode has no Check button: the page checks as the student works and moves on when the answer is right
+  function qzAuto() {
+    if (mode !== "demo" || busy || QZ.locked || !quiz()) return;
+    var fam = qFam(), st = qStep();
+    if (st === "eq") { var t = qNorm(($("qzEq") || {}).value || ""); if (t === QEQ[fam]) qzAdvance(); }
+    else if (st === "table") { if ([0, 1, 2, 3, 4].every(function (i) { return cellOK(i); })) qzAdvance(); }
+    else if (st === "points") {
+      var want = []; for (var x = -2; x <= 2; x++) want.push(x + "," + qf(fam, x));
+      var have = QZ.pts.map(function (p) { return p[0] + "," + p[1]; });
+      if (QZ.pts.length === 5 && want.every(function (w) { return have.indexOf(w) >= 0; })) qzAdvance();
+    } else if (st === "graph") {
+      var sh = QZ.shape; if (!sh || sh.t !== QSHAPE[fam]) return;
+      var ok;
+      if (sh.t === "line") { var dx = sh.p2[0] - sh.p1[0], dy = sh.p2[1] - sh.p1[1]; ok = dx !== 0 && (fam === 0 ? dy === 0 && sh.p1[1] === 1 : dy === dx && sh.p1[1] === sh.p1[0]); }
+      else ok = sh.h === 0 && sh.k === 0 && sh.a === 1;
+      if (ok) qzAdvance();
+    }
+  }
+  function cellOK(i) { var el = $("qzY" + i); if (!el) return false; var n = parse(String(el.value).replace(/−/g, "-")); return !!n && same(n, mk(qf(qFam(), i - 2))); }
+  document.addEventListener("input", function (e) {
+    if (mode !== "demo" || busy || !quiz()) return;
+    if (e.target.id === "qzEq") qzAuto();
+    else if (e.target.classList && e.target.classList.contains("qzCell")) {
+      var i = +e.target.id.slice(3);
+      if (cellOK(i)) {
+        var nx = [0, 1, 2, 3, 4].filter(function (j) { return !cellOK(j); })[0];
+        if (nx === undefined) qzAuto(); else { var c = $("qzY" + nx); c.focus(); c.select(); }
+      }
+    }
+  });
   function qzAdvance() {
     QZ.step++; QZ.hn = 0; QZ.tool = null; QZ.clk = [];
     if (!(explainOn && mode === "demo")) logEl.innerHTML = "";
@@ -2099,7 +2130,7 @@
       else { var a = Math.round((p[1] - sh.k) * 4) / 4; sh.a = a || (p[1] < sh.k ? -.25 : .25); }
       qzDraw();
     });
-    function end() { if (dragH) { dragH = null; if (QZ.shape && QZ.shape.t === "line" && QZ.shape.p1[0] === QZ.shape.p2[0] && QZ.shape.p1[1] === QZ.shape.p2[1]) QZ.shape.p2 = [QZ.shape.p1[0] + 1, QZ.shape.p1[1] + 1]; qzDraw(); } }
+    function end() { if (dragH) { dragH = null; if (mode === "demo") setTimeout(qzAuto, 0); if (QZ.shape && QZ.shape.t === "line" && QZ.shape.p1[0] === QZ.shape.p2[0] && QZ.shape.p1[1] === QZ.shape.p2[1]) QZ.shape.p2 = [QZ.shape.p1[0] + 1, QZ.shape.p1[1] + 1]; qzDraw(); } }
     S.addEventListener("pointerup", end); S.addEventListener("pointercancel", end);
     // tool buttons: a click picks the tool; a drag drops it onto the graph
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) {
@@ -2139,15 +2170,17 @@
     function run() { if (!q.length) { busy = false; $("qzNext").disabled = false; setTimeout(handHide, 400); qzPanel(); return; } var s = q.shift(); later(function () { s[1](); run(); }, s[0]); }
     function typeInto(el, text) { after(650, function () { handGo(ctr(el), 600); }); after(700, function () { handTap(); el.focus(); }); for (var c = 1; c <= text.length; c++) (function (c) { after(110, function () { el.value = text.slice(0, c); }); })(c); }
     function tapEl(get, fn) { if (get().hidden) { after(600, fn); return; } after(700, function () { handGo(ctr(get()), 650); }); after(750, function () { handTap(); }); after(200, fn); }
+    var st0 = QZ.step;
+    function chk() { if (QZ.step === st0 && !QZ.locked) qzCheck(); }
     function tapPt(x, y, fn) { after(550, function () { handGo(svgPt(x, y), 500); }); after(560, function () { handTap(); }); after(150, fn); }
-    if (st === "eq") { typeInto($("qzEq"), "f(x)=" + QEQ[fam].replace("^2", "²")); tapEl(function () { return $("qzGo"); }, qzCheck); }
-    else if (st === "table") { for (var x = -2; x <= 2; x++) typeInto($("qzY" + (x + 2)), String(qf(fam, x))); tapEl(function () { return $("qzGo"); }, qzCheck); }
+    if (st === "eq") { typeInto($("qzEq"), "f(x)=" + QEQ[fam].replace("^2", "²")); tapEl(function () { return $("qzGo"); }, chk); }
+    else if (st === "table") { for (var x = -2; x <= 2; x++) typeInto($("qzY" + (x + 2)), String(qf(fam, x))); tapEl(function () { return $("qzGo"); }, chk); }
     else if (st === "points") {
       // a student may already have plotted some of the points: keep the right ones, drop the wrong ones, add the missing ones
       QZ.pts = QZ.pts.filter(function (p) { return p[0] >= -2 && p[0] <= 2 && p[1] === qf(fam, p[0]); });
       tapEl(function () { return document.querySelector(".qzTools [data-tool=pt]"); }, function () { QZ.tool = "pt"; QZ.clk = []; qzRender(); });
       for (var x2 = -2; x2 <= 2; x2++) (function (x) { if (QZ.pts.some(function (p) { return p[0] === x; })) return; tapPt(x, qf(fam, x), function () { qzPlace("pt", x, qf(fam, x)); }); })(x2);
-      tapEl(function () { return $("qzGo"); }, qzCheck);
+      tapEl(function () { return $("qzGo"); }, chk);
     } else if (st === "graph") {
       QZ.shape = null; QZ.clk = [];
       if (fam < 2) {
@@ -2161,7 +2194,7 @@
         after(50, function () { handGo(svgPt(0, 0), 1200); });
         after(1300, function () { qzDrop(tool, 0, 0); });
       }
-      tapEl(function () { return $("qzGo"); }, qzCheck);
+      tapEl(function () { return $("qzGo"); }, chk);
     } else { tapEl(function () { return $("qzNext"); }, function () { qzNextParent(); }); }
     $("qzNext").textContent = qzLabel();
     run();
