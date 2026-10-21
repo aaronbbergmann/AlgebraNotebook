@@ -1851,7 +1851,7 @@
   function qzRender() {
     var fam = qFam(), st = qStep(), si = QZ.step;
     $("pgFam").hidden = true;
-    $("pgDesc").innerHTML = "Parent " + (QZ.pi + 1) + " of 4<br>Family: " + QFAM[fam];
+    $("pgDesc").innerHTML = si >= 1 ? "Parent " + (QZ.pi + 1) + " of 4<br>Family: " + QFAM[fam] : "";
     $("pgEq").innerHTML = si >= 1 ? "<i>f</i>(<i>x</i>) = " + qEqHTML(fam) : "";
     var T = $("pgTable"); T.style.display = si >= 1 ? "" : "none";
     T.querySelector(".pgMid").innerHTML = si >= 1 ? "<i>f</i>(<i>x</i>) = " + qEqHTML(fam) : "";
