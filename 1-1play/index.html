@@ -2530,7 +2530,7 @@
   }
   function drawGraph() {
     var S = $("pgSvg"); S.innerHTML = "";
-    if (PG.show.graph || PG.pts.length || TB.targets.length || PG.shape || PG.clk.length) {
+    { // the grid and both axes are always there; Graph only reveals the curve
       var gr = svgEl("g", { stroke: "#E3E5E8", "stroke-width": ".05" });
       for (var i = -10; i <= 10; i++) { gr.appendChild(svgEl("line", { x1: i, y1: -10, x2: i, y2: 10 })); gr.appendChild(svgEl("line", { x1: -10, y1: i, x2: 10, y2: i })); }
       S.appendChild(gr);
