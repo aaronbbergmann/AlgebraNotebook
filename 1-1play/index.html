@@ -2569,8 +2569,7 @@
   function tmClick() {
     var T = PG.tm; if (!T) return;
     if (T.stage === 0) { if (!T.cur) return; T.g = T.cur.slice(); T.stage = 1; if (!stretches()) { tmDone(); return; } }
-    else if (T.stage === 1) { T.p = T.cur ? T.cur[1] : T.g[1]; T.stage = 2; }
-    else { tmDone(); return; }
+    else { T.p = T.cur ? T.cur[1] : T.g[1]; T.stage = 2; tmDone(); return; }
     tmRefresh();
   }
   function tmArrow(S, x1, y1, x2, y2, col) {
@@ -2628,7 +2627,7 @@
     // the two points are always there to drag, even with the graph hidden
     if (PG.tm) {
       var T = PG.tm, gp = T.stage >= 1 ? T.g : T.cur;
-      if (T.stage < 2 && gp) { tmArrow(S, 0, 0, gp[0], 0, TMG); tmArrow(S, gp[0], 0, gp[0], gp[1], TMG); }
+      if (T.stage === 0 && gp) { tmArrow(S, 0, 0, gp[0], 0, TMG); tmArrow(S, gp[0], 0, gp[0], gp[1], TMG); }
       if (T.stage >= 1) tmArrow(S, T.g[0] + 1, T.g[1], T.g[0] + 1, T.stage === 1 ? (T.cur ? T.cur[1] : T.g[1]) : T.p, TMP);
       PG.pts.forEach(function (p, j) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .24, fill: "#111" })); });
       return;
@@ -3069,7 +3068,7 @@
       handGo(ctr(b), 650);
       pgWait(800, function () { handTap(); b.classList.add("simPress"); pgWait(180, function () { b.classList.remove("simPress"); qzTool("tr"); pgWait(600, function () {
         path([[h, 0], [h, k]], function () { handTap(); tmClick(); pgWait(700, function () {
-          path(stretches() ? [[h + 1, k + a / 2], [h + 1, k + a]] : [], function () { if (!PG.tm) { pgWait(500, then); return; } handTap(); tmClick(); pgWait(1100, function () { handTap(); tmClick(); pgWait(700, then); }); });
+          path(stretches() ? [[h + 1, k + a / 2], [h + 1, k + a]] : [], function () { if (!PG.tm) { pgWait(500, then); return; } handTap(); tmClick(); pgWait(900, then); });
         }); });
       }); }); });
     }
@@ -3087,7 +3086,7 @@
       function (n) { cap("Let's aim for g(x) = 2(x \u2212 3)\u00b2 + 1. First the vertex..."); drag("v", [3, 1], n); },
       function (n) { cap("...and then the stretch of 2."); drag("a", [0, 2], n); },
       function (n) { cap("Hide the description, then describe the transformation with the Transformation button."); tap(tog("desc"), n); },
-      function (n) { cap("Press Transformation, then click where the vertex is. Arrows measure the move from the origin."); trDemo(n); },
+      function (n) { cap("Press Transformation, then click where the vertex is: green arrows measure the move from the origin. Click again at the stretch point: a purple arrow measures it."); trDemo(n); },
       function (n) { cap("Show the description to check the answer."); tap(tog("desc"), n); },
       function (n) { cap("Hide the description and the parent."); tap(tog("desc"), function () { tap(tog("parent"), n); }); },
       function (n) { cap("Now hide the graph again: we will rebuild it from the table."); tap(tog("graph"), n); },
