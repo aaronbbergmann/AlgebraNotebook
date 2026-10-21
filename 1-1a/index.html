@@ -2569,9 +2569,9 @@
   }
   function tmArrow(S, x1, y1, x2, y2, col) {
     var L = Math.hypot(x2 - x1, y2 - y1); if (L < 1e-9) return;
-    var ux = (x2 - x1) / L, uy = (y2 - y1) / L, hl = Math.min(.4, L * .6), bx = x2 - ux * hl, by = y2 - uy * hl;
-    S.appendChild(svgEl("line", { x1: x1, y1: -y1, x2: bx, y2: -by, stroke: col, "stroke-width": ".07" }));
-    S.appendChild(svgEl("polygon", { points: x2 + "," + -y2 + " " + (bx - uy * hl * .4) + "," + -(by + ux * hl * .4) + " " + (bx + uy * hl * .4) + "," + -(by - ux * hl * .4), fill: col }));
+    var ux = (x2 - x1) / L, uy = (y2 - y1) / L, hl = Math.min(1, L * .6), bx = x2 - ux * hl, by = y2 - uy * hl;
+    S.appendChild(svgEl("line", { x1: x1, y1: -y1, x2: bx, y2: -by, stroke: col, "stroke-width": ".45" }));
+    S.appendChild(svgEl("polygon", { points: x2 + "," + -y2 + " " + (bx - uy * hl * .5) + "," + -(by + ux * hl * .5) + " " + (bx + uy * hl * .5) + "," + -(by - ux * hl * .5), fill: col }));
   }
   function descHTML(h2, k2, a2) {
     var L = ["Family: " + FAMS[PG.fam]], a = a2 === undefined ? A() : a2, h = h2 === undefined ? H() : h2, k = k2 === undefined ? K() : k2, m = Math.abs(a);
