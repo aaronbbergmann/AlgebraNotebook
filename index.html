@@ -214,6 +214,8 @@
   .pgTable td input.qzCell.badc{background:#FDECEA;box-shadow:inset 0 0 0 2px #C0301E}
   .pgTable td:has(input.qzCell){padding:0}
   .pgTable td.mid.live{cursor:pointer;background:#DCE8F7}
+  .pgTable td.yv.drop{background:#DCE8F7}
+  .pgTable td.yv.drop input.qzCell{background:#DCE8F7}
   .pgTable td.mid.drop{outline:3px solid #2D70B3;outline-offset:-3px;background:#fff}
   .pgTable tr.rdone{cursor:grab}.pgTable tr.rdone td{touch-action:none}
   body.tbon .pgTable th.pgMid,body.tbon .pgEq{cursor:grab;touch-action:none}
@@ -2436,6 +2438,17 @@
       document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); document.addEventListener("pointercancel", up);
     }
     function canSub() { var m = TB.mode(); return m === "quiz" ? QZ.step === 1 : m === "play" ? fillMode() : false; }
+    function yAt(ev) { var l = document.elementsFromPoint(ev.clientX, ev.clientY); for (var k = 0; k < l.length; k++) { var t = l[k].closest && l[k].closest("tbody td.yv"); if (t) return t; } return null; }
+    function yDrag(e, i) {
+      var val = String(TB.y(TB.rows()[i])), hot = null;
+      function target(ev) { var t = yAt(ev); if (!t) return null; var j = +t.parentNode.dataset.r, r = TB.rows()[j]; return r && !r.done && j !== i ? t : null; }
+      start(e, "<b>" + nf(TB.y(TB.rows()[i])) + "</b>", null, function (ev) {
+        var t = target(ev); if (hot !== t) { if (hot) hot.classList.remove("drop"); hot = t; if (t) t.classList.add("drop"); }
+      }, function (ev) {
+        if (hot) hot.classList.remove("drop"); var t = target(ev); if (!t) return;
+        var j = +t.parentNode.dataset.r; TB.typed(j, val); if (!TB.rows()[j].done) TB.draw();
+      });
+    }
     function eqDrag(e) {
       if (!canSub()) return;
       var src = e.currentTarget, hot = null;
@@ -2455,6 +2468,8 @@
     T.addEventListener("pointerdown", function (e) {
       var tr = e.target.closest("tbody tr[data-r]"), m = TB.mode(); if (!tr || !m || e.target.closest("input") || (m === "play" && e.target.closest("td:first-child"))) return;
       var i = +tr.dataset.r, p, ok;
+      // while the table is being filled in, a finished y-value can be dragged onto another y cell to copy it there
+      if (e.target.closest("td.yv") && canSub() && TB.rows()[i] && TB.rows()[i].done) { yDrag(e, i); return; }
       if (m === "quiz") { ok = QZ.step === 2 && TB.rows()[i] && TB.rows()[i].done; if (ok) p = TB.pt(i); }
       else if (fillMode()) { ok = TB.rows()[i] && TB.rows()[i].done; if (ok) p = TB.pt(i); }
       else if (PG.show.table) { ok = true; var x = i - 2 + (PG.off || 0); p = [x, g(x)]; }
@@ -2764,6 +2779,12 @@
       })();
     }
     // the hand types the y-value into the table
+    // the hand drags a finished y-value onto another y cell to copy it
+    function dragY(i, j, then) {
+      function yc(k) { return $("pgTable").querySelector("tbody tr[data-r=\"" + k + "\"] td.yv"); }
+      var src = yc(i); handGo(ctr(src), 650);
+      pgWait(800, function () { handTap(); pgWait(250, function () { var dst = yc(j); handGo(ctr(dst), 1400); fly(src, dst, function () { if (pgRun !== run) return; TB.typed(j, String(TB.y(TB.rows()[i]))); pgWait(600, then); }, false); }); });
+    }
     function typeRow(i, then, wrong) {
       var text = wrong || String(TB.y(TB.rows()[i])); function inp() { return $("pgTable").querySelector("input.qzCell[data-r=\"" + i + "\"]"); }
       var e0 = inp(); if (!e0) { then(); return; }
@@ -2848,8 +2869,9 @@
       function (n) { cap("The x-values appear, centered at 0. Drag the dot up or down to scroll the table like a wheel until the vertex, x = 3, is in the middle row."); dialDemo(-3, n); },
       function (n) { cap("You can type the y-value yourself..."); typeRow(0, n); },
       function (n) { cap("...or click the calculation to simplify it one step at a time. The answer moves into the y column."); clickRow(1, n); },
-      function (n) { cap("Let's do a third row, but type a wrong answer on purpose."); typeRow(2, n, "4"); },
-      function (n) { cap("The last two rows are done quickly."); TB.rows().forEach(function (r, i) { if (i > 2) { r.sub = true; r.done = true; r.fl = false; } }); TB.draw(); pgWait(1200, n); },
+      function (n) { cap("A parabola is symmetric, so x = 4 has the same y as x = 2. Drag a finished y-value onto another y cell to copy it."); dragY(1, 3, n); },
+      function (n) { cap("The same works for x = 5: copy the 9 from x = 1."); dragY(0, 4, n); },
+      function (n) { cap("Now the middle row, but type a wrong answer on purpose."); typeRow(2, n, "4"); },
       function (n) { cap("Press Table to reveal the real table. Right answers get a green check; a wrong one fades into the correct value."); tap(tog("table"), function () { pgWait(2200, n); }); },
       function (n) { cap("The buttons beside the graph place things by hand. The dot button plots a point."); dropShape("pt", -3, -3, n); },
       function (n) { cap("The line button drops a line..."); dropShape("line", -4, 2, n); },
