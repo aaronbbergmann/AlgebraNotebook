@@ -162,6 +162,27 @@
   body.wel .actBtn{width:auto;min-width:10.5em}
   .log .msg{align-self:stretch;max-width:none;background:none;padding:0;border-radius:0;font-size:1rem;line-height:1.45}
   .log .msg+.msg{padding-top:.6rem;border-top:1px solid color-mix(in srgb,var(--ink) 15%,transparent)}
+  /* ---- 1.1A quiz ---- */
+  body.quiz .pgCtl,body.quiz #undo,body.quiz #show{display:none!important}
+  body.quiz .pg{color:var(--ink)}
+  .pgTable th,.pgTable td{color:#1B2433}
+  .qzTools{display:flex;flex-direction:column;gap:.5rem;align-self:center}
+  .qzTools[hidden]{display:none}
+  .qzTools button,.ghost{width:2.7rem;height:2.7rem;border-radius:10px;border:2px solid #1B2433;background:#fff;color:#1B2433;font:700 1.25rem/1 system-ui,sans-serif;cursor:grab;touch-action:none;padding:0}
+  .qzTools button.on{background:#2D70B3;border-color:#2D70B3;color:#fff}
+  .qzTools button[data-tool=clear]{font-size:1rem;margin-top:.4rem}
+  .ghost{position:fixed;z-index:50;pointer-events:none;opacity:.85;box-shadow:0 .3em 1em rgba(0,0,0,.3)}
+  .qz{display:flex;flex-direction:column;gap:.6rem;padding:.9rem 1rem;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;border-bottom:2px solid color-mix(in srgb,var(--ink) 12%,transparent)}
+  .qz[hidden]{display:none}
+  .qzT{font-weight:600;line-height:1.4}
+  .qz input{box-sizing:border-box;width:100%;font:600 1.05rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:10px;padding:.45em .6em}
+  .qzCells{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.35rem .5rem;align-items:center}
+  .qzCells label{font:400 1.05rem "LM","Latin Modern Roman",Georgia,serif;white-space:nowrap}
+  .qz input.badc{border-color:var(--no);box-shadow:0 0 0 2px color-mix(in srgb,var(--no) 35%,transparent)}
+  .qzRow{display:flex;flex-direction:column;align-items:center;gap:.4rem}
+  .qzRow .btn{padding:.6em 1.1em;font-size:.95rem}
+  .qzRow .btn[hidden],.qzRow .link[hidden]{display:none}
+  @media (max-width:760px){.qzTools{flex-direction:row;width:100%;justify-content:center}}
   .eqn.free{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap}
   .eqn.free>*{padding:0 .16em!important;justify-self:auto}
   .eqn.free .raw{border-bottom:2px dashed var(--plus);cursor:pointer}
@@ -209,6 +230,7 @@
   <div class="stage">
     <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
+      <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click two points, or drag onto the graph">/</button><button type="button" data-tool="V" title="V: click the vertex, then a point on one side, or drag onto the graph">V</button><button type="button" data-tool="U" title="U: click the vertex, then a point on one side, or drag onto the graph">U</button><button type="button" data-tool="clear" title="Clear the graph">✕</button></div>
       <div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg><button class="pgFam" id="pgFam" type="button">Change Family</button></div>
       <div class="pgSide">
         <table class="pgTable" id="pgTable" aria-label="Table"><colgroup><col style="width:18%"><col><col style="width:18%"></colgroup><thead><tr><th>x</th><th class="pgMid"></th><th>y</th></tr></thead><tbody></tbody></table>
@@ -250,6 +272,7 @@
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
+    <section class="qz" id="qz" hidden aria-live="polite"><div class="qzT" id="qzT"></div><div id="qzIn"></div><div class="err" id="qzErr"></div><div class="qzRow"><button class="btn" id="qzGo">Check</button><button class="btn" id="qzNext" hidden>Next</button><button class="link" id="qzAgain" hidden>Another round</button></div></section>
     <div class="composer" id="ask" hidden>
       <div id="askT" style="font-weight:600"></div>
       <div class="err" id="askErr"></div>
@@ -1175,7 +1198,7 @@
   var PHRASES = ["Tasty!", "Cool!", "Nice!", "Stands on business!", "It's a W!", "Hundo!", "Great job!", "Well done!", "Yeeesss!", "Sooo good!", "Goated!", "Pro status unlocked!"];
   function stopParty() { clearTimeout(partyTimer); if (party) { party.remove(); party = null; } }
   function celebrate() {
-    if (mode === "demo") return;   // watching a demo is not something to celebrate
+    if (mode === "demo") return;   // no celebration for watching a demo
     stopParty();
     var t; do { t = PHRASES[rnd(PHRASES.length)]; } while (t === lastPhrase);
     lastPhrase = t;
@@ -1206,6 +1229,10 @@
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   var BUILT = {
+    "1.1A": { quiz: true, top: 1, key: "algebraProgress:1.1A", lessons: ["Memorize Parents"], modes: ["demo", "sequence", "solo"], levels: [
+      [1, "demo", 10, "Demo Mode"], [1, "sequence", 40, "Sequence Mode"], [1, "solo", 70, "Solo Mode"],
+      [1, "solo", 85, "Solo Mode, 2nd round", 2], [1, "solo", 100, "Solo Mode, 3rd round", 3]
+    ] },
     "1.1 Play": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
     "1.4B": { top: 2, key: "algebraProgress:1.4B", levels: [
       [1, "demo", 5, "Demo Mode"], [1, "sequence", 10, "Sequence Mode"],
@@ -1252,7 +1279,7 @@
   function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; }
   function openProg() {
     var p = pct(), h = "<h2 id=\"progT\">" + act + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = 0;
-    var names = { 1: "One Variable", 2: "2×2 Systems", 3: "3×3 Systems" };
+    var names = { 1: lessonName(1), 2: "2×2 Systems", 3: "3×3 Systems" };
     LEVELS.forEach(function (l, i) {
       if (l[0] !== last) { if (last) h += "</ul>"; last = l[0]; h += "<h3>" + names[last] + "</h3><ul>"; }
       var d = lvDone(l);
@@ -1264,7 +1291,7 @@
   function levelUp() {
     up = null; var c = prog[lesson + ":" + mode] || 0;
     if (mode === "create" || c < 2) return;
-    var nx = NEXTMODE[mode];
+    var ml = BUILT[act].modes || ["demo", "sequence", "calculate", "solo"], nx = ml[ml.indexOf(mode) + 1];
     if (nx) up = { label: "Level up: " + MODES[nx] + " mode", go: function () { setMode(nx); } };
     else if (mode === "solo" && lesson < topLesson()) up = { label: "Level up: " + LNAME[lesson + 1], go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
   }
@@ -1290,6 +1317,7 @@
     return lesson === 1 ? !!E[0].a.n : lesson === 3 ? !!bestElim(E) : E.every(function (q) { return q.a.n && q.b.n; });
   }
   function setMode(m) {
+    if (quiz()) { mode = m; document.documentElement.dataset.mode = m; $("modeSel").value = m; $("modeSel").style.color = ""; qzStart(); return; }
     var sel = $("modeSel");
     // equations typed in Create carry over to the mode the student picks
     if (mode === "create" && m !== "create" && m !== "solo" && SUB() && orig.length === allV().length && !orig.some(function (q) { return q.sol; })) { sel.value = "create"; note("For substitution, one equation has to be solved for a variable, like y = 2x - 6. Press Undo and type it that way."); return; }
@@ -1303,6 +1331,7 @@
   }
 
   function newProblem() {
+    if (quiz()) { qzStart(); return; }
     calc = null; hinted = false; mulNote = null; pend = null; stopParty(); stopDemo(); closeAsk(false); busy = false;
     var plain = mode === "solo" || mode === "create";
     if (mode === "demo") { curDm = demoN % 2 + 1; demoN++; }
@@ -1449,6 +1478,11 @@
   $("undo").addEventListener("click", undo);
   $("show").addEventListener("click", showWork);
   $("hint").addEventListener("click", function () {
+    if (quiz()) {
+      if (mode === "demo") { explainOn = !explainOn; $("hint").classList.toggle("on", explainOn); $("hint").setAttribute("aria-pressed", explainOn); logEl.innerHTML = ""; if (explainOn) logQzExplain(); }
+      else note(qzHint());
+      return;
+    }
     if (mode === "demo") {
       explainOn = !explainOn; $("hint").classList.toggle("on", explainOn); $("hint").setAttribute("aria-pressed", explainOn);
       lastExp = ""; if (explainOn) { if (pend) logExplain(); else say("This problem is solved. Nice work!"); }
@@ -1792,12 +1826,355 @@
     }
   }
 
+  // ---- 1.1A Memorize Parents: the activity asks; the student answers in the panel or on the graph ----
+  var QFAM = ["constant", "linear", "absolute value", "quadratic"];
+  var QEQ = ["1", "x", "|x|", "x^2"];
+  var QSHAPE = ["line", "line", "V", "U"];
+  var QSTEPS = ["eq", "table", "points", "graph", "done"];
+  var QZ = { order: [], pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0 };
+  function qf(fam, x) { return fam === 0 ? 1 : fam === 1 ? x : fam === 2 ? Math.abs(x) : x * x; }
+  function qFam() { return QZ.order[QZ.pi]; }
+  function qStep() { return QSTEPS[QZ.step]; }
+  function qEqHTML(fam, v) {
+    var X = v == null ? "<i>x</i>" : nf(v), P = v == null ? X : "(" + X + ")";
+    var body = fam === 0 ? "1" : fam === 1 ? X : fam === 2 ? "|" + X + "|" : (v == null || v >= 0 ? X : P) + "<sup>2</sup>";
+    return body;
+  }
+  function qNorm(t) {
+    t = String(t).toLowerCase().replace(/\s+/g, "").replace(/²/g, "^2").replace(/−/g, "-").replace(/\*\*/g, "^");
+    t = t.replace(/^(f\(x\)|g\(x\)|y)=/, "").replace(/abs\(x\)/g, "|x|").replace(/x\*x/g, "x^2").replace(/^\(x\)\^2$/, "x^2").replace(/^1x$/, "x").replace(/^1\*x$/, "x");
+    return t;
+  }
+  function quiz() { return !!(BUILT[act] && BUILT[act].quiz); }
+
+  // ---- drawing the page for the current step: only the parts this step needs are shown ----
+  function qzRender() {
+    var fam = qFam(), st = qStep(), si = QZ.step;
+    $("pgFam").hidden = true;
+    $("pgDesc").innerHTML = "Parent " + (QZ.pi + 1) + " of 4<br>Family: " + QFAM[fam];
+    $("pgEq").innerHTML = si >= 1 ? "<i>f</i>(<i>x</i>) = " + qEqHTML(fam) : "";
+    var T = $("pgTable"); T.style.display = si >= 1 ? "" : "none";
+    T.querySelector(".pgMid").innerHTML = si >= 1 ? "<i>f</i>(<i>x</i>) = " + qEqHTML(fam) : "";
+    var rows = ""; for (var x = -2; x <= 2; x++) rows += "<tr><td>" + nf(x) + "</td><td>" + qEqHTML(fam, x) + "</td><td>" + (si >= 2 ? nf(qf(fam, x)) : "") + "</td></tr>";
+    T.querySelector("tbody").innerHTML = rows;
+    $("pgGraph").style.display = si >= 2 ? "" : "none";
+    $("qzTools").hidden = !(si === 2 || si === 3);
+    [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === QZ.tool); });
+    qzDraw();
+    qzPanel();
+  }
+  function qzDraw() {
+    var S = $("pgSvg"); S.innerHTML = ""; if (QZ.step < 2) return;
+    var gr = svgEl("g", { stroke: "#E3E5E8", "stroke-width": ".05" });
+    for (var i = -10; i <= 10; i++) { gr.appendChild(svgEl("line", { x1: i, y1: -10, x2: i, y2: 10 })); gr.appendChild(svgEl("line", { x1: -10, y1: i, x2: 10, y2: i })); }
+    S.appendChild(gr);
+    S.appendChild(svgEl("line", { x1: -10, y1: 0, x2: 10, y2: 0, stroke: "#222", "stroke-width": ".09" }));
+    S.appendChild(svgEl("line", { x1: 0, y1: -10, x2: 0, y2: 10, stroke: "#222", "stroke-width": ".09" }));
+    var fam = qFam();
+    if (QZ.step >= 4) {   // solved: the true parent graph in red
+      var pts = []; for (var x = -10.5; x <= 10.501; x += .05) { var y = qf(fam, x); if (y < 12) pts.push(x.toFixed(3) + "," + (-y).toFixed(3)); }
+      S.appendChild(svgEl("polyline", { points: pts.join(" "), fill: "none", stroke: "#C74440", "stroke-width": ".13" }));
+      for (var u = -2; u <= 2; u++) S.appendChild(svgEl("circle", { cx: u, cy: -qf(fam, u), r: .22, fill: "#C74440" }));
+      return;
+    }
+    var sh = QZ.shape, blue = "#2D70B3";
+    if (sh) {
+      S.appendChild(svgEl("polyline", { points: shapePts(sh), fill: "none", stroke: blue, "stroke-width": ".12", "stroke-linejoin": "round" }));
+      handles(sh).forEach(function (h) {
+        var g = svgEl("g", { "data-qh": h.id, style: "cursor:grab" });
+        g.appendChild(svgEl("circle", { cx: h.x, cy: -h.y, r: .6, fill: blue, "fill-opacity": ".25" }));
+        g.appendChild(svgEl("circle", { cx: h.x, cy: -h.y, r: .2, fill: blue }));
+        S.appendChild(g);
+      });
+    }
+    QZ.pts.forEach(function (p, j) {
+      var g = svgEl("g", { "data-qh": "pt:" + j, style: "cursor:grab" });
+      g.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .55, fill: "#111", "fill-opacity": ".12" }));
+      g.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .24, fill: "#111" }));
+      S.appendChild(g);
+    });
+    if (QZ.clk.length) QZ.clk.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .3, fill: "none", stroke: blue, "stroke-width": ".1" })); });
+  }
+  function shapePts(sh) {
+    if (sh.t === "line") {
+      var a = sh.p1, b = sh.p2;
+      if (a[0] === b[0]) return a[0] + ",-11 " + a[0] + ",11";
+      var m = (b[1] - a[1]) / (b[0] - a[0]); return [-11, 11].map(function (x) { return x + "," + (-(a[1] + m * (x - a[0]))); }).join(" ");
+    }
+    if (sh.t === "V") return [sh.h - 12, sh.h, sh.h + 12].map(function (x) { return x + "," + (-(sh.a * Math.abs(x - sh.h) + sh.k)); }).join(" ");
+    var p = []; for (var x = -11; x <= 11.001; x += .05) { var y = sh.a * (x - sh.h) * (x - sh.h) + sh.k; if (Math.abs(y) < 14) p.push(x.toFixed(3) + "," + (-y).toFixed(3)); }
+    return p.join(" ");
+  }
+  function handles(sh) {
+    if (sh.t === "line") return [{ id: "l1", x: sh.p1[0], y: sh.p1[1] }, { id: "l2", x: sh.p2[0], y: sh.p2[1] }];
+    return [{ id: "vx", x: sh.h, y: sh.k }, { id: "s1", x: sh.h - 1, y: sh.k + sh.a }, { id: "s2", x: sh.h + 1, y: sh.k + sh.a }];
+  }
+
+  // ---- the panel: the question, the answer box(es), Check / Next ----
+  function qzPanel() {
+    var fam = qFam(), st = qStep(), demo = mode === "demo", h = "", inp = $("qzIn");
+    var T = {
+      eq: "What is the parent function of the " + QFAM[fam] + " family? Type its equation.",
+      table: "Fill in the y-values for the table.",
+      points: "Plot the five points from the table. Choose the ● tool, then click the graph at each point.",
+      graph: "Now draw the parent graph. Use the / tool (a line), the V tool or the U tool.",
+      done: QZ.pi < 3 ? "That's the " + QFAM[fam] + " parent!" : "You have all four parents!"
+    };
+    $("qzT").textContent = T[st];
+    if (st === "eq") h = "<input id=\"qzEq\" autocomplete=\"off\" aria-label=\"Parent equation\" placeholder=\"f(x) = ...\">";
+    if (st === "table") { h = "<div class=\"qzCells\">"; for (var x = -2; x <= 2; x++) h += "<label for=\"qzY" + (x + 2) + "\"><i>x</i> = " + nf(x) + ", <i>y</i> =</label><input id=\"qzY" + (x + 2) + "\" autocomplete=\"off\" inputmode=\"numeric\">"; h += "</div>"; }
+    inp.innerHTML = h; $("qzErr").textContent = ""; $("qzErr").className = "err";
+    var go = $("qzGo"), nx = $("qzNext");
+    go.hidden = demo || st === "done"; go.textContent = st === "points" || st === "graph" ? "Check graph" : "Check";
+    nx.hidden = !(demo || st === "done");
+    if (QZ.locked) nx.textContent = up ? up.label : "Another round"; else if (demo) nx.textContent = qzLabel(); else if (st === "done") nx.textContent = "Next parent";
+    $("qzAgain").hidden = !(st === "done" && QZ.pi === 3 && up);
+    if (!demo) { var f = inp.querySelector("input"); if (f) f.focus(); }
+  }
+  function qzLabel() {
+    var st = qStep();
+    return st === "eq" ? "Type the equation" : st === "table" ? "Fill in the table" : st === "points" ? "Plot the points" : st === "graph" ? "Draw the graph" : QZ.pi < 3 ? "Next parent" : "Finish";
+  }
+
+  // ---- checking ----
+  function qzFail(msg) { var e = $("qzErr"); e.className = "err"; e.textContent = mode === "solo" ? "Not quite. Try again." : msg; QZ.wrong++; }
+  function qzCheck() {
+    if (busy && mode !== "demo") return;
+    var fam = qFam(), st = qStep();
+    if (st === "eq") {
+      var t = qNorm($("qzEq").value);
+      if (!t) { qzFail("Type the equation, like f(x) = ..."); return; }
+      if (t === QEQ[fam]) { qzAdvance(); return; }
+      var other = QEQ.indexOf(t);
+      qzFail(other >= 0 ? "That is the parent of the " + QFAM[other] + " family, not the " + QFAM[fam] + " family." : "Not quite. Try again.");
+      return;
+    }
+    if (st === "table") {
+      var bad = 0;
+      for (var x = -2; x <= 2; x++) { var el = $("qzY" + (x + 2)), n = parse(String(el.value).replace(/−/g, "-")); var ok = n && same(n, mk(qf(fam, x))); el.classList.toggle("badc", !ok); if (!ok) bad++; }
+      if (!bad) { qzAdvance(); return; }
+      qzFail(bad === 1 ? "One y-value is not right yet. It is outlined in red." : bad + " y-values are not right yet. They are outlined in red.");
+      return;
+    }
+    if (st === "points") {
+      var want = []; for (var x2 = -2; x2 <= 2; x2++) want.push(x2 + "," + qf(fam, x2));
+      var have = QZ.pts.map(function (p) { return p[0] + "," + p[1]; });
+      var miss = want.filter(function (w) { return have.indexOf(w) < 0; }).length, extra = have.filter(function (w) { return want.indexOf(w) < 0; }).length;
+      if (!miss && !extra && have.length === 5) { qzAdvance(); return; }
+      qzFail((miss ? miss + " point" + (miss > 1 ? "s are" : " is") + " missing" : "") + (miss && extra ? " and " : "") + (extra ? extra + " point" + (extra > 1 ? "s don't" : " doesn't") + " belong" : "") + ". Click a point with the ● tool to remove it.");
+      return;
+    }
+    if (st === "graph") {
+      var sh = QZ.shape;
+      if (!sh) { qzFail("Use the /, V or U tool to draw the graph first."); return; }
+      if (sh.t !== QSHAPE[fam]) { qzFail("That shape isn't the " + QFAM[fam] + " parent. Which shape goes through your points?"); return; }
+      var ok2;
+      if (sh.t === "line") { var dx = sh.p2[0] - sh.p1[0], dy = sh.p2[1] - sh.p1[1]; ok2 = dx !== 0 && (fam === 0 ? dy === 0 && sh.p1[1] === 1 : dy === dx && sh.p1[1] === sh.p1[0]); }
+      else ok2 = sh.h === 0 && sh.k === 0 && sh.a === 1;
+      if (ok2) { qzAdvance(); return; }
+      qzFail("Right shape! Now make it go through all five of your points.");
+    }
+  }
+  function qzAdvance() {
+    QZ.step++; QZ.hn = 0; QZ.tool = null; QZ.clk = [];
+    if (!(explainOn && mode === "demo")) logEl.innerHTML = "";
+    var st = qStep();
+    if (st === "done") {
+      QZ.pts = []; QZ.shape = null;
+      if (QZ.pi === 3) { QZ.locked = true; counted = false; tally(); }
+    }
+    qzRender();
+    if (!QZ.locked) { var e = $("qzErr"); e.className = "ok"; e.textContent = "Correct!"; }
+    if (mode === "demo") logQzExplain();
+  }
+  function qzNextParent() {
+    if (qStep() !== "done") return;
+    QZ.pi++; QZ.step = 0; QZ.hn = 0; QZ.pts = []; QZ.shape = null; QZ.tool = null; QZ.clk = [];
+    logEl.innerHTML = ""; qzRender(); if (mode === "demo") logQzExplain();
+  }
+  function qzStart() {
+    stopDemo(); stopParty(); busy = false; up = null; counted = false;
+    var o = [0, 1, 2, 3]; for (var i = 3; i > 0; i--) { var j = rnd(i + 1), t = o[i]; o[i] = o[j]; o[j] = t; }
+    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false };
+    if (mode !== "demo") explainOn = false;
+    logEl.innerHTML = "";
+    $("hint").hidden = mode === "solo"; $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn);
+    qzRender();
+    if (mode === "solo") note("Work through all four parents on your own.");
+    if (mode === "demo") logQzExplain();
+  }
+
+  // ---- hints (escalating) and the demo's explanations ----
+  function qzHint() {
+    var fam = qFam(), st = qStep(), n = QZ.hn++;
+    if (QZ.locked || st === "done") return "Press the button below to keep going.";
+    if (st === "eq") return n === 0 ? "A parent function is the simplest equation in its family, with nothing added to it or multiplied by it." : "The " + QFAM[fam] + " parent is f(x) = " + plain(qEqHTML(fam)) + ".";
+    if (st === "table") {
+      if (n === 0) return "Put each x-value into f(x) = " + plain(qEqHTML(fam)) + " to get its y-value. The middle column shows the calculation.";
+      for (var x = -2; x <= 2; x++) { var el = $("qzY" + (x + 2)), v = parse(String(el.value).replace(/−/g, "-")); if (!v || !same(v, mk(qf(fam, x)))) return "When x = " + nf(x) + ", y = " + plain(qEqHTML(fam, x)) + " = " + nf(qf(fam, x)) + "."; }
+      return "Every y-value looks right. Press Check.";
+    }
+    if (st === "points") return n === 0 ? "Each row of the table is a point (x, y). Choose the ● tool, then click the graph at each point." : "Plot (−2, " + nf(qf(fam, -2)) + "), (−1, " + nf(qf(fam, -1)) + "), (0, " + nf(qf(fam, 0)) + "), (1, " + nf(qf(fam, 1)) + ") and (2, " + nf(qf(fam, 2)) + ").";
+    if (st === "graph") {
+      if (n === 0) return "Look at your points. Do they make a straight line, a V or a U?";
+      return fam === 0 ? "Use the / tool: click it, then click two of your points. The line is flat at y = 1."
+        : fam === 1 ? "Use the / tool: click it, then click two of your points, like (0, 0) and (1, 1)."
+        : "Drag the " + QSHAPE[fam] + " tool onto the graph with its vertex at (0, 0). Its side points should land on (−1, 1) and (1, 1).";
+    }
+    return "";
+  }
+  function qzExplain() {
+    var fam = qFam(), st = qStep();
+    if (st === "eq") return "Every family of functions has a parent: its simplest equation. The " + QFAM[fam] + " parent is f(x) = " + plain(qEqHTML(fam)) + ".";
+    if (st === "table") return "To fill the table, put each x into the equation. For example, when x = −2, f(−2) = " + plain(qEqHTML(fam, -2)) + " = " + nf(qf(fam, -2)) + ".";
+    if (st === "points") return "Each row of the table is a point (x, y) on the graph. Plotting them shows the shape of the parent.";
+    if (st === "graph") return "The points make a " + (fam < 2 ? "straight line" : fam === 2 ? "V" : "U") + ", so we draw the " + (fam < 2 ? "/ (line)" : QSHAPE[fam]) + " shape through them.";
+    return QZ.pi < 3 ? "On to the next parent." : "That's all four parents.";
+  }
+  function logQzExplain() {
+    if (!explainOn || mode !== "demo" || QZ.locked) return;
+    var d = document.createElement("div"), b = document.createElement("b");
+    d.className = "msg"; b.textContent = qzLabel(); d.appendChild(b); d.appendChild(document.createElement("br")); d.appendChild(document.createTextNode(qzExplain()));
+    logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  // ---- graph tools: ● point, / line, V, U and ✕ clear. Click a tool and then the graph, or drag a tool onto the graph ----
+  function qAt(e) { var S = $("pgSvg"), m = S.getScreenCTM().inverse(), p = S.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; p = p.matrixTransform(m); return [p.x, -p.y]; }
+  function snap(v) { return Math.max(-10, Math.min(10, Math.round(v))); }
+  function qzPlace(tool, x, y) {
+    x = snap(x); y = snap(y);
+    if (tool === "pt") {
+      var i = QZ.pts.findIndex(function (p) { return p[0] === x && p[1] === y; });
+      if (i >= 0) QZ.pts.splice(i, 1); else QZ.pts.push([x, y]);
+    } else if (tool === "line") {
+      QZ.clk.push([x, y]);
+      if (QZ.clk.length === 2) { if (QZ.clk[0][0] === x && QZ.clk[0][1] === y) QZ.clk.pop(); else { QZ.shape = { t: "line", p1: QZ.clk[0], p2: QZ.clk[1] }; QZ.clk = []; QZ.tool = null; } }
+    } else if (tool === "V" || tool === "U") {
+      // three clicks: the tool, the vertex, then a point on one side (which sets the stretch)
+      if (!QZ.clk.length) QZ.clk.push([x, y]);
+      else { var v = QZ.clk[0], dx = x - v[0]; if (!dx) return; var a = (y - v[1]) / (tool === "V" ? Math.abs(dx) : dx * dx); a = Math.round(a * 4) / 4 || .25; QZ.shape = { t: tool, h: v[0], k: v[1], a: a }; QZ.clk = []; QZ.tool = null; }
+    }
+    qzRender();
+  }
+  function qzDrop(tool, x, y) {
+    x = snap(x); y = snap(y);
+    if (tool === "pt") { if (!QZ.pts.some(function (p) { return p[0] === x && p[1] === y; })) QZ.pts.push([x, y]); }
+    else if (tool === "line") QZ.shape = { t: "line", p1: [x, y], p2: [snap(x + 1), snap(y + 1)] };
+    else QZ.shape = { t: tool, h: x, k: y, a: 1 };
+    QZ.tool = null; QZ.clk = []; qzRender();
+  }
+  (function () {
+    var S = $("pgSvg"), dragH = null;
+    S.addEventListener("pointerdown", function (e) {
+      if (!quiz() || QZ.step < 2 || QZ.step > 3 || (busy && e.isTrusted) || (mode === "demo" && e.isTrusted)) return;
+      var h = e.target.closest("[data-qh]");
+      // with a tool chosen, a click places with that tool (even on top of a plotted point); with no tool, points and handles can be dragged
+      if (h && !QZ.tool) { dragH = h.dataset.qh; S.setPointerCapture(e.pointerId); e.preventDefault(); return; }
+      if (QZ.tool) { var p = qAt(e); qzPlace(QZ.tool, p[0], p[1]); }
+    });
+    S.addEventListener("pointermove", function (e) {
+      if (!dragH) return; var p = qAt(e), x = snap(p[0]), y = snap(p[1]), sh = QZ.shape;
+      if (dragH.indexOf("pt:") === 0) { var j = +dragH.slice(3); QZ.pts[j] = [x, y]; }
+      else if (dragH === "l1") sh.p1 = [x, y]; else if (dragH === "l2") sh.p2 = [x, y];
+      else if (dragH === "vx") { sh.h = x; sh.k = y; }
+      else { var a = Math.round((p[1] - sh.k) * 4) / 4; sh.a = a || (p[1] < sh.k ? -.25 : .25); }
+      qzDraw();
+    });
+    function end() { if (dragH) { dragH = null; if (QZ.shape && QZ.shape.t === "line" && QZ.shape.p1[0] === QZ.shape.p2[0] && QZ.shape.p1[1] === QZ.shape.p2[1]) QZ.shape.p2 = [QZ.shape.p1[0] + 1, QZ.shape.p1[1] + 1]; qzDraw(); } }
+    S.addEventListener("pointerup", end); S.addEventListener("pointercancel", end);
+    // tool buttons: a click picks the tool; a drag drops it onto the graph
+    [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) {
+      b.addEventListener("pointerdown", function (e) {
+        if (busy || mode === "demo" || e.button > 0) return;
+        var tool = b.dataset.tool, sx = e.clientX, sy = e.clientY, ghost = null;
+        b.setPointerCapture(e.pointerId); e.preventDefault();
+        function mv(ev) {
+          if (!ghost && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
+          if (!ghost) { ghost = b.cloneNode(true); ghost.classList.add("ghost"); document.body.appendChild(ghost); }
+          ghost.style.left = ev.clientX - 20 + "px"; ghost.style.top = ev.clientY - 20 + "px";
+        }
+        function upH(ev) {
+          b.removeEventListener("pointermove", mv); b.removeEventListener("pointerup", upH); b.removeEventListener("pointercancel", upH);
+          if (ghost) {
+            ghost.remove(); var r = S.getBoundingClientRect();
+            if (tool !== "clear" && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) { var p = qAt(ev); qzDrop(tool, p[0], p[1]); }
+            return;
+          }
+          qzTool(tool);
+        }
+        b.addEventListener("pointermove", mv); b.addEventListener("pointerup", upH); b.addEventListener("pointercancel", upH);
+      });
+    });
+  })();
+  function qzTool(tool) {
+    if (tool === "clear") { QZ.pts = []; QZ.shape = null; QZ.clk = []; QZ.tool = null; qzRender(); return; }
+    QZ.tool = QZ.tool === tool ? null : tool; QZ.clk = []; qzRender();
+  }
+
+  // ---- demo: the hand answers each question ----
+  function qzDemoStep() {
+    if (busy || QZ.locked) return;
+    var fam = qFam(), st = qStep(); busy = true; $("qzNext").disabled = true;
+    var q = [];
+    function after(ms, fn) { q.push([ms, fn]); }
+    function run() { if (!q.length) { busy = false; $("qzNext").disabled = false; setTimeout(handHide, 400); qzPanel(); return; } var s = q.shift(); later(function () { s[1](); run(); }, s[0]); }
+    function typeInto(el, text) { after(650, function () { handGo(ctr(el), 600); }); after(700, function () { handTap(); el.focus(); }); for (var c = 1; c <= text.length; c++) (function (c) { after(110, function () { el.value = text.slice(0, c); }); })(c); }
+    function tapEl(get, fn) { after(700, function () { handGo(ctr(get()), 650); }); after(750, function () { handTap(); }); after(200, fn); }
+    function tapPt(x, y, fn) { after(550, function () { handGo(svgPt(x, y), 500); }); after(560, function () { handTap(); }); after(150, fn); }
+    if (st === "eq") { typeInto($("qzEq"), "f(x)=" + QEQ[fam].replace("^2", "²")); tapEl(function () { return $("qzGo"); }, qzCheck); }
+    else if (st === "table") { for (var x = -2; x <= 2; x++) typeInto($("qzY" + (x + 2)), String(qf(fam, x))); tapEl(function () { return $("qzGo"); }, qzCheck); }
+    else if (st === "points") {
+      tapEl(function () { return document.querySelector(".qzTools [data-tool=pt]"); }, function () { qzTool("pt"); });
+      for (var x2 = -2; x2 <= 2; x2++) (function (x) { tapPt(x, qf(fam, x), function () { qzPlace("pt", x, qf(fam, x)); }); })(x2);
+      tapEl(function () { return $("qzGo"); }, qzCheck);
+    } else if (st === "graph") {
+      if (fam < 2) {
+        tapEl(function () { return document.querySelector(".qzTools [data-tool=line]"); }, function () { qzTool("line"); });
+        tapPt(-2, qf(fam, -2), function () { qzPlace("line", -2, qf(fam, -2)); });
+        tapPt(2, qf(fam, 2), function () { qzPlace("line", 2, qf(fam, 2)); });
+      } else {
+        var tool = QSHAPE[fam];
+        after(700, function () { handGo(ctr(document.querySelector(".qzTools [data-tool=" + tool + "]")), 650); });
+        after(750, function () { handTap(); });
+        after(50, function () { handGo(svgPt(0, 0), 1200); });
+        after(1300, function () { qzDrop(tool, 0, 0); });
+      }
+      tapEl(function () { return $("qzGo"); }, qzCheck);
+    } else { tapEl(function () { return $("qzNext"); }, function () { qzNextParent(); }); }
+    $("qzNext").textContent = qzLabel();
+    run();
+  }
+  $("qzGo").addEventListener("click", qzCheck);
+  $("qzNext").addEventListener("click", function () {
+    if (busy) return;
+    if (QZ.locked) { if (up) { var u = up; up = null; u.go(); } else qzStart(); return; }
+    if (mode === "demo") qzDemoStep(); else qzNextParent();
+  });
+  $("qzAgain").addEventListener("click", qzStart);
+  $("qzIn").addEventListener("keydown", function (e) { if (e.key === "Enter" && mode !== "demo") qzCheck(); });
+  function enterQuiz() {
+    stopDemo(); stopParty(); closeAsk(false);
+    document.body.classList.add("quiz"); document.body.classList.remove("play");
+    $("pg").hidden = false; document.querySelector(".frame").hidden = true; $("pgCtl").hidden = true; $("qz").hidden = false; $("prog").hidden = true;
+    setMode("demo");
+  }
+  function leaveQuiz() {
+    if (!document.body.classList.contains("quiz")) return;
+    stopDemo(); busy = false;
+    document.body.classList.remove("quiz"); $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
+    $("pgTable").style.display = ""; $("pgGraph").style.display = ""; $("pgFam").hidden = false;
+  }
+
   // ---- the Activity menu: the button shows the short code, the list shows every full title ----
   var LONAME = { 1: "One Variable", 2: "2&times;2 Systems", 3: "3&times;3 Systems" };
+  function lessonName(l) { var L = BUILT[act].lessons; return L ? L[l - 1] : LONAME[l].replace("&times;", "×"); }
   function buildLessons() {
     if (lesson > topLesson()) lesson = topLesson();
-    var h = ""; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\">" + LONAME[l] + "</option>";
+    var h = ""; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\">" + lessonName(l) + "</option>";
     $("lesson").innerHTML = h; $("lesson").value = String(lesson);
+    var ms = BUILT[act].modes || ["demo", "sequence", "calculate", "solo", "create"];
+    $("modeSel").innerHTML = ms.map(function (m) { return "<option value=\"" + m + "\">" + MODES[m] + "</option>"; }).join("");
+    if (ms.indexOf(mode) < 0) mode = "demo"; $("modeSel").value = mode;
   }
   // the full title shown in the list (an activity can give its own, otherwise code + name)
   function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
@@ -1828,13 +2205,14 @@
       // on the website each activity has its own page; elsewhere (a preview) it opens right here
       if (hub) { location.href = slugOf(id) + "/"; return; }
       welcome = false; document.body.classList.remove("wel"); $("welcome").hidden = true;
-      if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else { leavePlay(); setMode("demo"); } return; }
+      if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
     if (id === act) return;
     act = id;
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
-    if (BUILT[act].play) enterPlay(); else { leavePlay(); setMode("demo"); }
+    leaveQuiz();
+    if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) { leavePlay(); enterQuiz(); } else { leavePlay(); setMode("demo"); }
   }
   $("actBtn").addEventListener("click", function () { if ($("actList").hidden) openActs(); else closeActs(); });
   $("actBtn").addEventListener("keydown", function (e) { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); openActs(); } });
@@ -2033,7 +2411,7 @@
   }
 
   buildActs(); buildLessons(); updProg();
-  if (BUILT[act].play) { setMode("demo"); enterPlay(); } else setMode("demo");
+  if (BUILT[act].play) { setMode("demo"); enterPlay(); } else if (BUILT[act].quiz) enterQuiz(); else setMode("demo");
   if (welcome) { document.body.classList.add("wel"); document.documentElement.dataset.mode = "welcome"; $("welcome").hidden = false; }
 </script>
 </body>
