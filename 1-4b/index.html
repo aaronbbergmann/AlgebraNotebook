@@ -1229,7 +1229,7 @@
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   var BUILT = {
-    "1.1A": { quiz: true, top: 1, key: "algebraProgress:1.1A", lessons: ["Memorize Parents"], modes: ["demo", "sequence", "solo"], levels: [
+    "1.1A": { quiz: true, top: 1, key: "algebraProgress:1.1A", lessons: ["Memorize Parents"], short: ["Parents"], modes: ["demo", "sequence", "solo"], levels: [
       [1, "demo", 10, "Demo Mode"], [1, "sequence", 40, "Sequence Mode"], [1, "solo", 70, "Solo Mode"],
       [1, "solo", 85, "Solo Mode, 2nd round", 2], [1, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
@@ -2170,7 +2170,7 @@
   function lessonName(l) { var L = BUILT[act].lessons; return L ? L[l - 1] : LONAME[l].replace("&times;", "×"); }
   function buildLessons() {
     if (lesson > topLesson()) lesson = topLesson();
-    var h = ""; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\">" + lessonName(l) + "</option>";
+    var h = "", sh = BUILT[act].short; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\" title=\"" + lessonName(l) + "\">" + (sh && sh[l - 1] || lessonName(l)) + "</option>";
     $("lesson").innerHTML = h; $("lesson").value = String(lesson);
     var ms = BUILT[act].modes || ["demo", "sequence", "calculate", "solo", "create"];
     $("modeSel").innerHTML = ms.map(function (m) { return "<option value=\"" + m + "\">" + MODES[m] + "</option>"; }).join("");
