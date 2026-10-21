@@ -398,11 +398,16 @@
       if (classify(E) === kind) return E;
     }
   }
+  // a "no solution" or "infinitely many" system only comes after the student has solved a regular problem in this mode,
+  // and never twice in a row, so every level-up includes a problem with a real solution
+  var lastDeg = false;
+  function degOK() { return !lastDeg && (prog[lesson + ":" + mode + ":one"] || 0) >= 1; }
   function makeProblem() {
     if (SUB()) return generateSub(mode === "demo" ? 1 : 0);
     if (lesson === 1) return generate1();
     var dm = mode === "demo" ? curDm : 0;
-    if (!dm && mode !== "create" && Math.random() < 0.2) return generateDeg(Math.random() < 0.5 ? "inf" : "none");
+    if (!dm && mode !== "create" && degOK() && Math.random() < 0.2) { lastDeg = true; return generateDeg(Math.random() < 0.5 ? "inf" : "none"); }
+    lastDeg = false;
     return lesson === 3 ? generate3(dm) : generate2(0, dm);
   }
   function det3(M) {
@@ -1265,7 +1270,7 @@
   function tally() {
     celebrate();
     // progress counts a problem once, and only when it is truly finished (or a full demo has been watched)
-    if (mode !== "create" && !counted) { counted = true; var k = lesson + ":" + mode; prog[k] = (prog[k] || 0) + 1; saveProg(); updProg(); }
+    if (mode !== "create" && !counted) { counted = true; var k = lesson + ":" + mode; prog[k] = (prog[k] || 0) + 1; if (classify(orig) === "one") prog[k + ":one"] = (prog[k + ":one"] || 0) + 1; saveProg(); updProg(); }
     levelUp();
   }
   function onSolved() {
@@ -1774,7 +1779,8 @@
   }
   // a system for substitution: one equation already solved for y (y = mx + n), the other in standard form
   function generateSub(demo) {
-    var deg = !demo && mode !== "create" && Math.random() < 0.2 ? (Math.random() < 0.5 ? "inf" : "none") : "";
+    var deg = !demo && mode !== "create" && degOK() && Math.random() < 0.2 ? (Math.random() < 0.5 ? "inf" : "none") : "";
+    lastDeg = !!deg;
     for (;;) {
       var m = nz(4), x0 = nz(5), y0 = nz(6), n = y0 - m * x0, a, b, c;
       if (!n || Math.abs(n) > 12) continue;
