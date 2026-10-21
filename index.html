@@ -2631,7 +2631,7 @@
       S.appendChild(gr);
       S.appendChild(svgEl("line", { x1: -10, y1: 0, x2: 10, y2: 0, stroke: "#222", "stroke-width": ".09" }));
       S.appendChild(svgEl("line", { x1: 0, y1: -10, x2: 0, y2: 10, stroke: "#222", "stroke-width": ".09" }));
-      if (PG.show.graph && PG.show.parent) {
+      if (PG.show.parent) {
         curvePts(pf).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#222", "stroke-width": ".07", "stroke-dasharray": ".3 .25" })); });
         for (var u = -2; u <= 2; u++) S.appendChild(svgEl("circle", { cx: u, cy: -pf(u), r: .13, fill: "#222" }));
       }
