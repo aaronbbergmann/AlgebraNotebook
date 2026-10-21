@@ -64,8 +64,8 @@
   #hand svg{display:block;transform-origin:19px 3px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
   #hand.tap svg{animation:tap .35s ease-in-out}
   @keyframes tap{50%{transform:scale(.8) translateY(3px)}}
-  body.play #hand svg{transform:rotate(-90deg)}
-  body.play #hand.tap svg{animation:tapR .35s ease-in-out}
+  body.tmOn #hand svg{transform:rotate(-90deg)}
+  body.tmOn #hand.tap svg{animation:tapR .35s ease-in-out}
   @keyframes tapR{50%{transform:rotate(-90deg) scale(.8) translateY(3px)}}
   .modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:1rem}
   .modal[hidden]{display:none}
@@ -2607,7 +2607,7 @@
     return segs.filter(function (c) { return c.length > 1; }).map(function (c) { return c.join(" "); });
   }
   function drawGraph() {
-    var S = $("pgSvg"); S.innerHTML = "";
+    var S = $("pgSvg"); S.innerHTML = ""; document.body.classList.toggle("tmOn", !!PG.tm);
     TB.targets = TB.targets.filter(function (t) { return !PG.pts.some(function (z) { return Math.abs(z[0] - t[0]) < 1e-9 && Math.abs(z[1] - t[1]) < 1e-9; }); });
     { // the grid and both axes are always there; Graph only reveals the curve
       var gr = svgEl("g", { stroke: "#E3E5E8", "stroke-width": ".05" });
