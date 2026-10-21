@@ -2357,7 +2357,10 @@
     if (TB.mode() === "quiz") return QZ.tbl || (QZ.tbl = mk5());
     // Play: the window shows 5 x-values; each keeps its own state while it is scrolled out of view
     var m = PG.tbl && !Array.isArray(PG.tbl) ? PG.tbl : (PG.tbl = {});
-    return [-2, -1, 0, 1, 2].map(function (k) { var w = k + (PG.off || 0); return m[w] || (m[w] = { u: w, sub: false, idx: 0, done: false }); });
+    return [-2, -1, 0, 1, 2].map(function (k) { var w = k + (PG.off || 0); var r = m[w] || (m[w] = { u: w, sub: false, idx: 0, done: false });
+      // once the equation has been dropped, every row that scrolls into view already shows its substituted expression (the y-value is still the student's job)
+      if (PG.subd && !r.sub && !r.done) { r.sub = true; r.idx = 0; }
+      return r; });
   };
   TB.par = function () { return TB.mode() === "quiz" ? { f: FAMS[qFam()], a: 1, h: 0, k: 0 } : { f: FAMS[PG.fam], a: A(), h: H(), k: K() }; };
   TB.x = function (r) { return TB.mode() === "quiz" ? r.u : r.u + H(); };
@@ -2387,6 +2390,7 @@
   // drop the equation on a center cell: that row now shows the equation with its x-value put in
   TB.sub = function (i) {
     var r = TB.rows()[i]; if (!r || r.sub || r.done) return;
+    if (TB.mode() === "play") PG.subd = true;
     // one drop is enough: every row shows the equation with its own x-value put in
     TB.rows().forEach(function (q) { if (!q.done && !q.sub) { q.sub = true; q.idx = 0; } }); TB.draw();
     var c = $("pgTable").querySelector("td.mid[data-r=\"" + i + "\"]"); if (c) c.classList.add("pop");
@@ -2706,7 +2710,7 @@
     D.addEventListener("pointerdown", begin);
     T.addEventListener("pointerdown", function (e) { if (e.target.closest("tbody td:first-child")) begin(e); });
   })();
-  $("pgFam").addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); PG.fam = (PG.fam + 1) % FAMS.length; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.off = 0; TB.targets = []; drawPlay(); });
+  $("pgFam").addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); PG.fam = (PG.fam + 1) % FAMS.length; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.off = 0; TB.targets = []; drawPlay(); });
   [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); var part = b.dataset.part, on = !PG.show[part], rv = on ? pgReveal(part) : null; PG.show[part] = on; drawPlay(); if (rv) rv(); }); });
   // ---- 1.1 Play demo: the hand shows every control, one at a time ----
   var pgRun = 0, pgTimers = [];
@@ -2720,7 +2724,7 @@
   function pgDemo() {
     if (pgRun) { pgStop(); return; }
     var run = ++pgRun; $("pgDemo").textContent = "Stop demo"; $("pgDemo").classList.add("on");
-    PG.fam = 0; PG.a = 1; PG.pa = [-5, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
+    PG.fam = 0; PG.a = 1; PG.pa = [-5, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); drawPlay();
     function cap(t) { $("pgCap").textContent = t; }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
