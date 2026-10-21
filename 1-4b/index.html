@@ -1871,7 +1871,7 @@
     $("pgEq").innerHTML = si >= 1 ? "<i>f</i>(<i>x</i>) = " + qEqHTML(fam) : "";
     var T = $("pgTable"); T.style.display = si >= 1 ? "" : "none";
     T.querySelector(".pgMid").innerHTML = si >= 1 ? "<i>f</i>(<i>x</i>) = " + qEqHTML(fam) : "";
-    var rows = ""; for (var x = -2; x <= 2; x++) rows += "<tr><td>" + nf(x) + "</td><td>" + qEqHTML(fam, x) + "</td><td>" + (si >= 2 ? nf(qf(fam, x)) : st === "table" ? "<input class=\"qzCell\" id=\"qzY" + (x + 2) + "\" autocomplete=\"off\" inputmode=\"numeric\" aria-label=\"y when x = " + nf(x) + "\"" + (mode === "demo" ? " readonly tabindex=\"-1\"" : "") + ">" : "") + "</td></tr>";
+    var rows = ""; for (var x = -2; x <= 2; x++) rows += "<tr><td>" + nf(x) + "</td><td>" + qEqHTML(fam, x) + "</td><td>" + (si >= 2 ? nf(qf(fam, x)) : st === "table" ? "<input class=\"qzCell\" id=\"qzY" + (x + 2) + "\" autocomplete=\"off\" inputmode=\"numeric\" aria-label=\"y when x = " + nf(x) + "\"" + "" + ">" : "") + "</td></tr>";
     T.querySelector("tbody").innerHTML = (mode === "sequence" && si >= 1) ? TB.html() : rows;
     $("pgGraph").style.display = si >= 2 ? "" : "none";
     $("qzTools").hidden = !(si === 2 || si === 3);
@@ -1941,7 +1941,7 @@
     if (st === "eq") h = "<input id=\"qzEq\" autocomplete=\"off\" aria-label=\"Parent equation\" placeholder=\"f(x) = ...\">";
     inp.innerHTML = h; $("qzErr").textContent = ""; $("qzErr").className = "err";
     var go = $("qzGo"), nx = $("qzNext");
-    go.hidden = demo || st === "done" || (mode === "sequence" && st === "table"); go.textContent = st === "points" || st === "graph" ? "Check graph" : "Check";
+    go.hidden = st === "done" || (mode === "sequence" && st === "table"); go.textContent = st === "points" || st === "graph" ? "Check graph" : "Check";
     nx.hidden = !(demo || st === "done");
     if (QZ.locked) nx.textContent = up ? up.label : "Another round"; else if (demo) nx.textContent = qzLabel(); else if (st === "done") nx.textContent = "Next parent";
     $("qzAgain").hidden = !(st === "done" && QZ.pi === 3 && up);
@@ -2085,7 +2085,7 @@
   (function () {
     var S = $("pgSvg"), dragH = null;
     S.addEventListener("pointerdown", function (e) {
-      if (!quiz() || QZ.step < 2 || QZ.step > 3 || (busy && e.isTrusted) || (mode === "demo" && e.isTrusted)) return;
+      if (!quiz() || QZ.step < 2 || QZ.step > 3 || (busy && e.isTrusted)) return;
       var h = e.target.closest("[data-qh]");
       // with a tool chosen, a click places with that tool (even on top of a plotted point); with no tool, points and handles can be dragged
       if (h && !QZ.tool) { dragH = h.dataset.qh; S.setPointerCapture(e.pointerId); e.preventDefault(); return; }
@@ -2104,7 +2104,7 @@
     // tool buttons: a click picks the tool; a drag drops it onto the graph
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) {
       b.addEventListener("pointerdown", function (e) {
-        if (busy || mode === "demo" || e.button > 0) return;
+        if (busy || e.button > 0) return;
         var tool = b.dataset.tool, sx = e.clientX, sy = e.clientY, ghost = null;
         b.setPointerCapture(e.pointerId); e.preventDefault();
         function mv(ev) {
@@ -2143,10 +2143,13 @@
     if (st === "eq") { typeInto($("qzEq"), "f(x)=" + QEQ[fam].replace("^2", "²")); tapEl(function () { return $("qzGo"); }, qzCheck); }
     else if (st === "table") { for (var x = -2; x <= 2; x++) typeInto($("qzY" + (x + 2)), String(qf(fam, x))); tapEl(function () { return $("qzGo"); }, qzCheck); }
     else if (st === "points") {
-      tapEl(function () { return document.querySelector(".qzTools [data-tool=pt]"); }, function () { qzTool("pt"); });
-      for (var x2 = -2; x2 <= 2; x2++) (function (x) { tapPt(x, qf(fam, x), function () { qzPlace("pt", x, qf(fam, x)); }); })(x2);
+      // a student may already have plotted some of the points: keep the right ones, drop the wrong ones, add the missing ones
+      QZ.pts = QZ.pts.filter(function (p) { return p[0] >= -2 && p[0] <= 2 && p[1] === qf(fam, p[0]); });
+      tapEl(function () { return document.querySelector(".qzTools [data-tool=pt]"); }, function () { QZ.tool = "pt"; QZ.clk = []; qzRender(); });
+      for (var x2 = -2; x2 <= 2; x2++) (function (x) { if (QZ.pts.some(function (p) { return p[0] === x; })) return; tapPt(x, qf(fam, x), function () { qzPlace("pt", x, qf(fam, x)); }); })(x2);
       tapEl(function () { return $("qzGo"); }, qzCheck);
     } else if (st === "graph") {
+      QZ.shape = null; QZ.clk = [];
       if (fam < 2) {
         tapEl(function () { return document.querySelector(".qzTools [data-tool=line]"); }, function () { qzTool("line"); });
         tapPt(-2, qf(fam, -2), function () { qzPlace("line", -2, qf(fam, -2)); });
@@ -2163,16 +2166,16 @@
     $("qzNext").textContent = qzLabel();
     run();
   }
-  $("qzGo").addEventListener("click", qzCheck);
+  $("qzGo").addEventListener("click", function () { if (!busy) qzCheck(); });
   $("qzNext").addEventListener("click", function () {
     if (busy) return;
     if (QZ.locked) { if (up) { var u = up; up = null; u.go(); } else qzStart(); return; }
     if (mode === "demo") qzDemoStep(); else qzNextParent();
   });
   $("qzAgain").addEventListener("click", qzStart);
-  $("qzIn").addEventListener("keydown", function (e) { if (e.key === "Enter" && mode !== "demo") qzCheck(); });
+  $("qzIn").addEventListener("keydown", function (e) { if (e.key === "Enter" && !busy) qzCheck(); });
   $("pgTable").addEventListener("keydown", function (e) {
-    if (mode === "demo" || !e.target.classList.contains("qzCell")) return;
+    if (busy || !e.target.classList.contains("qzCell")) return;
     var c = [].slice.call(document.querySelectorAll(".qzCell")), i = c.indexOf(e.target);
     if (e.key === "ArrowDown" || (e.key === "Enter" && i < c.length - 1)) { e.preventDefault(); var n1 = c[Math.min(i + 1, c.length - 1)]; n1.focus(); n1.select(); }
     else if (e.key === "ArrowUp") { e.preventDefault(); var n2 = c[Math.max(i - 1, 0)]; n2.focus(); n2.select(); }
@@ -2321,7 +2324,8 @@
     var T = $("pgTable");
     function midAt(ev) { var l = document.elementsFromPoint(ev.clientX, ev.clientY); for (var i = 0; i < l.length; i++) { var t = l[i].closest && l[i].closest("td.mid[data-r]"); if (t) return t; } return null; }
     function start(e, html, onStart, onMove, onDrop) {
-      if (e.button > 0 || TB.busy || (TB.mode() === "play" && pgRun)) return;
+      if (TB.mode() === "play" && pgRun) pgStop();
+      if (e.button > 0 || TB.busy) return;
       var sx = e.clientX, sy = e.clientY, g = null; e.preventDefault();
       function mv(ev) {
         if (!g) { if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return; g = document.createElement("div"); g.className = "tbg"; g.innerHTML = html; document.body.appendChild(g); if (onStart) onStart(); }
@@ -2345,7 +2349,8 @@
     T.querySelector(".pgMid").addEventListener("pointerdown", eqDrag);
     $("pgEq").addEventListener("pointerdown", eqDrag);
     T.addEventListener("click", function (e) {
-      var td = e.target.closest("td.mid[data-r]"); if (!td || !TB.mode() || (TB.mode() === "play" && pgRun)) return;
+      var td = e.target.closest("td.mid[data-r]"); if (!td || !TB.mode()) return;
+      if (TB.mode() === "play" && pgRun) pgStop();
       TB.click(+td.dataset.r);
     });
     T.addEventListener("pointerdown", function (e) {
@@ -2471,7 +2476,7 @@
     var S = $("pgSvg"), which = null;
     function at(e) { var m = S.getScreenCTM().inverse(), p = S.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; p = p.matrixTransform(m); return { x: p.x, y: -p.y }; }
     S.addEventListener("pointerdown", function (e) {
-      if (pgRun) return;
+      if (pgRun) pgStop();
       var sp = e.target.closest("[data-sp]"); if (sp) { PG.pts.splice(+sp.dataset.sp, 1); drawPlay(); return; }
       var t = e.target.closest("[data-pt]"); if (!t) return;
       which = t.dataset.pt;
@@ -2487,15 +2492,15 @@
     function end() { which = null; }
     S.addEventListener("pointerup", end); S.addEventListener("pointercancel", end);
   })();
-  $("pgFam").addEventListener("click", function (e) { if (pgRun && e.isTrusted) return; PG.fam = (PG.fam + 1) % FAMS.length; drawPlay(); });
-  [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (pgRun && e.isTrusted) return; PG.show[b.dataset.part] = !PG.show[b.dataset.part]; drawPlay(); }); });
+  $("pgFam").addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); PG.fam = (PG.fam + 1) % FAMS.length; drawPlay(); });
+  [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); PG.show[b.dataset.part] = !PG.show[b.dataset.part]; drawPlay(); }); });
   // ---- 1.1 Play demo: the hand shows every control, one at a time ----
   var pgRun = 0, pgTimers = [];
   function svgPt(x, y) { var S = $("pgSvg"), m = S.getScreenCTM(), p = S.createSVGPoint(); p.x = x; p.y = -y; p = p.matrixTransform(m); return { x: p.x, y: p.y }; }
   function handAt(pt) { var h = hand(); h.style.transition = "none"; h.style.opacity = "1"; h.dataset.on = "1"; h.style.transform = "translate(" + (pt.x - HX) + "px," + (pt.y - HY) + "px)"; }
   function pgWait(ms, fn) { var id = setTimeout(function () { pgTimers.splice(pgTimers.indexOf(id), 1); fn(); }, ms); pgTimers.push(id); }
   function pgStop() {
-    pgRun = 0; pgTimers.forEach(clearTimeout); pgTimers = []; handHide();
+    pgRun = 0; pgTimers.forEach(clearTimeout); pgTimers = []; handHide(); [].forEach.call(document.querySelectorAll(".tbg"), function (g) { g.remove(); }); TB.targets = [];
     $("pgDemo").textContent = "Start Demo"; $("pgDemo").classList.remove("on"); $("pgCap").textContent = "";
   }
   function pgDemo() {
