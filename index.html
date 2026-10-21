@@ -198,8 +198,7 @@
   .pg[hidden],.frame[hidden]{display:none}
   .pgGraph{position:relative;flex:1 1 18rem;max-width:30rem;width:100%;aspect-ratio:1;border:1px solid #9AA0A8;background:#fff;box-sizing:border-box;touch-action:none}
   .pgGraph svg{display:block;width:100%;height:100%}
-  .pgFam{position:absolute;top:.5rem;right:.5rem;font:500 .95rem system-ui,sans-serif;color:#fff;background:#3D6FC1;border:0;border-radius:3px;padding:.55em .9em;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.25)}
-  .pgFam:hover{background:#2F5BA6}.pgFam:focus-visible{outline:3px solid #1B2433;outline-offset:2px}
+  .pgFam{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;margin-bottom:.2rem}
   .pgSide{flex:1 1 16rem;max-width:26rem;display:flex;flex-direction:column;gap:.9rem}
   .pgTable{border-collapse:collapse;table-layout:fixed;width:100%;font:400 1.05rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;text-align:center}
   .pgTable th{font-style:italic;font-weight:400;white-space:nowrap;background:#F2F2F2;padding:.55em 0;border-bottom:1px solid #B8BCC2}
@@ -219,6 +218,11 @@
   .tbg:has(.dotg){background:none;border:0;box-shadow:none;padding:0}.tbg:has(.dotg) b{font-weight:400;background:rgba(255,255,255,.85);padding:0 .2em;border-radius:4px}
   body.play .pg{justify-content:flex-start;gap:.6rem;padding-left:1.2rem}
   body.play .qzTools{align-self:flex-start;margin-top:.2rem}
+  .rvMark{position:fixed;z-index:60;pointer-events:none;font:900 2.4rem/1 system-ui,sans-serif;transform:translate(-50%,-50%)}
+  .rvMark.ok{color:#1E9E4A}.rvMark.bad{color:#D32F2F}
+  .rvOld{position:fixed;z-index:55;pointer-events:none;white-space:nowrap;color:#C0301E}
+  .rvOld.cell{display:flex;align-items:center;justify-content:center;background:#E7E7E7;font:400 1.05rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
+  .rvDot{position:fixed;z-index:55;pointer-events:none;width:16px;height:16px;border-radius:50%;background:#111;transform:translate(-50%,-50%)}
   .pgEq{font:400 1.45rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;min-height:1.6em}
   .pgEq i{font-style:italic}
   .pgDesc{font-size:1.08rem;line-height:1.45}
@@ -250,7 +254,7 @@
     <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
       <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click two points, or drag onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click the vertex, then a point on one side, or drag onto the graph" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click the vertex, then a point on one side, or drag onto the graph" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="clear" title="Clear the graph">✕</button></div>
-      <div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg><button class="pgFam" id="pgFam" type="button">Change Family</button></div>
+      <div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div>
       <div class="pgSide">
         <table class="pgTable" id="pgTable" aria-label="Table"><colgroup><col style="width:18%"><col><col style="width:18%"></colgroup><thead><tr><th>x</th><th class="pgMid"></th><th>y</th></tr></thead><tbody></tbody></table>
         <div class="pgEq" id="pgEq" aria-live="polite"></div>
@@ -287,7 +291,7 @@
   <aside class="chat" aria-label="Controls and tutor chat">
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Exercise</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
-      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><div class="pgCap" id="pgCap" aria-live="polite"></div><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="build" aria-pressed="false" title="Fill the table in yourself, then plot it">Fill table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="build" aria-pressed="false" title="Fill the table in yourself, then plot it">Fill table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
@@ -2397,6 +2401,9 @@
     else if (TB.mode() === "play") drawPlay();
   };
   TB.autofill = function () { TB.rows().forEach(function (r) { r.sub = true; r.done = true; r.fl = false; }); TB.draw(); };
+  // smallest denominator d (1, 2, 3 ...) for which target is a whole number of 1/d units
+  function gridDen(t) { for (var d = 1; d <= 24; d++) if (Math.abs(t * d - Math.round(t * d)) < 1e-6) return d; return 100; }
+  function gridTo(v, t) { var d = gridDen(t); return Math.max(-10, Math.min(10, Math.round(v * d) / d)); }
   // pointer drags: the equation onto a center cell, and a finished row onto the graph
   (function () {
     var T = $("pgTable");
@@ -2443,10 +2450,11 @@
         if (m === "play") { TB.targets = []; }
         var r = $("pgGraph").getBoundingClientRect();
         if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
-          var q = qAt(ev), x = Math.max(-10, Math.min(10, Math.round(q[0])));
-          if (m === "quiz") { var y = snap(q[1]); if (!QZ.pts.some(function (z) { return z[0] === x && z[1] === y; })) QZ.pts.push([x, y]); qzDraw(); return; }
-          var y2 = Math.max(-10, Math.min(10, Math.round(q[1] * 4) / 4));
-          if (!PG.pts.some(function (z) { return z[0] === x && z[1] === y2; })) PG.pts.push([x, y2]);
+          // the dropped point locks to the grid: whole units, or the smallest fraction of a unit that the point itself needs (1/2, 1/3, 1/4 ...)
+          var q = qAt(ev), x = gridTo(q[0], p[0]), same = function (z, a, b) { return Math.abs(z[0] - a) < 1e-9 && Math.abs(z[1] - b) < 1e-9; };
+          if (m === "quiz") { var y = gridTo(q[1], p[1]); if (!QZ.pts.some(function (z) { return same(z, x, y); })) QZ.pts.push([x, y]); qzDraw(); return; }
+          var y2 = gridTo(q[1], p[1]);
+          if (!PG.pts.some(function (z) { return same(z, x, y2); })) PG.pts.push([x, y2]);
         }
         if (m === "play") drawPlay();
       });
@@ -2454,7 +2462,7 @@
   })();
 
   // ---- Playground: Equation Table Graph Description (no goals, no progress: just show/hide and drag) ----
-  var PG = { fam: 0, a: 2.25, h: 0, k: 0, pa: [-5, 2.25], pts: [], tbl: null, shape: null, tool: null, clk: [], show: { eq: false, table: false, build: false, graph: false, desc: false, parent: false } };
+  var PG = { fam: 0, a: 1, h: 0, k: 0, pa: [-5, 1], pts: [], tbl: null, shape: null, tool: null, clk: [], show: { eq: false, table: false, build: false, graph: false, desc: false, parent: false } };
   var FAMS = ["constant", "linear", "absolute value", "quadratic"];
   function pf(x) { var f = FAMS[PG.fam]; return f === "constant" ? 1 : f === "linear" ? x : f === "absolute value" ? Math.abs(x) : x * x; }
   function shifts() { return PG.fam >= 2; }                 // vertex point moves the graph
@@ -2581,8 +2589,92 @@
     function end() { which = null; }
     S.addEventListener("pointerup", end); S.addEventListener("pointercancel", end);
   })();
+  // ---- revealing hidden work: a green check when it was right, or the student's answer fading into the right one with a red !
+  function shapeY(sh, x) {
+    if (sh.t === "line") { if (sh.p1[0] === sh.p2[0]) return NaN; var m = (sh.p2[1] - sh.p1[1]) / (sh.p2[0] - sh.p1[0]); return sh.p1[1] + m * (x - sh.p1[0]); }
+    return sh.t === "V" ? sh.a * Math.abs(x - sh.h) + sh.k : sh.a * (x - sh.h) * (x - sh.h) + sh.k;
+  }
+  function shapeOK(sh) { for (var x = -6; x <= 6; x += .5) if (!(Math.abs(shapeY(sh, x) - g(x)) < 1e-6)) return false; return true; }
+  function shapeText(sh) {
+    var n = nf, M = "−";
+    if (sh.t === "line") {
+      var dx = sh.p2[0] - sh.p1[0]; if (!dx) return "x = " + n(sh.p1[0]);
+      var m = Math.round((sh.p2[1] - sh.p1[1]) / dx * 100) / 100, b = Math.round((sh.p1[1] - (sh.p2[1] - sh.p1[1]) / dx * sh.p1[0]) * 100) / 100;
+      return fname() + "(x) = " + (m === 0 ? n(b) : (m === 1 ? "" : m === -1 ? M : n(m)) + "x" + (b === 0 ? "" : b > 0 ? " + " + n(b) : " " + M + " " + n(-b)));
+    }
+    var xp = sh.h === 0 ? "x" : "x " + (sh.h > 0 ? M + " " + n(sh.h) : "+ " + n(-sh.h));
+    var core = sh.t === "V" ? "|" + xp + "|" : (sh.h === 0 ? "x" : "(" + xp + ")") + "²";
+    return fname() + "(x) = " + (sh.a === 1 ? "" : sh.a === -1 ? M : n(sh.a)) + core + (sh.k === 0 ? "" : sh.k > 0 ? " + " + n(sh.k) : " " + M + " " + n(-sh.k));
+  }
+  function rvMark(kind, x, y) {
+    var d = document.createElement("div"); d.className = "rvMark " + kind; d.textContent = kind === "ok" ? "✓" : "!"; d.style.left = x + "px"; d.style.top = y + "px"; document.body.appendChild(d);
+    d.animate([{ opacity: 0, transform: "translate(-50%,-50%) scale(.4)" }, { opacity: 1, transform: "translate(-50%,-50%) scale(1.2)", offset: .2 }, { opacity: 1, transform: "translate(-50%,-50%) scale(1)", offset: .55 }, { opacity: 0, transform: "translate(-50%,-50%) scale(1)" }], { duration: 2000, easing: "ease-out" }).onfinish = function () { d.remove(); };
+  }
+  function rvFadeOut(el) { document.body.appendChild(el); el.animate([{ opacity: 1 }, { opacity: 1, offset: .3 }, { opacity: 0 }], { duration: 2000 }).onfinish = function () { el.remove(); }; }
+  function rvFadeIn(el, o) { if (el) el.animate(o || [{ opacity: 0 }, { opacity: 0, offset: .3 }, { opacity: 1 }], { duration: 2000 }); }
+  function pgReveal(part) {
+    if (part === "table") {
+      if (!PG.show.build) return null;
+      var rows = TB.rows(), trs = $("pgTable").querySelectorAll("tbody tr"), info = [];
+      rows.forEach(function (r, i) {
+        var td = trs[i] && trs[i].lastElementChild; if (!td) return;
+        if (r.done) info.push({ i: i, ok: true });
+        else if (String(r.tv || "").trim()) info.push({ i: i, ok: false, txt: r.tv, rc: td.getBoundingClientRect() });
+      });
+      if (!info.length) return null;
+      info.forEach(function (o) { if (!o.ok) { var r = rows[o.i]; r.sub = true; r.done = true; r.tv = ""; } });
+      return function () {
+        var t2 = $("pgTable").querySelectorAll("tbody tr");
+        info.forEach(function (o) {
+          var td = t2[o.i] && t2[o.i].lastElementChild; if (!td) return; var rc = td.getBoundingClientRect(), cx = rc.left + 18, cy = rc.top + rc.height / 2;
+          if (o.ok) rvMark("ok", cx, cy);
+          else {
+            var d = document.createElement("div"); d.className = "rvOld cell"; d.textContent = o.txt; d.style.cssText = "left:" + rc.left + "px;top:" + rc.top + "px;width:" + rc.width + "px;height:" + rc.height + "px"; rvFadeOut(d);
+            rvFadeIn(td, [{ color: "rgba(27,36,51,0)" }, { color: "rgba(27,36,51,0)", offset: .3 }, { color: "rgb(27,36,51)" }]); rvMark("bad", cx, cy);
+          }
+        });
+      };
+    }
+    if (part === "graph") {
+      var sh = PG.shape; if (!PG.pts.length && !sh) return null;
+      var items = PG.pts.map(function (p) { return { p: p.slice(), ok: Math.abs(p[1] - g(p[0])) < 1e-6 }; }), shOK = sh ? shapeOK(sh) : true;
+      var old = sh ? { pts: shapePts(sh), at: sh.t === "line" ? sh.p1 : [sh.h, sh.k] } : null, np = [], newIdx = [];
+      items.forEach(function (o) { if (o.ok) np.push(o.p); else { var y = g(o.p[0]); if (Math.abs(y) <= 10) { newIdx.push(np.length); np.push([o.p[0], y]); } } });
+      PG.pts = np; if (sh && !shOK) PG.shape = null;
+      return function () {
+        var S = $("pgSvg");
+        items.forEach(function (o) {
+          var q = svgPt(o.p[0], o.p[1]);
+          if (o.ok) rvMark("ok", q.x + 22, q.y - 22);
+          else { var d = document.createElement("div"); d.className = "rvDot"; d.style.left = q.x + "px"; d.style.top = q.y + "px"; rvFadeOut(d); rvMark("bad", q.x + 22, q.y - 22); }
+        });
+        newIdx.forEach(function (j) { rvFadeIn(S.querySelector("[data-sp=\"" + j + "\"]")); });
+        if (sh) {
+          var q2 = svgPt(old.at[0], old.at[1]);
+          if (shOK) rvMark("ok", q2.x + 22, q2.y - 22);
+          else {
+            var pl = svgEl("polyline", { points: old.pts, fill: "none", stroke: "#2D70B3", "stroke-width": ".12", "stroke-linejoin": "round" }); S.appendChild(pl);
+            pl.animate([{ opacity: 1 }, { opacity: 1, offset: .3 }, { opacity: 0 }], { duration: 2000, fill: "forwards" }).onfinish = function () { pl.remove(); };
+            [].forEach.call(S.querySelectorAll("polyline[stroke=\"#C74440\"]"), function (c) { rvFadeIn(c); }); rvMark("bad", q2.x + 22, q2.y - 22);
+          }
+        }
+      };
+    }
+    if (part === "eq") {
+      var sh2 = PG.shape; if (!sh2) return null;
+      var okE = shapeOK(sh2), txt = shapeText(sh2);
+      return function () {
+        var el = $("pgEq"), r = document.createRange(); r.selectNodeContents(el); var rr = r.getBoundingClientRect(), cy = rr.top + rr.height / 2;
+        if (okE) rvMark("ok", rr.right + 26, cy);
+        else {
+          var d = document.createElement("div"); d.className = "pgEq rvOld"; d.textContent = txt; d.style.cssText = "left:" + rr.left + "px;top:" + rr.top + "px;margin:0;padding:0"; rvFadeOut(d); rvFadeIn(el); rvMark("bad", rr.right + 26, cy);
+        }
+      };
+    }
+    return null;
+  }
   $("pgFam").addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); PG.fam = (PG.fam + 1) % FAMS.length; drawPlay(); });
-  [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); PG.show[b.dataset.part] = !PG.show[b.dataset.part]; drawPlay(); }); });
+  [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (pgRun && e.isTrusted) pgStop(); var part = b.dataset.part, on = !PG.show[part], rv = on ? pgReveal(part) : null; PG.show[part] = on; if (rv && part === "table") PG.show.build = false; drawPlay(); if (rv) rv(); }); });
   // ---- 1.1 Play demo: the hand shows every control, one at a time ----
   var pgRun = 0, pgTimers = [];
   function svgPt(x, y) { var S = $("pgSvg"), m = S.getScreenCTM(), p = S.createSVGPoint(); p.x = x; p.y = -y; p = p.matrixTransform(m); return { x: p.x, y: p.y }; }
@@ -2595,7 +2687,7 @@
   function pgDemo() {
     if (pgRun) { pgStop(); return; }
     var run = ++pgRun; $("pgDemo").textContent = "Stop demo"; $("pgDemo").classList.add("on");
-    PG.fam = 0; PG.a = 2.25; PG.pa = [-5, 2.25]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
+    PG.fam = 0; PG.a = 1; PG.pa = [-5, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); drawPlay();
     function cap(t) { $("pgCap").textContent = t; }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
@@ -2635,8 +2727,8 @@
       })();
     }
     // the hand types the y-value into the table
-    function typeRow(i, then) {
-      var text = String(TB.y(TB.rows()[i])); function inp() { return $("pgTable").querySelector("input.qzCell[data-r=\"" + i + "\"]"); }
+    function typeRow(i, then, wrong) {
+      var text = wrong || String(TB.y(TB.rows()[i])); function inp() { return $("pgTable").querySelector("input.qzCell[data-r=\"" + i + "\"]"); }
       var e0 = inp(); if (!e0) { then(); return; }
       handGo(ctr(e0), 600);
       pgWait(750, function () {
@@ -2671,8 +2763,8 @@
       });
     }
     // the hand drags the side point of the shape to change its stretch
-    function stretch(aTo, then) {
-      var sh = PG.shape, h = sh.h, k = sh.k, a0 = (sh.a = 1, drawPlay(), 1), ms = 1300, t0 = null;
+    function stretch(aTo, then, from) {
+      var sh = PG.shape, h = sh.h, k = sh.k, a0 = from == null ? sh.a : (sh.a = from, drawPlay(), from), ms = 1300, t0 = null;
       handGo(svgPt(h + 1, k + a0), 650);
       pgWait(800, function () {
         handTap();
@@ -2699,15 +2791,19 @@
       function (n) { cap("You can type the y-value yourself..."); typeRow(0, n); },
       function (n) { cap("Drag the equation onto another center cell."); dragEq(1, n); },
       function (n) { cap("...or click the calculation to simplify it one step at a time. The answer moves into the y column."); clickRow(1, n); },
-      function (n) { cap("The other rows are filled in the same way."); TB.autofill(); pgWait(1400, n); },
-      function (n) { cap("Turn off Fill table and press Table to see the whole finished table."); tap(tog("build"), function () { tap(tog("table"), n); }); },
+      function (n) { cap("Let's do a third row, but type a wrong answer on purpose."); dragEq(2, function () { typeRow(2, n, "4"); }); },
+      function (n) { cap("The last two rows are done quickly."); TB.rows().forEach(function (r, i) { if (i > 2) { r.sub = true; r.done = true; r.fl = false; } }); TB.draw(); pgWait(1200, n); },
+      function (n) { cap("Press Table to reveal the real table. Right answers get a green check; a wrong one fades into the correct value."); tap(tog("table"), function () { pgWait(2200, n); }); },
       function (n) { cap("The buttons beside the graph place things by hand. The dot button plots a point."); dropShape("pt", -3, -3, n); },
       function (n) { cap("The line button drops a line..."); dropShape("line", -4, 2, n); },
       function (n) { cap("...the V button drops an absolute value graph..."); dropShape("V", -4, -2, n); },
       function (n) { cap("...and the \u00d7 button clears the graph."); tapClear(n); },
       function (n) { cap("Drag each row onto the graph to plot its point. The red dot shows where it belongs."); dragRows(0, n); },
       function (n) { cap("Now drag the parabola button onto the graph, with its vertex on (3, 1)."); dropShape("U", 3, 1, n); },
-      function (n) { cap("Drag its side point to adjust the stretch until the parabola passes through your points."); stretch(2, n); },
+      function (n) { cap("Drag its side point to set the stretch. Suppose we guess 3."); stretch(3, n, 1); },
+      function (n) { cap("Hide the equation, then reveal it to check the guess."); tap(tog("eq"), function () { tap(tog("eq"), function () { pgWait(2300, n); }); }); },
+      function (n) { cap("It was wrong, so the answer faded into the correct one. Adjust the stretch to 2."); stretch(2, n); },
+      function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
       function (n) { cap("Your turn: try every button, drag both points and plot your own graph."); pgWait(2500, n); }
     ];
     var k = 0;
