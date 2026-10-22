@@ -1515,14 +1515,14 @@
     return "Substitute " + s[1];
   }
 
-  $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; if (mode === "create") orig = []; useCustom = null; setMode("demo"); });
+  $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; if (mode === "create") orig = []; useCustom = null; setMode("demo"); this.blur(); });
   $("crAdd").addEventListener("click", crAdd);
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
   $("ansGo").addEventListener("click", checkAnswer);
   $("ansKind").addEventListener("change", function () { $("ansFields").hidden = this.value !== "one"; });
   $("answer").addEventListener("input", function () { ansTouched = true; updUndo(); });
   $("answer").addEventListener("keydown", function (e) { if (e.key === "Enter") checkAnswer(); });
-  $("modeSel").addEventListener("change", function () { setMode(this.value); });
+  $("modeSel").addEventListener("change", function () { setMode(this.value); this.blur(); });
   $("undo").addEventListener("click", undo);
   $("show").addEventListener("click", showWork);
   $("hint").addEventListener("click", function () {
@@ -2440,7 +2440,7 @@
   }
   function closeActs(back) { if ($("actList").hidden) return; $("actList").hidden = true; $("actBtn").setAttribute("aria-expanded", "false"); if (back) $("actBtn").focus(); }
   function setActivity(id) {
-    closeActs(true);
+    closeActs(); $("actBtn").blur();   // once an activity is chosen the button is let go
     if (!BUILT[id]) return;
     // on the website every activity is its own page, so switching goes to that page
     if (hub && id !== act) { location.href = (fixedAct ? "../" : "") + slugOf(id) + "/"; return; }
