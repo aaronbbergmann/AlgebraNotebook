@@ -2375,7 +2375,7 @@
         if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
           tally(); var ml = BUILT[act].modes, nm = ml[ml.indexOf(mode) + 1];
           up = nm ? { label: MODES[nm] + " Mode", go: function () { setMode(nm); } } : null;
-        } else { counted = false; if (last) { QZ.locked = true; tally(); } else tally(true); }   // every finished question counts toward Progress; the celebration waits for the last parent
+        } else if (last) { QZ.locked = true; counted = false; tally(); }   // Sequence and Solo count a round only when all four parents are done
         pqPanel();
       }
     } finally { pqBusy = false; }
