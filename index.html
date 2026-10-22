@@ -172,11 +172,17 @@
   .pgQ{display:none}
   body.pq .pgQ{display:block;flex:0 0 100%;margin:0 0 .3rem .2rem}
   .pgQt{font:600 1.25rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
+  .pgQcue{font:400 .9rem system-ui,sans-serif;color:#5B6577;margin-top:.15rem}
   .pgQmsg{min-height:1.5em;margin-top:.2rem;font:600 .98rem system-ui,sans-serif;color:#C0301E}
   .pgQmsg.ok{color:#1E9E4A}
   body.pq .pg{align-content:flex-start}
   body.pq .pgCtl .lbl,body.pq .pgCtl .tog,body.pq .pgCtl .pgFam{display:none}
   body.pq #qzT,body.pq #qzIn,body.pq #qzErr{display:none}
+  body.pq #qzAgain{font-size:.8rem}
+  body.pq .qzRow{flex-direction:column;align-items:center;gap:.5rem}
+  body.pq #qz:not(:has(button:not([hidden]))){display:none}
+  body.pq .pgDemo{margin-bottom:0}
+  body.pq .pgCtl.empty:not(:has(#pgPt:not([hidden]))){display:none}
   body.pq #qzNext{background:var(--plus);border-color:var(--plus);color:#fff}
   body.pq #qzNext:hover:not(:disabled){background:var(--plus-hover);border-color:var(--plus-hover)}
   body.quiz .pg{color:var(--ink)}
@@ -238,7 +244,8 @@
   .pgTable td input.qzCell.badc{background:#FDECEA;box-shadow:inset 0 0 0 2px #C0301E}
   .pgTable td:has(input.qzCell){padding:0}
   body.demoTyping .pgTable input.qzCell{caret-color:transparent}
-  .pgTable td input.qzCell.xin.full{background:#E7E7E7}
+  .pgTable td input.qzCell.xin.full:not(:placeholder-shown){background:#E7E7E7}
+  .pgTable td:empty,.pgTable td:has(>span.cv:empty){background:#fff}
   .pgTable td[tabindex]:focus{outline:2px solid #2D70B3;outline-offset:-2px;background:#B7D3F2}
   .pgTable td.yv[tabindex]:focus input{background:#B7D3F2}
   .fakeCaret{position:fixed;z-index:44;width:2px;background:#1B2433;pointer-events:none;animation:caretBlink 1s steps(1) infinite}
@@ -292,7 +299,7 @@
   <div class="stage">
     <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
-      <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div>
+      <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQcue">(Equation, Table, Graph)</div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div>
       <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope. Or drag it onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
       <div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div>
       <div class="pgSide">
@@ -2293,10 +2300,11 @@
   $("qzNext").addEventListener("click", function () {
     if (busy) return;
     if (QZ.locked) { if (up) { var u = up; up = null; u.go(); } else qzStart(); return; }
+    if (pq() && mode === "demo" && QZ.step >= 4 && up) { var u2 = up; up = null; u2.go(); return; }
     if (pq()) { pqNext(); return; }
     if (mode === "demo") qzDemoStep(); else qzNextParent();
   });
-  $("qzAgain").addEventListener("click", qzStart);
+  $("qzAgain").addEventListener("click", function () { if (pq() && mode === "demo" && QZ.step >= 4) pqAnother(); else qzStart(); });
   $("qzIn").addEventListener("keydown", function (e) { if (e.key === "Enter" && !busy) qzCheck(); });
   $("pgTable").addEventListener("keydown", function (e) {
     if (busy || TB.mode() === "play" || !e.target.classList.contains("qzCell")) return;
@@ -2328,14 +2336,19 @@
     if (QZ.step < 4) return;
     QZ.pi++; pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel(); if (mode === "demo") logQzExplain();
   }
+  // "Another demo": the demo runs again on a different parent function
+  function pqAnother() {
+    up = null; QZ.pi = (QZ.pi + 1) % 4; pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel();
+    setTimeout(function () { if (pq() && mode === "demo" && !pgRun) $("pgDemo").click(); }, 400);
+  }
   function pqPanel() {
     var fam = qFam(), done = QZ.step >= 4, demo = mode === "demo";
     $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
     var go = $("qzGo"), nx = $("qzNext");
     go.hidden = demo || done; go.textContent = "Check";
-    nx.hidden = !done; nx.disabled = false; nx.textContent = QZ.locked ? (up ? up.label : "Another round") : "Next parent";
-    $("qzAgain").hidden = !(done && QZ.pi === 3 && up);
-    $("pgDemo").style.display = demo && !done ? "" : "none";
+    nx.hidden = !done; nx.disabled = false; nx.textContent = demo ? (up ? up.label : "Next parent") : QZ.locked ? (up ? up.label : "Another round") : "Next parent";
+    $("qzAgain").hidden = !(done && (demo || (QZ.pi === 3 && up))); $("qzAgain").textContent = demo ? "Another demo" : "Another round";
+    $("pgDemo").style.display = demo && !done ? "" : "none"; $("pgCtl").classList.toggle("empty", !(demo && !done));
     $("hint").hidden = done || mode === "solo";   // a right answer needs no hint
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
@@ -2352,7 +2365,10 @@
       if (ok.eq && ok.table && ok.graph) {
         QZ.step = 4; var last = QZ.pi === 3;
         pqMsg(last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
-        if (last) { QZ.locked = true; counted = false; tally(); }
+        if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
+          tally(); var ml = BUILT[act].modes, nm = ml[ml.indexOf(mode) + 1];
+          up = nm ? { label: MODES[nm] + " Mode", go: function () { setMode(nm); } } : null;
+        } else if (last) { QZ.locked = true; counted = false; tally(); }
         pqPanel();
       }
     } finally { pqBusy = false; }
@@ -2513,7 +2529,7 @@
     var play = TB.mode() === "play";
     return TB.rows().map(function (r, i) {
       var hx = TB.hasX(r), st = hx ? TB.st(r) : [""], mid = !r.sub || !hx ? "" : r.done ? st[0] : st[Math.min(r.idx, st.length - 1)];
-      var xc = play ? "<input class=\"qzCell xin" + (hx ? " full" : "") + "\" id=\"qzX" + i + "\" data-r=\"" + i + "\" data-c=\"x\" autocomplete=\"off\" inputmode=\"decimal\" aria-label=\"x value\" value=\"" + (hx ? nf(TB.x(r)) : (r.xt || "").replace(/[^0-9.\/\-\u2212]/g, "")) + "\">" : nf(TB.x(r));
+      var xc = play ? "<input class=\"qzCell xin" + (hx ? " full" : "") + "\" id=\"qzX" + i + "\" data-r=\"" + i + "\" data-c=\"x\" placeholder=\" \" autocomplete=\"off\" inputmode=\"decimal\" aria-label=\"x value\" value=\"" + (hx ? nf(TB.x(r)) : (r.xt || "").replace(/[^0-9.\/\-\u2212]/g, "")) + "\">" : nf(TB.x(r));
       var mc = play && ((!r.sub && !r.done) || r.mt) ? "<input class=\"qzCell min\" id=\"qzM" + i + "\" data-r=\"" + i + "\" data-c=\"m\" autocomplete=\"off\" aria-label=\"value\">" : "<span class=\"cv\">" + mid + "</span>";
       return "<tr data-r=\"" + i + "\"" + (r.done ? " class=\"rdone\"" : "") + "><td>" + xc + "</td><td class=\"mid" + (r.sub && hx && !r.done ? " live" : "") + "\" data-r=\"" + i + "\"" + (play ? " tabindex=\"-1\"" : "") + ">" + mc + "</td><td class=\"yv" + (TB.pop === i ? " pop" : "") + "\"" + (r.done && play ? " tabindex=\"-1\"" : "") + ">" + (r.done ? nf(TB.y(r)) : "<input class=\"qzCell\" id=\"qzY" + i + "\" data-r=\"" + i + "\" data-c=\"y\" autocomplete=\"off\" inputmode=\"decimal\" aria-label=\"y when x = " + nf(TB.x(r)) + "\" value=\"" + (r.tv || "").replace(/[^0-9.\-\u2212]/g, "") + "\">") + "</td></tr>";
     }).join("");
