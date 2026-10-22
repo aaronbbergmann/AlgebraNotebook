@@ -1893,7 +1893,7 @@
   }
   function qNorm(t) {
     t = String(t).toLowerCase().replace(/\s+/g, "").replace(/²/g, "^2").replace(/−/g, "-").replace(/\*\*/g, "^");
-    t = t.replace(/^(f\(x\)|g\(x\)|y)=/, "").replace(/abs\(x\)/g, "|x|").replace(/x\*x/g, "x^2").replace(/^\(x\)\^2$/, "x^2").replace(/^1x$/, "x").replace(/^1\*x$/, "x");
+    t = t.replace(/x(\d+)/g, "x^$1"); t = t.replace(/^(f\(x\)|g\(x\)|y)=/, "").replace(/abs\(x\)/g, "|x|").replace(/x\*x/g, "x^2").replace(/^\(x\)\^2$/, "x^2").replace(/^1x$/, "x").replace(/^1\*x$/, "x");
     return t;
   }
   function quiz() { return !!(BUILT[act] && BUILT[act].quiz); }
@@ -2916,6 +2916,7 @@
   function eqTypedOK(t) {
     t = t.replace(/[\u2212\u2013]/g, "-").replace(/[\u00d7\u00b7\u22c5]/g, "*").replace(/\u00b2/g, "^2").replace(/\s+/g, "").toLowerCase();
     var i = t.lastIndexOf("="); if (i >= 0) { var L = t.slice(0, i); if (!/^([a-z])?(\(x\))?$/.test(L)) return false; t = t.slice(i + 1); }
+    t = t.replace(/x(\d+)/g, "x^$1");   // x2 is read as x squared
     if (!t || !/^[0-9x+\-*\/().^|]+$/.test(t)) return false;
     var bars = 0; t = t.replace(/\|/g, function () { return bars++ % 2 ? ")" : "abs("; }); if (bars % 2) return false;
     for (var k = 0; k < 4; k++) t = t.replace(/(x|\d+\.?\d*|\([^()]*\))\^(-?\d+\.?\d*|x)/g, "pow($1,$2)");
