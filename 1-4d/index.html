@@ -181,6 +181,7 @@
   .eqKeys button.eqGo{font:600 .92rem system-ui,sans-serif;background:var(--plus);border-color:var(--plus);color:#fff}.eqKeys button.eqGo:hover{background:var(--plus-hover)}
   .eqKeys i{font-style:italic}.eqKeys sup{font-size:.7em}
   .pgQcue{font:400 .9rem system-ui,sans-serif;color:#5B6577;margin-top:.15rem}
+  .pgQcue .lm{font:400 1.05em "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
   .pgQmsg{min-height:1.5em;margin-top:.2rem;font:600 .98rem system-ui,sans-serif;color:#C0301E}
   .pgQmsg.ok{color:#1E9E4A}
   body.pq .pg{align-content:flex-start}
@@ -2389,7 +2390,7 @@
   }
   function pqPanel() {
     var fam = qFam(), done = QZ.step >= 4, demo = mode === "demo";
-    if (gd()) { $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation."; $("pgQcue").textContent = "Problem " + (QZ.pi + 1) + " of 4 (Parent graph, graph of g, Table, Description)"; }
+    if (gd()) { $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation."; $("pgQcue").innerHTML = "Problem " + (QZ.pi + 1) + " of 4 (Parent graph, graph of <span class=\"lm\"><i>g</i>(<i>x</i>)</span>, Table, Description)"; }
     else { $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?"; $("pgQcue").textContent = "(Equation, Table, Graph)"; }
     var go = $("qzGo"), nx = $("qzNext");
     go.hidden = demo || done; go.textContent = "Check";
@@ -3579,14 +3580,16 @@
       var gO = tmO(), gT = [gO[0] + (shifts() ? H() : 0), gO[1] + K()];
       var pathTo = function (pts, done) { if (!pts.length) { pgWait(300, done); return; } var p = pts.shift(); handGo(svgPt(p[0], p[1]), 650); pgWait(380, function () { tmMove(p); }); pgWait(700, function () { pathTo(pts, done); }); };
       var watch = function (n) { return function () { gdWatch(); pgWait(1100, n); }; };
+      var scroll = shifts() && H() !== 0;
       steps = [
-        function (n) { cap("g(x) is given. Graph the parent function first: the simplest graph in the " + FAMS[pqFam] + " family."); pgWait(2200, n); },
+        function (n) { cap("g(x) is given. Start with the table: drag g(x) onto any center cell."); dragEq(0, n); },
+        function (n) { if (!scroll) { n(); return; } cap("The x-values are centered at 0, but the vertex of g is at x = " + nf(H()) + ". Drag the dot to scroll the table until x = " + nf(H()) + " is in the middle row."); dialDemo(-H(), n); },
+        function (n) { cap("Type a y-value, click calculations to simplify, and fill in the rest."); typeRow(0, function () { clickRow(1, function () { typeRow(2, function () { clickRow(3, function () { typeRow(4, n); }); }); }); }); },
+        function (n) { cap("Now graph the parent function: the simplest graph in the " + FAMS[pqFam] + " family."); pgWait(2000, n); },
         function (n) { pqFam < 2 ? clickTool("line", [0, pf(0)], [1, pf(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, watch(n)); },
         function (n) { cap("A correct parent turns dotted. Now graph g(x) with the same tool."); pgWait(1800, n); },
         function (n) { pqFam < 2 ? clickTool("line", [0, g(0)], [1, g(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [H(), K()], null, watch(n)); },
         function (n) { cap("A correct graph of g(x) turns red."); pgWait(1800, n); },
-        function (n) { cap("Drag g(x) onto any center cell of the table."); dragEq(0, n); },
-        function (n) { cap("Type a y-value, click calculations to simplify, and fill in the rest."); typeRow(0, function () { clickRow(1, function () { typeRow(2, function () { clickRow(3, function () { typeRow(4, n); }); }); }); }); },
         function (n) {
           cap("Describe the transformation: press the transformation button, then click where the parent's " + (shifts() ? "vertex" : "point on the y-axis") + " ends up.");
           var b = document.querySelector(".qzTools [data-tool=tr]"); handGo(ctr(b), 650);
