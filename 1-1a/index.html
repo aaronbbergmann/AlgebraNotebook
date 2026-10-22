@@ -147,6 +147,7 @@
   .r{display:flex;gap:.8em}
   .r .m{min-width:3.4em;text-align:right;color:var(--plus);font-size:.85em}
   .sheet i{font-style:italic}
+  .sheet .wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.sheet .wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid var(--ink);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer}.sheet .wt{font:600 .95rem system-ui,sans-serif;opacity:.7;margin-bottom:.2rem}.sheet .wp[hidden]{display:none}
   
   .act{position:relative}
   .actBtn{box-sizing:border-box;width:10.5em;display:flex;align-items:center;justify-content:space-between;gap:.4em;font:600 .92rem system-ui,sans-serif;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:999px;padding:.6em .8em;cursor:pointer;text-align:left}
@@ -374,7 +375,7 @@
   var logEl = $("log");
   var orig = [], ws = [], rows = [], orows = [], srows = [], sys = [], sysV = [], elim = "", elimInfo = null;
   var counted = false, introV = false, explainOn = false, lastExp = "", up = null, prog = {}, handEl = null;
-  var vals = {}, hist = [], steps = [], ops = 0, locked = false, busy = false, colMin = [];
+  var vals = {}, hist = [], steps = [], works = [], ops = 0, locked = false, busy = false, colMin = [];
   var result = null, ansTouched = false, credited = false, lesson = 1, subx = false, demoN = 0, curDm = 1, pend = null, mode = "demo", demoTimer = null, gen = null, askIdx = 0, askK = 0, askC = null, askKind = "mul", calc = null, hinted = false, mulNote = null;
   var CK = { x: "a", y: "b", z: "e", p: "b", s: "b" };  // p and s are the constant slots before and after x in the one-variable lesson
 
@@ -677,7 +678,7 @@
     });
     lockCols();
     renderVals();
-    $("show").hidden = steps.length < 2;
+    $("show").hidden = !workAny();
   }
 
   // solved values live at the bottom; drag one up onto a matching variable in an equation
@@ -973,7 +974,7 @@
     if (mode === "solo") { buildAnswer(); nx.hidden = true; updUndo(); return; }
     if (mode === "create") {
       if (!orig.length) return;
-      orig.pop(); ws = wsFromOrig(); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }];
+      orig.pop(); ws = wsFromOrig(); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }]; workCreate();
       render(-1); $("answer").hidden = true; $("creator").hidden = false; nx.hidden = true; crPrompt(); updUndo(); return;
     }
     if (!hist.length) return;
@@ -1268,17 +1269,38 @@
   }
 
   // ---- show work: "Make One Change And Recopy" (just the equations) ----
-  function workHTML() {
-    return steps.map(function (w) {
+  function workHTML(st) {
+    return st.map(function (w) {
       return "<section>" + w.eqs.map(function (e, j) { return "<div class=\"r\"><span class=\"m\">" + ((w.ms && w.ms[j]) || "") + "</span><span>" + e.replace(/[xyz]/g, "<i>$&</i>") + "</span></div>"; }).join("") + "</section>";
     }).join("");
   }
+  // every problem worked in the session is kept, so Show work can page back and forward through them
+  function workAny() { return steps.length >= 2 || works.some(function (w) { return w.steps.length >= 2; }); }
+  function workBegin() { works.push({ steps: steps, label: MODES[mode] + " mode, " + (subx ? "Substitution" : lessonName(lesson)) }); if (works.length > 300) works.shift(); }
+  function workCreate() { var l = works[works.length - 1]; if (l && l.create) l.steps = steps; else { workBegin(); works[works.length - 1].create = true; } }
+  // Previous / Next: runs inside the Show work window (and in the on-page sheet)
+  function workNavInit(root) {
+    var nav = root.querySelector(".wnav"), ps = root.querySelectorAll(".wp"); if (!nav || !ps.length) return;
+    var i = +nav.getAttribute("data-start");
+    function go(d) {
+      i = Math.max(0, Math.min(ps.length - 1, i + d)); for (var k = 0; k < ps.length; k++) ps[k].hidden = k !== i;
+      nav.querySelector(".wprev").style.visibility = i ? "" : "hidden"; nav.querySelector(".wnext").style.visibility = i < ps.length - 1 ? "" : "hidden";
+      nav.querySelector(".wcount").textContent = "Problem " + (i + 1) + " of " + ps.length;
+    }
+    nav.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) go(+b.getAttribute("data-nav")); });
+    go(0);
+  }
   function showWork() {
-    var body = workHTML(), w = null;
-    var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;max-width:34rem;margin:2rem auto;padding:0 1rem}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}</style>" + body;
+    var list = works.filter(function (w) { return w.steps.length >= 2; }), cur = works[works.length - 1];
+    if (!list.length) list = [{ steps: steps, label: "" }];
+    var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
+    var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
+      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + workHTML(w.steps) + "</div>"; }).join("");
+    var css = ".wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
+    var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;max-width:34rem;margin:2rem auto;padding:0 1rem}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
     try { w = window.open("", "_blank"); } catch (e) {}
     if (w) { w.document.write(doc); w.document.close(); }
-    else { $("sheetBody").innerHTML = body; $("sheet").hidden = false; }
+    else { $("sheetBody").innerHTML = body; $("sheet").hidden = false; workNavInit($("sheetBody")); }
   }
 
   var NEXTMODE = { demo: "sequence", sequence: "calculate", calculate: "solo" }, LNAME = { 2: "2×2 Systems", 3: "3×3 Systems" };
@@ -1413,7 +1435,7 @@
     ws = wsFromOrig();
     sys = []; sysV = []; elim = ""; elimInfo = lesson === 3 && orig.length === 3 && ints(orig) ? bestElim(orig) : null;
     hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = [];
-    steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }];
+    steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }]; workBegin();
     if (mode !== "demo") explainOn = false;
     if (explainOn && logEl.children.length) { var dv2 = document.createElement("div"); dv2.className = "msg"; dv2.textContent = "New problem"; dv2.style.opacity = ".6"; logEl.appendChild(dv2); } else logEl.innerHTML = "";
     lastExp = ""; up = null; counted = false; $("again").hidden = true;
@@ -1499,7 +1521,7 @@
     var r = parseAny($("crIn").value), err = $("crErr");
     if (typeof r === "string") { err.textContent = r; return; }
     var E = orig.concat([r]);
-    orig = E; ws = wsFromOrig(); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }];
+    orig = E; ws = wsFromOrig(); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }]; workCreate();
     render(-1); updUndo();
     if (orig.length < allV().length) { crPrompt(); return; }
     elimInfo = lesson === 3 && ints(orig) ? bestElim(orig) : null;
@@ -1749,7 +1771,7 @@
     var live = mode !== "solo" && mode !== "create";
     ws.forEach(function (q, i) { var r = subRowEl(q, "w", i, live); if (i === pop) r.classList.add("pop"); W.appendChild(r); rows.push(r); });
     renderVals();
-    $("show").hidden = steps.length < 2;
+    $("show").hidden = !workAny();
   }
   function tEl(i, side, idx) { return rows[i] && rows[i].querySelector(".tm[data-side=\"" + side + "\"][data-idx=\"" + idx + "\"]"); }
   function opEl(i, side, at) { return rows[i] && rows[i].querySelector(".op[data-side=\"" + side + "\"][data-at=\"" + at + "\"]"); }
