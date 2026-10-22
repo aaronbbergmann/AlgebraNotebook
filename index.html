@@ -2622,9 +2622,9 @@
   }
   function descHTML(h2, k2, a2) {
     var L = ["Family: " + FAMS[PG.fam]], a = a2 === undefined ? A() : a2, h = h2 === undefined ? H() : h2, k = k2 === undefined ? K() : k2, m = Math.abs(a);
+    if (h || k) { var t = []; if (h) t.push((h > 0 ? "→ " : "← ") + nf(Math.abs(h))); if (k) t.push((k > 0 ? "↑ " : "↓ ") + nf(Math.abs(k))); L.push("Translation " + t.join(" and ")); }
     if (m !== 1 && m !== 0) L.push((m > 1 ? "Vertical stretch" : "Vertical shrink") + " by factor of " + nf(m));
     if (a < 0) L.push("Reflection over the <i>x</i>-axis");
-    if (h || k) { var t = []; if (h) t.push((h > 0 ? "→ " : "← ") + nf(Math.abs(h))); if (k) t.push((k > 0 ? "↑ " : "↓ ") + nf(Math.abs(k))); L.push("Translation " + t.join(" and ")); }
     return L.join("<br>");
   }
   // table: x | the equation with that x substituted | y
