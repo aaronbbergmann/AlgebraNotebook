@@ -283,6 +283,13 @@
   .eqIn:hover,.eqIn:focus{border-bottom-color:#9AA4B2}
   .pgDesc{font-size:1.08rem;line-height:1.45}
   .pgDesc i{font-family:"LM",Georgia,serif;font-style:italic}
+  .descIn[hidden]{display:none}.descIn{display:flex;flex-direction:column;gap:.55rem}
+  .descIn input{box-sizing:border-box;width:100%;padding:.55em .7em;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 1rem system-ui,sans-serif}
+  .descKeys{display:flex;flex-wrap:wrap;gap:.4rem}.descArr{display:inline-flex;gap:.4rem}
+  .descKeys button{height:2.1rem;padding:0 .7rem;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 .95rem system-ui,sans-serif;cursor:pointer}
+  .descKeys .descArr button{min-width:2.3rem;padding:0 .4rem;font-size:1.15rem}
+  .descKeys button:hover{background:#EEF1F6}.descKeys button:active{background:#DCE8F7}
+  .descKeys button.descGo{background:var(--plus);border-color:var(--plus);color:#fff;font-weight:600}.descKeys button.descGo:hover{background:var(--plus-hover)}
   .pgCtl{display:flex;flex-direction:column;align-items:center;gap:.5rem}
   .pgCtl[hidden]{display:none}
   .pgDemo{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;margin-bottom:1.2rem}
@@ -317,6 +324,7 @@
         <table class="pgTable" id="pgTable" aria-label="Table"><colgroup><col style="width:18%"><col><col style="width:18%"></colgroup><thead><tr><th>x</th><th class="pgMid"></th><th>y</th></tr></thead><tbody></tbody></table>
         <div class="pgEq" id="pgEq" aria-live="polite"></div>
         <div class="pgDesc" id="pgDesc" aria-live="polite"></div>
+        <div class="descIn" id="pgDescIn" hidden><input id="pgDescTx" autocomplete="off" spellcheck="false" placeholder="Describe the transformation" aria-label="Describe the transformation"><div class="descKeys" id="pgDescKeys"><button type="button" data-ins="Translation">Translation</button><button type="button" data-ins="Stretch">Stretch</button><button type="button" data-ins="Shrink">Shrink</button><button type="button" data-ins="Reflection">Reflection</button><button type="button" data-ins="Horizontal">Horizontal</button><button type="button" data-ins="Vertical">Vertical</button><span class="descArr"><button type="button" data-ins="←" aria-label="left">←</button><button type="button" data-ins="→" aria-label="right">→</button><button type="button" data-ins="↑" aria-label="up">↑</button><button type="button" data-ins="↓" aria-label="down">↓</button></span><button type="button" class="descGo" id="pgDescGo">Submit</button></div></div>
       </div>
     </section>
     <div class="frame">
@@ -2353,16 +2361,49 @@
   function pq() { return document.body.classList.contains("pq"); }
   // the cue under the question lists what is left to answer, each ending in "?"; a finished part gets a green check instead
   function pqCue() {
+    gdDescUI();
     if (!pq() || !QZ.order) return;
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
     var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
     $("pgQcue").innerHTML = (gd() ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
   }
+  // Solo: the description is typed (with help from buttons) once the graphs and the table are done
+  function gdDescUI() {
+    var ok = pq() && gd() && mode === "solo" && QZ.order && QZ.step < 4 && !PG.dOK && !pgRun, pt = ok ? pqParts() : null;
+    var show = !!(ok && pt.parent && pt.graph && pt.table), box = $("pgDescIn"), was = !box.hidden;
+    box.hidden = !show; if (show && !was) setTimeout(function () { $("pgDescTx").focus(); }, 0);
+  }
+  // what a typed description says: "Translation → 3 and ↑ 2", "right 3, up 2", "3 units left" ...  Returns the move, or null
+  function gdParse(t) {
+    t = String(t).toLowerCase().replace(/\u2212/g, "-");
+    if (/stretch|shrink|reflect/.test(t) || !/translat|shift|slide|move/.test(t)) return null;
+    var re = /(\u2192|\u2190|\u2191|\u2193|\bright\b|\bleft\b|\bup\b|\bdown\b)\s*(?:by\s*)?(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:units?\s*)?(\u2192|\u2190|\u2191|\u2193|\bright\b|\bleft\b|\bup\b|\bdown\b)/g, m, h = 0, k = 0, n = 0;
+    while ((m = re.exec(t))) {
+      var d = m[1] || m[4], v = +(m[2] || m[3]); n++;
+      if (d === "\u2192" || d === "right") h += v; else if (d === "\u2190" || d === "left") h -= v; else if (d === "\u2191" || d === "up") k += v; else k -= v;
+    }
+    return n ? { h: h, k: k } : null;
+  }
+  function gdDescSubmit() {
+    var m = gdParse($("pgDescTx").value), box = $("pgDescIn"), right = false;
+    if (m) right = PG.fam === 1 ? Math.abs((m.k - m.h) - K()) < 1e-6 : PG.fam === 0 ? (m.h === 0 && Math.abs(m.k - K()) < 1e-6) : (Math.abs(m.h - H()) < 1e-6 && Math.abs(m.k - K()) < 1e-6);   // a line slid sideways is the same line slid up or down
+    if (right) { PG.tAns = { h: H(), k: K(), a: 1 }; PG.dOK = true; pqMsg(""); var rr = box.getBoundingClientRect(); rvMark("ok", rr.left + 24, rr.top + 14); box.hidden = true; pgDescUpd(); drawPlay(); return; }
+    QZ.wrong++; pqMsg("Not quite. Try again.");
+    box.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
+  }
+  $("pgDescKeys").addEventListener("mousedown", function (e) { if (e.target.closest("button")) e.preventDefault(); });   // the cursor stays in the text box
+  $("pgDescKeys").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.id === "pgDescGo") { gdDescSubmit(); return; }
+    var el = $("pgDescTx"), i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd, before = el.value.slice(0, i);
+    el.setRangeText((before && !/\s$/.test(before) ? " " : "") + b.dataset.ins + " ", i, j, "end"); el.focus();
+  });
+  $("pgDescTx").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); gdDescSubmit(); } });
   function pqMsg(t, cls) { var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = t || ""; }
   function pqSetup() {
     closePt(); var fam = qFam();
     PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = [];
-    PG.show = { eq: false, table: false, graph: false, desc: true, parent: false }; PG.pdone = false; PG.dOK = false;
+    PG.show = { eq: false, table: false, graph: false, desc: true, parent: false }; PG.pdone = false; PG.dOK = false; $("pgDescTx").value = "";
     if (gd()) { var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false }; }   // Graph & Describe: g(x) is given; the parent graph, g's graph, the table and the description are the answer
     TB.targets = []; QZ.step = 0; QZ.hn = 0; pqMsg("");
   }
@@ -2474,7 +2515,7 @@
       if (!ok.parent) need.push("the parent graph (it turns dotted when it is right)");
       if (!ok.graph) need.push("the graph of g(x)");
       if (!ok.table) need.push("the table (" + TB.rows().filter(function (r) { return r.done; }).length + " of 5 y-values)");
-      if (!ok.desc) need.push("the description (use the transformation button)");
+      if (!ok.desc) need.push(mode === "solo" ? "the description (type it in the box)" : "the description (use the transformation button)");
       QZ.wrong++; pqMsg(mode === "solo" ? "Not quite. Try again." : (PG.shape ? "The blue graph is not the parent or g(x) yet. " : "") + "Still to do: " + need.join(", ") + ".");
       return;
     }
@@ -2511,7 +2552,7 @@
   function leaveQuiz() {
     if (!document.body.classList.contains("quiz")) return;
     stopDemo(); busy = false; if (pgRun) pgStop();
-    document.body.classList.remove("quiz", "play", "pq"); $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
+    document.body.classList.remove("quiz", "play", "pq"); $("pgDescIn").hidden = true; $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
     $("pgTable").style.display = ""; $("pgGraph").style.display = ""; $("pgFam").hidden = false;
   }
 
@@ -3068,7 +3109,7 @@
     [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part] ? "true" : "false"); });
     TB.sync(); $("qzTools").hidden = false; posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
-    { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !gd(); tb.classList.toggle("on", !!PG.tm); }
+    { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && mode !== "solo"); tb.classList.toggle("on", !!PG.tm); }
     eqKeysUpd(); pqCue(); pqEval();
   }
   // ---- editing a point's coordinates: double-click a plotted point (or the dot button) and a small panel opens below the Show buttons ----
