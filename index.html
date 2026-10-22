@@ -2414,8 +2414,8 @@
     var r = TB.rows()[i]; if (!r || r.done || r.fl) return;
     r.tv = v; var n = parse(String(v).replace(/−/g, "-")); if (!n || Math.abs(n.n / n.d - TB.y(r)) > 1e-6) return;
     r.sub = true; r.done = true; r.tv = ""; TB.pop = i; TB.draw();
-    var nx = TB.rows().findIndex(function (q) { return !q.done; }); if (nx >= 0) { var el = $("qzY" + nx); if (el) { el.focus(); el.select(); } }
     TB.after();
+    var nx = TB.rows().findIndex(function (q) { return !q.done; }); if (nx >= 0 && !(typeof pgRun !== "undefined" && pgRun)) { var el = $("qzY" + nx) || $("pgTable").querySelector("input.qzCell[data-r=\"" + nx + "\"]"); if (el) { el.focus(); el.select(); } }
   };
   TB.sync = function () { var m = TB.mode(); document.body.classList.toggle("tbon", m === "quiz" ? QZ.step === 1 : m === "play" ? fillMode() : false); };
   // drop the equation on a center cell: that row now shows the equation with its x-value put in
@@ -2509,6 +2509,13 @@
         if (hot !== t) { if (hot) hot.classList.remove("drop"); hot = t; if (t) t.classList.add("drop"); }
       }, function (ev) { if (hot) hot.classList.remove("drop"); var t = midAt(ev); if (t) TB.sub(+t.dataset.r); });
     }
+    // Return moves on to the next y cell that is still empty (wrapping round to the top)
+    T.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" || !e.target.classList || !e.target.classList.contains("qzCell")) return;
+      e.preventDefault(); var all = [].slice.call(T.querySelectorAll("input.qzCell")), i = all.indexOf(e.target), nx = null;
+      for (var k = 1; k < all.length; k++) { var c = all[(i + k) % all.length]; if (c !== e.target) { nx = c; break; } }
+      if (nx) { nx.focus(); nx.select(); }
+    });
     T.addEventListener("input", function (e) { if (TB.mode() && e.target.classList && e.target.classList.contains("qzCell")) TB.typed(+e.target.dataset.r, e.target.value); });
     T.querySelector(".pgMid").addEventListener("pointerdown", eqDrag);
     $("pgEq").addEventListener("pointerdown", eqDrag);
