@@ -2308,7 +2308,7 @@
   function pqMsg(t, cls) { var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = t || ""; }
   function pqSetup() {
     closePt(); var fam = qFam();
-    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = ""; PG.hist = [];
+    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = [];
     PG.show = { eq: false, table: false, graph: false, desc: true, parent: false };
     TB.targets = []; QZ.step = 0; QZ.hn = 0; pqMsg("");
   }
@@ -2354,6 +2354,9 @@
       }
     } finally { pqBusy = false; }
   }
+  // what the student has typed after the "f(x)=" that is already in the box
+  function pqTyped() { var t = String(PG.eqTxt || "").trim(); return /^f\(x\)=?$/i.test(t.replace(/\s/g, "")) ? "" : t; }
+  ["focusin", "click"].forEach(function (ev) { document.addEventListener(ev, function (e) { var el = e.target; if (pq() && el.classList && el.classList.contains("eqIn") && el.value === "f(x)=") { el.setSelectionRange(el.value.length, el.value.length); setTimeout(function () { el.setSelectionRange(el.value.length, el.value.length); }, 0); } }); });
   function pqEqWrong(t) {
     var other = QEQ.indexOf(qNorm(t)), fam = qFam(); QZ.wrong++;
     pqMsg(mode === "solo" ? "Not quite. Try again." : other >= 0 && other !== fam ? "That is the parent of the " + QFAM[other] + " family, not the " + QFAM[fam] + " family." : "Not quite. Try again.", "");
@@ -2361,13 +2364,13 @@
   }
   // Return in the equation box checks it: a right equation is revealed with a check mark; a wrong one is only flagged
   function eqEnter() {
-    var t = String(PG.eqTxt || "").trim(); if (PG.show.eq || !t) return;
+    var t = pqTyped(); if (PG.show.eq || !t) return;
     if (pq() && !eqTypedOK(t)) { pqEqWrong(t); return; }
     var tg = document.querySelector(".tog[data-part=eq]"); if (tg) { pqMsg(""); tg.click(); }
   }
   function pqCheck() {
     if (QZ.step >= 4) return; pqEval(); if (QZ.step >= 4) return;
-    var ok = pqParts(), need = [], fam = qFam(), t = String(PG.eqTxt || "").trim();
+    var ok = pqParts(), need = [], fam = qFam(), t = pqTyped();
     if (!ok.eq) { if (t) { eqEnter(); return; } need.push("the equation"); }
     if (!ok.table) { var n = TB.rows().filter(function (r) { return r.done; }).length; need.push("the table (" + n + " of 5 y-values)"); }
     if (!ok.graph) need.push(PG.shape ? "a graph through the points (that shape isn't the " + QFAM[fam] + " parent yet)" : "the graph");
@@ -3189,7 +3192,7 @@
     closePt(); var run = ++pgRun; pgShift = 0; $("pgDemo").textContent = "Pause demo"; $("pgDemo").classList.add("on");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
     PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
-    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (PQ) PG.show.desc = true; else PG.show.eq = true; drawPlay();
+    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (PQ) PG.show.desc = true; else PG.show.eq = true; if (PQ) PG.eqTxt = "f(x)="; drawPlay();
     function cap(t) { $("pgCap").textContent = t; }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
