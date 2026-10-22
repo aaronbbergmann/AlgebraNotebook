@@ -227,6 +227,9 @@
   .pgTable td input.qzCell:focus{outline:2px solid #2D70B3;outline-offset:-2px}
   .pgTable td input.qzCell.badc{background:#FDECEA;box-shadow:inset 0 0 0 2px #C0301E}
   .pgTable td:has(input.qzCell){padding:0}
+  body.demoTyping .pgTable input.qzCell{caret-color:transparent}
+  .fakeCaret{position:fixed;z-index:44;width:2px;background:#1B2433;pointer-events:none;animation:caretBlink 1s steps(1) infinite}
+  @keyframes caretBlink{50%{opacity:0}}
   .pgTable td.mid.live{cursor:pointer;background:#DCE8F7}
   .pgTable td.yv.drop{background:#DCE8F7}
   .pgTable td.yv.drop input.qzCell{background:#DCE8F7}
@@ -2874,6 +2877,10 @@
           else { var d = document.createElement("div"); d.className = "rvDot"; d.style.left = q.x + "px"; d.style.top = q.y + "px"; rvFadeOut(d); rvMark("bad", q.x + 22, q.y - 22); }
         });
         newIdx.forEach(function (j) { rvFadeIn(S.querySelector("[data-sp=\"" + j + "\"]")); });
+        if (!sh) {   // points were plotted but the curve itself is missing: the real one fades in beside a red "!"
+          var vx0 = shifts() ? H() : 0, q3 = svgPt(vx0, g(vx0));
+          [].forEach.call(S.querySelectorAll("polyline[stroke=\"#C74440\"]"), function (c) { rvFadeIn(c); }); rvMark("bad", q3.x + 22, q3.y - 22);
+        }
         if (sh) {
           var q2 = svgPt(old.at[0], old.at[1]);
           if (shOK) rvMark("ok", q2.x + 22, q2.y - 22);
@@ -2978,7 +2985,7 @@
     pgQ.forEach(pgArm); var hd = pgHeld; pgHeld = []; hd.forEach(pgRaf);
   }
   function pgStop() {
-    pgRun = 0; pgQ.forEach(function (e) { clearTimeout(e.id); }); pgQ = []; pgHeld = []; pgPaused = false; pgSnap = null; closePt(); handHide(); [].forEach.call(document.querySelectorAll(".tbg,.ghost"), function (g) { g.remove(); }); [].forEach.call(document.querySelectorAll(".simHover,.simPress"), function (g) { g.classList.remove("simHover", "simPress"); }); TB.targets = [];
+    pgRun = 0; pgQ.forEach(function (e) { clearTimeout(e.id); }); pgQ = []; pgHeld = []; pgPaused = false; pgSnap = null; closePt(); handHide(); [].forEach.call(document.querySelectorAll(".tbg,.ghost,.fakeCaret"), function (g) { g.remove(); }); document.body.classList.remove("demoTyping"); [].forEach.call(document.querySelectorAll(".simHover,.simPress"), function (g) { g.classList.remove("simHover", "simPress"); }); TB.targets = [];
     $("pgDemo").textContent = "Start Demo"; $("pgDemo").classList.remove("on", "paused"); $("pgEnd").hidden = true; $("pgCap").textContent = "";
   }
   function pgDemo() {
@@ -3040,10 +3047,23 @@
     function typeRow(i, then, wrong) {
       var text = wrong || String(TB.y(TB.rows()[i])); function inp() { return $("pgTable").querySelector("input.qzCell[data-r=\"" + i + "\"]"); }
       var e0 = inp(); if (!e0) { then(); return; }
-      handGo(ctr(e0), 600);
+      // a blinking text cursor sits where the next character will go, so it is plain that the answer is being typed
+      var cv = document.createElement("canvas").getContext("2d"), car = null;
+      function caret() {
+        var e = inp(); if (!e) return; if (!car) { car = document.createElement("div"); car.className = "fakeCaret"; document.body.appendChild(car); }
+        var rc = e.getBoundingClientRect(), cs = getComputedStyle(e); cv.font = cs.font; var w = cv.measureText(e.value).width;
+        car.style.left = (rc.left + rc.width / 2 + w / 2 + 1) + "px"; car.style.top = (rc.top + rc.height * .2) + "px"; car.style.height = (rc.height * .6) + "px";
+        car.style.animation = "none"; void car.offsetWidth; car.style.animation = "";
+      }
+      function done(ms) { pgWait(ms, function () { if (car) car.remove(); document.body.classList.remove("demoTyping"); then(); }); }
+      var r0 = e0.getBoundingClientRect(); handGo({ x: r0.right - 12, y: r0.top + r0.height / 2 }, 600);   // the hand waits at the right edge, clear of the text
       pgWait(750, function () {
-        handTap(); var e1 = inp(); if (e1) e1.focus(); var c = 0;
-        (function nx() { if (pgRun !== run) return; c++; var e = inp(); if (!e) { pgWait(500, then); return; } e.value = text.slice(0, c); e.dispatchEvent(new Event("input", { bubbles: true })); if (c < text.length) pgWait(180, nx); else pgWait(900, then); })();
+        handTap(); document.body.classList.add("demoTyping"); var e1 = inp(); if (e1) e1.focus(); var c = 0; caret();
+        pgWait(1300, function nx() {   // the cursor blinks in the empty cell first, then the digits go in one at a time
+          if (pgRun !== run) { if (car) car.remove(); document.body.classList.remove("demoTyping"); return; } c++; var e = inp(); if (!e) { done(500); return; }
+          e.value = text.slice(0, c); e.dispatchEvent(new Event("input", { bubbles: true })); var e2 = inp(); if (e2 && document.activeElement !== e2) e2.focus(); caret();
+          if (c < text.length) pgWait(380, nx); else done(1100);
+        });
       });
     }
     // the hand drags a finished row onto the graph as a dot
