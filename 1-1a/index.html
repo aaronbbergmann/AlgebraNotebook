@@ -1359,8 +1359,8 @@
     if (nx) up = { label: "Level up: " + MODES[nx] + " mode", go: function () { setMode(nx); } };
     else if (mode === "solo" && !subx && lesson < topLesson()) up = { label: "Level up: " + LNAME[lesson + 1], go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
   }
-  function tally() {
-    celebrate();
+  function tally(quiet) {
+    if (!quiet) celebrate();
     // progress counts a problem once, and only when it is truly finished (or a full demo has been watched)
     if (mode !== "create" && !counted) { counted = true; var k = LK() + ":" + mode; prog[k] = (prog[k] || 0) + 1; if (classify(orig) === "one") prog[k + ":one"] = (prog[k + ":one"] || 0) + 1; saveProg(); updProg(); }
     levelUp();
@@ -2375,7 +2375,7 @@
         if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
           tally(); var ml = BUILT[act].modes, nm = ml[ml.indexOf(mode) + 1];
           up = nm ? { label: MODES[nm] + " Mode", go: function () { setMode(nm); } } : null;
-        } else if (last) { QZ.locked = true; counted = false; tally(); }
+        } else { counted = false; if (last) { QZ.locked = true; tally(); } else tally(true); }   // every finished question counts toward Progress; the celebration waits for the last parent
         pqPanel();
       }
     } finally { pqBusy = false; }
