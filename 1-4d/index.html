@@ -2693,6 +2693,7 @@
   TB.click = function (i) {
     var r = TB.rows()[i]; if (!r || r.done || r.fl || TB.busy) return;
     if (!r.sub || !TB.hasX(r)) { if (TB.mode() === "play" && fillMode()) TB.midFill(i); return; }
+    if (pq() && mode === "solo") return;   // Solo: no simplifying by click; the y-value is the student's own calculation
     var n = TB.st(r).length;
     if (r.idx < n - 1) {
       r.idx++; TB.draw(); var c = $("pgTable").querySelector("td.mid[data-r=\"" + i + "\"]"); if (c) c.classList.add("pop");
