@@ -44,6 +44,7 @@
   .frame{display:grid;grid-template-columns:minmax(0,1fr);column-gap:1rem;align-items:start;flex:1 0 auto;min-height:100%}
   .center{display:flex;flex-direction:column;min-width:0;min-height:100%}
   .ctlbox{display:flex;flex-direction:column;gap:2.5rem;padding:.9rem 1rem;border-bottom:2px solid color-mix(in srgb,var(--ink) 12%,transparent)}
+  body.quiz #lesson{width:9.66rem;padding:.68em .2em .68em .7em;font-size:.84rem}   /* room for "Graph & Describe" */
   .ctl-sel{display:flex;flex-direction:column;align-items:center;gap:.5rem}.ctl-sel select{box-sizing:border-box;width:10.5em;font-size:.92rem;padding:.6em .8em}
   .ctl-btn{display:flex;flex-direction:column;align-items:center;gap:.5rem}
   .ctl-btn .btn{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;text-align:center;white-space:nowrap}
@@ -305,7 +306,7 @@
   <div class="stage">
     <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
-      <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQcue">(Equation, Table, Graph)</div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div>
+      <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQcue" id="pgQcue">(Equation, Table, Graph)</div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div>
       <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope. Or drag it onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
       <div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div>
       <div class="pgSide">
@@ -1307,9 +1308,11 @@
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   var BUILT = {
-    "1.1A": { quiz: true, top: 1, key: "algebraProgress:1.1A", lessons: ["Memorizing Parents"], short: ["Parents"], modes: ["demo", "sequence", "solo"], levels: [
+    "1.1A": { quiz: true, top: 2, key: "algebraProgress:1.1A", perLesson: true, lessons: ["Memorizing Parents", "Graphing and Describing Translations"], short: ["Parents", "Graph & Describe"], modes: ["demo", "sequence", "solo"], levels: [
       [1, "demo", 10, "Demo Mode"], [1, "sequence", 25, "Sequence Mode"], [1, "solo", 40, "Solo Mode"],
-      [1, "solo", 70, "Solo Mode, 2nd round", 2], [1, "solo", 100, "Solo Mode, 3rd round", 3]
+      [1, "solo", 70, "Solo Mode, 2nd round", 2], [1, "solo", 100, "Solo Mode, 3rd round", 3],
+      [2, "demo", 10, "Demo Mode"], [2, "sequence", 25, "Sequence Mode"], [2, "solo", 40, "Solo Mode"],
+      [2, "solo", 70, "Solo Mode, 2nd round", 2], [2, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
     "1.1 Play": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
     "1.4D": { top: 3, sub: true, key: "algebraProgress", levels: [
@@ -1339,12 +1342,13 @@
   loadProg();
   function saveProg() { try { localStorage.setItem(BUILT[act].key, JSON.stringify(prog)); } catch (e) {} }
   function lvDone(l) { var tot = 0; for (var m = MORD.indexOf(l[1]); m < 4; m++) tot += prog[l[0] + ":" + MORD[m]] || 0; return tot >= (l[4] || 1); }
-  function pct() { var p = 0; LEVELS.forEach(function (l) { if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }
+  function pct() { var p = 0; LEVELS.forEach(function (l) { if (BUILT[act].perLesson && l[0] !== lesson) return; if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }   // an activity with perLesson keeps a separate percentage for each exercise
   function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; }
   function openProg() {
     var p = pct(), h = "<h2 id=\"progT\">" + shortOf(act) + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = 0;
-    var names = { 1: lessonName(1), 2: "2×2 Systems", 3: "3×3 Systems" };
+    var names = { 1: lessonName(1), 2: lessonName(2), 3: lessonName(3) };
     LEVELS.forEach(function (l, i) {
+      if (BUILT[act].perLesson && l[0] !== lesson) return;
       if (l[0] !== last) { if (last) h += "</ul>"; last = l[0]; h += "<h3>Exercise: " + names[last] + "</h3><ul>"; }
       var d = lvDone(l);
       h += "<li class=\"lv" + (d ? " done" : "") + "\"><span class=\"ck\">" + (d ? "✓" : "○") + "</span><span class=\"pc\">" + l[2] + "%</span><span>" + l[3] + "</span></li>";
@@ -1357,12 +1361,13 @@
     if (mode === "create" || c < 2) return;
     var ml = BUILT[act].modes || ["demo", "sequence", "calculate", "solo"], nx = ml[ml.indexOf(mode) + 1];
     if (nx) up = { label: "Level up: " + MODES[nx] + " mode", go: function () { setMode(nx); } };
+    else if (mode === "solo" && !subx && lesson < topLesson() && BUILT[act].perLesson) { if (pct() >= 100) up = { label: "Next exercise: " + (BUILT[act].short[lesson] || lessonName(lesson + 1)), stay: true, go: function () { lesson++; $("lesson").value = String(lesson); setMode("demo"); } }; }   // at 100% the Next button moves on to the next exercise; a small link stays here
     else if (mode === "solo" && !subx && lesson < topLesson()) up = { label: "Level up: " + LNAME[lesson + 1], go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
   }
   function tally(quiet) {
     if (!quiet) celebrate();
     // progress counts a problem once, and only when it is truly finished (or a full demo has been watched)
-    if (mode !== "create" && !counted) { counted = true; var k = LK() + ":" + mode; prog[k] = (prog[k] || 0) + 1; if (classify(orig) === "one") prog[k + ":one"] = (prog[k + ":one"] || 0) + 1; saveProg(); updProg(); }
+    if (mode !== "create" && !counted) { counted = true; var k = LK() + ":" + mode; prog[k] = (prog[k] || 0) + 1; if (!quiz() && classify(orig) === "one") prog[k + ":one"] = (prog[k + ":one"] || 0) + 1; saveProg(); updProg(); }
     levelUp();
   }
   function onSolved() {
@@ -2326,13 +2331,46 @@
   function pqSetup() {
     closePt(); var fam = qFam();
     PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = [];
-    PG.show = { eq: false, table: false, graph: false, desc: true, parent: false };
+    PG.show = { eq: false, table: false, graph: false, desc: true, parent: false }; PG.pdone = false; PG.dOK = false;
+    if (gd()) { var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false }; }   // Graph & Describe: g(x) is given; the parent graph, g's graph, the table and the description are the answer
     TB.targets = []; QZ.step = 0; QZ.hn = 0; pqMsg("");
+  }
+  // ---- 1.1A, second exercise: Graph & Describe.  g(x) is a translation of the parent; the student graphs both, fills in the table and describes the move ----
+  function gd() { return pq() && lesson === 2; }
+  function gdMake(fam) {
+    function nz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
+    var h = 0, k = 0;
+    if (fam < 2) k = nz(5); else { h = nz(5); k = nz(5); var r = rnd(4); if (r === 0) h = 0; else if (r === 1) k = 0; }
+    return { h: h, k: k };
+  }
+  function gdWords(t) { var w = []; if (t.h) w.push((t.h > 0 ? "right " : "left ") + Math.abs(t.h)); if (t.k) w.push((t.k > 0 ? "up " : "down ") + Math.abs(t.k)); return w.join(" and "); }
+  function shapeIs(sh, fn) { for (var x = -6; x <= 6; x += .5) if (!(Math.abs(shapeY(sh, x) - fn(x)) < 1e-6)) return false; return true; }
+  // a right shape for the parent turns dotted; a right shape for g turns red; a right description earns a check
+  function gdWatch() {
+    if (!gd() || !QZ.order) return;
+    var sh = PG.shape;
+    if (sh && !PG.pdone && shapeIs(sh, pf)) {
+      var at = sh.t === "line" ? sh.p1 : [sh.h, sh.k]; PG.pdone = true; PG.show.parent = true; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; pqMsg("");
+      drawGraph(); var q = svgPt(at[0], at[1]); rvMark("ok", q.x + 22, q.y - 22);
+    } else if (sh && !PG.show.graph && shapeOK(sh)) {
+      var tg = document.querySelector(".tog[data-part=graph]"); pqMsg(""); if (tg) tg.click();
+      PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; drawGraph();
+    }
+    var T = PG.tAns;
+    if (T && !PG.dOK) {
+      if (Math.abs(T.h - H()) < 1e-6 && Math.abs(T.k - K()) < 1e-6) {
+        PG.dOK = true; pqMsg(""); var el = $("pgDesc"), rr = el.getBoundingClientRect(); rvMark("ok", Math.min(rr.right - 14, rr.left + 280), rr.top + 16);
+      } else {
+        PG.tAns = null; QZ.wrong++; pgDescUpd();
+        pqMsg(mode === "solo" ? "Not quite. Try again." : "Not quite. Watch where the parent's " + (shifts() ? "vertex" : "point on the y-axis, " + (PG.fam === 0 ? "(0, 1)" : "(0, 0)") + ",") + " moves.");
+        $("pgDesc").animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
+      }
+    }
   }
   function pqStart() {
     stopDemo(); if (pgRun) pgStop(); stopParty(); busy = false; up = null; counted = false;
     var o = [0, 1, 2, 3]; for (var i = 3; i > 0; i--) { var j = rnd(i + 1), t = o[i]; o[i] = o[j]; o[j] = t; }
-    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null };
+    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: o.map(gdMake) }; updProg();
     if (mode !== "demo") explainOn = false;
     logEl.innerHTML = "";
     $("hint").hidden = mode === "solo"; $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn);
@@ -2350,28 +2388,30 @@
   }
   function pqPanel() {
     var fam = qFam(), done = QZ.step >= 4, demo = mode === "demo";
-    $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
+    if (gd()) { $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation."; $("pgQcue").textContent = "Problem " + (QZ.pi + 1) + " of 4 (Parent graph, graph of g, Table, Description)"; }
+    else { $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?"; $("pgQcue").textContent = "(Equation, Table, Graph)"; }
     var go = $("qzGo"), nx = $("qzNext");
     go.hidden = demo || done; go.textContent = "Check";
-    nx.hidden = !done; nx.disabled = false; nx.textContent = demo ? (up ? up.label : "Next parent") : QZ.locked ? (up ? up.label : "Another round") : "Next parent";
-    $("qzAgain").hidden = !(done && (demo || (QZ.pi === 3 && up))); $("qzAgain").textContent = demo ? "Another demo" : "Another round";
+    nx.hidden = !done; nx.disabled = false; nx.textContent = demo ? (up ? up.label : gd() ? "Next problem" : "Next parent") : QZ.locked ? (up ? up.label : "Another round") : gd() ? "Next problem" : "Next parent";
+    $("qzAgain").hidden = !(done && (demo || (QZ.pi === 3 && up))); $("qzAgain").textContent = demo ? "Another demo" : up && up.stay ? "Stay in this exercise" : "Another round";
     $("pgDemo").style.display = demo && !done ? "" : "none"; $("pgCtl").classList.toggle("empty", !(demo && !done));
     $("hint").hidden = done || mode === "solo";   // a right answer needs no hint
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
-  function pqParts() { return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: !!(PG.shape && shapeOK(PG.shape)) }; }
+  function pqParts() { return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
   var pqBusy = false;
   function pqEval() {
     if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order) return;
     pqBusy = true;
     try {
+      gdWatch();
       var ok = pqParts();
       if (ok.graph && !PG.show.graph) { pqMsg(""); }
       if (ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
-      if (ok.eq && ok.table && ok.graph) {
+      if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
         QZ.step = 4; var last = QZ.pi === 3;
-        pqMsg(last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
+        pqMsg(gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
         if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
           tally(); var ml = BUILT[act].modes, nm = ml[ml.indexOf(mode) + 1];
           up = nm ? { label: MODES[nm] + " Mode", go: function () { setMode(nm); } } : null;
@@ -2397,6 +2437,14 @@
   function pqCheck() {
     if (QZ.step >= 4) return; pqEval(); if (QZ.step >= 4) return;
     var ok = pqParts(), need = [], fam = qFam(), t = pqTyped();
+    if (gd()) {
+      if (!ok.parent) need.push("the parent graph (it turns dotted when it is right)");
+      if (!ok.graph) need.push("the graph of g(x)");
+      if (!ok.table) need.push("the table (" + TB.rows().filter(function (r) { return r.done; }).length + " of 5 y-values)");
+      if (!ok.desc) need.push("the description (use the transformation button)");
+      QZ.wrong++; pqMsg(mode === "solo" ? "Not quite. Try again." : (PG.shape ? "The blue graph is not the parent or g(x) yet. " : "") + "Still to do: " + need.join(", ") + ".");
+      return;
+    }
     if (!ok.eq) { if (t) { eqEnter(); return; } need.push("the equation"); }
     if (!ok.table) { var n = TB.rows().filter(function (r) { return r.done; }).length; need.push("the table (" + n + " of 5 y-values)"); }
     if (!ok.graph) need.push(PG.shape ? "a graph through the points (that shape isn't the " + QFAM[fam] + " parent yet)" : "the graph");
@@ -2405,12 +2453,20 @@
   function pqHint() {
     var fam = qFam(), n = QZ.hn++, ok = pqParts();
     if (QZ.locked || QZ.step >= 4) return "Press the button below to keep going.";
+    if (gd()) {
+      var tt = QZ.tr[QZ.pi], tool = QSHAPE[fam] === "line" ? "/" : QSHAPE[fam];
+      if (!ok.parent) return n === 0 ? "Start with the parent: the simplest function in the " + QFAM[fam] + " family, f(x) = " + plain(qEqHTML(fam)) + ". Graph it with the " + tool + " tool." : fam === 0 ? "The parent is flat at y = 1." : fam === 1 ? "Use the / tool through (0, 0) and (1, 1)." : "Click the " + tool + " tool, then click the vertex, (0, 0).";
+      if (!ok.graph) return n === 0 ? "g(x) is the parent translated " + gdWords(tt) + ". Graph it with the same tool." : fam === 0 ? "g(x) is flat at y = " + nf(1 + tt.k) + "." : fam === 1 ? "Use the / tool through (0, " + nf(tt.k) + ") and (1, " + nf(tt.k + 1) + ")." : "Click the " + tool + " tool, then click the vertex, (" + nf(tt.h) + ", " + nf(tt.k) + ").";
+      if (!ok.table) return n === 0 ? "Drag g(x) onto a center cell of the table. Then click each calculation to simplify it, or type the y-value yourself." : "Put each x-value into g(x) = " + plain(rhsHTML()) + " to get its y-value.";
+      return n === 0 ? "Press the transformation button beside the graph, then click where the parent's " + (shifts() ? "vertex" : "point on the y-axis") + " ends up." : "The parent's " + (shifts() ? "vertex is at (0, 0)" : fam === 0 ? "point (0, 1) is on the y-axis" : "point (0, 0) is on the y-axis") + ". Click where it moves: " + gdWords(tt) + ".";
+    }
     if (!ok.eq) return n === 0 ? "A parent function is the simplest equation in its family, with nothing added to it or multiplied by it." : "The " + QFAM[fam] + " parent is f(x) = " + plain(qEqHTML(fam)) + ".";
     if (!ok.table) return n === 0 ? "Drag the equation onto a center cell of the table. Then click each calculation to simplify it, or type the y-value yourself." : "Put each x-value into f(x) = " + plain(qEqHTML(fam)) + " to get its y-value.";
     return n === 0 ? "Look at the points. Do they make a straight line, a V or a U? Choose that button beside the graph." : fam === 0 ? "Use the / tool: flat at y = 1." : fam === 1 ? "Use the / tool through (0, 0) and (1, 1)." : "Click the " + QSHAPE[fam] + " tool, then click the graph at the vertex, (0, 0).";
   }
   function pqExplain() {
     var fam = qFam();
+    if (gd()) return "A translation slides the parent without changing its shape. Here g(x) = " + plain(rhsHTML()) + " is the " + QFAM[fam] + " parent moved " + gdWords(QZ.tr[QZ.pi]) + ". Graph the parent (it turns dotted), then graph g(x); the table and the description tell the same story.";
     return "Every family of functions has a parent: its simplest equation. The " + QFAM[fam] + " parent is f(x) = " + plain(qEqHTML(fam)) + ". You can answer with the equation, the table or the graph, in any order: put each x into the equation to fill the table, and the points make a " + (fam < 2 ? "straight line" : fam === 2 ? "V" : "U") + " graph.";
   }
   function enterQuiz() {
@@ -2477,7 +2533,7 @@
       if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
     if (id === act) return;
-    act = id;
+    act = id; if (BUILT[act].quiz) lesson = 1;
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     leaveQuiz();
@@ -2828,10 +2884,10 @@
     var x = shifts() ? Math.max(-10, Math.min(10, Math.round(p[0]))) : 0, y = Math.max(-10, Math.min(10, Math.round(p[1])));
     if (T.cur && T.cur[0] === x && T.cur[1] === y) return; T.cur = [x, y]; tmRefresh();
   }
-  function tmDone() { var v = tmVals(), T = PG.tm; PG.tm = null; if (T && T.g) PG.tAns = { h: v[0], k: v[1], a: stretches() ? v[2] : 1 }; drawPlay(); }
+  function tmDone() { var v = tmVals(), T = PG.tm; PG.tm = null; if (T && T.g) PG.tAns = { h: v[0], k: v[1], a: stretches() && !gd() ? v[2] : 1 }; drawPlay(); }
   function tmClick() {
     var T = PG.tm; if (!T) return;
-    if (T.stage === 0) { if (!T.cur) return; T.g = T.cur.slice(); T.stage = 1; if (!stretches()) { tmDone(); return; } }
+    if (T.stage === 0) { if (!T.cur) return; T.g = T.cur.slice(); T.stage = 1; if (!stretches() || gd()) { tmDone(); return; } }
     else { T.p = T.cur ? T.cur[1] : T.g[1]; T.stage = 2; tmDone(); return; }
     tmRefresh();
   }
@@ -2912,7 +2968,7 @@
       if (ptOpen && ptIdx === j) sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .8, fill: "none", stroke: "#2D70B3", "stroke-width": ".12" }));
       sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .5, fill: "#111", "fill-opacity": ".1" })); sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .24, fill: "#111" })); S.appendChild(sg2);
     });
-    if (PG.shape && !PG.show.graph) {
+    if (PG.shape && (!PG.show.graph || gd())) {
       S.appendChild(svgEl("polyline", { points: shapePts(PG.shape), fill: "none", stroke: "#2D70B3", "stroke-width": ".12", "stroke-linejoin": "round" }));
       handles(PG.shape).forEach(function (h) {
         var hg = svgEl("g", { "data-qh": h.id, style: "cursor:grab" });
@@ -2978,7 +3034,7 @@
     [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part] ? "true" : "false"); });
     TB.sync(); $("qzTools").hidden = false; posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
-    { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq(); tb.classList.toggle("on", !!PG.tm); }
+    { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !gd(); tb.classList.toggle("on", !!PG.tm); }
     eqKeysUpd(); pqEval();
   }
   // ---- editing a point's coordinates: double-click a plotted point (or the dot button) and a small panel opens below the Show buttons ----
@@ -3239,7 +3295,9 @@
     closePt(); var run = ++pgRun; pgShift = 0; $("pgDemo").textContent = "Pause demo"; $("pgDemo").classList.add("on");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
     PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
-    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (PQ) PG.show.desc = true; else PG.show.eq = true; if (PQ) PG.eqTxt = "f(x)="; drawPlay();
+    var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
+    if (GD) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
+    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; drawPlay();
     function cap(t) { $("pgCap").textContent = t; }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
@@ -3514,6 +3572,28 @@
         function (n) { cap("Drag each row onto the graph."); dragAll(0, n); },
         function (n) { cap("Now the graph: choose the tool that fits the points."); pqFam < 2 ? clickTool("line", [0, ys(0)], [1, ys(1)], n) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, n); },
         function (n) { cap("The equation, the table and the graph all describe the same parent."); var tg = document.querySelector(".tog[data-part=graph]"); if (!PG.show.graph && tg) tg.click(); pgWait(2300, n); }
+      ];
+    }
+    if (GD) {   // the demo graphs the parent and g, fills in the table, then describes the translation
+      var gO = tmO(), gT = [gO[0] + (shifts() ? H() : 0), gO[1] + K()];
+      var pathTo = function (pts, done) { if (!pts.length) { pgWait(300, done); return; } var p = pts.shift(); handGo(svgPt(p[0], p[1]), 650); pgWait(380, function () { tmMove(p); }); pgWait(700, function () { pathTo(pts, done); }); };
+      var watch = function (n) { return function () { gdWatch(); pgWait(1100, n); }; };
+      steps = [
+        function (n) { cap("g(x) is given. Graph the parent function first: the simplest graph in the " + FAMS[pqFam] + " family."); pgWait(2200, n); },
+        function (n) { pqFam < 2 ? clickTool("line", [0, pf(0)], [1, pf(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, watch(n)); },
+        function (n) { cap("A correct parent turns dotted. Now graph g(x) with the same tool."); pgWait(1800, n); },
+        function (n) { pqFam < 2 ? clickTool("line", [0, g(0)], [1, g(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [H(), K()], null, watch(n)); },
+        function (n) { cap("A correct graph of g(x) turns red."); pgWait(1800, n); },
+        function (n) { cap("Drag g(x) onto any center cell of the table."); dragEq(0, n); },
+        function (n) { cap("Type a y-value, click calculations to simplify, and fill in the rest."); typeRow(0, function () { clickRow(1, function () { typeRow(2, function () { clickRow(3, function () { typeRow(4, n); }); }); }); }); },
+        function (n) {
+          cap("Describe the transformation: press the transformation button, then click where the parent's " + (shifts() ? "vertex" : "point on the y-axis") + " ends up.");
+          var b = document.querySelector(".qzTools [data-tool=tr]"); handGo(ctr(b), 650);
+          pgWait(800, function () { handTap(); b.classList.add("simPress"); pgWait(180, function () { b.classList.remove("simPress"); qzTool("tr"); pgWait(600, function () {
+            pathTo([gO, gT], function () { handTap(); tmClick(); pgWait(700, function () { gdWatch(); drawPlay(); pgWait(1000, n); }); });
+          }); }); });
+        },
+        function (n) { cap("The parent, the graph of g, the table and the description all show the same translation: " + gdWords(QZ.tr[QZ.pi]) + "."); pgWait(2600, n); }
       ];
     }
     var k = 0;
