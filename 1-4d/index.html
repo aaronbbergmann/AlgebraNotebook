@@ -177,6 +177,7 @@
   .eqKeys[hidden]{display:none}
   .eqKeys button{min-width:2.6rem;height:2.2rem;padding:0 .6rem;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 1.15rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;cursor:pointer}
   .eqKeys button:hover{background:#EEF1F6}.eqKeys button:active{background:#DCE8F7}
+  .eqKeys button.eqGo{font:600 .92rem system-ui,sans-serif;background:var(--plus);border-color:var(--plus);color:#fff}.eqKeys button.eqGo:hover{background:var(--plus-hover)}
   .eqKeys i{font-style:italic}.eqKeys sup{font-size:.7em}
   .pgQcue{font:400 .9rem system-ui,sans-serif;color:#5B6577;margin-top:.15rem}
   .pgQmsg{min-height:1.5em;margin-top:.2rem;font:600 .98rem system-ui,sans-serif;color:#C0301E}
@@ -350,7 +351,7 @@
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
     <section class="qz" id="qz" hidden aria-live="polite"><div class="qzT" id="qzT"></div><div id="qzIn"></div><div class="err" id="qzErr"></div><div class="qzRow"><button class="btn" id="qzGo">Check</button><button class="btn" id="qzNext" hidden>Next</button><button class="link" id="qzAgain" hidden>Another round</button></div></section>
-    <div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="^" aria-label="Insert ^ (to the power of)"><i>x</i><sup>2</sup></button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|<i>x</i>|</button></div>
+    <div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="^" aria-label="Insert ^ (to the power of)"><i>x</i><sup>2</sup></button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|<i>x</i>|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
     <div class="composer" id="ask" hidden>
       <div id="askT" style="font-weight:600"></div>
       <div class="err" id="askErr"></div>
@@ -2947,6 +2948,7 @@
   $("eqKeys").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the equation
   $("eqKeys").addEventListener("click", function (e) {
     var b = e.target.closest("button"), el = document.activeElement; if (!b || !el || !el.classList.contains("eqIn")) return;
+    if (b.dataset.go) { el.blur(); eqEnter(); return; }   // Submit does what Return does
     var i = el.selectionStart, j = el.selectionEnd; el.setRangeText(b.dataset.ins, i, j, "end");
     el.dispatchEvent(new Event("input", { bubbles: true })); el.focus();
   });
