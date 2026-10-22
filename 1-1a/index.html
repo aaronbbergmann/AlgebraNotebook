@@ -178,6 +178,8 @@
   body.pq .pg{align-content:flex-start}
   body.pq .pgCtl .lbl,body.pq .pgCtl .tog,body.pq .pgCtl .pgFam{display:none}
   body.pq #qzT,body.pq #qzIn,body.pq #qzErr{display:none}
+  body.pq #qzNext{background:var(--plus);border-color:var(--plus);color:#fff}
+  body.pq #qzNext:hover:not(:disabled){background:var(--plus-hover);border-color:var(--plus-hover)}
   body.quiz .pg{color:var(--ink)}
   .pgTable th,.pgTable td{color:#1B2433}
   .qzTools{display:flex;flex-direction:column;gap:.5rem;align-self:center}
@@ -2335,6 +2337,7 @@
     nx.hidden = !done; nx.disabled = false; nx.textContent = QZ.locked ? (up ? up.label : "Another round") : "Next parent";
     $("qzAgain").hidden = !(done && QZ.pi === 3 && up);
     $("pgDemo").style.display = demo && !done ? "" : "none";
+    $("hint").hidden = done || mode === "solo";   // a right answer needs no hint
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
