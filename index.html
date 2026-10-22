@@ -180,6 +180,7 @@
   .eqKeys button.eqGo{font:600 .92rem system-ui,sans-serif;background:var(--plus);border-color:var(--plus);color:#fff}.eqKeys button.eqGo:hover{background:var(--plus-hover)}
   .eqKeys i{font-style:italic}.eqKeys sup{font-size:.7em}
   .pgQcue{font:400 .9rem system-ui,sans-serif;color:#5B6577;margin-top:.15rem}
+  .pgQcue .cueOk{color:#1E9E4A;font-weight:700}
   .pgQcue .lm{font:400 1.05em "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
   .pgQmsg{min-height:1.5em;margin-top:.2rem;font:600 .98rem system-ui,sans-serif;color:#C0301E}
   .pgQmsg.ok{color:#1E9E4A}
@@ -2328,6 +2329,13 @@
   });
   // ---- 1.1A uses the 1.1 Play center: the same questions, answered with the equation, the table or the graph (in any order) ----
   function pq() { return document.body.classList.contains("pq"); }
+  // the cue under the question lists what is left to answer, each ending in "?"; a finished part gets a green check instead
+  function pqCue() {
+    if (!pq() || !QZ.order) return;
+    var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
+    var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
+    $("pgQcue").innerHTML = (gd() ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
+  }
   function pqMsg(t, cls) { var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = t || ""; }
   function pqSetup() {
     closePt(); var fam = qFam();
@@ -2367,6 +2375,7 @@
         $("pgDesc").animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
       }
     }
+    pqCue();
   }
   function pqStart() {
     stopDemo(); if (pgRun) pgStop(); stopParty(); busy = false; up = null; counted = false;
@@ -2389,8 +2398,9 @@
   }
   function pqPanel() {
     var fam = qFam(), done = QZ.step >= 4, demo = mode === "demo";
-    if (gd()) { $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation."; $("pgQcue").innerHTML = "Problem " + (QZ.pi + 1) + " of 4 (Parent graph, graph of <span class=\"lm\"><i>g</i>(<i>x</i>)</span>, Table, Description)"; }
-    else { $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?"; $("pgQcue").textContent = "(Equation, Table, Graph)"; }
+    if (gd()) $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation.";
+    else $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
+    pqCue();
     var go = $("qzGo"), nx = $("qzNext");
     go.hidden = demo || done; go.textContent = "Check";
     nx.hidden = !done; nx.disabled = false; nx.textContent = demo ? (up ? up.label : gd() ? "Next problem" : "Next parent") : QZ.locked ? (up ? up.label : "Another round") : gd() ? "Next problem" : "Next parent";
@@ -2419,7 +2429,7 @@
         } else if (last) { QZ.locked = true; counted = false; tally(); }   // Sequence and Solo count a round only when all four parents are done
         pqPanel();
       }
-    } finally { pqBusy = false; }
+    } finally { pqBusy = false; pqCue(); }
   }
   // what the student has typed after the "f(x)=" that is already in the box
   function pqTyped() { var t = String(PG.eqTxt || "").trim(); return /^f\(x\)=?$/i.test(t.replace(/\s/g, "")) ? "" : t; }
@@ -3036,7 +3046,7 @@
     TB.sync(); $("qzTools").hidden = false; posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !gd(); tb.classList.toggle("on", !!PG.tm); }
-    eqKeysUpd(); pqEval();
+    eqKeysUpd(); pqCue(); pqEval();
   }
   // ---- editing a point's coordinates: double-click a plotted point (or the dot button) and a small panel opens below the Show buttons ----
   var ptOpen = false, ptIdx = -1, ptTimer = 0;
