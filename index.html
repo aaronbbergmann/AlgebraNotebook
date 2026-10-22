@@ -2839,7 +2839,7 @@
       if (!ok) return;
       var added = false, near = function (a, b) { return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9; };
       // the red target stays on the graph until a plotted point sits on it: a miss leaves it there to be corrected
-      start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { if (fillRow && !fillRow.done && String(fillRow.tv || "").trim()) checkOff(i, fillRow); if (!TB.targets.some(function (t) { return near(t, p); })) { TB.targets.push(p); added = true; } drawPlay(); } }, null, function (ev) {
+      start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { if (fillRow && !fillRow.done && String(fillRow.tv || "").trim()) checkOff(i, fillRow); if (!(pq() && mode === "solo") && !TB.targets.some(function (t) { return near(t, p); })) { TB.targets.push(p); added = true; } drawPlay(); } }, null, function (ev) {
         var r = $("pgGraph").getBoundingClientRect();
         if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
           // the dropped point locks to the grid: whole units, or the smallest fraction of a unit that the point itself needs (1/2, 1/3, 1/4 ...)
