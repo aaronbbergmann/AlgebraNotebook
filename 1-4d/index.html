@@ -2404,9 +2404,14 @@
   // ---- the Activity menu: the button shows the short code, the list shows every full title ----
   var LONAME = { 1: "One Variable", 2: "2&times;2 Systems", 3: "3&times;3 Systems" };
   function lessonName(l) { var L = BUILT[act].lessons; return L ? L[l - 1] : LONAME[l].replace("&times;", "×"); }
+  // a lesson with a short name shows it on the closed menu and its full name while the menu is open
+  function lessonNames(full) { [].forEach.call($("lesson").options, function (o) { if (o.dataset.short) o.textContent = full ? o.dataset.full : o.dataset.short; }); }
+  ["mousedown", "focus"].forEach(function (ev) { $("lesson").addEventListener(ev, function () { lessonNames(true); }); });
+  $("lesson").addEventListener("keydown", function (e) { if (e.key === "Escape") setTimeout(function () { lessonNames(false); }, 0); else if (/^(Arrow|Enter| )/.test(e.key)) lessonNames(true); });
+  ["change", "blur"].forEach(function (ev) { $("lesson").addEventListener(ev, function () { setTimeout(function () { lessonNames(false); }, 0); }); });
   function buildLessons() {
     if (lesson > topLesson()) lesson = topLesson();
-    var h = "", sh = BUILT[act].short; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\" title=\"" + lessonName(l) + "\">" + (sh && sh[l - 1] || lessonName(l)) + "</option>";
+    var h = "", sh = BUILT[act].short; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\" title=\"" + lessonName(l) + "\"" + (sh && sh[l - 1] ? " data-short=\"" + sh[l - 1] + "\" data-full=\"" + lessonName(l) + "\"" : "") + ">" + (sh && sh[l - 1] || lessonName(l)) + "</option>";
     if (!BUILT[act].sub) subx = false; else { var k1 = h.indexOf("</option>") + 9; h = h.slice(0, k1) + "<option value=\"s\" title=\"Substitution\">Substitution</option>" + h.slice(k1); }
     $("lesson").innerHTML = h; $("lesson").value = subx ? "s" : String(lesson);
     var ms = BUILT[act].modes || ["demo", "sequence", "calculate", "solo", "create"];
