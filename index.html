@@ -2527,7 +2527,7 @@
   }
   // Return in the equation box checks it: a right equation is revealed with a check mark; a wrong one is only flagged
   function eqEnter() {
-    var t = pqTyped(); if (PG.show.eq || !t) return;
+    var t = pqTyped(); if ((PG.show.eq && !PG.editEq) || !t) return;
     if (!pq()) { eqAdopt(t); return; }   // 1.1 Play: the typed function becomes the function
     if (gd() && mode === "create" && !QZ.cr) { gdCreateAdopt(t); return; }
     if (pq() && !eqTypedOK(t)) { pqEqWrong(t); return; }
@@ -3155,12 +3155,36 @@
     if (d2 && fits(function (q) { return d2 / 2 * q * q + (v(1) - v(-1)) / 2 * q + c0; })) return WHOLE;
     return { err: EQ_NO };
   }
+  // 1.1 Play: click the equation to edit it in place; Return accepts it, Escape or clicking away puts the old one back
+  function eqText() { return plain(eqHTML().replace(/<sup>2<\/sup>/g, "^2")); }
+  function eqEditStart() {
+    if (pq() || PG.tm || PG.editEq || !PG.show.eq) return;
+    PG.editEq = true; PG.eqTxt = eqText(); eqMsg(""); drawPlay();
+    var f = $("pgEq").querySelector(".eqIn"); if (f) { f.focus(); f.select(); }
+  }
+  function eqEditCancel() { if (!PG.editEq) return; PG.editEq = false; PG.eqTxt = ""; eqMsg(""); drawPlay(); }
+  (function () {
+    var dn = null;
+    [$("pgEq"), $("pgTable").querySelector(".pgMid")].forEach(function (el) {
+      el.addEventListener("pointerdown", function (e) { dn = [e.clientX, e.clientY]; });
+      el.addEventListener("click", function (e) {
+        if (e.target.closest && e.target.closest("input")) return;
+        if (dn && e.isTrusted && Math.hypot(e.clientX - dn[0], e.clientY - dn[1]) > 6) return;   // that was a drag onto the table
+        if (e.isTrusted) pgUser(); eqEditStart();
+      });
+    });
+    document.addEventListener("focusout", function (e) {
+      if (!PG.editEq || !e.target.classList || !e.target.classList.contains("eqIn")) return;
+      setTimeout(function () { var a = document.activeElement; if (PG.editEq && !(a && a.classList && a.classList.contains("eqIn"))) eqEditCancel(); }, 0);
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && PG.editEq && e.target.classList && e.target.classList.contains("eqIn")) { e.preventDefault(); eqEditCancel(); } });
+  })();
   function eqMsg(t) { if (pq()) pqMsg(t); else $("pgEqMsg").textContent = t || ""; }
   function eqShake() { $("pgEq").animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 }); }
   // 1.1 Play: the typed function is accepted as the function; the family and both points follow it
   function eqAdopt(t) {
-    var r = eqFit(t); if (r.err) { eqMsg(r.err); eqShake(); return false; }
-    PG.fam = r.fam; PG.a = r.a; PG.h = r.h; PG.k = r.k; PG.pa = [r.h + 1, r.k + r.a]; PG.eqTxt = ""; PG.show.eq = true;
+    var r = eqFit(t); if (r.err) { eqMsg(r.err); eqShake(); if (PG.editEq) { var fe = $("pgEq").querySelector(".eqIn"); if (fe) { fe.focus(); fe.setSelectionRange(fe.value.length, fe.value.length); } } return false; }
+    PG.editEq = false; PG.fam = r.fam; PG.a = r.a; PG.h = r.h; PG.k = r.k; PG.pa = [r.h + 1, r.k + r.a]; PG.eqTxt = ""; PG.show.eq = true;
     PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true;
     eqMsg(""); drawPlay(); return true;
   }
@@ -3175,9 +3199,11 @@
     drawGraph();
     $("pgTable").querySelector("tbody").innerHTML = fillMode() ? TB.html() : tableHTML();
     var fe = document.activeElement, fw = fe && fe.classList && fe.classList.contains("eqIn") ? (fe.closest("#pgEq") ? "pgEq" : "mid") : null;
-    $("pgTable").querySelector(".pgMid").innerHTML = PG.show.eq ? eqHTML() : EQIN;
-    $("pgEq").innerHTML = PG.show.eq ? eqHTML() : EQIN;
-    if (!PG.show.eq) {
+    var typing = !PG.show.eq || (PG.editEq && !pq());   // the equation box is open for typing (or being edited in place)
+    $("pgTable").querySelector(".pgMid").innerHTML = typing ? EQIN : eqHTML();
+    $("pgEq").innerHTML = typing ? EQIN : eqHTML();
+    $("pgEq").title = !pq() && !typing ? "Click the equation to type your own function" : "";
+    if (typing) {
       [].forEach.call(document.querySelectorAll(".eqIn"), function (el) { el.value = PG.eqTxt || ""; if (pq()) el.placeholder = gd() ? "g(x)=..." : "f(x)=..."; });
       if (fw) { var re = fw === "pgEq" ? $("pgEq").querySelector(".eqIn") : $("pgTable").querySelector(".pgMid .eqIn"); if (re) { re.focus(); re.setSelectionRange(re.value.length, re.value.length); } }
     }
@@ -3403,7 +3429,7 @@
       document.addEventListener("pointermove", mv); document.addEventListener("pointerup", off); document.addEventListener("pointercancel", off);
     });
   })();
-  $("pgFam").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); PG.fam = (PG.fam + 1) % FAMS.length; PG.eqTxt = ""; PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; drawPlay(); });
+  $("pgFam").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); PG.fam = (PG.fam + 1) % FAMS.length; PG.eqTxt = ""; PG.editEq = false; PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; drawPlay(); });
   [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (e.isTrusted) pgUser(); closePt(); var part = b.dataset.part, on = !PG.show[part], rv = on ? pgReveal(part) : null; PG.show[part] = on; drawPlay(); if (rv) rv(); }); });
   // ---- 1.1 Play demo: the hand shows every control, one at a time ----
   var pgRun = 0, pgQ = [], pgPaused = false, pgShift = 0, pgPauseAt = 0, pgHeld = [], pgSnap = null, pgHandOp = "1";
@@ -3709,7 +3735,7 @@
       function (n) { cap("Now click the parabola button and click the vertex, (3, 1)."); clickTool("U", [3, 1], null, n); },
       function (n) { cap("Drag its side point to set the stretch of 2."); stretch(2, n, 1); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
-      function (n) { cap("You can also type a function of your own. Hide the equation, type g(x) = \u2212|x + 2| + 4 and press Return."); tap(tog("eq"), function () { typeEq("g(x) = -|x+2|+4", function () { eqEnter(); pgWait(1200, n); }); }); },
+      function (n) { cap("You can also type a function of your own. Click the equation, type g(x) = \u2212|x + 2| + 4 and press Return."); tap($("pgEq"), function () { typeEq("g(x) = -|x+2|+4", function () { eqEnter(); pgWait(1200, n); }); }); },
       function (n) { cap("The family changed to absolute value, and the green and purple points moved to match."); pgWait(3200, n); },
       function (n) { cap("Your turn: try every button, drag both points and plot your own graph."); pgWait(2500, n); }
     ];
