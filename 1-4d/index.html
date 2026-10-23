@@ -2610,6 +2610,7 @@
   function pqStart() {
     stopDemo(); if (pgRun) pgStop(); stopParty(); busy = false; up = null; counted = false;
     var o = [0, 1, 2, 3]; for (var i = 3; i > 0; i--) { var j = rnd(i + 1), t = o[i]; o[i] = o[j]; o[j] = t; }
+    if (!gd() && mode === "demo") o.splice(o.indexOf(3), 1), o.unshift(3);   // Memorizing Parents: the demo starts with the quadratic family
     var cu = gd() && mode !== "create" && gdCustom;
     if (gd() && mode === "create") { o = [0]; gdCustom = null; }   // Create: the student types the function, so there is one problem and no family yet
     else if (cu) o = [cu.fam];   // the student's own function runs in whichever mode they pick
