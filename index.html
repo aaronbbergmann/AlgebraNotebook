@@ -1479,10 +1479,14 @@
     else if (mode === "solo" && !subx && lesson < topLesson() && BUILT[act].perLesson) { if (pct() >= 100) up = { label: "Next exercise: " + (BUILT[act].short[lesson] || lessonName(lesson + 1)), stay: true, stayText: "Stay in this exercise", go: function () { lesson++; $("lesson").value = String(lesson); setMode("demo"); } }; }   // at 100% the Next button moves on to the next exercise; a small link stays here
     else if (mode === "solo" && !subx && lesson < topLesson()) up = { label: LNAME[lesson + 1], stayText: "Stay in " + MODES[mode] + " mode", go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
   }
+  // Demo progress is earned only by a demo that plays through to its end: a demo that was ended, left for another mode, or finished by hand
+  // while paused earns nothing (1.4: the demo is still running when the problem is solved; 1.1A: the whole demo script has played out)
+  function demoCredit() { return quiz() ? !!PG.demoFin : !!(DM4.run && !DM4.paused); }
   function tally(quiet) {
-    if (!quiet) celebrate();
+    var earn = mode !== "demo" || demoCredit();
+    if (!quiet && earn) celebrate();
     // progress counts a problem once, and only when it is truly finished (or a full demo has been watched)
-    if (mode !== "create" && !counted) { counted = true; var k = LK() + ":" + mode; prog[k] = (prog[k] || 0) + 1; if (!quiz() && classify(orig) === "one") prog[k + ":one"] = (prog[k + ":one"] || 0) + 1; saveProg(); updProg(); }
+    if (mode !== "create" && earn && !counted) { counted = true; var k = LK() + ":" + mode; prog[k] = (prog[k] || 0) + 1; if (!quiz() && classify(orig) === "one") prog[k + ":one"] = (prog[k + ":one"] || 0) + 1; saveProg(); updProg(); }
     levelUp();
   }
   // ---- ONE "Next" for every Progress activity ----
@@ -2617,7 +2621,7 @@
     pqCue();
   }
   function pqStart() {
-    stopDemo(); if (pgRun) pgStop(); stopParty(); busy = false; up = null; counted = false;
+    stopDemo(); if (pgRun) pgStop(); PG.demoFin = false; stopParty(); busy = false; up = null; counted = false;
     var o = [0, 1, 2, 3]; for (var i = 3; i > 0; i--) { var j = rnd(i + 1), t = o[i]; o[i] = o[j]; o[j] = t; }
     if (!gd() && mode === "demo") o.splice(o.indexOf(3), 1), o.unshift(3);   // Memorizing Parents: the demo starts with the quadratic family
     var cu = gd() && mode !== "create" && gdCustom;
@@ -3670,7 +3674,7 @@
   }
   function pgDemo() {
     if (pgRun) { pgStop(); return; }
-    closePt(); var run = ++pgRun; theme(); pgShift = 0; dmUI("playing");
+    closePt(); var run = ++pgRun; PG.demoFin = false; theme(); pgShift = 0; dmUI("playing");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
     PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
@@ -4020,7 +4024,7 @@
       ];
     }
     var k = 0;
-    (function next() { if (pgRun !== run) return; if (k >= steps.length) { pgStop(); return; } steps[k++](next); })();
+    (function next() { if (pgRun !== run) return; if (k >= steps.length) { PG.demoFin = true; pgStop(); return; } steps[k++](next); })();
   }
   // one button starts, pauses and resumes the demo; End demo appears while it is paused
   $("pgDemo").addEventListener("click", function () { if (dmClickFinish()) return; if (!pgRun) pgDemo(); else if (!pgPaused) pgPause(); else pgResume(); });
