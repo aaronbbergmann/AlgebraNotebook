@@ -1572,7 +1572,7 @@
     return "Substitute " + s[1];
   }
 
-  $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); this.blur(); });
+  $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); this.blur(); });
   $("crAdd").addEventListener("click", crAdd);
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
   $("ansGo").addEventListener("click", checkAnswer);
@@ -2370,11 +2370,11 @@
     if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = "Function?"; return; }
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
     var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
-    $("pgQcue").innerHTML = (gd() && mode !== "create" ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
+    $("pgQcue").innerHTML = (gd() && mode !== "create" && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
   }
   // Solo: the description is typed (with help from buttons) once the graphs and the table are done
   function gdDescUI() {
-    var ok = pq() && gd() && soloish() && (mode !== "create" || QZ.cr) && QZ.order && QZ.step < 4 && !PG.dOK && !pgRun, pt = ok ? pqParts() : null;
+    var ok = pq() && gd() && gdTyped() && (mode !== "create" || QZ.cr) && QZ.order && QZ.step < 4 && !PG.dOK, pt = ok ? pqParts() : null;
     var show = !!(ok && pt.parent && pt.graph && pt.table), box = $("pgDescIn"), was = !box.hidden;
     box.hidden = !show; if (show && !was) setTimeout(function () { $("pgDescTx").focus(); }, 0);
   }
@@ -2426,6 +2426,8 @@
   }
   // ---- 1.1A, second exercise: Graph & Describe.  g(x) is a translation of the parent; the student graphs both, fills in the table and describes the move ----
   function gd() { return pq() && lesson === 2; }
+  var gdCustom = null;   // Graph & Describe: the function typed in Create, carried into the other modes
+  function gdTyped() { return gd() && (soloish() || A() !== 1); }   // the description is typed (not clicked) when practising alone, or when it needs a stretch or a reflection
   function soloish() { return mode === "solo" || mode === "create"; }
   function gdMake(fam) {
     function nz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
@@ -2433,7 +2435,9 @@
     if (fam < 2) k = nz(5); else { h = nz(5); k = nz(5); var r = rnd(4); if (r === 0) h = 0; else if (r === 1) k = 0; }
     return { h: h, k: k };
   }
-  function gdWords(t) { var w = []; if (t.h) w.push((t.h > 0 ? "right " : "left ") + Math.abs(t.h)); if (t.k) w.push((t.k > 0 ? "up " : "down ") + Math.abs(t.k)); return w.join(" and "); }
+  function gdWords(t) { var w = [], ex = ""; if (t.a && t.a !== 1) { var ab = Math.abs(t.a); ex = (ab > 1 ? "stretched by a factor of " + nf(ab) : ab < 1 ? "shrunk by a factor of " + nf(ab) : "") + (t.a < 0 ? (ab !== 1 ? " and " : "") + "reflected over the x-axis" : ""); }
+    var r0 = gdWords0(t); return r0 && ex ? r0 + ", " + ex : r0 || ex; }
+  function gdWords0(t) { var w = []; if (t.h) w.push((t.h > 0 ? "right " : "left ") + Math.abs(t.h)); if (t.k) w.push((t.k > 0 ? "up " : "down ") + Math.abs(t.k)); return w.join(" and "); }
   function shapeIs(sh, fn) { for (var x = -6; x <= 6; x += .5) if (!(Math.abs(shapeY(sh, x) - fn(x)) < 1e-6)) return false; return true; }
   // a right shape for the parent turns dotted; a right shape for g turns red; a right description earns a check
   function gdWatch() {
@@ -2461,8 +2465,10 @@
   function pqStart() {
     stopDemo(); if (pgRun) pgStop(); stopParty(); busy = false; up = null; counted = false;
     var o = [0, 1, 2, 3]; for (var i = 3; i > 0; i--) { var j = rnd(i + 1), t = o[i]; o[i] = o[j]; o[j] = t; }
-    if (gd() && mode === "create") o = [0];   // Create: the student types the function, so there is one problem and no family yet
-    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: o.map(gdMake), cr: false }; updProg();
+    var cu = gd() && mode !== "create" && gdCustom;
+    if (gd() && mode === "create") { o = [0]; gdCustom = null; }   // Create: the student types the function, so there is one problem and no family yet
+    else if (cu) o = [cu.fam];   // the student's own function runs in whichever mode they pick
+    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : o.map(gdMake), cr: false, custom: !!cu }; updProg();
     if (mode !== "demo") explainOn = false;
     logEl.innerHTML = "";
     $("hint").hidden = soloish(); $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn);
@@ -2472,12 +2478,13 @@
   }
   function pqNext() {
     if (QZ.step < 4) return;
+    if (QZ.custom && up) { var uc = up; up = null; uc.go(); return; }
     if (mode === "create") { pqStart(); return; }
     QZ.pi++; pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel(); if (mode === "demo") logQzExplain();
   }
   // "Another demo": the demo runs again on a different parent function
   function pqAnother() {
-    up = null; QZ.pi = (QZ.pi + 1) % 4; pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel();
+    up = null; QZ.pi = (QZ.pi + 1) % QZ.order.length; pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel();
     setTimeout(function () { if (pq() && mode === "demo" && !pgRun) $("pgDemo").click(); }, 400);
   }
   function pqPanel() {
@@ -2489,8 +2496,8 @@
     pqCue();
     var go = $("qzGo"), nx = $("qzNext");
     go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr); go.textContent = "Check";
-    nx.hidden = !done; nx.disabled = false; nx.textContent = gd() && mode === "create" ? "Create another" : demo ? (up ? up.label : gd() ? "Next problem" : "Next parent") : QZ.locked ? (up ? up.label : "Another round") : gd() ? "Next problem" : "Next parent";
-    $("qzAgain").hidden = !(done && (demo || (QZ.pi === 3 && up))); $("qzAgain").textContent = demo ? "Another demo" : up && up.stay ? "Stay in this exercise" : "Another round";
+    nx.hidden = !done; nx.disabled = false; nx.textContent = gd() && mode === "create" ? "Create another" : QZ.custom ? (up ? up.label : "Next") : demo ? (up ? up.label : gd() ? "Next problem" : "Next parent") : QZ.locked ? (up ? up.label : "Another round") : gd() ? "Next problem" : "Next parent";
+    $("qzAgain").hidden = !(done && (demo || QZ.custom || (QZ.pi === 3 && up))); $("qzAgain").textContent = QZ.custom ? (demo ? "Watch again" : "Try again") : demo ? "Another demo" : up && up.stay ? "Stay in this exercise" : "Another round";
     $("pgDemo").style.display = demo && !done ? "" : "none"; $("pgCtl").classList.toggle("empty", !(demo && !done));
     $("hint").hidden = done || soloish();   // a right answer needs no hint
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
@@ -2509,7 +2516,11 @@
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
         QZ.step = 4; var last = QZ.pi === 3;
         pqMsg(gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
-        if (mode === "create") { pqMsg("Well done!", "ok"); up = null; }   // Create never counts toward Progress
+        if (QZ.custom) {   // the student's own function: no Progress, and Next offers the next mode with the same function
+          pqMsg("Well done!", "ok"); var cm = ["demo", "sequence", "solo"], cn = cm[cm.indexOf(mode) + 1];
+          up = cn ? { label: MODES[cn] + " Mode", go: function () { setMode(cn); } } : { label: "Create another", go: function () { setMode("create"); } };
+        }
+        else if (mode === "create") { pqMsg("Well done!", "ok"); up = null; }   // Create never counts toward Progress
         else if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
           tally(); var ml = BUILT[act].modes, nm = ml[ml.indexOf(mode) + 1];
           up = nm ? { label: MODES[nm] + " Mode", go: function () { setMode(nm); } } : null;
@@ -2541,7 +2552,7 @@
       if (!ok.parent) need.push("the parent graph (it turns dotted when it is right)");
       if (!ok.graph) need.push("the graph of g(x)");
       if (!ok.table) need.push("the table (" + TB.rows().filter(function (r) { return r.done; }).length + " of 5 y-values)");
-      if (!ok.desc) need.push(soloish() ? "the description (type it in the box)" : "the description (use the transformation button)");
+      if (!ok.desc) need.push(gdTyped() ? "the description (type it in the box)" : "the description (use the transformation button)");
       QZ.wrong++; pqMsg(soloish() ? "Not quite. Try again." : (PG.shape ? "The blue graph is not the parent or g(x) yet. " : "") + "Still to do: " + need.join(", ") + ".");
       return;
     }
@@ -2556,8 +2567,9 @@
     if (gd()) {
       var tt = QZ.tr[QZ.pi], tool = QSHAPE[fam] === "line" ? "/" : QSHAPE[fam];
       if (!ok.parent) return n === 0 ? "Start with the parent: the simplest function in the " + QFAM[fam] + " family, f(x) = " + plain(qEqHTML(fam)) + ". Graph it with the " + tool + " tool." : fam === 0 ? "The parent is flat at y = 1." : fam === 1 ? "Use the / tool through (0, 0) and (1, 1)." : "Click the " + tool + " tool, then click the vertex, (0, 0).";
-      if (!ok.graph) return n === 0 ? "g(x) is the parent translated " + gdWords(tt) + ". Graph it with the same tool." : fam === 0 ? "g(x) is flat at y = " + nf(1 + tt.k) + "." : fam === 1 ? "Use the / tool through (0, " + nf(tt.k) + ") and (1, " + nf(tt.k + 1) + ")." : "Click the " + tool + " tool, then click the vertex, (" + nf(tt.h) + ", " + nf(tt.k) + ").";
+      if (!ok.graph) return n === 0 ? "g(x) is the parent translated " + gdWords(tt) + ". Graph it with the same tool." : fam === 0 ? "g(x) is flat at y = " + nf(1 + tt.k) + "." : fam === 1 ? "Use the / tool through (0, " + nf(tt.k) + ") and (1, " + nf(tt.k + (tt.a || 1)) + ")." : "Click the " + tool + " tool, then click the vertex, (" + nf(tt.h) + ", " + nf(tt.k) + ")." + (tt.a && tt.a !== 1 ? " Then drag a side point of the shape to set the stretch." : "");
       if (!ok.table) return n === 0 ? "Drag g(x) onto a center cell of the table. Then click each calculation to simplify it, or type the y-value yourself." : "Put each x-value into g(x) = " + plain(rhsHTML()) + " to get its y-value.";
+      if (gdTyped()) return "Type the description in the box: the translation with arrows and numbers, then any stretch, shrink or reflection.";
       return n === 0 ? "Press the transformation button beside the graph, then click where the parent's " + (shifts() ? "vertex" : "point on the y-axis") + " ends up." : "The parent's " + (shifts() ? "vertex is at (0, 0)" : fam === 0 ? "point (0, 1) is on the y-axis" : "point (0, 0) is on the y-axis") + ". Click where it moves: " + gdWords(tt) + ".";
     }
     if (!ok.eq) return n === 0 ? "A parent function is the simplest equation in its family, with nothing added to it or multiplied by it." : "The " + QFAM[fam] + " parent is f(x) = " + plain(qEqHTML(fam)) + ".";
@@ -2636,7 +2648,7 @@
       if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
     if (id === act) return;
-    act = id; if (BUILT[act].quiz) lesson = 1;
+    act = id; gdCustom = null; if (BUILT[act].quiz) lesson = 1;
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     leaveQuiz();
@@ -3193,7 +3205,7 @@
   function gdCreateAdopt(t) {
     var r = eqFit(t); if (r.err) { eqMsg(r.err); eqShake(); return; }
     if (r.fam === 0 ? r.k === 0 : r.a === 1 && !r.h && !r.k) { eqMsg("That is the parent function itself. Try one with a transformation."); eqShake(); return; }
-    QZ.order = [r.fam]; QZ.pi = 0; QZ.tr = [{ h: r.h, k: r.k, a: r.a }]; QZ.cr = true;
+    QZ.order = [r.fam]; QZ.pi = 0; QZ.tr = [{ h: r.h, k: r.k, a: r.a }]; QZ.cr = true; gdCustom = { fam: r.fam, h: r.h, k: r.k, a: r.a };
     pqSetup(); eqMsg(""); drawPlay(); pqPanel();
   }
   function drawPlay() {
@@ -3212,7 +3224,7 @@
     [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part] ? "true" : "false"); });
     TB.sync(); $("qzTools").hidden = false; posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
-    { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !soloish()); tb.classList.toggle("on", !!PG.tm); }
+    { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
     eqKeysUpd(); pqCue(); pqEval();
   }
   // ---- editing a point's coordinates: double-click a plotted point (or the dot button) and a small panel opens below the Show buttons ----
@@ -3474,7 +3486,7 @@
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
     PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
-    if (GD) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
+    if (GD) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
     Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; drawPlay();
     function cap(t) { $("pgCap").textContent = t; }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
@@ -3766,9 +3778,19 @@
         function (n) { cap("Now graph the parent function: the simplest graph in the " + FAMS[pqFam] + " family."); pgWait(2000, n); },
         function (n) { pqFam < 2 ? clickTool("line", [0, pf(0)], [1, pf(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, watch(n)); },
         function (n) { cap("A correct parent turns dotted. Now graph g(x) with the same tool."); pgWait(1800, n); },
-        function (n) { pqFam < 2 ? clickTool("line", [0, g(0)], [1, g(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [H(), K()], null, watch(n)); },
+        function (n) { pqFam < 2 ? clickTool("line", [0, g(0)], [1, g(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [H(), K()], null, function () { if (A() === 1) { watch(n)(); return; } cap("Drag a side point of the shape to set the stretch."); stretch(A(), watch(n), 1); }); },
         function (n) { cap("A correct graph of g(x) turns red."); pgWait(1800, n); },
         function (n) {
+          if (!gdTyped()) { n(); return; }   // a stretch or a reflection is typed, so the hand uses the description box
+          var th = shifts() ? H() : 0, tk = K(), ab = Math.abs(A()), parts = [], tt = "";
+          if (th || tk) { tt = "Translation" + (th ? " " + (th > 0 ? "\u2192" : "\u2190") + " " + Math.abs(th) : "") + (th && tk ? " and" : "") + (tk ? " " + (tk > 0 ? "\u2191" : "\u2193") + " " + Math.abs(tk) : ""); parts.push(tt); }
+          if (ab > 1) parts.push("Vertical stretch by factor of " + nf(ab)); else if (ab < 1) parts.push("Vertical shrink by factor of " + nf(ab));
+          if (A() < 0) parts.push("Reflection over the x-axis");
+          cap("Describe the transformation in the box: the translation, then the stretch or reflection.");
+          typeBox("pgDescTx", parts.join(", "), function () { tap($("pgDescGo"), function () { pgWait(500, n); }); });
+        },
+        function (n) {
+          if (gdTyped()) { n(); return; }
           cap("Describe the transformation: press the transformation button, then click where the parent's " + (shifts() ? "vertex" : "point on the y-axis") + " ends up.");
           var b = document.querySelector(".qzTools [data-tool=tr]"); handGo(ctr(b), 650);
           pgWait(800, function () { handTap(); b.classList.add("simPress"); pgWait(180, function () { b.classList.remove("simPress"); qzTool("tr"); pgWait(600, function () {
