@@ -2127,7 +2127,7 @@
       g.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .24, fill: "#111" }));
       S.appendChild(g);
     });
-    if (QZ.clk.length) QZ.clk.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .3, fill: "none", stroke: blue, "stroke-width": ".1" })); });
+    QZ.clk.forEach(function (p, j) { S.appendChild(clkDot(p, j, blue)); });
     drawGhost(S, QZ, blue);
   }
   function shapePts(sh) {
@@ -2328,8 +2328,15 @@
   function fmtN(n) { return (n < 0 ? "\u2212" : "") + Math.abs(n); }
   // the preview: a point that snaps to the grid beside the cursor, labelled with its coordinates (not in Solo mode); once the first point is
   // placed, the second point is previewed (up 1, right 1 by default; for a line it follows the cursor, so a click lands it)
+  // a point already placed (the first point of a line) is the same filled, draggable dot as any other handle
+  function clkDot(p, j, col) {
+    var g = svgEl("g", { "data-qh": "c" + j, style: "cursor:grab" });
+    g.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .6, fill: col, "fill-opacity": ".25" }));
+    g.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .2, fill: col }));
+    return g;
+  }
   function drawGhost(S, G, col) {
-    var sh = toolGhost(G); if (sh) S.appendChild(svgEl("polyline", { points: shapePts(sh), fill: "none", stroke: col, "stroke-width": ".12", "stroke-linejoin": "round", "stroke-opacity": ".45" }));
+    var sh = toolGhost(G); if (sh) S.appendChild(svgEl("polyline", { points: shapePts(sh), fill: "none", stroke: col, "stroke-width": ".12", "stroke-linejoin": "round", "stroke-opacity": ".45", "pointer-events": "none" }));
     if (!G.tool || !G.hv) return;
     function dot(x, y) { var g = svgEl("g", { "pointer-events": "none" }); g.appendChild(svgEl("circle", { cx: x, cy: -y, r: .55, fill: col, "fill-opacity": ".22" })); g.appendChild(svgEl("circle", { cx: x, cy: -y, r: .22, fill: col, "fill-opacity": ".85" })); S.appendChild(g); }
     if (!G.clk.length) {
@@ -2371,7 +2378,7 @@
       var G = G_(); if (G === PG) { pgUser(); if (PG.tm) { tmMove(qAt(e)); tmClick(); e.preventDefault(); return; } } else if (!quiz() || QZ.step < 2 || QZ.step > 3 || (busy && e.isTrusted)) return;
       var h = e.target.closest("[data-qh]");
       // with a tool chosen, a click places with that tool (even on top of a plotted point); with no tool, points and handles can be dragged
-      if (h && !G.tool) { gSnap(); dragH = h.dataset.qh; S.setPointerCapture(e.pointerId); e.preventDefault(); return; }
+      if (h && (!G.tool || h.dataset.qh === "c0")) { gSnap(); dragH = h.dataset.qh; S.setPointerCapture(e.pointerId); e.preventDefault(); return; }
       if (G.tool) { var p = qAt(e); qzPlace(G.tool, p[0], p[1]); }
     });
     S.addEventListener("pointerleave", function () { var G = G_(); if (G.hv) { G.hv = null; gDraw(); } });
@@ -2381,6 +2388,7 @@
       if (!dragH) return; var p = qAt(e), x = snap(p[0]), y = snap(p[1]), G = G_(), sh = G.shape;
       if (dragH.indexOf("pt:") === 0) { var j = +dragH.slice(3); G.pts[j] = [x, y]; }
       else if (dragH === "l1") sh.p1 = [x, y]; else if (dragH === "l2") sh.p2 = [x, y];
+      else if (dragH === "c0") { if (G.clk.length) G.clk[0] = [x, y]; }   // the first point of a line, before the second is placed
       else if (dragH === "vx") { sh.h = x; sh.k = y; }
       else { var a = Math.round((p[1] - sh.k) * 4) / 4; sh.a = a || (p[1] < sh.k ? -.25 : .25); }
       gDraw();
@@ -3257,7 +3265,7 @@
         hg.appendChild(svgEl("circle", { cx: h.x, cy: -h.y, r: .6, fill: "#2D70B3", "fill-opacity": ".25" })); hg.appendChild(svgEl("circle", { cx: h.x, cy: -h.y, r: .2, fill: "#2D70B3" })); S.appendChild(hg);
       });
     }
-    PG.clk.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .3, fill: "none", stroke: "#2D70B3", "stroke-width": ".1" })); });
+    PG.clk.forEach(function (p, j) { S.appendChild(clkDot(p, j, "#2D70B3")); });
     drawGhost(S, PG, "#2D70B3");
   }
   function dialOn() { return !!(PG.show.table || PG.subd); }
