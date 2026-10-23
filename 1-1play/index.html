@@ -2143,7 +2143,7 @@
   }
   function handles(sh) {
     if (sh.t === "line") return [{ id: "l1", x: sh.p1[0], y: sh.p1[1] }, { id: "l2", x: sh.p2[0], y: sh.p2[1] }];
-    return [{ id: "vx", x: sh.h, y: sh.k }, { id: "s1", x: sh.h - 1, y: sh.k + sh.a }, { id: "s2", x: sh.h + 1, y: sh.k + sh.a }];
+    return [{ id: "vx", x: sh.h, y: sh.k }, { id: "s2", x: sh.h + 1, y: sh.k + sh.a }];   // one second dot (up 1, right 1 as in the parent) sets the stretch
   }
 
   // ---- the panel: the question, the answer box(es), Check / Next ----
