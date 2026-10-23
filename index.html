@@ -244,6 +244,8 @@
   .zmRow button{width:2.2rem;height:2.2rem;padding:0;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:600 1.25rem/1 system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .zmRow button:hover:not(:disabled){background:#EEF1F6}.zmRow button:active:not(:disabled){background:#DCE8F7}
   .zmRow button:disabled{opacity:.35;cursor:default}
+  #zmData{display:none}
+  body.dataAct #zmRow #zmData{display:flex}
   .pgGraph svg{display:block;width:100%;height:100%}
   .pgFam{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;margin-bottom:.2rem}
   .btn.simHover:not(:disabled){background:var(--ink);color:var(--bg)}
@@ -360,7 +362,7 @@
     <section class="pg" id="pg" hidden aria-label="Playground">
       <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQcue" id="pgQcue">(Equation, Table, Graph)</div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div>
       <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope. Or drag it onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
-      <div class="pgGraphWrap" id="pgGraphWrap"><div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div><div class="zmRow" id="zmRow" role="group" aria-label="Zoom the graph"><button type="button" id="zmIn" title="Zoom in" aria-label="Zoom in">+</button><button type="button" id="zmOut" title="Zoom out" aria-label="Zoom out">−</button><button type="button" id="zmHome" title="Home: back to the default view" aria-label="Home view"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"/><path d="M6 10v9.5h4.5v-5.5h3v5.5H18V10"/></svg></button></div></div>
+      <div class="pgGraphWrap" id="pgGraphWrap"><div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div><div class="zmRow" id="zmRow" role="group" aria-label="Zoom the graph"><button type="button" id="zmData" title="Data: zoom to fit all the data" aria-label="Zoom to fit all the data"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 3.5v17h17"/><circle cx="8" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="11.5" cy="11" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/></svg></button><button type="button" id="zmIn" title="Zoom in" aria-label="Zoom in">+</button><button type="button" id="zmOut" title="Zoom out" aria-label="Zoom out">−</button><button type="button" id="zmHome" title="Home: back to the default view" aria-label="Home view"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"/><path d="M6 10v9.5h4.5v-5.5h3v5.5H18V10"/></svg></button></div></div>
       <div class="pgSide">
         <div class="dial" id="pgDial" role="slider" aria-label="Scroll the table" title="Drag up or down to scroll the table"></div>
         <table class="pgTable" id="pgTable" aria-label="Table"><colgroup><col style="width:18%"><col><col style="width:18%"></colgroup><thead><tr><th>x</th><th class="pgMid"></th><th>y</th></tr></thead><tbody></tbody></table>
@@ -403,7 +405,7 @@
       <button class="btn" id="show">Show work</button></div></div>
     <div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="link" id="again" hidden>Stay</button></div>
     <section class="qz" id="qz" hidden aria-live="polite"><div class="qzT" id="qzT"></div><div id="qzIn"></div><div class="err" id="qzErr"></div><div class="qzRow"><button class="btn" id="qzGo">Check</button><button class="btn" id="qzNext" hidden>Next</button><button class="link" id="qzAgain" hidden>Another round</button></div></section>
-    <div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div><div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^2" aria-label="Insert ^2 (squared)"><i>x</i><sup>2</sup></button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|<i>x</i>|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
+    <div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div><div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^2" aria-label="Insert ^2 (squared)">^2</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
     <div class="composer" id="ask" hidden>
       <div id="askT" style="font-weight:600"></div>
       <div class="err" id="askErr"></div>
@@ -3466,6 +3468,18 @@
   $("zmIn").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); zoomStep(-1); });
   $("zmOut").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); zoomStep(1); });
   $("zmHome").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); zoomHome(); });
+  // Data Activities: the Data button zooms (and moves) the window to fit every completed row of the table, with a little room round the edges
+  function zoomData() {
+    var P = (TB.rows() || []).filter(function (r) { return r.done; }).map(function (r) { return [TB.x(r), TB.y(r)]; }).filter(function (q) { return isFinite(q[0]) && isFinite(q[1]); });
+    if (!P.length) return;
+    function span(k) {
+      var lo = Math.min.apply(null, P.map(function (q) { return q[k]; })), hi = Math.max.apply(null, P.map(function (q) { return q[k]; })), c = (lo + hi) / 2, h = (hi - lo) / 2 * 1.3;
+      if (h < 1e-9) h = Math.max(1, Math.abs(c) * .2);
+      return [c, Math.min(ZLIST[ZLIST.length - 1], Math.max(ZLIST[0], h))];
+    }
+    var X = span(0), Y = span(1); zoomTo(X[1], Y[1], false, X[0], Y[0]);
+  }
+  $("zmData").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); zoomData(); });
   zoomBtns();
   // drag an axis (or one of its numbers) to stretch that direction only; drag the origin or any empty part of the graph to move the window
   (function () {
@@ -3762,6 +3776,8 @@
         // a plotted point can be dragged; it keeps to the grid (whole units, or the fractions it already uses)
         if (!pd.moved && Math.hypot(e.clientX - pd.x, e.clientY - pd.y) < 5) return; pd.moved = true;
         var q = at(e), cur = PG.pts[pd.j]; if (!cur) return;
+        var sn = spSnapTo(PG, q.x, q.y); pd.snap = sn;   // near a graphed shape: stick to the shape (anywhere along it), not to the grid
+        if (sn) { PG.pts[pd.j] = sn.pos.slice(); if (ptOpen && ptIdx === pd.j) ptFill(); drawPlay(); return; }
         var nx = gridTo(q.x, cur[0]), ny = gridTo(q.y, cur[1]); if (nx === cur[0] && ny === cur[1]) return;
         PG.pts[pd.j] = [nx, ny]; if (ptOpen && ptIdx === pd.j) ptFill(); drawPlay(); return;
       }
@@ -3773,6 +3789,7 @@
     });
     // a plain click on a plotted point removes it (after a beat, so that a double-click can open the editor instead)
     function end() {
+      if (pd && pd.moved && pd.snap && PG.pts[pd.j]) { spAdopt(PG, pd.j, pd.snap); drawPlay(); }
       if (pd && !pd.moved) { var j = pd.j; clearTimeout(ptTimer); ptTimer = setTimeout(function () { if (!PG.pts[j]) return; PG.pts.splice(j, 1); if (ptOpen) { if (ptIdx === j) { closePt(); return; } if (ptIdx > j) ptIdx--; } drawPlay(); }, 380); }
       pd = null; which = null;
     }
@@ -3803,6 +3820,38 @@
     for (i = i0; i <= i1; i++) { var x = +(i * sx).toFixed(8); tryPt(x, yAt(x)); }
     return best;
   }
+  // the graphed shapes a point can be dropped onto, and the nearest point of one of them (anywhere along it, not only on the grid)
+  function spTargets(G) {
+    var T = []; if (G !== PG) return T;
+    if (PG.show.graph && dataOK()) T.push({ k: "c", sh: null });
+    if (PG.shape && (!PG.show.graph || gd())) T.push({ k: "s", sh: PG.shape });
+    return T;
+  }
+  function spProj(G, T, cx, cy) {
+    var kx = 10 / ZM.cur, ky = 10 / ZM.curY, sh = T.sh;
+    if (sh && sh.t === "line") {
+      var a = sh.p1, b = sh.p2, ax = a[0] * kx, ay = a[1] * ky, dx = (b[0] - a[0]) * kx, dy = (b[1] - a[1]) * ky, L2 = dx * dx + dy * dy; if (!L2) return null;
+      var u = ((cx * kx - ax) * dx + (cy * ky - ay) * dy) / L2, fx = a[0] + u * (b[0] - a[0]), fy = a[1] + u * (b[1] - a[1]);
+      return { pos: [fx, fy], d: Math.hypot((fx - cx) * kx, (fy - cy) * ky) };
+    }
+    function yAt(x) { return sh ? shapeY(sh, x) : g(x); }
+    function dist(x) { var y = yAt(x); return isFinite(y) ? Math.hypot((x - cx) * kx, (y - cy) * ky) : Infinity; }
+    var N = 480, lo = ZM.ox - ZM.cur, st = 2 * ZM.cur / N, bx = lo, bd = Infinity, i;
+    for (i = 0; i <= N; i++) { var xx = lo + i * st, dd = dist(xx); if (dd < bd) { bd = dd; bx = xx; } }
+    if (!isFinite(bd)) return null;
+    var a2 = bx - 2 * st, b2 = bx + 2 * st; for (i = 0; i < 40; i++) { var m1 = a2 + (b2 - a2) / 3, m2 = b2 - (b2 - a2) / 3; if (dist(m1) < dist(m2)) b2 = m2; else a2 = m1; }
+    bx = (a2 + b2) / 2; return { pos: [bx, yAt(bx)], d: dist(bx) };
+  }
+  // a dragged point within reach of a graphed shape is pulled onto the shape
+  function spSnapTo(G, cx, cy) {
+    var best = null; spTargets(G).forEach(function (T) { var r = spProj(G, T, cx, cy); if (r && r.d <= .65 && (!best || r.d < best.d)) best = { pos: r.pos, d: r.d, k: T.k, sh: T.sh }; });
+    return best;
+  }
+  // a plotted point dropped on a shape becomes a point of that shape: it travels with the shape from then on
+  function spAdopt(G, j, sn) {
+    var p = { k: sn.k, fam: PG.fam, sh: sn.sh, free: true }; spSet(G, p, sn.pos[0], sn.pos[1]); (G.sp = G.sp || []).push(p);
+    G.pts.splice(j, 1); if (ptOpen) { if (ptIdx === j) closePt(); else if (ptIdx > j) ptIdx--; }
+  }
   function spDraw(S, G) {
     var L = G.sp || []; if (!L.length) return;
     L.forEach(function (p, j) {
@@ -3826,7 +3875,7 @@
     }
     function mv(e) {
       if (!SPD) return; if (!SPD.moved && Math.hypot(e.clientX - SPD.cx, e.clientY - SPD.cy) < 4) return; SPD.moved = true;
-      var G = SPD.G, p = (G.sp || [])[SPD.i]; if (!p) return; var q = qAt(e), b = spNearest(G, p, q[0], q[1]); if (!b) return;
+      var G = SPD.G, p = (G.sp || [])[SPD.i]; if (!p) return; var q = qAt(e), b = p.free ? ((spProj(G, { sh: p.k === "s" ? p.sh : null }, q[0], q[1]) || {}).pos) : spNearest(G, p, q[0], q[1]); if (!b) return;
       spSet(G, p, b[0], b[1]); gDraw();
     }
     S.addEventListener("pointerdown", function (e) {
@@ -4236,6 +4285,29 @@
       });
     }
     // the hand clicks a graphed shape to put a point on it, drags the point along (it snaps to the grid and shows its coordinates), then the shape is moved and the point goes with it
+    // a plain point is dragged onto the shape: it snaps to the shape (not the grid), and then goes along when the shape moves
+    function dropDemo(then) {
+      var G = G_(), T = spTargets(G)[0]; if (G !== PG || !T) { then(); return; }
+      var sh = T.sh, base = !sh ? H() : sh.t === "line" ? sh.p1[0] : sh.h, xe = base + 1.37, tgt = spProj(G, T, xe, T.sh ? (sh.t === "line" ? sh.p1[1] : sh.k) : g(xe));
+      if (!tgt) { then(); return; }
+      var x0 = xe - .6, y0 = tgt.pos[1] + .18 * ZM.curY * (tgt.pos[1] + .18 * ZM.curY > ZM.oy + .8 * ZM.curY ? -1 : 1); PG.pts.push([x0, y0]); var j = PG.pts.length - 1; drawPlay();
+      cap("A plotted point dragged onto a shape snaps to the shape, not to the grid, and then goes along with it.");
+      handGo(svgPt(x0, y0), 700);
+      pgWait(900, function () {
+        handTap();
+        (function mvP(i) {
+          if (pgRun !== run) return;
+          var u = i / 6, x = x0 + (tgt.pos[0] - x0) * u, y = y0 + (tgt.pos[1] - y0) * u;
+          if (i < 6) { PG.pts[j] = [x, y]; drawPlay(); handGo(svgPt(x, y), 300); pgWait(340, function () { mvP(i + 1); }); return; }
+          var sn = spSnapTo(PG, tgt.pos[0], tgt.pos[1]); if (sn && PG.pts[j]) spAdopt(PG, j, sn); drawPlay();
+          pgWait(1000, function () {
+            if (!sh) { if (!pq()) { PG.h = PG.h - (shifts() ? 2 : 0); PG.k = PG.k - (shifts() ? 0 : 1); PG.pa = [PG.h + 1, PG.k + PG.a]; } }
+            else if (sh.t === "line") sh.p2 = [sh.p2[0], sh.p2[1] - 2]; else { sh.h -= 2; sh.k -= 1; }
+            gDraw(); pgWait(2200, then);
+          });
+        })(1);
+      });
+    }
     function spDemo(then) {
       var G = G_(), sh = G.shape, useShape = !!(sh && (!PG.show.graph || gd())), p = { k: useShape ? "s" : "c", fam: PG.fam, sh: useShape ? sh : null };
       if (!useShape && !PG.show.graph) { then(); return; }
@@ -4255,7 +4327,7 @@
               pgWait(600, function () {
                 if (!useShape) { if (!pq()) { PG.h = PG.h + (shifts() ? 2 : 0); PG.k = PG.k + (shifts() ? 0 : 1); PG.pa = [PG.h + 1, PG.k + PG.a]; } }
                 else if (sh.t === "line") sh.p2 = [sh.p2[0], sh.p2[1] + 2]; else { sh.h += 2; sh.k += 1; }
-                gDraw(); pgWait(2200, then);
+                gDraw(); pgWait(1800, function () { dropDemo(then); });
               });
             });
             return;
@@ -4369,7 +4441,7 @@
       function (n) { cap("Now the middle row, but type a wrong answer on purpose."); typeRow(2, n, "4"); },
       function (n) { cap("Press Table to check: right answers get a green check."); tap(tog("table"), function () { pgWait(2200, n); }); },
       function (n) { autoZoomStep("1", n); },
-      function (n) { pauseHere(n); },
+      function (n) { if (isDataAct()) { n(); return; } pauseHere(n); },
       "@tools",
       function (n) { cap("The buttons beside the graph place things by hand. The dot button plots a point."); dropShape("pt", -3, -3, n); },
       function (n) { cap("Double-click a point to edit it exactly. A small pop-up opens right there with its x and y."); dbl(ptEl(PG.pts.length - 1), n); },
@@ -4390,7 +4462,7 @@
       function (n) { cap("Now click the parabola button and click the vertex, (3, 1)."); clickTool("U", [3, 1], null, n); },
       function (n) { cap("Drag its side point to set the stretch of 2."); stretch(2, n, 1); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
-      function (n) { cap("While you type, the x, x\u00b2 and |x| buttons under the box enter those symbols for you."); tap($("pgEq"), function () { typeKeys(["g(x) = ", "x", "^2", " - 3"], function () { eqEnter(); pgWait(1400, n); }); }); },
+      function (n) { cap("While you type, the x, ^2 and | | buttons under the box enter those symbols for you."); tap($("pgEq"), function () { typeKeys(["g(x) = ", "x", "^2", " - 3"], function () { eqEnter(); pgWait(1400, n); }); }); },
       function (n) { cap("Click the equation to type a function of your own."); tap($("pgEq"), function () { typeEq("g(x) = -|x+2|+4", function () { eqEnter(); pgWait(1200, n); }); }); },
       function (n) { cap("The family changed to absolute value, and the green and purple points moved to match."); pgWait(3200, n); },
       function (n) { zoomDemo(function () { rectDemo(n); }); },
@@ -4480,12 +4552,6 @@
           ret(function () { ret(function () { ret(function () { pgWait(500, n); }); }); });
         },
         function (n) {
-          cap("The left and right arrow keys move between the columns.");
-          var a0 = $("qzX0"), key = function (k2) { var el = document.activeElement; if (el) el.dispatchEvent(new KeyboardEvent("keydown", { key: k2, bubbles: true, cancelable: true })); };
-          if (!a0) { n(); return; } handGo(ctr(a0), 600);
-          pgWait(900, function () { TB.focus(0, "x", true); handTap(); pgWait(900, function () { key("ArrowRight"); pgWait(1300, function () { key("ArrowLeft"); pgWait(1300, function () { key("ArrowRight"); pgWait(1000, n); }); }); }); });
-        },
-        function (n) {
           cap("Now the y-values. Each time a row is completed its point is plotted, and the graph zooms out by itself when the point would be off the screen.");
           (function ys(i) { if (i > 6) { n(); return; } typeCell(i, "y", DYS[i], function () { ys(i + 1); }); })(0);
         },
@@ -4496,10 +4562,8 @@
         function (n) { cap("Constant: y = c."); tap($("pgFam"), function () { pgWait(2200, n); }); },
         function (n) { cap("And around again to line."); tap($("pgFam"), function () { pgWait(2200, n); }); },
         function (n) { cap("Press Regression again to hide the regression."); tap(tog("reg"), function () { pgWait(900, n); }); },
-        function (n) { pauseHere(n); },
-        function (n) { rectDemo(n); },
-        function (n) { pauseHere(n); }
-      ].concat(TOOLS, [
+        function (n) { rectDemo(function () { cap("The Data button, left of the +, zooms to fit all of the data."); tap($("zmData"), function () { pgWait(2200, n); }); }); }
+      ].concat([
         function (n) { cap("Your turn: type your own data, plot it, and zoom or move the graph to look at it."); pgWait(2500, n); }
       ]);
     }
