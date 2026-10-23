@@ -237,7 +237,13 @@
   :root[data-act="pg"]{--plus:#8E2465;--plus-hover:#6E1A4E;--no:#C0301E}
   .pg{flex:1 0 auto;display:flex;align-items:flex-start;justify-content:center;gap:1.2rem;flex-wrap:wrap;padding:1.2rem .4rem;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
   .pg[hidden],.frame[hidden]{display:none}
-  .pgGraph{position:relative;flex:1 1 18rem;max-width:30rem;width:100%;aspect-ratio:1;border:1px solid #9AA0A8;background:#fff;box-sizing:border-box;touch-action:none}
+  .pgGraphWrap{flex:1 1 18rem;max-width:30rem;width:100%;display:flex;flex-direction:column}
+  .pgGraph{position:relative;width:100%;aspect-ratio:1;border:1px solid #9AA0A8;background:#fff;box-sizing:border-box;touch-action:none}
+  /* the three zoom buttons: just below the graph, at its right edge */
+  .zmRow{display:flex;justify-content:flex-end;gap:.4rem;margin-top:.45rem}
+  .zmRow button{width:2.2rem;height:2.2rem;padding:0;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:600 1.25rem/1 system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .zmRow button:hover:not(:disabled){background:#EEF1F6}.zmRow button:active:not(:disabled){background:#DCE8F7}
+  .zmRow button:disabled{opacity:.35;cursor:default}
   .pgGraph svg{display:block;width:100%;height:100%}
   .pgFam{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;margin-bottom:.2rem}
   .btn.simHover:not(:disabled){background:var(--ink);color:var(--bg)}
@@ -293,7 +299,7 @@
   .eqIn:hover,.eqIn:focus{border-bottom-color:#9AA4B2}
   .pgDesc{font-size:1.08rem;line-height:1.45}
   .pgEqMsg{font:600 .9rem/1.35 system-ui,sans-serif;color:#C0301E;margin-top:-.5rem}.pgEqMsg:empty{display:none}
-  body.crPre .pgGraph,body.crPre .pgTable,body.crPre .qzTools{visibility:hidden}
+  body.crPre .pgGraphWrap,body.crPre .pgTable,body.crPre .qzTools{visibility:hidden}
   .pgDesc i{font-family:"LM",Georgia,serif;font-style:italic}
   .descIn[hidden]{display:none}.descIn{display:flex;flex-direction:column;gap:.55rem}
   .descIn input{box-sizing:border-box;width:100%;padding:.55em .7em;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 1rem system-ui,sans-serif}
@@ -346,7 +352,7 @@
     <section class="pg" id="pg" hidden aria-label="Playground">
       <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQcue" id="pgQcue">(Equation, Table, Graph)</div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div>
       <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope. Or drag it onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
-      <div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div>
+      <div class="pgGraphWrap" id="pgGraphWrap"><div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div><div class="zmRow" id="zmRow" role="group" aria-label="Zoom the graph"><button type="button" id="zmIn" title="Zoom in" aria-label="Zoom in">+</button><button type="button" id="zmOut" title="Zoom out" aria-label="Zoom out">−</button><button type="button" id="zmHome" title="Home: back to the default view" aria-label="Home view"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"/><path d="M6 10v9.5h4.5v-5.5h3v5.5H18V10"/></svg></button></div></div>
       <div class="pgSide">
         <div class="dial" id="pgDial" role="slider" aria-label="Scroll the table" title="Drag up or down to scroll the table"></div>
         <table class="pgTable" id="pgTable" aria-label="Table"><colgroup><col style="width:18%"><col><col style="width:18%"></colgroup><thead><tr><th>x</th><th class="pgMid"></th><th>y</th></tr></thead><tbody></tbody></table>
@@ -2105,12 +2111,13 @@
     qzPanel(); TB.sync();
     if (mode === "demo") setTimeout(qzAuto, 0);
   }
-  function qzDraw() {
+  function qzDraw() { qzDraw0(); zoomApply($("pgSvg")); }
+  function qzDraw0() {
     var S = $("pgSvg"); S.innerHTML = ""; if (QZ.step < 2) return;
     gridLayer(S);
     var fam = qFam();
     if (QZ.step >= 4) {   // solved: the true parent graph in red
-      var pts = []; for (var x = -10.5; x <= 10.501; x += .05) { var y = qf(fam, x); if (y < 12) pts.push(x.toFixed(3) + "," + (-y).toFixed(3)); }
+      var pts = [], Wz = ZM.cur; for (var x = -1.05 * Wz; x <= 1.0501 * Wz; x += Wz * .005) { var y = qf(fam, x); if (y < 1.2 * Wz) pts.push(x.toFixed(6) + "," + (-y).toFixed(6)); }
       S.appendChild(svgEl("polyline", { points: pts.join(" "), fill: "none", stroke: "#C74440", "stroke-width": ".13" }));
       for (var u = -2; u <= 2; u++) S.appendChild(svgEl("circle", { cx: u, cy: -qf(fam, u), r: .22, fill: "#C74440" }));
       return;
@@ -2136,13 +2143,14 @@
     drawGhost(S, QZ, blue);
   }
   function shapePts(sh) {
+    var Wz = ZM.cur;
     if (sh.t === "line") {
       var a = sh.p1, b = sh.p2;
-      if (a[0] === b[0]) return a[0] + ",-11 " + a[0] + ",11";
-      var m = (b[1] - a[1]) / (b[0] - a[0]); return [-11, 11].map(function (x) { return x + "," + (-(a[1] + m * (x - a[0]))); }).join(" ");
+      if (a[0] === b[0]) return a[0] + "," + (-1.1 * Wz) + " " + a[0] + "," + (1.1 * Wz);
+      var m = (b[1] - a[1]) / (b[0] - a[0]); return [-1.1 * Wz, 1.1 * Wz].map(function (x) { return x + "," + (-(a[1] + m * (x - a[0]))); }).join(" ");
     }
-    if (sh.t === "V") return [sh.h - 12, sh.h, sh.h + 12].map(function (x) { return x + "," + (-(sh.a * Math.abs(x - sh.h) + sh.k)); }).join(" ");
-    var p = []; for (var x = -11; x <= 11.001; x += .05) { var y = sh.a * (x - sh.h) * (x - sh.h) + sh.k; if (Math.abs(y) < 14) p.push(x.toFixed(3) + "," + (-y).toFixed(3)); }
+    if (sh.t === "V") return [sh.h - 1.2 * Wz, sh.h, sh.h + 1.2 * Wz].map(function (x) { return x + "," + (-(sh.a * Math.abs(x - sh.h) + sh.k)); }).join(" ");
+    var p = []; for (var x = -1.1 * Wz; x <= 1.1001 * Wz; x += Wz * .005) { var y = sh.a * (x - sh.h) * (x - sh.h) + sh.k; if (Math.abs(y) < 1.4 * Wz) p.push(x.toFixed(6) + "," + (-y).toFixed(6)); }
     return p.join(" ");
   }
   function handles(sh) {
@@ -2316,8 +2324,19 @@
   }
 
   // ---- graph tools: ● point, / line, V, U and ✕ clear. Click a tool and then the graph, or drag a tool onto the graph ----
-  function qAt(e) { var S = $("pgSvg"), m = S.getScreenCTM().inverse(), p = S.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; p = p.matrixTransform(m); return [p.x, -p.y]; }
-  function snap(v) { if (typeof v !== "number") { hist.push([JSON.stringify([ws, vals, sys, sysV, elim]), steps.length, ops]); updUndo(); return; } return Math.max(-10, Math.min(10, Math.round(v))); }
+  // ---- zoom (Graphing activities): the window is centred on the origin and shows x and y from -W to W; W is 10 at home.
+  // Each + / - step goes along 10, 5, 2.5, 1, 0.5, 0.25, 0.1 ... (and 25, 50, 100 ... outward). Everything is drawn at its real coordinates,
+  // then zoomApply() moves it to the current zoom, so a zoom animates the axes, the grid and every graphed object together.
+  var ZLIST = [0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 25, 50, 100, 250, 500, 1000], ZHOME = 10;
+  var ZM = { cur: 10, to: 10, from: 10, t: 1, raf: 0 };
+  function niceStep(v) { var e = Math.floor(Math.log10(v) + 1e-9), p = Math.pow(10, e), c = [5, 2, 1]; for (var i = 0; i < 3; i++) if (c[i] * p <= v * 1.000001) return +(c[i] * p).toPrecision(6); return p; }
+  function snapStep() { return niceStep(ZM.to / 10); }   // one grid cell at the target zoom: 1 at home
+  function zk() { return 10 / ZM.cur; }
+  function qAt(e) { var S = $("pgSvg"), m = S.getScreenCTM().inverse(), p = S.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; p = p.matrixTransform(m); return [p.x * ZM.cur / 10, -p.y * ZM.cur / 10]; }
+  function snap(v) {
+    if (typeof v !== "number") { hist.push([JSON.stringify([ws, vals, sys, sysV, elim]), steps.length, ops]); updUndo(); return; }
+    var st = snapStep(), W = ZM.to; return Math.max(-W, Math.min(W, +(Math.round(v / st) * st).toFixed(8)));
+  }
   function G_() { return document.body.classList.contains("play") ? PG : QZ; }
   function gRef() { if (G_() === PG) drawPlay(); else qzRender(); }
   function gDraw() { if (G_() === PG) drawPlay(); else qzDraw(); }
@@ -2325,7 +2344,7 @@
   // with a tool picked, a ghost of the shape rides along with the cursor: first it is placed (a point on the line, or the vertex), then its dilation follows the cursor
   function toolGhost(G) {
     if (!G.tool || G.tool === "pt" || (!G.hv && !(G.tool === "line" && G.clk.length))) return null; var h = G.hv || G.clk[0], t = G.tool;   // with the cursor away, a line's second point waits at its default (up 1, right 1)
-    if (t === "line") { if (!G.clk.length) return { t: "line", p1: h, p2: [h[0] + 1, h[1] + 1] }; var p = G.clk[0]; return { t: "line", p1: p, p2: h[0] === p[0] && h[1] === p[1] ? [p[0] + 1, p[1] + 1] : h }; }
+    if (t === "line") { if (!G.clk.length) return { t: "line", p1: h, p2: [h[0] + snapStep(), h[1] + snapStep()] }; var p = G.clk[0]; return { t: "line", p1: p, p2: h[0] === p[0] && h[1] === p[1] ? [p[0] + snapStep(), p[1] + snapStep()] : h }; }
     return { t: t, h: h[0], k: h[1], a: 1 };
   }
   // is the student drawing a parent function (nothing to transform), or a shape that is moved/stretched from its parent?
@@ -2348,8 +2367,8 @@
     if (!G.clk.length) {
       dot(G.hv[0], G.hv[1]);
       if (mode !== "solo") {
-        var x = G.hv[0], y = G.hv[1], right = x <= 5, below = y >= 8;
-        var t = svgEl("text", { x: x + (right ? .7 : -.7), y: -y + (below ? 1.15 : -.55), "text-anchor": right ? "start" : "end", "font-family": "system-ui,-apple-system,'Segoe UI',sans-serif", "font-size": ".66", "font-weight": "600", fill: "#1B2433", "paint-order": "stroke", stroke: "#fff", "stroke-width": ".2", "stroke-linejoin": "round", "pointer-events": "none" });
+        var x = G.hv[0], y = G.hv[1], right = x * zk() <= 5, below = y * zk() >= 8;
+        var t = svgEl("text", { x: x, y: -y, dx: right ? .7 : -.7, dy: below ? 1.15 : -.55, "text-anchor": right ? "start" : "end", "font-family": "system-ui,-apple-system,'Segoe UI',sans-serif", "font-size": ".66", "font-weight": "600", fill: "#1B2433", "paint-order": "stroke", stroke: "#fff", "stroke-width": ".2", "stroke-linejoin": "round", "pointer-events": "none" });
         t.textContent = "(" + fmtN(x) + ", " + fmtN(y) + ")"; S.appendChild(t);
       }
     } else if (G.tool === "line" && sh) dot(sh.p2[0], sh.p2[1]);   // in every graphing activity, parent lines included
@@ -2374,7 +2393,7 @@
     x = snap(x); y = snap(y);
     if (tool === "pt") { if (!G.pts.some(function (p) { return p[0] === x && p[1] === y; })) G.pts.push([x, y]); }
     else if (tool === "line" && !parentDraw()) { G.tool = "line"; G.clk = [[x, y]]; G.hv = [x, y]; gRef(); return; }   // the second point now follows the cursor until a click lands it
-    else if (tool === "line") G.shape = { t: "line", p1: [x, y], p2: [snap(x + 1), snap(y + 1)] };
+    else if (tool === "line") G.shape = { t: "line", p1: [x, y], p2: [snap(x + snapStep()), snap(y + snapStep())] };
     else G.shape = { t: tool, h: x, k: y, a: 1 };
     G.tool = null; G.clk = []; gRef();
   }
@@ -2399,7 +2418,7 @@
       else { var a = Math.round((p[1] - sh.k) * 4) / 4; sh.a = a || (p[1] < sh.k ? -.25 : .25); }
       gDraw();
     });
-    function end() { if (dragH) { dragH = null; var G = G_(); if (G === QZ && mode === "demo") setTimeout(qzAuto, 0); if (G.shape && G.shape.t === "line" && G.shape.p1[0] === G.shape.p2[0] && G.shape.p1[1] === G.shape.p2[1]) G.shape.p2 = [G.shape.p1[0] + 1, G.shape.p1[1] + 1]; gDraw(); } }
+    function end() { if (dragH) { dragH = null; var G = G_(); if (G === QZ && mode === "demo") setTimeout(qzAuto, 0); if (G.shape && G.shape.t === "line" && G.shape.p1[0] === G.shape.p2[0] && G.shape.p1[1] === G.shape.p2[1]) G.shape.p2 = [G.shape.p1[0] + snapStep(), G.shape.p1[1] + snapStep()]; gDraw(); } }
     S.addEventListener("pointerup", end); S.addEventListener("pointercancel", end);
     // tool buttons: a click picks the tool; a drag drops it onto the graph
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) {
@@ -2621,7 +2640,7 @@
     pqCue();
   }
   function pqStart() {
-    stopDemo(); if (pgRun) pgStop(); PG.demoFin = false; stopParty(); busy = false; up = null; counted = false;
+    stopDemo(); if (pgRun) pgStop(); PG.demoFin = false; zoomHome(true); stopParty(); busy = false; up = null; counted = false;
     var o = [0, 1, 2, 3]; for (var i = 3; i > 0; i--) { var j = rnd(i + 1), t = o[i]; o[i] = o[j]; o[j] = t; }
     if (!gd() && mode === "demo") o.splice(o.indexOf(3), 1), o.unshift(3);   // Memorizing Parents: the demo starts with the quadratic family
     var cu = gd() && mode !== "create" && gdCustom;
@@ -2984,13 +3003,14 @@
   function gridDen(t) { for (var d = 1; d <= 24; d++) if (Math.abs(t * d - Math.round(t * d)) < 1e-6) return d; return 100; }
   // y-values: the grid is as fine as the finest y-value in the table needs (whole units, halves, quarters ...)
   function gcd2(a, b) { return b ? gcd2(b, a % b) : a; }
+  function zStep(t) { return Math.min(1 / gridDen(t), snapStep()); }
   function yDen(t) {
     var d = gridDen(t);
     try { TB.rows().forEach(function (r) { var y = TB.y(r); if (typeof y !== "number" || !isFinite(y)) return; var e = gridDen(y); if (e <= 24) d = d / gcd2(d, e) * e; }); } catch (err) {}
     return d > 48 ? gridDen(t) : d;
   }
-  function gridToY(v, t) { var d = yDen(t); return Math.max(-10, Math.min(10, Math.round(v * d) / d)); }
-  function gridTo(v, t) { var d = gridDen(t); return Math.max(-10, Math.min(10, Math.round(v * d) / d)); }
+  function gridToY(v, t) { var d = yDen(t), st = Math.min(1 / d, snapStep()); return Math.max(-ZM.to, Math.min(ZM.to, +(Math.round(v / st) * st).toFixed(8))); }
+  function gridTo(v, t) { var st = zStep(t); return Math.max(-ZM.to, Math.min(ZM.to, +(Math.round(v / st) * st).toFixed(8))); }
   // pointer drags: the equation onto a center cell, and a finished row onto the graph
   (function () {
     var T = $("pgTable");
@@ -3200,33 +3220,82 @@
   function curvePts(fn) {
     var f = FAMS[PG.fam], segs = [], cur = [];
     if (f === "quadratic") {
-      for (var x = -10.5; x <= 10.501; x += .05) { var y = fn(x); if (y > -12 && y < 12) cur.push(x.toFixed(3) + "," + (-y).toFixed(3)); else if (cur.length) { segs.push(cur); cur = []; } }
+      var Wz = ZM.cur; for (var x = -1.05 * Wz; x <= 1.0501 * Wz; x += Wz * .005) { var y = fn(x); if (y > -1.2 * Wz && y < 1.2 * Wz) cur.push(x.toFixed(6) + "," + (-y).toFixed(6)); else if (cur.length) { segs.push(cur); cur = []; } }
       if (cur.length) segs.push(cur);
     } else {
-      var xs = f === "absolute value" ? [-10.5, fn === pf ? 0 : H(), 10.5] : [-10.5, 10.5];
+      var Wz2 = ZM.cur, xs = f === "absolute value" ? [-1.05 * Wz2, fn === pf ? 0 : H(), 1.05 * Wz2] : [-1.05 * Wz2, 1.05 * Wz2];
       segs.push(xs.map(function (x) { return x + "," + (-fn(x)); }));
     }
     return segs.filter(function (c) { return c.length > 1; }).map(function (c) { return c.join(" "); });
   }
   // ONE grid for every graph (Graphing activities): light lines, every fifth line a little darker, the axes, and the numbers every 5 units
   function gridLayer(S) {
-    var gr = svgEl("g", { stroke: "#E3E5E8", "stroke-width": ".05" }), g5 = svgEl("g", { stroke: "#C3C7CD", "stroke-width": ".07" });
-    for (var i = -10; i <= 10; i++) {
-      var t = i % 5 === 0 ? g5 : gr;
-      t.appendChild(svgEl("line", { x1: i, y1: -10, x2: i, y2: 10 })); t.appendChild(svgEl("line", { x1: -10, y1: i, x2: 10, y2: i }));
+    var W = ZM.cur, k = 10 / W, mN = niceStep(ZM.to / 10), mO = niceStep(ZM.from / 10), t = ZM.t;
+    function fmtL(v) { return (v < 0 ? "\u2212" : "") + String(+Math.abs(v).toPrecision(8)); }
+    // one layer of lines and numbers at a given spacing m; during a zoom the old spacing fades out while the new one fades in
+    function layer(m, op) {
+      var gr = svgEl("g", { stroke: "#E3E5E8", "stroke-width": ".05", "data-g": 1, opacity: op }), g5 = svgEl("g", { stroke: "#C3C7CD", "stroke-width": ".07", "data-g": 1, opacity: op });
+      var n = Math.floor(W / m + 1e-9);
+      for (var i = -n; i <= n; i++) {
+        var p = +(i * m * k).toFixed(5), tg = i % 5 === 0 ? g5 : gr;
+        tg.appendChild(svgEl("line", { x1: p, y1: -10, x2: p, y2: 10 })); tg.appendChild(svgEl("line", { x1: -10, y1: p, x2: 10, y2: p }));
+      }
+      S.appendChild(gr); S.appendChild(g5);
+      var tx = svgEl("g", { "font-family": "system-ui,-apple-system,'Segoe UI',sans-serif", "font-size": ".62", fill: "#4A5262", "pointer-events": "none", "paint-order": "stroke", stroke: "#fff", "stroke-width": ".16", "stroke-linejoin": "round", "data-g": 1, opacity: op });
+      for (var j = 1; j * 5 <= n; j++) [-1, 1].forEach(function (sg) {
+        var v = sg * j * 5 * m, p = v * k, lab = fmtL(v), edge = Math.abs(p) > 9.85;
+        var a = svgEl("text", { x: edge ? sg * 9.85 : p, y: .85, "text-anchor": edge ? (sg > 0 ? "end" : "start") : "middle" }); a.textContent = lab; tx.appendChild(a);
+        var b = svgEl("text", { x: -.25, y: edge ? (sg > 0 ? -9.45 : 9.85) : -p + .22, "text-anchor": "end" }); b.textContent = lab; tx.appendChild(b);
+      });
+      S.appendChild(tx);
     }
-    S.appendChild(gr); S.appendChild(g5);
-    S.appendChild(svgEl("line", { x1: -10, y1: 0, x2: 10, y2: 0, stroke: "#222", "stroke-width": ".09" }));
-    S.appendChild(svgEl("line", { x1: 0, y1: -10, x2: 0, y2: 10, stroke: "#222", "stroke-width": ".09" }));
-    var tx = svgEl("g", { "font-family": "system-ui,-apple-system,'Segoe UI',sans-serif", "font-size": ".62", fill: "#4A5262", "pointer-events": "none", "paint-order": "stroke", stroke: "#fff", "stroke-width": ".16", "stroke-linejoin": "round" });
-    [-10, -5, 5, 10].forEach(function (n) {
-      var lab = (n < 0 ? "\u2212" : "") + Math.abs(n);
-      var a = svgEl("text", { x: n === 10 ? 9.85 : n === -10 ? -9.85 : n, y: .85, "text-anchor": n === 10 ? "end" : n === -10 ? "start" : "middle" }); a.textContent = lab; tx.appendChild(a);
-      var b = svgEl("text", { x: -.25, y: n === 10 ? -9.45 : n === -10 ? 9.85 : -n + .22, "text-anchor": "end" }); b.textContent = lab; tx.appendChild(b);
-    });
-    S.appendChild(tx);
+    if (mO !== mN && t < 1) { layer(mO, +(1 - t).toFixed(3)); layer(mN, +t.toFixed(3)); } else layer(mN, 1);
+    S.appendChild(svgEl("line", { x1: -10, y1: 0, x2: 10, y2: 0, stroke: "#222", "stroke-width": ".09", "data-g": 1 }));
+    S.appendChild(svgEl("line", { x1: 0, y1: -10, x2: 0, y2: 10, stroke: "#222", "stroke-width": ".09", "data-g": 1 }));
   }
-  function drawGraph() {
+  // everything but the grid is drawn at its real coordinates; this moves it to where the current zoom puts it (sizes stay the same)
+  function zoomApply(S) {
+    if (ZM.cur === 10) return;
+    var k = 10 / ZM.cur;
+    function num(el, a) { var v = el.getAttribute(a); if (v !== null && v !== "") el.setAttribute(a, +(parseFloat(v) * k).toFixed(5)); }
+    function map(el) {
+      if (el.getAttribute && el.getAttribute("data-g")) return;
+      var tg = el.tagName;
+      if (tg === "circle") { num(el, "cx"); num(el, "cy"); }
+      else if (tg === "line") { num(el, "x1"); num(el, "y1"); num(el, "x2"); num(el, "y2"); }
+      else if (tg === "text") { num(el, "x"); num(el, "y"); }
+      else if (tg === "polyline" || tg === "polygon") { el.setAttribute("points", el.getAttribute("points").trim().split(/\s+/).map(function (q) { var c = q.split(","); return +(parseFloat(c[0]) * k).toFixed(5) + "," + +(parseFloat(c[1]) * k).toFixed(5); }).join(" ")); }
+      else if (tg === "g") [].forEach.call(el.children, map);
+    }
+    [].forEach.call(S.children, map);
+  }
+  // the zoom buttons: + and - step along 10, 5, 2.5, 1, 0.5, 0.25, 0.1 ...; the home button returns to 10. The change is animated.
+  function zoomIdx(w) { var b = 0; ZLIST.forEach(function (z, i) { if (Math.abs(Math.log(z / w)) < Math.abs(Math.log(ZLIST[b] / w))) b = i; }); return b; }
+  function zoomBtns() {
+    var i = zoomIdx(ZM.to);
+    if ($("zmIn")) { $("zmIn").disabled = i <= 0; $("zmOut").disabled = i >= ZLIST.length - 1; $("zmHome").disabled = false; }
+  }
+  function zoomRedraw() { if (document.body.classList.contains("play")) { drawGraph(); if (typeof ptPos === "function") ptPos(); } else qzDraw(); }
+  function zoomTo(w, instant) {
+    cancelAnimationFrame(ZM.raf); ZM.raf = 0;
+    ZM.from = ZM.cur; ZM.to = w; zoomBtns();
+    if (instant || ZM.from === w) { ZM.cur = w; ZM.from = w; ZM.t = 1; zoomRedraw(); return; }
+    var t0 = null, dur = 420;
+    (function frame(ts) {
+      if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / dur), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+      ZM.t = e; ZM.cur = ZM.from * Math.pow(w / ZM.from, e);
+      if (u >= 1) { ZM.cur = w; ZM.from = w; ZM.t = 1; ZM.raf = 0; } else ZM.raf = requestAnimationFrame(frame);
+      zoomRedraw();
+    })(performance.now());
+  }
+  function zoomStep(d) { var i = zoomIdx(ZM.to) + d; if (i < 0 || i >= ZLIST.length) return; zoomTo(ZLIST[i]); }
+  function zoomHome(instant) { if (ZM.to === ZHOME && ZM.cur === ZHOME) { zoomBtns(); return; } zoomTo(ZHOME, instant); }
+  $("zmIn").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); zoomStep(-1); });
+  $("zmOut").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); zoomStep(1); });
+  $("zmHome").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); zoomHome(); });
+  zoomBtns();
+  function drawGraph() { drawGraph0(); zoomApply($("pgSvg")); }
+  function drawGraph0() {
     var S = $("pgSvg"); S.innerHTML = ""; document.body.classList.toggle("tmOn", !!PG.tm);
     TB.targets = TB.targets.filter(function (t) { return !PG.pts.some(function (z) { return Math.abs(z[0] - t[0]) < 1e-9 && Math.abs(z[1] - t[1]) < 1e-9; }); });
     { // the grid and both axes are always there; Graph only reveals the curve
@@ -3421,7 +3490,7 @@
     var P = $("pgPt"); if (P.hidden) return;
     // it first opens right where the double-click happened; if the point is then dragged, the pop-up follows it
     var c = ptAt, p = ptIdx >= 0 ? PG.pts[ptIdx] : null;
-    if (!c && p) { var r = $("pgSvg").getBoundingClientRect(); c = { x: r.left + r.width * (p[0] + 10) / 20, y: r.top + r.height * (10 - p[1]) / 20 }; }
+    if (!c && p) { var r = $("pgSvg").getBoundingClientRect(); c = { x: r.left + r.width * (p[0] * zk() + 10) / 20, y: r.top + r.height * (10 - p[1] * zk()) / 20 }; }
     if (!c) return;
     P.style.left = Math.max(6, Math.min(innerWidth - P.offsetWidth - 6, c.x + (c.side ? 14 : -P.offsetWidth / 2))) + "px";
     P.style.top = Math.max(6, Math.min(innerHeight - P.offsetHeight - 6, c.y + (c.side ? 14 : 20))) + "px";
@@ -3438,7 +3507,7 @@
   function ptTyped() {
     if (!ptOpen) return;
     var x = ptNum($("pgPtX").value), y = ptNum($("pgPtY").value);
-    if (!(Math.abs(x) <= 10) || !(Math.abs(y) <= 10)) return;
+    if (!(Math.abs(x) <= 1000) || !(Math.abs(y) <= 1000)) return;
     if (ptIdx < 0) { PG.pts.push([x, y]); ptIdx = PG.pts.length - 1; } else PG.pts[ptIdx] = [x, y];
     drawPlay();
   }
@@ -3461,7 +3530,7 @@
   // drag: the red point snaps to whole numbers; the purple point's height is the stretch factor a (steps of 0.25, never 0)
   (function () {
     var S = $("pgSvg"), which = null, pd = null;
-    function at(e) { var m = S.getScreenCTM().inverse(), p = S.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; p = p.matrixTransform(m); return { x: p.x, y: -p.y }; }
+    function at(e) { var m = S.getScreenCTM().inverse(), p = S.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; p = p.matrixTransform(m); return { x: p.x * ZM.cur / 10, y: -p.y * ZM.cur / 10 }; }
     S.addEventListener("pointerdown", function (e) {
       pgUser();
       if (PG.tool) return;
@@ -3479,7 +3548,7 @@
         var nx = gridTo(q.x, cur[0]), ny = gridTo(q.y, cur[1]); if (nx === cur[0] && ny === cur[1]) return;
         PG.pts[pd.j] = [nx, ny]; if (ptOpen && ptIdx === pd.j) ptFill(); drawPlay(); return;
       }
-      if (!which) return; var p = at(e), cl = function (v) { return Math.max(-10, Math.min(10, v)); };
+      if (!which) return; var p = at(e), cl = function (v) { return Math.max(-ZM.to, Math.min(ZM.to, v)); };
       // the red point moves by whole units: up and down only for constant and linear, any direction for absolute value and quadratic
       if (which === "v") { var h = shifts() ? Math.round(cl(p.x)) : PG.h, k = Math.round(cl(p.y)) - A() * pf(0); if (h === PG.h && k === PG.k) return; PG.h = h; PG.k = k; }
       else { var a = Math.round((cl(p.y) - K()) * 4) / 4; if (!a) a = p.y < K() ? -.25 : .25; PG.a = a; PG.pa = [H() + 1, K() + a]; }
@@ -3641,7 +3710,7 @@
   var pgRun = 0, pgQ = [], pgPaused = false, pgShift = 0, pgPauseAt = 0, pgHeld = [], pgSnap = null, pgHandOp = "1";
   // a student's own action ends a running demo, but not a paused one (that is the point of pausing)
   function pgUser() { if (pgRun && !pgPaused) pgStop(); }
-  function svgPt(x, y) { var S = $("pgSvg"), m = S.getScreenCTM(), p = S.createSVGPoint(); p.x = x; p.y = -y; p = p.matrixTransform(m); return { x: p.x, y: p.y }; }
+  function svgPt(x, y) { var S = $("pgSvg"), m = S.getScreenCTM(), p = S.createSVGPoint(); p.x = x * zk(); p.y = -y * zk(); p = p.matrixTransform(m); return { x: p.x, y: p.y }; }
   function handAt(pt) { var h = hand(); h.style.transition = "none"; h.style.opacity = "1"; h.dataset.on = "1"; h.style.transform = "translate(" + (pt.x - HX) + "px," + (pt.y - HY) + "px)"; }
   function pgArm(e) { e.due = Date.now() + e.rem; e.id = setTimeout(function () { pgQ.splice(pgQ.indexOf(e), 1); e.fn(); }, e.rem); }
   function pgWait(ms, fn) { var e = { fn: fn, rem: ms, due: 0, id: 0 }; pgQ.push(e); if (!pgPaused) pgArm(e); }
@@ -3674,7 +3743,7 @@
   }
   function pgDemo() {
     if (pgRun) { pgStop(); return; }
-    closePt(); var run = ++pgRun; PG.demoFin = false; theme(); pgShift = 0; dmUI("playing");
+    closePt(); var run = ++pgRun; PG.demoFin = false; zoomHome(true); theme(); pgShift = 0; dmUI("playing");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
     PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
@@ -3855,6 +3924,15 @@
         (function put(c) { if (c > text.length) { pgWait(900, function () { el.blur(); then(); }); return; } el.value = text.slice(0, c); el.dispatchEvent(new Event("input", { bubbles: true })); pgWait(110, function () { put(c + 1); }); })(1);
       });
     }
+    // the hand zooms the graph in twice, out again, and presses the home button (every graph keeps its coordinates)
+    function zoomDemo(then) {
+      function tp(id, ms, nx) { tap($(id), function () { pgWait(ms, nx); }); }
+      cap("The + and \u2212 buttons under the graph zoom in and out. Everything stays at the same coordinates.");
+      tp("zmIn", 900, function () { tp("zmIn", 1100, function () {
+        cap("Zoom back out with \u2212, or press the home button to return to the start.");
+        tp("zmOut", 800, function () { tp("zmOut", 800, function () { tp("zmOut", 900, function () { tp("zmHome", 1100, then); }); }); });
+      }); });
+    }
     // typing with the help of the buttons under the box: text is typed a key at a time, and "x" / "^2" are pressed on the little keypad
     function typeKeys(parts, then) {
       var el = $("pgEq").querySelector(".eqIn"); if (!el) { then(); return; }
@@ -3958,6 +4036,7 @@
       function (n) { cap("While you type, the x, x\u00b2 and |x| buttons under the box enter those symbols for you."); tap($("pgEq"), function () { typeKeys(["g(x) = ", "x", "^2", " - 3"], function () { eqEnter(); pgWait(1400, n); }); }); },
       function (n) { cap("Click the equation to type a function of your own."); tap($("pgEq"), function () { typeEq("g(x) = -|x+2|+4", function () { eqEnter(); pgWait(1200, n); }); }); },
       function (n) { cap("The family changed to absolute value, and the green and purple points moved to match."); pgWait(3200, n); },
+      function (n) { zoomDemo(n); },
       function (n) { cap("Your turn: try every button, drag both points and plot your own graph."); pgWait(2500, n); }
     ];
     if (PQ) {   // 1.1A: the demo answers this parent's question with the equation, the table and the graph
@@ -3979,6 +4058,7 @@
         },
         function (n) { cap("Drag each row onto the graph."); dragAll(0, n); },
         function (n) { cap("Now the graph: choose the tool that fits the points."); pqFam < 2 ? clickTool("line", [0, ys(0)], [1, ys(1)], n) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, n); },
+        function (n) { zoomDemo(n); },
         function (n) { cap("The equation, the table and the graph all describe the same parent."); var tg = document.querySelector(".tog[data-part=graph]"); if (!PG.show.graph && tg) tg.click(); pgWait(2300, n); }
       ];
     }
@@ -4020,6 +4100,7 @@
             pathTo([gO, gT], function () { handTap(); tmClick(); pgWait(700, function () { gdWatch(); drawPlay(); pgWait(1000, n); }); });
           }); }); });
         },
+        function (n) { zoomDemo(n); },
         function (n) { cap("The parent, the graph of g, the table and the description all show the same translation: " + gdWords(QZ.tr[QZ.pi]) + "."); pgWait(2600, n); }
       ];
     }
