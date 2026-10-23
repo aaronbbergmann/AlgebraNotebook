@@ -200,7 +200,7 @@
   body.pq .qzRow{flex-direction:column;align-items:center;gap:.5rem}
   body.pq #qz:not(:has(button:not([hidden]))){display:none}
   body.pq .pgDemo{margin-bottom:0}
-  body.pq .pgCtl.empty:not(:has(#pgPt:not([hidden]))){display:none}
+  body.pq .pgCtl.empty{display:none}
 
   body.quiz .pg{color:var(--ink)}
   .pgTable th,.pgTable td{color:#1B2433}
@@ -242,7 +242,7 @@
   .pgFam{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;margin-bottom:.2rem}
   .btn.simHover:not(:disabled){background:var(--ink);color:var(--bg)}
   .pgCtl .pgFam:active,.pgCtl .pgFam.simPress{background:var(--plus);border-color:var(--plus);color:#fff}
-  .ptEdit{position:relative;box-sizing:border-box;width:10.5em;margin-top:.6rem;padding:.7em .8em .8em;background:#fff;border:1px solid #B8BCC2;border-radius:12px;display:flex;flex-direction:column;gap:.45em;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .ptEdit{position:fixed;z-index:60;box-sizing:border-box;width:10.5em;margin:0;padding:.7em .8em .8em;background:#fff;border:1px solid #B8BCC2;border-radius:12px;display:flex;flex-direction:column;gap:.45em;box-shadow:0 4px 14px rgba(0,0,0,.22)}
   .ptEdit[hidden]{display:none}
   .ptEdit label{display:flex;flex-wrap:nowrap;white-space:nowrap;align-items:center;gap:.4em;font:italic 400 1.05rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;color:#1B2433}
   .ptEdit input{box-sizing:border-box;flex:1 1 0;width:0;min-width:0;font:400 1rem system-ui,sans-serif;text-align:center;padding:.3em .2em;border:1.5px solid #9AA0A8;border-radius:6px;background:#fff;color:#1B2433}
@@ -382,13 +382,13 @@
   <aside class="chat" aria-label="Controls and tutor chat">
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Exercise</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
-      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button><div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
     <div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="link" id="again" hidden>Stay</button></div>
     <section class="qz" id="qz" hidden aria-live="polite"><div class="qzT" id="qzT"></div><div id="qzIn"></div><div class="err" id="qzErr"></div><div class="qzRow"><button class="btn" id="qzGo">Check</button><button class="btn" id="qzNext" hidden>Next</button><button class="link" id="qzAgain" hidden>Another round</button></div></section>
-    <div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^" aria-label="Insert ^ (to the power of)"><i>x</i><sup>2</sup></button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|<i>x</i>|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
+    <div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div><div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^2" aria-label="Insert ^2 (squared)"><i>x</i><sup>2</sup></button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|<i>x</i>|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
     <div class="composer" id="ask" hidden>
       <div id="askT" style="font-weight:600"></div>
       <div class="err" id="askErr"></div>
@@ -2347,7 +2347,7 @@
         var t = svgEl("text", { x: x + (right ? .7 : -.7), y: -y + (below ? 1.15 : -.55), "text-anchor": right ? "start" : "end", "font-family": "system-ui,-apple-system,'Segoe UI',sans-serif", "font-size": ".66", "font-weight": "600", fill: "#1B2433", "paint-order": "stroke", stroke: "#fff", "stroke-width": ".2", "stroke-linejoin": "round", "pointer-events": "none" });
         t.textContent = "(" + fmtN(x) + ", " + fmtN(y) + ")"; S.appendChild(t);
       }
-    } else if (G.tool === "line" && !parentDraw() && sh) dot(sh.p2[0], sh.p2[1]);
+    } else if (G.tool === "line" && sh) dot(sh.p2[0], sh.p2[1]);   // in every graphing activity, parent lines included
   }
   function qzPlace(tool, x, y) {
     var G = G_(); gSnap();
@@ -3283,7 +3283,7 @@
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("eqIn")) { e.target.blur(); eqEnter(); } });
   // is a typed equation the same function as the real one? (tested at several x-values, so any equivalent form counts)
-  // while an equation is being typed, three buttons put in the x, ^ and | characters for anyone who cannot find them on the keyboard
+  // while an equation is being typed, three buttons put in the x, ^2 and | characters for anyone who cannot find them on the keyboard
   function eqKeysUpd() {
     var a = document.activeElement, K = $("eqKeys"), el = a && a.classList && a.classList.contains("eqIn") ? a : null;
     if (!el) { K.hidden = true; return; }
@@ -3402,7 +3402,7 @@
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
     eqKeysUpd(); pqCue(); pqEval();
   }
-  // ---- editing a point's coordinates: double-click a plotted point (or the dot button) and a small panel opens below the Show buttons ----
+  // ---- editing a point's coordinates: double-click a plotted point (or the dot button) and a small pop-up opens in the centre pane, just below the point ----
   var ptOpen = false, ptIdx = -1, ptTimer = 0;
   function ptNum(t) {
     t = String(t).replace(/−/g, "-").trim(); if (!t) return NaN;
@@ -3410,11 +3410,22 @@
     return /^-?(\d+\.?\d*|\.\d+)$/.test(t) ? +t : NaN;
   }
   function ptStr(v) { return String(Math.round(v * 1000) / 1000); }
-  function ptFill() { var p = ptIdx >= 0 ? PG.pts[ptIdx] : null; $("pgPtX").value = p ? ptStr(p[0]) : ""; $("pgPtY").value = p ? ptStr(p[1]) : ""; }
-  function selectPt(j) {
+  // the editor is a small pop-up in the centre pane, just below the point (or below the dot button when a new point is being typed in)
+  var ptAt = null;
+  function ptPos() {
+    var P = $("pgPt"); if (P.hidden) return;
+    var c = ptAt, p = ptIdx >= 0 ? PG.pts[ptIdx] : null;
+    if (p) { var r = $("pgSvg").getBoundingClientRect(); c = { x: r.left + r.width * (p[0] + 10) / 20, y: r.top + r.height * (10 - p[1]) / 20 }; }
+    if (!c) return;
+    P.style.left = Math.max(6, Math.min(innerWidth - P.offsetWidth - 6, c.x - P.offsetWidth / 2)) + "px";
+    P.style.top = Math.max(6, Math.min(innerHeight - P.offsetHeight - 6, c.y + 20)) + "px";
+  }
+  window.addEventListener("resize", ptPos);
+  function ptFill() { var p = ptIdx >= 0 ? PG.pts[ptIdx] : null; $("pgPtX").value = p ? ptStr(p[0]) : ""; $("pgPtY").value = p ? ptStr(p[1]) : ""; ptPos(); }
+  function selectPt(j, at) {
     if (!document.body.classList.contains("play") || PG.tool) return;
     if (j >= 0 && !PG.pts[j]) return;
-    ptOpen = true; ptIdx = j; ptFill(); $("pgPt").hidden = false; drawPlay();
+    ptOpen = true; ptIdx = j; ptAt = at || null; $("pgPt").hidden = false; ptFill(); drawPlay();
   }
   function closePt() { if (!ptOpen) return; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; if (document.body.classList.contains("play")) drawPlay(); }
   // typing in either box moves the point at once (a new point is added once both boxes hold numbers)
@@ -3437,9 +3448,10 @@
     // the svg holds the pointer capture, so find the point under the cursor rather than trusting e.target
     var sp = e.target.closest && e.target.closest("[data-sp]"), l = sp ? [] : document.elementsFromPoint(e.clientX, e.clientY);
     for (var k = 0; k < l.length && !sp; k++) sp = l[k].closest && l[k].closest("[data-sp]");
-    if (!sp) return; clearTimeout(ptTimer); selectPt(+sp.dataset.sp);
+    if (!sp) return; clearTimeout(ptTimer); selectPt(+sp.dataset.sp, { x: e.clientX, y: e.clientY });
   });
-  document.querySelector(".qzTools [data-tool=pt]").addEventListener("dblclick", function () { if (document.body.classList.contains("play")) selectPt(-1); });
+  // the dot button's pop-up opens on the graph, just below the level of the button, not over the tool column
+  document.querySelector(".qzTools [data-tool=pt]").addEventListener("dblclick", function (e) { if (document.body.classList.contains("play")) { var b = e.currentTarget.getBoundingClientRect(); selectPt(-1, { x: b.right + 84, y: b.top + b.height / 2 - 6 }); } });
   // drag: the red point snaps to whole numbers; the purple point's height is the stretch factor a (steps of 0.25, never 0)
   (function () {
     var S = $("pgSvg"), which = null, pd = null;
