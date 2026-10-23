@@ -4566,26 +4566,26 @@
       var DYS = [225, 401, 524, 602, 623, 600, 524];
       steps = [
         function (n) {
-          cap("Play Data: a table of x and y values. Let's enter some data. Click once in the table, then use the keyboard: type 5, 10 and 15, pressing Return after each.");
+          cap("Type x-values");
           PG.fam = 1; PG.drows = null; PG.pts = []; PG.sp = []; Object.keys(PG.show).forEach(function (q) { PG.show[q] = false; }); PG.show.eq = false; drawPlay();
           clickCell(0, "x", function () { typeHere(5, function () { typeHere(10, function () { typeHere(15, n); }); }); });
         },
         function (n) {
-          cap("After three values in a steady pattern, Return fills in the next one by itself: 20, 25, 30 and 35. The table grows to make room.");
+          cap("Return auto-fills");
           ret(function () { ret(function () { ret(function () { pgWait(500, n); }); }); });
         },
         function (n) {
-          cap("Now the y-values: the arrow keys go to the top of the table and over to the y column. Each time a row is completed its point is plotted, and the graph zooms out by itself when the point would be off the screen.");
+          cap("Now y-values");
           toTop(function () { key("ArrowRight"); pgWait(600, function () { (function ys(i) { if (i > 6) { n(); return; } typeHere(DYS[i], function () { ys(i + 1); }); })(0); }); });
         },
-        function (n) { cap("Press Regression: the best-fitting curve for the family is calculated and graphed, with its equation."); tap(tog("reg"), function () { pgWait(2600, n); }); },
+        function (n) { cap("Press Regression"); tap(tog("reg"), function () { pgWait(2600, n); }); },
         function (n) {
-          cap("Change Family steps through line, absolute value, quadratic and constant, and then around again. Let's stop on quadratic.");
+          cap("Change families");
           (function again(i) { if (i >= 6) { pgWait(2200, n); return; } tap($("pgFam"), function () { pgWait(i === 5 ? 600 : 1100, function () { again(i + 1); }); }); })(0);
         },
-        function (n) { cap("The home button returns the graph to its starting view."); tap($("zmHome"), function () { pgWait(2000, function () { cap("The Data button, left of the +, zooms to fit all of the data."); tap($("zmData"), function () { pgWait(2400, n); }); }); }); }
+        function (n) { cap("Home view"); tap($("zmHome"), function () { pgWait(2000, function () { cap("Zoom to data"); tap($("zmData"), function () { pgWait(2400, n); }); }); }); }
       ].concat([
-        function (n) { cap("Your turn: type your own data, plot it, and zoom or move the graph to look at it."); pgWait(2500, n); }
+        function (n) { cap("Your turn"); pgWait(2500, n); }
       ]);
     }
     (function next() { if (pgRun !== run) return; if (k >= steps.length) { PG.demoFin = true; pgStop(); return; } steps[k++](next); })();
