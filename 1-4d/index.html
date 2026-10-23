@@ -3965,7 +3965,15 @@
         function (n) { cap("Drag the equation onto any center cell of the table."); dragEq(0, n); },
         function (n) { cap("Type a y-value."); typeRow(0, n); },
         function (n) { cap("Click a calculation to simplify it."); clickRow(1, n); },
-        function (n) { cap("Fill in the rest."); typeRow(2, function () { clickRow(3, function () { typeRow(4, n); }); }); },
+        function (n) {
+          // a constant, an absolute value and a parabola are symmetric about the middle row, so a finished y-value can be dragged to the matching cell on the other side
+          if (pqFam !== 1) { cap("Fill in the middle row."); typeRow(2, n); return; }
+          cap("Fill in the rest."); typeRow(2, function () { clickRow(3, function () { typeRow(4, n); }); });
+        },
+        function (n) {
+          if (pqFam === 1) { n(); return; }
+          cap("Copy a y-value: drag it from one y cell to another cell with the same answer."); dragY(1, 3, function () { cap("Same for the first row: drag its y-value to the last."); dragY(0, 4, n); });
+        },
         function (n) { cap("Drag each row onto the graph."); dragAll(0, n); },
         function (n) { cap("Now the graph: choose the tool that fits the points."); pqFam < 2 ? clickTool("line", [0, ys(0)], [1, ys(1)], n) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, n); },
         function (n) { cap("The equation, the table and the graph all describe the same parent."); var tg = document.querySelector(".tog[data-part=graph]"); if (!PG.show.graph && tg) tg.click(); pgWait(2300, n); }
@@ -3979,7 +3987,14 @@
       steps = [
         function (n) { cap("g(x) is given. Start with the table: drag g(x) onto any center cell."); dragEq(0, n); },
         function (n) { if (!scroll) { n(); return; } cap("The x-values are centered at 0, but the vertex of g is at x = " + nf(H()) + ". Drag the dot to scroll the table until x = " + nf(H()) + " is in the middle row."); dialDemo(-H(), n); },
-        function (n) { cap("Type a y-value, click calculations to simplify, and fill in the rest."); typeRow(0, function () { clickRow(1, function () { typeRow(2, function () { clickRow(3, function () { typeRow(4, n); }); }); }); }); },
+        function (n) {
+          if (pqFam !== 1) { cap("Type a y-value, click a calculation to simplify, and do the middle row."); typeRow(0, function () { clickRow(1, function () { typeRow(2, n); }); }); return; }   // symmetric families: the rest are copied next
+          cap("Type a y-value, click calculations to simplify, and fill in the rest."); typeRow(0, function () { clickRow(1, function () { typeRow(2, function () { clickRow(3, function () { typeRow(4, n); }); }); }); });
+        },
+        function (n) {
+          if (pqFam === 1) { n(); return; }
+          cap("Copy a y-value: drag it from one y cell to another cell with the same answer."); dragY(1, 3, function () { cap("Same for the first row: drag its y-value to the last."); dragY(0, 4, n); });
+        },
         function (n) { cap("Now graph the parent function: the simplest graph in the " + FAMS[pqFam] + " family."); pgWait(2000, n); },
         function (n) { pqFam < 2 ? clickTool("line", [0, pf(0)], [1, pf(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, watch(n)); },
         function (n) { cap("A correct parent turns dotted. Now graph g(x) with the same tool."); pgWait(1800, n); },
