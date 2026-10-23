@@ -565,7 +565,9 @@
       if (res.some(function (r) { return !r.u[0].n || !r.u[1].n; })) return;
       if (!(res[0].u[0].n * res[1].u[1].n - res[0].u[1].n * res[1].u[0].n)) return;
       var cost = res[0].ms.length + res[1].ms.length;
-      if (!best || cost < best.cost) best = { v: v, pairs: res, cost: cost };
+      // a variable with a coefficient of 1 or \u22121 is the friendliest to eliminate, so those come first (if possible); then the fewest multiplications
+      var unit = res.filter(function (r) { return Math.abs(E[0][CK[v]].n) === 1 || Math.abs(E[r.p][CK[v]].n) === 1; }).length;
+      if (!best || unit > best.unit || (unit === best.unit && cost < best.cost)) best = { v: v, pairs: res, cost: cost, unit: unit };
     });
     return best;
   }
@@ -1178,7 +1180,9 @@
     if (ws.length === 2) {
       var cx = elimMuls(base[0][CK[vs[0]]].n, base[1][CK[vs[0]]].n), cy = elimMuls(base[0][CK[vs[1]]].n, base[1][CK[vs[1]]].n);
       // fewer multiplications wins; on a tie, take turns
-      var i0 = cx.length !== cy.length ? (cx.length < cy.length ? 0 : 1) : curDm - 1;
+      // prefer the variable that has a coefficient of 1 or \u22121 (if possible); then fewer multiplications; on a tie, take turns
+      var u0 = Math.abs(base[0][CK[vs[0]]].n) === 1 || Math.abs(base[1][CK[vs[0]]].n) === 1, u1 = Math.abs(base[0][CK[vs[1]]].n) === 1 || Math.abs(base[1][CK[vs[1]]].n) === 1;
+      var i0 = u0 !== u1 ? (u0 ? 0 : 1) : cx.length !== cy.length ? (cx.length < cy.length ? 0 : 1) : curDm - 1;
       pendElim = { v: vs[i0], rows: [0, 1] };
       return mulStep(i0 ? cy : cx, base, function (r) { return r; }) || ["add", 0, 1];
     }
