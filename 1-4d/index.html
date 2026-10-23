@@ -3284,7 +3284,12 @@
       var l2 = bh - st, r2 = bh + st; for (var it = 0; it < 70; it++) { var m1 = l2 + (r2 - l2) / 3, m2 = r2 - (r2 - l2) / 3; if (sse(m1)[0] < sse(m2)[0]) r2 = m2; else l2 = m1; }
       var hb = (l2 + r2) / 2, R = sse(hb); if (isFinite(R[0])) { DFIT.c = { a: R[1], h: hb, k: R[2] }; PG.a = R[1]; PG.h = hb; PG.k = R[2]; }
     }
-    DFIT.ok = !!DFIT.c; return DFIT;
+    DFIT.ok = !!DFIT.c; DFIT.r2 = null;
+    if (DFIT.ok) {   // R^2: how much of the spread of the y-values the curve accounts for
+      var my = mean(ys), sr = 0, st2 = 0; for (var i3 = 0; i3 < n; i3++) { var d1 = ys[i3] - g(xs[i3]), d2 = ys[i3] - my; sr += d1 * d1; st2 += d2 * d2; }
+      DFIT.r2 = st2 < 1e-12 ? 1 : 1 - sr / st2;
+    }
+    return DFIT;
   }
   function dataOK() { return !isDataAct() || dataFit().ok; }
   function rd2(v) { var r = Math.round(v * 100) / 100; return Object.is(r, -0) ? 0 : r; }
@@ -3306,12 +3311,12 @@
     else T = poly([[c.c, ""]]);
     return "<i>y</i> = " + T;
   }
-  // the longer versions of the coefficients, at the bottom of the right side panel (only when rounding changed something)
+  // the longer versions of the coefficients, and R squared, at the bottom of the right side panel whenever there is a regression
   function regUpd() {
     var el = $("regVals"); if (!el) return; var F = isDataAct() && PG.show.eq ? dataFit() : null;
     if (!F || !F.ok) { el.hidden = true; el.innerHTML = ""; return; }
     var c = F.c, L = FAMS[PG.fam] === "linear" ? [["m", c.m], ["b", c.b]] : FAMS[PG.fam] === "quadratic" ? [["a", c.a], ["b", c.b], ["c", c.c]] : FAMS[PG.fam] === "absolute value" ? [["a", c.a], ["h", c.h], ["k", c.k]] : [["c", c.c]];
-    if (!L.some(function (q) { return Math.abs(q[1] - rd2(q[1])) > 1e-9; })) { el.hidden = true; el.innerHTML = ""; return; }
+    L.push(["R\u00b2", F.r2]);   // every regression reports its R squared along with its constants
     el.innerHTML = L.map(function (q) { return "<div>" + q[0] + " = " + dnum(+q[1].toFixed(10)) + "</div>"; }).join(""); el.hidden = false;
   }
   function eqHTML() { if (isDataAct()) return dataEqHTML(); return "<i>" + fname() + "</i>(<i>x</i>) = " + rhsHTML(); }
