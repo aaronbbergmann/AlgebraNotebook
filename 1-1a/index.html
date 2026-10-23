@@ -4539,31 +4539,52 @@
     var k = 0;
     if (isDataAct()) {   // a Data Activity: a table of x and y values, plotted and explored on the graph
       // type into a cell the way a student does, then press Return (or step to the next cell with the keyboard)
-      function typeCell(i, col, val, next) { typeRow(i, function () { TB.submit(i, col); pgWait(350, next); }, String(val), col, true); }
-      function ret(next, wait) { var el = document.activeElement; if (el) el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })); pgWait(wait || 450, next); }
+      // the hand clicks once in the table; from then on everything is done from the keyboard
+      function clickCell(i, col, then) {
+        var e = $("pgTable").querySelector("input.qzCell[data-c=\"" + col + "\"][data-r=\"" + i + "\"]"); if (!e) { then(); return; }
+        var rc = e.getBoundingClientRect(); handGo({ x: rc.right - 12, y: rc.top + rc.height / 2 }, 500);
+        pgWait(650, function () { handTap(); TB.focus(i, col, true); pgWait(350, then); });
+      }
+      function key(k) { var el = document.activeElement; if (el) el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true })); }
+      function ret(next, wait) { key("Enter"); pgWait(wait || 450, next); }
+      // type into the cell the cursor is in, one character at a time, then press Return
+      function typeHere(val, next) {
+        var a = document.activeElement, td = a && a.closest && a.closest("td"), tr = td && td.parentNode; if (!tr || tr.dataset.r === undefined) { next(); return; }
+        var r = tr.dataset.r, c = a.dataset.c, text = String(val), n = 0;
+        (function go() {
+          if (pgRun !== run) return; n++; var e = $("pgTable").querySelector("input.qzCell[data-c=\"" + c + "\"][data-r=\"" + r + "\"]"); if (!e) { next(); return; }
+          if (document.activeElement !== e) e.focus(); e.value = text.slice(0, n); e.dispatchEvent(new Event("input", { bubbles: true }));
+          if (n < text.length) pgWait(90, go); else pgWait(250, function () { key("Enter"); pgWait(350, next); });
+        })();
+      }
+      // arrow keys up the column to the first row
+      function toTop(then) {
+        (function up() {
+          if (pgRun !== run) return; var a = document.activeElement, tr = a && a.closest && a.closest("tr[data-r]"); if (!tr || +tr.dataset.r <= 0) { then(); return; }
+          key("ArrowUp"); pgWait(120, up);
+        })();
+      }
       var DYS = [225, 401, 524, 602, 623, 600, 524];
       steps = [
         function (n) {
-          cap("Play Data: a table of x and y values. Let's enter some data. First the x-values: type 5, 10 and 15, pressing Return after each.");
+          cap("Play Data: a table of x and y values. Let's enter some data. Click once in the table, then use the keyboard: type 5, 10 and 15, pressing Return after each.");
           PG.fam = 1; PG.drows = null; PG.pts = []; PG.sp = []; Object.keys(PG.show).forEach(function (q) { PG.show[q] = false; }); PG.show.eq = false; drawPlay();
-          typeCell(0, "x", 5, function () { typeCell(1, "x", 10, function () { typeCell(2, "x", 15, n); }); });
+          clickCell(0, "x", function () { typeHere(5, function () { typeHere(10, function () { typeHere(15, n); }); }); });
         },
         function (n) {
           cap("After three values in a steady pattern, Return fills in the next one by itself: 20, 25, 30 and 35. The table grows to make room.");
           ret(function () { ret(function () { ret(function () { pgWait(500, n); }); }); });
         },
         function (n) {
-          cap("Now the y-values. Each time a row is completed its point is plotted, and the graph zooms out by itself when the point would be off the screen.");
-          (function ys(i) { if (i > 6) { n(); return; } typeCell(i, "y", DYS[i], function () { ys(i + 1); }); })(0);
+          cap("Now the y-values: the arrow keys go to the top of the table and over to the y column. Each time a row is completed its point is plotted, and the graph zooms out by itself when the point would be off the screen.");
+          toTop(function () { key("ArrowRight"); pgWait(600, function () { (function ys(i) { if (i > 6) { n(); return; } typeHere(DYS[i], function () { ys(i + 1); }); })(0); }); });
         },
-        function (n) { cap("Press Regression: the best-fitting curve for the family is calculated and graphed, with its equation. The family starts as line: y = mx + b."); tap(tog("reg"), function () { pgWait(2800, n); }); },
-        function (n) { cap("The coefficients are rounded to the nearest hundredth in the equation; the longer values, labeled m and b, are at the bottom of the side panel."); pgWait(3200, n); },
-        function (n) { cap("Change Family: absolute value, y = a|x \u2212 h| + k."); tap($("pgFam"), function () { pgWait(2600, n); }); },
-        function (n) { cap("Quadratic: y = ax\u00b2 + bx + c."); tap($("pgFam"), function () { pgWait(2600, n); }); },
-        function (n) { cap("Constant: y = c."); tap($("pgFam"), function () { pgWait(2200, n); }); },
-        function (n) { cap("And around again to line."); tap($("pgFam"), function () { pgWait(2200, n); }); },
-        function (n) { cap("Press Regression again to hide the regression."); tap(tog("reg"), function () { pgWait(900, n); }); },
-        function (n) { rectDemo(function () { cap("The Data button, left of the +, zooms to fit all of the data."); tap($("zmData"), function () { pgWait(2200, n); }); }); }
+        function (n) { cap("Press Regression: the best-fitting curve for the family is calculated and graphed, with its equation."); tap(tog("reg"), function () { pgWait(2600, n); }); },
+        function (n) {
+          cap("Change Family steps through line, absolute value, quadratic and constant, and then around again. Let's stop on quadratic.");
+          (function again(i) { if (i >= 6) { pgWait(2200, n); return; } tap($("pgFam"), function () { pgWait(i === 5 ? 600 : 1100, function () { again(i + 1); }); }); })(0);
+        },
+        function (n) { cap("The home button returns the graph to its starting view."); tap($("zmHome"), function () { pgWait(2000, function () { cap("The Data button, left of the +, zooms to fit all of the data."); tap($("zmData"), function () { pgWait(2400, n); }); }); }); }
       ].concat([
         function (n) { cap("Your turn: type your own data, plot it, and zoom or move the graph to look at it."); pgWait(2500, n); }
       ]);
