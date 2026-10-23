@@ -301,6 +301,7 @@
   .pgDesc{font-size:1.08rem;line-height:1.45}
   .pgEqMsg{font:600 .9rem/1.35 system-ui,sans-serif;color:#C0301E;margin-top:-.5rem}.pgEqMsg:empty{display:none}
   /* Data Activities: the table has only the x and y columns */
+  body.dataAct .dial,body.dataAct .tog[data-part=table]{display:none!important}
   body.dataAct .pgTable th.pgMid,body.dataAct .pgTable td.mid,body.dataAct .pgTable col:nth-child(2){display:none}
   body.dataAct .pgTable col:nth-child(1),body.dataAct .pgTable col:nth-child(3){width:50%}
   body.crPre .pgGraphWrap,body.crPre .pgTable,body.crPre .qzTools{visibility:hidden}
@@ -2600,7 +2601,7 @@
   function pqMsg(t, cls) { var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = t || ""; }
   function pqSetup() {
     closePt(); var fam = qFam();
-    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = [];
+    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = [];
     PG.show = { eq: false, table: false, graph: false, desc: true, parent: false }; PG.pdone = false; PG.dOK = false; $("pgDescTx").value = "";
     if (gd()) {
       var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.a = tr.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false };
@@ -2882,6 +2883,8 @@
   TB.rows = function () {
     var mk5 = function () { return [-2, -1, 0, 1, 2].map(function (u) { return { u: u, sub: false, idx: 0, done: false }; }); };
     if (TB.mode() === "quiz") return QZ.tbl || (QZ.tbl = mk5());
+    // a Data Activity has a plain list of rows (five to start with); the table grows or closes up as it fills (see TB.grow)
+    if (isDataAct()) return PG.drows || (PG.drows = [0, 1, 2, 3, 4].map(function () { return TB.newRow(); }));
     // Play: the window shows 5 x-values; each keeps its own state while it is scrolled out of view
     var m = PG.tbl && !Array.isArray(PG.tbl) ? PG.tbl : (PG.tbl = {});
     return [-2, -1, 0, 1, 2].map(function (k) { var w = k + (PG.off || 0); var r = m[w] || (m[w] = { u: w, sub: false, idx: 0, done: false });
@@ -2889,11 +2892,13 @@
       if ((PG.subd || PG.mfill) && TB.hasX(r) && !r.sub && !r.done) { r.sub = true; r.idx = 0; }
       return r; });
   };
+  TB.newRow = function () { return { u: 0, sub: false, idx: 0, done: false }; };
   TB.par = function () { return TB.mode() === "quiz" ? { f: FAMS[qFam()], a: 1, h: 0, k: 0 } : { f: FAMS[PG.fam], a: A(), h: H(), k: K() }; };
   TB.x = function (r) { return r.xv !== undefined ? r.xv : r.u; };
   TB.hasX = function (r) { return TB.mode() !== "play" || r.xv !== undefined || !!PG.subd; };
   TB.st = function (r) { var p = TB.par(); return sstep(p.f, p.a, p.h, p.k, TB.x(r)); };
-  TB.y = function (r) { var p = TB.par(); return gval(p.f, p.a, p.h, p.k, TB.x(r)); };
+  TB.y = function (r) { if (isDataAct() && TB.mode() === "play") return r.yv !== undefined ? r.yv : NaN;   // Data: the y-value is whatever was typed
+    var p = TB.par(); return gval(p.f, p.a, p.h, p.k, TB.x(r)); };
   TB.pt = function (i) { var r = TB.rows()[i]; return [TB.x(r), TB.y(r)]; };
   TB.html = function () {
     var play = TB.mode() === "play";
@@ -2928,6 +2933,7 @@
     if (t && !n) { r.xt = t; return false; }
     var v = n ? Math.round(n.n / n.d * 10000) / 10000 : undefined, old = r.xv !== undefined ? r.xv : (PG.subd ? r.u : undefined); r.xt = "";
     if (v === old && (v !== undefined || r.xv === undefined)) return false;
+    if (isDataAct()) { r.xv = v; r.done = v !== undefined && r.yv !== undefined; return true; }
     r.xv = v; r.done = false; r.fl = false; r.idx = 0; r.tv = "";
     r.sub = v !== undefined && !!(PG.subd || PG.mfill);
     return true;
@@ -2935,6 +2941,7 @@
   // the student can type the y-value instead of simplifying: a right answer completes the row
   TB.typed = function (i, v, col) {
     var r = TB.rows()[i]; if (!r || r.done || r.fl) return;
+    if (isDataAct()) { r.tv = v; return; }   // Data: a y-value is accepted when the cell is left (Return, an arrow or a click elsewhere), whatever it is
     var had = $("pgTable").contains(document.activeElement);
     r.tv = v; var n = parse(String(v).replace(/\u2212/g, "-")); if (!n || Math.abs(n.n / n.d - TB.y(r)) > 1e-6) return;
     r.sub = true; r.done = true; r.tv = ""; r.mt = false; TB.pop = i; TB.draw();
@@ -2943,7 +2950,39 @@
     if (had && col !== false && !(typeof pgRun !== "undefined" && pgRun)) TB.focus(i, col || "y");
   };
   // the cell fills a column: type a value, press Return or the down arrow; two values one apart prefill the next
+  // Data Activities: every row with an x and a typed y becomes a data point; the graph zooms out to show it when it is off the screen
+  TB.commitAll = function () {
+    var ch = []; TB.rows().forEach(function (r) {
+      if (r.done || !TB.hasX(r)) return; var q = parse(String(r.tv || "").replace(/\u2212/g, "-").trim()); if (!q) return;
+      r.yv = q.n / q.d; r.done = true; r.sub = true; r.tv = ""; ch.push(r);
+    });
+    return ch;
+  };
+  TB.dSync = function () {
+    if (!isDataAct() || TB.mode() !== "play") return;
+    var ch = TB.commitAll(), rs = TB.rows();
+    if (ch.length) { TB.draw(); drawGraph(); ch.forEach(function (r) { TB.see(rs.indexOf(r)); }); }
+    TB.grow();
+  };
   TB.submit = function (i, c) {
+    if (isDataAct()) {
+      // Return: the cell is accepted. After three x-values in a steady pattern (5, 10, 15) Return carries the pattern on into the next empty cell (20, then 25 ...)
+      var rd = TB.rows(), cur = rd[i], xi0 = c === "x" ? $("qzX" + i) : null; if (!cur) return;
+      if (xi0) TB.setX(i, xi0.value);
+      var ch = TB.commitAll(); TB.draw(); TB.grow();
+      var rs2 = TB.rows(), i2 = rs2.indexOf(cur), preR = null;
+      if (c === "x" && i2 >= 2 && i2 < rs2.length - 1 && TB.empty(i2 + 1, "x") && TB.hasX(rs2[i2]) && TB.hasX(rs2[i2 - 1]) && TB.hasX(rs2[i2 - 2])) {
+        var x2 = TB.x(rs2[i2]), x1 = TB.x(rs2[i2 - 1]), x0 = TB.x(rs2[i2 - 2]), d1 = x1 - x0, d2 = x2 - x1;
+        if (d2 !== 0 && Math.abs(d1 - d2) < 1e-9) { preR = rs2[i2 + 1]; TB.setX(i2 + 1, String(Math.round((x2 + d2) * 10000) / 10000)); TB.draw(); TB.grow(); }
+      }
+      var rs3 = TB.rows(); if (ch.length) drawGraph();
+      var t = preR ? rs3.indexOf(preR) : -1, ci = rs3.indexOf(cur);
+      if (t < 0) { for (var j = ci + 1; j < rs3.length && t < 0; j++) if (TB.empty(j, c)) t = j; for (j = 0; j < ci && t < 0; j++) if (TB.empty(j, c)) t = j; }
+      if (t < 0) t = Math.min(ci + 1, rs3.length - 1);
+      TB.focus(t, c);
+      ch.forEach(function (r) { TB.see(rs3.indexOf(r)); });
+      return;
+    }
     var rs = TB.rows(), n = rs.length, pre = -1;
     if (c === "x") { var xi = $("qzX" + i); if (xi) TB.setX(i, xi.value); }
     if (i > 0 && i < n - 1 && TB.empty(i + 1, c)) {
@@ -2953,14 +2992,14 @@
         if (c === "x") TB.setX(pre, String(v)); else { var yv = rs[pre]; yv.tv = String(v); TB.typed(pre, String(v), false); }
       }
     }
-    TB.draw();
+    TB.draw(); TB.grow();
     var t = pre;
     if (t < 0) { for (var j = i + 1; j < n && t < 0; j++) if (TB.empty(j, c)) t = j; for (j = 0; j < i && t < 0; j++) if (TB.empty(j, c)) t = j; }
     if (t < 0) t = Math.min(i + 1, n - 1);
     TB.focus(t, c);
   };
   // leaving an x cell keeps what was typed
-  TB.leave = function (i, c) { if (c === "x") { var xi = $("qzX" + i); if (xi && TB.setX(i, xi.value)) TB.draw(); } };
+  TB.leave = function (i, c) { if (c === "x") { var xi = $("qzX" + i); if (xi && TB.setX(i, xi.value)) TB.draw(); } if (isDataAct()) TB.dSync(); else TB.grow(); };
   // a click on an empty center cell: every row that has an x-value shows the equation with that x put in; a +1/-1 sequence of x-values also fills in the empty ones
   TB.midFill = function (i) {
     var td = $("pgTable").querySelector("td.mid[data-r=\"" + i + "\"]"), rs = TB.rows(), known = rs.map(function (r) { return TB.hasX(r); });
@@ -3013,7 +3052,25 @@
   };
   TB.after = function () {
     if (TB.mode() === "quiz") { if (QZ.step === 1 && TB.rows().every(function (r) { return r.done; })) setTimeout(function () { if (QZ.step === 1 && (mode === "sequence" || mode === "demo")) qzAdvance(); }, 700); }
-    else if (TB.mode() === "play") drawPlay();
+    else if (TB.mode() === "play") { drawPlay(); TB.grow(); }
+  };
+  // Data Activities: when the bottom row has something in it, the rows below any completely empty rows slide up to close the gaps; with no empty row to fill, another row is added
+  TB.rowEmpty = function (r) { return r.xv === undefined && !String(r.xt || "").trim() && !String(r.tv || "").trim() && !r.done && !r.fl && !r.sub; };
+  TB.grow = function () {
+    if (!isDataAct() || TB.mode() !== "play" || !fillMode()) return;
+    var rows = TB.rows(), n = rows.length; if (!n || TB.rowEmpty(rows[n - 1])) return;
+    var T0 = $("pgTable"), tb = T0.querySelector("tbody"), fa = document.activeElement, fr = null, fc = -1, old = new Map();
+    if (fa && T0.contains(fa)) { var ftr = fa.closest("tr[data-r]"), ftd = fa.closest("td"); if (ftr && ftd) { fr = rows[+ftr.dataset.r]; fc = ftd.cellIndex; } }
+    [].forEach.call(tb.querySelectorAll("tr[data-r]"), function (tr) { old.set(rows[+tr.dataset.r], tr.getBoundingClientRect().top); });
+    var gaps = rows.filter(TB.rowEmpty).length, grown = false;
+    if (gaps) { var keep = rows.filter(function (r) { return !TB.rowEmpty(r); }); for (var q = 0; q < gaps; q++) keep.push(TB.newRow()); PG.drows = keep; } else { PG.drows.push(TB.newRow()); grown = true; }
+    tb.innerHTML = TB.html(); TB.pop = -1; posDial();
+    var nr = TB.rows(); if (fr && nr.indexOf(fr) >= 0) TB.focus(nr.indexOf(fr), "xmy".charAt(fc), true);
+    [].forEach.call(tb.querySelectorAll("tr[data-r]"), function (tr) {
+      var r = nr[+tr.dataset.r];
+      if (old.has(r)) { var dy = old.get(r) - tr.getBoundingClientRect().top; if (Math.abs(dy) > 1) tr.animate([{ transform: "translateY(" + dy + "px)" }, { transform: "none" }], { duration: 650, easing: "ease-in-out" }); }
+      else if (grown) tr.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500 });
+    });
   };
   TB.autofill = function () { TB.rows().forEach(function (r) { r.sub = true; r.done = true; r.fl = false; }); TB.draw(); };
   // smallest denominator d (1, 2, 3 ...) for which target is a whole number of 1/d units
@@ -3091,8 +3148,8 @@
         if (c === "m") { if (k === "Enter" && !isIn) td.click(); else if (i < n - 1) TB.focus(i + 1, "m"); }
         else TB.submit(i, c);
       } else if (k === "ArrowUp") { e.preventDefault(); TB.leave(i, c); if (i > 0) TB.focus(i - 1, c); }
-      else if (k === "ArrowLeft") { if (isIn && t.selectionStart > 0) return; e.preventDefault(); if (ci > 0) { TB.leave(i, c); TB.focus(i, "xmy".charAt(ci - 1)); } }
-      else if (k === "ArrowRight") { if (isIn && t.selectionEnd < t.value.length) return; e.preventDefault(); if (ci < 2) { TB.leave(i, c); TB.focus(i, "xmy".charAt(ci + 1)); } }
+      else if (k === "ArrowLeft") { if (isIn && t.selectionStart > 0) return; e.preventDefault(); var cl = isDataAct() ? "xy" : "xmy", cj = cl.indexOf(c); if (cj > 0) { TB.leave(i, c); TB.focus(i, cl.charAt(cj - 1)); } }
+      else if (k === "ArrowRight") { if (isIn && t.selectionEnd < t.value.length) return; e.preventDefault(); var cr = isDataAct() ? "xy" : "xmy", ck = cr.indexOf(c); if (ck < cr.length - 1) { TB.leave(i, c); TB.focus(i, cr.charAt(ck + 1)); } }
       else if (!isIn && c !== "x" && (k === "Backspace" || k === "Delete" || (k.length === 1 && /[0-9.\-\/\u2212]/.test(k)))) {
         // typing over a full cell replaces what it holds
         e.preventDefault(); var ch = k.length === 1 ? k : "", r = TB.rows()[i];
@@ -3105,6 +3162,7 @@
       var r = TB.rows()[i]; v = String(v).trim(); if (!r || r.done || !/^[-\u2212]?\d+(\.\d+)?(\/\d+)?$/.test(v)) return;
       var yi = $("qzY" + i); if (yi) yi.value = v; TB.typed(i, v, "m");
     };
+    T.addEventListener("focusout", function (e) { if (e.target.classList && e.target.classList.contains("qzCell")) setTimeout(function () { if (isDataAct()) TB.dSync(); else TB.grow(); }, 0); });
     T.addEventListener("input", function (e) {
       if (!TB.mode() || !e.target.classList || !e.target.classList.contains("qzCell")) return;
       var c = e.target.dataset.c; if (c === "x") { var rx = TB.rows()[+e.target.dataset.r]; if (rx) rx.xt = e.target.value; return; }
@@ -3143,7 +3201,7 @@
         var r0 = TB.rows()[i]; if (!r0 || !TB.hasX(r0)) return;
         ok = true; p = TB.pt(i); fillRow = r0;
       }
-      else if (PG.show.table) { ok = true; var x = i - 2 + (PG.off || 0); p = [x, g(x)]; }
+      else if (PG.show.table) { var x = i - 2 + (PG.off || 0); if (isDataAct()) { var rd = TB.rows()[i]; if (!rd || rd.xv === undefined) return; x = rd.xv; } ok = true; p = [x, g(x)]; }
       if (!ok) return;
       var added = false, near = function (a, b) { return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9; };
       // the red target stays on the graph until a plotted point sits on it: a miss leaves it there to be corrected
@@ -3226,9 +3284,12 @@
   // table: x | the equation with that x substituted | y
   function tableHTML() {
     var rows = "", h = H();
+    if (isDataAct()) {   // the rows the student has made (any with no x are left blank)
+      TB.rows().forEach(function (r, i) { var c = PG.show.table && r.xv !== undefined ? [nf(r.xv), r.done ? nf(r.yv) : ""] : ["", ""]; rows += "<tr data-r=\"" + i + "\">" + c.map(function (t) { return "<td>" + t + "</td>"; }).join("") + "</tr>"; });
+      return rows;
+    }
     for (var u = -2; u <= 2; u++) {
-      var x = u + (PG.off || 0), c; if (isDataAct()) { var rr = TB.rows()[u + 2]; if (rr && rr.xv !== undefined) x = rr.xv; }
-      c = PG.show.table ? (isDataAct() ? [nf(x), nf(g(x))] : [nf(x), rhsHTML(x), nf(g(x))]) : (isDataAct() ? ["", ""] : ["", "", ""]);
+      var x = u + (PG.off || 0), c = PG.show.table ? [nf(x), rhsHTML(x), nf(g(x))] : ["", "", ""];
       rows += "<tr data-r=\"" + (u + 2) + "\">" + c.map(function (t) { return "<td>" + t + "</td>"; }).join("") + "</tr>";
     }
     return rows;
@@ -3419,6 +3480,7 @@
       ag.appendChild(svgEl("circle", { cx: H() + 1, cy: -(K() + PG.a), r: .2, fill: "#6042A6" }));
       S.appendChild(ag);
     }
+    if (isDataAct()) TB.rows().forEach(function (r) { if (r.done && isFinite(r.xv) && isFinite(r.yv)) { S.appendChild(svgEl("circle", { cx: r.xv, cy: -r.yv, r: .5, fill: "#2D70B3", "fill-opacity": ".15" })); S.appendChild(svgEl("circle", { cx: r.xv, cy: -r.yv, r: .24, fill: "#2D70B3" })); } });   // the rows of a Data Activity are points
     TB.targets.forEach(function (p) { S.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .34, fill: "#FFD400", stroke: "#B58900", "stroke-width": ".07" })); });
     PG.pts.forEach(function (p, j) {
       var sg2 = svgEl("g", { "data-sp": j, style: "cursor:pointer" });
@@ -3539,7 +3601,7 @@
   function eqAdopt(t) {
     var r = eqFit(t); if (r.err) { eqMsg(r.err); eqShake(); if (PG.editEq) { var fe = $("pgEq").querySelector(".eqIn"); if (fe) { fe.focus(); fe.setSelectionRange(fe.value.length, fe.value.length); } } return false; }
     PG.editEq = false; PG.fam = r.fam; PG.a = r.a; PG.h = r.h; PG.k = r.k; PG.pa = [r.h + 1, r.k + r.a]; PG.eqTxt = ""; PG.show.eq = true;
-    PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true;
+    PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true;
     eqMsg(""); drawPlay(); return true;
   }
   // Graph & Describe, Create: the typed function becomes the problem
@@ -3796,7 +3858,7 @@
       document.addEventListener("pointermove", mv); document.addEventListener("pointerup", off); document.addEventListener("pointercancel", off);
     });
   })();
-  $("pgFam").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); PG.fam = (PG.fam + 1) % FAMS.length; PG.eqTxt = ""; PG.editEq = false; PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; drawPlay(); });
+  $("pgFam").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); PG.fam = (PG.fam + 1) % FAMS.length; PG.eqTxt = ""; PG.editEq = false; PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; drawPlay(); });
   [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (e.isTrusted) pgUser(); closePt(); var part = b.dataset.part, on = !PG.show[part], rv = on ? pgReveal(part) : null; PG.show[part] = on; drawPlay(); if (rv) rv(); }); });
   // ---- 1.1 Play demo: the hand shows every control, one at a time ----
   var pgRun = 0, pgQ = [], pgPaused = false, pgShift = 0, pgPauseAt = 0, pgHeld = [], pgSnap = null, pgHandOp = "1";
@@ -3837,7 +3899,7 @@
     if (pgRun) { pgStop(); return; }
     closePt(); var run = ++pgRun; PG.demoFin = false; zoomHome(true); theme(); pgShift = 0; dmUI("playing");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
-    PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
+    PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
     if (GD) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
     Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; drawPlay();
@@ -4096,6 +4158,19 @@
         }); });
       }); }); });
     }
+    // a row finished off the graph: the graph zooms out by itself (restoreX is the x the row goes back to afterwards)
+    function autoZoomStep(restoreX, n) {
+      cap("When a finished row lands off the graph, the graph zooms out by itself. Hide the table, and try x = 20 in the first row.");
+      tap(tog("table"), function () {
+        TB.setX(0, "20"); drawPlay();
+        pgWait(700, function () { typeRow(0, function () {
+          pgWait(2200, function () {
+            cap("Press home to return, and put the row back.");
+            tap($("zmHome"), function () { TB.setX(0, restoreX); TB.typed(0, String(TB.y(TB.rows()[0])), false); tap(tog("table"), function () { pgWait(1800, n); }); });
+          });
+        }); });
+      });
+    }
     var steps = [
       function (n) { cap("Start with the equation. It names the family and every transformation."); pgWait(2200, n); },
       function (n) { cap("Press Graph to see the curve first."); tap(tog("graph"), n); },
@@ -4119,7 +4194,14 @@
       function (n) { cap("Now hide the graph again: we will rebuild it from the table."); tap(tog("graph"), n); },
       function (n) { cap("With Table off, the table is empty for you to complete yourself."); pgWait(1800, n); },
       function (n) {
-        if (isDataAct()) { cap("The table has an x column and a y column. Type the x-values in the left column."); (function xs(i) { if (i > 4) { n(); return; } typeRow(i, function () { TB.setX(i, String(i + 1)); TB.draw(); xs(i + 1); }, String(i + 1), "x"); })(0); return; }
+        if (isDataAct()) { cap("The table has an x column and a y column. Type the x-values in the left column."); (function xs(i) {
+          if (i > 4) {
+            cap("The left and right arrow keys move between the columns.");
+            var a0 = $("qzX0"), key = function (k) { var el = document.activeElement; if (el) el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true })); };
+            if (!a0) { n(); return; } handGo(ctr(a0), 600);
+            pgWait(900, function () { TB.focus(0, "x", true); handTap(); pgWait(900, function () { key("ArrowRight"); pgWait(1300, function () { key("ArrowLeft"); pgWait(1300, function () { key("ArrowRight"); pgWait(1000, n); }); }); }); });
+            return;
+          } typeRow(i, function () { TB.setX(i, String(i + 1)); TB.draw(); xs(i + 1); }, String(i + 1), "x"); })(0); return; }
         cap("Drag the equation onto any center cell. One drop puts each row's x-value into the equation."); dragEq(0, n); },
       function (n) { if (isDataAct()) { n(); return; } cap("Scroll the table with the dot until the vertex, x = 3, is in the middle row."); dialDemo(-3, n); },
       function (n) { cap(isDataAct() ? "Then click a y cell and type the answer yourself." : "Three ways to get a y-value. First: click a y cell and type the answer yourself."); typeRow(0, n); },
@@ -4128,19 +4210,9 @@
       function (n) { cap("The same works for x = 5: copy the 9 from x = 1."); dragY(0, 4, n); },
       function (n) { cap("Now the middle row, but type a wrong answer on purpose."); typeRow(2, n, "4"); },
       function (n) { cap("Press Table to check: right answers get a green check."); tap(tog("table"), function () { pgWait(2200, n); }); },
-      function (n) {
-        cap("When a finished row lands off the graph, the graph zooms out by itself. Hide the table, and try x = 20 in the first row.");
-        tap(tog("table"), function () {
-          TB.setX(0, "20"); drawPlay();
-          pgWait(700, function () { typeRow(0, function () {
-            pgWait(2200, function () {
-              cap("Press home to return, and put the row back.");
-              tap($("zmHome"), function () { TB.setX(0, "1"); TB.typed(0, String(TB.y(TB.rows()[0])), false); tap(tog("table"), function () { pgWait(1800, n); }); });
-            });
-          }); });
-        });
-      },
+      function (n) { autoZoomStep("1", n); },
       function (n) { pauseHere(n); },
+      "@tools",
       function (n) { cap("The buttons beside the graph place things by hand. The dot button plots a point."); dropShape("pt", -3, -3, n); },
       function (n) { cap("Double-click a point to edit it exactly. A small pop-up opens right there with its x and y."); dbl(ptEl(PG.pts.length - 1), n); },
       function (n) { cap("Type new values and the point follows along."); typeBox("pgPtX", "-4", function () { typeBox("pgPtY", "2", n); }); },
@@ -4153,6 +4225,7 @@
       function (n) { cap("Or click the line button: a point snaps to the grid and shows its coordinates. Click it, then click again to land the second point."); clickTool("line", [-4, -3], [0, 1], n); },
       function (n) { cap("The V needs one click less: click the button, then the vertex."); clickTool("V", [2, -2], null, n); },
       function (n) { cap("...and so does the parabola button."); clickTool("U", [-3, 3], null, n); },
+      "@toolsEnd",
       function (n) { cap("Clear the graph again."); tapClear(n); },
       function (n) { cap("Drag each row onto the graph to plot its point. The yellow dot shows where it belongs."); dragRows(0, n); },
       function (n) { cap("Now click the parabola button and click the vertex, (3, 1)."); clickTool("U", [3, 1], null, n); },
@@ -4164,6 +4237,8 @@
       function (n) { zoomDemo(function () { rectDemo(n); }); },
       function (n) { cap("Your turn: try every button, drag both points and plot your own graph."); pgWait(2500, n); }
     ];
+    var TOOLS = steps.slice(steps.indexOf("@tools") + 1, steps.indexOf("@toolsEnd"));   // the buttons beside the graph (shared with the Data demo)
+    steps = steps.filter(function (q) { return typeof q === "function"; });
     if (PQ) {   // 1.1A: the demo answers this parent's question with the equation, the table and the graph
       var EQT = ["f(x)=1", "f(x)=x", "f(x)=|x|", "f(x)=x^2"][pqFam], ys = function (u) { return qf(pqFam, u); };
       var dragAll = function (i, then) { if (i > 4) { then(); return; } dragRow(i, function () { dragAll(i + 1, then); }); };
@@ -4230,6 +4305,38 @@
       ];
     }
     var k = 0;
+    if (isDataAct()) {   // a Data Activity: a table of x and y values, plotted and explored on the graph
+      // type into a cell the way a student does, then press Return (or step to the next cell with the keyboard)
+      function typeCell(i, col, val, next) { typeRow(i, function () { TB.submit(i, col); pgWait(1100, next); }, String(val), col); }
+      function ret(next, wait) { var el = document.activeElement; if (el) el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })); pgWait(wait || 1300, next); }
+      var DYS = [225, 401, 524, 602, 623, 600, 524];
+      steps = [
+        function (n) {
+          cap("Play Data: a table of x and y values. Let's enter some data. First the x-values: type 5, 10 and 15, pressing Return after each.");
+          PG.fam = 0; Object.keys(PG.show).forEach(function (q) { PG.show[q] = false; }); PG.show.eq = false; drawPlay();
+          typeCell(0, "x", 5, function () { typeCell(1, "x", 10, function () { typeCell(2, "x", 15, n); }); });
+        },
+        function (n) {
+          cap("After three values in a steady pattern, Return fills in the next one by itself: 20, 25, 30 and 35. The table grows to make room.");
+          ret(function () { ret(function () { ret(function () { pgWait(900, n); }); }); });
+        },
+        function (n) {
+          cap("The left and right arrow keys move between the columns.");
+          var a0 = $("qzX0"), key = function (k2) { var el = document.activeElement; if (el) el.dispatchEvent(new KeyboardEvent("keydown", { key: k2, bubbles: true, cancelable: true })); };
+          if (!a0) { n(); return; } handGo(ctr(a0), 600);
+          pgWait(900, function () { TB.focus(0, "x", true); handTap(); pgWait(900, function () { key("ArrowRight"); pgWait(1300, function () { key("ArrowLeft"); pgWait(1300, function () { key("ArrowRight"); pgWait(1000, n); }); }); }); });
+        },
+        function (n) {
+          cap("Now the y-values. Each time a row is completed its point is plotted, and the graph zooms out by itself when the point would be off the screen.");
+          (function ys(i) { if (i > 6) { n(); return; } typeCell(i, "y", DYS[i], function () { ys(i + 1); }); })(0);
+        },
+        function (n) { pauseHere(n); },
+        function (n) { zoomDemo(function () { rectDemo(n); }); },
+        function (n) { pauseHere(n); }
+      ].concat(TOOLS, [
+        function (n) { cap("Your turn: type your own data, plot it, and zoom or move the graph to look at it."); pgWait(2500, n); }
+      ]);
+    }
     (function next() { if (pgRun !== run) return; if (k >= steps.length) { PG.demoFin = true; pgStop(); return; } steps[k++](next); })();
   }
   // one button starts, pauses and resumes the demo; End demo appears while it is paused
