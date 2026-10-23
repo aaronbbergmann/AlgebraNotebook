@@ -242,6 +242,7 @@
   .pgGraph svg{display:block;width:100%;height:100%}
   .pgFam{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;margin-bottom:.2rem}
   .btn.simHover:not(:disabled){background:var(--ink);color:var(--bg)}
+  .eqKeys button.simPress{background:#DCE8F7}
   .pgCtl .pgFam:active,.pgCtl .pgFam.simPress{background:var(--plus);border-color:var(--plus);color:#fff}
   .ptEdit{position:fixed;z-index:60;box-sizing:border-box;width:10.5em;margin:0;padding:.7em .8em .8em;background:#fff;border:1px solid #B8BCC2;border-radius:12px;display:flex;flex-direction:column;gap:.45em;box-shadow:0 4px 14px rgba(0,0,0,.22)}
   .ptEdit[hidden]{display:none}
@@ -3851,6 +3852,21 @@
         (function put(c) { if (c > text.length) { pgWait(900, function () { el.blur(); then(); }); return; } el.value = text.slice(0, c); el.dispatchEvent(new Event("input", { bubbles: true })); pgWait(110, function () { put(c + 1); }); })(1);
       });
     }
+    // typing with the help of the buttons under the box: text is typed a key at a time, and "x" / "^2" are pressed on the little keypad
+    function typeKeys(parts, then) {
+      var el = $("pgEq").querySelector(".eqIn"); if (!el) { then(); return; }
+      var rc = el.getBoundingClientRect(); handGo({ x: rc.right - 24, y: rc.top + rc.height / 2 }, 650);
+      pgWait(800, function () {
+        handTap(); el.focus(); el.value = ""; el.dispatchEvent(new Event("input", { bubbles: true }));
+        (function go(i) {
+          if (pgRun !== run) return;
+          if (i >= parts.length) { pgWait(900, function () { el.blur(); then(); }); return; }
+          var part = parts[i], base = el.value, kb = /^(x|\^2|\|)$/.test(part) ? document.querySelector("#eqKeys [data-ins=\"" + part + "\"]") : null;
+          if (kb) { handGo(ctr(kb), 600); pgWait(900, function () { handTap(); kb.classList.add("simPress"); pgWait(180, function () { kb.classList.remove("simPress"); el.focus(); el.setSelectionRange(el.value.length, el.value.length); kb.click(); pgWait(700, function () { go(i + 1); }); }); }); return; }
+          (function put(c) { if (c > part.length) { go(i + 1); return; } el.value = base + part.slice(0, c); el.dispatchEvent(new Event("input", { bubbles: true })); pgWait(110, function () { put(c + 1); }); })(1);
+        })(0);
+      });
+    }
     // the demo stops itself now and then: the hand presses Pause demo, and the student resumes when ready
     function pauseHere(then) {
       var b = $("pgDemo"); cap("Paused. Take your time, then press Resume demo.");
@@ -3920,15 +3936,15 @@
       function (n) { cap("Press Table to check: right answers get a green check."); tap(tog("table"), function () { pgWait(2200, n); }); },
       function (n) { pauseHere(n); },
       function (n) { cap("The buttons beside the graph place things by hand. The dot button plots a point."); dropShape("pt", -3, -3, n); },
-      function (n) { cap("Double-click a point to edit it exactly. A panel opens with its x and y."); dbl(ptEl(PG.pts.length - 1), n); },
+      function (n) { cap("Double-click a point to edit it exactly. A small pop-up opens right there with its x and y."); dbl(ptEl(PG.pts.length - 1), n); },
       function (n) { cap("Type new values and the point follows along."); typeBox("pgPtX", "-4", function () { typeBox("pgPtY", "2", n); }); },
-      function (n) { cap("Press \u00d7 to close the panel."); tap($("pgPtX0"), n); },
+      function (n) { cap("Press \u00d7 to close the pop-up."); tap($("pgPtX0"), n); },
       function (n) { cap("Double-click the dot button to make a point from its coordinates."); dbl(document.querySelector(".qzTools [data-tool=pt]"), n); },
       function (n) { cap("Type an x and a y, and the point appears."); typeBox("pgPtX", "3", function () { typeBox("pgPtY", "-2", n); }); },
-      function (n) { cap("Drag the point and the panel updates too."); drag2(n); },
-      function (n) { cap("Close the panel."); tap($("pgPtX0"), n); },
+      function (n) { cap("Drag the point and the pop-up follows, with its values updating."); drag2(n); },
+      function (n) { cap("Close the pop-up."); tap($("pgPtX0"), n); },
       function (n) { cap("Drag a shape button onto the graph and let go to place it."); dropShape("V", -4, -2, n); },
-      function (n) { cap("Or click the line button: click a point, then click again to set the slope."); clickTool("line", [-4, -3], [0, 1], n); },
+      function (n) { cap("Or click the line button: a point snaps to the grid and shows its coordinates. Click it, then click again to land the second point."); clickTool("line", [-4, -3], [0, 1], n); },
       function (n) { cap("The V needs one click less: click the button, then the vertex."); clickTool("V", [2, -2], null, n); },
       function (n) { cap("...and so does the parabola button."); clickTool("U", [-3, 3], null, n); },
       function (n) { cap("Clear the graph again."); tapClear(n); },
@@ -3936,6 +3952,7 @@
       function (n) { cap("Now click the parabola button and click the vertex, (3, 1)."); clickTool("U", [3, 1], null, n); },
       function (n) { cap("Drag its side point to set the stretch of 2."); stretch(2, n, 1); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
+      function (n) { cap("While you type, the x, x\u00b2 and |x| buttons under the box enter those symbols for you."); tap($("pgEq"), function () { typeKeys(["g(x) = ", "x", "^2", " - 3"], function () { eqEnter(); pgWait(1400, n); }); }); },
       function (n) { cap("Click the equation to type a function of your own."); tap($("pgEq"), function () { typeEq("g(x) = -|x+2|+4", function () { eqEnter(); pgWait(1200, n); }); }); },
       function (n) { cap("The family changed to absolute value, and the green and purple points moved to match."); pgWait(3200, n); },
       function (n) { cap("Your turn: try every button, drag both points and plot your own graph."); pgWait(2500, n); }
