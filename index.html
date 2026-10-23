@@ -388,7 +388,7 @@
       <button class="btn" id="show">Show work</button></div></div>
     <div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="link" id="again" hidden>Stay</button></div>
     <section class="qz" id="qz" hidden aria-live="polite"><div class="qzT" id="qzT"></div><div id="qzIn"></div><div class="err" id="qzErr"></div><div class="qzRow"><button class="btn" id="qzGo">Check</button><button class="btn" id="qzNext" hidden>Next</button><button class="link" id="qzAgain" hidden>Another round</button></div></section>
-    <div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="^" aria-label="Insert ^ (to the power of)"><i>x</i><sup>2</sup></button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|<i>x</i>|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
+    <div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^" aria-label="Insert ^ (to the power of)"><i>x</i><sup>2</sup></button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|<i>x</i>|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
     <div class="composer" id="ask" hidden>
       <div id="askT" style="font-weight:600"></div>
       <div class="err" id="askErr"></div>
@@ -3273,7 +3273,7 @@
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("eqIn")) { e.target.blur(); eqEnter(); } });
   // is a typed equation the same function as the real one? (tested at several x-values, so any equivalent form counts)
-  // while an equation is being typed, two buttons put in the ^ and | characters for anyone who cannot find them on the keyboard
+  // while an equation is being typed, three buttons put in the x, ^ and | characters for anyone who cannot find them on the keyboard
   function eqKeysUpd() {
     var a = document.activeElement, K = $("eqKeys"), el = a && a.classList && a.classList.contains("eqIn") ? a : null;
     if (!el) { K.hidden = true; return; }
