@@ -1421,7 +1421,7 @@
 
   // ---- activities: AlgebraNotebook is a collection; each built activity sets its top lesson and its progress levels ----
   var ACTS = [
-    ["1.1 Play", "Playground: Equation Table Graph Description", "1.1 Playground: Equation Table Graph Description"],
+    ["1.1 Play", "Playground: Equation Table Graph Description", "Playground: Equation Table Graph Description"],
     ["1.1A", "Parent Functions and Transformations", "1.1 Parent Functions and Transformations"],
     ["1.2", "Transformations of Linear and Absolute Value Functions", "1.2 Transformations of Linear and Absolute Value Functions"],
     ["1.3", "Modeling with Linear Functions", "1.3 Modeling with Linear Functions"],
@@ -2801,7 +2801,7 @@
     if (ms.indexOf(mode) < 0) mode = "demo"; $("modeSel").value = mode;
   }
   // the full title shown in the list (an activity can give its own, otherwise code + name)
-  function shortOf(id) { return id === "1.4D" ? "1.4 Algebra" : id; }
+  function shortOf(id) { return id === "1.4D" ? "1.4 Algebra" : id === "1.1 Play" ? "Play: Graph" : id; }
   function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
   function buildActs() {
     $("actLbl").textContent = welcome ? "Choose an activity" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
