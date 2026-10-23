@@ -44,6 +44,11 @@
   .frame{display:grid;grid-template-columns:minmax(0,1fr);column-gap:1rem;align-items:start;flex:1 0 auto;min-height:100%}
   .center{display:flex;flex-direction:column;min-width:0;min-height:100%}
   .ctlbox{display:flex;flex-direction:column;gap:2.5rem;padding:.9rem 1rem;border-bottom:2px solid color-mix(in srgb,var(--ink) 12%,transparent)}
+  /* ONE divider in the side panel, below the last button: when the Check / Next block follows the controls, the line goes under that block, not between */
+  .ctlbox{border-bottom:0}
+  .qz{border-bottom:0}
+  .chat>.log{border-top:2px solid color-mix(in srgb,var(--ink) 12%,transparent);}
+  body.play:not(.pq) .ctlbox{border-bottom:2px solid color-mix(in srgb,var(--ink) 12%,transparent)}
   body.quiz #lesson{width:9.66rem;padding:.68em .2em .68em .7em;font-size:.84rem}   /* room for "Graph & Describe" */
   .ctl-sel{display:flex;flex-direction:column;align-items:center;gap:.5rem}.ctl-sel select{box-sizing:border-box;width:10.5em;font-size:.92rem;padding:.6em .8em}
   .ctl-btn{display:flex;flex-direction:column;align-items:center;gap:.5rem}
@@ -196,8 +201,7 @@
   body.pq #qz:not(:has(button:not([hidden]))){display:none}
   body.pq .pgDemo{margin-bottom:0}
   body.pq .pgCtl.empty:not(:has(#pgPt:not([hidden]))){display:none}
-  body.pq #qzNext{background:var(--plus);border-color:var(--plus);color:#fff}
-  body.pq #qzNext:hover:not(:disabled){background:var(--plus-hover);border-color:var(--plus-hover)}
+
   body.quiz .pg{color:var(--ink)}
   .pgTable th,.pgTable td{color:#1B2433}
   .qzTools{display:flex;flex-direction:column;gap:.5rem;align-self:center}
@@ -300,13 +304,28 @@
   .pgCtl{display:flex;flex-direction:column;align-items:center;gap:.5rem}
   .pgCtl[hidden]{display:none}
   .pgDemo{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;margin-bottom:1.2rem}
-  #pgDemo.paused{margin-bottom:.5rem}
+  #pgDemo.paused,#dmBtn.paused{margin-bottom:.5rem}
+  /* the call-to-action colour (plum red): Start Demo when a demo waits, and Next whenever a problem or a mode is finished */
+  .pgDemo.ready,.btn.next,body.pq #qzNext,.pgDemo.next{background:#8E2465;border-color:#8E2465;color:#fff}
+  .pgDemo.ready:hover,.btn.next:hover,body.pq #qzNext:hover:not(:disabled){background:#6E1A4E;border-color:#6E1A4E}
+  .dmLink{font-size:.85rem;margin-top:-.2rem;margin-bottom:.8rem;max-width:11rem;text-align:center}
+  .nxRow{padding:0;gap:.5rem}
+  .nxRow:has(>:not([hidden])){padding:.9rem 1rem 0}
+  #dmEnd[hidden]{display:none}
+  /* the title area at the top of every activity: the title, and (in Demo) one short phrase on what is happening */
+  .stHead{position:sticky;top:-.8rem;z-index:6;margin:-.8rem -1rem .5rem;padding:.8rem 1.2rem .5rem;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
+  .stHead[hidden]{display:none}
+  .stT{font:600 1.25rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .stT:empty{display:none}
+  .stCap{font:500 1.05rem/1.35 system-ui,sans-serif;color:var(--plus);min-height:1.4em;margin-top:.15rem}
+  html:not([data-mode="demo"]) .stCap{visibility:hidden}
   #pgEnd[hidden]{display:none}
   .pgCap{display:none;min-height:1.2em;max-width:12rem;text-align:center;font:500 .9rem/1.35 system-ui,sans-serif;margin-bottom:1.2rem}
   .pgCap:empty{margin-bottom:.8rem}
   .pgCtl .lbl{font:700 .78rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-bottom:.1rem}
   .tog{box-sizing:border-box;width:10.5em;display:flex;align-items:center;justify-content:center;gap:.6em;font:600 .92rem system-ui,sans-serif;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:999px;padding:.55em .9em;cursor:pointer;text-align:center}
-  .tog[aria-pressed="true"]{background:var(--plus);border-color:var(--plus);color:#fff}
+  /* a switched-on toggle is a quiet tint: the solid plum is kept for the one call-to-action button (Start Demo / Next) */
+  .tog[aria-pressed="true"]{background:color-mix(in srgb,var(--plus) 16%,var(--bg));border-color:var(--plus);color:var(--plus-hover)}
   .tog:focus-visible{outline:3px solid var(--plus);outline-offset:3px}
   .play:not(.pq) .ctl-sel select,.play:not(.pq) .ctl-sel label,.play:not(.pq) .ctl-btn,.play:not(.pq) .composer,.play:not(.pq) .log{display:none!important}
   @media (max-width:760px){
@@ -321,6 +340,7 @@
 <body>
 <div class="app">
   <div class="stage">
+    <div class="stHead" id="stHead" hidden><div class="stT" id="stT"></div><div class="stCap" id="stCap" role="status" aria-live="polite"></div></div>
     <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
       <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQcue" id="pgQcue">(Equation, Table, Graph)</div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div>
@@ -353,9 +373,6 @@
         <div id="ansMsg" style="min-height:1.4em;font-weight:700"></div>
         <div id="ansSol" class="vals" style="display:none;flex-direction:column;align-items:center"></div>
       </section>
-      <div class="row">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:.5rem"><button class="btn" id="next">Next step</button><button class="link" id="again" hidden>Try another</button></div>
-      </div>
     </div>
     </div>
     </div>
@@ -365,10 +382,11 @@
   <aside class="chat" aria-label="Controls and tutor chat">
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Exercise</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
-      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button><div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button><div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
+    <div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="link" id="again" hidden>Stay</button></div>
     <section class="qz" id="qz" hidden aria-live="polite"><div class="qzT" id="qzT"></div><div id="qzIn"></div><div class="err" id="qzErr"></div><div class="qzRow"><button class="btn" id="qzGo">Check</button><button class="btn" id="qzNext" hidden>Next</button><button class="link" id="qzAgain" hidden>Another round</button></div></section>
     <div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="^" aria-label="Insert ^ (to the power of)"><i>x</i><sup>2</sup></button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|<i>x</i>|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
     <div class="composer" id="ask" hidden>
@@ -734,7 +752,7 @@
     eq.addEventListener("pointerdown", function (e) {
       drag(e, r, function () { openAsk(i, "mul"); }, function (t) { var j = +t.dataset.drop.slice(4); if (j !== i) addEq(i, j); });
     });
-    eq.addEventListener("click", function (e) { if (e.detail === 0 && mode !== "demo") openAsk(i, "mul"); });
+    eq.addEventListener("click", function (e) { if (e.detail === 0 && !dmLocked()) openAsk(i, "mul"); });
     // the dark dot beside the equation (or the equation itself) drags it onto another equation to add
     r.addEventListener("pointerdown", function (e) {
       if (e.target !== r) return;
@@ -751,7 +769,7 @@
       var cell = c[kslot(q, k, vs)];
       if (k.r) {
         cell.classList.add("pend"); cell.title = mode === "sequence" ? "Click to multiply" : "";
-        cell.addEventListener("click", function () { if (locked || busy) return; if (mode === "sequence" || mode === "demo") simpSub(i, idx); else openAsk(i, "ksimp", idx); });
+        cell.addEventListener("click", function () { if (locked || busy || dmLocked()) return; if (mode === "sequence" || mode === "demo") simpSub(i, idx); else openAsk(i, "ksimp", idx); });
       }
       else {
         cell.classList.add("grab");
@@ -781,7 +799,7 @@
       var op = c[kslot(q, k, vs) - 1]; op.classList.add("opc"); op.title = "Rewrite as subtraction";
       op.addEventListener("click", function () { if (!locked && !busy && !calc) convertK(i, idx); });
     });
-    if (q.raw) { c[N - 1].classList.add("pend"); c[N - 1].addEventListener("click", function () { if (busy) return; if (mode === "demo") doCalc(i); else openAsk(i, "simp"); }); }
+    if (q.raw) { c[N - 1].classList.add("pend"); c[N - 1].addEventListener("click", function () { if (busy || dmLocked()) return; if (mode === "demo") doCalc(i); else openAsk(i, "simp"); }); }
   }
 
   // ---- generic drag: the dragged element follows the pointer; drop zones carry data-drop ----
@@ -794,7 +812,7 @@
     return null;
   }
   function drag(e, el, onClick, onDrop, prefix) {
-    if (busy || locked || calc || e.button > 0) return;
+    if (busy || locked || calc || e.button > 0 || dmLocked()) return;
     prefix = prefix || "row:";
     var cap = e.currentTarget, sx = e.clientX, sy = e.clientY, moved = false, hot = null;
     cap.setPointerCapture(e.pointerId); e.preventDefault();
@@ -995,7 +1013,7 @@
     if (!hist.length) return;
     var h = hist.pop(), st = JSON.parse(h[0]); ws = st[0]; vals = st[1]; sys = st[2]; sysV = st[3]; elim = st[4]; steps.length = h[1]; ops = h[2];
     locked = false; result = null; mulNote = null; closeAsk(false); clearLog(); lastExp = "";
-    if (mode === "demo") nx.textContent = "Next step"; else nx.hidden = true;
+    nx.hidden = true;
     render(-1); updUndo();
     if (mode === "demo") peekNext();
   }
@@ -1030,7 +1048,7 @@
   function openAsk(i, kind, idx) {
     if (locked || busy || calc || !rows[i]) return;
     // the demo never asks the student to type anything: a click on the = or the dot just does the demo's multiplication step
-    if (mode === "demo") { if (pend && (pend[0] === "show" || pend[0] === "mul") && pend[1] === i) demoStep(); return; }
+    if (dmLocked()) return;   // while the demo plays it never asks anything; paused, the student can use the pane
     if (!$("ask").hidden) closeAsk(true);
     askIdx = i; askKind = kind; askK = typeof idx === "number" ? idx : 0; askC = Array.isArray(idx) ? idx : null;
     var q = ws[i];
@@ -1230,15 +1248,57 @@
   function handHide() { if (handEl) { handEl.style.opacity = "0"; handEl.dataset.on = "0"; } }
   function stopDemo() { clearTimeout(demoTimer); demoTimer = null; handHide(); }
   function later(fn, ms) { demoTimer = setTimeout(fn, ms); }
+  // ---- 1.4's demo plays on its own, step after step (same controls as every other activity: see dmUI) ----
+  var DM4 = { run: false, paused: false, endReq: false, brk: false, t: 0 };
+  function dmLocked() { return mode === "demo" && !quiz() && DM4.run && !DM4.paused; }   // the demo is in charge of the pane
+  function dm4Reset() { clearTimeout(DM4.t); DM4.run = DM4.paused = DM4.endReq = DM4.brk = false; }
+  function dm4Go(ms) {
+    clearTimeout(DM4.t);
+    DM4.t = setTimeout(function () {
+      if (!DM4.run || DM4.paused || busy || locked || quiz() || mode !== "demo") return;
+      if (calc) return;
+      peekNext(); if (pend) demoStep();
+    }, ms || 0);
+  }
+  // a step has just finished
+  function dm4After() {
+    if (quiz() || mode !== "demo") return;
+    if (DM4.endReq) { dm4Reset(); dmUI("idle"); newProblem(); return; }
+    if (!DM4.run) return;
+    if (locked) {
+      DM4.run = DM4.paused = false; dmUI("idle"); dmCap("Solved!");
+      var u = up; dmFinish(u ? u.label : "Next", function () { if (u) { up = null; u.go(); } else dm4Begin(); }, u ? u.stayText : "", function () { dm4Begin(); });
+      return;
+    }
+    // a natural place to stop in a long demo: the 3\u00d73 is now two equations in two variables
+    if (!SUB() && lesson === 3 && sys.length === 2 && !DM4.brk) { DM4.brk = true; DM4.paused = true; dmUI("paused"); dmCap("Two equations with just two variables are left. Press Resume demo to solve them."); return; }
+    if (!DM4.paused) dm4Go(700);
+  }
+  function dm4Begin() {   // a fresh problem plays from its start
+    if (locked) newProblem();
+    DM4.run = true; DM4.paused = false; DM4.brk = false; DM4.endReq = false; closeAsk(false); calc = null; dmUI("playing"); dmCap(""); peekNext(); dm4Go(300);
+  }
+  function dm4Click() {
+    if (quiz() || mode !== "demo") return;
+    if (dmClickFinish()) return;
+    if (!DM4.run) { dm4Begin(); return; }
+    if (!DM4.paused) { DM4.paused = true; clearTimeout(DM4.t); dmUI("paused"); dmCap("Paused. Change anything you like, then press Resume demo."); return; }
+    DM4.paused = false; closeAsk(false); calc = null; dmUI("playing"); dmCap(""); peekNext(); dm4Go(300);
+  }
+  function dm4End() {
+    if (!DM4.run) return;
+    if (busy) { DM4.endReq = true; DM4.paused = true; clearTimeout(DM4.t); return; }   // let the step in progress finish first
+    dm4Reset(); dmUI("idle"); newProblem();
+  }
 
 
   function demoStep() {
     if (busy || locked) return;
     var s = pend; if (!s) return;
     if (s[0].indexOf("s_") === 0) { subDemoStep(s); return; }
-    busy = true; $("next").disabled = true;
+    busy = true; $("next").disabled = true; if (DM4.run) dmCap(stepLabel(s));
     var t = s[0], i = s[1], act;
-    function release(ms) { setTimeout(function () { busy = false; $("next").disabled = false; peekNext(); }, ms || 0); setTimeout(handHide, (ms || 0) + 350); }
+    function release(ms) { setTimeout(function () { busy = false; $("next").disabled = false; peekNext(); dm4After(); }, ms || 0); setTimeout(handHide, (ms || 0) + 350); }
     // the "=" grows to show what to click or drag
     function cue(r) { var e = rows[r] && rows[r].querySelector(".eq"); if (e) e.classList.add("target"); }
     function rhs(r) { return rows[r].children[rows[r].children.length - 1]; }
@@ -1365,7 +1425,7 @@
       [2, "solo", 70, "Solo Mode, 2nd round", 2], [2, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
     "1.1 Play": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
-    "1.4D": { top: 3, sub: true, key: "algebraProgress", levels: [
+    "1.4D": { title: "Solve", top: 3, sub: true, key: "algebraProgress", levels: [
       [1, "demo", 5, "Demo Mode"], [1, "sequence", 10, "Sequence Mode"],
       [1, "calculate", 15, "Calculate Mode"], [1, "solo", 20, "Solo Mode"],
       [2, "demo", 25, "Demo Mode"], [2, "sequence", 30, "Sequence Mode"],
@@ -1409,10 +1469,10 @@
   function levelUp() {
     up = null; var c = prog[LK() + ":" + mode] || 0;
     if (mode === "create" || c < 2) return;
-    var ml = BUILT[act].modes || ["demo", "sequence", "calculate", "solo"], nx = ml[ml.indexOf(mode) + 1];
-    if (nx) up = { label: "Level up: " + MODES[nx] + " mode", go: function () { setMode(nx); } };
-    else if (mode === "solo" && !subx && lesson < topLesson() && BUILT[act].perLesson) { if (pct() >= 100) up = { label: "Next exercise: " + (BUILT[act].short[lesson] || lessonName(lesson + 1)), stay: true, go: function () { lesson++; $("lesson").value = String(lesson); setMode("demo"); } }; }   // at 100% the Next button moves on to the next exercise; a small link stays here
-    else if (mode === "solo" && !subx && lesson < topLesson()) up = { label: "Level up: " + LNAME[lesson + 1], go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
+    var ml = BUILT[act].modes || ["demo", "sequence", "calculate", "solo"], nx = ml[ml.indexOf(mode) + 1], stayT = "Stay in " + MODES[mode] + " mode";
+    if (nx && nx !== "create") up = { label: MODES[nx] + " mode", stayText: stayT, go: function () { setMode(nx); } };   // the next mode is never Create
+    else if (mode === "solo" && !subx && lesson < topLesson() && BUILT[act].perLesson) { if (pct() >= 100) up = { label: "Next exercise: " + (BUILT[act].short[lesson] || lessonName(lesson + 1)), stay: true, stayText: "Stay in this exercise", go: function () { lesson++; $("lesson").value = String(lesson); setMode("demo"); } }; }   // at 100% the Next button moves on to the next exercise; a small link stays here
+    else if (mode === "solo" && !subx && lesson < topLesson()) up = { label: LNAME[lesson + 1], stayText: "Stay in " + MODES[mode] + " mode", go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
   }
   function tally(quiet) {
     if (!quiet) celebrate();
@@ -1420,12 +1480,17 @@
     if (mode !== "create" && !counted) { counted = true; var k = LK() + ":" + mode; prog[k] = (prog[k] || 0) + 1; if (!quiz() && classify(orig) === "one") prog[k + ":one"] = (prog[k + ":one"] || 0) + 1; saveProg(); updProg(); }
     levelUp();
   }
+  // ---- ONE "Next" for every Progress activity ----
+  // A finished problem offers a plum-red "Next"; a finished mode offers the next mode's name instead (never Create), with a small
+  // "Stay in ... mode" link beneath. It lives in the right side panel; in Demo the demo button itself turns into it (see dmFinish).
+  function nxShow() {
+    var nx = $("next"), ag = $("again"), stay = up && up.stayText || "";
+    if (mode === "demo") { nx.hidden = true; ag.hidden = true; return; }   // the demo button carries it
+    nx.textContent = up ? up.label : "Next"; nx.hidden = false; nx.disabled = false;
+    ag.textContent = stay; ag.hidden = !stay;
+  }
   function onSolved() {
-    var nx = $("next"); nx.textContent = "Next problem";
-    nx.hidden = false; nx.disabled = false;
-    tally();
-    if (up) { nx.textContent = up.label; $("again").hidden = false; }
-    if (mode !== "demo") nx.focus();
+    tally(); nxShow(); if (mode !== "demo") $("next").focus();
   }
   var useCustom = null;
   function ints(E) { return E.every(function (q) { return allV().every(function (v) { return q[CK[v]].d === 1; }); }); }
@@ -1434,6 +1499,39 @@
     if (!ints(E)) return false;
     if (SUB()) return E.some(function (q) { return q.sol; });
     return lesson === 1 ? !!E[0].a.n : lesson === 3 ? !!bestElim(E) : E.every(function (q) { return q.a.n && q.b.n; });
+  }
+  // ---- ONE Demo controller for every activity (see "Unify Activities") -------------------------------------------
+  // Every activity has a Demo mode that plays on its own. Its button reads Start Demo (highlighted until pressed) -> Pause demo (black)
+  // -> Resume demo (+ an End demo button). What is happening is told in the title area at the top (#stHead), never on the button.
+  // A new activity only has to: call dmUI("playing" | "paused" | "idle") when its demo changes state, dmCap("short phrase") as it goes,
+  // and dmTitle("Title") for its own title. Pausing leaves the centre pane free to edit; resuming carries on from what the student left.
+  var DMX = null;   // when a demo problem is finished the demo button becomes Next / the next mode's name: { go, stayGo }
+  function dmFinish(label, go, stay, stayGo) {
+    DMX = { go: go, stayGo: stayGo };
+    [["pgDemo", "pgEnd", "pgLink"], ["dmBtn", "dmEnd", "dmLink"]].forEach(function (p) {
+      var b = $(p[0]), l = $(p[2]); b.textContent = label; b.classList.remove("on", "paused", "ready"); b.classList.add("next"); b.setAttribute("aria-pressed", "false");
+      $(p[1]).hidden = true; l.textContent = stay || ""; l.hidden = !stay;
+    });
+  }
+  function dmClickFinish() { var d = DMX; if (!d) return false; dmUI("idle"); d.go(); return true; }
+  function dmUI(st) {
+    DMX = null;
+    [["pgDemo", "pgEnd", "pgLink"], ["dmBtn", "dmEnd", "dmLink"]].forEach(function (p) {
+      var b = $(p[0]), e = $(p[1]); if (!b) return;
+      b.classList.remove("next"); $(p[2]).hidden = true;
+      b.textContent = st === "playing" ? "Pause demo" : st === "paused" ? "Resume demo" : "Start Demo";
+      b.classList.toggle("on", st === "playing"); b.classList.toggle("paused", st === "paused"); b.classList.toggle("ready", st === "idle"); b.setAttribute("aria-pressed", st === "playing");
+      e.hidden = st !== "paused";
+    });
+    if (st === "idle") dmCap("");
+  }
+  function dmCap(t) { var c = $("stCap"); if (c) c.textContent = t || ""; dmHead(); }
+  function dmTitle(t) { var c = $("stT"); if (c) c.textContent = t || ""; dmHead(); }
+  function dmHead() {
+    var h = $("stHead"); if (!h) return;
+    var b = document.body, pgd = b.classList.contains("play"), dem = document.documentElement.dataset.mode === "demo";
+    // 1.1 Play and 1.1A keep the band so the page does not jump between modes or when the demo's first phrase appears when the demo's first phrase appears; elsewhere it shows when there is a title, or a phrase in Demo
+    h.hidden = welcome || !(pgd || $("stT").textContent || (dem && $("stCap").textContent));
   }
   // ONE place decides the colours: the page's theme follows the current mode in every activity (new ones included).
   // Demo = the Welcome cream, Solo = white, Sequence / Create / Calculate = pale tints. Play (no modes) is white, cream while its demo runs.
@@ -1444,6 +1542,9 @@
     else if (b.classList.contains("play")) t = pgRun ? "demo" : "playground";
     else t = mode;
     r.dataset.mode = t; r.dataset.act = b.classList.contains("play") ? "pg" : "";
+    var own = !welcome && !b.classList.contains("quiz") && !b.classList.contains("play");   // an activity whose centre pane is the equation pane (1.4)
+    $("dmCtl").hidden = !(own && mode === "demo");
+    dmTitle(own && BUILT[act] && BUILT[act].title || ""); dmHead();
   }
   function setMode(m) {
     if (quiz()) { mode = m; theme(); $("modeSel").value = m; $("modeSel").style.color = ""; qzStart(); return; }
@@ -1454,7 +1555,7 @@
       if (m === "demo" && !demoOK(orig)) { sel.value = "create"; note("The demo can't walk through this one: a coefficient is zero or not a whole number. Try Calculate or Sequence."); return; }
       useCustom = JSON.parse(JSON.stringify(orig));
     }
-    mode = m; theme();
+    dm4Reset(); mode = m; theme();
     sel.value = m; sel.style.color = "";
     newProblem();
   }
@@ -1474,7 +1575,8 @@
     if (mode !== "demo") explainOn = false;
     if (explainOn && logEl.children.length) { var dv2 = document.createElement("div"); dv2.className = "msg"; dv2.textContent = "New problem"; dv2.style.opacity = ".6"; logEl.appendChild(dv2); } else logEl.innerHTML = "";
     lastExp = ""; up = null; counted = false; $("again").hidden = true;
-    var nx = $("next"); nx.disabled = false; nx.hidden = mode !== "demo"; nx.textContent = "Next step";
+    var nx = $("next"); nx.disabled = false; nx.hidden = true; nx.textContent = "Next"; DM4.brk = false;
+    if (mode === "demo" && !DM4.run) { dmUI("idle"); dmCap("Press Start Demo to watch this problem solved."); }
     $("hint").hidden = plain; $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn); updUndo();
     $("top").style.display = plain ? "none" : ""; $("vals").style.display = plain ? "none" : "";
     var building = mode === "create" && orig.length < allV().length;
@@ -1521,8 +1623,8 @@
     var sl = cl === "one" ? solveSys(orig).map(function (t, j) { return "<span class=\"chip\"><i class=\"var\">" + allV()[j] + "</i> = " + sg(t) + "</span>"; }).join("") : "<span class=\"chip\">" + (cl === "inf" ? "Infinitely many solutions" : "No solution") + "</span>";
     $("ansSol").innerHTML = sl; $("ansSol").style.display = "flex"; $("ansSol").style.flexDirection = "row";
     $("ansT").hidden = true; $("ansKind").hidden = true; $("ansFields").hidden = true; $("ansGo").hidden = true; $("undo").hidden = true; $("show").style.visibility = "hidden";
-    var nx = $("next"); nx.textContent = "Next problem"; nx.hidden = false; nx.disabled = false;
-    if (!credited) { credited = true; tally(); if (up) { nx.textContent = up.label; $("again").hidden = false; } }
+    if (!credited) { credited = true; tally(); }
+    nxShow();
   }
   // an equation as written in a book: variables and numbers on either side, collected into a x + b y + e z = c
   function parseOne(s) {
@@ -1565,7 +1667,7 @@
   }
 
   // the demo button names the step it is about to do
-  function peekNext() { pend = locked ? null : nextStep(); markElim(); if (mode === "demo" && !locked) $("next").textContent = pend ? (ops === 0 ? "Start Demo" : stepLabel(pend)) : "Next step"; logExplain(); }
+  function peekNext() { pend = locked ? null : nextStep(); markElim(); logExplain(); }
   // why the next step makes sense (the demo's Explain button)
   function explain(s) {
     if (s[0].indexOf("s_") === 0) return subExplain(s);
@@ -1622,8 +1724,8 @@
   });
   $("sheetX").addEventListener("click", function () { $("sheet").hidden = true; });
   $("next").addEventListener("click", function () {
-    if (up && (locked || mode !== "demo")) { var u = up; up = null; u.go(); return; }
-    if (mode === "demo" && !locked) demoStep(); else newProblem();
+    if (up) { var u = up; up = null; u.go(); return; }
+    newProblem();
   });
   $("again").addEventListener("click", newProblem);
   $("progBtn").addEventListener("click", openProg);
@@ -1818,23 +1920,23 @@
     if (src) {
       r.classList.add("dots");
       var go = function (e) {
-        if (mode === "demo") return;
+        if (dmLocked()) return;
         drag(e, r, function () { note("Drag this equation onto the " + src + " in the other equation."); }, function (t) { var d = dropTerm(t); if (d && d.i !== i && d.v === src) subSubst(i, d.i, d.side, d.idx); }, "sub:w:");
       };
       r.querySelector(".eq").addEventListener("pointerdown", go);
       r.addEventListener("pointerdown", function (e) { if (e.target === r) go(e); });
     }
-    if (q.raw) { var rw = r.querySelector(".raw"); rw.classList.add("pend"); rw.addEventListener("click", function () { if (mode !== "demo" && !busy) subRawAsk(i); }); return; }
+    if (q.raw) { var rw = r.querySelector(".raw"); rw.classList.add("pend"); rw.addEventListener("click", function () { if (!dmLocked() && !busy) subRawAsk(i); }); return; }
     ["L", "R"].forEach(function (sd) {
       q[sd].forEach(function (t, j) {
         var el = r.querySelector(".tm[data-side=\"" + sd + "\"][data-idx=\"" + j + "\"]");
-        if (t.k === "g") { el.classList.add("pend"); el.title = "Click to distribute"; el.addEventListener("click", function () { if (mode !== "demo" && !busy && !locked) subDist(i, sd, j); }); return; }
-        if (t.k === "p") { el.classList.add("pend"); el.title = "Click to multiply"; el.addEventListener("click", function () { if (mode !== "demo" && !busy && !locked) subProd(i, sd, j); }); return; }
+        if (t.k === "g") { el.classList.add("pend"); el.title = "Click to distribute"; el.addEventListener("click", function () { if (!dmLocked() && !busy && !locked) subDist(i, sd, j); }); return; }
+        if (t.k === "p") { el.classList.add("pend"); el.title = "Click to multiply"; el.addEventListener("click", function () { if (!dmLocked() && !busy && !locked) subProd(i, sd, j); }); return; }
         // a term can be dragged onto a like term (same side) to combine, or across the = (a number moves; a lone coefficient divides)
         if (src) return;
         el.classList.add("grab");
         el.addEventListener("pointerdown", function (e) {
-          if (mode === "demo") return;
+          if (dmLocked()) return;
           drag(e, el, null, function (tg, ev) {
             var d = dropTerm(tg);
             if (d && d.i === i && d.side === sd && d.idx !== j) { subComb(i, sd, j, d.idx); return; }
@@ -1914,8 +2016,8 @@
     return "Drag the " + s[1] + " at the bottom up onto the " + s[1] + " in " + fmtSub(toExpr(orig[s[3]])) + ".";
   }
   function subDemoStep(s) {
-    busy = true; $("next").disabled = true;
-    function release(ms) { setTimeout(function () { busy = false; $("next").disabled = false; peekNext(); }, ms || 0); setTimeout(handHide, (ms || 0) + 350); }
+    busy = true; $("next").disabled = true; if (DM4.run) dmCap(stepLabel(s));
+    function release(ms) { setTimeout(function () { busy = false; $("next").disabled = false; peekNext(); dm4After(); }, ms || 0); setTimeout(handHide, (ms || 0) + 350); }
     var t = s[0], i = s[1];
     if (t === "s_subst") {
       var src = rows[i], dst = tEl(s[2], s[3], s[4]); dst.classList.add("tgt"); handGo(dotPt(src), 600);
@@ -2221,7 +2323,7 @@
     if (t === "line") { if (!G.clk.length) return { t: "line", p1: h, p2: [h[0] + 1, h[1] + 1] }; var p = G.clk[0]; return { t: "line", p1: p, p2: h[0] === p[0] && h[1] === p[1] ? [p[0] + 1, p[1] + 1] : h }; }
     return { t: t, h: h[0], k: h[1], a: 1 };
   }
-  function drawGhost(S, G, col) { var sh = toolGhost(G); if (sh) S.appendChild(svgEl("polyline", { points: shapePts(sh), fill: "none", stroke: col, "stroke-width": ".12", "stroke-linejoin": "round", "stroke-opacity": ".45", "stroke-dasharray": ".3 .2" })); }
+  function drawGhost(S, G, col) { var sh = toolGhost(G); if (sh) S.appendChild(svgEl("polyline", { points: shapePts(sh), fill: "none", stroke: col, "stroke-width": ".12", "stroke-linejoin": "round", "stroke-opacity": ".45" })); }
   function qzPlace(tool, x, y) {
     var G = G_(); gSnap();
     x = snap(x); y = snap(y);
@@ -2520,9 +2622,16 @@
     pqCue();
     var go = $("qzGo"), nx = $("qzNext");
     go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr); go.textContent = "Check";
-    nx.hidden = !done; nx.disabled = false; nx.textContent = gd() && mode === "create" ? "Create another" : QZ.custom ? (up ? up.label : "Next") : demo ? (up ? up.label : gd() ? "Next problem" : "Next parent") : QZ.locked ? (up ? up.label : "Another round") : gd() ? "Next problem" : "Next parent";
-    $("qzAgain").hidden = !(done && (demo || QZ.custom || (QZ.pi === 3 && up))); $("qzAgain").textContent = QZ.custom ? (demo ? "Watch again" : "Try again") : demo ? "Another demo" : up && up.stay ? "Stay in this exercise" : "Another round";
-    $("pgDemo").style.display = demo && !done ? "" : "none"; $("pgCtl").classList.toggle("empty", !(demo && !done));
+    // the one Next (see nxShow): in Demo the demo button carries it; otherwise it sits here in the side panel
+    nx.hidden = !done || demo; nx.disabled = false; nx.textContent = gd() && mode === "create" ? "Create another" : up ? up.label : "Next";
+    $("qzAgain").hidden = demo || !(done && (QZ.custom || (up && up.stayText))); $("qzAgain").textContent = QZ.custom ? "Try again" : up && up.stayText || "";
+    $("pgDemo").style.display = demo ? "" : "none"; $("pgCtl").classList.toggle("empty", !demo);
+    if (demo && done) {
+      var u = up, cu = QZ.custom;
+      dmFinish(u ? u.label : "Next",
+        function () { if (u && !cu) { up = null; u.go(); } else if (cu) pqNext(); else { pqNext(); setTimeout(function () { if (pq() && mode === "demo" && !pgRun) $("pgDemo").click(); }, 400); } },
+        cu ? "Watch again" : u ? u.stayText || "" : "", function () { $("qzAgain").click(); });
+    } else if (!pgRun) dmUI("idle");   // a fresh demo waits, its button highlighted
     $("hint").hidden = done || soloish();   // a right answer needs no hint
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
@@ -2542,12 +2651,12 @@
         pqMsg(gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
         if (QZ.custom) {   // the student's own function: no Progress, and Next offers the next mode with the same function
           pqMsg("Well done!", "ok"); var cm = ["demo", "sequence", "solo"], cn = cm[cm.indexOf(mode) + 1];
-          up = cn ? { label: MODES[cn] + " Mode", go: function () { setMode(cn); } } : { label: "Create another", go: function () { setMode("create"); } };
+          up = cn ? { label: MODES[cn] + " mode", go: function () { setMode(cn); } } : { label: "Create another", go: function () { setMode("create"); } };
         }
         else if (mode === "create") { pqMsg("Well done!", "ok"); up = null; }   // Create never counts toward Progress
         else if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
           tally(); var ml = BUILT[act].modes, nm = ml[ml.indexOf(mode) + 1];
-          up = nm ? { label: MODES[nm] + " Mode", go: function () { setMode(nm); } } : null;
+          up = nm && nm !== "create" ? { label: MODES[nm] + " mode", stayText: "Stay in " + MODES[mode] + " mode", go: function () { setMode(nm); } } : null;
         } else if (last) { QZ.locked = true; counted = false; tally(); }   // Sequence and Solo count a round only when all four parents are done
         pqPanel();
       }
@@ -3482,37 +3591,36 @@
     if (!pgRun || pgPaused) return;
     pgPaused = true; pgPauseAt = performance.now();
     pgQ.forEach(function (e) { clearTimeout(e.id); e.rem = Math.max(0, e.due - Date.now()); });
-    pgSnap = JSON.stringify({ PG: PG, targets: TB.targets });
     var h = hand(); pgHandOp = h.style.opacity || "1"; h.style.opacity = "0";
     [].forEach.call(document.querySelectorAll(".tbg,.ghost"), function (g) { g.style.visibility = "hidden"; });
-    $("pgDemo").textContent = "Resume demo"; $("pgDemo").classList.add("paused"); $("pgEnd").hidden = false;
+    dmUI("paused"); dmCap("Paused. Change anything you like, then press Resume demo.");
   }
   // resuming puts the playground back as it was when the demo was paused, so the demo carries on coherently
   function pgResume() {
     if (!pgRun || !pgPaused) return;
     closePt();
-    var o = JSON.parse(pgSnap); Object.keys(PG).forEach(function (k) { delete PG[k]; }); Object.keys(o.PG).forEach(function (k) { PG[k] = o.PG[k]; }); TB.targets = o.targets;
+    // whatever the student changed while paused stays: the demo carries on from there
     drawPlay();
     pgPaused = false; pgShift += performance.now() - pgPauseAt;
     hand().style.opacity = pgHandOp;
     [].forEach.call(document.querySelectorAll(".tbg,.ghost"), function (g) { g.style.visibility = ""; });
-    $("pgDemo").textContent = "Pause demo"; $("pgDemo").classList.remove("paused"); $("pgEnd").hidden = true;
+    dmUI("playing"); dmCap("");
     pgQ.forEach(pgArm); var hd = pgHeld; pgHeld = []; hd.forEach(pgRaf);
   }
   function pgStop() {
     pgRun = 0; theme(); pgQ.forEach(function (e) { clearTimeout(e.id); }); pgQ = []; pgHeld = []; pgPaused = false; pgSnap = null; closePt(); handHide(); [].forEach.call(document.querySelectorAll(".tbg,.ghost,.fakeCaret"), function (g) { g.remove(); }); document.body.classList.remove("demoTyping"); [].forEach.call(document.querySelectorAll(".simHover,.simPress"), function (g) { g.classList.remove("simHover", "simPress"); }); TB.targets = [];
-    $("pgDemo").textContent = "Start Demo"; $("pgDemo").classList.remove("on", "paused"); $("pgEnd").hidden = true; $("pgCap").textContent = "";
+    dmUI("idle");
     if (pq()) { pqEval(); pqPanel(); }
   }
   function pgDemo() {
     if (pgRun) { pgStop(); return; }
-    closePt(); var run = ++pgRun; theme(); pgShift = 0; $("pgDemo").textContent = "Pause demo"; $("pgDemo").classList.add("on");
+    closePt(); var run = ++pgRun; theme(); pgShift = 0; dmUI("playing");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
     PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
     if (GD) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
     Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; drawPlay();
-    function cap(t) { $("pgCap").textContent = t; }
+    function cap(t) { dmCap(t); }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
     // the demo's hand makes a button look hovered when it arrives and pressed when it taps, just as for a real pointer
@@ -3738,41 +3846,41 @@
       function (n) { cap("Let's aim for g(x) = 2(x \u2212 3)\u00b2 + 1. First the vertex..."); drag("v", [3, 1], n); },
       function (n) { cap("...and then the stretch of 2."); drag("a", [0, 2], n); },
       function (n) { pauseHere(n); },
-      function (n) { cap("Hide the equation: now you type it yourself. Click the space below the table and type; the table's top cell copies it."); tap(tog("eq"), function () { typeEq("g(x) = 2(x-3)^2+1", n); }); },
-      function (n) { cap("Press Equation to check it. A correct equation gets a green check; a wrong one is replaced by the real equation with a red !."); tap(tog("eq"), function () { pgWait(2200, n); }); },
+      function (n) { cap("Hide the equation, then type it yourself."); tap(tog("eq"), function () { typeEq("g(x) = 2(x-3)^2+1", n); }); },
+      function (n) { cap("Press Equation to check it: a green check means right."); tap(tog("eq"), function () { pgWait(2200, n); }); },
       function (n) { cap("Hide the description, then describe the transformation with the Transformation button."); tap(tog("desc"), n); },
-      function (n) { cap("Press Transformation, then click where the vertex is: green arrows measure the move from the origin. Click again at the stretch point: a purple arrow measures it."); trDemo(n); },
+      function (n) { cap("Transformation: click the vertex, then the stretch point, to measure each change."); trDemo(n); },
       function (n) { cap("Show the description to check the answer."); tap(tog("desc"), n); },
       function (n) { cap("Hide the description and the parent."); tap(tog("desc"), function () { tap(tog("parent"), n); }); },
       function (n) { cap("Now hide the graph again: we will rebuild it from the table."); tap(tog("graph"), n); },
       function (n) { cap("With Table off, the table is empty for you to complete yourself."); pgWait(1800, n); },
       function (n) { cap("Drag the equation onto any center cell. One drop puts each row's x-value into the equation."); dragEq(0, n); },
-      function (n) { cap("The x-values appear, centered at 0. Drag the dot up or down to scroll the table like a wheel until the vertex, x = 3, is in the middle row."); dialDemo(-3, n); },
+      function (n) { cap("Scroll the table with the dot until the vertex, x = 3, is in the middle row."); dialDemo(-3, n); },
       function (n) { cap("Three ways to get a y-value. First: click a y cell and type the answer yourself."); typeRow(0, n); },
-      function (n) { cap("Second: click the expression in the middle column. Each click simplifies one step, and the answer slides into the y column."); clickRow(1, n); },
-      function (n) { cap("Third: drag a finished y-value onto another y cell. A parabola is symmetric, so x = 4 has the same y as x = 2."); dragY(1, 3, n); },
+      function (n) { cap("Second: click the expression to simplify it one step at a time."); clickRow(1, n); },
+      function (n) { cap("Third: copy a y-value. A parabola is symmetric, so x = 4 matches x = 2."); dragY(1, 3, n); },
       function (n) { cap("The same works for x = 5: copy the 9 from x = 1."); dragY(0, 4, n); },
       function (n) { cap("Now the middle row, but type a wrong answer on purpose."); typeRow(2, n, "4"); },
-      function (n) { cap("Press Table to reveal the real table. Right answers get a green check; a wrong one fades into the correct value."); tap(tog("table"), function () { pgWait(2200, n); }); },
+      function (n) { cap("Press Table to check: right answers get a green check."); tap(tog("table"), function () { pgWait(2200, n); }); },
       function (n) { pauseHere(n); },
       function (n) { cap("The buttons beside the graph place things by hand. The dot button plots a point."); dropShape("pt", -3, -3, n); },
       function (n) { cap("Double-click a point to edit it exactly. A panel opens with its x and y."); dbl(ptEl(PG.pts.length - 1), n); },
       function (n) { cap("Type new values and the point follows along."); typeBox("pgPtX", "-4", function () { typeBox("pgPtY", "2", n); }); },
       function (n) { cap("Press \u00d7 to close the panel."); tap($("pgPtX0"), n); },
-      function (n) { cap("Double-clicking the dot button opens the same panel, blank, to make a new point from its coordinates."); dbl(document.querySelector(".qzTools [data-tool=pt]"), n); },
+      function (n) { cap("Double-click the dot button to make a point from its coordinates."); dbl(document.querySelector(".qzTools [data-tool=pt]"), n); },
       function (n) { cap("Type an x and a y, and the point appears."); typeBox("pgPtX", "3", function () { typeBox("pgPtY", "-2", n); }); },
       function (n) { cap("Drag the point and the panel updates too."); drag2(n); },
       function (n) { cap("Close the panel."); tap($("pgPtX0"), n); },
-      function (n) { cap("Drag a shape button onto the graph: the shape hangs from the point you hold and lands where you let go."); dropShape("V", -4, -2, n); },
-      function (n) { cap("Or click the button instead: a ghost of the line follows the cursor. Click once for a point on the line, and again to set its slope."); clickTool("line", [-4, -3], [0, 1], n); },
-      function (n) { cap("The V needs one click less: click the button, then click the vertex. The stretch starts at 1, like the parent."); clickTool("V", [2, -2], null, n); },
+      function (n) { cap("Drag a shape button onto the graph and let go to place it."); dropShape("V", -4, -2, n); },
+      function (n) { cap("Or click the line button: click a point, then click again to set the slope."); clickTool("line", [-4, -3], [0, 1], n); },
+      function (n) { cap("The V needs one click less: click the button, then the vertex."); clickTool("V", [2, -2], null, n); },
       function (n) { cap("...and so does the parabola button."); clickTool("U", [-3, 3], null, n); },
       function (n) { cap("Clear the graph again."); tapClear(n); },
       function (n) { cap("Drag each row onto the graph to plot its point. The yellow dot shows where it belongs."); dragRows(0, n); },
       function (n) { cap("Now click the parabola button and click the vertex, (3, 1)."); clickTool("U", [3, 1], null, n); },
       function (n) { cap("Drag its side point to set the stretch of 2."); stretch(2, n, 1); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
-      function (n) { cap("You can also type a function of your own. Click the equation, type g(x) = \u2212|x + 2| + 4 and press Return."); tap($("pgEq"), function () { typeEq("g(x) = -|x+2|+4", function () { eqEnter(); pgWait(1200, n); }); }); },
+      function (n) { cap("Click the equation to type a function of your own."); tap($("pgEq"), function () { typeEq("g(x) = -|x+2|+4", function () { eqEnter(); pgWait(1200, n); }); }); },
       function (n) { cap("The family changed to absolute value, and the green and purple points moved to match."); pgWait(3200, n); },
       function (n) { cap("Your turn: try every button, drag both points and plot your own graph."); pgWait(2500, n); }
     ];
@@ -3828,8 +3936,11 @@
     (function next() { if (pgRun !== run) return; if (k >= steps.length) { pgStop(); return; } steps[k++](next); })();
   }
   // one button starts, pauses and resumes the demo; End demo appears while it is paused
-  $("pgDemo").addEventListener("click", function () { if (!pgRun) pgDemo(); else if (!pgPaused) pgPause(); else pgResume(); });
+  $("pgDemo").addEventListener("click", function () { if (dmClickFinish()) return; if (!pgRun) pgDemo(); else if (!pgPaused) pgPause(); else pgResume(); });
   $("pgEnd").addEventListener("click", function () { pgStop(); });
+  $("dmBtn").addEventListener("click", dm4Click);
+  ["pgLink", "dmLink"].forEach(function (id) { $(id).addEventListener("click", function () { var d = DMX; if (d && d.stayGo) { dmUI("idle"); d.stayGo(); } }); });
+  $("dmEnd").addEventListener("click", dm4End);
 
   function enterPlay() {
     stopDemo(); stopParty(); closeAsk(false); busy = false; calc = null;
