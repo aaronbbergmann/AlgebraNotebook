@@ -2319,7 +2319,7 @@
   function gSnap() { var G = G_(); (G.hist = G.hist || []).push(JSON.stringify([G.pts, G.shape, G.clk])); if (G.hist.length > 60) G.hist.shift(); }
   // with a tool picked, a ghost of the shape rides along with the cursor: first it is placed (a point on the line, or the vertex), then its dilation follows the cursor
   function toolGhost(G) {
-    if (!G.tool || !G.hv || G.tool === "pt") return null; var h = G.hv, t = G.tool;
+    if (!G.tool || G.tool === "pt" || (!G.hv && !(G.tool === "line" && G.clk.length))) return null; var h = G.hv || G.clk[0], t = G.tool;   // with the cursor away, a line's second point waits at its default (up 1, right 1)
     if (t === "line") { if (!G.clk.length) return { t: "line", p1: h, p2: [h[0] + 1, h[1] + 1] }; var p = G.clk[0]; return { t: "line", p1: p, p2: h[0] === p[0] && h[1] === p[1] ? [p[0] + 1, p[1] + 1] : h }; }
     return { t: t, h: h[0], k: h[1], a: 1 };
   }
@@ -2337,8 +2337,9 @@
   }
   function drawGhost(S, G, col) {
     var sh = toolGhost(G); if (sh) S.appendChild(svgEl("polyline", { points: shapePts(sh), fill: "none", stroke: col, "stroke-width": ".12", "stroke-linejoin": "round", "stroke-opacity": ".45", "pointer-events": "none" }));
-    if (!G.tool || !G.hv) return;
-    function dot(x, y) { var g = svgEl("g", { "pointer-events": "none" }); g.appendChild(svgEl("circle", { cx: x, cy: -y, r: .55, fill: col, "fill-opacity": ".22" })); g.appendChild(svgEl("circle", { cx: x, cy: -y, r: .22, fill: col, "fill-opacity": ".85" })); S.appendChild(g); }
+    if (!G.tool || !(G.hv || (G.tool === "line" && G.clk.length))) return;
+    // the second point of a line looks exactly like the first one (filled, with the soft halo); it snaps to the grid under the cursor, and a click lands it
+    function dot(x, y) { var g = svgEl("g", { "pointer-events": "none" }); g.appendChild(svgEl("circle", { cx: x, cy: -y, r: .6, fill: col, "fill-opacity": ".25" })); g.appendChild(svgEl("circle", { cx: x, cy: -y, r: .2, fill: col })); S.appendChild(g); }
     if (!G.clk.length) {
       dot(G.hv[0], G.hv[1]);
       if (mode !== "solo") {
