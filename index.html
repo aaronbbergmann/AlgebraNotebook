@@ -3589,7 +3589,7 @@
   // with the equation hidden, either space can be typed in; what is typed is copied into the other space
   document.addEventListener("input", function (e) {
     var el = e.target; if (!el.classList || !el.classList.contains("eqIn")) return;
-    PG.eqTxt = el.value; $("pgEqMsg").textContent = ""; [].forEach.call(document.querySelectorAll(".eqIn"), function (o) { if (o !== el) o.value = el.value; });
+    PG.eqTxt = el.value; $("pgEqMsg").textContent = ""; [].forEach.call(document.querySelectorAll(".eqIn"), function (o) { if (o !== el) o.value = el.value; }); eqShrink();
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("eqIn")) { e.target.blur(); eqEnter(); } });
   // is a typed equation the same function as the real one? (tested at several x-values, so any equivalent form counts)
@@ -3693,6 +3693,18 @@
     QZ.order = [r.fam]; QZ.pi = 0; QZ.tr = [{ h: r.h, k: r.k, a: r.a }]; QZ.cr = true; gdCustom = { fam: r.fam, h: r.h, k: r.k, a: r.a };
     pqSetup(); eqMsg(""); drawPlay(); pqPanel();
   }
+  // an equation too long for its line gets a smaller font instead of wrapping onto a second line
+  function eqShrink() {
+    var cv = document.createElement("canvas").getContext("2d");
+    [$("pgEq"), $("pgTable") && $("pgTable").querySelector(".pgMid")].forEach(function (el) {
+      if (!el) return; el.style.fontSize = ""; el.style.whiteSpace = "nowrap"; if (!el.offsetWidth) return;
+      var cs = getComputedStyle(el), base = parseFloat(cs.fontSize), inp = el.querySelector(".eqIn"), sc = 1;
+      if (inp) { var ics = getComputedStyle(inp); cv.font = ics.fontStyle + " " + ics.fontWeight + " " + ics.fontSize + " " + ics.fontFamily; var w = cv.measureText(inp.value || inp.placeholder || "").width + parseFloat(ics.paddingLeft) + parseFloat(ics.paddingRight) + 4; if (w > inp.clientWidth) sc = inp.clientWidth / w; }
+      else { var pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), cw = el.clientWidth - pad; if (el.scrollWidth - pad > cw + .5) sc = cw / (el.scrollWidth - pad); }
+      if (sc < 1) { el.style.fontSize = Math.max(7, base * sc * .98) + "px"; }
+    });
+  }
+  window.addEventListener("resize", function () { if (document.body.classList.contains("play")) eqShrink(); });
   function drawPlay() {
     drawGraph();
     $("pgTable").querySelector("tbody").innerHTML = fillMode() ? TB.html() : tableHTML();
@@ -3710,7 +3722,7 @@
     TB.sync(); $("qzTools").hidden = false; posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
-    eqKeysUpd(); pqCue(); pqEval();
+    eqKeysUpd(); pqCue(); pqEval(); eqShrink();
   }
   // ---- editing a point's coordinates: double-click a plotted point (or the dot button) and a small pop-up opens in the centre pane, just below the point ----
   var ptOpen = false, ptIdx = -1, ptTimer = 0;
