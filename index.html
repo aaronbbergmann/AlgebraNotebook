@@ -2098,11 +2098,7 @@
   }
   function qzDraw() {
     var S = $("pgSvg"); S.innerHTML = ""; if (QZ.step < 2) return;
-    var gr = svgEl("g", { stroke: "#E3E5E8", "stroke-width": ".05" });
-    for (var i = -10; i <= 10; i++) { gr.appendChild(svgEl("line", { x1: i, y1: -10, x2: i, y2: 10 })); gr.appendChild(svgEl("line", { x1: -10, y1: i, x2: 10, y2: i })); }
-    S.appendChild(gr);
-    S.appendChild(svgEl("line", { x1: -10, y1: 0, x2: 10, y2: 0, stroke: "#222", "stroke-width": ".09" }));
-    S.appendChild(svgEl("line", { x1: 0, y1: -10, x2: 0, y2: 10, stroke: "#222", "stroke-width": ".09" }));
+    gridLayer(S);
     var fam = qFam();
     if (QZ.step >= 4) {   // solved: the true parent graph in red
       var pts = []; for (var x = -10.5; x <= 10.501; x += .05) { var y = qf(fam, x); if (y < 12) pts.push(x.toFixed(3) + "," + (-y).toFixed(3)); }
@@ -3175,15 +3171,29 @@
     }
     return segs.filter(function (c) { return c.length > 1; }).map(function (c) { return c.join(" "); });
   }
+  // ONE grid for every graph (Graphing activities): light lines, every fifth line a little darker, the axes, and the numbers every 5 units
+  function gridLayer(S) {
+    var gr = svgEl("g", { stroke: "#E3E5E8", "stroke-width": ".05" }), g5 = svgEl("g", { stroke: "#C3C7CD", "stroke-width": ".07" });
+    for (var i = -10; i <= 10; i++) {
+      var t = i % 5 === 0 ? g5 : gr;
+      t.appendChild(svgEl("line", { x1: i, y1: -10, x2: i, y2: 10 })); t.appendChild(svgEl("line", { x1: -10, y1: i, x2: 10, y2: i }));
+    }
+    S.appendChild(gr); S.appendChild(g5);
+    S.appendChild(svgEl("line", { x1: -10, y1: 0, x2: 10, y2: 0, stroke: "#222", "stroke-width": ".09" }));
+    S.appendChild(svgEl("line", { x1: 0, y1: -10, x2: 0, y2: 10, stroke: "#222", "stroke-width": ".09" }));
+    var tx = svgEl("g", { "font-family": "system-ui,-apple-system,'Segoe UI',sans-serif", "font-size": ".62", fill: "#4A5262", "pointer-events": "none", "paint-order": "stroke", stroke: "#fff", "stroke-width": ".16", "stroke-linejoin": "round" });
+    [-10, -5, 5, 10].forEach(function (n) {
+      var lab = (n < 0 ? "\u2212" : "") + Math.abs(n);
+      var a = svgEl("text", { x: n === 10 ? 9.85 : n === -10 ? -9.85 : n, y: .85, "text-anchor": n === 10 ? "end" : n === -10 ? "start" : "middle" }); a.textContent = lab; tx.appendChild(a);
+      var b = svgEl("text", { x: -.25, y: n === 10 ? -9.45 : n === -10 ? 9.85 : -n + .22, "text-anchor": "end" }); b.textContent = lab; tx.appendChild(b);
+    });
+    S.appendChild(tx);
+  }
   function drawGraph() {
     var S = $("pgSvg"); S.innerHTML = ""; document.body.classList.toggle("tmOn", !!PG.tm);
     TB.targets = TB.targets.filter(function (t) { return !PG.pts.some(function (z) { return Math.abs(z[0] - t[0]) < 1e-9 && Math.abs(z[1] - t[1]) < 1e-9; }); });
     { // the grid and both axes are always there; Graph only reveals the curve
-      var gr = svgEl("g", { stroke: "#E3E5E8", "stroke-width": ".05" });
-      for (var i = -10; i <= 10; i++) { gr.appendChild(svgEl("line", { x1: i, y1: -10, x2: i, y2: 10 })); gr.appendChild(svgEl("line", { x1: -10, y1: i, x2: 10, y2: i })); }
-      S.appendChild(gr);
-      S.appendChild(svgEl("line", { x1: -10, y1: 0, x2: 10, y2: 0, stroke: "#222", "stroke-width": ".09" }));
-      S.appendChild(svgEl("line", { x1: 0, y1: -10, x2: 0, y2: 10, stroke: "#222", "stroke-width": ".09" }));
+      gridLayer(S);
       if (PG.show.parent) {
         curvePts(pf).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#222", "stroke-width": ".07", "stroke-dasharray": ".3 .25" })); });
         for (var u = -2; u <= 2; u++) S.appendChild(svgEl("circle", { cx: u, cy: -pf(u), r: .13, fill: "#222" }));
