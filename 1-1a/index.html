@@ -3711,7 +3711,7 @@
       function (n) { cap("Drag its side point to set the stretch of 2."); stretch(2, n, 1); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
       function (n) { cap("You can also type a function of your own. Hide the equation, type g(x) = \u2212|x + 2| + 4 and press Return."); tap(tog("eq"), function () { typeEq("g(x) = -|x+2|+4", function () { eqEnter(); pgWait(1200, n); }); }); },
-      function (n) { cap("The family changed to absolute value, and the green and purple points moved to match. A function the activity cannot graph, like x\u00b3, is turned away."); pgWait(3200, n); },
+      function (n) { cap("The family changed to absolute value, and the green and purple points moved to match."); pgWait(3200, n); },
       function (n) { cap("Your turn: try every button, drag both points and plot your own graph."); pgWait(2500, n); }
     ];
     if (PQ) {   // 1.1A: the demo answers this parent's question with the equation, the table and the graph
