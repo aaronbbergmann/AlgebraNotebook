@@ -14,11 +14,11 @@
     padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181F;--ink:#E8ECF4;--plus:#7C9CFF;--plus-hover:#A3B8FF;--no:#FF7A66}}
   :root[data-theme="dark"]{--bg:#14181F;--ink:#E8ECF4;--plus:#7C9CFF;--plus-hover:#A3B8FF;--no:#FF7A66}
-  :root[data-mode="demo"]{--bg:#0B0D12;--ink:#F1F4FA;--plus:#8FA9FF;--plus-hover:#B7C8FF;--no:#FF7A66}
-  :root[data-mode="sequence"]{--bg:#C9EBD3;--ink:#0F2A1B;--plus:#0B6E3A;--plus-hover:#07522B;--no:#C0301E}
-  :root[data-mode="solo"]{--bg:#E1D4F6;--ink:#24113D;--plus:#6A2FB8;--plus-hover:#4E1F8C;--no:#C0301E}
-  :root[data-mode="create"]{--bg:#F8E7B9;--ink:#3A2A05;--plus:#9A5B00;--plus-hover:#704200;--no:#C0301E}
-  :root[data-mode="calculate"]{--bg:#C7DBFB;--ink:#0E1B38;--plus:#1F43B8;--plus-hover:#152F8A;--no:#C0301E}
+  :root[data-mode="demo"]{--bg:#F6F4EE;--ink:#1B2433;--plus:#2F5BEA;--plus-hover:#1E44C4;--no:#C0301E}
+  :root[data-mode="sequence"]{--bg:#ECF8F0;--ink:#0F2A1B;--plus:#0B6E3A;--plus-hover:#07522B;--no:#C0301E}
+  :root[data-mode="solo"]{--bg:#FFFFFF;--ink:#24113D;--plus:#6A2FB8;--plus-hover:#4E1F8C;--no:#C0301E}
+  :root[data-mode="create"]{--bg:#FDF7E6;--ink:#3A2A05;--plus:#9A5B00;--plus-hover:#704200;--no:#C0301E}
+  :root[data-mode="calculate"]{--bg:#EBF2FE;--ink:#0E1B38;--plus:#1F43B8;--plus-hover:#152F8A;--no:#C0301E}
   body{transition:background-color .5s,color .5s}
   html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
   body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Fraunces",Georgia,"Times New Roman",serif}
@@ -227,6 +227,8 @@
   .eqn.free .raw{border-bottom:2px dashed var(--plus);cursor:pointer}
   /* ---- Playground: Equation Table Graph Description ---- */
   :root[data-mode="playground"]{--bg:#FFFFFF;--ink:#1B2433;--plus:#8E2465;--plus-hover:#6E1A4E;--no:#C0301E}
+  /* 1.1 Play and 1.1A keep their plum accent; the background and ink still follow the mode */
+  :root[data-act="pg"]{--plus:#8E2465;--plus-hover:#6E1A4E;--no:#C0301E}
   .pg{flex:1 0 auto;display:flex;align-items:flex-start;justify-content:center;gap:1.2rem;flex-wrap:wrap;padding:1.2rem .4rem;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
   .pg[hidden],.frame[hidden]{display:none}
   .pgGraph{position:relative;flex:1 1 18rem;max-width:30rem;width:100%;aspect-ratio:1;border:1px solid #9AA0A8;background:#fff;box-sizing:border-box;touch-action:none}
@@ -1421,8 +1423,18 @@
     if (SUB()) return E.some(function (q) { return q.sol; });
     return lesson === 1 ? !!E[0].a.n : lesson === 3 ? !!bestElim(E) : E.every(function (q) { return q.a.n && q.b.n; });
   }
+  // ONE place decides the colours: the page's theme follows the current mode in every activity (new ones included).
+  // Demo = the Welcome cream, Solo = white, Sequence / Create / Calculate = pale tints. Play (no modes) is white, cream while its demo runs.
+  function theme() {
+    var b = document.body, r = document.documentElement, t;
+    if (welcome) t = "welcome";
+    else if (b.classList.contains("quiz")) t = mode;
+    else if (b.classList.contains("play")) t = pgRun ? "demo" : "playground";
+    else t = mode;
+    r.dataset.mode = t; r.dataset.act = b.classList.contains("play") ? "pg" : "";
+  }
   function setMode(m) {
-    if (quiz()) { mode = m; document.documentElement.dataset.mode = "playground"; $("modeSel").value = m; $("modeSel").style.color = ""; qzStart(); return; }
+    if (quiz()) { mode = m; theme(); $("modeSel").value = m; $("modeSel").style.color = ""; qzStart(); return; }
     var sel = $("modeSel");
     // equations typed in Create carry over to the mode the student picks
     if (mode === "create" && m !== "create" && m !== "solo" && SUB() && orig.length === allV().length && !orig.some(function (q) { return q.sol; })) { sel.value = "create"; note("For substitution, one equation has to be solved for a variable, like y = 2x - 6. Press Undo and type it that way."); return; }
@@ -1430,7 +1442,7 @@
       if (m === "demo" && !demoOK(orig)) { sel.value = "create"; note("The demo can't walk through this one: a coefficient is zero or not a whole number. Try Calculate or Sequence."); return; }
       useCustom = JSON.parse(JSON.stringify(orig));
     }
-    mode = m; document.documentElement.dataset.mode = m;
+    mode = m; theme();
     sel.value = m; sel.style.color = "";
     newProblem();
   }
@@ -2644,7 +2656,7 @@
     if (welcome) {
       // on the website each activity has its own page; elsewhere (a preview) it opens right here
       if (hub) { location.href = slugOf(id) + "/"; return; }
-      welcome = false; document.body.classList.remove("wel"); $("welcome").hidden = true;
+      welcome = false; theme(); document.body.classList.remove("wel"); $("welcome").hidden = true;
       if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
     if (id === act) return;
@@ -3476,13 +3488,13 @@
     pgQ.forEach(pgArm); var hd = pgHeld; pgHeld = []; hd.forEach(pgRaf);
   }
   function pgStop() {
-    pgRun = 0; pgQ.forEach(function (e) { clearTimeout(e.id); }); pgQ = []; pgHeld = []; pgPaused = false; pgSnap = null; closePt(); handHide(); [].forEach.call(document.querySelectorAll(".tbg,.ghost,.fakeCaret"), function (g) { g.remove(); }); document.body.classList.remove("demoTyping"); [].forEach.call(document.querySelectorAll(".simHover,.simPress"), function (g) { g.classList.remove("simHover", "simPress"); }); TB.targets = [];
+    pgRun = 0; theme(); pgQ.forEach(function (e) { clearTimeout(e.id); }); pgQ = []; pgHeld = []; pgPaused = false; pgSnap = null; closePt(); handHide(); [].forEach.call(document.querySelectorAll(".tbg,.ghost,.fakeCaret"), function (g) { g.remove(); }); document.body.classList.remove("demoTyping"); [].forEach.call(document.querySelectorAll(".simHover,.simPress"), function (g) { g.classList.remove("simHover", "simPress"); }); TB.targets = [];
     $("pgDemo").textContent = "Start Demo"; $("pgDemo").classList.remove("on", "paused"); $("pgEnd").hidden = true; $("pgCap").textContent = "";
     if (pq()) { pqEval(); pqPanel(); }
   }
   function pgDemo() {
     if (pgRun) { pgStop(); return; }
-    closePt(); var run = ++pgRun; pgShift = 0; $("pgDemo").textContent = "Pause demo"; $("pgDemo").classList.add("on");
+    closePt(); var run = ++pgRun; theme(); pgShift = 0; $("pgDemo").textContent = "Pause demo"; $("pgDemo").classList.add("on");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
     PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
@@ -3809,7 +3821,7 @@
 
   function enterPlay() {
     stopDemo(); stopParty(); closeAsk(false); busy = false; calc = null;
-    document.documentElement.dataset.mode = "playground"; document.body.classList.add("play");
+    document.body.classList.add("play"); theme();
     $("pg").hidden = false; document.querySelector(".frame").hidden = true; $("pgCtl").hidden = false; $("prog").hidden = true; logEl.innerHTML = "";
     drawPlay();
   }
@@ -3820,7 +3832,7 @@
 
   buildActs(); buildLessons(); updProg();
   if (BUILT[act].play) { setMode("demo"); enterPlay(); } else if (BUILT[act].quiz) enterQuiz(); else setMode("demo");
-  if (welcome) { document.body.classList.add("wel"); document.documentElement.dataset.mode = "welcome"; $("welcome").hidden = false; }
+  if (welcome) { document.body.classList.add("wel"); theme(); $("welcome").hidden = false; }
 </script>
 </body>
 </html>
