@@ -3975,7 +3975,7 @@
       e.preventDefault(); var L = (G.sp = G.sp || []), i;
       if (po) { i = +po.getAttribute("data-sop"); SPD = { G: G, i: i, moved: false, isNew: false, cx: e.clientX, cy: e.clientY }; }
       else {
-        var p = { k: sh.getAttribute("data-sh"), fam: PG.fam, sh: G.shape }, q = qAt(e), b = spNearest(G, p, q[0], q[1]); if (!b) return;
+        var p = { k: sh.getAttribute("data-sh"), fam: PG.fam, sh: G.shape, free: est() }, q = qAt(e), b = p.free ? (spProj(G, { sh: p.k === "s" ? p.sh : null }, q[0], q[1]) || {}).pos : spNearest(G, p, q[0], q[1]); if (!b) return;
         spSet(G, p, b[0], b[1]); L.push(p); i = L.length - 1; SPD = { G: G, i: i, moved: true, isNew: true, cx: e.clientX, cy: e.clientY }; gDraw();
       }
       document.addEventListener("pointermove", mv); document.addEventListener("pointerup", end); document.addEventListener("pointercancel", end);
@@ -4169,7 +4169,7 @@
     PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
     if (GD) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
-    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 1; PG.eOK = false; PG.eqTxt = ""; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; } drawPlay();
+    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 0; PG.eOK = false; PG.eqTxt = ""; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; } drawPlay();
     function cap(t) { dmCap(t); }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
@@ -4663,12 +4663,18 @@
           function (n) { cap("Press Regression"); tap(tog("reg"), function () { pgWait(2400, n); }); },
           function (n) {
             cap("Change families");
-            (function again(i) { if (i >= 6) { pgWait(1800, n); return; } tap($("pgFam"), function () { pgWait(i === 5 ? 600 : 1100, function () { again(i + 1); }); }); })(0);
+            (function again(i) { if (i >= 3) { pgWait(1800, n); return; } tap($("pgFam"), function () { pgWait(1100, function () { again(i + 1); }); }); })(0);
           },
           function (n) {
-            cap("Click the curve at " + EP.t);
-            var yy = g(EP.t); handGo(svgPt(EP.t, yy), 700);
-            pgWait(900, function () { handTap(); var q = { k: "c", fam: PG.fam, sh: null }; spSet(PG, q, EP.t, yy); (PG.sp = PG.sp || []).push(q); SPD = { G: PG, i: PG.sp.length - 1, moved: true, isNew: true }; drawPlay(); pgWait(2200, function () { SPD = null; drawPlay(); n(); }); });
+            cap("Click the curve");
+            var x0 = EP.t - 0.6, p = { k: "c", fam: PG.fam, sh: null, free: true }; handGo(svgPt(x0, g(x0)), 700);
+            pgWait(900, function () {
+              handTap(); spSet(PG, p, x0, g(x0)); (PG.sp = PG.sp || []).push(p); SPD = { G: PG, i: PG.sp.length - 1, moved: true, isNew: true }; drawPlay();
+              cap("Slide it freely");
+              // the point glides along the curve (not snapped to the grid) and settles at the x of the question
+              var N = 40, xs = []; for (var q = 0; q <= N; q++) xs.push(x0 + (EP.t + 0.45 - x0) * q / N); for (q = 1; q <= N / 2; q++) xs.push(EP.t + 0.45 * (1 - q / (N / 2)));
+              (function glide(j) { if (j >= xs.length) { pgWait(1500, function () { SPD = null; drawPlay(); n(); }); return; } spSet(PG, p, xs[j], g(xs[j])); handGo(svgPt(xs[j], g(xs[j])), 60); drawPlay(); pgWait(55, function () { glide(j + 1); }); })(0);
+            });
           },
           function (n) { cap("Type the estimate"); typeBox("estTx", String(Math.round(EP.ans * 100) / 100), function () { tap($("estGo"), function () { pgWait(900, n); }); }); }
         ];
