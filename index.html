@@ -95,6 +95,9 @@
   .eqn>.opc:hover,.eqn>.opc.hl{color:var(--plus-hover);transform:scale(1.5);background:color-mix(in srgb,var(--plus) 20%,transparent)}
   .eqn>.opc.hl{transform:scale(1.9);text-shadow:0 0 .4em var(--plus)}
   .eqn>.hl{background:color-mix(in srgb,var(--plus) 30%,transparent);border-radius:6px;transform:scale(1.3)}
+  /* Demo: the variable that is about to be eliminated gets a red box and red type in every equation it is in */
+  .eqn>span.elim,.eqn>span.elim *{color:var(--no)!important}
+  .eqn>span.elim{outline:2.5px solid var(--no);outline-offset:3px;border-radius:5px}
   #modeSel{background:transparent}
   #modeSel option[value=demo]{color:#111}#modeSel option[value=sequence]{color:#1E8A4C}#modeSel option[value=calculate]{color:#2F5BEA}#modeSel option[value=solo]{color:#7B3FBF}#modeSel option[value=create]{color:#B26A00}
   .afield{font:400 1.5rem "LM","Latin Modern Roman","CMU Serif","STIX Two Text",Georgia,"Times New Roman",serif;display:inline-flex;gap:.3em;align-items:center}
@@ -689,7 +692,7 @@
       wire(r, q, i); W.appendChild(r); rows.push(r);
     });
     lockCols();
-    renderVals();
+    renderVals(); markElim();
     $("show").hidden = !workAny();
   }
 
@@ -1134,14 +1137,23 @@
     }
     return null;
   }
+  var pendElim = null;   // Demo: which variable the coming steps eliminate, and in which equations
+  function markElim() {
+    var W = $("wsEl"); if (!W) return;
+    [].forEach.call(W.querySelectorAll(".elim"), function (e) { e.classList.remove("elim"); });
+    if (SUB() || mode !== "demo" || locked || !pendElim) return;
+    var k = curVs().indexOf(pendElim.v); if (k < 0) return;
+    pendElim.rows.forEach(function (r) { if (rows[r] && ws[r] && ws[r][CK[pendElim.v]].n) rows[r].children[2 * k].classList.add("elim"); });
+  }
   function nextStep() {
     if (SUB()) return subNext();
+    pendElim = null;
     var q = ws[0], v, m, ri = ws.findIndex(function (r) { return r.raw; });
     if (ri >= 0) return ["calc", ri];
     if (lesson === 1) return !q ? null : q.ks.length ? ["const", 0, 0] : isOne(q.a) ? null : ["coef", 0];
     // 3x3 step one: two equations without one variable (equations 1&2, then 1&3)
     if (lesson === 3 && sys.length < 2 && elimInfo) {
-      var P = elimInfo.pairs[sys.length];
+      var P = elimInfo.pairs[sys.length]; pendElim = { v: elimInfo.v, rows: [0, P.p] };
       return mulStep(P.ms, orig, function (r) { return r === 0 ? 0 : P.p; }) || ["add", 0, P.p];
     }
     var base = lesson === 3 ? sys : orig, vs = lesson === 3 ? sysV : ["x", "y"], set = lesson === 3 ? "s" : "o";
@@ -1149,6 +1161,7 @@
       var cx = elimMuls(base[0][CK[vs[0]]].n, base[1][CK[vs[0]]].n), cy = elimMuls(base[0][CK[vs[1]]].n, base[1][CK[vs[1]]].n);
       // fewer multiplications wins; on a tie, take turns
       var i0 = cx.length !== cy.length ? (cx.length < cy.length ? 0 : 1) : curDm - 1;
+      pendElim = { v: vs[i0], rows: [0, 1] };
       return mulStep(i0 ? cy : cx, base, function (r) { return r; }) || ["add", 0, 1];
     }
     if (!q) {
@@ -1552,7 +1565,7 @@
   }
 
   // the demo button names the step it is about to do
-  function peekNext() { pend = locked ? null : nextStep(); if (mode === "demo" && !locked) $("next").textContent = pend ? (ops === 0 ? "Start Demo" : stepLabel(pend)) : "Next step"; logExplain(); }
+  function peekNext() { pend = locked ? null : nextStep(); markElim(); if (mode === "demo" && !locked) $("next").textContent = pend ? (ops === 0 ? "Start Demo" : stepLabel(pend)) : "Next step"; logExplain(); }
   // why the next step makes sense (the demo's Explain button)
   function explain(s) {
     if (s[0].indexOf("s_") === 0) return subExplain(s);
