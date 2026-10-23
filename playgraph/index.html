@@ -301,7 +301,9 @@
   .pgDesc{font-size:1.08rem;line-height:1.45}
   .pgEqMsg{font:600 .9rem/1.35 system-ui,sans-serif;color:#C0301E;margin-top:-.5rem}.pgEqMsg:empty{display:none}
   /* Data Activities: the table has only the x and y columns */
-  body.dataAct .dial,body.dataAct .tog[data-part=table]{display:none!important}
+  body.dataAct .tog[data-part=eq],body.dataAct .tog[data-part=graph],body.dataAct .dial,body.dataAct .tog[data-part=table],body.dataAct .tog[data-part=desc],body.dataAct .tog[data-part=parent]{display:none!important}
+  .regVals{flex:none;margin-top:auto;padding:.7rem 1rem;border-top:1px solid color-mix(in srgb,var(--ink) 18%,transparent);font:500 .82rem/1.55 ui-monospace,Menlo,Consolas,monospace;word-break:break-all;color:var(--ink)}
+  .regVals[hidden]{display:none}
   body.dataAct .pgTable th.pgMid,body.dataAct .pgTable td.mid,body.dataAct .pgTable col:nth-child(2){display:none}
   body.dataAct .pgTable col:nth-child(1),body.dataAct .pgTable col:nth-child(3){width:50%}
   body.crPre .pgGraphWrap,body.crPre .pgTable,body.crPre .qzTools{visibility:hidden}
@@ -337,6 +339,8 @@
   .pgCtl .lbl{font:700 .78rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-bottom:.1rem}
   .tog{box-sizing:border-box;width:10.5em;display:flex;align-items:center;justify-content:center;gap:.6em;font:600 .92rem system-ui,sans-serif;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:999px;padding:.55em .9em;cursor:pointer;text-align:center}
   /* a switched-on toggle is a quiet tint: the solid plum is kept for the one call-to-action button (Start Demo / Next) */
+  .tog[data-part=reg]{display:none}
+  body.dataAct .tog[data-part=reg]{display:flex}
   .tog[aria-pressed="true"]{background:color-mix(in srgb,var(--plus) 16%,var(--bg));border-color:var(--plus);color:var(--plus-hover)}
   .tog:focus-visible{outline:3px solid var(--plus);outline-offset:3px}
   .play:not(.pq) .ctl-sel select,.play:not(.pq) .ctl-sel label,.play:not(.pq) .ctl-btn,.play:not(.pq) .composer,.play:not(.pq) .log{display:none!important}
@@ -394,7 +398,7 @@
   <aside class="chat" aria-label="Controls and tutor chat">
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Exercise</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
-      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="reg" aria-pressed="false">Regression</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
@@ -411,6 +415,7 @@
       </div>
     </div>
     <div class="log" id="log" role="log" aria-live="polite"></div>
+    <div class="regVals" id="regVals" hidden aria-live="polite"></div>
   </aside>
 </div>
   <div class="sheet" id="sheet" hidden><button class="btn" id="sheetX">Close</button><div id="sheetBody"></div></div>
@@ -2131,7 +2136,7 @@
     }
     var sh = QZ.shape, blue = "#2D70B3";
     if (sh) {
-      S.appendChild(svgEl("polyline", { points: shapePts(sh), fill: "none", stroke: blue, "stroke-width": ".12", "stroke-linejoin": "round" }));
+      S.appendChild(svgEl("polyline", { points: shapePts(sh), fill: "none", stroke: blue, "stroke-width": ".12", "stroke-linejoin": "round" })); spHit(S, shapePts(sh), "s");
       handles(sh).forEach(function (h) {
         var g = svgEl("g", { "data-qh": h.id, style: "cursor:grab" });
         g.appendChild(svgEl("circle", { cx: h.x, cy: -h.y, r: .6, fill: blue, "fill-opacity": ".25" }));
@@ -2146,6 +2151,7 @@
       g.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .24, fill: "#111" }));
       S.appendChild(g);
     });
+    spDraw(S, QZ);
     QZ.clk.forEach(function (p, j) { S.appendChild(clkDot(p, j, blue)); });
     drawGhost(S, QZ, blue);
   }
@@ -2267,7 +2273,7 @@
     if (!(explainOn && mode === "demo")) logEl.innerHTML = "";
     var st = qStep();
     if (st === "done") {
-      QZ.pts = []; QZ.shape = null;
+      QZ.pts = []; QZ.sp = []; QZ.shape = null;
       if (QZ.pi === 3) { QZ.locked = true; counted = false; tally(); }
     }
     qzRender();
@@ -2276,7 +2282,7 @@
   }
   function qzNextParent() {
     if (qStep() !== "done") return;
-    QZ.pi++; QZ.step = 0; QZ.hn = 0; QZ.tbl = null; QZ.pts = []; QZ.shape = null; QZ.tool = null; QZ.clk = [];
+    QZ.pi++; QZ.step = 0; QZ.hn = 0; QZ.tbl = null; QZ.pts = []; QZ.sp = []; QZ.shape = null; QZ.tool = null; QZ.clk = [];
     logEl.innerHTML = ""; qzRender(); if (mode === "demo") logQzExplain();
   }
   function qzStart() {
@@ -2463,7 +2469,7 @@
     var G = G_();
     if (tool === "undo") { var hs = G.hist || []; if (hs.length) { var o = JSON.parse(hs.pop()); G.pts = o[0]; G.shape = o[1]; G.clk = o[2] || []; G.tool = null; } gRef(); return; }
     if (tool === "tr") { PG.tm = PG.tm ? null : { stage: 0, cur: null }; PG.tool = null; PG.clk = []; gRef(); return; }
-    if (tool === "clear") { gSnap(); G.pts = []; G.shape = null; G.clk = []; G.tool = null; gRef(); return; }
+    if (tool === "clear") { gSnap(); G.pts = []; G.sp = []; G.shape = null; G.clk = []; G.tool = null; gRef(); return; }
     G.tool = G.tool === tool ? null : tool; G.clk = []; gRef();
   }
 
@@ -2601,7 +2607,7 @@
   function pqMsg(t, cls) { var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = t || ""; }
   function pqSetup() {
     closePt(); var fam = qFam();
-    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = [];
+    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = [];
     PG.show = { eq: false, table: false, graph: false, desc: true, parent: false }; PG.pdone = false; PG.dOK = false; $("pgDescTx").value = "";
     if (gd()) {
       var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.a = tr.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false };
@@ -3249,7 +3255,64 @@
   }
   // f(x) for the parent itself, g(x) once it has been transformed
   function fname() { return A() === 1 && H() === 0 && K() === 0 ? "f" : "g"; }
-  function eqHTML() { return "<i>" + fname() + "</i>(<i>x</i>) = " + rhsHTML(); }
+  // ---- Data Activities: the equation and the graph are a regression of the data, by family (line, absolute value, quadratic, constant) ----
+  var DFIT = { key: "", ok: false, c: null };
+  function dataFit() {
+    var pts = TB.rows().filter(function (r) { return r.done && isFinite(r.xv) && isFinite(r.yv); }).map(function (r) { return [r.xv, r.yv]; }), key = PG.fam + "|" + JSON.stringify(pts);
+    if (key === DFIT.key) return DFIT; DFIT.key = key; DFIT.ok = false; DFIT.c = null;
+    var n = pts.length, f = FAMS[PG.fam], xs = pts.map(function (q) { return q[0]; }), ys = pts.map(function (q) { return q[1]; }), distinct = xs.filter(function (v, i) { return xs.indexOf(v) === i; }).length;
+    function mean(a) { return a.reduce(function (t, v) { return t + v; }, 0) / (a.length || 1); }
+    function line(zs, ws) { var mz = mean(zs), mw = mean(ws), sz = 0, sw = 0; for (var i = 0; i < zs.length; i++) { sz += (zs[i] - mz) * (ws[i] - mw); sw += (zs[i] - mz) * (zs[i] - mz); } if (sw < 1e-12) return null; var m = sz / sw; return [m, mw - m * mz]; }
+    if (f === "constant" && n >= 1) { DFIT.c = { c: mean(ys) }; PG.k = DFIT.c.c - 1; PG.h = 0; PG.a = 1; }
+    else if (f === "linear" && n >= 2 && distinct >= 2) { var L = line(xs, ys); if (L) { DFIT.c = { m: L[0], b: L[1] }; PG.a = L[0]; PG.k = L[1]; PG.h = 0; } }
+    else if (f === "quadratic" && n >= 3 && distinct >= 3) {
+      var xm = mean(xs), u = xs.map(function (v) { return v - xm; }), S = [0, 0, 0, 0, 0], T = [0, 0, 0];
+      for (var i = 0; i < n; i++) { var p = 1; for (var j = 0; j < 5; j++) { S[j] += p; if (j < 3) T[j] += p * 0; p *= u[i]; } T[0] += ys[i]; T[1] += u[i] * ys[i]; T[2] += u[i] * u[i] * ys[i]; }
+      var M = [[S[4], S[3], S[2], T[2]], [S[3], S[2], S[1], T[1]], [S[2], S[1], S[0], T[0]]];   // unknowns a1, b1, c1 for y = a1 u^2 + b1 u + c1
+      for (var c0 = 0; c0 < 3; c0++) { var pv = c0; for (var r0 = c0 + 1; r0 < 3; r0++) if (Math.abs(M[r0][c0]) > Math.abs(M[pv][c0])) pv = r0; var tm = M[c0]; M[c0] = M[pv]; M[pv] = tm;
+        if (Math.abs(M[c0][c0]) < 1e-12) { M = null; break; } for (var r1 = 0; r1 < 3; r1++) if (r1 !== c0) { var fc = M[r1][c0] / M[c0][c0]; for (var k0 = c0; k0 < 4; k0++) M[r1][k0] -= fc * M[c0][k0]; } }
+      if (M) { var a1 = M[0][3] / M[0][0], b1 = M[1][3] / M[1][1], c1 = M[2][3] / M[2][2], a = a1, b = b1 - 2 * a1 * xm, c = c1 - b1 * xm + a1 * xm * xm;
+        if (Math.abs(a) > 1e-12) { DFIT.c = { a: a, b: b, c: c }; PG.a = a; PG.h = -b / (2 * a); PG.k = c - b * b / (4 * a); } }
+    }
+    else if (f === "absolute value" && n >= 3 && distinct >= 3) {
+      var lo = Math.min.apply(null, xs), hi = Math.max.apply(null, xs), span = hi - lo || 1;
+      function sse(h) { var zs = xs.map(function (v) { return Math.abs(v - h); }), L2 = line(zs, ys); if (!L2) return [Infinity, 0, 0]; var e = 0; for (var i2 = 0; i2 < n; i2++) { var d = ys[i2] - (L2[0] * zs[i2] + L2[1]); e += d * d; } return [e, L2[0], L2[1]]; }
+      var A0 = lo - span * .5, B0 = hi + span * .5, st = (B0 - A0) / 800, bh = A0, be = Infinity;
+      for (var q = 0; q <= 800; q++) { var h0 = A0 + q * st, e0 = sse(h0)[0]; if (e0 < be) { be = e0; bh = h0; } }
+      var l2 = bh - st, r2 = bh + st; for (var it = 0; it < 70; it++) { var m1 = l2 + (r2 - l2) / 3, m2 = r2 - (r2 - l2) / 3; if (sse(m1)[0] < sse(m2)[0]) r2 = m2; else l2 = m1; }
+      var hb = (l2 + r2) / 2, R = sse(hb); if (isFinite(R[0])) { DFIT.c = { a: R[1], h: hb, k: R[2] }; PG.a = R[1]; PG.h = hb; PG.k = R[2]; }
+    }
+    DFIT.ok = !!DFIT.c; return DFIT;
+  }
+  function dataOK() { return !isDataAct() || dataFit().ok; }
+  function rd2(v) { var r = Math.round(v * 100) / 100; return Object.is(r, -0) ? 0 : r; }
+  function dnum(v) { return (v < 0 ? "\u2212" : "") + Math.abs(v); }
+  // the equation, with each coefficient rounded to the nearest hundredth
+  function dataEqHTML() {
+    var F = dataFit(); if (!F.ok) return "<span style=\"opacity:.6\">add more data</span>"; var c = F.c, f = FAMS[PG.fam], T;
+    function poly(terms) {
+      var out = "", any = false; terms.forEach(function (t) {
+        var v = rd2(t[0]), vr = t[1]; if (v === 0 && (any || t !== terms[terms.length - 1])) return;
+        var neg = v < 0, av = Math.abs(v), body = vr ? (av === 1 ? "" : String(av)) + vr : String(av);
+        out += any ? (neg ? " \u2212 " : " + ") + body : (neg ? "\u2212" : "") + body; any = true;
+      });
+      return any ? out : "0";
+    }
+    if (f === "linear") T = poly([[c.m, "<i>x</i>"], [c.b, ""]]);
+    else if (f === "quadratic") T = poly([[c.a, "<i>x</i><sup>2</sup>"], [c.b, "<i>x</i>"], [c.c, ""]]);
+    else if (f === "absolute value") { var h2 = rd2(c.h); T = poly([[c.a, "|<i>x</i>" + (h2 === 0 ? "" : h2 > 0 ? " \u2212 " + h2 : " + " + Math.abs(h2)) + "|"], [c.k, ""]]); }
+    else T = poly([[c.c, ""]]);
+    return "<i>y</i> = " + T;
+  }
+  // the longer versions of the coefficients, at the bottom of the right side panel (only when rounding changed something)
+  function regUpd() {
+    var el = $("regVals"); if (!el) return; var F = isDataAct() && PG.show.eq ? dataFit() : null;
+    if (!F || !F.ok) { el.hidden = true; el.innerHTML = ""; return; }
+    var c = F.c, L = FAMS[PG.fam] === "linear" ? [["m", c.m], ["b", c.b]] : FAMS[PG.fam] === "quadratic" ? [["a", c.a], ["b", c.b], ["c", c.c]] : FAMS[PG.fam] === "absolute value" ? [["a", c.a], ["h", c.h], ["k", c.k]] : [["c", c.c]];
+    if (!L.some(function (q) { return Math.abs(q[1] - rd2(q[1])) > 1e-9; })) { el.hidden = true; el.innerHTML = ""; return; }
+    el.innerHTML = L.map(function (q) { return "<div>" + q[0] + " = " + dnum(+q[1].toFixed(10)) + "</div>"; }).join(""); el.hidden = false;
+  }
+  function eqHTML() { if (isDataAct()) return dataEqHTML(); return "<i>" + fname() + "</i>(<i>x</i>) = " + rhsHTML(); }
   var TMG = "#2E9E4F", TMP = "#6042A6";
   function tmO() { return [0, pf(0)]; }   // where the parent crosses the y-axis: the origin, or (0, 1) for the constant function
   function tmVals() { var T = PG.tm, O = tmO(); if (!T) return null; if (T.stage === 0) return T.cur ? [T.cur[0] - O[0], T.cur[1] - O[1], 1] : null; var y = T.stage === 1 ? (T.cur ? T.cur[1] : T.g[1]) : T.p; return [T.g[0] - O[0], T.g[1] - O[1], y - T.g[1]]; }
@@ -3449,16 +3512,16 @@
   })();
   function drawGraph() { drawGraph0(); zoomApply($("pgSvg")); }
   function drawGraph0() {
-    var S = $("pgSvg"); S.innerHTML = ""; document.body.classList.toggle("tmOn", !!PG.tm);
+    var S = $("pgSvg"); S.innerHTML = ""; document.body.classList.toggle("tmOn", !!PG.tm); if (isDataAct()) dataFit();
     TB.targets = TB.targets.filter(function (t) { return !PG.pts.some(function (z) { return Math.abs(z[0] - t[0]) < 1e-9 && Math.abs(z[1] - t[1]) < 1e-9; }); });
     { // the grid and both axes are always there; Graph only reveals the curve
       gridLayer(S);
       if (PG.show.parent) {
         curvePts(pf).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#222", "stroke-width": ".07", "stroke-dasharray": ".3 .25" })); });
-        for (var u = -2; u <= 2; u++) S.appendChild(svgEl("circle", { cx: u, cy: -pf(u), r: .13, fill: "#222" }));
+        for (var u = -2; u <= 2; u++) S.appendChild(svgEl("circle", { cx: u, cy: -pf(u), r: .13, fill: "#222", "pointer-events": "none" }));
       }
-      if (PG.show.graph) curvePts(g).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#C74440", "stroke-width": ".13", "stroke-linejoin": "round" })); });
-      if (PG.show.graph) for (var v = -2; v <= 2; v++) { var y = g(v + H()); if (Math.abs(y - ZM.oy) <= 1.05 * ZM.curY) S.appendChild(svgEl("circle", { cx: v + H(), cy: -y, r: .2, fill: "#C74440" })); }
+      if (PG.show.graph && dataOK()) curvePts(g).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#C74440", "stroke-width": ".13", "stroke-linejoin": "round" })); spHit(S, pts, "c"); });
+      if (PG.show.graph && !isDataAct()) for (var v = -2; v <= 2; v++) { var y = g(v + H()); if (Math.abs(y - ZM.oy) <= 1.05 * ZM.curY) S.appendChild(svgEl("circle", { cx: v + H(), cy: -y, r: .2, fill: "#C74440", "pointer-events": "none" })); }
     }
     // the two transformation handles sit underneath every other dot
     // the two points are always there to drag, even with the graph hidden
@@ -3473,8 +3536,8 @@
     var vg = svgEl("g", { "data-pt": "v", style: "cursor:grab" });
     vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .62, fill: "#2E9E4F", "fill-opacity": ".3" }));
     vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .2, fill: "#2E9E4F" }));
-    if (!pq()) S.appendChild(vg);   // in 1.1A the parent never moves, so its two handles stay away
-    if (stretches() && !pq()) {
+    if (!pq() && !isDataAct()) S.appendChild(vg);   // in 1.1A the parent never moves, so its two handles stay away
+    if (stretches() && !pq() && !isDataAct()) {
       var ag = svgEl("g", { "data-pt": "a", style: "cursor:grab" });
       ag.appendChild(svgEl("circle", { cx: H() + 1, cy: -(K() + PG.a), r: .62, fill: "#6042A6", "fill-opacity": ".3" }));
       ag.appendChild(svgEl("circle", { cx: H() + 1, cy: -(K() + PG.a), r: .2, fill: "#6042A6" }));
@@ -3488,12 +3551,13 @@
       sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .5, fill: "#111", "fill-opacity": ".1" })); sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .24, fill: "#111" })); S.appendChild(sg2);
     });
     if (PG.shape && (!PG.show.graph || gd())) {
-      S.appendChild(svgEl("polyline", { points: shapePts(PG.shape), fill: "none", stroke: "#2D70B3", "stroke-width": ".12", "stroke-linejoin": "round" }));
+      S.appendChild(svgEl("polyline", { points: shapePts(PG.shape), fill: "none", stroke: "#2D70B3", "stroke-width": ".12", "stroke-linejoin": "round" })); spHit(S, shapePts(PG.shape), "s");
       handles(PG.shape).forEach(function (h) {
         var hg = svgEl("g", { "data-qh": h.id, style: "cursor:grab" });
         hg.appendChild(svgEl("circle", { cx: h.x, cy: -h.y, r: .6, fill: "#2D70B3", "fill-opacity": ".25" })); hg.appendChild(svgEl("circle", { cx: h.x, cy: -h.y, r: .2, fill: "#2D70B3" })); S.appendChild(hg);
       });
     }
+    spDraw(S, PG);
     PG.clk.forEach(function (p, j) { S.appendChild(clkDot(p, j, "#2D70B3")); });
     drawGhost(S, PG, "#2D70B3");
   }
@@ -3601,7 +3665,7 @@
   function eqAdopt(t) {
     var r = eqFit(t); if (r.err) { eqMsg(r.err); eqShake(); if (PG.editEq) { var fe = $("pgEq").querySelector(".eqIn"); if (fe) { fe.focus(); fe.setSelectionRange(fe.value.length, fe.value.length); } } return false; }
     PG.editEq = false; PG.fam = r.fam; PG.a = r.a; PG.h = r.h; PG.k = r.k; PG.pa = [r.h + 1, r.k + r.a]; PG.eqTxt = ""; PG.show.eq = true;
-    PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true;
+    PG.tm = null; PG.tAns = null; PG.pts = []; PG.sp = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true;
     eqMsg(""); drawPlay(); return true;
   }
   // Graph & Describe, Create: the typed function becomes the problem
@@ -3623,8 +3687,8 @@
       [].forEach.call(document.querySelectorAll(".eqIn"), function (el) { el.value = PG.eqTxt || ""; if (pq()) el.placeholder = gd() ? "g(x)=..." : "f(x)=..."; });
       if (fw) { var re = fw === "pgEq" ? $("pgEq").querySelector(".eqIn") : $("pgTable").querySelector(".pgMid .eqIn"); if (re) { re.focus(); re.setSelectionRange(re.value.length, re.value.length); } }
     }
-    pgDescUpd();
-    [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part] ? "true" : "false"); });
+    pgDescUpd(); regUpd();
+    [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part === "reg" ? "eq" : b.dataset.part] ? "true" : "false"); });
     TB.sync(); $("qzTools").hidden = false; posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
@@ -3716,6 +3780,70 @@
     S.addEventListener("pointerup", end); S.addEventListener("pointercancel", end);
   })();
   // ---- revealing hidden work: a green check when it was right, or the student's answer fading into the right one with a red !
+  // ---- points on a graphed shape: click a line, V, parabola (or the graphed function) to put a point on it. The point is dragged along the shape, snaps to the grid, shows its coordinates
+  // while it moves, and stays on the shape when the shape is transformed (it is remembered as u, its x-distance from the vertex, or t, how far along the line it is).
+  var SPD = null;   // the point being dragged: { G, i, moved, isNew, x, y, cx, cy }
+  function spHit(S, pts, kind) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#000", "stroke-opacity": 0, "stroke-width": .9, "pointer-events": "stroke", "data-sh": kind, style: "cursor:pointer" })); }
+  function spPos(G, p) {
+    if (p.k === "c") { if (G !== PG || !PG.show.graph || p.fam !== PG.fam || !dataOK()) return null; var xc = H() + p.u; return [xc, g(xc)]; }
+    var sh = G.shape; if (!sh || p.sh !== sh) return null;
+    if (sh.t === "line") { var a = sh.p1, b = sh.p2; if (a[0] === b[0] && a[1] === b[1]) return null; return [a[0] + p.t * (b[0] - a[0]), a[1] + p.t * (b[1] - a[1])]; }
+    var xx = sh.h + p.u; return [xx, shapeY(sh, xx)];
+  }
+  function spSet(G, p, x, y) {
+    if (p.k === "c") { p.u = x - H(); return; }
+    var sh = G.shape; if (sh.t === "line") { var a = sh.p1, b = sh.p2; p.t = a[0] !== b[0] ? (x - a[0]) / (b[0] - a[0]) : (y - a[1]) / (b[1] - a[1]); } else p.u = x - sh.h;
+  }
+  // the point of the shape nearest the cursor (cx, cy) that sits on a grid line: x on the grid, or y for a vertical line
+  function spNearest(G, p, cx, cy) {
+    var kx = 10 / ZM.cur, ky = 10 / ZM.curY, best = null, bd = Infinity, sx = snapStep(), sy = snapStep(1), sh = p.k === "s" ? G.shape : null, i, i0, i1;
+    function tryPt(x, y) { if (!isFinite(x) || !isFinite(y)) return; var d = Math.pow((x - cx) * kx, 2) + Math.pow((y - cy) * ky, 2); if (d < bd) { bd = d; best = [x, y]; } }
+    if (sh && sh.t === "line" && sh.p1[0] === sh.p2[0]) { i0 = Math.ceil((ZM.oy - ZM.curY) / sy); i1 = Math.floor((ZM.oy + ZM.curY) / sy); for (i = i0; i <= i1; i++) tryPt(sh.p1[0], +(i * sy).toFixed(8)); return best; }
+    function yAt(x) { if (!sh) return g(x); if (sh.t === "line") return sh.p1[1] + (sh.p2[1] - sh.p1[1]) / (sh.p2[0] - sh.p1[0]) * (x - sh.p1[0]); return shapeY(sh, x); }
+    i0 = Math.ceil((ZM.ox - ZM.cur) / sx); i1 = Math.floor((ZM.ox + ZM.cur) / sx);
+    for (i = i0; i <= i1; i++) { var x = +(i * sx).toFixed(8); tryPt(x, yAt(x)); }
+    return best;
+  }
+  function spDraw(S, G) {
+    var L = G.sp || []; if (!L.length) return;
+    L.forEach(function (p, j) {
+      var q = spPos(G, p); if (!q || !isFinite(q[0]) || !isFinite(q[1])) return; var col = p.k === "c" ? "#C74440" : "#2D70B3";
+      var g2 = svgEl("g", { "data-sop": j, style: "cursor:grab" });
+      g2.appendChild(svgEl("circle", { cx: q[0], cy: -q[1], r: .55, fill: col, "fill-opacity": ".22" })); g2.appendChild(svgEl("circle", { cx: q[0], cy: -q[1], r: .24, fill: col, stroke: "#fff", "stroke-width": ".07" })); S.appendChild(g2);
+      if (SPD && SPD.G === G && SPD.i === j) {   // while it is being dragged, its coordinates ride beside it
+        var rt = (q[0] - ZM.ox) * 10 / ZM.cur <= 5, t = svgEl("text", { x: q[0], y: -q[1], dx: rt ? .8 : -.8, dy: -.6, "text-anchor": rt ? "start" : "end", "font-family": "system-ui,-apple-system,'Segoe UI',sans-serif", "font-size": ".66", "font-weight": "600", fill: "#1B2433", "paint-order": "stroke", stroke: "#fff", "stroke-width": ".22", "stroke-linejoin": "round", "pointer-events": "none" });
+        function r2(v) { return fmtN(Math.round(v * 100) / 100); }
+        t.textContent = "(" + r2(q[0]) + ", " + r2(q[1]) + ")"; S.appendChild(t);
+      }
+    });
+  }
+  (function () {
+    var S = $("pgSvg");
+    function end() {
+      document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", end); document.removeEventListener("pointercancel", end);
+      if (!SPD) return; var d = SPD; SPD = null;
+      if (!d.moved && !d.isNew) { var L = d.G.sp || []; L.splice(d.i, 1); }   // a plain click on a point takes it off again
+      gDraw();
+    }
+    function mv(e) {
+      if (!SPD) return; if (!SPD.moved && Math.hypot(e.clientX - SPD.cx, e.clientY - SPD.cy) < 4) return; SPD.moved = true;
+      var G = SPD.G, p = (G.sp || [])[SPD.i]; if (!p) return; var q = qAt(e), b = spNearest(G, p, q[0], q[1]); if (!b) return;
+      spSet(G, p, b[0], b[1]); gDraw();
+    }
+    S.addEventListener("pointerdown", function (e) {
+      if (e.button > 0) return; var G = G_(); if (G.tool || (G === PG && PG.tm)) return;
+      var po = e.target.closest && e.target.closest("[data-sop]"), sh = e.target.closest && e.target.closest("[data-sh]"); if (!po && !sh) return;
+      if (G === QZ && (!quiz() || QZ.step < 2 || QZ.step > 3 || (busy && e.isTrusted))) return;
+      if (G === PG && e.isTrusted) pgUser();
+      e.preventDefault(); var L = (G.sp = G.sp || []), i;
+      if (po) { i = +po.getAttribute("data-sop"); SPD = { G: G, i: i, moved: false, isNew: false, cx: e.clientX, cy: e.clientY }; }
+      else {
+        var p = { k: sh.getAttribute("data-sh"), fam: PG.fam, sh: G.shape }, q = qAt(e), b = spNearest(G, p, q[0], q[1]); if (!b) return;
+        spSet(G, p, b[0], b[1]); L.push(p); i = L.length - 1; SPD = { G: G, i: i, moved: true, isNew: true, cx: e.clientX, cy: e.clientY }; gDraw();
+      }
+      document.addEventListener("pointermove", mv); document.addEventListener("pointerup", end); document.addEventListener("pointercancel", end);
+    });
+  })();
   function shapeY(sh, x) {
     if (sh.t === "line") { if (sh.p1[0] === sh.p2[0]) return NaN; var m = (sh.p2[1] - sh.p1[1]) / (sh.p2[0] - sh.p1[0]); return sh.p1[1] + m * (x - sh.p1[0]); }
     return sh.t === "V" ? sh.a * Math.abs(x - sh.h) + sh.k : sh.a * (x - sh.h) * (x - sh.h) + sh.k;
@@ -3858,8 +3986,10 @@
       document.addEventListener("pointermove", mv); document.addEventListener("pointerup", off); document.addEventListener("pointercancel", off);
     });
   })();
-  $("pgFam").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); PG.fam = (PG.fam + 1) % FAMS.length; PG.eqTxt = ""; PG.editEq = false; PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; drawPlay(); });
-  [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (e.isTrusted) pgUser(); closePt(); var part = b.dataset.part, on = !PG.show[part], rv = on ? pgReveal(part) : null; PG.show[part] = on; drawPlay(); if (rv) rv(); }); });
+  $("pgFam").addEventListener("click", function (e) { if (e.isTrusted) pgUser(); if (isDataAct()) { var ord = [1, 2, 3, 0]; PG.fam = ord[(ord.indexOf(PG.fam) + 1) % 4]; PG.eqTxt = ""; PG.editEq = false; PG.tm = null; closePt(); drawPlay(); return; }   // Data: line, absolute value, quadratic, constant, and round again
+    PG.fam = (PG.fam + 1) % FAMS.length; PG.eqTxt = ""; PG.editEq = false; PG.tm = null; PG.tAns = null; PG.pts = []; PG.sp = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; drawPlay(); });
+  [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.addEventListener("click", function (e) { if (e.isTrusted) pgUser(); closePt(); var part = b.dataset.part; if (part === "reg") { var onR = !PG.show.eq; PG.show.eq = PG.show.graph = onR; drawPlay(); return; }   /* Data: one button shows or hides the regression: its equation, its curve and its values */
+    var on = !PG.show[part], rv = on ? pgReveal(part) : null; PG.show[part] = on; drawPlay(); if (rv) rv(); }); });
   // ---- 1.1 Play demo: the hand shows every control, one at a time ----
   var pgRun = 0, pgQ = [], pgPaused = false, pgShift = 0, pgPauseAt = 0, pgHeld = [], pgSnap = null, pgHandOp = "1";
   // a student's own action ends a running demo, but not a paused one (that is the point of pausing)
@@ -3899,7 +4029,7 @@
     if (pgRun) { pgStop(); return; }
     closePt(); var run = ++pgRun; PG.demoFin = false; zoomHome(true); theme(); pgShift = 0; dmUI("playing");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
-    PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
+    PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
     if (GD) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
     Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; drawPlay();
@@ -3954,8 +4084,8 @@
       var src = yc(i); handGo(ctr(src), 650);
       pgWait(800, function () { handTap(); pgWait(250, function () { var dst = yc(j); handGo(ctr(dst), 1400); fly(src, dst, function () { if (pgRun !== run) return; TB.typed(j, String(TB.y(TB.rows()[i]))); pgWait(600, then); }, false); }); });
     }
-    function typeRow(i, then, wrong, col) {
-      col = col || "y"; var text = wrong || String(col === "x" ? TB.x(TB.rows()[i]) : TB.y(TB.rows()[i])); function inp() { return $("pgTable").querySelector("input.qzCell[data-c=\"" + col + "\"][data-r=\"" + i + "\"]"); }
+    function typeRow(i, then, wrong, col, fast) {
+      col = col || "y"; var T0 = fast ? [250, 300, 250, 90, 250] : [600, 750, 1300, 380, 1100];   /* hand move, pause, blink, per character, finish (a fast run fills a long table) */ var text = wrong || String(col === "x" ? TB.x(TB.rows()[i]) : TB.y(TB.rows()[i])); function inp() { return $("pgTable").querySelector("input.qzCell[data-c=\"" + col + "\"][data-r=\"" + i + "\"]"); }
       var e0 = inp(); if (!e0) { then(); return; }
       // a blinking text cursor sits where the next character will go, so it is plain that the answer is being typed
       var cv = document.createElement("canvas").getContext("2d"), car = null;
@@ -3966,13 +4096,13 @@
         car.style.animation = "none"; void car.offsetWidth; car.style.animation = "";
       }
       function done(ms) { pgWait(ms, function () { if (car) car.remove(); document.body.classList.remove("demoTyping"); then(); }); }
-      var r0 = e0.getBoundingClientRect(); handGo({ x: r0.right - 12, y: r0.top + r0.height / 2 }, 600);   // the hand waits at the right edge, clear of the text
-      pgWait(750, function () {
+      var r0 = e0.getBoundingClientRect(); handGo({ x: r0.right - 12, y: r0.top + r0.height / 2 }, T0[0]);   // the hand waits at the right edge, clear of the text
+      pgWait(T0[1], function () {
         handTap(); document.body.classList.add("demoTyping"); var e1 = inp(); if (e1) e1.focus(); var c = 0; caret();
-        pgWait(1300, function nx() {   // the cursor blinks in the empty cell first, then the digits go in one at a time
+        pgWait(T0[2], function nx() {   // the cursor blinks in the empty cell first, then the digits go in one at a time
           if (pgRun !== run) { if (car) car.remove(); document.body.classList.remove("demoTyping"); return; } c++; var e = inp(); if (!e) { done(500); return; }
           e.value = text.slice(0, c); e.dispatchEvent(new Event("input", { bubbles: true })); var e2 = inp(); if (e2 && document.activeElement !== e2) e2.focus(); caret();
-          if (c < text.length) pgWait(380, nx); else done(1100);
+          if (c < text.length) pgWait(T0[3], nx); else done(T0[4]);
         });
       });
     }
@@ -4106,6 +4236,35 @@
         });
       });
     }
+    // the hand clicks a graphed shape to put a point on it, drags the point along (it snaps to the grid and shows its coordinates), then the shape is moved and the point goes with it
+    function spDemo(then) {
+      var G = G_(), sh = G.shape, useShape = !!(sh && (!PG.show.graph || gd())), p = { k: useShape ? "s" : "c", fam: PG.fam, sh: useShape ? sh : null };
+      if (!useShape && !PG.show.graph) { then(); return; }
+      function yAt(x) { if (!useShape) return g(x); if (sh.t === "line") return sh.p1[1] + (sh.p2[1] - sh.p1[1]) / (sh.p2[0] - sh.p1[0]) * (x - sh.p1[0]); return shapeY(sh, x); }
+      var base = !useShape ? H() : sh.t === "line" ? Math.round(sh.p1[0]) : sh.h, xA = base + 2, xB = base - 2;
+      if (useShape && sh.t === "line" && sh.p1[0] === sh.p2[0]) { then(); return; }
+      cap("Click a graphed shape and a point lands on it. Drag it along the shape: it snaps to the grid and shows its coordinates.");
+      var A0 = svgPt(xA, yAt(xA)); handGo(A0, 700);
+      pgWait(900, function () {
+        handTap(); var L = (G.sp = G.sp || []); spSet(G, p, xA, yAt(xA)); L.push(p); SPD = { G: G, i: L.length - 1, moved: true, isNew: true }; gDraw();
+        (function mvX(x) {
+          if (pgRun !== run) { SPD = null; return; }
+          if (x < xB) {
+            pgWait(900, function () {
+              SPD = null; gDraw();
+              cap("When the shape is moved or stretched, the point stays on it.");
+              pgWait(600, function () {
+                if (!useShape) { if (!pq()) { PG.h = PG.h + (shifts() ? 2 : 0); PG.k = PG.k + (shifts() ? 0 : 1); PG.pa = [PG.h + 1, PG.k + PG.a]; } }
+                else if (sh.t === "line") sh.p2 = [sh.p2[0], sh.p2[1] + 2]; else { sh.h += 2; sh.k += 1; }
+                gDraw(); pgWait(2200, then);
+              });
+            });
+            return;
+          }
+          spSet(G, p, x, yAt(x)); gDraw(); handGo(svgPt(x, yAt(x)), 380); pgWait(430, function () { mvX(x - 1); });
+        })(xA - 1);
+      });
+    }
     // typing with the help of the buttons under the box: text is typed a key at a time, and "x" / "^2" are pressed on the little keypad
     function typeKeys(parts, then) {
       var el = $("pgEq").querySelector(".eqIn"); if (!el) { then(); return; }
@@ -4225,6 +4384,7 @@
       function (n) { cap("Or click the line button: a point snaps to the grid and shows its coordinates. Click it, then click again to land the second point."); clickTool("line", [-4, -3], [0, 1], n); },
       function (n) { cap("The V needs one click less: click the button, then the vertex."); clickTool("V", [2, -2], null, n); },
       function (n) { cap("...and so does the parabola button."); clickTool("U", [-3, 3], null, n); },
+      function (n) { spDemo(n); },
       "@toolsEnd",
       function (n) { cap("Clear the graph again."); tapClear(n); },
       function (n) { cap("Drag each row onto the graph to plot its point. The yellow dot shows where it belongs."); dragRows(0, n); },
@@ -4258,7 +4418,7 @@
         },
         function (n) { cap("Drag each row onto the graph."); dragAll(0, n); },
         function (n) { cap("Now the graph: choose the tool that fits the points."); pqFam < 2 ? clickTool("line", [0, ys(0)], [1, ys(1)], n) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, n); },
-        function (n) { zoomDemo(function () { rectDemo(n); }); },
+        function (n) { spDemo(function () { zoomDemo(function () { rectDemo(n); }); }); },
         function (n) { cap("The equation, the table and the graph all describe the same parent."); var tg = document.querySelector(".tog[data-part=graph]"); if (!PG.show.graph && tg) tg.click(); pgWait(2300, n); }
       ];
     }
@@ -4300,25 +4460,25 @@
             pathTo([gO, gT], function () { handTap(); tmClick(); pgWait(700, function () { gdWatch(); drawPlay(); pgWait(1000, n); }); });
           }); }); });
         },
-        function (n) { zoomDemo(function () { rectDemo(n); }); },
+        function (n) { spDemo(function () { zoomDemo(function () { rectDemo(n); }); }); },
         function (n) { cap("The parent, the graph of g, the table and the description all show the same translation: " + gdWords(QZ.tr[QZ.pi]) + "."); pgWait(2600, n); }
       ];
     }
     var k = 0;
     if (isDataAct()) {   // a Data Activity: a table of x and y values, plotted and explored on the graph
       // type into a cell the way a student does, then press Return (or step to the next cell with the keyboard)
-      function typeCell(i, col, val, next) { typeRow(i, function () { TB.submit(i, col); pgWait(1100, next); }, String(val), col); }
-      function ret(next, wait) { var el = document.activeElement; if (el) el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })); pgWait(wait || 1300, next); }
+      function typeCell(i, col, val, next) { typeRow(i, function () { TB.submit(i, col); pgWait(350, next); }, String(val), col, true); }
+      function ret(next, wait) { var el = document.activeElement; if (el) el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })); pgWait(wait || 450, next); }
       var DYS = [225, 401, 524, 602, 623, 600, 524];
       steps = [
         function (n) {
           cap("Play Data: a table of x and y values. Let's enter some data. First the x-values: type 5, 10 and 15, pressing Return after each.");
-          PG.fam = 0; Object.keys(PG.show).forEach(function (q) { PG.show[q] = false; }); PG.show.eq = false; drawPlay();
+          PG.fam = 1; PG.drows = null; PG.pts = []; PG.sp = []; Object.keys(PG.show).forEach(function (q) { PG.show[q] = false; }); PG.show.eq = false; drawPlay();
           typeCell(0, "x", 5, function () { typeCell(1, "x", 10, function () { typeCell(2, "x", 15, n); }); });
         },
         function (n) {
           cap("After three values in a steady pattern, Return fills in the next one by itself: 20, 25, 30 and 35. The table grows to make room.");
-          ret(function () { ret(function () { ret(function () { pgWait(900, n); }); }); });
+          ret(function () { ret(function () { ret(function () { pgWait(500, n); }); }); });
         },
         function (n) {
           cap("The left and right arrow keys move between the columns.");
@@ -4330,8 +4490,15 @@
           cap("Now the y-values. Each time a row is completed its point is plotted, and the graph zooms out by itself when the point would be off the screen.");
           (function ys(i) { if (i > 6) { n(); return; } typeCell(i, "y", DYS[i], function () { ys(i + 1); }); })(0);
         },
+        function (n) { cap("Press Regression: the best-fitting curve for the family is calculated and graphed, with its equation. The family starts as line: y = mx + b."); tap(tog("reg"), function () { pgWait(2800, n); }); },
+        function (n) { cap("The coefficients are rounded to the nearest hundredth in the equation; the longer values, labeled m and b, are at the bottom of the side panel."); pgWait(3200, n); },
+        function (n) { cap("Change Family: absolute value, y = a|x \u2212 h| + k."); tap($("pgFam"), function () { pgWait(2600, n); }); },
+        function (n) { cap("Quadratic: y = ax\u00b2 + bx + c."); tap($("pgFam"), function () { pgWait(2600, n); }); },
+        function (n) { cap("Constant: y = c."); tap($("pgFam"), function () { pgWait(2200, n); }); },
+        function (n) { cap("And around again to line."); tap($("pgFam"), function () { pgWait(2200, n); }); },
+        function (n) { cap("Press Regression again to hide the regression."); tap(tog("reg"), function () { pgWait(900, n); }); },
         function (n) { pauseHere(n); },
-        function (n) { zoomDemo(function () { rectDemo(n); }); },
+        function (n) { rectDemo(n); },
         function (n) { pauseHere(n); }
       ].concat(TOOLS, [
         function (n) { cap("Your turn: type your own data, plot it, and zoom or move the graph to look at it."); pgWait(2500, n); }
@@ -4349,12 +4516,13 @@
   function enterPlay() {
     stopDemo(); stopParty(); closeAsk(false); busy = false; calc = null;
     document.body.classList.add("play"); document.body.classList.toggle("dataAct", isDataAct()); theme();
+    { var kd = isDataAct() ? "d" : "g"; if (PG.kind !== kd) { PG.kind = kd; PG.fam = kd === "d" ? 1 : 0; PG.a = 1; PG.h = 0; PG.k = 0; PG.pa = [1, 1]; PG.pts = []; PG.sp = []; PG.shape = null; PG.clk = []; PG.tbl = null; PG.drows = null; PG.eqTxt = ""; PG.editEq = false; Object.keys(PG.show).forEach(function (q) { PG.show[q] = false; }); PG.show.eq = kd !== "d"; } }   // a Data Activity starts with the line family and everything hidden
     $("pg").hidden = false; document.querySelector(".frame").hidden = true; $("pgCtl").hidden = false; $("prog").hidden = true; logEl.innerHTML = "";
     drawPlay();
   }
   function leavePlay() {
     if (pgRun) pgStop(); closePt();
-    document.body.classList.remove("play", "dataAct"); $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false; $("pgCtl").hidden = true;
+    document.body.classList.remove("play", "dataAct"); if ($("regVals")) $("regVals").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false; $("pgCtl").hidden = true;
   }
 
   buildActs(); buildLessons(); updProg();
