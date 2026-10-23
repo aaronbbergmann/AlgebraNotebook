@@ -246,6 +246,17 @@
   .zmRow button:disabled{opacity:.35;cursor:default}
   #zmData{display:none}
   body.dataAct #zmRow #zmData{display:flex}
+  body.dataAct:not(.pq) .tog[data-part=reg]{display:flex}
+  body.pq .tog[data-part=reg]{display:none!important}
+  .estP{font:600 1rem/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433;max-width:44rem}
+  .estT{border-collapse:collapse;margin:.5rem 0 .1rem;font:400 .95rem system-ui,sans-serif;color:#1B2433}
+  .estT th,.estT td{border:1px solid #B8BCC2;padding:.3rem .7rem;text-align:center;min-width:2.6rem}
+  .estT th{background:#F7E9D0;font-weight:600;text-align:left}
+  .estIn[hidden]{display:none}.estIn{display:flex;flex-direction:column;gap:.5rem;margin-top:.6rem}
+  .estIn label{font:600 .95rem system-ui,sans-serif;color:#1B2433}
+  .estIn .estRow{display:flex;gap:.5rem}
+  .estIn input{box-sizing:border-box;flex:1;min-width:0;padding:.55em .7em;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 1rem system-ui,sans-serif}
+  .estIn button{height:2.6rem;padding:0 1rem;border:2px solid var(--plus);border-radius:8px;background:var(--plus);color:#fff;font:600 .95rem system-ui,sans-serif;cursor:pointer}
   .pgGraph svg{display:block;width:100%;height:100%}
   .pgFam{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;margin-bottom:.2rem}
   .btn.simHover:not(:disabled){background:var(--ink);color:var(--bg)}
@@ -370,6 +381,7 @@
         <div class="pgEqMsg" id="pgEqMsg" aria-live="polite"></div>
         <div class="pgDesc" id="pgDesc" aria-live="polite"></div>
         <div class="descIn" id="pgDescIn" hidden><input id="pgDescTx" autocomplete="off" spellcheck="false" placeholder="Describe the transformation" aria-label="Describe the transformation"><div class="descKeys" id="pgDescKeys"><button type="button" data-ins="Translation">Translation</button><button type="button" data-ins="Stretch">Stretch</button><button type="button" data-ins="Shrink">Shrink</button><button type="button" data-ins="Reflection">Reflection</button><button type="button" data-ins="Horizontal">Horizontal</button><button type="button" data-ins="Vertical">Vertical</button><span class="descArr"><button type="button" data-ins="←" aria-label="left">←</button><button type="button" data-ins="→" aria-label="right">→</button><button type="button" data-ins="↑" aria-label="up">↑</button><button type="button" data-ins="↓" aria-label="down">↓</button></span><button type="button" class="descGo" id="pgDescGo">Submit</button></div></div>
+        <div class="estIn" id="estIn" hidden><label for="estTx" id="estLbl">Estimate</label><div class="estRow"><input id="estTx" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="Estimated height"><button type="button" id="estGo">Submit</button></div></div>
       </div>
     </section>
     <div class="frame">
@@ -1441,11 +1453,13 @@
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   var BUILT = {
-    "1.1A": { quiz: true, top: 2, key: "algebraProgress:1.1A", perLesson: true, modesFor: function (l) { return l === 2 ? ["demo", "sequence", "solo", "create"] : ["demo", "sequence", "solo"]; }, lessons: ["Memorizing Parents", "Graphing and Describing Translations"], short: ["Parents", "Graph & Describe"], modes: ["demo", "sequence", "solo"], levels: [
+    "1.1A": { quiz: true, top: 3, key: "algebraProgress:1.1A", perLesson: true, modesFor: function (l) { return l === 2 ? ["demo", "sequence", "solo", "create"] : ["demo", "sequence", "solo"]; }, lessons: ["Memorizing Parents", "Graphing and Describing Translations", "Estimating a Value from a Graph"], short: ["Parents", "Graph & Describe", "Estimate"], modes: ["demo", "sequence", "solo"], levels: [
       [1, "demo", 10, "Demo Mode"], [1, "sequence", 25, "Sequence Mode"], [1, "solo", 40, "Solo Mode"],
       [1, "solo", 70, "Solo Mode, 2nd round", 2], [1, "solo", 100, "Solo Mode, 3rd round", 3],
       [2, "demo", 10, "Demo Mode"], [2, "sequence", 25, "Sequence Mode"], [2, "solo", 40, "Solo Mode"],
-      [2, "solo", 70, "Solo Mode, 2nd round", 2], [2, "solo", 100, "Solo Mode, 3rd round", 3]
+      [2, "solo", 70, "Solo Mode, 2nd round", 2], [2, "solo", 100, "Solo Mode, 3rd round", 3],
+      [3, "demo", 10, "Demo Mode"], [3, "sequence", 25, "Sequence Mode"], [3, "solo", 40, "Solo Mode"],
+      [3, "solo", 70, "Solo Mode, 2nd round", 2], [3, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
     "Play Data": { play: true, data: true, top: 1, key: "algebraProgress:PlayData", levels: [] },   // a Data Activity (a kind of Graphing activity); for now an exact copy of Play Graph
@@ -1461,7 +1475,7 @@
   };
   var act = "1.4D";
   // each activity also lives at its own address: …/algebranotebook/1-4b/ opens that activity and stays there
-  function isDataAct(id) { return !!(BUILT[id || act] && BUILT[id || act].data); }   // Data Activities (Play Data, and more to come) are Graphing activities of a special kind
+  function isDataAct(id) { var b = BUILT[id || act]; return !!(b && (b.data || (!id && b.quiz && lesson === 3))); }   // (1.1A's third exercise, Estimating a Value from a Graph, has the same centre pane as a Data Activity)   // Data Activities (Play Data, and more to come) are Graphing activities of a special kind
   function slugOf(id) { return id.toLowerCase().replace(/\./g, "-").replace(/\s+/g, ""); }
   var fixedAct = null;
   (function () {
@@ -2557,8 +2571,9 @@
   function pq() { return document.body.classList.contains("pq"); }
   // the cue under the question lists what is left to answer, each ending in "?"; a finished part gets a green check instead
   function pqCue() {
-    gdDescUI();
+    gdDescUI(); estUI();
     if (!pq() || !QZ.order) return;
+    if (est()) { var oe = pqParts(), alle = QZ.step >= 4; $("pgQcue").innerHTML = (QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + [["Table", oe.table], ["Graph", oe.graph], ["Estimate", oe.desc]].map(function (a) { return a[0] + (alle || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; "); return; }
     if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = "Function?"; return; }
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
     var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
@@ -2606,6 +2621,48 @@
   });
   $("pgDescTx").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); gdDescSubmit(); } });
   function pqMsg(t, cls) { var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = t || ""; }
+  // ---- 1.1A, third exercise: Estimating a Value from a Graph.  The data come from a table in the question; the student enters them in the Data table, graphs the model
+  // (a U for a quadratic) through the points, then estimates a height from the graph.  The centre pane is the Play Data pane. ----
+  function est() { return pq() && lesson === 3; }
+  var ESC = [["a dirt bike", "jumping off a ramp"], ["a ball", "being thrown upward from a platform"], ["a model rocket", "launching from a stand"]];
+  // the height after x seconds is -16x^2 + 32x + h0: the first problem is the dirt bike of the textbook (h0 = 8, estimate at 1.75 s)
+  function estMake(i) {
+    var h0 = 8, t = 1.75, sc = ESC[0];
+    if (i > 0) { h0 = [4, 5, 6, 10, 12][rnd(5)]; t = [0.25, 0.75, 1.25, 1.75][rnd(4)]; sc = ESC[rnd(3)]; }
+    var X = [0, 0.5, 1, 1.5, 2], Y = X.map(function (x) { return -16 * x * x + 32 * x + h0; });
+    return { x: X, y: Y, t: t, ans: -16 * t * t + 32 * t + h0, h0: h0, n: sc[0], w: sc[1] };
+  }
+  function estProb() { return QZ.est && QZ.est[QZ.pi]; }
+  function estHTML() {
+    var e = estProb(); if (!e) return "";
+    function row(a) { return a.map(function (v) { return "<td>" + v + "</td>"; }).join(""); }
+    return "<div class=\"estP\">The table shows the height <i>y</i> of " + e.n + " <i>x</i> seconds after " + e.w + ". What type of function can you use to model the data? Estimate the height after " + e.t + " seconds.</div>" +
+      "<table class=\"estT\"><tr><th>Time (seconds), <i>x</i></th>" + row(e.x) + "</tr><tr><th>Height (feet), <i>y</i></th>" + row(e.y) + "</tr></table>";
+  }
+  function estRows() { return TB.rows().filter(function (r) { return r.done && isFinite(r.xv) && isFinite(r.yv); }); }
+  function estTableOK() { var e = estProb(); if (!e) return false; var R = estRows(); return R.length === e.x.length && e.x.every(function (x, i) { return R.some(function (r) { return Math.abs(r.xv - x) < 1e-9 && Math.abs(r.yv - e.y[i]) < 1e-9; }); }); }
+  function estModelOK() { var e = estProb(), sh = PG.shape; return !!(e && sh && sh.t === "U" && e.x.every(function (x, i) { return Math.abs(shapeY(sh, x) - e.y[i]) <= 1; })); }
+  // once the table and the graph are right, a box takes the estimate
+  function estUI() {
+    var box = $("estIn"); if (!box) return;
+    var show = !!(est() && QZ.order && QZ.step < 4 && !PG.eOK && estTableOK() && estModelOK()), was = !box.hidden;
+    box.hidden = !show;
+    if (show && !was) { $("estTx").value = ""; $("estLbl").innerHTML = "Estimate the height after " + estProb().t + " seconds (feet)"; if (!pgRun) setTimeout(function () { if (!box.hidden) $("estTx").focus(); }, 0); }
+  }
+  function estSubmit() {
+    var e = estProb(), v = ptNum($("estTx").value), box = $("estIn");
+    if (e && isFinite(v) && Math.abs(v - e.ans) <= 1) { PG.eOK = true; pqMsg(""); var rr = box.getBoundingClientRect(); rvMark("ok", rr.left + 24, rr.top + 14); box.hidden = true; drawPlay(); return; }
+    QZ.wrong++; pqMsg("Not quite. Try again.");
+    box.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
+  }
+  $("estGo").addEventListener("click", estSubmit);
+  $("estTx").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); estSubmit(); } });
+  function estHint(n, ok) {
+    var e = estProb();
+    if (!ok.table) return n === 0 ? "Enter each pair from the table in the question: the x-value in the left column and the y-value in the right." : "Type " + e.x.map(function (x, i) { return "(" + x + ", " + e.y[i] + ")"; }).join(", ") + ". Return moves down the column, and the arrow keys move between the columns.";
+    if (!ok.graph) return n === 0 ? "Look at the points: they rise and then fall, symmetric about the middle. Which shape is that: a line, a V or a U?" : "Choose the U tool, click the vertex, (" + e.x[2] + ", " + e.y[2] + "), then drag its side point onto (" + e.x[4] + ", " + e.y[4] + "). Use the Data button under the graph to see all of the points.";
+    return n === 0 ? "Click your U to put a point on it and drag the point to x = " + e.t + ": its coordinates show beside it." : "Read the y-value of the curve where x = " + e.t + ", then type it in the box.";
+  }
   function pqSetup() {
     closePt(); var fam = qFam();
     PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = [];
@@ -2614,6 +2671,7 @@
       var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.a = tr.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false };
       if (mode === "create" && !QZ.cr) { PG.show.eq = false; PG.eqTxt = "g(x)="; }
     }   // Graph & Describe: g(x) is given; the parent graph, g's graph, the table and the description are the answer
+    if (est()) { PG.fam = 3; PG.show = { eq: false, table: false, graph: false, desc: false, parent: false }; PG.eOK = false; PG.eqTxt = ""; $("estIn").hidden = true; }
     TB.targets = []; QZ.step = 0; QZ.hn = 0; pqMsg("");
   }
   // ---- 1.1A, second exercise: Graph & Describe.  g(x) is a translation of the parent; the student graphs both, fills in the table and describes the move ----
@@ -2658,10 +2716,12 @@
     stopDemo(); if (pgRun) pgStop(); PG.demoFin = false; zoomHome(true); stopParty(); busy = false; up = null; counted = false;
     var o = [0, 1, 2, 3]; for (var i = 3; i > 0; i--) { var j = rnd(i + 1), t = o[i]; o[i] = o[j]; o[j] = t; }
     if (!gd() && mode === "demo") o.splice(o.indexOf(3), 1), o.unshift(3);   // Memorizing Parents: the demo starts with the quadratic family
+    document.body.classList.toggle("dataAct", isDataAct());
+    if (est()) o = mode === "demo" ? [0] : [0, 1, 2];   // Estimating a Value from a Graph: a round is three problems, the first one the textbook's
     var cu = gd() && mode !== "create" && gdCustom;
     if (gd() && mode === "create") { o = [0]; gdCustom = null; }   // Create: the student types the function, so there is one problem and no family yet
     else if (cu) o = [cu.fam];   // the student's own function runs in whichever mode they pick
-    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : o.map(gdMake), cr: false, custom: !!cu }; updProg();
+    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : o.map(gdMake), est: est() ? o.map(estMake) : null, cr: false, custom: !!cu }; updProg();
     if (mode !== "demo") explainOn = false;
     logEl.innerHTML = "";
     $("hint").hidden = soloish(); $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn);
@@ -2673,7 +2733,7 @@
     if (QZ.step < 4) return;
     if (QZ.custom && up) { var uc = up; up = null; uc.go(); return; }
     if (mode === "create") { pqStart(); return; }
-    QZ.pi++; pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel(); if (mode === "demo") logQzExplain();
+    QZ.pi++; if (est()) zoomHome(true); pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel(); if (mode === "demo") logQzExplain();
   }
   // "Another demo": the demo runs again on a different parent function
   function pqAnother() {
@@ -2684,6 +2744,7 @@
     var fam = qFam(), done = QZ.step >= 4, demo = mode === "demo";
     document.body.classList.toggle("crPre", gd() && mode === "create" && !QZ.cr);
     if (gd() && mode === "create" && !QZ.cr) $("pgQt").innerHTML = "Type a function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2|<i>x</i> \u2212 3| + 1</span>.";
+    else if (est()) $("pgQt").innerHTML = estHTML();
     else if (gd()) $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation.";
     else $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
     pqCue();
@@ -2703,7 +2764,7 @@
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
-  function pqParts() { return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
+  function pqParts() { if (est()) return { eq: true, table: estTableOK(), graph: estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
   var pqBusy = false;
   function pqEval() {
     if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order || (gd() && mode === "create" && !QZ.cr)) return;
@@ -2711,11 +2772,11 @@
     try {
       gdWatch();
       var ok = pqParts();
-      if (ok.graph && !PG.show.graph) { pqMsg(""); }
-      if (ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
+      if (!est() && ok.graph && !PG.show.graph) { pqMsg(""); }
+      if (!est() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
-        QZ.step = 4; var last = QZ.pi === 3;
-        pqMsg(gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
+        QZ.step = 4; var last = QZ.pi === QZ.order.length - 1;
+        pqMsg(est() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
         if (QZ.custom) {   // the student's own function: no Progress, and Next offers the next mode with the same function
           pqMsg("Well done!", "ok"); var cm = ["demo", "sequence", "solo"], cn = cm[cm.indexOf(mode) + 1];
           up = cn ? { label: MODES[cn] + " mode", go: function () { setMode(cn); } } : { label: "Create another", go: function () { setMode("create"); } };
@@ -2748,6 +2809,12 @@
   function pqCheck() {
     if (QZ.step >= 4) return; pqEval(); if (QZ.step >= 4) return;
     var ok = pqParts(), need = [], fam = qFam(), t = pqTyped();
+    if (est()) {
+      if (!ok.table) need.push("the table (" + estRows().length + " of 5 rows)");
+      if (!ok.graph) need.push("the graph through the points");
+      if (!ok.desc) need.push("your estimate");
+      QZ.wrong++; pqMsg(soloish() ? "Not quite. Try again." : "Still to do: " + need.join(", ") + "."); return;
+    }
     if (gd()) {
       if (!ok.parent) need.push("the parent graph (it turns dotted when it is right)");
       if (!ok.graph) need.push("the graph of g(x)");
@@ -2764,6 +2831,7 @@
   function pqHint() {
     var fam = qFam(), n = QZ.hn++, ok = pqParts();
     if (QZ.locked || QZ.step >= 4) return "Press the button below to keep going.";
+    if (est()) return estHint(n, ok);
     if (gd()) {
       var tt = QZ.tr[QZ.pi], tool = QSHAPE[fam] === "line" ? "/" : QSHAPE[fam];
       if (!ok.parent) return n === 0 ? "Start with the parent: the simplest function in the " + QFAM[fam] + " family, f(x) = " + plain(qEqHTML(fam)) + ". Graph it with the " + tool + " tool." : fam === 0 ? "The parent is flat at y = 1." : fam === 1 ? "Use the / tool through (0, 0) and (1, 1)." : "Click the " + tool + " tool, then click the vertex, (0, 0).";
@@ -2778,19 +2846,20 @@
   }
   function pqExplain() {
     var fam = qFam();
+    if (est()) return "Enter the data in the table, then graph a function through the points: they rise and fall like a U, so a quadratic fits. Once the graph is right, read it at x = " + estProb().t + " to estimate the height.";
     if (gd()) return "A translation slides the parent without changing its shape. Here g(x) = " + plain(rhsHTML()) + " is the " + QFAM[fam] + " parent moved " + gdWords(QZ.tr[QZ.pi]) + ". Graph the parent (it turns dotted), then graph g(x); the table and the description tell the same story.";
     return "Every family of functions has a parent: its simplest equation. The " + QFAM[fam] + " parent is f(x) = " + plain(qEqHTML(fam)) + ". You can answer with the equation, the table or the graph, in any order: put each x into the equation to fill the table, and the points make a " + (fam < 2 ? "straight line" : fam === 2 ? "V" : "U") + " graph.";
   }
   function enterQuiz() {
     stopDemo(); stopParty(); closeAsk(false);
-    document.body.classList.add("quiz", "play", "pq");
+    document.body.classList.add("quiz", "play", "pq"); document.body.classList.toggle("dataAct", isDataAct());
     $("pg").hidden = false; document.querySelector(".frame").hidden = true; $("pgCtl").hidden = false; $("qz").hidden = false; $("prog").hidden = true;
     setMode("demo");
   }
   function leaveQuiz() {
     if (!document.body.classList.contains("quiz")) return;
     stopDemo(); busy = false; if (pgRun) pgStop();
-    document.body.classList.remove("quiz", "play", "pq", "crPre"); $("pgDescIn").hidden = true; $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
+    document.body.classList.remove("quiz", "play", "pq", "crPre", "dataAct"); $("estIn").hidden = true; $("pgDescIn").hidden = true; $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
     $("pgTable").style.display = ""; $("pgGraph").style.display = ""; $("pgFam").hidden = false;
   }
 
@@ -3318,7 +3387,7 @@
     L.push(["R\u00b2", F.r2]);   // every regression reports its R squared along with its constants
     el.innerHTML = L.map(function (q) { return "<div>" + q[0] + " = " + dnum(+q[1].toFixed(10)) + "</div>"; }).join(""); el.hidden = false;
   }
-  function eqHTML() { if (isDataAct()) return dataEqHTML(); return "<i>" + fname() + "</i>(<i>x</i>) = " + rhsHTML(); }
+  function eqHTML() { if (est()) return ""; if (isDataAct()) return dataEqHTML(); return "<i>" + fname() + "</i>(<i>x</i>) = " + rhsHTML(); }
   var TMG = "#2E9E4F", TMP = "#6042A6";
   function tmO() { return [0, pf(0)]; }   // where the parent crosses the y-axis: the origin, or (0, 1) for the constant function
   function tmVals() { var T = PG.tm, O = tmO(); if (!T) return null; if (T.stage === 0) return T.cur ? [T.cur[0] - O[0], T.cur[1] - O[1], 1] : null; var y = T.stage === 1 ? (T.cur ? T.cur[1] : T.g[1]) : T.p; return [T.g[0] - O[0], T.g[1] - O[1], y - T.g[1]]; }
@@ -3709,7 +3778,7 @@
     drawGraph();
     $("pgTable").querySelector("tbody").innerHTML = fillMode() ? TB.html() : tableHTML();
     var fe = document.activeElement, fw = fe && fe.classList && fe.classList.contains("eqIn") ? (fe.closest("#pgEq") ? "pgEq" : "mid") : null;
-    var typing = !PG.show.eq || (PG.editEq && !pq());   // the equation box is open for typing (or being edited in place)
+    var typing = !est() && (!PG.show.eq || (PG.editEq && !pq()));   // the equation box is open for typing (or being edited in place)
     $("pgTable").querySelector(".pgMid").innerHTML = typing ? EQIN : eqHTML();
     $("pgEq").innerHTML = typing ? EQIN : eqHTML();
     $("pgEq").title = !pq() && !typing ? "Click the equation to type your own function" : "";
@@ -4097,7 +4166,7 @@
     PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
     if (GD) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
-    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; drawPlay();
+    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 3; PG.eOK = false; PG.eqTxt = ""; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; } drawPlay();
     function cap(t) { dmCap(t); }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
@@ -4386,8 +4455,8 @@
       }
       pgRaf(step);
     }
-    function clickTool(tool, p1, p2, then) {
-      var b = document.querySelector(".qzTools [data-tool=" + tool + "]"), st = [-7, -6];
+    function clickTool(tool, p1, p2, then, from) {
+      var b = document.querySelector(".qzTools [data-tool=" + tool + "]"), st = from || [-7, -6];
       handGo(ctr(b), 650);
       pgWait(800, function () { handTap(); qzTool(tool); handGo(svgPt(st[0], st[1]), 700); pgWait(900, function () {
         hoverTo(st, p1, 1000, function () { handTap(); qzPlace(tool, p1[0], p1[1]);
@@ -4487,7 +4556,7 @@
     ];
     var TOOLS = steps.slice(steps.indexOf("@tools") + 1, steps.indexOf("@toolsEnd"));   // the buttons beside the graph (shared with the Data demo)
     steps = steps.filter(function (q) { return typeof q === "function"; });
-    if (PQ) {   // 1.1A: the demo answers this parent's question with the equation, the table and the graph
+    if (PQ && !est()) {   // 1.1A: the demo answers this parent's question with the equation, the table and the graph
       var EQT = ["f(x)=1", "f(x)=x", "f(x)=|x|", "f(x)=x^2"][pqFam], ys = function (u) { return qf(pqFam, u); };
       var dragAll = function (i, then) { if (i > 4) { then(); return; } dragRow(i, function () { dragAll(i + 1, then); }); };
       steps = [
@@ -4581,6 +4650,23 @@
         })();
       }
       var DYS = [225, 401, 524, 602, 623, 600, 524];
+      if (est()) {   // 1.1A, Estimating a Value from a Graph: the data go into the table, the U goes through them, and the graph gives the estimate
+        var EP = estProb();
+        steps = [
+          function (n) { cap("Enter the data"); clickCell(0, "x", function () { (function xs(i) { if (i > 2) { n(); return; } typeHere(EP.x[i], function () { xs(i + 1); }); })(0); }); },
+          function (n) { cap("Return auto-fills"); ret(function () { pgWait(300, n); }, 700); },
+          function (n) { cap("Now y-values"); toTop(function () { key("ArrowRight"); pgWait(600, function () { (function ys(i) { if (i > 4) { n(); return; } typeHere(EP.y[i], function () { ys(i + 1); }); })(0); }); }); },
+          function (n) { cap("Zoom to data"); tap($("zmData"), function () { pgWait(1800, n); }); },
+          function (n) { cap("A U shape fits"); clickTool("U", [EP.x[2], EP.y[2]], null, n, [EP.x[1] - .3, EP.y[2] - 5]); },
+          function (n) { cap("Drag to a data point"); stretch(EP.y[4] - EP.y[2], n, 1); },
+          function (n) {
+            cap("Click the curve at " + EP.t);
+            var sh = PG.shape, yy = shapeY(sh, EP.t); handGo(svgPt(EP.t, yy), 700);
+            pgWait(900, function () { handTap(); var q = { k: "s", fam: PG.fam, sh: sh }; spSet(PG, q, EP.t, yy); (PG.sp = PG.sp || []).push(q); SPD = { G: PG, i: PG.sp.length - 1, moved: true, isNew: true }; drawPlay(); pgWait(2200, function () { SPD = null; drawPlay(); n(); }); });
+          },
+          function (n) { cap("Type the estimate"); typeBox("estTx", String(Math.round(EP.ans * 100) / 100), function () { tap($("estGo"), function () { pgWait(900, n); }); }); }
+        ];
+      } else
       steps = [
         function (n) {
           cap("Type x-values");
