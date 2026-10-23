@@ -3415,18 +3415,19 @@
   var ptAt = null;
   function ptPos() {
     var P = $("pgPt"); if (P.hidden) return;
+    // it first opens right where the double-click happened; if the point is then dragged, the pop-up follows it
     var c = ptAt, p = ptIdx >= 0 ? PG.pts[ptIdx] : null;
-    if (p) { var r = $("pgSvg").getBoundingClientRect(); c = { x: r.left + r.width * (p[0] + 10) / 20, y: r.top + r.height * (10 - p[1]) / 20 }; }
+    if (!c && p) { var r = $("pgSvg").getBoundingClientRect(); c = { x: r.left + r.width * (p[0] + 10) / 20, y: r.top + r.height * (10 - p[1]) / 20 }; }
     if (!c) return;
-    P.style.left = Math.max(6, Math.min(innerWidth - P.offsetWidth - 6, c.x - P.offsetWidth / 2)) + "px";
-    P.style.top = Math.max(6, Math.min(innerHeight - P.offsetHeight - 6, c.y + 20)) + "px";
+    P.style.left = Math.max(6, Math.min(innerWidth - P.offsetWidth - 6, c.x + (c.side ? 14 : -P.offsetWidth / 2))) + "px";
+    P.style.top = Math.max(6, Math.min(innerHeight - P.offsetHeight - 6, c.y + (c.side ? 14 : 20))) + "px";
   }
   window.addEventListener("resize", ptPos);
   function ptFill() { var p = ptIdx >= 0 ? PG.pts[ptIdx] : null; $("pgPtX").value = p ? ptStr(p[0]) : ""; $("pgPtY").value = p ? ptStr(p[1]) : ""; ptPos(); }
   function selectPt(j, at) {
     if (!document.body.classList.contains("play") || PG.tool) return;
     if (j >= 0 && !PG.pts[j]) return;
-    ptOpen = true; ptIdx = j; ptAt = at || null; $("pgPt").hidden = false; ptFill(); drawPlay();
+    ptOpen = true; ptIdx = j; ptAt = at || null; $("pgPt").hidden = false; ptFill(); ptAt = null; drawPlay();
   }
   function closePt() { if (!ptOpen) return; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true; if (document.body.classList.contains("play")) drawPlay(); }
   // typing in either box moves the point at once (a new point is added once both boxes hold numbers)
@@ -3449,10 +3450,10 @@
     // the svg holds the pointer capture, so find the point under the cursor rather than trusting e.target
     var sp = e.target.closest && e.target.closest("[data-sp]"), l = sp ? [] : document.elementsFromPoint(e.clientX, e.clientY);
     for (var k = 0; k < l.length && !sp; k++) sp = l[k].closest && l[k].closest("[data-sp]");
-    if (!sp) return; clearTimeout(ptTimer); selectPt(+sp.dataset.sp, { x: e.clientX, y: e.clientY });
+    if (!sp) return; clearTimeout(ptTimer); selectPt(+sp.dataset.sp, e.clientX || e.clientY ? { x: e.clientX, y: e.clientY } : null);   // (the demo's hand sends no coordinates: the pop-up then goes under the point)
   });
-  // the dot button's pop-up opens on the graph, just below the level of the button, not over the tool column
-  document.querySelector(".qzTools [data-tool=pt]").addEventListener("dblclick", function (e) { if (document.body.classList.contains("play")) { var b = e.currentTarget.getBoundingClientRect(); selectPt(-1, { x: b.right + 84, y: b.top + b.height / 2 - 6 }); } });
+  // the dot button's pop-up opens beside the double-click, over the graph rather than the tool column
+  document.querySelector(".qzTools [data-tool=pt]").addEventListener("dblclick", function (e) { if (document.body.classList.contains("play")) { var b = e.currentTarget.getBoundingClientRect(); selectPt(-1, { x: e.clientX || b.left + b.width / 2, y: e.clientY || b.top + b.height / 2, side: true }); } });
   // drag: the red point snaps to whole numbers; the purple point's height is the stretch factor a (steps of 0.25, never 0)
   (function () {
     var S = $("pgSvg"), which = null, pd = null;
