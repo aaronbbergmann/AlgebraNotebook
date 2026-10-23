@@ -282,6 +282,8 @@
   .eqIn{width:100%;box-sizing:border-box;border:0;border-bottom:2px solid transparent;background:transparent;font:inherit;text-align:center;color:inherit;outline:0;padding:.1em .2em;min-height:1.5em}
   .eqIn:hover,.eqIn:focus{border-bottom-color:#9AA4B2}
   .pgDesc{font-size:1.08rem;line-height:1.45}
+  .pgEqMsg{font:600 .9rem/1.35 system-ui,sans-serif;color:#C0301E;margin-top:-.5rem}.pgEqMsg:empty{display:none}
+  body.crPre .pgGraph,body.crPre .pgTable,body.crPre .qzTools{visibility:hidden}
   .pgDesc i{font-family:"LM",Georgia,serif;font-style:italic}
   .descIn[hidden]{display:none}.descIn{display:flex;flex-direction:column;gap:.55rem}
   .descIn input{box-sizing:border-box;width:100%;padding:.55em .7em;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 1rem system-ui,sans-serif}
@@ -323,6 +325,7 @@
         <div class="dial" id="pgDial" role="slider" aria-label="Scroll the table" title="Drag up or down to scroll the table"></div>
         <table class="pgTable" id="pgTable" aria-label="Table"><colgroup><col style="width:18%"><col><col style="width:18%"></colgroup><thead><tr><th>x</th><th class="pgMid"></th><th>y</th></tr></thead><tbody></tbody></table>
         <div class="pgEq" id="pgEq" aria-live="polite"></div>
+        <div class="pgEqMsg" id="pgEqMsg" aria-live="polite"></div>
         <div class="pgDesc" id="pgDesc" aria-live="polite"></div>
         <div class="descIn" id="pgDescIn" hidden><input id="pgDescTx" autocomplete="off" spellcheck="false" placeholder="Describe the transformation" aria-label="Describe the transformation"><div class="descKeys" id="pgDescKeys"><button type="button" data-ins="Translation">Translation</button><button type="button" data-ins="Stretch">Stretch</button><button type="button" data-ins="Shrink">Shrink</button><button type="button" data-ins="Reflection">Reflection</button><button type="button" data-ins="Horizontal">Horizontal</button><button type="button" data-ins="Vertical">Vertical</button><span class="descArr"><button type="button" data-ins="←" aria-label="left">←</button><button type="button" data-ins="→" aria-label="right">→</button><button type="button" data-ins="↑" aria-label="up">↑</button><button type="button" data-ins="↓" aria-label="down">↓</button></span><button type="button" class="descGo" id="pgDescGo">Submit</button></div></div>
       </div>
@@ -1340,7 +1343,7 @@
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   var BUILT = {
-    "1.1A": { quiz: true, top: 2, key: "algebraProgress:1.1A", perLesson: true, lessons: ["Memorizing Parents", "Graphing and Describing Translations"], short: ["Parents", "Graph & Describe"], modes: ["demo", "sequence", "solo"], levels: [
+    "1.1A": { quiz: true, top: 2, key: "algebraProgress:1.1A", perLesson: true, modesFor: function (l) { return l === 2 ? ["demo", "sequence", "solo", "create"] : ["demo", "sequence", "solo"]; }, lessons: ["Memorizing Parents", "Graphing and Describing Translations"], short: ["Parents", "Graph & Describe"], modes: ["demo", "sequence", "solo"], levels: [
       [1, "demo", 10, "Demo Mode"], [1, "sequence", 25, "Sequence Mode"], [1, "solo", 40, "Solo Mode"],
       [1, "solo", 70, "Solo Mode, 2nd round", 2], [1, "solo", 100, "Solo Mode, 3rd round", 3],
       [2, "demo", 10, "Demo Mode"], [2, "sequence", 25, "Sequence Mode"], [2, "solo", 40, "Solo Mode"],
@@ -1568,7 +1571,7 @@
     return "Substitute " + s[1];
   }
 
-  $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; if (mode === "create") orig = []; useCustom = null; setMode("demo"); this.blur(); });
+  $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); this.blur(); });
   $("crAdd").addEventListener("click", crAdd);
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
   $("ansGo").addEventListener("click", checkAnswer);
@@ -2363,31 +2366,41 @@
   function pqCue() {
     gdDescUI();
     if (!pq() || !QZ.order) return;
+    if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = "Function?"; return; }
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
     var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
-    $("pgQcue").innerHTML = (gd() ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
+    $("pgQcue").innerHTML = (gd() && mode !== "create" ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
   }
   // Solo: the description is typed (with help from buttons) once the graphs and the table are done
   function gdDescUI() {
-    var ok = pq() && gd() && mode === "solo" && QZ.order && QZ.step < 4 && !PG.dOK && !pgRun, pt = ok ? pqParts() : null;
+    var ok = pq() && gd() && soloish() && (mode !== "create" || QZ.cr) && QZ.order && QZ.step < 4 && !PG.dOK && !pgRun, pt = ok ? pqParts() : null;
     var show = !!(ok && pt.parent && pt.graph && pt.table), box = $("pgDescIn"), was = !box.hidden;
     box.hidden = !show; if (show && !was) setTimeout(function () { $("pgDescTx").focus(); }, 0);
   }
-  // what a typed description says: "Translation → 3 and ↑ 2", "right 3, up 2", "3 units left" ...  Returns the move, or null
+  // what a typed description says: "Translation → 3 and ↑ 2", "right 3, up 2", "Vertical stretch by factor of 2", "Reflection" ...
+  function gdNum(x) { x = String(x).replace(/\s+/g, ""); var m = /^(\d*\.?\d+)\/(\d+)$/.exec(x); return m ? +m[1] / +m[2] : +x; }
   function gdParse(t) {
     t = String(t).toLowerCase().replace(/\u2212/g, "-");
-    if (/stretch|shrink|reflect/.test(t) || !/translat|shift|slide|move/.test(t)) return null;
-    var re = /(\u2192|\u2190|\u2191|\u2193|\bright\b|\bleft\b|\bup\b|\bdown\b)\s*(?:by\s*)?(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:units?\s*)?(\u2192|\u2190|\u2191|\u2193|\bright\b|\bleft\b|\bup\b|\bdown\b)/g, m, h = 0, k = 0, n = 0;
+    var o = { h: 0, k: 0, n: 0, tr: /translat|shift|slide|move/.test(t), rf: /reflect/.test(t), st: null, sh: null, both: /stretch/.test(t) && /shrink/.test(t) };
+    var fm = /(stretch|shrink)\D*?(\d*\.?\d+(?:\s*\/\s*\d+)?)/.exec(t);
+    if (fm) { o[fm[1] === "stretch" ? "st" : "sh"] = gdNum(fm[2]); t = t.replace(fm[0], " "); }
+    var re = /(\u2192|\u2190|\u2191|\u2193|\bright\b|\bleft\b|\bup\b|\bdown\b)\s*(?:by\s*)?(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:units?\s*)?(\u2192|\u2190|\u2191|\u2193|\bright\b|\bleft\b|\bup\b|\bdown\b)/g, m;
     while ((m = re.exec(t))) {
-      var d = m[1] || m[4], v = +(m[2] || m[3]); n++;
-      if (d === "\u2192" || d === "right") h += v; else if (d === "\u2190" || d === "left") h -= v; else if (d === "\u2191" || d === "up") k += v; else k -= v;
+      var d = m[1] || m[4], v = +(m[2] || m[3]); o.n++;
+      if (d === "\u2192" || d === "right") o.h += v; else if (d === "\u2190" || d === "left") o.h -= v; else if (d === "\u2191" || d === "up") o.k += v; else o.k -= v;
     }
-    return n ? { h: h, k: k } : null;
+    return o;
+  }
+  function gdDescRight(m) {
+    var a = A(), ab = Math.abs(a), th = shifts() ? H() : 0, tk = K(), need = th !== 0 || tk !== 0, tr;
+    if (need) tr = m.tr && m.n > 0 && (PG.fam === 1 ? Math.abs((m.k - a * m.h) - tk) < 1e-6 : PG.fam === 0 ? (m.h === 0 && Math.abs(m.k - tk) < 1e-6) : (Math.abs(m.h - th) < 1e-6 && Math.abs(m.k - tk) < 1e-6));   // a line slid sideways is the same line slid up or down
+    else tr = m.n === 0;
+    var sc = m.both ? false : ab > 1 ? (m.st !== null && Math.abs(m.st - ab) < 1e-6) : ab < 1 ? (m.sh !== null && Math.abs(m.sh - ab) < 1e-6) : (m.st === null && m.sh === null);
+    return !!(tr && sc && (a < 0) === m.rf);
   }
   function gdDescSubmit() {
-    var m = gdParse($("pgDescTx").value), box = $("pgDescIn"), right = false;
-    if (m) right = PG.fam === 1 ? Math.abs((m.k - m.h) - K()) < 1e-6 : PG.fam === 0 ? (m.h === 0 && Math.abs(m.k - K()) < 1e-6) : (Math.abs(m.h - H()) < 1e-6 && Math.abs(m.k - K()) < 1e-6);   // a line slid sideways is the same line slid up or down
-    if (right) { PG.tAns = { h: H(), k: K(), a: 1 }; PG.dOK = true; pqMsg(""); var rr = box.getBoundingClientRect(); rvMark("ok", rr.left + 24, rr.top + 14); box.hidden = true; pgDescUpd(); drawPlay(); return; }
+    var m = gdParse($("pgDescTx").value), box = $("pgDescIn"), right = gdDescRight(m);
+    if (right) { PG.tAns = { h: shifts() ? H() : 0, k: K(), a: A() }; PG.dOK = true; pqMsg(""); var rr = box.getBoundingClientRect(); rvMark("ok", rr.left + 24, rr.top + 14); box.hidden = true; pgDescUpd(); drawPlay(); return; }
     QZ.wrong++; pqMsg("Not quite. Try again.");
     box.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
   }
@@ -2404,11 +2417,15 @@
     closePt(); var fam = qFam();
     PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = [];
     PG.show = { eq: false, table: false, graph: false, desc: true, parent: false }; PG.pdone = false; PG.dOK = false; $("pgDescTx").value = "";
-    if (gd()) { var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false }; }   // Graph & Describe: g(x) is given; the parent graph, g's graph, the table and the description are the answer
+    if (gd()) {
+      var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.a = tr.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false };
+      if (mode === "create" && !QZ.cr) { PG.show.eq = false; PG.eqTxt = "g(x)="; }
+    }   // Graph & Describe: g(x) is given; the parent graph, g's graph, the table and the description are the answer
     TB.targets = []; QZ.step = 0; QZ.hn = 0; pqMsg("");
   }
   // ---- 1.1A, second exercise: Graph & Describe.  g(x) is a translation of the parent; the student graphs both, fills in the table and describes the move ----
   function gd() { return pq() && lesson === 2; }
+  function soloish() { return mode === "solo" || mode === "create"; }
   function gdMake(fam) {
     function nz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
     var h = 0, k = 0;
@@ -2434,7 +2451,7 @@
         PG.dOK = true; pqMsg(""); var el = $("pgDesc"), rr = el.getBoundingClientRect(); rvMark("ok", Math.min(rr.right - 14, rr.left + 280), rr.top + 16);
       } else {
         PG.tAns = null; QZ.wrong++; pgDescUpd();
-        pqMsg(mode === "solo" ? "Not quite. Try again." : "Not quite. Watch where the parent's " + (shifts() ? "vertex" : "point on the y-axis, " + (PG.fam === 0 ? "(0, 1)" : "(0, 0)") + ",") + " moves.");
+        pqMsg(soloish() ? "Not quite. Try again." : "Not quite. Watch where the parent's " + (shifts() ? "vertex" : "point on the y-axis, " + (PG.fam === 0 ? "(0, 1)" : "(0, 0)") + ",") + " moves.");
         $("pgDesc").animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
       }
     }
@@ -2443,15 +2460,18 @@
   function pqStart() {
     stopDemo(); if (pgRun) pgStop(); stopParty(); busy = false; up = null; counted = false;
     var o = [0, 1, 2, 3]; for (var i = 3; i > 0; i--) { var j = rnd(i + 1), t = o[i]; o[i] = o[j]; o[j] = t; }
-    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: o.map(gdMake) }; updProg();
+    if (gd() && mode === "create") o = [0];   // Create: the student types the function, so there is one problem and no family yet
+    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: o.map(gdMake), cr: false }; updProg();
     if (mode !== "demo") explainOn = false;
     logEl.innerHTML = "";
-    $("hint").hidden = mode === "solo"; $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn);
+    $("hint").hidden = soloish(); $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn);
     pqSetup(); drawPlay(); pqPanel();
+    if (gd() && mode === "create") setTimeout(function () { var f = $("pgEq").querySelector(".eqIn"); if (f && pq()) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } }, 50);
     if (mode === "demo") logQzExplain();
   }
   function pqNext() {
     if (QZ.step < 4) return;
+    if (mode === "create") { pqStart(); return; }
     QZ.pi++; pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel(); if (mode === "demo") logQzExplain();
   }
   // "Another demo": the demo runs again on a different parent function
@@ -2461,22 +2481,24 @@
   }
   function pqPanel() {
     var fam = qFam(), done = QZ.step >= 4, demo = mode === "demo";
-    if (gd()) $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation.";
+    document.body.classList.toggle("crPre", gd() && mode === "create" && !QZ.cr);
+    if (gd() && mode === "create" && !QZ.cr) $("pgQt").innerHTML = "Type a function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2|<i>x</i> \u2212 3| + 1</span>.";
+    else if (gd()) $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation.";
     else $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
     pqCue();
     var go = $("qzGo"), nx = $("qzNext");
-    go.hidden = demo || done; go.textContent = "Check";
-    nx.hidden = !done; nx.disabled = false; nx.textContent = demo ? (up ? up.label : gd() ? "Next problem" : "Next parent") : QZ.locked ? (up ? up.label : "Another round") : gd() ? "Next problem" : "Next parent";
+    go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr); go.textContent = "Check";
+    nx.hidden = !done; nx.disabled = false; nx.textContent = gd() && mode === "create" ? "Create another" : demo ? (up ? up.label : gd() ? "Next problem" : "Next parent") : QZ.locked ? (up ? up.label : "Another round") : gd() ? "Next problem" : "Next parent";
     $("qzAgain").hidden = !(done && (demo || (QZ.pi === 3 && up))); $("qzAgain").textContent = demo ? "Another demo" : up && up.stay ? "Stay in this exercise" : "Another round";
     $("pgDemo").style.display = demo && !done ? "" : "none"; $("pgCtl").classList.toggle("empty", !(demo && !done));
-    $("hint").hidden = done || mode === "solo";   // a right answer needs no hint
+    $("hint").hidden = done || soloish();   // a right answer needs no hint
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
   function pqParts() { return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
   var pqBusy = false;
   function pqEval() {
-    if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order) return;
+    if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order || (gd() && mode === "create" && !QZ.cr)) return;
     pqBusy = true;
     try {
       gdWatch();
@@ -2486,7 +2508,8 @@
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
         QZ.step = 4; var last = QZ.pi === 3;
         pqMsg(gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
-        if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
+        if (mode === "create") { pqMsg("Well done!", "ok"); up = null; }   // Create never counts toward Progress
+        else if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
           tally(); var ml = BUILT[act].modes, nm = ml[ml.indexOf(mode) + 1];
           up = nm ? { label: MODES[nm] + " Mode", go: function () { setMode(nm); } } : null;
         } else if (last) { QZ.locked = true; counted = false; tally(); }   // Sequence and Solo count a round only when all four parents are done
@@ -2495,8 +2518,8 @@
     } finally { pqBusy = false; pqCue(); }
   }
   // what the student has typed after the "f(x)=" that is already in the box
-  function pqTyped() { var t = String(PG.eqTxt || "").trim(); return /^f\(x\)=?$/i.test(t.replace(/\s/g, "")) ? "" : t; }
-  ["focusin", "click"].forEach(function (ev) { document.addEventListener(ev, function (e) { var el = e.target; if (pq() && el.classList && el.classList.contains("eqIn") && el.value === "f(x)=") { el.setSelectionRange(el.value.length, el.value.length); setTimeout(function () { el.setSelectionRange(el.value.length, el.value.length); }, 0); } }); });
+  function pqTyped() { var t = String(PG.eqTxt || "").trim(); return /^[fg]\(x\)=?$/i.test(t.replace(/\s/g, "")) ? "" : t; }
+  ["focusin", "click"].forEach(function (ev) { document.addEventListener(ev, function (e) { var el = e.target; if (pq() && el.classList && el.classList.contains("eqIn") && /^[fg]\(x\)=$/.test(el.value)) { el.setSelectionRange(el.value.length, el.value.length); setTimeout(function () { el.setSelectionRange(el.value.length, el.value.length); }, 0); } }); });
   function pqEqWrong(t) {
     var other = QEQ.indexOf(qNorm(t)), fam = qFam(); QZ.wrong++;
     pqMsg(mode === "solo" ? "Not quite. Try again." : other >= 0 && other !== fam ? "That is the parent of the " + QFAM[other] + " family, not the " + QFAM[fam] + " family." : "Not quite. Try again.", "");
@@ -2505,6 +2528,8 @@
   // Return in the equation box checks it: a right equation is revealed with a check mark; a wrong one is only flagged
   function eqEnter() {
     var t = pqTyped(); if (PG.show.eq || !t) return;
+    if (!pq()) { eqAdopt(t); return; }   // 1.1 Play: the typed function becomes the function
+    if (gd() && mode === "create" && !QZ.cr) { gdCreateAdopt(t); return; }
     if (pq() && !eqTypedOK(t)) { pqEqWrong(t); return; }
     var tg = document.querySelector(".tog[data-part=eq]"); if (tg) { pqMsg(""); tg.click(); }
   }
@@ -2515,8 +2540,8 @@
       if (!ok.parent) need.push("the parent graph (it turns dotted when it is right)");
       if (!ok.graph) need.push("the graph of g(x)");
       if (!ok.table) need.push("the table (" + TB.rows().filter(function (r) { return r.done; }).length + " of 5 y-values)");
-      if (!ok.desc) need.push(mode === "solo" ? "the description (type it in the box)" : "the description (use the transformation button)");
-      QZ.wrong++; pqMsg(mode === "solo" ? "Not quite. Try again." : (PG.shape ? "The blue graph is not the parent or g(x) yet. " : "") + "Still to do: " + need.join(", ") + ".");
+      if (!ok.desc) need.push(soloish() ? "the description (type it in the box)" : "the description (use the transformation button)");
+      QZ.wrong++; pqMsg(soloish() ? "Not quite. Try again." : (PG.shape ? "The blue graph is not the parent or g(x) yet. " : "") + "Still to do: " + need.join(", ") + ".");
       return;
     }
     if (!ok.eq) { if (t) { eqEnter(); return; } need.push("the equation"); }
@@ -2552,7 +2577,7 @@
   function leaveQuiz() {
     if (!document.body.classList.contains("quiz")) return;
     stopDemo(); busy = false; if (pgRun) pgStop();
-    document.body.classList.remove("quiz", "play", "pq"); $("pgDescIn").hidden = true; $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
+    document.body.classList.remove("quiz", "play", "pq", "crPre"); $("pgDescIn").hidden = true; $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
     $("pgTable").style.display = ""; $("pgGraph").style.display = ""; $("pgFam").hidden = false;
   }
 
@@ -2569,7 +2594,10 @@
     var h = "", sh = BUILT[act].short; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\" title=\"" + lessonName(l) + "\"" + (sh && sh[l - 1] ? " data-short=\"" + sh[l - 1] + "\" data-full=\"" + lessonName(l) + "\"" : "") + ">" + (sh && sh[l - 1] || lessonName(l)) + "</option>";
     if (!BUILT[act].sub) subx = false; else { var k1 = h.indexOf("</option>") + 9; h = h.slice(0, k1) + "<option value=\"s\" title=\"Substitution\">Substitution</option>" + h.slice(k1); }
     $("lesson").innerHTML = h; $("lesson").value = subx ? "s" : String(lesson);
-    var ms = BUILT[act].modes || ["demo", "sequence", "calculate", "solo", "create"];
+    buildModes();
+  }
+  function buildModes() {
+    var B = BUILT[act], ms = B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"];
     $("modeSel").innerHTML = ms.map(function (m) { return "<option value=\"" + m + "\">" + MODES[m] + "</option>"; }).join("");
     if (ms.indexOf(mode) < 0) mode = "demo"; $("modeSel").value = mode;
   }
@@ -2755,7 +2783,7 @@
   TB.click = function (i) {
     var r = TB.rows()[i]; if (!r || r.done || r.fl || TB.busy) return;
     if (!r.sub || !TB.hasX(r)) { if (TB.mode() === "play" && fillMode()) TB.midFill(i); return; }
-    if (pq() && mode === "solo") return;   // Solo: no simplifying by click; the y-value is the student's own calculation
+    if (pq() && soloish()) return;   // Solo: no simplifying by click; the y-value is the student's own calculation
     var n = TB.st(r).length;
     if (r.idx < n - 1) {
       r.idx++; TB.draw(); var c = $("pgTable").querySelector("td.mid[data-r=\"" + i + "\"]"); if (c) c.classList.add("pop");
@@ -2903,7 +2931,7 @@
       if (!ok) return;
       var added = false, near = function (a, b) { return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9; };
       // the red target stays on the graph until a plotted point sits on it: a miss leaves it there to be corrected
-      start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { if (fillRow && !fillRow.done && String(fillRow.tv || "").trim()) checkOff(i, fillRow); if (!(pq() && mode === "solo") && !TB.targets.some(function (t) { return near(t, p); })) { TB.targets.push(p); added = true; } drawPlay(); } }, null, function (ev) {
+      start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { if (fillRow && !fillRow.done && String(fillRow.tv || "").trim()) checkOff(i, fillRow); if (!(pq() && soloish()) && !TB.targets.some(function (t) { return near(t, p); })) { TB.targets.push(p); added = true; } drawPlay(); } }, null, function (ev) {
         var r = $("pgGraph").getBoundingClientRect();
         if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
           // the dropped point locks to the grid: whole units, or the smallest fraction of a unit that the point itself needs (1/2, 1/3, 1/4 ...)
@@ -3063,7 +3091,7 @@
   // with the equation hidden, either space can be typed in; what is typed is copied into the other space
   document.addEventListener("input", function (e) {
     var el = e.target; if (!el.classList || !el.classList.contains("eqIn")) return;
-    PG.eqTxt = el.value; [].forEach.call(document.querySelectorAll(".eqIn"), function (o) { if (o !== el) o.value = el.value; });
+    PG.eqTxt = el.value; $("pgEqMsg").textContent = ""; [].forEach.call(document.querySelectorAll(".eqIn"), function (o) { if (o !== el) o.value = el.value; });
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("eqIn")) { e.target.blur(); eqEnter(); } });
   // is a typed equation the same function as the real one? (tested at several x-values, so any equivalent form counts)
@@ -3082,18 +3110,66 @@
     var i = el.selectionStart, j = el.selectionEnd; el.setRangeText(b.dataset.ins, i, j, "end");
     el.dispatchEvent(new Event("input", { bubbles: true })); el.focus();
   });
-  function eqTypedOK(t) {
-    t = t.replace(/[\u2212\u2013]/g, "-").replace(/[\u00d7\u00b7\u22c5]/g, "*").replace(/\u00b2/g, "^2").replace(/\s+/g, "").toLowerCase();
-    var i = t.lastIndexOf("="); if (i >= 0) { var L = t.slice(0, i); if (!/^([a-z])?(\(x\))?$/.test(L)) return false; t = t.slice(i + 1); }
+  // the typed text as a function of x, or null when it cannot be read
+  function eqFn(t) {
+    t = String(t).replace(/[\u2212\u2013]/g, "-").replace(/[\u00d7\u00b7\u22c5]/g, "*").replace(/\u00f7/g, "/").replace(/\u00b2/g, "^2").replace(/\s+/g, "").toLowerCase();
+    var i = t.lastIndexOf("="); if (i >= 0) { var L = t.slice(0, i); if (!/^([a-z])?(\(x\))?$/.test(L)) return null; t = t.slice(i + 1); }
     t = t.replace(/x(\d+)/g, "x^$1");   // x2 is read as x squared
-    if (!t || !/^[0-9x+\-*\/().^|]+$/.test(t)) return false;
-    var bars = 0; t = t.replace(/\|/g, function () { return bars++ % 2 ? ")" : "abs("; }); if (bars % 2) return false;
+    if (!t || !/^[0-9x+\-*\/().^|]+$/.test(t)) return null;
+    var bars = 0; t = t.replace(/\|/g, function () { return bars++ % 2 ? ")" : "abs("; }); if (bars % 2) return null;
     for (var k = 0; k < 4; k++) t = t.replace(/(x|\d+\.?\d*|\([^()]*\))\^(-?\d+\.?\d*|x)/g, "pow($1,$2)");
-    if (t.indexOf("^") >= 0) return false;
+    if (t.indexOf("^") >= 0) return null;
     t = t.replace(/(\d|x|\))(?=\(|x|abs|pow)/g, "$1*");
-    var f; try { f = new Function("x", "abs", "pow", "return " + t); } catch (e) { return false; }
-    for (var x = -3; x <= 3; x++) { var v; try { v = f(x, Math.abs, Math.pow); } catch (e) { return false; } if (typeof v !== "number" || !isFinite(v) || Math.abs(v - g(x)) > 1e-6) return false; }
+    var f; try { f = new Function("x", "abs", "pow", "return " + t); } catch (e) { return null; }
+    return function (x) { return f(x, Math.abs, Math.pow); };
+  }
+  function eqTypedOK(t) {
+    var f = eqFn(t); if (!f) return false;
+    for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e) { return false; } if (typeof v !== "number" || !isFinite(v) || Math.abs(v - g(x)) > 1e-6) return false; }
     return true;
+  }
+  // can the typed function be graphed here?  A constant, a line, a|x - h| + k or a(x - h)^2 + k, with a in quarters and h, k whole numbers inside the window.
+  // Returns {fam, a, h, k} (the same numbers the green and purple points set) or {err}
+  var EQ_NO = "I can't graph that here. Try a constant, a line, an absolute value like 2|x \u2212 3| + 1, or a parabola like \u2212(x + 2)^2 + 4.";
+  function eqFit(t) {
+    var f = eqFn(t); if (!f) return { err: EQ_NO };
+    var v = function (x) { try { return f(x); } catch (e) { return NaN; } }, x;
+    for (x = -12; x <= 12; x += .5) { var y0 = v(x); if (typeof y0 !== "number" || !isFinite(y0)) return { err: EQ_NO }; }
+    var fits = function (fn) { for (var q = -12; q <= 12; q += .25) if (!(Math.abs(v(q) - fn(q)) < 1e-6)) return false; return true; };
+    var q4 = function (a) { return Math.abs(a * 4 - Math.round(a * 4)) < 1e-9; }, whole = function (n) { return Math.abs(n - Math.round(n)) < 1e-9; };
+    var WIN = { err: "That graph leaves the window (it must stay between \u221210 and 10)." }, WHOLE = { err: "The green point moves by whole units, so the vertex and any shift must be whole numbers." }, QTR = { err: "The stretch must be a multiple of 1/4, like 2, 1/2 or \u22123/4." };
+    var c0 = v(0);
+    if (fits(function () { return c0; })) { if (!whole(c0)) return WHOLE; if (Math.abs(c0) > 10) return WIN; return { fam: 0, a: 1, h: 0, k: Math.round(c0) - 1 }; }
+    var a1 = v(1) - v(0);
+    if (fits(function (q) { return a1 * q + c0; })) {
+      if (!q4(a1)) return QTR; if (!whole(c0)) return WHOLE; if (Math.abs(c0) > 10 || Math.abs(a1) > 10 || Math.abs(c0 + a1) > 10) return WIN;
+      return { fam: 1, a: Math.round(a1 * 4) / 4, h: 0, k: Math.round(c0) };
+    }
+    for (var fam = 2; fam <= 3; fam++) for (var h = -10; h <= 10; h++) {
+      var a = v(h + 1) - v(h), k = v(h);
+      if (!a || !fits(function (q) { return a * (fam === 2 ? Math.abs(q - h) : (q - h) * (q - h)) + k; })) continue;
+      if (!q4(a)) return QTR; if (!whole(k)) return WHOLE; if (Math.abs(k) > 10 || Math.abs(a) > 10 || Math.abs(k + a) > 10) return WIN;
+      return { fam: fam, a: Math.round(a * 4) / 4, h: h, k: Math.round(k) };
+    }
+    var d2 = v(1) - 2 * v(0) + v(-1);   // a parabola whose vertex is not at a whole number
+    if (d2 && fits(function (q) { return d2 / 2 * q * q + (v(1) - v(-1)) / 2 * q + c0; })) return WHOLE;
+    return { err: EQ_NO };
+  }
+  function eqMsg(t) { if (pq()) pqMsg(t); else $("pgEqMsg").textContent = t || ""; }
+  function eqShake() { $("pgEq").animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 }); }
+  // 1.1 Play: the typed function is accepted as the function; the family and both points follow it
+  function eqAdopt(t) {
+    var r = eqFit(t); if (r.err) { eqMsg(r.err); eqShake(); return false; }
+    PG.fam = r.fam; PG.a = r.a; PG.h = r.h; PG.k = r.k; PG.pa = [r.h + 1, r.k + r.a]; PG.eqTxt = ""; PG.show.eq = true;
+    PG.tm = null; PG.tAns = null; PG.pts = []; PG.shape = null; PG.tool = null; PG.clk = []; PG.tbl = null; PG.subd = false; PG.mfill = false; PG.off = 0; TB.targets = []; ptOpen = false; ptIdx = -1; $("pgPt").hidden = true;
+    eqMsg(""); drawPlay(); return true;
+  }
+  // Graph & Describe, Create: the typed function becomes the problem
+  function gdCreateAdopt(t) {
+    var r = eqFit(t); if (r.err) { eqMsg(r.err); eqShake(); return; }
+    if (r.fam === 0 ? r.k === 0 : r.a === 1 && !r.h && !r.k) { eqMsg("That is the parent function itself. Try one with a transformation."); eqShake(); return; }
+    QZ.order = [r.fam]; QZ.pi = 0; QZ.tr = [{ h: r.h, k: r.k, a: r.a }]; QZ.cr = true;
+    pqSetup(); eqMsg(""); drawPlay(); pqPanel();
   }
   function drawPlay() {
     drawGraph();
@@ -3102,14 +3178,14 @@
     $("pgTable").querySelector(".pgMid").innerHTML = PG.show.eq ? eqHTML() : EQIN;
     $("pgEq").innerHTML = PG.show.eq ? eqHTML() : EQIN;
     if (!PG.show.eq) {
-      [].forEach.call(document.querySelectorAll(".eqIn"), function (el) { el.value = PG.eqTxt || ""; if (pq()) el.placeholder = "f(x)=..."; });
+      [].forEach.call(document.querySelectorAll(".eqIn"), function (el) { el.value = PG.eqTxt || ""; if (pq()) el.placeholder = gd() ? "g(x)=..." : "f(x)=..."; });
       if (fw) { var re = fw === "pgEq" ? $("pgEq").querySelector(".eqIn") : $("pgTable").querySelector(".pgMid .eqIn"); if (re) { re.focus(); re.setSelectionRange(re.value.length, re.value.length); } }
     }
     pgDescUpd();
     [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part] ? "true" : "false"); });
     TB.sync(); $("qzTools").hidden = false; posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
-    { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && mode !== "solo"); tb.classList.toggle("on", !!PG.tm); }
+    { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !soloish()); tb.classList.toggle("on", !!PG.tm); }
     eqKeysUpd(); pqCue(); pqEval();
   }
   // ---- editing a point's coordinates: double-click a plotted point (or the dot button) and a small panel opens below the Show buttons ----
@@ -3633,6 +3709,8 @@
       function (n) { cap("Now click the parabola button and click the vertex, (3, 1)."); clickTool("U", [3, 1], null, n); },
       function (n) { cap("Drag its side point to set the stretch of 2."); stretch(2, n, 1); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
+      function (n) { cap("You can also type a function of your own. Hide the equation, type g(x) = \u2212|x + 2| + 4 and press Return."); tap(tog("eq"), function () { typeEq("g(x) = -|x+2|+4", function () { eqEnter(); pgWait(1200, n); }); }); },
+      function (n) { cap("The family changed to absolute value, and the green and purple points moved to match. A function the activity cannot graph, like x\u00b3, is turned away."); pgWait(3200, n); },
       function (n) { cap("Your turn: try every button, drag both points and plot your own graph."); pgWait(2500, n); }
     ];
     if (PQ) {   // 1.1A: the demo answers this parent's question with the equation, the table and the graph
