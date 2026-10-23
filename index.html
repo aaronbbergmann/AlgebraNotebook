@@ -317,7 +317,7 @@
   .stHead[hidden]{display:none}
   .stT{font:600 1.25rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif}
   .stT:empty{display:none}
-  .stCap{font:500 1.05rem/1.35 system-ui,sans-serif;color:var(--plus);min-height:1.4em;margin-top:.15rem}
+  .stCap{font:400 1.05rem/1.35 system-ui,sans-serif;color:#000;min-height:1.4em;margin-top:.15rem}   /* black and regular weight, so it reads as the sub heading under the bold title */
   html:not([data-mode="demo"]) .stCap{visibility:hidden}
   #pgEnd[hidden]{display:none}
   .pgCap{display:none;min-height:1.2em;max-width:12rem;text-align:center;font:500 .9rem/1.35 system-ui,sans-serif;margin-bottom:1.2rem}
@@ -2315,11 +2315,28 @@
   function gSnap() { var G = G_(); (G.hist = G.hist || []).push(JSON.stringify([G.pts, G.shape, G.clk])); if (G.hist.length > 60) G.hist.shift(); }
   // with a tool picked, a ghost of the shape rides along with the cursor: first it is placed (a point on the line, or the vertex), then its dilation follows the cursor
   function toolGhost(G) {
-    if (!G.tool || !G.hv) return null; var h = G.hv, t = G.tool;
+    if (!G.tool || !G.hv || G.tool === "pt") return null; var h = G.hv, t = G.tool;
     if (t === "line") { if (!G.clk.length) return { t: "line", p1: h, p2: [h[0] + 1, h[1] + 1] }; var p = G.clk[0]; return { t: "line", p1: p, p2: h[0] === p[0] && h[1] === p[1] ? [p[0] + 1, p[1] + 1] : h }; }
     return { t: t, h: h[0], k: h[1], a: 1 };
   }
-  function drawGhost(S, G, col) { var sh = toolGhost(G); if (sh) S.appendChild(svgEl("polyline", { points: shapePts(sh), fill: "none", stroke: col, "stroke-width": ".12", "stroke-linejoin": "round", "stroke-opacity": ".45" })); }
+  // is the student drawing a parent function (nothing to transform), or a shape that is moved/stretched from its parent?
+  function parentDraw() { return pq() && (!gd() || !PG.pdone); }
+  function fmtN(n) { return (n < 0 ? "\u2212" : "") + Math.abs(n); }
+  // the preview: a point that snaps to the grid beside the cursor, labelled with its coordinates (not in Solo mode); once the first point is
+  // placed, the second point is previewed (up 1, right 1 by default; for a line it follows the cursor, so a click lands it)
+  function drawGhost(S, G, col) {
+    var sh = toolGhost(G); if (sh) S.appendChild(svgEl("polyline", { points: shapePts(sh), fill: "none", stroke: col, "stroke-width": ".12", "stroke-linejoin": "round", "stroke-opacity": ".45" }));
+    if (!G.tool || !G.hv) return;
+    function dot(x, y) { var g = svgEl("g", { "pointer-events": "none" }); g.appendChild(svgEl("circle", { cx: x, cy: -y, r: .55, fill: col, "fill-opacity": ".22" })); g.appendChild(svgEl("circle", { cx: x, cy: -y, r: .22, fill: col, "fill-opacity": ".85" })); S.appendChild(g); }
+    if (!G.clk.length) {
+      dot(G.hv[0], G.hv[1]);
+      if (mode !== "solo") {
+        var x = G.hv[0], y = G.hv[1], right = x <= 5, below = y >= 8;
+        var t = svgEl("text", { x: x + (right ? .7 : -.7), y: -y + (below ? 1.15 : -.55), "text-anchor": right ? "start" : "end", "font-family": "system-ui,-apple-system,'Segoe UI',sans-serif", "font-size": ".66", "font-weight": "600", fill: "#1B2433", "paint-order": "stroke", stroke: "#fff", "stroke-width": ".2", "stroke-linejoin": "round", "pointer-events": "none" });
+        t.textContent = "(" + fmtN(x) + ", " + fmtN(y) + ")"; S.appendChild(t);
+      }
+    } else if (G.tool === "line" && !parentDraw() && sh) dot(sh.p2[0], sh.p2[1]);
+  }
   function qzPlace(tool, x, y) {
     var G = G_(); gSnap();
     x = snap(x); y = snap(y);
@@ -2327,7 +2344,7 @@
       var i = G.pts.findIndex(function (p) { return p[0] === x && p[1] === y; });
       if (i >= 0) G.pts.splice(i, 1); else G.pts.push([x, y]);
     } else if (tool === "line") {
-      G.clk.push([x, y]);
+      G.clk.push([x, y]); if (G.clk.length === 1) G.hv = [x, y];
       if (G.clk.length === 2) { if (G.clk[0][0] === x && G.clk[0][1] === y) G.clk.pop(); else { G.shape = { t: "line", p1: G.clk[0], p2: G.clk[1] }; G.clk = []; G.tool = null; } }
     } else if (tool === "V" || tool === "U") {
       // two clicks: the tool, then the vertex (the stretch starts at 1, the same as the parent; the side points adjust it)
@@ -2339,6 +2356,7 @@
     var G = G_(); gSnap();
     x = snap(x); y = snap(y);
     if (tool === "pt") { if (!G.pts.some(function (p) { return p[0] === x && p[1] === y; })) G.pts.push([x, y]); }
+    else if (tool === "line" && !parentDraw()) { G.tool = "line"; G.clk = [[x, y]]; G.hv = [x, y]; gRef(); return; }   // the second point now follows the cursor until a click lands it
     else if (tool === "line") G.shape = { t: "line", p1: [x, y], p2: [snap(x + 1), snap(y + 1)] };
     else G.shape = { t: tool, h: x, k: y, a: 1 };
     G.tool = null; G.clk = []; gRef();
@@ -2377,7 +2395,7 @@
           if (!ghost) { ghost = b.cloneNode(true); ghost.classList.add("ghost"); document.body.appendChild(ghost); }
           ghost.style.left = ev.clientX - 20 + "px"; ghost.style.top = ev.clientY - 20 + "px";
           // a dragged shape button hangs the shape from the point being held; it lands wherever it is let go
-          if (tool === "line" || tool === "V" || tool === "U") {
+          if (tool === "pt" || tool === "line" || tool === "V" || tool === "U") {
             var G1 = G_(), r1 = S.getBoundingClientRect(), over = ev.clientX >= r1.left && ev.clientX <= r1.right && ev.clientY >= r1.top && ev.clientY <= r1.bottom;
             if (over) { var q1 = qAt(ev); G1.tool = tool; G1.clk = []; G1.hv = [snap(q1[0]), snap(q1[1])]; ghost.style.display = "none"; } else { G1.tool = null; G1.hv = null; ghost.style.display = ""; }
             gDraw();
@@ -2386,7 +2404,7 @@
         function upH(ev) {
           b.removeEventListener("pointermove", mv); b.removeEventListener("pointerup", upH); b.removeEventListener("pointercancel", upH);
           if (ghost) {
-            ghost.remove(); var r = S.getBoundingClientRect(); { var G2 = G_(); if (tool === "line" || tool === "V" || tool === "U") { G2.tool = null; G2.hv = null; } }
+            ghost.remove(); var r = S.getBoundingClientRect(); { var G2 = G_(); if (tool === "pt" || tool === "line" || tool === "V" || tool === "U") { G2.tool = null; G2.hv = null; } }
             if (tool !== "clear" && tool !== "undo" && tool !== "tr" && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) { var p = qAt(ev); qzDrop(tool, p[0], p[1]); }
             return;
           }
