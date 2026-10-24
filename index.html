@@ -2555,10 +2555,26 @@
     if (el.parentNode && el.parentNode.classList && el.parentNode.classList.contains("eqn")) { var tx = p.textContent.trim(); if ((tx === "+" || tx === "\u2212") && !p.firstElementChild && !p.classList.contains("grab")) return p; }
     return null;
   }
+  // a term dragged across the = changes its sign on the spot: -9 turns into +9 (and a first term with no sign gets a minus) as soon as the pointer is on the other side
+  function eqOf(el) {
+    if (!(el.classList.contains("exT") || (el.parentNode && el.parentNode.classList && el.parentNode.classList.contains("eqn") && !el.classList.contains("co")))) return null;
+    var row = el.closest(".eqn, #exRow, .zpRow"); if (!row) return null;
+    return row.classList.contains("eqn") ? row.children[row.children.length - 2] : row.querySelector(".exEq");
+  }
+  function firstText(el) {
+    var w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null), n; while ((n = w.nextNode())) if (n.data.trim()) return n; return null;
+  }
   function drag(e, el, onClick, onDrop, prefix, onStart, onEnd) {
     if (busy || locked || calc || e.button > 0 || dmLocked()) return;
     prefix = prefix || "row:";
     var cap = e.currentTarget, sx = e.clientX, sy = e.clientY, moved = false, hot = null, hotOp = null, myOp = opOf(el);
+    var eqE = eqOf(el), eqX = 0, side0 = 0, signOn = false, opTxt = myOp ? myOp.textContent : "", tn = eqE && !myOp ? firstText(el) : null, tnData = tn ? tn.data : "";
+    if (eqE) { var er = eqE.getBoundingClientRect(); eqX = er.left + er.width / 2; side0 = e.clientX < eqX ? -1 : 1; }
+    function showSign(on) {   // on: the term is on the other side of the = from where it started
+      if (on === signOn) return; signOn = on;
+      if (myOp) myOp.textContent = on ? (opTxt === "+" ? "\u2212" : "+") : opTxt;
+      else if (tn) { var neg = tnData.trim().charAt(0) === "\u2212"; tn.data = !on ? tnData : neg ? tnData.replace("\u2212", "") : "\u2212" + tnData; }
+    }
     cap.setPointerCapture(e.pointerId); e.preventDefault();
     function mv(ev) {
       var dx = ev.clientX - sx, dy = ev.clientY - sy;
@@ -2566,13 +2582,14 @@
       if (!moved && onStart) onStart();
       moved = true; el.classList.add("drag"); el.style.transform = "translate(" + dx + "px," + dy + "px)";
       if (myOp) { myOp.classList.add("dragOp"); myOp.style.transform = el.style.transform; }
+      if (eqE) showSign((ev.clientX < eqX ? -1 : 1) !== side0);
       var t = under(ev, el, prefix);
       if (hot !== t) { if (hot) { hot.classList.remove("drop"); if (hotOp) hotOp.classList.remove("drop"); hotOp = null; if (el._hotAll) el._hotAll(false); } hot = t; if (t) { t.classList.add("drop"); hotOp = opOf(t); if (hotOp && hotOp !== myOp) hotOp.classList.add("drop"); else hotOp = null; if (el._hotAll) el._hotAll(true); } }   // _hotAll: the drop lights up more than the one target (dividing lights up the whole equation)
     }
     function up(ev) {
       cap.removeEventListener("pointermove", mv); cap.removeEventListener("pointerup", up); cap.removeEventListener("pointercancel", up);
       var t = moved ? under(ev, el, prefix) : null;
-      el.classList.remove("drag"); el.style.transform = ""; if (myOp) { myOp.classList.remove("dragOp"); myOp.style.transform = ""; } if (hot) { hot.classList.remove("drop"); if (hotOp) hotOp.classList.remove("drop"); if (el._hotAll) el._hotAll(false); }
+      showSign(false); el.classList.remove("drag"); el.style.transform = ""; if (myOp) { myOp.classList.remove("dragOp"); myOp.style.transform = ""; } if (hot) { hot.classList.remove("drop"); if (hotOp) hotOp.classList.remove("drop"); if (el._hotAll) el._hotAll(false); }
       if (!moved) { if (onClick) onClick(); } else if (t) onDrop(t, ev);
       if (moved && onEnd) onEnd(t, ev);
     }
