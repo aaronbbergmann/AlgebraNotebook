@@ -122,6 +122,7 @@
   .exRow{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;line-height:1.3}
   .exOpc{cursor:pointer;color:var(--plus);font-weight:800;border-radius:6px;transition:transform .2s}.exOpc:hover{transform:scale(1.4);background:color-mix(in srgb,var(--plus) 20%,transparent)}
   .exEq{padding:0 .5em}.exEq.grab:hover{background:color-mix(in srgb,var(--plus) 20%,transparent)}
+  .exH{border-radius:.3em}.exT.grab .exG,.exT.grab .exH{cursor:default}.exT.grab .exG:hover,.exT.grab .exH:hover{background:color-mix(in srgb,var(--plus) 16%,transparent)}
   .exCo{border-radius:6px;cursor:grab;touch-action:none;border-bottom:2px dashed var(--plus)}
   .exK{border-radius:6px;touch-action:none}.exT.grab>.exK{cursor:grab}.exT.grab>.exK:hover{background:color-mix(in srgb,var(--plus) 25%,transparent)}
   .exOp{padding:0 .3em}.exRow>.exOp:first-child{padding:0 .02em 0 0}.exT{padding:0 .1em;border-radius:6px;white-space:nowrap;transition:background .3s}
@@ -919,6 +920,7 @@
         else if (s[i] === "(") {
           if (inner) return null; i++; var g = sum(true); if (!g || !g.length || s[i] !== ")") return null; i++;
           t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: g };
+          if (s[i] === "(") { i++; var g2 = sum(true); if (!g2 || !g2.length || s[i] !== ")") return null; i++; t.b = g2; }   // two sets of parentheses: (3x - 4)(x - 6)
         } else if (n) t = { k: "c", n: mul(n, mk(sg1)) }; else return null;
         out.push(t);
       }
@@ -1126,30 +1128,43 @@
   }
   function facCoef(t) { var m = t.k === "x" ? facMono(t) : null; return m && (m.n > 1 || sSig(m.s)) ? m : null; }
   function facWhole(t) {
-    if (t.k === "g") { var gm = facMono({ n: t.m, s: t.m.s }); return gm && gm.n && t.items.every(function (u) { return u.k !== "g" && facMono(u); }) ? gm : null; }
+    if (t.k === "g") { var gm = !t.b && facMono({ n: t.m, s: t.m.s }); return gm && gm.n && t.items.every(function (u) { return u.k !== "g" && facMono(u); }) ? gm : null; }
     var m = t.k === "x" || t.k === "c" ? facMono(t) : null; return m && m.n ? m : null;
   }
   function facSay(m) { return m.n === 1 && sSig(m.s) ? sSig(m.s) : (m.n > 1 || !sSig(m.s) ? String(m.n) : "") + (m.n > 1 ? sSig(m.s) : ""); }
   function facDiv(t, G) {   // t divided by the monomial G
     var u = JSON.parse(JSON.stringify(t)); u.n = mul(t.n, mk(1, G.n)); var ns = sMul(t.s || {}, G.s, -1); if (sSig(ns)) u.s = ns; else delete u.s; return u;
   }
-  function facBuild(a, b, aFirst) {   // a: the term whose number (or letter) was dragged, b: the term it landed on -> { g, group, msg } or { err }
-    var ma = facCoef(a), mb = facWhole(b);
-    if (!ma) return { err: "Drag the number or letter that sits in front of x." };
-    if (b.k !== "g" && exLike(a, b)) return { err: "Those are like terms: drop one on the other to combine them." };
+  function facScale(t, G) {   // the terms of t once G is taken out
+    if (t.k === "g") { var q0 = mk(t.m.n, G.n), qs = sMul(t.m.s || {}, G.s, -1); return t.items.map(function (u) { var w = JSON.parse(JSON.stringify(u)); w.n = mul(u.n, q0); var ns = sMul(u.s || {}, qs, 1); if (sSig(ns)) w.s = ns; else delete w.s; return w; }); }
+    return [facDiv(t, G)];
+  }
+  function facBuild(a, b, aFirst) {   // a: the term (or group) whose number or letter was dragged, b: the term it landed on -> { g, group, show, msg } or { err }
+    var ma = a.k === "g" ? facWhole(a) : facCoef(a), mb = facWhole(b);
+    if (!ma) return { err: a.k === "g" ? "There is no whole number or letter in front of those parentheses to factor with." : "Drag the number or letter that sits in front of x." };
+    if (a.k !== "g" && b.k !== "g" && exLike(a, b)) return { err: "Those are like terms: drop one on the other to combine them." };
     if (!mb) return { err: "That term can't be factored with " + facSay(ma) + "." };
     var G = { n: gcd(ma.n, mb.n), s: {} }; Object.keys(ma.s).forEach(function (l) { if (mb.s[l] > 0) G.s[l] = Math.min(ma.s[l], mb.s[l]); });
     if (G.n < 2 && !sSig(G.s)) return { err: facSay(ma) + " and " + facSay(mb) + " have no common factor to take out." };
     var gm = mk(G.n); if (sSig(G.s)) gm.s = G.s;
-    var cp = function (t) { return JSON.parse(JSON.stringify(t)); }, aa = facDiv(a, G), inner;
-    if (b.k === "g") { var Q = { n: G.n, s: G.s }, q0 = mk(b.m.n, G.n), qs = sMul(b.m.s || {}, G.s, -1); inner = b.items.map(function (t) { var u = cp(t); u.n = mul(t.n, q0); var ns = sMul(t.s || {}, qs, 1); if (sSig(ns)) u.s = ns; else delete u.s; return u; }); }
-    else inner = [facDiv(b, G)];
-    var group = { k: "g", m: gm, items: aFirst ? [aa].concat(inner) : inner.concat([aa]) }, gs = facSay({ n: G.n, s: G.s });
+    var ia = facScale(a, G), ib = facScale(b, G);
+    var group = { k: "g", m: gm, items: aFirst ? ia.concat(ib) : ib.concat(ia) }, gs = facSay({ n: G.n, s: G.s });
     return { g: gs, group: group, show: Object.assign({}, group, { fac: true }), msg: "Factor out " + gs + (G.n !== ma.n || sSig(G.s) !== sSig(ma.s) ? ", the biggest factor of both " + facSay(ma) + " and " + facSay(mb) : "") + ": " + exSay(aFirst ? [a, b] : [b, a]) + " = " + exSay([group]) + "." };
   }
   function facKeys(its) { return JSON.stringify(its.map(litKey).sort()); }
   function facOK(r, group) { return r.length === 1 && r[0].k === "g" && same(r[0].m, group.m) && sSig(r[0].m.s) === sSig(group.m.s) && facKeys(r[0].items) === facKeys(group.items); }
-  function facDone(its) { if (its.length !== 1 || its[0].k !== "g") return false; var g = 0; its[0].items.forEach(function (t) { g = gcd(g, t.n.d === 1 ? t.n.n : 1); }); return g <= 1; }   // one group, and nothing more to take out
+  function facDone(its) {   // one group, and nothing more (number or letter) to take out of it
+    if (its.length !== 1 || its[0].k !== "g") return false;
+    var g = 0, ms = its[0].items.map(function (t) { return facMono(t); }); if (ms.some(function (m) { return !m; })) { its[0].items.forEach(function (t) { g = gcd(g, t.n.d === 1 ? t.n.n : 1); }); return g <= 1; }
+    ms.forEach(function (m) { g = gcd(g, m.n); });
+    return g <= 1 && !Object.keys(ms[0].s).some(function (l) { return ms.every(function (m) { return m.s[l] > 0; }); });
+  }
+  function litFacTerms(src) {   // a typed sum with letters that has something to factor out of every term, like ax + ab or 2ax - 6ab: its terms, or null
+    var r = litTerms(src, "x", true); if (typeof r === "string" || r.length < 2) return null;
+    if (r.some(function (t) { return t.k === "g" || t.co || !facMono(t) || !facMono(t).n; }) || r.filter(function (t) { return t.k === "x"; }).length !== 1 || !r.some(hasS)) return null;
+    var g = 0, ms = r.map(facMono); ms.forEach(function (m) { g = gcd(g, m.n); });
+    return g >= 2 || Object.keys(ms[0].s).some(function (l) { return ms.every(function (m) { return m.s[l] > 0; }); }) ? r : null;
+  }   // one group, and nothing more to take out
   function facAll(its) {   // the common number of a sum with no parentheses and no like terms (0 when there is nothing to factor)
     if (its.length < 2 || its.some(hasS) || !its.some(function (t) { return facCoef(t); }) || !its.every(function (t) { return t.k !== "g" && facWhole(t); })) return 0;
     var g = 0; its.forEach(function (t) { g = gcd(g, Math.abs(t.n.n)); }); return g >= 2 ? g : 0;
@@ -1158,18 +1173,23 @@
   function exTot(its) {   // the whole value, by kind of term: { "": number, x: coefficient, "y^2": coefficient ... }
     var o = {};
     its.forEach(function (t) {
-      if (t.k === "g") { var u = exTot(t.items); Object.keys(u).forEach(function (k) { o[k] = add(o[k] || mk(0), mul(u[k], t.m)); }); }
+      if (t.k === "g") { var u = exTot(t.items); if (t.b) u = totMul(u, exTot(t.b)); Object.keys(u).forEach(function (k) { o[k] = add(o[k] || mk(0), mul(u[k], t.m)); }); }
       else { var k2 = exKey(t); o[k2] = add(o[k2] || mk(0), t.n); }
     });
     return o;
   }
   function exSame(a, b) { var ks = {}; Object.keys(a).concat(Object.keys(b)).forEach(function (k) { ks[k] = 1; }); return Object.keys(ks).every(function (k) { return same(a[k] || mk(0), b[k] || mk(0)); }); }
-  function exDist(g) { return g.items.map(function (t) { var u = JSON.parse(JSON.stringify(t)); u.n = mul(t.n, g.m); if (g.m.s && sSig(g.m.s)) { var ns = sMul(t.s || {}, g.m.s, 1); if (sSig(ns)) u.s = ns; else delete u.s; } return u; }); }
+  function vMulStr(a, b) { var f = {}; [a || "", b || ""].forEach(function (v) { v.replace(/([a-z])(?:\^(\d+))?/g, function (_, l, e) { f[l] = (f[l] || 0) + (e ? +e : 1); }); }); return Object.keys(f).sort().map(function (l) { return l + (f[l] > 1 ? "^" + f[l] : ""); }).join(""); }
+  function tMul(t, u) { var n = mul(t.n, u.n); if (t.k === "c" && u.k === "c") return { k: "c", n: n }; return { k: "x", v: vMulStr(t.k === "x" ? t.v || "x" : "", u.k === "x" ? u.v || "x" : ""), n: n }; }
+  function totMul(A, B) { var o = {}; Object.keys(A).forEach(function (ka) { Object.keys(B).forEach(function (kb) { var k = vMulStr(ka, kb); o[k] = add(o[k] || mk(0), mul(A[ka], B[kb])); }); }); return o; }
+  function exDist(g) {
+    if (g.b) { var out = []; g.items.forEach(function (a) { g.b.forEach(function (b) { var t = tMul(a, b); t.n = mul(t.n, g.m); out.push(t); }); }); return out; }   // two sets of parentheses: every term times every term, row by row
+    return g.items.map(function (t) { var u = JSON.parse(JSON.stringify(t)); u.n = mul(t.n, g.m); if (g.m.s && sSig(g.m.s)) { var ns = sMul(t.s || {}, g.m.s, 1); if (sSig(ns)) u.s = ns; else delete u.s; } return u; }); }
   function exVarHtml(v) { return v.replace(/([a-z])(?:\^(\d+))?/g, function (m, l, e) { return "<i>" + l + "</i>" + (e ? "<sup>" + e + "</sup>" : ""); }); }
   function exFr(p) { return p.d > 1 ? p.n + "/" + p.d : String(p.n); }
   function exTerm(t, inner) {   // the term without its sign
     if (t.k === "q") return "<span class=\"fr\"><span>" + exHtml(t.num) + "</span><span>" + exHtml(t.den) + "</span></span>";
-    if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">(" + exHtml(t.items) + ")</span>"; }
+    if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">(" + exHtml(t.items) + ")</span>" + (t.b ? "<span class=\"exH\">(" + exHtml(t.b) + ")</span>" : ""); }
     if (hasS(t)) return litHtml(t, false);
     var a = mk(Math.abs(t.n.n), t.n.d); return t.k === "x" ? (a.n === 1 && a.d === 1 ? "" : a.d === 1 ? "<span class=\"exK\" title=\"Drag me onto another term to factor out a number they share\">" + a.n + "</span>" : exFr(a)) + exVarHtml(t.v || "x") : exFr(a);
   }
@@ -1184,7 +1204,7 @@
   // a minus sign in front of parentheses is the drag handle that distributes it (it means -1): -(x + 1) becomes -x - 1
   function exSignOf(el) { var p = el.previousElementSibling; return el.querySelector(":scope > .exG") && !el.querySelector(":scope > .exM") && p && p.classList.contains("exOp") && p.textContent === "\u2212" ? p : null; }
   function exNegMark(h, key) { if (h && h.classList.contains("exOp")) { h.classList.add("exNeg"); h.dataset.for = key; h.title = "Drag the minus sign onto the parentheses"; } }
-  function distMsg(g, d) { return "Distribute: " + exSay([g]) + " = " + exSay(d) + "." + (g.m.d === 1 && g.m.n === -1 ? " The minus sign means \u22121, so \u22121 times each term." : ""); }
+  function distMsg(g, d) { if (g.b) return "Multiply: " + exSay([g]) + " = " + exSay(d) + ". Every term in one set of parentheses times every term in the other."; return "Distribute: " + exSay([g]) + " = " + exSay(d) + "." + (g.m.d === 1 && g.m.n === -1 ? " The minus sign means \u22121, so \u22121 times each term." : ""); }
   function dgWord(m) { return m.s && sSig(m.s) ? "the letter" : m.d === 1 && Math.abs(m.n) === 1 ? (m.n < 0 ? "the minus sign" : "the plus sign") : "the number"; }
   function exRender(hot) {
     if (!EXP) return;
@@ -1200,7 +1220,12 @@
       var i = +el.dataset.i, mEl = el.querySelector(":scope > .exM") || exSignOf(el), gEl = el.querySelector(":scope > .exG");
       if (mEl && gEl) {   // the number in front of the parentheses is dragged onto them to distribute
         gEl.dataset.drop = "exg:" + i; exNegMark(mEl, String(i));
-        mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, mEl, function () { exDistribute(i); }, function (t) { if (t.dataset.drop === "exg:" + i) exDistribute(i); }, "exg:"); });
+        mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, mEl, function () { exDistribute(i); }, function (t) { var dd = t.dataset.drop; if (dd === "exg:" + i) exDistribute(i); else if (dd.indexOf("exg:") === 0) exFactor(i, +dd.slice(4)); else exFactor(i, +dd.slice(3)); }, ["exg:", "ex:"]); });
+      }
+      var hEl = el.querySelector(":scope > .exH");
+      if (hEl && gEl) {   // (A)(B): drag one set of parentheses onto the other to multiply them
+        hEl.dataset.drop = "exg:" + i; gEl.dataset.drop = "exg:" + i;
+        [gEl, hEl].forEach(function (pe) { pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, pe, function () { exDistribute(i); }, function (t) { if (t.dataset.drop === "exg:" + i) exDistribute(i); }, "exg:"); }); });
       }
       var kEl = el.querySelector(":scope > .exK");
       if (kEl) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, kEl, null, function (t) { exFactor(i, +t.dataset.drop.slice(3)); }, "ex:"); });
@@ -1212,8 +1237,26 @@
   // and each product inside, in the box where its row and column meet
   var distT = [];
   function distHide() { distT.forEach(clearTimeout); distT = []; var d = $("distBox"); if (d) d.remove(); }
+  function distShow2(g) {   // (A)(B): the area model as a 2 x 2 square: one expression down the left, one across the top, the four products in the boxes
+    var A = g.items, B = g.b, nb = B.length, d = exDist(g), term = function (t) { return (t.n.n < 0 ? "\u2212" : "") + exTerm(t); };
+    var corner = g.m.n === 1 && g.m.d === 1 ? "" : (g.m.n < 0 ? "\u2212" : "") + exFr(mk(Math.abs(g.m.n), g.m.d));
+    var h = "<div class=\"dgrid\" style=\"grid-template-columns:auto repeat(" + nb + ",auto)\"><span class=\"dcorner\">" + corner + "</span>" + B.map(function (t, j) { return "<span class=\"dtop\" data-j=\"" + j + "\">" + term(t) + "</span>"; }).join("") +
+      A.map(function (t, i) { return "<span class=\"dleft\" data-i=\"" + i + "\">" + term(t) + "</span>" + B.map(function (u, j) { return "<span class=\"dcell\"><span class=\"dp\" data-j=\"" + (i * nb + j) + "\">" + term(d[i * nb + j]) + "</span></span>"; }).join(""); }).join("") + "</div>";
+    var el = document.createElement("div"); el.id = "distBox"; el.setAttribute("role", "img"); el.setAttribute("aria-label", "Multiplying " + exSay([g]) + " gives " + exSay(d)); el.innerHTML = h; document.body.appendChild(el);
+    var st = document.querySelector(".stage").getBoundingClientRect(); el.style.left = (st.left + st.width / 2) + "px"; el.style.bottom = Math.max(10, innerHeight - st.bottom + 14) + "px";
+    var quick = window.matchMedia && matchMedia("(prefers-reduced-motion:reduce)").matches, at = function (ms, fn) { distT.push(setTimeout(fn, ms)); };
+    at(20, function () { el.classList.add("on"); });
+    d.forEach(function (t, idx) {
+      var i = Math.floor(idx / nb), j = idx % nb, top = el.querySelector(".dtop[data-j=\"" + j + "\"]"), left = el.querySelector(".dleft[data-i=\"" + i + "\"]"), p = el.querySelector(".dp[data-j=\"" + idx + "\"]"), t0 = quick ? 0 : 700 + idx * 900;
+      at(t0, function () { top.classList.add("hl"); left.classList.add("hl"); });
+      at(t0 + (quick ? 0 : 400), function () { p.classList.add("show"); });
+      at(t0 + (quick ? 0 : 850), function () { top.classList.remove("hl"); left.classList.remove("hl"); });
+    });
+    var end = (quick ? 0 : 700 + d.length * 900) + 2200; at(end, function () { el.classList.remove("on"); }); at(end + 450, distHide);
+  }
   function distShow(g) {
     distHide(); if (!g || g.k !== "g" || g.items.some(function (t) { return t.k === "g"; })) return;
+    if (g.b) { distShow2(g); return; }
     var sgn = function (n) { return (n.n < 0 ? "\u2212" : "") + (n.s && sSig(n.s) ? litHtml({ k: "c", n: mk(Math.abs(n.n), n.d), s: n.s }, false) : exFr(mk(Math.abs(n.n), n.d))); }, term = function (t) { return (t.n.n < 0 ? "\u2212" : "") + exTerm(t); }, d = exDist(g), n = g.items.length;
     var fc = !!g.fac, hid = fc ? " dh" : "";   // factoring plays the same box backwards: the terms sit inside the boxes first, then the common factor appears outside, and the terms left over appear on top last
     var h = "<div class=\"dgrid\" style=\"grid-template-columns:auto repeat(" + n + ",auto)\"><span></span>" + g.items.map(function (t, j) { return "<span class=\"dtop" + hid + "\" data-j=\"" + j + "\">" + term(t) + "</span>"; }).join("") + "<span class=\"dleft" + hid + "\">" + sgn(g.m) + "</span>" + d.map(function (t, j) { return "<span class=\"dcell\"><span class=\"dp" + (fc ? " show" : "") + "\" data-j=\"" + j + "\">" + term(t) + "</span></span>"; }).join("") + "</div>";
@@ -1284,12 +1327,12 @@
   }
   function exAskOK() {
     if (EXP && EXP.eq) { eqAskOK(); return; }
-    var k = EXP && EXP.ask; if (!k) return; var r = exParse($("askIn").value), its = EXP.items, ok = false, m = $("askErr");
+    var k = EXP && EXP.ask; if (!k) return; var r = EXP.lit ? litTerms($("askIn").value, "x", true) : exParse($("askIn").value), its = EXP.items, ok = false, m = $("askErr");
     if (typeof r === "string") { m.textContent = "Type the result, like 5x or −2."; return; }
     if (k.kind === "fac") { if (!facOK(r, k.f.group)) { m.textContent = "Not quite. Factor out " + k.f.g + " and write what is left inside parentheses."; $("askIn").select(); return; } exSet(k.res, k.f.msg, k.f.show); return; }
     var want = k.kind === "comb" ? [exCombineTo(k.i, k.j)[k.j > k.i ? k.j - 1 : k.j]] : exDist(its[k.i]);
     if (k.kind === "comb" && want[0] && want[0].k !== "g" && want[0].n.n === 0 && exLike(its[k.i], its[k.j])) want = [{ k: "c", n: mk(0) }];
-    function key(t) { return exKey(t) + ":" + t.n.n + "/" + t.n.d; }
+    function key(t) { return EXP.lit ? litKey(t) : exKey(t) + ":" + t.n.n + "/" + t.n.d; }
     var nz = function (l) { return l.filter(function (t) { return t.k !== "c" || t.n.n !== 0 || l.length === 1; }); };
     ok = r.every(function (t) { return t.k !== "g"; }) && JSON.stringify(nz(r).map(key).sort()) === JSON.stringify(nz(want).map(key).sort()) || (k.kind === "comb" && r.length === 1 && r[0].k !== "g" && r[0].n.n === 0 && want[0].n.n === 0);
     if (!ok) { m.textContent = "Not quite. Check your work and try again."; $("askIn").select(); return; }
@@ -1299,8 +1342,13 @@
   }
   function exCheckSolo() {
     if (EXP.eq) { eqCheckSolo(); return; }
-    var r = exParse($("exSoloIn").value), m = $("exMsg"); ansTouched = true;
+    var r = EXP.lit ? litTerms($("exSoloIn").value, "x", true) : exParse($("exSoloIn").value), m = $("exMsg"); ansTouched = true;
     if (typeof r === "string") { m.className = "bad"; m.textContent = r; return; }
+    if (EXP.lit) {
+      if (!ratEq(litSideRat(r), litSideRat(EXP.items))) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
+      if (!facDone(r)) { m.className = "bad"; m.textContent = "That is the same value, but it is not fully factored yet."; return; }
+      EXP.items = r; exEnd(); $("exSolo").hidden = true; return;
+    }
     if (!exSame(exTot(r), exTot(EXP.items))) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
     if (EXP.fac) { if (!facDone(r)) { m.className = "bad"; m.textContent = "That is the same value, but it is not fully factored yet."; return; } EXP.items = r; exEnd(); $("exSolo").hidden = true; return; }
     if (!exFin(r)) { m.className = "bad"; m.textContent = "That is the same value, but it is not fully simplified yet."; return; }
@@ -1358,21 +1406,25 @@
     DM4.t = setTimeout(function () {
       if (!EXP || !DM4.run || DM4.paused || locked) return;
       var its = EXP.items, gi = -1, a = -1, b = -1, j, k;
-      if (EXP.fac) {   // factoring: drag the number in front of x onto another term (a group first, if there is one)
+      if (EXP.fac) {   // factoring: drag the number or letter in front of x onto another term (onto a group if there is one); a group's own number can be dragged onto a term too
         var bs = null, pass, ii, jj;
-        for (pass = 0; pass < 2 && !bs; pass++) for (ii = 0; ii < its.length && !bs; ii++) for (jj = 0; jj < its.length && !bs; jj++) {
-          if (ii === jj || (pass === 0) !== (its[jj].k === "g")) continue;
+        for (pass = 0; pass < 3 && !bs; pass++) for (ii = 0; ii < its.length && !bs; ii++) for (jj = 0; jj < its.length && !bs; jj++) {
+          if (ii === jj) continue; var sg0 = its[ii].k === "g", tg0 = its[jj].k === "g";
+          if (pass === 0 ? (sg0 || !tg0) : pass === 1 ? (sg0 || tg0) : !sg0) continue;
           var fb = facBuild(its[ii], its[jj], ii < jj); if (!fb.err) bs = { i: ii, j: jj, f: fb };
         }
         if (!bs) return;
-        exRender(); dmCap("Drag " + facSay(facCoef(its[bs.i])) + " onto " + exSay([its[bs.j]]) + " to factor it out.");
-        exMoveDemo('.exT[data-i="' + bs.i + '"] > .exK', '.exT[data-i="' + bs.j + '"]', function () { var nn = its.slice(); nn[bs.j] = bs.f.group; nn.splice(bs.i, 1); exSet(nn, bs.f.msg, bs.f.show); }, function () { if (!locked) exDemoStep(900); });
+        var sm = its[bs.i].k === "g" ? facWhole(its[bs.i]) : facCoef(its[bs.i]);
+        exRender(); dmCap("Drag " + facSay(sm) + " onto " + exSay([its[bs.j]]) + " to factor it out.");
+        exMoveDemo('.exT[data-i="' + bs.i + '"] > ' + (its[bs.i].k === "g" ? ".exM" : ".exK"), '.exT[data-i="' + bs.j + '"]', function () { var nn = its.slice(); nn[bs.j] = bs.f.group; nn.splice(bs.i, 1); exSet(nn, bs.f.msg, bs.f.show); }, function () { if (!locked) exDemoStep(900); });
         return;
       }
       for (j = 0; j < its.length && gi < 0; j++) if (its[j].k === "g") gi = j;
       var go = function (fn) { DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused) return; fn(); if (!locked) exDemoStep(900); }, 1300); };
       if (gi >= 0) {
-        var g = its[gi]; exRender(); dmCap("Drag " + (dgWord(g.m) === "the number" ? exSay([{ k: "c", n: g.m }]) : dgWord(g.m)) + " onto the parentheses to distribute it.");
+        var g = its[gi]; exRender();
+        if (g.b) { dmCap("Drag one set of parentheses onto the other to multiply them."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, distMsg(g, exDist(g)), g); }, function () { if (!locked) exDemoStep(900); }); return; }
+        dmCap("Drag " + (dgWord(g.m) === "the number" ? exSay([{ k: "c", n: g.m }]) : dgWord(g.m)) + " onto the parentheses to distribute it.");
         exDragDemo('.exT[data-i="' + gi + '"]', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, distMsg(g, exDist(g)), g); }, function () { if (!locked) exDemoStep(900); }, String(gi));
         return;
       }
@@ -1385,9 +1437,10 @@
   function exCreate() {
     var r = exParse($("crIn").value), err = $("crErr");
     if (typeof r === "string") { err.textContent = r; return; }
-    var fac = exFin(r) && facAll(r) >= 2;
-    if (exFin(r) && !fac) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5, or a sum with a common factor to take out, like 3x+9."; return; }
-    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, fac: fac }; SOL.lvl = exLevel(r); SOL.fresh = false;
+    var fac = false, lit = false, lr = exFin(r) ? litFacTerms($("crIn").value) : null;   // a sum with letters (ax + ab) is read with the letters as coefficients
+    if (lr) { r = lr; fac = true; lit = true; } else fac = exFin(r) && facAll(r) >= 2;
+    if (exFin(r) && !fac) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5, or a sum with a common factor to take out, like 3x+9 or ax+ab."; return; }
+    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, fac: fac, lit: lit }; SOL.lvl = lit ? 6 : exLevel(r); SOL.fresh = false;
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your expression is in. Choose how you want to work on it.");
   }
 
@@ -1398,7 +1451,7 @@
   function eqIneq() { return !!(EXP && EXP.eq && EXP.orig && (EXP.orig.rel || "=") !== "="); }
   function eqNorm(its) { var r = its.filter(function (t) { return t.k === "g" || t.n.n !== 0; }); return r.length ? r : [{ k: "c", n: mk(0) }]; }
   function eqOther(S) { return S === "L" ? "R" : "L"; }
-  function eqVars(its, o) { its.forEach(function (t) { if (t.k === "g") eqVars(t.items, o); else if (t.k === "x") o[t.v || "x"] = 1; }); return o; }
+  function eqVars(its, o) { its.forEach(function (t) { if (t.k === "g") { eqVars(t.items, o); if (t.b) eqVars(t.b, o); } else if (t.k === "x") o[t.v || "x"] = 1; }); return o; }
   function litAlone(a, b) { return a.length === 1 && a[0].k === "x" && same(a[0].n, mk(1)) && !hasS(a[0]) && ((b.length === 1 && b[0].k === "q") || (b.every(function (t) { return t.k === "c"; }) && b.every(function (t, i) { return b.every(function (u, j) { return i === j || exKey(t) !== exKey(u); }); }))); }
   function eqKind() {   // "one" (x = 4 or 4 = x), "none", "inf", or "" while there is more to do
     if (EXP.lit) return litAlone(EXP.L, EXP.R) || litAlone(EXP.R, EXP.L) ? "one" : "";
@@ -1453,7 +1506,7 @@
       var S = el.dataset.s, i = +el.dataset.i, t = EXP[S][i], mEl = el.querySelector(":scope > .exM") || exSignOf(el), gEl = el.querySelector(":scope > .exG");
       if (mEl && gEl) {
         gEl.dataset.drop = "exg:" + S + ":" + i; exNegMark(mEl, S + ":" + i);
-        mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, mEl, function () { eqDistribute(S, i); }, function (t2) { if (t2.dataset.drop === "exg:" + S + ":" + i) eqDistribute(S, i); }, "exg:"); });
+        mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, mEl, function () { eqDistribute(S, i); }, function (t2) { var dd = t2.dataset.drop; if (dd === "exg:" + S + ":" + i) eqDistribute(S, i); else if (dd.indexOf("exg:") === 0 || dd.indexOf("et:") === 0) { var p2 = dd.split(":"); eqFactor(S, i, p2[1], +p2[2]); } }, ["exg:", "et:"]); });
       }
       el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; drag(e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, dropOf(S, i), ["et:", "eq="]); });
       var kEl = el.querySelector(":scope > .exK");
@@ -1678,6 +1731,7 @@
     if (/[a-wyz]/.test(s)) { eqCreateLit(p, rel, err); return; }
     var L = exParse(p[0]), R = exParse(p[1]);
     if (typeof L === "string" || typeof R === "string") { err.textContent = typeof L === "string" ? L : R; return; }
+    if (L.concat(R).some(function (t) { return t.k === "g" && t.b; })) { err.textContent = "Two sets of parentheses can be multiplied in an expression (no = sign) for now."; return; }
     var vs = Object.keys(eqVars(L, eqVars(R, {})));
     if (!vs.length) { err.textContent = "That equation needs a variable."; return; }
     if (vs.length > 1 || /[\^]/.test(s) || vs.some(function (v) { return /\^/.test(v); })) { err.textContent = "Use one variable, to the first power, like 3x=x+2."; return; }
@@ -1822,7 +1876,25 @@
   function exGen(lv) {
     var KS = ["x", "y", "x^2", "y^2"], kv = lv >= 1 ? KS[rnd(4)] : "x", other = { x: "x^2", y: "y^2", "x^2": "x", "y^2": "y" }[kv];
     var X = function (n) { return { k: "x", v: kv, n: mk(n[0], n[1] || 1) }; }, U = function (n) { return { k: "x", v: other, n: mk(n) }; }, C = function (n) { return { k: "c", n: mk(n) }; };
-    if (lv >= 5) {   // factoring: a sum whose terms share a number, like 6x + 9 or 4x - 8 + 12y
+    if (lv >= 7) {   // two sets of parentheses: (3x - 4)(x - 6)
+      var pv = rnd(2) ? "x" : "y", Xp = function (n) { return { k: "x", v: pv, n: mk(n) }; }, Cp = function (n) { return { k: "c", n: mk(n) }; };
+      var c1 = rnd(3) === 0 ? 2 : 1, a1 = rnd(2) ? 1 : 2 + rnd(2), b1 = nz(6), d1 = nz(6), m1 = rnd(5) === 0 ? -1 : 1;
+      return [{ k: "g", m: mk(m1), items: [Xp(a1), Cp(b1)], b: [Xp(c1), Cp(d1)] }];
+    }
+    if (lv === 6) {   // factoring with letters: ax + ab, 2ax - 6ab, ax + ab + ac, 3ax + 6a
+      var LT = ["a", "b", "c", "m", "n", "p", "k", "h"];
+      for (;;) {
+        var la = LT[rnd(LT.length)], lb = LT[rnd(LT.length)], lc = LT[rnd(LT.length)]; if (la === lb || la === lc || lb === lc) continue;
+        var gn = rnd(2) ? 1 : 2 + rnd(2), k1 = rnd(3) === 0 ? 2 : 1, k2 = nz(4), k3 = nz(3), w6 = rnd(4), sa = {}, sb = {}, sc = {}; sa[la] = 1; sb[la] = 1; sb[lb] = 1; sc[la] = 1; sc[lc] = 1;
+        if (gcd(gcd(k1, Math.abs(k2)), w6 === 2 ? Math.abs(k3) : 0) !== 1) continue;
+        var L6 = [{ k: "x", v: "x", n: mk(gn * k1), s: sa }];
+        if (w6 === 1) L6.push({ k: "c", n: mk(gn * k2), s: sa }); else L6.push({ k: "c", n: mk(gn * k2), s: sb });
+        if (w6 === 2) L6.push({ k: "c", n: mk(gn * k3), s: sc });
+        for (var q6 = L6.length - 1; q6 > 0; q6--) { var w7 = rnd(q6 + 1), t6 = L6[q6]; L6[q6] = L6[w7]; L6[w7] = t6; }
+        return L6;
+      }
+    }
+    if (lv === 5) {   // factoring: a sum whose terms share a number, like 6x + 9 or 4x - 8 + 12y
       for (;;) {
         var g5 = 2 + rnd(5), m1 = nz(5), m2 = nz(5), m3 = nz(5), three = rnd(2) === 0, gg = gcd(gcd(Math.abs(m1), Math.abs(m2)), three ? Math.abs(m3) : 0);
         if (gg !== 1 || (!three && Math.abs(m1) === 1 && Math.abs(m2) === 1 && false)) continue;
@@ -1842,12 +1914,13 @@
   }
   function exLevel(its) {
     var g = its.filter(function (t) { return t.k === "g"; }).length, ng = its.filter(function (t) { return (t.k === "g" ? t.m.n : t.n.n) < 0; }).length, fr = JSON.stringify(its).indexOf('"d":') >= 0 && its.some(function (t) { return t.k === "x" && t.n.d > 1; });
+    if (its.some(function (t) { return t.k === "g" && t.b; })) return 7;
     if (!g && exFin(its) && facAll(its) >= 2) return 5;
     return Math.max(0, Math.min(4, g ? (fr ? 4 : ng ? 3 : 2) : ng ? 1 : 0));
   }
   function solverGo(dl, m) {
     SOL.fresh = false; SOL.keep = true;
-    if (EXP && !EXP.eq) { SOL.lvl = Math.max(0, Math.min(5, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5; }   // expressions have their own six levels (5 is factoring)
+    if (EXP && !EXP.eq) { SOL.lvl = Math.max(0, Math.min(7, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; }   // expressions have their own eight levels (5 is factoring, 6 is factoring with letters, 7 is two sets of parentheses)
     else {
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
       if (st.e === "eq") {
