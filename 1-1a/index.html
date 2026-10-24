@@ -918,7 +918,7 @@
       return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live ? " pend" : "") + (hot && hot.indexOf(i) >= 0 ? " hot" : "") + "\" data-i=\"" + i + "\" data-drop=\"ex:" + i + "\"" + (t.k === "g" && live ? " title=\"Click to distribute\"" : "") + ">" + exTerm(t) + "</span>";
     }).join("");
     if (!live) return;
-    [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var k = +el.dataset.op; exDrop(k - 1, k); }); });
+    [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var k = +el.dataset.op; exDrop(k, k - 1); }); });
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
       var i = +el.dataset.i;
       el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { exDrop(i, +t.dataset.drop.slice(3)); }, "ex:"); });
@@ -935,9 +935,9 @@
     if (mode === "demo") { onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap("Fully simplified!"); solverFinish(); }
     else { tally(); nxShow(); }
   }
-  function exCombineTo(i, j) {   // terms i and j are alike: one term takes their place
-    var its = EXP.items.slice(), a = its[i], b = its[j], c = exSum(a, b), lo = Math.min(i, j), hi = Math.max(i, j);
-    its.splice(hi, 1); its.splice(lo, 1, c); its = its.filter(function (t) { return t.k === "g" || t.n.n !== 0; });
+  function exCombineTo(i, j) {   // term i is dropped on term j (alike): the sum takes j's place
+    var its = EXP.items.slice(), a = its[i], b = its[j], c = exSum(a, b);
+    its[j] = c; its.splice(i, 1); its = its.filter(function (t) { return t.k === "g" || t.n.n !== 0; });
     return its.length ? its : [{ k: "c", n: mk(0) }];
   }
   function exDrop(i, j) {
@@ -964,7 +964,7 @@
     if (EXP && EXP.eq) { eqAskOK(); return; }
     var k = EXP && EXP.ask; if (!k) return; var r = exParse($("askIn").value), its = EXP.items, ok = false, m = $("askErr");
     if (typeof r === "string") { m.textContent = "Type the result, like 5x or −2."; return; }
-    var want = k.kind === "comb" ? [exCombineTo(k.i, k.j)[Math.min(k.i, k.j)]] : exDist(its[k.i]);
+    var want = k.kind === "comb" ? [exCombineTo(k.i, k.j)[k.j > k.i ? k.j - 1 : k.j]] : exDist(its[k.i]);
     if (k.kind === "comb" && want[0] && want[0].k !== "g" && want[0].n.n === 0 && exLike(its[k.i], its[k.j])) want = [{ k: "c", n: mk(0) }];
     function key(t) { return exKey(t) + ":" + t.n.n + "/" + t.n.d; }
     var nz = function (l) { return l.filter(function (t) { return t.k !== "c" || t.n.n !== 0 || l.length === 1; }); };
@@ -1029,7 +1029,7 @@
       for (j = 0; j < its.length && a < 0; j++) for (k = j + 1; k < its.length; k++) if (exLike(its[k], its[j])) { a = j; b = k; break; }
       if (a < 0) return;
       exRender([a, b]); dmCap("Combine the like terms: " + exSay([its[a], its[b]]) + ".");
-      go(function () { exSet(exCombineTo(a, b), exSay([its[a], its[b]]) + " = " + exSay([exSum(its[a], its[b])])); });
+      go(function () { exSet(exCombineTo(b, a), exSay([its[a], its[b]]) + " = " + exSay([exSum(its[a], its[b])])); });
     }, ms);
   }
   function exCreate() {
@@ -1093,7 +1093,7 @@
       if (!tg || i === j) return null;
       if (exLike(t, tg)) {
         want = exSum(t, tg); label = exSay(i < j ? [t, tg] : [tg, t]); msg = label + " = " + exSay([want]);
-        var lo = Math.min(i, j), hi = Math.max(i, j); N[S].splice(hi, 1); N[S].splice(lo, 1, want);
+        N[S][j] = want; N[S].splice(i, 1);   // the sum appears where the term was dropped
       } else { N[S].splice(i, 1); var at = N[S].indexOf(tg); N[S].splice(i < j ? at + 1 : at, 0, t); }
     } else {
       var f = JSON.parse(JSON.stringify(t)); f.n = neg(t.n); var ab2 = JSON.parse(JSON.stringify(t)); ab2.n = mk(Math.abs(t.n.n), t.n.d);
@@ -1360,11 +1360,11 @@
           drag(e, cell, null, function (t, ev) {
             var d = t.dataset.drop;
             if (d.indexOf("comb:") === 0) {
-              // drop one number on any other number in the equation (same side of the =) to combine them; the sum stays where the left one was
+              // drop one number on any other number in the equation (same side of the =) to combine them; the sum appears where the number was dropped
               var pp = d.split(":"), tk = t.dataset.k === undefined ? -1 : +t.dataset.k;
               if (+pp[1] === i && tk >= 0 && tk !== idx && q.ks[tk] && !q.ks[tk].r) {
                 var a = idx, b2 = tk; if (kslot(q, q.ks[a], vs) > kslot(q, q.ks[b2], vs)) { a = tk; b2 = idx; }
-                if (mode === "calculate") openAsk(i, "comb", [a, b2, 0]); else combineK(i, a, b2);
+                if (mode === "calculate") openAsk(i, "comb", [a, b2, 0, tk]); else combineK(i, a, b2, tk);
               }
             } else if (d.indexOf("mv:") === 0) mvDropK(i, idx, t);
             else if (sameRowRight(t, ev)) constDrop(i, idx);
@@ -1578,11 +1578,11 @@
     if (mode === "calculate" && k.r && ws[at]) openAsk(at, "ksimp", ws[at].ks.length - 1);
   }
   // click the + between two constants: they combine into one (3x + 2 + 1 = 9 becomes 3x + 3 = 9)
-  function combineK(i, a, b) {
+  function combineK(i, a, b, keep) {   // keep = the one that stays (the one dropped on); the sum appears where it is. Default: the left one.
     if (locked) return; var q = ws[i]; if (!q.ks[a] || !q.ks[b]) return;
     snap();
-    var n = JSON.parse(JSON.stringify(q)), ka = n.ks[a], kb = n.ks[b];
-    ka.k = add(ka.k, kb.k); n.ks.splice(b, 1);
+    var n = JSON.parse(JSON.stringify(q)), ka = n.ks[keep === b ? b : a], kb = n.ks[keep === b ? a : b];
+    ka.k = add(ka.k, kb.k); n.ks.splice(n.ks.indexOf(kb), 1);
     if (!ka.k.n) n.ks.splice(n.ks.indexOf(ka), 1);
     ws[i] = n; done(i);
   }
@@ -1680,7 +1680,7 @@
       if (!q2 || !q2.ks[askC[0]] || !q2.ks[askC[1]]) { closeAsk(false); return; }
       if (!n2) { err("Type a number, like 3 or -1."); return; }
       if (!same(n2, add(q2.ks[askC[0]].k, q2.ks[askC[1]].k))) { err("Not quite. Try again."); $("askIn").select(); return; }
-      closeAsk(false); combineK(i, askC[0], askC[1]); return;
+      closeAsk(false); combineK(i, askC[0], askC[1], askC[3]); return;
     }
     if (askKind === "simp" || askKind === "ksimp") {
       var q1 = ws[i];
@@ -1951,7 +1951,7 @@
         act = function () { combineK(i, s[2], s[3]); };
       } else {   // not next to each other (the variable is between them): drag one onto the other
         handGo(ctr(cb2), 600); tapAt = 1000;
-        act = function () { handGo(ctr(ca), 700); fly(cb2, ca, function () { combineK(i, s[2], s[3]); release(900); }, true); return true; };
+        act = function () { handGo(ctr(ca), 700); fly(cb2, ca, function () { combineK(i, s[2], s[3], s[2]); release(900); }, true); return true; };
       }
     } else if (t === "simp") {
       rows[i].children[kslot(ws[i], ws[i].ks[s[2]], curVs())].classList.add("hl"); handGo(ctr(rows[i].children[kslot(ws[i], ws[i].ks[s[2]], curVs())]), 600); tapAt = 1000;
@@ -2279,6 +2279,11 @@
     if (!L || !R || L.y.n || L.z.n || !L.x.n) return bad;
     var q = { a: L.x, b: mk(0), e: mk(0), ks: [], c: R };
     if (FLIP) q.flip = true;   // the variable side is on the right of the = sign: 10 = 3x - 2 is solved as typed
+    var toks = (p[0].match(/[+-]?[^+-]+/g) || []), cts = toks.filter(function (z) { return !/x/.test(z); });
+    if (cts.length >= 2 && cts.every(function (z) { return parse(z); })) {   // typed as several numbers (-4-2x-6): keep them apart so they can be combined
+      var seenX = false; toks.forEach(function (z) { if (/x/.test(z)) seenX = true; else if (parse(z).n) q.ks.push({ v: seenX ? "s" : "p", k: parse(z) }); });
+      return q;
+    }
     if (L.k.n) { var pre = !/x/.test(first); q.ks = [{ v: pre ? "p" : "s", k: L.k, pa: pa && !pre && L.k.n < 0 }]; }
     return q;
   }
