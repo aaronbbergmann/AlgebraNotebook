@@ -366,6 +366,7 @@
   .pgDemo.ready:hover,.pgDemo.paused:hover,.btn.next:hover,body.pq #qzNext:hover:not(:disabled){background:#6E1A4E;border-color:#6E1A4E}
   .dmLink{font-size:.85rem;margin-top:-.2rem;margin-bottom:.8rem;max-width:11rem;text-align:center}
   .nxRow{padding:0;gap:.5rem}
+  #next[hidden]~#nxHard,#nxHard[hidden],#dmHard[hidden]{display:none!important}
   .nxRow:has(>:not([hidden])){padding:.9rem 1rem 0}
   #dmEnd[hidden]{display:none}
   /* the title area at the top of every activity: the title, and (in Demo) one short phrase on what is happening */
@@ -444,11 +445,11 @@
   <aside class="chat" aria-label="Controls and tutor chat">
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Exercise</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
-      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="reg" aria-pressed="false">Regression</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo hard" id="dmHard" hidden>Harder Equation</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="reg" aria-pressed="false">Regression</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
-    <div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="link" id="again" hidden>Stay</button></div>
+    <div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="btn" id="nxHard" hidden>Harder Equation</button><button class="link" id="again" hidden>Stay</button></div>
     <section class="qz" id="qz" hidden aria-live="polite"><div class="qzT" id="qzT"></div><div id="qzIn"></div><div class="err" id="qzErr"></div><div class="qzRow"><button class="btn" id="qzGo">Check</button><button class="btn" id="qzNext" hidden>Next</button><button class="link" id="qzAgain" hidden>Another round</button></div></section>
     <div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div><div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^2" aria-label="Insert ^2 (squared)">^2</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
     <div class="composer" id="ask" hidden>
@@ -628,6 +629,7 @@
   function degOK() { return !lastDeg && (prog[LK() + ":" + mode + ":one"] || 0) >= 1; }
   function makeProblem() {
     if (SUB()) return generateSub(mode === "demo" ? 1 : 0);
+    if (lesson === 1 && BUILT[act].solver) { SOL.fresh = false; return solverEq(SOL.lvl, mode === "demo"); }
     if (lesson === 1) return generate1();
     var dm = mode === "demo" ? curDm : 0;
     if (!dm && mode !== "create" && degOK() && Math.random() < 0.2) { lastDeg = true; return generateDeg(Math.random() < 0.5 ? "inf" : "none"); }
@@ -902,7 +904,7 @@
   function exEnd() {
     locked = true; exRender(); closeAsk(false);
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note("Fully simplified: " + exSay(EXP.items) + ".");
-    if (mode === "demo") { onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap("Fully simplified!"); dmFinish("Watch again", function () { exBegin(); }, "", null); }
+    if (mode === "demo") { onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap("Fully simplified!"); solverFinish(); }
     else { tally(); nxShow(); }
   }
   function exCombineTo(i, j) {   // terms i and j are alike: one term takes their place
@@ -995,9 +997,70 @@
     var r = exParse($("crIn").value), err = $("crErr");
     if (typeof r === "string") { err.textContent = r; return; }
     if (exFin(r)) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5."; return; }
-    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null };
+    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null }; SOL.lvl = exLevel(r); SOL.fresh = false;
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your expression is in. Choose how you want to work on it.");
   }
+
+  // ---- Playground: Equation Solver: Next / Harder / Try another ----
+  // When a problem is finished: Next (plum red, "Try in [next mode] Mode"), "Harder Equation" directly below it, and a small "Try another" link.
+  // The Next button is the demo button in Demo (Start Demo, Pause demo, Resume demo ... and, when the demo is over, Next) and the right panel's Next in the other modes.
+  var SOL = { lvl: 1, fresh: true };   // lvl: how hard the variants are; fresh: the first Demo still shows 3x-2=10
+  var SOLMODES = ["demo", "sequence", "calculate", "solo"];
+  function solverFinish() { var m = nextMode(); dmFinish(nextLabel(), function () { solverGo(0, m); }, "Try another", function () { solverGo(0, "demo"); }); }
+  function nextMode() { return SOLMODES[(SOLMODES.indexOf(mode) + 1) % SOLMODES.length]; }
+  function nextLabel() { return "Try in " + MODES[nextMode()] + " Mode"; }
+  function hardLabel() { return EXP ? "Harder Expression" : "Harder Equation"; }
+  function solverEq(lv, demo) {   // a variant of the given difficulty; whole-number coefficients when the Demo has to walk through it
+    if (demo && lv > 4) lv = 4;
+    for (;;) {
+      var big = lv >= 4 ? 12 : 9, a = nz(lv >= 4 ? 7 : 5), x = nz(big), k1 = nz(big), k2 = nz(big), ks = [], q, sum;
+      if (Math.abs(a) < 2) a = a < 0 ? -2 : 2;
+      if (lv < 2 || lv === 3) a = Math.abs(a);
+      if (lv === 2) a = -Math.abs(a);
+      if (lv < 2) x = Math.abs(x);
+      if (lv === 4 && a > 0) a = -a;
+      if (lv === 0) k1 = Math.abs(k1);
+      if (lv === 1) k1 = -Math.abs(k1);   // level 1: subtraction, like 3x - 2 = 10
+      if (lv === 5) {
+        var d = [2, 3, 4][rnd(3)], nn = d === 2 ? 1 : [1, 2][rnd(2)]; if (rnd(2)) a = nn; else a = -nn; x = d * nz(4);
+        q = mkEq(1, 0, 0, 0); q.a = mk(a, d);
+      } else q = mkEq(a, 0, 0, 0);
+      if (lv >= 3) { ks = [{ v: "p", k: mk(k1) }, { v: "s", k: mk(k2) }]; if (k1 + k2 === 0) continue; }
+      else ks = [{ v: rnd(2) ? "p" : "s", k: mk(k1) }];
+      if (lv === 5 && rnd(2)) ks = [{ v: "p", k: mk(k1) }, { v: "s", k: mk(k2) }];
+      sum = ks.reduce(function (t, k) { return add(t, k.k); }, mk(0));
+      q.ks = ks; q.c = add(mul(q.a, mk(x)), sum);
+      if (!q.c.n) continue;
+      return [q];
+    }
+  }
+  function eqLevel(q) {
+    var sc = (q.ks.some(function (k) { return k.k.n < 0; }) ? 1 : 0) + (q.a.n < 0 ? 1 : 0) + (q.ks.length > 1 ? 1 : 0) + (q.a.d > 1 ? 2 : 0) + (q.c.n < 0 ? 1 : 0);
+    return Math.max(0, Math.min(5, sc));
+  }
+  function exGen(lv) {
+    var X = function (n) { return { k: "x", n: mk(n[0], n[1] || 1) }; }, C = function (n) { return { k: "c", n: mk(n) }; }, big = lv >= 4 ? 9 : 6, a = nz(big > 6 ? 6 : 5), b = nz(big), c = nz(5), d = nz(big), m = 2 + rnd(4), parts;
+    if (lv === 0) { a = Math.abs(a); c = Math.abs(c); b = Math.abs(b); parts = [X([a]), C(b), X([c])]; }
+    else if (lv === 1) parts = [X([a]), C(b), X([c]), C(d)];
+    else if (lv === 2) { parts = [{ k: "g", m: mk(m), items: [X([1]), C(b)] }, X([c])]; if (rnd(2)) parts.push(C(d)); }
+    else if (lv === 3) parts = [{ k: "g", m: mk(rnd(2) ? m : -m), items: [X([a]), C(b)] }, X([c]), C(d)];
+    else { var f = [[1, 2], [3, 2], [1, 3], [5, 2]][rnd(4)]; parts = [{ k: "g", m: mk(rnd(2) ? m : -m), items: [X([a]), C(b)] }, X([rnd(2) ? f[0] : -f[0], f[1]]), C(d), X([c])]; }
+    for (var i = parts.length - 1; i > 0; i--) { var j = rnd(i + 1), t = parts[i]; parts[i] = parts[j]; parts[j] = t; }   // shuffle the order
+    return exFin(parts) ? exGen(lv) : parts;
+  }
+  function exLevel(its) {
+    var g = its.filter(function (t) { return t.k === "g"; }).length, ng = its.filter(function (t) { return (t.k === "g" ? t.m.n : t.n.n) < 0; }).length, fr = JSON.stringify(its).indexOf('"d":') >= 0 && its.some(function (t) { return t.k === "x" && t.n.d > 1; });
+    return Math.max(0, Math.min(4, g ? (fr ? 4 : ng ? 3 : 2) : ng ? 1 : 0));
+  }
+  function solverGo(dl, m) {
+    var max = EXP ? 4 : 5; SOL.lvl = Math.max(0, Math.min(max, SOL.lvl + dl)); SOL.fresh = false; SOL.keep = true;
+    if (EXP) { var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; }
+    else useCustom = solverEq(SOL.lvl, m === "demo");
+    $("modePick").hidden = true;
+    if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); }
+  }
+  $("dmHard").addEventListener("click", function () { dmUI("idle"); solverGo(1, mode); });
+  $("nxHard").addEventListener("click", function () { solverGo(1, mode); });
 
   // ---- Playground: Equation Solver: terms of one side can be rearranged (the commutative property of addition) by dragging.
   // A term carries its sign with it: dragging "2" out of 3x \u2212 2 gives \u22122 + 3x. Drop a term on the other side of the variable term, or on a term to swap places.
@@ -1564,7 +1627,7 @@
     if (!DM4.run) return;
     if (locked) {
       DM4.run = DM4.paused = false; dmUI("idle"); dmCap("Solved!");
-      var u = up; if (BUILT[act].solver) { dmFinish("Watch again", function () { dm4Begin(); }, "", null); return; }
+      var u = up; if (BUILT[act].solver) { solverFinish(); return; }
       dmFinish(u ? u.label : "Next", function () { if (u) { up = null; u.go(); } else dm4Begin(); }, u ? u.stayText : "", function () { dm4Begin(); });
       return;
     }
@@ -1796,6 +1859,9 @@
   function nxShow() {
     var nx = $("next"), ag = $("again"), stay = up && up.stayText || "";
     if (mode === "demo") { nx.hidden = true; ag.hidden = true; return; }   // the demo button carries it
+    if (BUILT[act].solver) {   // Next, then Harder, then the small Try another link
+      nx.textContent = nextLabel(); nx.hidden = false; nx.disabled = false; $("nxHard").hidden = false; $("nxHard").textContent = hardLabel(); ag.textContent = "Try another"; ag.hidden = false; return;
+    }
     nx.textContent = up ? up.label : EXP ? "Another expression" : BUILT[act].solver ? "Another equation" : "Next"; nx.hidden = false; nx.disabled = false;
     ag.textContent = stay; ag.hidden = !stay;
   }
@@ -1822,10 +1888,11 @@
       var b = $(p[0]), l = $(p[2]); b.textContent = label; b.classList.remove("on", "paused", "ready"); b.classList.add("next"); b.setAttribute("aria-pressed", "false");
       $(p[1]).hidden = true; l.textContent = stay || ""; l.hidden = !stay;
     });
+    $("dmHard").hidden = !BUILT[act].solver; $("dmHard").textContent = hardLabel();
   }
   function dmClickFinish() { var d = DMX; if (!d) return false; dmUI("idle"); d.go(); return true; }
   function dmUI(st) {
-    DMX = null;
+    DMX = null; $("dmHard").hidden = true;
     [["pgDemo", "pgEnd", "pgLink"], ["dmBtn", "dmEnd", "dmLink"]].forEach(function (p) {
       var b = $(p[0]), e = $(p[1]); if (!b) return;
       b.classList.remove("next"); $(p[2]).hidden = true;
@@ -1879,8 +1946,8 @@
     var plain = mode === "solo" || mode === "create";
     if (mode === "demo") { curDm = demoN % 2 + 1; demoN++; }
     if (mode === "create") orig = [];
-    else if (useCustom) { orig = useCustom; useCustom = null; }
-    else if (BUILT[act].solver && mode === "demo") { var sd = parseAny("3x-2=10"); orig = [sd]; }   // Playground: Equation Solver demonstrates 3x-2=10
+    else if (useCustom) { orig = useCustom; useCustom = null; if (BUILT[act].solver) { SOL.fresh = false; if (!SOL.keep) SOL.lvl = eqLevel(orig[0]); SOL.keep = false; } }
+    else if (BUILT[act].solver && mode === "demo" && SOL.fresh) { var sd = parseAny("3x-2=10"); orig = [sd]; }   // Playground: Equation Solver demonstrates 3x-2=10
     else orig = makeProblem();
     ws = wsFromOrig();
     sys = []; sysV = []; elim = ""; elimInfo = lesson === 3 && orig.length === 3 && ints(orig) ? bestElim(orig) : null;
@@ -2054,10 +2121,10 @@
   $("sheetX").addEventListener("click", function () { $("sheet").hidden = true; });
   $("next").addEventListener("click", function () {
     if (up) { var u = up; up = null; u.go(); return; }
-    if (EXP) { EXP = null; setMode("create"); return; }
+    if (BUILT[act].solver && mode !== "create") { solverGo(0, nextMode()); return; }
     newProblem();
   });
-  $("again").addEventListener("click", newProblem);
+  $("again").addEventListener("click", function () { if (BUILT[act].solver && mode !== "create") solverGo(0, mode); else newProblem(); });
   $("progBtn").addEventListener("click", openProg);
   $("progX").addEventListener("click", function () { $("prog").hidden = true; });
   $("prog").addEventListener("click", function (e) { if (e.target === this) this.hidden = true; });
@@ -3291,7 +3358,7 @@ var ESPIC = {
       if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
     if (id === act) return;
-    var wasSolver = !!BUILT[act].solver; EXP = null; act = id; gdCustom = null; if (BUILT[act].quiz || BUILT[act].solver) lesson = 1; if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
+    var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 1; act = id; gdCustom = null; if (BUILT[act].quiz || BUILT[act].solver) lesson = 1; if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     leaveQuiz();
