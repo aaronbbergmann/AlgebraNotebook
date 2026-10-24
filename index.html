@@ -120,6 +120,8 @@
   .exBox[hidden]{display:none}
   .exRow{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;line-height:1.3}
   .exOpc{cursor:pointer;color:var(--plus);font-weight:800;border-radius:6px;transition:transform .2s}.exOpc:hover{transform:scale(1.4);background:color-mix(in srgb,var(--plus) 20%,transparent)}
+  .exEq{padding:0 .5em}.exEq.grab:hover{background:color-mix(in srgb,var(--plus) 20%,transparent)}
+  .exCo{border-radius:6px;cursor:grab;touch-action:none;border-bottom:2px dashed var(--plus)}
   .exOp{padding:0 .3em}.exRow>.exOp:first-child{padding:0 .02em 0 0}.exT{padding:0 .1em;border-radius:6px;white-space:nowrap;transition:background .3s}
   .exT i{font-style:italic}.exT.hot{background:color-mix(in srgb,var(--plus) 30%,transparent)}
   .exAsk{font:600 1.1rem system-ui,sans-serif;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:center}
@@ -761,13 +763,16 @@
     o[N - 1] = q.raw || sg(q.c);
     return o;
   }
-  function fmt(q, vs) { if (SUB()) return fmtSub(toExpr(q)); return cells(q, vs).join(" ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
+  function fmt(q, vs) { if (SUB()) return fmtSub(toExpr(q)); var o = cells(q, vs); if (q.flip && lesson === 1) o = [o[o.length - 1], "="].concat(o.slice(0, o.length - 2)); return o.join(" ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
 
   function mkRow(q, live, vs) {
     var r = document.createElement("div"), N = 2 * vs.length + 3; r.className = "eqn";
     r.innerHTML = cells(q, vs).map(function (h, j) {
       return j === N - 2 && live && lesson !== 1 ? "<button class=\"eq\" aria-label=\"Equals sign: click to multiply, drag onto another equation to add\">=</button>" : "<span>" + h + "</span>";
     }).join("");
+    if (q.flip && lesson === 1) {   // the number and the = come first, then the variable side (10 = 3x - 2); the cells stay in their usual order underneath
+      var kids = r.children; r.classList.add("flip"); kids[N - 1].style.order = 0; kids[N - 2].style.order = 1; for (var jj = 0; jj < N - 2; jj++) kids[jj].style.order = jj + 2;
+    }
     return r;
   }
   // an original (or 2-variable) row: each variable is a place to drop a solved value
@@ -805,13 +810,14 @@
   }
 
   // solved values live at the bottom; drag one up onto a matching variable in an equation
+  function flipped() { return lesson === 1 && !SUB() && !!(orig[0] && orig[0].flip); }   // typed with the variable on the right (10 = 3x - 2): the answer reads 4 = x
   function renderVals() {
     var V = $("vals"); V.innerHTML = "";
     allV().forEach(function (n) {
       var s = document.createElement("span");
-      if (!vals[n]) { s.className = "chip ph" + (introV ? " intro" : ""); s.innerHTML = "<i class=\"var\">" + n + "</i> ="; V.appendChild(s); return; }
+      if (!vals[n]) { s.className = "chip ph" + (introV ? " intro" : ""); s.innerHTML = flipped() ? "= <i class=\"var\">" + n + "</i>" : "<i class=\"var\">" + n + "</i> ="; V.appendChild(s); return; }
       s.className = "chip"; s.dataset.v = n;
-      s.className = "chip grab"; s.innerHTML = "<i class=\"var\">" + n + "</i> = " + sg(vals[n]);
+      s.className = "chip grab"; s.innerHTML = flipped() ? sg(vals[n]) + " = <i class=\"var\">" + n + "</i>" : "<i class=\"var\">" + n + "</i> = " + sg(vals[n]);
       s.addEventListener("pointerdown", function (e) {
         drag(e, s, null, function (t) { var p = t.dataset.drop.split(":"); substitute(n, p[1], +p[2], p[3]); }, "sub:");
       });
@@ -900,6 +906,7 @@
   function exPair(i, j) { var its = EXP.items; return i < j ? [its[i], its[j]] : [its[j], its[i]]; }
   function exRender(hot) {
     if (!EXP) return;
+    if (EXP.eq) { eqRender(hot); return; }
     var R = $("exRow"), its = EXP.items, live = (mode === "sequence" || mode === "calculate") && !locked;
     R.innerHTML = its.map(function (t, i) {
       var ng = (t.k === "g" ? t.m.n : t.n.n) < 0, op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + i + "\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "";
@@ -949,6 +956,7 @@
     askKind = "ex"; $("askT").textContent = label.replace(/ =$/, ":"); showInput(); $("askIn").placeholder = "e.g. 5x or −2"; EXP.ask = { kind: kind, i: i, j: j };
   }
   function exAskOK() {
+    if (EXP && EXP.eq) { eqAskOK(); return; }
     var k = EXP && EXP.ask; if (!k) return; var r = exParse($("askIn").value), its = EXP.items, ok = false, m = $("askErr");
     if (typeof r === "string") { m.textContent = "Type the result, like 5x or −2."; return; }
     var want = k.kind === "comb" ? [exCombineTo(k.i, k.j)[Math.min(k.i, k.j)]] : exDist(its[k.i]);
@@ -962,6 +970,7 @@
     else { var n = its.slice(); n.splice.apply(n, [k.i, 1].concat(exDist(its[k.i]))); exSet(n, "Distribute: " + A + " = " + exSay(exDist(its[k.i])) + "."); }
   }
   function exCheckSolo() {
+    if (EXP.eq) { eqCheckSolo(); return; }
     var r = exParse($("exSoloIn").value), m = $("exMsg"); ansTouched = true;
     if (typeof r === "string") { m.className = "bad"; m.textContent = r; return; }
     if (!exSame(exTot(r), exTot(EXP.items))) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
@@ -969,18 +978,27 @@
     EXP.items = r; exEnd(); $("exSolo").hidden = true;
   }
   function exUndo() {
-    if (!hist.length) return; EXP.items = JSON.parse(hist.pop()); locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false);
+    if (!hist.length) return;
+    if (EXP.eq) { eqUndo(); return; } EXP.items = JSON.parse(hist.pop()); locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false);
     clearLog(); exRender(); updUndo();
   }
   function exHide() { $("exBox").hidden = true; $("wsEl").style.display = ""; }
   function exBegin() {
     stopDemo(); closeAsk(false); stopParty(); busy = false; calc = null; $("modePick").hidden = true;
     orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
-    EXP.items = JSON.parse(JSON.stringify(EXP.orig)); EXP.ask = null; logEl.innerHTML = ""; DM4.brk = false;
+    if (EXP.eq) { EXP.L = JSON.parse(JSON.stringify(EXP.orig.L)); EXP.R = JSON.parse(JSON.stringify(EXP.orig.R)); } else EXP.items = JSON.parse(JSON.stringify(EXP.orig));
+    EXP.ask = null; logEl.innerHTML = ""; DM4.brk = false;
     $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
     $("top").style.display = "none"; $("vals").style.display = "none"; $("creator").hidden = true; $("answer").hidden = true; $("wsEl").style.display = "none";
     $("exBox").hidden = false; $("exSolo").hidden = mode !== "solo"; $("exMsg").textContent = ""; $("exSoloIn").value = "";
+    $("exSolo").firstElementChild.textContent = EXP.eq ? (EXP.vk || "x") + " =" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? "e.g. 3 or no solution" : "";
     exRender(); updUndo();
+    if (EXP.eq) {
+      if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this equation solved."); }
+      else if (mode === "solo") note("Solve it on your own, then type your answer.");
+      else note("Drag a term across the = to move it to the other side (its sign changes). Drop it on a like term to combine them. Drag the number in front of x across to divide." + (mode === "calculate" ? " You will be asked for each result." : ""));
+      return;
+    }
     if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this expression simplified."); }
     else if (mode === "solo") note("Simplify it on your own, then type your answer.");
     else note("Drag a term onto a like term to combine them. Drag any other term to move it, and its sign goes with it. Click parentheses to distribute." + (mode === "calculate" ? " You will be asked for each result." : ""));
@@ -991,6 +1009,7 @@
     DM4.paused = false; dmUI("playing"); dmCap(""); exDemoStep(300);
   }
   function exDemoStep(ms) {
+    if (EXP && EXP.eq) { eqDemoStep(ms); return; }
     clearTimeout(DM4.t);
     DM4.t = setTimeout(function () {
       if (!EXP || !DM4.run || DM4.paused || locked) return;
@@ -1016,6 +1035,202 @@
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your expression is in. Choose how you want to work on it.");
   }
 
+  // ---- Playground: Equation Solver: equations with the variable on both sides (3x = x + 2), solved as typed ----
+  // Same session object as an expression (EXP) with eq: true, L and R: the two sides, each a list of terms. Drag a term onto the other side (onto the = or onto a term there):
+  // it crosses with its sign changed (the same as adding or subtracting it on both sides) and joins a like term if it lands on one. A side that loses its last term keeps a 0.
+  function eqClone() { return { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; }
+  function eqNorm(its) { var r = its.filter(function (t) { return t.k === "g" || t.n.n !== 0; }); return r.length ? r : [{ k: "c", n: mk(0) }]; }
+  function eqOther(S) { return S === "L" ? "R" : "L"; }
+  function eqVars(its, o) { its.forEach(function (t) { if (t.k === "g") eqVars(t.items, o); else if (t.k === "x") o[t.v || "x"] = 1; }); return o; }
+  function eqKind() {   // "one" (x = 4 or 4 = x), "none", "inf", or "" while there is more to do
+    if (EXP.L.length !== 1 || EXP.R.length !== 1) return "";
+    var a = EXP.L[0], b = EXP.R[0]; if (a.k === "g" || b.k === "g") return "";
+    if (a.k === "c" && b.k === "c") return same(a.n, b.n) ? "inf" : "none";
+    var x = a.k === "x" ? a : b, c = a.k === "x" ? b : a;
+    return x.k === "x" && c.k === "c" && same(x.n, mk(1)) ? "one" : "";
+  }
+  function eqSolution(L, R) {   // { kind, x } from the equation as first typed
+    var l = exTot(L), r = exTot(R), vk = Object.keys(eqVars(L, eqVars(R, {})))[0], a = add(l[vk] || mk(0), neg(r[vk] || mk(0))), c = add(r[""] || mk(0), neg(l[""] || mk(0)));
+    return a.n ? { kind: "one", x: mul(c, inv(a)) } : { kind: c.n ? "none" : "inf" };
+  }
+  function eqDivReady() {   // one side is just a x-term with a coefficient and the other side is just a number
+    if (EXP.L.length !== 1 || EXP.R.length !== 1) return null;
+    var sides = ["L", "R"];
+    for (var q = 0; q < 2; q++) { var t = EXP[sides[q]][0], c = EXP[sides[1 - q]][0]; if (t.k === "x" && c.k === "c" && !same(t.n, mk(1))) return { S: sides[q], O: sides[1 - q] }; }
+    return null;
+  }
+  function eqSideHtml(S, hot, live, dv) {
+    var its = EXP[S];
+    return its.map(function (t, i) {
+      var ng = (t.k === "g" ? t.m.n : t.n.n) < 0;
+      var op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + S + i + "\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "";
+      var body = dv && dv.S === S ? (function () { var a = mk(Math.abs(t.n.n), t.n.d); return "<span class=\"exCo\" title=\"Drag me to the other side to divide\">" + exFr(a) + "</span>" + exVarHtml(t.v || "x"); })() : exTerm(t);
+      return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live ? " pend" : "") + (hot && hot.indexOf(S + i) >= 0 ? " hot" : "") + "\" data-s=\"" + S + "\" data-i=\"" + i + "\" data-drop=\"et:" + S + ":" + i + "\">" + body + "</span>";
+    }).join("");
+  }
+  function eqRender(hot) {
+    var R = $("exRow"), live = (mode === "sequence" || mode === "calculate") && !locked, dv = live ? eqDivReady() : null;
+    R.innerHTML = eqSideHtml("L", hot, live, dv) + "<span class=\"exEq" + (live ? " grab" : "") + "\" data-drop=\"eq=\">=</span>" + eqSideHtml("R", hot, live, dv);
+    if (!live) return;
+    var dropOf = function (S, i) { return function (t) { if (t.dataset.drop === "eq=") eqDrop(S, i, eqOther(S), -1); else { var p = t.dataset.drop.split(":"); eqDrop(S, i, p[1], +p[2]); } }; };
+    [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var S = el.dataset.op[0], k = +el.dataset.op.slice(1); eqDrop(S, k - 1, S, k); }); });
+    [].forEach.call(R.querySelectorAll(".exT"), function (el) {
+      var S = el.dataset.s, i = +el.dataset.i, t = EXP[S][i];
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; drag(e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, dropOf(S, i), ["et:", "eq="]); });
+      var co = el.querySelector(".exCo");
+      if (co) co.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, co, null, function () { eqDivide(); }, ["et:", "eq="]); });
+    });
+  }
+  function eqBuild(S, i, S2, j) {
+    var N = eqClone(), t = N[S][i], tg = j >= 0 ? N[S2][j] : null, msg = "", want = null, label = "";
+    if (!t || t.k === "g") return null;
+    if (S === S2) {
+      if (!tg || i === j) return null;
+      if (exLike(t, tg)) {
+        want = exSum(t, tg); label = exSay(i < j ? [t, tg] : [tg, t]); msg = label + " = " + exSay([want]);
+        var lo = Math.min(i, j), hi = Math.max(i, j); N[S].splice(hi, 1); N[S].splice(lo, 1, want);
+      } else { N[S].splice(i, 1); var at = N[S].indexOf(tg); N[S].splice(i < j ? at + 1 : at, 0, t); }
+    } else {
+      var f = JSON.parse(JSON.stringify(t)); f.n = neg(t.n); var ab2 = JSON.parse(JSON.stringify(t)); ab2.n = mk(Math.abs(t.n.n), t.n.d);
+      msg = (t.n.n > 0 ? "Subtract " : "Add ") + exSay([ab2]) + (t.n.n > 0 ? " from" : " to") + " both sides.";
+      N[S].splice(i, 1);
+      if (tg && exLike(f, tg)) { want = exSum(tg, f); label = exSay([tg, f]); msg += " " + label + " = " + exSay([want]); N[S2].splice(j, 1, want); }
+      else if (tg) N[S2].splice(j + 1, 0, f); else N[S2].push(f);
+    }
+    N.L = eqNorm(N.L); N.R = eqNorm(N.R);
+    return { N: N, msg: msg, want: want, label: label };
+  }
+  function eqDrop(S, i, S2, j) {
+    if (locked || busy || EXP.ask) return;
+    var b = eqBuild(S, i, S2, j); if (!b) return;
+    if (b.want && mode === "calculate") { eqAsk({ kind: "term", b: b }, b.label + " ="); return; }
+    eqSet(b.N, b.msg);
+  }
+  function eqDistribute(S, i) {
+    if (locked || busy || EXP.ask) return;
+    var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R);
+    var msg = "Distribute: " + exSay([g]) + " = " + exSay(d) + ".";
+    if (mode === "calculate") { eqAsk({ kind: "dist", b: { N: N, msg: msg }, d: d }, exSay([g]) + " ="); return; }
+    eqSet(N, msg);
+  }
+  function eqDivide() {
+    var s = eqDivReady(); if (!s || locked || busy || EXP.ask) return;
+    var N = eqClone(), t = N[s.S][0], c = N[s.O][0], a = t.n, q = mul(c.n, inv(a));
+    t.n = mk(1); c.n = q;
+    var b = { N: N, msg: "Divide both sides by " + sg(a) + ": " + sg(EXP[s.O][0].n) + " ÷ " + sg(a) + " = " + sg(q) + ".", want: { k: "c", n: q } };
+    if (mode === "calculate") { eqAsk({ kind: "term", b: b }, sg(EXP[s.O][0].n) + " ÷ " + sg(a) + " ="); return; }
+    eqSet(N, b.msg);
+  }
+  function eqAsk(info, label) {
+    if (!$("ask").hidden) closeAsk(true);
+    askKind = "ex"; $("askT").textContent = label.replace(/ =$/, ":"); showInput(); $("askIn").placeholder = "e.g. 5x or −2"; EXP.ask = info;
+  }
+  function eqAskOK() {
+    var k = EXP && EXP.ask; if (!k) return; var r = exParse($("askIn").value), m = $("askErr");
+    if (typeof r === "string") { m.textContent = "Type the result, like 5x or −2."; return; }
+    var ok;
+    if (k.kind === "term") {
+      var w = k.b.want, t = r[0];
+      ok = r.length === 1 && t.k !== "g" && (w.n.n === 0 ? t.n.n === 0 : exKey(t) === exKey(w) && same(t.n, w.n));
+    } else {
+      var key = function (t) { return exKey(t) + ":" + t.n.n + "/" + t.n.d; };
+      ok = r.every(function (t) { return t.k !== "g"; }) && JSON.stringify(r.map(key).sort()) === JSON.stringify(k.d.map(key).sort());
+    }
+    if (!ok) { m.textContent = "Not quite. Check your work and try again."; $("askIn").select(); return; }
+    eqSet(k.b.N, k.b.msg);
+  }
+  function eqSet(N, msg) {
+    hist.push(JSON.stringify({ L: EXP.L, R: EXP.R })); updUndo();
+    EXP.L = N.L; EXP.R = N.R; closeAsk(false); eqRender(); if (msg) note(msg);
+    var k = eqKind(); if (k) eqEnd(k); else if (!msg) clearLog();
+  }
+  function eqEnd(kind) {
+    locked = true; eqRender(); closeAsk(false);
+    var txt = kind === "one" ? "Solved: " + exSay(EXP.L) + " = " + exSay(EXP.R) + "." : kind === "none" ? "No solution: the two sides can never be equal." : "Infinitely many solutions: the two sides are always equal.";
+    if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note(txt);
+    if (mode === "demo") { onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(kind === "one" ? "Solved!" : kind === "none" ? "No solution" : "Infinitely many"); solverFinish(); }
+    else { tally(); nxShow(); }
+  }
+  function eqUndo() {
+    var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
+  }
+  function eqCheckSolo() {
+    var m = $("exMsg"), txt = $("exSoloIn").value.toLowerCase().replace(/−/g, "-").replace(/\s+/g, ""), want = eqSolution(EXP.orig.L, EXP.orig.R), ok = false;
+    ansTouched = true;
+    var vk = Object.keys(eqVars(EXP.L, eqVars(EXP.R, {})))[0] || "x";
+    if (/^(no|none|nosolution)/.test(txt)) ok = want.kind === "none";
+    else if (/^(all|inf|many)/.test(txt)) ok = want.kind === "inf";
+    else { var v = parse(txt.replace(new RegExp("^" + vk + "="), "")); if (!v) { m.className = "bad"; m.textContent = "Type a number like 3, −2 or 1/2, or \"no solution\" or \"infinitely many\"."; return; } ok = want.kind === "one" && same(v, want.x); }
+    if (!ok) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
+    EXP.L = [{ k: "x", v: vk, n: mk(1) }]; EXP.R = [{ k: "c", n: want.x || mk(0) }];
+    if (want.kind !== "one") { EXP.L = [{ k: "c", n: mk(0) }]; EXP.R = [{ k: "c", n: mk(want.kind === "none" ? 1 : 0) }]; }
+    eqEnd(want.kind); $("exSolo").hidden = true;
+  }
+  function eqDemoStep(ms) {
+    clearTimeout(DM4.t);
+    DM4.t = setTimeout(function () {
+      if (!EXP || !DM4.run || DM4.paused || locked) return;
+      var step = eqNextStep(); if (!step) return;
+      eqRender(step.hot); dmCap(step.cap);
+      DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused) return; step.run(); if (!locked) eqDemoStep(900); }, 1300);
+    }, ms);
+  }
+  function eqNextStep() {
+    var sides = ["L", "R"], q, i, j, S;
+    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return { hot: [S + i], cap: "Distribute.", run: (function (S, i) { return function () { var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, "Distribute: " + exSay([g]) + " = " + exSay(d) + "."); }; })(S, i) }; }
+    for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { hot: [S + i, S + j], cap: "Combine like terms.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
+    var xi = function (S) { return EXP[S].findIndex(function (t) { return t.k === "x"; }); }, ci = function (S) { return EXP[S].findIndex(function (t) { return t.k === "c"; }); };
+    var xl = xi("L"), xr = xi("R");
+    if (xl >= 0 && xr >= 0) {   // x on both sides: move the smaller x term onto the larger, so the x that is left is positive
+      var big = EXP.L[xl].n.n * EXP.R[xr].n.d - EXP.R[xr].n.n * EXP.L[xl].n.d > 0, from = big ? "R" : "L", to = big ? "L" : "R", fi = big ? xr : xl, ti = big ? xl : xr;
+      return { hot: [from + fi, to + ti], cap: "Get the x terms together.", run: function () { var b = eqBuild(from, fi, to, ti); eqSet(b.N, b.msg); } };
+    }
+    var xs = xl >= 0 ? "L" : "R", os = eqOther(xs), cx = ci(xs);
+    if (cx >= 0 && xi(xs) >= 0 && EXP[xs].length > 1) { var tj = ci(os); return { hot: [xs + cx, os + tj], cap: "Move the number to the other side.", run: function () { var b = eqBuild(xs, cx, os, tj); eqSet(b.N, b.msg); } }; }
+    if (eqDivReady()) return { hot: [xs + "0"], cap: "Divide both sides.", run: function () { eqDivide(); } };
+    return null;
+  }
+  // a variant: x on both sides, with an integer answer
+  function eqGen(lv) {
+    for (;;) {
+      var X = function (n, d) { return { k: "x", v: "x", n: mk(n, d || 1) }; }, C = function (n) { return { k: "c", n: mk(n) }; };
+      var x0 = nz(6), a = nz(lv >= 3 ? 7 : 5), b = nz(lv >= 3 ? 7 : 5), d = nz(8), e, L, R, m = 2 + rnd(4);
+      if (lv <= 1) { a = Math.abs(a); b = Math.abs(b); }
+      if (a === b) continue;
+      if (lv === 0) { a = 2 + rnd(4); b = 1 + rnd(a - 1); e = (a - b) * x0; L = [X(a)]; R = [X(b), C(e)]; }
+      else if (lv <= 2) { e = (a - b) * x0 + d; L = [X(a), C(d)]; R = [X(b), C(e)]; }
+      else if (lv === 3) { if (m === b) continue; e = (m - b) * x0 + m * d; L = [{ k: "g", m: mk(m), items: [X(1), C(d)] }]; R = [X(b), C(e)]; }
+      else { var q = [2, 3, 4][rnd(3)], p = nz(5); if (p % q === 0 || q * 0 !== 0) continue; x0 = q * nz(3); var f = mk(p, q); e = add(add(mul(f, mk(x0)), neg(mk(b * x0))), mk(d)); if (e.d !== 1) continue; e = e.n; L = [{ k: "x", v: "x", n: f }, C(d)]; R = [X(b), C(e)]; }
+      if (!e) continue;
+      if (lv >= 2 && rnd(5) < 2) { var tt = L; L = R; R = tt; }
+      if (lv >= 2) { if (rnd(2)) L.reverse(); if (rnd(2)) R.reverse(); }
+      EXP.L = L; EXP.R = R; var done = eqKind(); if (done) continue;
+      return { L: L, R: R };
+    }
+  }
+  function eqLevelOf(L, R) {
+    var all = L.concat(R), s = JSON.stringify(all);
+    return all.some(function (t) { return t.k === "g"; }) ? 3 : all.some(function (t) { return t.k === "x" && t.n.d > 1; }) ? 4 : all.some(function (t) { return t.n && t.n.n < 0; }) ? 2 : L.some(function (t) { return t.k === "c"; }) && R.some(function (t) { return t.k === "c"; }) ? 1 : 0;
+  }
+  function eqCreate() {
+    var s = $("crIn").value.toLowerCase().replace(/−/g, "-"), p = s.split("="), err = $("crErr");
+    if (p.length !== 2 || !p[0].trim() || !p[1].trim()) { err.textContent = "Type an equation with one = sign, like 3x=x+2."; return; }
+    var L = exParse(p[0]), R = exParse(p[1]);
+    if (typeof L === "string" || typeof R === "string") { err.textContent = typeof L === "string" ? L : R; return; }
+    var vs = Object.keys(eqVars(L, eqVars(R, {})));
+    if (!vs.length) { err.textContent = "That equation needs a variable."; return; }
+    if (vs.length > 1 || /[\^]/.test(s) || vs.some(function (v) { return /\^/.test(v); })) { err.textContent = "Use one variable, to the first power, like 3x=x+2."; return; }
+    var keep = EXP; EXP = { eq: true, L: L, R: R, ask: null }; var k = eqKind();
+    if (k) { EXP = keep; err.textContent = "That one is already solved. Type an equation that still needs work."; return; }
+    EXP = { eq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)) }, L: L, R: R, ask: null, vk: vs[0] };
+    SOL.lvl = eqLevelOf(L, R); SOL.fresh = false;
+    $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
+  }
+  function eqWanted(s) {   // is this typed equation one for this module? (the variable on both sides, or a variable inside parentheses)
+    s = s.toLowerCase(); var p = s.split("="); if (p.length !== 2) return false;
+    return (/[a-z]/.test(p[0]) && /[a-z]/.test(p[1])) || /\([^)]*[a-z][^)]*\)/.test(s);
+  }
+
   // ---- Playground: Equation Solver: Next / Harder / Try another ----
   // When a problem is finished: Next (plum red, "Try in [next mode] Mode"), "Harder Equation" directly below it, and a small "Try another" link.
   // The Next button is the demo button in Demo (Start Demo, Pause demo, Resume demo ... and, when the demo is over, Next) and the right panel's Next in the other modes.
@@ -1024,7 +1239,7 @@
   function solverFinish() { var m = nextMode(); dmFinish(nextLabel(), function () { solverGo(0, m); }, "Try another", function () { solverGo(0, "demo"); }); }
   function nextMode() { return SOLMODES[(SOLMODES.indexOf(mode) + 1) % SOLMODES.length]; }
   function nextLabel() { return MODES[nextMode()] + " Mode"; }
-  function hardLabel() { return EXP ? "Harder Expression" : "Harder Equation"; }
+  function hardLabel() { return EXP && !EXP.eq ? "Harder Expression" : "Harder Equation"; }
   function solverEq(lv, demo) {   // a variant of the given difficulty; whole-number coefficients when the Demo has to walk through it
     if (demo && lv > 4) lv = 4;
     for (;;) {
@@ -1044,13 +1259,13 @@
       else ks = [{ v: rnd(2) ? "p" : "s", k: mk(k1) }];
       if (lv === 5 && rnd(2)) ks = [{ v: "p", k: mk(k1) }, { v: "s", k: mk(k2) }];
       sum = ks.reduce(function (t, k) { return add(t, k.k); }, mk(0));
-      q.ks = ks; q.c = add(mul(q.a, mk(x)), sum);
+      q.ks = ks; q.c = add(mul(q.a, mk(x)), sum); if (lv >= 2 && rnd(5) < 2) q.flip = true;   // harder: the variable on the right, like 10 = 3x - 2
       if (!q.c.n) continue;
       return [q];
     }
   }
   function eqLevel(q) {
-    var sc = (q.ks.some(function (k) { return k.k.n < 0; }) ? 1 : 0) + (q.a.n < 0 ? 1 : 0) + (q.ks.length > 1 ? 1 : 0) + (q.a.d > 1 ? 2 : 0) + (q.c.n < 0 ? 1 : 0);
+    var sc = (q.ks.some(function (k) { return k.k.n < 0; }) ? 1 : 0) + (q.a.n < 0 ? 1 : 0) + (q.ks.length > 1 ? 1 : 0) + (q.a.d > 1 ? 2 : 0) + (q.c.n < 0 ? 1 : 0) + (q.flip ? 1 : 0);
     return Math.max(0, Math.min(5, sc));
   }
   function exGen(lv) {
@@ -1071,7 +1286,8 @@
   }
   function solverGo(dl, m) {
     var max = EXP ? 4 : 5; SOL.lvl = Math.max(0, Math.min(max, SOL.lvl + dl)); SOL.fresh = false; SOL.keep = true;
-    if (EXP) { var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; }
+    if (EXP && EXP.eq) { var g2 = eqGen(SOL.lvl); EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)) }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; }
+    else if (EXP) { var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; }
     else useCustom = solverEq(SOL.lvl, m === "demo");
     $("modePick").hidden = true;
     if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); }
@@ -1120,7 +1336,7 @@
       if (e.target !== r) return;
       drag(e, r, function () { openAsk(i, "mul"); }, function (t) { var j = +t.dataset.drop.slice(4); if (j !== i) addEq(i, j); });
     });
-    function sameRowRight(t, ev) { return t.dataset.drop.indexOf("row:") === 0 && +t.dataset.drop.slice(4) === i && ev.clientX > eq.getBoundingClientRect().right; }
+    function sameRowRight(t, ev) { return t.dataset.drop.indexOf("row:") === 0 && +t.dataset.drop.slice(4) === i && (q.flip && lesson === 1 ? ev.clientX < eq.getBoundingClientRect().left : ev.clientX > eq.getBoundingClientRect().right); }
     vs.forEach(function (v, k) {
       var co = c[2 * k].querySelector(".co");
       if (!co || !q[CK[v]].n) return;
@@ -1205,7 +1421,7 @@
 
   // ---- operations ----
   function snap() { hist.push([JSON.stringify([ws, vals, sys, sysV, elim]), steps.length, ops]); updUndo(); }
-  function vlines() { return allV().filter(function (n) { return vals[n]; }).map(function (n) { return n + " = " + sg(vals[n]); }); }
+  function vlines() { return allV().filter(function (n) { return vals[n]; }).map(function (n) { return flipped() ? sg(vals[n]) + " = " + n : n + " = " + sg(vals[n]); }); }
   function lines() {
     var L = ws.map(function (q) { return fmt(q); });
     if (sys.length < 2) L = L.concat(sys.map(function (q) { return fmt(q, sysV); }));
@@ -1904,7 +2120,7 @@
     ag.textContent = stay; ag.hidden = !stay;
   }
   function onSolved() {
-    tally(); nxShow(); if (mode !== "demo") $("next").focus();
+    tally(); nxShow(); if (mode !== "demo" && !BUILT[act].solver) $("next").focus();   // (in Play Solver Next changes the mode, so Enter on the last answer must not land on it)
   }
   var useCustom = null;
   function ints(E) { return E.every(function (q) { return allV().every(function (v) { return q[CK[v]].d === 1; }); }); }
@@ -2056,6 +2272,7 @@
     var L = parseSide(p[0]), R = parse(p[1]), first = (p[0].match(/[+-]?[^+-]+/) || [""])[0];
     if (!L || !R || L.y.n || L.z.n || !L.x.n) return bad;
     var q = { a: L.x, b: mk(0), e: mk(0), ks: [], c: R };
+    if (FLIP) q.flip = true;   // the variable side is on the right of the = sign: 10 = 3x - 2 is solved as typed
     if (L.k.n) { var pre = !/x/.test(first); q.ks = [{ v: pre ? "p" : "s", k: L.k, pa: pa && !pre && L.k.n < 0 }]; }
     return q;
   }
@@ -2091,6 +2308,7 @@
   }
   function crAdd() {
     if (BUILT[act].solver && lesson === 1 && $("crIn").value.indexOf("=") < 0) { exCreate(); return; }
+    if (BUILT[act].solver && lesson === 1 && eqWanted($("crIn").value)) { eqCreate(); return; }
     var r = parseAny($("crIn").value), err = $("crErr");
     if (typeof r === "string") { err.textContent = r; return; }
     var E = orig.concat([r]);
@@ -2099,7 +2317,7 @@
     if (orig.length < allV().length) { crPrompt(); return; }
     elimInfo = lesson === 3 && ints(orig) ? bestElim(orig) : null;
     $("creator").hidden = true;
-    { $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation" + (orig.length > 1 ? "s are" : " is") + " in" + (FLIP && lesson === 1 ? ", written with x on the left: " + fmt(orig[0], dv()) + " (swapping the two sides does not change the answer)" : "") + ". Choose how you want to work on " + (orig.length > 1 ? "them." : "it.")); }
+    { $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation" + (orig.length > 1 ? "s are" : " is") + " in" + ". Choose how you want to work on " + (orig.length > 1 ? "them." : "it.")); }
   }
 
   // the demo button names the step it is about to do
