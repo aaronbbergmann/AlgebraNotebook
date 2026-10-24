@@ -1273,26 +1273,28 @@
   var distT = [];
   function distHide() { distT.forEach(clearTimeout); distT = []; var d = $("distBox"); if (d) d.remove(); grHide(); }
   function distShow2(g) {   // (A)(B): the area model as a 2 x 2 square: one expression down the left, one across the top, the four products in the boxes
-    var A = g.items, B = g.b, nb = B.length, d = exDist(g), term = function (t) { return (t.n.n < 0 ? "\u2212" : "") + exTerm(t); };
+    var A = g.items, B = g.b, nb = B.length, d = exDist(g), term = function (t) { return "<span>" + (t.n.n < 0 ? "\u2212" : "") + exTerm(t) + "</span>"; };
     var corner = g.m.n === 1 && g.m.d === 1 ? "" : (g.m.n < 0 ? "\u2212" : "") + exFr(mk(Math.abs(g.m.n), g.m.d));
     var h = "<div class=\"dgrid\" style=\"grid-template-columns:auto repeat(" + nb + ",auto)\"><span class=\"dcorner\">" + corner + "</span>" + B.map(function (t, j) { return "<span class=\"dtop\" data-j=\"" + j + "\">" + term(t) + "</span>"; }).join("") +
       A.map(function (t, i) { return "<span class=\"dleft\" data-i=\"" + i + "\">" + term(t) + "</span>" + B.map(function (u, j) { return "<span class=\"dcell\"><span class=\"dp\" data-j=\"" + (i * nb + j) + "\">" + term(d[i * nb + j]) + "</span></span>"; }).join(""); }).join("") + "</div>";
     var el = document.createElement("div"); el.id = "distBox"; el.setAttribute("role", "img"); el.setAttribute("aria-label", "Multiplying " + exSay([g]) + " gives " + exSay(d)); el.innerHTML = h; document.body.appendChild(el);
     var st = document.querySelector(".stage").getBoundingClientRect(); el.style.left = (st.left + st.width / 2) + "px"; el.style.bottom = Math.max(10, innerHeight - st.bottom + 14) + "px";
+    if (d.length > 4) { var base = Math.min(33.6, Math.max(20.8, innerWidth * 0.032)), fitH = st.height * 0.62 / ((A.length + 1) * 2.1), fitW = st.width * 0.92 / ((nb + 1) * 3.8); el.style.fontSize = Math.max(11, Math.min(base, fitH, fitW)) + "px"; }   // a 3 x 4 or 4 x 4 square shrinks to stay on the stage
     var quick = window.matchMedia && matchMedia("(prefers-reduced-motion:reduce)").matches, at = function (ms, fn) { distT.push(setTimeout(fn, ms)); };
+    var per = d.length <= 4 ? 900 : Math.max(360, Math.round(900 - (d.length - 4) * 45));   // more boxes, a quicker pace
     at(20, function () { el.classList.add("on"); });
     d.forEach(function (t, idx) {
-      var i = Math.floor(idx / nb), j = idx % nb, top = el.querySelector(".dtop[data-j=\"" + j + "\"]"), left = el.querySelector(".dleft[data-i=\"" + i + "\"]"), p = el.querySelector(".dp[data-j=\"" + idx + "\"]"), t0 = quick ? 0 : 700 + idx * 900;
+      var i = Math.floor(idx / nb), j = idx % nb, top = el.querySelector(".dtop[data-j=\"" + j + "\"]"), left = el.querySelector(".dleft[data-i=\"" + i + "\"]"), p = el.querySelector(".dp[data-j=\"" + idx + "\"]"), t0 = quick ? 0 : 700 + idx * per;
       at(t0, function () { top.classList.add("hl"); left.classList.add("hl"); });
-      at(t0 + (quick ? 0 : 400), function () { p.classList.add("show"); });
-      at(t0 + (quick ? 0 : 850), function () { top.classList.remove("hl"); left.classList.remove("hl"); });
+      at(t0 + (quick ? 0 : Math.round(per * 0.45)), function () { p.classList.add("show"); });
+      at(t0 + (quick ? 0 : Math.round(per * 0.94)), function () { top.classList.remove("hl"); left.classList.remove("hl"); });
     });
-    var end = (quick ? 0 : 700 + d.length * 900) + 2200; at(end, function () { el.classList.remove("on"); }); at(end + 450, distHide);
+    var end = (quick ? 0 : 700 + d.length * per) + 2200; at(end, function () { el.classList.remove("on"); }); at(end + 450, distHide);
   }
   function distShow(g) {
     distHide(); if (!g || g.k !== "g" || g.items.some(function (t) { return t.k === "g"; })) return;
     if (g.b) { distShow2(g); return; }
-    var sgn = function (n) { return (n.n < 0 ? "\u2212" : "") + (n.s && sSig(n.s) ? litHtml({ k: "c", n: mk(Math.abs(n.n), n.d), s: n.s }, false) : exFr(mk(Math.abs(n.n), n.d))); }, term = function (t) { return (t.n.n < 0 ? "\u2212" : "") + exTerm(t); }, d = exDist(g), n = g.items.length;
+    var sgn = function (n) { return (n.n < 0 ? "\u2212" : "") + (n.s && sSig(n.s) ? litHtml({ k: "c", n: mk(Math.abs(n.n), n.d), s: n.s }, false) : exFr(mk(Math.abs(n.n), n.d))); }, term = function (t) { return "<span>" + (t.n.n < 0 ? "\u2212" : "") + exTerm(t) + "</span>"; }, d = exDist(g), n = g.items.length;
     var fc = !!g.fac, hid = fc ? " dh" : "";   // factoring plays the same box backwards: the terms sit inside the boxes first, then the common factor appears outside, and the terms left over appear on top last
     var h = "<div class=\"dgrid\" style=\"grid-template-columns:auto repeat(" + n + ",auto)\"><span></span>" + g.items.map(function (t, j) { return "<span class=\"dtop" + hid + "\" data-j=\"" + j + "\">" + term(t) + "</span>"; }).join("") + "<span class=\"dleft" + hid + "\">" + sgn(g.m) + "</span>" + d.map(function (t, j) { return "<span class=\"dcell\"><span class=\"dp" + (fc ? " show" : "") + "\" data-j=\"" + j + "\">" + term(t) + "</span></span>"; }).join("") + "</div>";
     var el = document.createElement("div"); el.id = "distBox"; el.setAttribute("role", "img"); el.setAttribute("aria-label", fc ? "Factoring " + exSay(d) + " gives " + exSay([g]) : "Distributing " + exSay([g]) + " gives " + exSay(d)); el.innerHTML = h; document.body.appendChild(el);
@@ -2189,7 +2191,16 @@
   function exGen(lv) {
     var KS = ["x", "y", "x^2", "y^2"], kv = lv >= 1 ? KS[rnd(4)] : "x", other = { x: "x^2", y: "y^2", "x^2": "x", "y^2": "y" }[kv];
     var X = function (n) { return { k: "x", v: kv, n: mk(n[0], n[1] || 1) }; }, U = function (n) { return { k: "x", v: other, n: mk(n) }; }, C = function (n) { return { k: "c", n: mk(n) }; };
-    if (lv >= 8) return grGen(1 + rnd(2));   // factoring by grouping: x^2 + 5x + 3x + 15
+    if (lv >= 9) return grGen(1 + rnd(2));   // factoring by grouping: x^2 + 5x + 3x + 15
+    if (lv === 8) {   // bigger products, up to 4 x 4: (x + 1)(x^2 + 2x + 3), 3(x^2 + x + 1 + 2x^3), (x^3 + 2x^2 + 3x + 4)(x^3 - x^2 + 2x - 5)
+      var SH = [[1, 3], [1, 4], [2, 3], [3, 2], [3, 3], [2, 4], [4, 2], [3, 4], [4, 3], [4, 4]], sh = SH[rnd(SH.length)], mc = sh[0] * sh[1] > 9 ? 3 : 4;
+      var poly = function (n) {   // n terms with different powers of x, highest first
+        var dg = [], gap = rnd(3) === 0; for (var q8 = 0; q8 <= (gap ? n : n - 1); q8++) dg.push(q8); if (gap) dg.splice(rnd(dg.length - 1), 1);   // usually x^(n-1) down to the number, sometimes with a power skipped
+        return dg.reverse().map(function (e, i8) { var c8 = i8 === 0 && rnd(3) ? 1 + rnd(2) : nz(mc); return e === 0 ? { k: "c", n: mk(c8) } : { k: "x", v: e === 1 ? "x" : "x^" + e, n: mk(c8) }; });
+      };
+      if (sh[0] === 1) return [{ k: "g", m: mk((rnd(2) ? 1 : -1) * (2 + rnd(3))), items: poly(sh[1]) }];
+      return [{ k: "g", m: mk(1), items: poly(sh[0]), b: poly(sh[1]) }];
+    }
     if (lv === 7) {   // two sets of parentheses: (3x - 4)(x - 6)
       var pv = rnd(2) ? "x" : "y", Xp = function (n) { return { k: "x", v: pv, n: mk(n) }; }, Cp = function (n) { return { k: "c", n: mk(n) }; };
       var c1 = rnd(3) === 0 ? 2 : 1, a1 = rnd(2) ? 1 : 2 + rnd(2), b1 = nz(6), d1 = nz(6), m1 = rnd(5) === 0 ? -1 : 1;
@@ -2228,14 +2239,16 @@
   }
   function exLevel(its) {
     var g = its.filter(function (t) { return t.k === "g"; }).length, ng = its.filter(function (t) { return (t.k === "g" ? t.m.n : t.n.n) < 0; }).length, fr = JSON.stringify(its).indexOf('"d":') >= 0 && its.some(function (t) { return t.k === "x" && t.n.d > 1; });
-    if (its.some(function (t) { return t.k === "g" && t.b; })) return 7;
-    if (grOf(its)) return 8;
+    var gb = its.filter(function (t) { return t.k === "g" && t.b; })[0];
+    if (gb) return gb.items.length <= 2 && gb.b.length <= 2 ? 7 : 8;
+    if (its.some(function (t) { return t.k === "g" && t.items.length >= 3; })) return 8;
+    if (grOf(its)) return 9;
     if (!g && exFin(its) && facAll(its) >= 2) return 5;
     return Math.max(0, Math.min(4, g ? (fr ? 4 : ng ? 3 : 2) : ng ? 1 : 0));
   }
   function solverGo(dl, m) {
     SOL.fresh = false; SOL.keep = true;
-    if (EXP && !EXP.eq) { SOL.lvl = Math.max(0, Math.min(8, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 8; }   // expressions have their own eight levels (5 is factoring, 6 is factoring with letters, 7 is two sets of parentheses)
+    if (EXP && !EXP.eq) { SOL.lvl = Math.max(0, Math.min(9, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 9; }   // expressions have their own ten levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is factoring by grouping)
     else {
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
       if (st.e === "eq") {
