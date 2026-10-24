@@ -2641,33 +2641,105 @@
     ["A diver springs off a platform.", "their", '<svg class="estPic" viewBox="0 0 120 100" role="img" aria-hidden="true" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M0 82q10-5 20 0t20 0t20 0t20 0t20 0t20 0" stroke="var(--plus)" stroke-width="2.5"/><path d="M0 85h120v15H0z" fill="var(--plus)" fill-opacity=".18" stroke="none"/><path d="M5 32h44" stroke-width="5"/><path d="M12 33v47" stroke-width="4"/><path d="M12 56h8M12 68h8" stroke-width="2"/><path d="M47 26Q58 -2 82 14" stroke="var(--plus)" stroke-width="2" stroke-dasharray="3 5"/><path d="M58 28Q78 34 90 54" stroke-width="8"/><path d="M57 26l-6-4" stroke-width="4"/><circle cx="95" cy="60" r="6.5" fill="currentColor" stroke="none"/><path d="M86 52l15 19" stroke-width="3.5"/><path d="M82 55l6 14" stroke-width="3.5"/></svg>'],
     ["A frisbee is tossed upward in a park.", "its", '<svg class="estPic" viewBox="0 0 120 100" role="img" aria-hidden="true" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M0 94h120" stroke-width="2.5" stroke="#3d8f4f"/><path d="M12 94V66" stroke-width="3"/><circle cx="12" cy="52" r="14" fill="#3d8f4f" fill-opacity=".35" stroke-width="2"/><ellipse cx="82" cy="30" rx="16" ry="5" fill="var(--plus)" fill-opacity=".4" transform="rotate(-14 82 30)"/><path d="M56 92q22-86 40-62" stroke-width="2" stroke-dasharray="3 5"/><circle cx="48" cy="72" r="5" fill="currentColor" stroke="none"/><path d="M48 78v10M48 82l10-8" stroke-width="3"/></svg>']
   ];
-  // the height after x seconds is -16x^2 + bx + h0, with a new scenario, b, h0 and question time every time
-  function estMake(i) {
-    var h0 = [3, 4, 5, 6, 7, 9, 10, 12][rnd(8)], b = [32, 40][rnd(2)], t = [0.25, 0.75, 1.25, 1.75][rnd(4)], sc = ESC[rnd(ESC.length)];
-    var X = [0, 0.5, 1, 1.5, 2], Y = X.map(function (x) { return -16 * x * x + b * x + h0; });
-    return { x: X, y: Y, t: t, ans: -16 * t * t + b * t + h0, h0: h0, b: b, s: sc[0], pr: sc[1], pic: sc[2], q: "Height", u: "feet" };
+var ESPIC = {
+    snow: '<svg class="estPic" viewBox="0 0 120 100" role="img" aria-hidden="true" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M0 90h120" stroke-width="2.5"/><path d="M104 90V46" stroke-width="3"/><path d="M104 46h14v11h-14z" fill="var(--plus)" fill-opacity=".45" stroke-width="2"/><circle cx="46" cy="30" r="6.5" fill="currentColor" stroke="none"/><path d="M46 38l-4 24l10 16l8 11M42 62l-8 16l-6 11" stroke-width="3.5"/><ellipse cx="62" cy="91" rx="10" ry="3" stroke-width="2.5"/><ellipse cx="26" cy="91" rx="10" ry="3" stroke-width="2.5"/><path d="M44 44l14 8l8 36M44 44l-12 10l-12 33" stroke-width="2"/></svg>',
+    tank: '<svg class="estPic" viewBox="0 0 120 100" role="img" aria-hidden="true" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M0 94h120" stroke-width="2.5"/><path d="M30 14h52v60q0 6-6 6H36q-6 0-6-6z" stroke-width="3"/><path d="M30 44q6-5 13 0t13 0t13 0t13 0v30q0 6-6 6H36q-6 0-6-6z" fill="var(--plus)" fill-opacity=".35" stroke="var(--plus)" stroke-width="2"/><path d="M38 80v14M74 80v14M82 66h22v12" stroke-width="3"/><path d="M104 86v4" stroke="var(--plus)" stroke-width="3"/><path d="M38 28v32" stroke-width="1.5" opacity=".5"/></svg>',
+    hike: '<svg class="estPic" viewBox="0 0 120 100" role="img" aria-hidden="true" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M0 94h120" stroke-width="2.5"/><path d="M40 94l30-52l16 22l12-14l22 44z" fill="currentColor" fill-opacity=".12" stroke-width="2.5"/><path d="M70 42l-6 9l6-3l5 5z" fill="#fff" stroke-width="1.5"/><circle cx="24" cy="46" r="6.5" fill="currentColor" stroke="none"/><path d="M24 54v20l-9 18M24 74l9 18" stroke-width="3.5"/><rect x="26" y="54" width="9" height="14" rx="2" fill="var(--plus)" fill-opacity=".4" stroke-width="2"/><path d="M24 60l-10 8M10 56l-4 36" stroke-width="2.5"/></svg>',
+    vac: '<svg class="estPic" viewBox="0 0 120 100" role="img" aria-hidden="true" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M0 90h120" stroke-width="2.5"/><circle cx="60" cy="58" r="32" fill="var(--plus)" fill-opacity=".14" stroke-width="3"/><circle cx="60" cy="58" r="21" stroke-width="2"/><rect x="45" y="50" width="27" height="16" rx="2" stroke-width="2.5"/><path d="M75 55v6" stroke-width="3"/><path d="M49 54v8M55 54v8" stroke-width="3" stroke="var(--plus)"/><path d="M86 38l8-8M92 46l10-3" stroke-width="2" opacity=".6"/></svg>',
+    cyc: '<svg class="estPic" viewBox="0 0 120 100" role="img" aria-hidden="true" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M0 92h120" stroke-width="2.5"/><path d="M6 92V46h30v46" stroke-width="3"/><path d="M2 46h38l-4-12H6z" fill="var(--plus)" fill-opacity=".4" stroke-width="2.5"/><path d="M16 92V66h10v26" stroke-width="2"/><circle cx="62" cy="78" r="11" stroke-width="3"/><circle cx="102" cy="78" r="11" stroke-width="3"/><path d="M62 78l14-22l26 22M76 56h-6M76 56l22 0M98 56l4 22" stroke-width="3"/><circle cx="84" cy="30" r="6" fill="currentColor" stroke="none"/><path d="M84 37l-8 19M84 42l14 12M76 56l2 12" stroke-width="3.5"/></svg>',
+    tree: '<svg class="estPic" viewBox="0 0 120 100" role="img" aria-hidden="true" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M0 94h120" stroke-width="2.5"/><path d="M60 6L40 34h40z" fill="#3d8f4f" fill-opacity=".45" stroke-width="2.5"/><path d="M60 24L34 56h52z" fill="#3d8f4f" fill-opacity=".45" stroke-width="2.5"/><path d="M60 44L28 80h64z" fill="#3d8f4f" fill-opacity=".45" stroke-width="2.5"/><rect x="55" y="80" width="10" height="14" fill="#8a5a2b" fill-opacity=".6" stroke-width="2"/><path d="M100 10v84M94 10h12M94 94h12M94 30h6M94 50h6M94 70h6" stroke-width="2" stroke="var(--plus)"/></svg>'
+  };
+  // ---- the variants of the Estimate exercise: every problem is a new scenario with new numbers, and the kind of question varies too
+  //  kind "at": estimate the value at a given x; "start": the value at x = 0 (outside the table); "when": the x where y reaches 0 (outside the table)
+  function r3(v) { return Math.round(v * 1000) / 1000; }
+  function estFin(o, kind, tx, ans, tol, fh, ex) {
+    o.kind = kind; o.tx = tx; o.ans = r3(ans); o.tol = tol; o.fh = fh; o.ex = ex; o.n = o.x.length;
+    o.fn = ["constant", "line", "absolute value", "quadratic"][o.fam]; o.ty = kind === "when" ? 0 : o.ans; return o;
+  }
+  function estPick(a) { return a[rnd(a.length)]; }
+  function estProj(start) {
+    var h0 = estPick([3, 4, 5, 6, 7, 9, 10, 12]), b = start ? 40 : estPick([32, 40]), t = estPick([0.25, 0.75, 1.25, 1.75]), sc = estPick(ESC);
+    var X = start ? [0.5, 1, 1.5, 2, 2.5] : [0, 0.5, 1, 1.5, 2], Y = X.map(function (x) { return r3(-16 * x * x + b * x + h0); });
+    var o = { x: X, y: Y, fam: 3, s: sc[0], pr: sc[1], pic: sc[2], xn: "Time", xu: "seconds", yn: "Height", yu: "feet" };
+    if (start) { o.q = "Estimate the starting height."; o.lbl = "Estimate the starting height (feet)"; return estFin(o, "start", 0, h0, 1, "they rise and then fall, like a U", "read the graph where it crosses the y-axis (x = 0)"); }
+    o.q = "Estimate the height after " + t + " seconds."; o.lbl = "Estimate the height after " + t + " seconds (feet)";
+    return estFin(o, "at", t, -16 * t * t + b * t + h0, 1, "they rise and then fall, like a U", "read the graph at x = " + t);
+  }
+  var ESL = [["A snowshoer races toward the finish line.", "their", "snow", "Time", "minutes", "Distance remaining", "km", [10], "When will they finish?", "When will they finish (minutes)?"],
+    ["A water tank drains at a steady rate.", "its", "tank", "Time", "minutes", "Water remaining", "gallons", [5, 10], "When will it be empty?", "When will it be empty (minutes)?"],
+    ["A hiker walks the trail toward the end.", "their", "hike", "Time", "hours", "Distance remaining", "miles", [1], "When will they finish?", "When will they finish (hours)?"]];
+  function estLine() {
+    var sc = estPick(ESL), s0, d, D0, ans, k = 0;
+    do { s0 = estPick(sc[7]); d = estPick([1, 2, 3, 4]); D0 = estPick([7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 20]); ans = s0 * D0 / d; k++; } while (k < 200 && (D0 - 4 * d < 1 || Math.abs(ans * 4 - Math.round(ans * 4)) > 1e-9 || ans > 80));
+    var X = [0, 1, 2, 3, 4].map(function (i) { return i * s0; }), Y = [0, 1, 2, 3, 4].map(function (i) { return D0 - d * i; });
+    var o = { x: X, y: Y, fam: 1, s: sc[0], pr: sc[1], pic: ESPIC[sc[2]], xn: sc[3], xu: sc[4], yn: sc[5], yu: sc[6], q: sc[8], lbl: sc[9] };
+    return estFin(o, "when", ans, ans, Math.max(0.1, 0.025 * 4 * s0), "they fall steadily along a straight line", "find where the line reaches y = 0");
+  }
+  var ESA = [["A robot vacuum runs until its battery dies, then recharges.", "its", "vac", "Time", "minutes", "Battery life", "%", 30, [30, 60], [20, 25], "Estimate the battery life after "],
+    ["A cyclist rides past a bike shop.", "their", "cyc", "Time", "minutes", "Distance from the shop", "miles", 10, [0, 10, 20], [1, 2], "Estimate the distance after "]];
+  function estAbs() {
+    var sc = estPick(ESA), s0 = sc[7], x0 = estPick(sc[8]), dy = estPick(sc[9]), j = 1 + rnd(3), i0 = rnd(4);
+    var X = [0, 1, 2, 3, 4].map(function (i) { return x0 + i * s0; }), Y = [0, 1, 2, 3, 4].map(function (i) { return r3(dy * Math.abs(i - j)); }), Xq = X[i0] + s0 / 2;
+    var o = { x: X, y: Y, fam: 2, s: sc[0], pr: sc[1], pic: ESPIC[sc[2]], xn: sc[3], xu: sc[4], yn: sc[5], yu: sc[6] };
+    o.q = sc[10] + Xq + " minutes."; o.lbl = o.q.slice(0, -1) + " (" + (sc[6] === "%" ? "%" : "miles") + ")";
+    return estFin(o, "at", Xq, dy * Math.abs(Xq - X[j]) / s0, 1, "they fall to a low point and then rise, like a V", "read the graph at x = " + Xq);
+  }
+  // the least-squares polynomial through (xs, ys) and its R squared (centred on the mean x)
+  function estLsq(xs, ys, deg) {
+    var n = xs.length, m = xs.reduce(function (t, v) { return t + v; }, 0) / n, u = xs.map(function (v) { return v - m; }), A = [], i, j, k;
+    for (i = 0; i <= deg; i++) { A.push([]); for (j = 0; j <= deg + 1; j++) A[i].push(0); }
+    for (k = 0; k < n; k++) for (i = 0; i <= deg; i++) { for (j = 0; j <= deg; j++) A[i][j] += Math.pow(u[k], i + j); A[i][deg + 1] += Math.pow(u[k], i) * ys[k]; }
+    for (i = 0; i <= deg; i++) { var pv = i; for (j = i + 1; j <= deg; j++) if (Math.abs(A[j][i]) > Math.abs(A[pv][i])) pv = j; var t0 = A[i]; A[i] = A[pv]; A[pv] = t0;
+      for (j = 0; j <= deg; j++) if (j !== i) { var f = A[j][i] / A[i][i]; for (k = i; k <= deg + 1; k++) A[j][k] -= f * A[i][k]; } }
+    var c = A.map(function (r, q) { return r[deg + 1] / r[q]; }), my = ys.reduce(function (t, v) { return t + v; }, 0) / n, se = 0, st = 0;
+    function at(x) { var v = 0, uu = x - m; for (var q = 0; q <= deg; q++) v += c[q] * Math.pow(uu, q); return v; }
+    for (k = 0; k < n; k++) { se += Math.pow(ys[k] - at(xs[k]), 2); st += Math.pow(ys[k] - my, 2); }
+    return { at: at, r2: 1 - se / st };
+  }
+  // the best R squared an absolute value a|x - h| + k can reach for the data (a search over h)
+  function estAbsR2(xs, ys) {
+    var lo = Math.min.apply(null, xs), hi = Math.max.apply(null, xs), best = -1, q;
+    for (q = -50; q <= 150; q++) { var h = lo + (hi - lo) * q / 100, F = estLsq(xs.map(function (v) { return Math.abs(v - h); }), ys, 1); if (isFinite(F.r2) && F.r2 > best) best = F.r2; }
+    return best;
+  }
+  // measured data that curve upward but are not exact: a quadratic fits best
+  function estScatter() {
+    var X = [10, 25, 40, 55, 70], Y, F, L, Xq, k = 0;
+    do {
+      var a = estPick([0.03, 0.04, 0.05]), b = estPick([0.2, 0.5, 0.8]), c = estPick([6, 10, 14]);
+      Y = X.map(function (x) { return Math.round(a * x * x + b * x + c + (rnd(9) - 4) * 1.5); }); F = estLsq(X, Y, 2); L = estLsq(X, Y, 1); k++;
+    } while (k < 200 && (F.r2 < .985 || F.r2 - L.r2 < .015 || F.r2 - estAbsR2(X, Y) < .01 || !Y.every(function (v, i) { return !i || v > Y[i - 1]; })));
+    Xq = estPick([30, 45, 60, 65]);
+    var o = { x: X, y: Y, fam: 3, s: "A forester measures Douglas fir trees.", pr: "their", pic: ESPIC.tree, xn: "Height", xu: "meters", yn: "Diameter", yu: "cm" };
+    o.q = "Estimate the diameter of a tree that is " + Xq + " meters tall."; o.lbl = "Estimate the diameter of a tree " + Xq + " meters tall (cm)";
+    return estFin(o, "at", Xq, F.at(Xq), 3, "they curve upward, bending more as x grows", "read the graph at x = " + Xq);
+  }
+  var ESTT = [function () { return estProj(false); }, function () { return estProj(true); }, estLine, estAbs, estScatter];
+  function estSet(n) {
+    var idx = [0, 1, 2, 3, 4], i, j, t; for (i = 4; i > 0; i--) { j = rnd(i + 1); t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
+    var out = []; for (i = 0; i < n; i++) out.push(ESTT[idx[i % 5]]()); return out;
   }
   function estProb() { return QZ.est && QZ.est[QZ.pi]; }
   function estHTML() {
     var e = estProb(); if (!e) return "";
     function row(a) { return a.map(function (v) { return "<td>" + v + "</td>"; }).join(""); }
-    return "<div class=\"estWrap\"><div class=\"estMain\"><div class=\"estP\">" + e.s + " The table shows " + e.pr + " height <i>y</i> over time <i>x</i>. Estimate the height after " + e.t + " seconds.</div>" +
-      "<table class=\"estT\"><tr><th>Time (seconds), <i>x</i></th>" + row(e.x) + "</tr><tr><th>" + e.q + " (" + e.u + "), <i>y</i></th>" + row(e.y) + "</tr></table></div>" + e.pic + "</div>";
+    return "<div class=\"estWrap\"><div class=\"estMain\"><div class=\"estP\">" + e.s + " The table shows " + e.pr + " " + e.yn.toLowerCase() + " <i>y</i> over " + e.xn.toLowerCase() + " <i>x</i>. " + e.q + "</div>" +
+      "<table class=\"estT\"><tr><th>" + e.xn + " (" + e.xu + "), <i>x</i></th>" + row(e.x) + "</tr><tr><th>" + e.yn + " (" + e.yu + "), <i>y</i></th>" + row(e.y) + "</tr></table></div>" + e.pic + "</div>";
   }
   function estRows() { return TB.rows().filter(function (r) { return r.done && isFinite(r.xv) && isFinite(r.yv); }); }
   function estTableOK() { var e = estProb(); if (!e) return false; var R = estRows(); return R.length === e.x.length && e.x.every(function (x, i) { return R.some(function (r) { return Math.abs(r.xv - x) < 1e-9 && Math.abs(r.yv - e.y[i]) < 1e-9; }); }); }
-  // the model is right when the quadratic regression of the data is showing (its equation and its curve)
-  function estModelOK() { var e = estProb(); return !!(e && PG.fam === 3 && PG.show.eq && PG.show.graph && estTableOK() && dataFit().ok); }
+  // the model is right when the regression of the data for the right family is showing (its equation and its curve)
+  function estModelOK() { var e = estProb(); return !!(e && PG.fam === e.fam && PG.show.eq && PG.show.graph && estTableOK() && dataFit().ok); }
   // once the table and the graph are right, a box takes the estimate
   function estUI() {
     var box = $("estIn"); if (!box) return;
     var show = !!(est() && QZ.order && QZ.step < 4 && !PG.eOK && estTableOK() && estModelOK()), was = !box.hidden;
     box.hidden = !show;
-    if (show && !was) { $("estTx").value = ""; $("estLbl").innerHTML = "Estimate the " + estProb().q.toLowerCase() + " after " + estProb().t + " seconds (" + estProb().u + ")"; if (!pgRun) setTimeout(function () { if (!box.hidden) $("estTx").focus(); }, 0); }
+    if (show && !was) { $("estTx").value = ""; $("estLbl").innerHTML = estProb().lbl; if (!pgRun) setTimeout(function () { if (!box.hidden) $("estTx").focus(); }, 0); }
   }
   function estSubmit() {
     var e = estProb(), v = ptNum($("estTx").value), box = $("estIn");
-    if (e && isFinite(v) && Math.abs(v - e.ans) <= 1) { PG.eOK = true; pqMsg(""); var rr = box.getBoundingClientRect(); rvMark("ok", rr.left + 24, rr.top + 14); box.hidden = true; drawPlay(); return; }
+    if (e && isFinite(v) && Math.abs(v - e.ans) <= e.tol) { PG.eOK = true; pqMsg(""); var rr = box.getBoundingClientRect(); rvMark("ok", rr.left + 24, rr.top + 14); box.hidden = true; drawPlay(); return; }
     QZ.wrong++; pqMsg("Not quite. Try again.");
     box.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
   }
@@ -2676,8 +2748,10 @@
   function estHint(n, ok) {
     var e = estProb();
     if (!ok.table) return n === 0 ? "Enter each pair from the table in the question: the x-value in the left column and the y-value in the right." : "Type " + e.x.map(function (x, i) { return "(" + x + ", " + e.y[i] + ")"; }).join(", ") + ". Return moves down the column, and the arrow keys move between the columns.";
-    if (!ok.graph) return n === 0 ? "Look at the points: they rise and then fall, like a U. Press Change Family until you reach the family that fits, then press Regression. Use the Data button under the graph to see all of the points." : "The closer R\u00b2 is to 1, the better the family fits. Choose the quadratic family and press Regression.";
-    return n === 0 ? "Click the curve to put a point on it and drag the point to x = " + e.t + ": its coordinates show beside it." : "Read the y-value of the curve where x = " + e.t + ", then type it in the box.";
+    if (!ok.graph) return n === 0 ? "Look at the points: " + e.fh + ". Press Change Family until you reach the family that fits, then press Regression. Use the Data button under the graph to see all of the points." : "The closer R\u00b2 is to 1, the better the family fits. Choose the " + e.fn + " family and press Regression.";
+    if (e.kind === "start") return n === 0 ? "The starting value is where the curve crosses the y-axis, at x = 0. Zoom out with the \u2212 button, click the curve and slide the point to x = 0." : "Read the y-value of the point at x = 0, then type it in the box.";
+    if (e.kind === "when") return n === 0 ? "Nothing is left where y = 0. Zoom out with the \u2212 button, click the line and slide the point to y = 0." : "Read the x-value of the point where y = 0, then type it in the box.";
+    return n === 0 ? "Click the curve to put a point on it and drag the point to x = " + e.tx + ": its coordinates show beside it." : "Read the y-value of the curve where x = " + e.tx + ", then type it in the box.";
   }
   function pqSetup() {
     closePt(); var fam = qFam();
@@ -2737,7 +2811,7 @@
     var cu = gd() && mode !== "create" && gdCustom;
     if (gd() && mode === "create") { o = [0]; gdCustom = null; }   // Create: the student types the function, so there is one problem and no family yet
     else if (cu) o = [cu.fam];   // the student's own function runs in whichever mode they pick
-    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : o.map(gdMake), est: est() ? o.map(estMake) : null, cr: false, custom: !!cu }; updProg();
+    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : o.map(gdMake), est: est() ? estSet(o.length) : null, cr: false, custom: !!cu }; updProg();
     if (mode !== "demo") explainOn = false;
     logEl.innerHTML = "";
     $("hint").hidden = soloish(); $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn);
@@ -2862,7 +2936,7 @@
   }
   function pqExplain() {
     var fam = qFam();
-    if (est()) return "Enter the data in the table. The points rise and fall like a U, so a quadratic fits: press Change Family to choose it and Regression to graph it. Then read the graph at x = " + estProb().t + " to estimate the height.";
+    if (est()) { var ee = estProb(); return "Enter the data in the table. The points: " + ee.fh + ", so " + (ee.fam === 2 ? "an " : "a ") + ee.fn + " fits: press Change Family to choose it and Regression to graph it. Then " + ee.ex + "."; }
     if (gd()) return "A translation slides the parent without changing its shape. Here g(x) = " + plain(rhsHTML()) + " is the " + QFAM[fam] + " parent moved " + gdWords(QZ.tr[QZ.pi]) + ". Graph the parent (it turns dotted), then graph g(x); the table and the description tell the same story.";
     return "Every family of functions has a parent: its simplest equation. The " + QFAM[fam] + " parent is f(x) = " + plain(qEqHTML(fam)) + ". You can answer with the equation, the table or the graph, in any order: put each x into the equation to fill the table, and the points make a " + (fam < 2 ? "straight line" : fam === 2 ? "V" : "U") + " graph.";
   }
@@ -4676,16 +4750,21 @@
           function (n) { cap("Press Regression"); tap(tog("reg"), function () { pgWait(2400, n); }); },
           function (n) {
             cap("Change families");
-            (function again(i) { if (i >= 3) { pgWait(1800, n); return; } tap($("pgFam"), function () { pgWait(1100, function () { again(i + 1); }); }); })(0);
+            (function again(i) { if (PG.fam === EP.fam || i >= 6) { pgWait(1800, n); return; } tap($("pgFam"), function () { pgWait(1100, function () { again(i + 1); }); }); })(0);
+          },
+          function (n) {   // an answer outside the window: zoom out until it shows
+            function far() { return Math.abs(EP.tx - ZM.tox) > ZM.to * .85 || Math.abs(EP.ty - ZM.toy) > ZM.toY * .85; }
+            if (!far()) { n(); return; }
+            cap("Zoom out"); (function out(i) { if (!far() || i >= 4) { pgWait(1200, n); return; } tap($("zmOut"), function () { pgWait(1300, function () { out(i + 1); }); }); })(0);
           },
           function (n) {
             cap("Click the curve");
-            var x0 = EP.t - 0.6, p = { k: "c", fam: PG.fam, sh: null, free: true }; handGo(svgPt(x0, g(x0)), 700);
+            var sp = ZM.to, x0 = EP.tx - sp * .3, p = { k: "c", fam: PG.fam, sh: null, free: true }; handGo(svgPt(x0, g(x0)), 700);
             pgWait(900, function () {
               handTap(); spSet(PG, p, x0, g(x0)); (PG.sp = PG.sp || []).push(p); SPD = { G: PG, i: PG.sp.length - 1, moved: true, isNew: true }; drawPlay();
               cap("Slide it freely");
-              // the point glides along the curve (not snapped to the grid) and settles at the x of the question
-              var N = 40, xs = []; for (var q = 0; q <= N; q++) xs.push(x0 + (EP.t + 0.45 - x0) * q / N); for (q = 1; q <= N / 2; q++) xs.push(EP.t + 0.45 * (1 - q / (N / 2)));
+              // the point glides along the curve (not snapped to the grid) and settles at the x of the answer
+              var N = 40, xs = [], q; for (q = 0; q <= N; q++) xs.push(x0 + (EP.tx + sp * .1 - x0) * q / N); for (q = 1; q <= N / 2; q++) xs.push(EP.tx + sp * .1 * (1 - q / (N / 2)));
               (function glide(j) { if (j >= xs.length) { pgWait(1500, function () { SPD = null; drawPlay(); n(); }); return; } spSet(PG, p, xs[j], g(xs[j])); handGo(svgPt(xs[j], g(xs[j])), 60); drawPlay(); pgWait(55, function () { glide(j + 1); }); })(0);
             });
           },
