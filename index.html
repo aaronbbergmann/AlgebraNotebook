@@ -119,6 +119,7 @@
   .exBox{display:flex;flex-direction:column;align-items:center;gap:1rem;margin:1rem auto;width:fit-content;max-width:100%;padding:.4em .8em;border-radius:.4em;background:color-mix(in srgb,var(--ink) 7%,var(--bg))}
   .exBox[hidden]{display:none}
   .exRow{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;line-height:1.3}
+  .exOpc{cursor:pointer;color:var(--plus);font-weight:800;border-radius:6px;transition:transform .2s}.exOpc:hover{transform:scale(1.4);background:color-mix(in srgb,var(--plus) 20%,transparent)}
   .exOp{padding:0 .3em}.exRow>.exOp:first-child{padding:0 .02em 0 0}.exT{padding:0 .1em;border-radius:6px;white-space:nowrap;transition:background .3s}
   .exT i{font-style:italic}.exT.hot{background:color-mix(in srgb,var(--plus) 30%,transparent)}
   .exAsk{font:600 1.1rem system-ui,sans-serif;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:center}
@@ -901,10 +902,11 @@
     if (!EXP) return;
     var R = $("exRow"), its = EXP.items, live = (mode === "sequence" || mode === "calculate") && !locked;
     R.innerHTML = its.map(function (t, i) {
-      var ng = (t.k === "g" ? t.m.n : t.n.n) < 0, op = i ? "<span class=\"exOp\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "";
+      var ng = (t.k === "g" ? t.m.n : t.n.n) < 0, op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + i + "\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "";
       return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live ? " pend" : "") + (hot && hot.indexOf(i) >= 0 ? " hot" : "") + "\" data-i=\"" + i + "\" data-drop=\"ex:" + i + "\"" + (t.k === "g" && live ? " title=\"Click to distribute\"" : "") + ">" + exTerm(t) + "</span>";
     }).join("");
     if (!live) return;
+    [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var k = +el.dataset.op; exDrop(k - 1, k); }); });
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
       var i = +el.dataset.i;
       el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { exDrop(i, +t.dataset.drop.slice(3)); }, "ex:"); });
@@ -1548,7 +1550,13 @@
     pendElim = null;
     var q = ws[0], v, m, ri = ws.findIndex(function (r) { return r.raw; });
     if (ri >= 0) return ["calc", ri];
-    if (lesson === 1) return !q ? null : q.ks.length ? ["const", 0, 0] : isOne(q.a) ? null : ["coef", 0];
+    if (lesson === 1) {
+      if (!q) return null;
+      // like terms on the same side are combined first (before anything moves to the other side)
+      var nr = q.ks.map(function (z, n) { return n; }).filter(function (n) { return !q.ks[n].r; }).sort(function (a, b) { return kslot(q, q.ks[a], curVs()) - kslot(q, q.ks[b], curVs()); });
+      if (nr.length >= 2 && !q.raw) return ["comb", 0, nr[0], nr[1]];
+      return q.ks.length ? ["const", 0, 0] : isOne(q.a) ? null : ["coef", 0];
+    }
     // 3x3 step one: two equations without one variable (equations 1&2, then 1&3)
     if (lesson === 3 && sys.length < 2 && elimInfo) {
       var P = elimInfo.pairs[sys.length]; pendElim = { v: elimInfo.v, rows: [0, P.p] };
@@ -1715,9 +1723,15 @@
       act = function () { doCalc(i); };
     } else if (t === "comb") {
       var pr = adjKs(ws[i]).filter(function (m) { return m[0] === s[2] && m[1] === s[3]; })[0], cr = rows[i].children, vz = curVs();
-      cr[pr[2]].classList.add("opc", "hl"); cr[kslot(ws[i], ws[i].ks[s[2]], vz)].classList.add("hl"); cr[kslot(ws[i], ws[i].ks[s[3]], vz)].classList.add("hl");
-      handGo(ctr(cr[pr[2]]), 600); tapAt = 1000;
-      act = function () { combineK(i, s[2], s[3]); };
+      var ca = cr[kslot(ws[i], ws[i].ks[s[2]], vz)], cb2 = cr[kslot(ws[i], ws[i].ks[s[3]], vz)];
+      ca.classList.add("hl"); cb2.classList.add("hl");
+      if (pr) {
+        cr[pr[2]].classList.add("opc", "hl"); handGo(ctr(cr[pr[2]]), 600); tapAt = 1000;
+        act = function () { combineK(i, s[2], s[3]); };
+      } else {   // not next to each other (the variable is between them): drag one onto the other
+        handGo(ctr(cb2), 600); tapAt = 1000;
+        act = function () { handGo(ctr(ca), 700); fly(cb2, ca, function () { combineK(i, s[2], s[3]); release(900); }, true); return true; };
+      }
     } else if (t === "simp") {
       rows[i].children[kslot(ws[i], ws[i].ks[s[2]], curVs())].classList.add("hl"); handGo(ctr(rows[i].children[kslot(ws[i], ws[i].ks[s[2]], curVs())]), 600); tapAt = 1000;
       act = function () { simpSub(i, s[2]); };
@@ -2032,9 +2046,12 @@
     nxShow();
   }
   // an equation as written in a book: variables and numbers on either side, collected into a x + b y + e z = c
+  var FLIP = false;   // the last equation typed had its x on the right and was written the other way round
   function parseOne(s) {
     var pa = /\(/.test(s), t = s.replace(/[()]/g, "").replace(/\+-/g, "-").replace(/--/g, "+"), p = t.split("=");
-    var bad = "Write it with x on the left and a number on the right, like 3x-2=10.";
+    var bad = "Put the x term on one side and the number on the other, like 3x-2=10 or 10=3x-2."; FLIP = false;
+    // x on the right (10=3x-2): the two sides swap, which does not change the solution
+    if (p.length === 2 && p[0] && p[1] && !/x/.test(p[0]) && /x/.test(p[1]) && parse(p[0])) { p = [p[1], p[0]]; FLIP = true; }
     if (p.length !== 2 || !p[0] || !p[1]) return bad;
     var L = parseSide(p[0]), R = parse(p[1]), first = (p[0].match(/[+-]?[^+-]+/) || [""])[0];
     if (!L || !R || L.y.n || L.z.n || !L.x.n) return bad;
@@ -2082,7 +2099,7 @@
     if (orig.length < allV().length) { crPrompt(); return; }
     elimInfo = lesson === 3 && ints(orig) ? bestElim(orig) : null;
     $("creator").hidden = true;
-    { $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation" + (orig.length > 1 ? "s are" : " is") + " in. Choose how you want to work on " + (orig.length > 1 ? "them." : "it.")); }
+    { $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation" + (orig.length > 1 ? "s are" : " is") + " in" + (FLIP && lesson === 1 ? ", written with x on the left: " + fmt(orig[0], dv()) + " (swapping the two sides does not change the answer)" : "") + ". Choose how you want to work on " + (orig.length > 1 ? "them." : "it.")); }
   }
 
   // the demo button names the step it is about to do
@@ -2099,7 +2116,7 @@
       ? "There is a negative number, " + sg(k.k) + ", on the variable's side. Adding " + sg(ab(k.k)) + " to both sides cancels it, because adding the opposite makes 0."
       : "There is a + " + (k ? sg(k.k) : "number") + " on the variable's side. Subtracting it from both sides cancels it and leaves the variable's term alone.";
     if (t === "calc") return "Now do the arithmetic to turn it into a single number.";
-    if (t === "comb") return "Two plain numbers sit side by side, so we can combine them into one number. That is called combining like terms.";
+    if (t === "comb") return "Two plain numbers are on the same side of the equation, so we can combine them into one number first. That is called combining like terms.";
     if (t === "simp") return "Putting a value in for a variable made a multiplication" + (k ? ", " + kview(q, k, curVs()).prompt : "") + ". Multiplying gives a single number.";
     return "We found " + s[1] + " = " + (vals[s[1]] ? sg(vals[s[1]]) : "a number") + ". Putting that value in place of " + s[1] + " in an equation leaves one fewer unknown, so we can solve for the next variable.";
   }
