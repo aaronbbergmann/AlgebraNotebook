@@ -152,6 +152,9 @@
   .exBox.zp .exG,.exBox.zp .exH{cursor:grab;touch-action:none}
   .exRow{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;line-height:1.3}
   .exOpc{cursor:pointer;color:var(--plus);font-weight:800;border-radius:6px;transition:transform .2s}.exOpc:hover{transform:scale(1.4);background:color-mix(in srgb,var(--plus) 20%,transparent)}
+  @keyframes relFlip{from{transform:perspective(320px) rotateY(180deg)}50%{transform:perspective(320px) rotateY(90deg) scale(1.25)}to{transform:perspective(320px) rotateY(0)}}
+  .relFlip{display:inline-block;animation:relFlip .9s ease-in-out}
+  @media (prefers-reduced-motion:reduce){.relFlip{animation:none}}
   .exEq{padding:0 .5em}.exEq.grab:hover{background:color-mix(in srgb,var(--plus) 20%,transparent)}
   .exH{border-radius:.3em}.exT.grab .exG,.exT.grab .exH{cursor:default}.exT.grab .exG:hover,.exT.grab .exH:hover{background:color-mix(in srgb,var(--plus) 16%,transparent)}
   .exCo{border-radius:6px;cursor:grab;touch-action:none;border-bottom:2px dashed var(--plus)}
@@ -890,7 +893,15 @@
     });
     lockCols();
     renderVals(); markElim();
-    $("show").hidden = !workAny();
+    $("show").hidden = !workAny(); paneRelFlip();
+  }
+  // dividing (or multiplying) by a negative number reverses an inequality: the sign turns over like a sheet of paper spun on its vertical axis, < becoming >
+  var relPrev = null, relTurned = false;   // relTurned: the step just made reversed the sign of an inequality (the answer then turns its sign over as it drops into place)
+  function relTurn(el, past) { if (!el) return; el.classList.remove("relFlip"); el.style.animationDelay = past ? "-" + past + "ms" : ""; void el.offsetWidth; el.classList.add("relFlip"); }   // past: milliseconds the turn has already run, when the row was drawn again meanwhile
+  function paneRelFlip() {
+    var r = lesson === 1 && !SUB() && ws.length === 1 ? rows[0] : null, el = r && r.children[r.children.length - 2], g = el ? el.textContent.trim() : null;
+    if (g && relPrev && relPrev.o === orig[0] && relRev(relPrev.g) === g && g !== relPrev.g) relTurn(el);
+    relPrev = g ? { o: orig[0], g: g } : null;
   }
 
   // solved values live at the bottom; drag one up onto a matching variable in an equation
@@ -901,7 +912,7 @@
       var s = document.createElement("span");
       if (!vals[n]) { s.className = "chip ph" + (introV ? " intro" : ""); s.innerHTML = flipped() ? "= <i class=\"var\">" + n + "</i>" : "<i class=\"var\">" + n + "</i> ="; V.appendChild(s); return; }
       s.className = "chip"; s.dataset.v = n;
-      s.className = "chip grab"; s.innerHTML = flipped() ? sg(vals[n]) + " " + relGlyph(relRev(valRel(n))) + " <i class=\"var\">" + n + "</i>" : "<i class=\"var\">" + n + "</i> " + relGlyph(valRel(n)) + " " + sg(vals[n]);
+      s.className = "chip grab"; s.innerHTML = flipped() ? sg(vals[n]) + " <span class=\"rg\">" + relGlyph(relRev(valRel(n))) + "</span> <i class=\"var\">" + n + "</i>" : "<i class=\"var\">" + n + "</i> <span class=\"rg\">" + relGlyph(valRel(n)) + "</span> " + sg(vals[n]);
       s.addEventListener("pointerdown", function (e) {
         drag(e, s, null, function (t) { var p = t.dataset.drop.split(":"); substitute(n, p[1], +p[2], p[3]); }, "sub:");
       });
@@ -1244,11 +1255,29 @@
   function exNegMark(h, key) { if (h && h.classList.contains("exOp")) { h.classList.add("exNeg"); h.dataset.for = key; h.title = "Drag the minus sign onto the parentheses"; } }
   function distMsg(g, d) { if (g.b) return "Multiply: " + exSay([g]) + " = " + exSay(d) + ". Every term in one set of parentheses times every term in the other."; return "Distribute: " + exSay([g]) + " = " + exSay(d) + "." + (g.m.d === 1 && g.m.n === -1 ? " The minus sign means \u22121, so \u22121 times each term." : ""); }
   function dgWord(m) { return m.s && sSig(m.s) ? "the letter" : m.d === 1 && Math.abs(m.n) === 1 ? (m.n < 0 ? "the minus sign" : "the plus sign") : "the number"; }
-  function exRender(hot) {
+  // Show work for the expression and equation engine: every distinct state of the problem is one step (all the equations, once the zero product property has split it); Undo takes it back
+  function exLines() {
+    if (!EXP) return [];
+    if (!EXP.eq) return [exSay(EXP.items)];
+    var z = EXP.zp, one = function (L, R) { return exSay(L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(R) : exSay(R)); };
+    return z ? z.eqs.map(function (e, k) { return k === z.act ? one(EXP.L, EXP.R) : one(e.L, e.R); }) : [one(EXP.L, EXP.R)];
+  }
+  function exWork() {
+    if (!EXP || !$("exBox") || $("exBox").hidden) return;
+    var L = exLines(), key = L.join("\n");
+    if (!steps.length) { steps.push({ eqs: L, ms: L.map(function () { return ""; }) }); works.push({ steps: steps, label: MODES[mode] + " mode, Play Solver" }); if (works.length > 300) works.shift(); }
+    else {
+      var k = -1; for (var i = steps.length - 1; i >= 0; i--) if (steps[i].eqs.join("\n") === key) { k = i; break; }
+      if (k >= 0) steps.length = k + 1; else steps.push({ eqs: L, ms: L.map(function () { return ""; }) });
+    }
+    $("show").hidden = !workAny();
+  }
+  function exRender(hot) { exRender0(hot); exWork(); }
+  function exRender0(hot) {
     if (!EXP) return;
     if (EXP.eq) { eqRender(hot); return; }
     zpPaint();
-    var R = $("exRow"), its = EXP.items, live = (mode === "sequence" || mode === "calculate") && !locked;
+    var R = $("exRow"), its = EXP.items, live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked;   // in Demo the student can always take over
     R.innerHTML = its.map(function (t, i) {
       var ng = (t.k === "g" ? t.m.n : t.n.n) < 0, op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + i + "\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "";
       return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live ? " pend" : "") + (hot && hot.indexOf(i) >= 0 ? " hot" : "") + "\" data-i=\"" + i + "\" data-drop=\"ex:" + i + "\"" + (t.k === "g" && live ? " title=\"Click to distribute\"" : "") + ">" + exTerm(t) + "</span>";
@@ -1440,7 +1469,7 @@
       if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this equation solved."); }
       else if (mode === "solo") note("Solve it on your own, then type your answer.");
       else if (EXP.grq) note("Drag a term down into the square to factor by grouping: put each term in a box, then click the spaces on the left and above to type the greatest common factor of each row and column. The factored form goes back into the equation, and then you can split it into two equations." + (mode === "calculate" ? " You will be asked for each result." : ""));
-      else if (EXP.zpq) note("Drag one of the parentheses up or down. A product is 0 only when one of its factors is 0 (the zero product property), so the equation splits into " + (EXP.L[0] && EXP.L[0].c ? "three" : "two") + " equations." + (mode === "calculate" ? " You will be asked for each result." : ""));
+      else if (EXP.zpq) note("Drag one of the parentheses up or down. A product is 0 only when one of its factors is 0 (the zero product property), so the equation splits." + (EXP.L[0] && EXP.L[0].c ? " One factor splits off and the other two stay together, ready to split again." : "") + (mode === "calculate" ? " You will be asked for each result." : ""));
       else note("Drag a term across the " + (eqIneq() ? "sign" : "=") + " to move it to the other side (its sign changes). Drop it on a like term to combine them. Drag the number in front of x across to divide." + (eqIneq() ? " Dividing or multiplying by a negative number turns the sign around." : "") + (EXP.lit ? " The letters are numbers too: dividing by a gives b/a." : "") + (mode === "calculate" ? " You will be asked for each result." : ""));
       return;
     }
@@ -1530,49 +1559,71 @@
   function zpRoot(f, vk) { var t = exTot(f), a = t[vk]; return a && a.n ? mul(neg(t[""] || mk(0)), inv(a)) : null; }
   function zpFacs(g) { return g.c ? [g.items, g.b, g.c] : [g.items, g.b]; }   // the sets of parentheses of a product (two or three)
   function zpRoots(g, vk) { return zpFacs(g).map(function (f) { return zpRoot(f, vk); }); }
-  function zpStatic(e) {
-    var sl = EXP.L, sr = EXP.R; EXP.L = e.L; EXP.R = e.R;
-    var h = "<span class=\"zpS zpL\">" + eqSideHtml("L", null, false, null) + "</span><span class=\"exEq\">=</span><span class=\"zpS zpR\">" + eqSideHtml("R", null, false, null) + "</span>";
-    EXP.L = sl; EXP.R = sr; return h.replace(/ data-drop="[^"]*"/g, "");
-  }
   function zpPaint() {
     var b = $("exBox"), on = !!(EXP && EXP.eq && EXP.zpq), A = $("zpA"), B = $("zpB"), z = on && EXP.zp;
     b.classList.toggle("zp", on); $("exRow").classList.toggle("zpRow", on);
     A.hidden = B.hidden = true; A.className = B.className = "zpRow"; A.removeAttribute("data-drop"); B.removeAttribute("data-drop"); A.innerHTML = B.innerHTML = "";
     if (!on) return;
     if (!z) return;   // not split yet: just the equation; a factor is dragged above or below it
-    var rows = [[], []]; z.eqs.forEach(function (e, idx) { if (idx !== z.act) rows[idx < z.act ? 0 : 1].push("<div class=\"zpRow" + (z.done[idx] ? "" : " zpDim") + "\">" + zpStatic(e) + "</div>"); });
-    [A, B].forEach(function (T, q) { T.className = "zpWrap"; T.hidden = !rows[q].length; T.innerHTML = rows[q].join(""); if (EXP.zpNew) T.classList.add("zpIn"); });
+    var holders = [A, B]; holders.forEach(function (T) { T.className = "zpWrap"; T.innerHTML = ""; T.hidden = true; });
+    z.eqs.forEach(function (e, idx) {
+      if (idx === z.act) return; var T = holders[idx < z.act ? 0 : 1], row = document.createElement("div"); row.className = "zpRow"; T.hidden = false; T.appendChild(row);
+      var sL = EXP.L, sR = EXP.R, sRel = EXP.rel; EXP.L = e.L; EXP.R = e.R; EXP.rel = "=";
+      try { eqRenderRow(row, null, idx, z.done[idx]); } finally { EXP.L = sL; EXP.R = sR; EXP.rel = sRel; }
+    });
+    if (EXP.zpNew) holders.forEach(function (T) { T.classList.add("zpIn"); });
     if (EXP.zpNew) { $("exRow").classList.add("zpIn"); EXP.zpNew = false; } else $("exRow").classList.remove("zpIn");
   }
   function zpAnchor(up) {   // an invisible spot above (or below) the equation for the demo hand to drag a factor to
     var a = $("zpAnchor"); if (!a) { a = document.createElement("div"); a.id = "zpAnchor"; a.style.cssText = "position:fixed;width:40px;height:20px;visibility:hidden;pointer-events:none"; document.body.appendChild(a); }
     var r = $("exRow").getBoundingClientRect(); a.style.left = (r.left + r.width / 2 - 20) + "px"; a.style.top = (up ? r.top - 70 : r.bottom + 50) + "px"; return "#zpAnchor";
   }
-  function zpWire(R) {   // the sets of parentheses (two or three): grab any part of one and drag it above or below the equation
+  function zpPick(idx) {   // the product equation the user is working on: its row becomes the active one; null when it is not a product (or is finished)
+    if (locked || !EXP.zpq) return null;
+    if (EXP.zp && idx != null && idx >= 0 && idx !== EXP.zp.act) { if (EXP.zp.done[idx]) return null; zpFocus(idx); }
+    return zpOf(EXP.L, EXP.R);
+  }
+  function zpHist() { hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: "=", z: EXP.zp || null })); updUndo(); }
+  function zpDropM(idx) {   // the number in front was dragged away: it can never be 0, so it simply disappears
+    var g = zpPick(idx); if (!g || (g.m.n === 1 && g.m.d === 1 && !(g.m.s && sSig(g.m.s)))) return;
+    var w = g.m.d === 1 && g.m.n === -1 ? "minus sign" : "number";
+    zpHist(); g.m = mk(1); delete g.m.s; closeAsk(false); eqRender(); note("The " + w + " in front can never be 0, so it drops out. Now drag one of the parentheses up or down.");
+  }
+  function zpWire(R, idx) {   // the sets of parentheses (two or three): grab any part of one and drag it above or below its equation
+    var out = function (ev) { var r = R.getBoundingClientRect(); return ev.clientY < r.top - 10 ? 1 : ev.clientY > r.bottom + 10 ? 2 : 0; };
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
+      var mEl = el.querySelector(":scope > .exM") || exSignOf(el);
+      if (mEl) mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, mEl, function () { note("Drag the number up or down and it disappears: it can never be 0."); }, function () {}, "zp:", null, function (t, ev) { if (out(ev)) zpDropM(idx); }); });
       [".exG", ".exH", ".exJ"].forEach(function (sel, fi) {
         var pe = el.querySelector(":scope > " + sel); if (!pe) return;
-        pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, pe, function () { note("Drag this factor up or down: if two numbers multiply to make 0, one of them has to be 0."); }, function () {}, "zp:", null, function (t, ev) { var r = $("exRow").getBoundingClientRect(); if (ev.clientY < r.top - 10) zpSplit(fi, true); else if (ev.clientY > r.bottom + 10) zpSplit(fi, false); }); });
+        pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, pe, function () { note("Drag this factor up or down: if two numbers multiply to make 0, one of them has to be 0."); }, function () {}, "zp:", null, function (t, ev) { var o = out(ev); if (o) zpSplit(fi, o === 1, idx); }); });
       });
     });
   }
-  function zpSplit(fi, up) {   // fi: which set of parentheses (0, 1 or 2); the dragged factor becomes the top equation when it went up, the bottom one when it went down; the others keep their order
-    if (locked || EXP.zp || !EXP.zpq) return;
-    var g = EXP.L[0], F = zpFacs(g), mkE = function (its) { return { L: JSON.parse(JSON.stringify(its)), R: [{ k: "c", n: mk(0) }] }; }, noM = !(g.m.n === 1 && g.m.d === 1);
-    var rest = F.map(function (f, q) { return q; }).filter(function (q) { return q !== fi; }), ord = up ? [fi].concat(rest) : rest.concat([fi]);
-    hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: "=", z: null })); updUndo();
-    EXP.zp = { eqs: ord.map(function (q) { return mkE(F[q]); }), done: ord.map(function () { return false; }), act: 0 }; EXP.zpNew = true;
-    EXP.L = JSON.parse(JSON.stringify(EXP.zp.eqs[0].L)); EXP.R = JSON.parse(JSON.stringify(EXP.zp.eqs[0].R)); EXP.rel = "=";
-    closeAsk(false); eqRender(); note("A product is 0 only when one of its factors is 0, so " + EXP.zp.eqs.map(function (e) { return exSay(e.L) + " = 0"; }).join(" or ") + "." + (noM ? " The number in front can never be 0, so it drops out." : "") + " Solve the top equation first.");
+  function zpSplit(fi, up, idx) {   // fi: which set of parentheses (0, 1 or 2). The dragged factor becomes its own equation, above its product when it went up, below when it went down; the factors left behind stay together as a product (the number in front stays with them)
+    var g = zpPick(idx); if (!g) return;
+    var F = zpFacs(g), noM = !(g.m.n === 1 && g.m.d === 1 && !(g.m.s && sSig(g.m.s))), zero = function () { return [{ k: "c", n: mk(0) }]; }, cp = function (o) { return JSON.parse(JSON.stringify(o)); };
+    var rest = F.map(function (f, q) { return q; }).filter(function (q) { return q !== fi; }), D = { L: cp(F[fi]), R: zero() }, Rm;
+    if (rest.length === 1) {   // one factor is left: a single equation, with the number in front kept
+      var its = cp(F[rest[0]]), one = its.length === 1 && its[0].k === "x" && !hasS(its[0]) ? its[0] : null;
+      if (!noM) Rm = { L: its, R: zero() }; else if (one) { one.n = mul(one.n, g.m); Rm = { L: its, R: zero() }; } else Rm = { L: [{ k: "g", m: cp(g.m), items: its }], R: zero() };
+    } else { var h = { k: "g", m: cp(g.m), items: cp(F[rest[0]]), b: cp(F[rest[1]]) }; Rm = { L: [h], R: zero() }; }
+    var pair = up ? [D, Rm] : [Rm, D], again = rest.length > 1;
+    zpHist();
+    var z = EXP.zp, t = z ? z.act : 0;
+    if (!z) { EXP.zp = z = { eqs: pair, done: [false, false], act: 0 }; } else { z.eqs.splice(t, 1, pair[0], pair[1]); z.done.splice(t, 1, false, false); z.act = t; }
+    EXP.zpNew = true; EXP.L = cp(z.eqs[t].L); EXP.R = cp(z.eqs[t].R); EXP.rel = "=";
+    closeAsk(false); eqRender();
+    note("A product is 0 only when one of its factors is 0, so " + pair.map(function (e) { return exSay(e.L) + " = 0"; }).join(" or ") + "." + (noM ? " The " + (g.m.d === 1 && g.m.n === -1 ? "minus sign" : "number") + " in front stays with the factors you did not drag." : "") + (again ? " The second equation is still a product: drag one of its parentheses up or down to split it again." : " Solve them in any order."));
     var k = eqKind(); if (k) eqEnd(k);
   }
-  function zpSwitch() {   // the active equation is solved: keep it, and move on to the next one waiting
-    var z = EXP.zp, a = z.act, sol = exSay(EXP.L) + " = " + exSay(EXP.R);
-    z.eqs[a] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; z.done[a] = true; var b = z.done.indexOf(false); z.act = b;
-    EXP.L = JSON.parse(JSON.stringify(z.eqs[b].L)); EXP.R = JSON.parse(JSON.stringify(z.eqs[b].R)); EXP.rel = "="; closeAsk(false);
-    eqRender(); note("One answer: " + sol + ". Now solve " + (z.eqs.length > 2 && z.done.filter(function (d) { return !d; }).length > 1 ? "the next equation, " : "the other equation, ") + exSay(EXP.L) + " = " + exSay(EXP.R) + ".");
-    var k = eqKind(); if (k) eqEnd(k);
+  function zpFocus(k) {   // the user began working on equation k: it becomes the active one (the equation the solver acts on); the others keep their place
+    var z = EXP.zp; if (!z || k === z.act || z.done[k]) return;
+    z.eqs[z.act] = { L: EXP.L, R: EXP.R }; z.act = k; EXP.L = z.eqs[k].L; EXP.R = z.eqs[k].R; EXP.rel = "=";
+  }
+  function zdr(idx, e, el, onClick, onDrop, prefix, onStart, onEnd) {   // drag() for a row of a split: working on a row makes it the active one, and a drop only counts inside the same row
+    if (idx >= 0 && EXP.zp) zpFocus(idx);
+    drag(e, el, onClick, idx < 0 ? onDrop : function (t, ev) { var r = t.closest && t.closest("[data-zrow]"); if (r && +r.dataset.zrow !== idx) return; onDrop(t, ev); }, prefix, onStart, onEnd);
   }
 
   // ---- factoring by grouping: x^2 + 5x + 3x + 15. Dragging a term down opens a 2 x 2 square. The terms go into the boxes, the greatest common factor of each row (left) and column (above) is typed,
@@ -1785,33 +1836,45 @@
     if (locked && EXP.lit && its.length > 1) { var gr = litGroup(its); if (gr) return "<span class=\"exT\" data-s=\"" + S + "\" data-i=\"0\"><span class=\"fr\"><span>" + exHtml(gr.nums) + "</span><span>" + litHtml(gr.den) + "</span></span></span>"; }
     return its.map(function (t, i) {
       var ng = (t.k === "g" ? t.m.n : t.n.n) < 0;
-      var op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + S + i + "\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "";
-      var body = dv && dv.S === S ? (function () { var a = mk(Math.abs(t.n.n), t.n.d); return "<span class=\"exCo\" title=\"Drag me to the other side to divide\">" + (hasS(t) ? litHtml(t, true) : exFr(a)) + "</span>" + exVarHtml(t.v || "x"); })() : exTerm(t);
+      var op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + S + i + "\">" + (ng ? "−" : "+") + "</span>" : ng && !(dv && dv.S === S) ? "<span class=\"exOp\">−</span>" : "";   // the minus sign of the term being divided by belongs to its handle, so the whole −1 lights up and moves
+      var body = dv && dv.S === S ? (function () { var a = mk(Math.abs(t.n.n), t.n.d); return "<span class=\"exCo\" title=\"Drag me to the other side to divide\">" + (ng && !i ? "−" : "") + (hasS(t) ? litHtml(t, true) : exFr(a)) + "</span>" + exVarHtml(t.v || "x"); })() : exTerm(t);
       return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live && !EXP.zpq ? " pend" : "") + (hot && hot.indexOf(S + i) >= 0 ? " hot" : "") + "\" data-s=\"" + S + "\" data-i=\"" + i + "\" data-drop=\"et:" + S + ":" + i + "\">" + body + "</span>";
     }).join("");
   }
   function eqRender(hot) {
+    eqRender0(hot); exWork();
+    var g = EXP && EXP.eq && !EXP.zp ? EXP.rel : null;
+    if (g && EXP.relPrev && EXP.relPrevO === EXP.orig && relRev(EXP.relPrev) === g && g !== EXP.relPrev) EXP.relAt = Date.now();   // the inequality sign turns over
+    if (g && EXP.relAt && Date.now() - EXP.relAt < 850) relTurn($("exRow").querySelector(".exEq"), Date.now() - EXP.relAt);
+    EXP.relPrev = g; EXP.relPrevO = EXP.orig;
+  }
+  function eqRender0(hot) {
     zpPaint();
-    var R = $("exRow"), live = (mode === "sequence" || mode === "calculate") && !locked, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !EXP.zp, gq = EXP.grq && !EXP.zpq;
+    var z = EXP.zp; eqRenderRow($("exRow"), hot, z ? z.act : -1, !!(z && z.done[z.act]));
+  }
+  function eqRenderRow(R, hot, idx, fin) {   // one equation in a row; idx is its place in a split (the zero product property), -1 when not split
+    if (idx >= 0) R.dataset.zrow = idx; else R.removeAttribute("data-zrow");
+    var live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked && !fin, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !!zpOf(EXP.L, EXP.R), gq = EXP.grq && !EXP.zpq;
     R.innerHTML = wrap("L") + "<span class=\"exEq" + (live && !un && !gq ? " grab" : "") + "\" data-drop=\"eq=\">" + relGlyph(EXP.rel) + "</span>" + wrap("R");
     grMark();
-    if (!locked && !un && !gq) { R.querySelector(".exEq").addEventListener("click", eqMulAsk); R.onclick = function (e) { if (e.target === R) eqMulAsk(); }; } else R.onclick = null;
-    if (live && un) { zpWire(R); return; }
+    var mulAsk = function () { if (EXP.ask || locked) return; if (idx >= 0 && EXP.zp && idx !== EXP.zp.act) { zpFocus(idx); eqRender(); } eqMulAsk(); };
+    if (!locked && !un && !gq && !fin) { R.querySelector(".exEq").addEventListener("click", mulAsk); R.onclick = function (e) { if (e.target === R) mulAsk(); }; } else R.onclick = null;
+    if (live && un) { zpWire(R, idx); return; }
     if (live && gq) { grWire(R); return; }
     if (!live) return;
     var dropOf = function (S, i) { return function (t) { if (t.dataset.drop === "eq=") eqDrop(S, i, eqOther(S), -1); else { var p = t.dataset.drop.split(":"); eqDrop(S, i, p[1], +p[2]); } }; };
-    [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var S = el.dataset.op[0], k = +el.dataset.op.slice(1); eqDrop(S, k - 1, S, k); }); });
+    [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { if (EXP.ask) return; if (idx >= 0) zpFocus(idx); var S = el.dataset.op[0], k = +el.dataset.op.slice(1); eqDrop(S, k - 1, S, k); }); });
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
       var S = el.dataset.s, i = +el.dataset.i, t = EXP[S][i], mEl = el.querySelector(":scope > .exM") || exSignOf(el), gEl = el.querySelector(":scope > .exG");
       if (mEl && gEl) {
         gEl.dataset.drop = "exg:" + S + ":" + i; exNegMark(mEl, S + ":" + i);
-        mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, mEl, function () { eqDistribute(S, i); }, function (t2) { var dd = t2.dataset.drop; if (dd === "exg:" + S + ":" + i) eqDistribute(S, i); else if (dd.indexOf("exg:") === 0 || dd.indexOf("et:") === 0) { var p2 = dd.split(":"); eqFactor(S, i, p2[1], +p2[2]); } }, ["exg:", "et:"]); });
+        mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, mEl, function () { eqDistribute(S, i); }, function (t2) { var dd = t2.dataset.drop; if (dd === "exg:" + S + ":" + i) eqDistribute(S, i); else if (dd.indexOf("exg:") === 0 || dd.indexOf("et:") === 0) { var p2 = dd.split(":"); eqFactor(S, i, p2[1], +p2[2]); } }, ["exg:", "et:"]); });
       }
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; drag(e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, dropOf(S, i), ["et:", "eq="]); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; zdr(idx, e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, dropOf(S, i), ["et:", "eq="]); });
       var kEl = el.querySelector(":scope > .exK");
-      if (kEl) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, kEl, null, function (t2) { var p = t2.dataset.drop.split(":"); if (p[0] === "et") eqFactor(S, i, p[1], +p[2]); else eqFactor(S, i, eqOther(S), -1); }, ["et:", "eq="]); });
+      if (kEl) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, kEl, null, function (t2) { var p = t2.dataset.drop.split(":"); if (p[0] === "et") eqFactor(S, i, p[1], +p[2]); else eqFactor(S, i, eqOther(S), -1); }, ["et:", "eq="]); });
       var co = el.querySelector(".exCo");
-      if (co) co.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, co, null, function () { eqDivide(); }, ["et:", "eq="]); });
+      if (co) co.addEventListener("pointerdown", function (e) { if (EXP.ask) return; co._hotAll = function (on) { [].forEach.call(R.querySelectorAll(".exT, .exEq"), function (x) { x.classList.toggle("drop", on); }); }; zdr(idx, e, co, null, function () { eqDivide(); }, ["et:", "eq="]); });   // dividing acts on every term of both sides, so they all light up
     });
   }
   function eqBuild(S, i, S2, j) {
@@ -1943,7 +2006,10 @@
     var k = eqKind(); if (k) eqEnd(k); else if (!msg) clearLog();
   }
   function eqEnd(kind) {
-    if (EXP.zp) { if (EXP.zp.done.some(function (d, q) { return q !== EXP.zp.act && !d; })) { zpSwitch(); return; } EXP.zp.eqs[EXP.zp.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; EXP.zp.done[EXP.zp.act] = true; }
+    if (EXP.zp) {
+      var zz = EXP.zp, sol = exSay(EXP.L) + " = " + exSay(EXP.R); zz.eqs[zz.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; zz.done[zz.act] = true;
+      var left = zz.done.filter(function (d) { return !d; }).length;
+      if (left) { closeAsk(false); eqRender(); note("One answer: " + sol + ". " + (left > 1 ? "Solve the other equations, in any order." : "Now solve the other equation.")); return; } EXP.zp.eqs[EXP.zp.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; EXP.zp.done[EXP.zp.act] = true; }
     locked = true; eqRender(); closeAsk(false);
     var iq = eqIneq(), txt = kind === "one" ? "Solved: " + (EXP.zp ? zpSay() : exSay(EXP.L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(EXP.R) : exSay(EXP.R))) + "." : kind === "none" ? (iq ? "No solution: the inequality is never true." : "No solution: the two sides can never be equal.") : (iq ? "Every number is a solution: the inequality is always true." : "Infinitely many solutions: the two sides are always equal.");
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note(txt);
@@ -1952,7 +2018,7 @@
   }
   function eqUndo() {
     distHide();
-    var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; if (EXP.grq) EXP.zpq = !!zpOf(EXP.L, EXP.R); locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
+    var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; if (EXP.grq) EXP.zpq = !!(EXP.zp || zpOf(EXP.L, EXP.R)); locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
   }
   function eqCheckSolo() {
     if (EXP.zpq || EXP.grq) {   // the answers are a set: "3, -2", "x = 3 or x = -2"
@@ -1996,7 +2062,8 @@
   }
   function eqNextStep() {
     var sides = ["L", "R"], q, i, j, S;
-    if (EXP.zpq && !EXP.zp) return { cap: "If two numbers multiply to make 0, one of them must be 0. Drag a factor up.", mv: ['.exT[data-s="L"][data-i="0"] > .exG', zpAnchor(true)], run: function () { var a = $("zpAnchor"); if (a) a.remove(); zpSplit(0, true); } };
+    if (EXP.zp && EXP.zp.done[EXP.zp.act]) { var nx = EXP.zp.done.indexOf(false); if (nx >= 0) zpFocus(nx); }
+    if (EXP.zpq && zpOf(EXP.L, EXP.R)) return { cap: "If two numbers multiply to make 0, one of them must be 0. Drag a factor up.", mv: ['#exRow .exT[data-s="L"][data-i="0"] > .exG', zpAnchor(true)], run: function () { var a = $("zpAnchor"); if (a) a.remove(); zpSplit(0, true); } };
     for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return { hot: [S + i], cap: "Drag " + dgWord(EXP[S][i].m) + " onto the parentheses.", key: S + ":" + i, anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, distMsg(g, d), g); }; })(S, i) }; }
     for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"]', '.exT[data-s="' + S + '"][data-i="' + j + '"]'], cap: "Drag a term onto its like term.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
     var xi = function (S) { return EXP[S].findIndex(function (t) { return t.k === "x"; }); }, ci = function (S) { return EXP[S].findIndex(function (t) { return t.k === "c"; }); };
@@ -2422,12 +2489,12 @@
       if (!moved && onStart) onStart();
       moved = true; el.classList.add("drag"); el.style.transform = "translate(" + dx + "px," + dy + "px)";
       var t = under(ev, el, prefix);
-      if (hot !== t) { if (hot) hot.classList.remove("drop"); hot = t; if (t) t.classList.add("drop"); }
+      if (hot !== t) { if (hot) { hot.classList.remove("drop"); if (el._hotAll) el._hotAll(false); } hot = t; if (t) { t.classList.add("drop"); if (el._hotAll) el._hotAll(true); } }   // _hotAll: the drop lights up more than the one target (dividing lights up the whole equation)
     }
     function up(ev) {
       cap.removeEventListener("pointermove", mv); cap.removeEventListener("pointerup", up); cap.removeEventListener("pointercancel", up);
       var t = moved ? under(ev, el, prefix) : null;
-      el.classList.remove("drag"); el.style.transform = ""; if (hot) hot.classList.remove("drop");
+      el.classList.remove("drag"); el.style.transform = ""; if (hot) { hot.classList.remove("drop"); if (el._hotAll) el._hotAll(false); }
       if (!moved) { if (onClick) onClick(); } else if (t) onDrop(t, ev);
       if (moved && onEnd) onEnd(t, ev);
     }
@@ -2456,7 +2523,7 @@
     mulNote = null;
     steps.push({ eqs: L, ms: M }); clearLog(); render(pop);
     // a solved value drops from the workspace down to the values bar
-    fresh.forEach(function (n) { var chip = $("vals").querySelector("[data-v=\"" + n + "\"]"); if (a && chip) dropIn(chip, a); });
+    fresh.forEach(function (n) { var chip = $("vals").querySelector("[data-v=\"" + n + "\"]"); if (a && chip) dropIn(chip, a, relTurned); }); relTurned = false;
     if (fa && rows[pop]) { rows[pop].classList.remove("pop"); flyIn(rows[pop], { getBoundingClientRect: function () { return fa; } }); }
     var dead = ws.filter(function (q) { return !q.ks.length && !q.raw && allV().every(function (n) { return !q[CK[n]].n; }); })[0];
     if (dead) {
@@ -2560,6 +2627,7 @@
     var nq = { a: mul(q.a, k), b: mul(q.b, k), e: mul(q.e, k), ks: q.ks.map(function (z) { var y = JSON.parse(JSON.stringify(z)); y.k = mul(z.k, k); return y; }), c: mul(q.c, k) };
     if (q.flip) nq.flip = true;
     if (q.rel) nq.rel = k.n < 0 ? relRev(q.rel) : q.rel;   // multiplying or dividing by a negative number turns the sign around
+    if (q.rel && k.n < 0) relTurned = true;
     if (mode === "calculate" && !ready) {
       var want = { a: nq.a, b: nq.b, e: nq.e, c: nq.c, rel: nq.rel };   // the typed equation is compared with its numbers gathered on one side
       nq.ks.forEach(function (z) { want.c = add(want.c, neg(z.k)); });
@@ -2618,6 +2686,7 @@
     var key = CK[vn[0]], co = q[key], n = { a: mk(0), b: mk(0), e: mk(0), ks: [], c: mul(q.c, inv(co)) };
     n[key] = mk(1); if (q.flip) n.flip = true;
     if (q.rel) n.rel = co.n < 0 ? relRev(q.rel) : q.rel;   // dividing by a negative coefficient turns the sign around
+    if (q.rel && co.n < 0) relTurned = true;
     if (mode === "calculate") n.raw = sg(q.c) + "/" + wrap(co);
     ws[i] = n; done(i);
     if (q.rel && co.n < 0) note("Dividing both sides by a negative number turns the sign around: " + q.rel + " becomes " + n.rel + ".");
@@ -2908,11 +2977,12 @@
     void row.offsetWidth; row.style.transition = "transform 1.4s ease-in-out"; row.style.transform = "";
   }
   // a newly solved value glides down from where its equation was into the values bar
-  function dropIn(chip, a) {
+  function dropIn(chip, a, turn) {   // turn: the sign of the inequality turns over while the answer falls into place
     var b = chip.getBoundingClientRect(), g = chip.cloneNode(true), cs = getComputedStyle(chip);
     var l = a.left + a.width / 2 - b.width / 2, tp = a.top + a.height / 2 - b.height / 2;
     g.style.cssText = "position:fixed;left:" + l + "px;top:" + tp + "px;margin:0;z-index:40;pointer-events:none;box-shadow:0 .2em .8em rgba(0,0,0,.35);transform:scale(1.5);transition:transform 1.4s ease-in-out;font-size:" + cs.fontSize + ";font-weight:" + cs.fontWeight + ";font-family:" + cs.fontFamily + ";color:" + cs.color + ";background:" + cs.backgroundColor;
     chip.style.visibility = "hidden"; document.body.appendChild(g); void g.offsetWidth;
+    if (turn) { var rg = g.querySelector(".rg"); if (rg) { rg.style.animationDuration = "1.2s"; relTurn(rg); } }
     g.style.transform = "translate(" + (b.left - l) + "px," + (b.top - tp) + "px) scale(1.5)";
     setTimeout(function () { g.remove(); chip.style.visibility = ""; }, 1450);
   }
@@ -2947,6 +3017,12 @@
   // ---- 1.4's demo plays on its own, step after step (same controls as every other activity: see dmUI) ----
   var DM4 = { run: false, paused: false, endReq: false, brk: false, t: 0 };
   function dmLocked() { return mode === "demo" && !quiz() && DM4.run && !DM4.paused; }   // the demo is in charge of the pane
+  // the student may take over the pane at any time in Demo (before it starts, while it plays, paused): touching the equations pauses a running demo, and then the move is theirs
+  function dmHold() {
+    if (!dmLocked()) return;
+    DM4.paused = true; clearTimeout(DM4.t); if (typeof handHide === "function") handHide(); dmUI("paused"); dmCap("Paused. Change anything you like, then press Resume demo.");
+  }
+  document.addEventListener("pointerdown", function (e) { if (dmLocked() && e.target.closest && e.target.closest("#wsEl, #exBox")) dmHold(); }, true);
   function dm4Reset() { clearTimeout(DM4.t); DM4.run = DM4.paused = DM4.endReq = DM4.brk = false; }
   function dm4Go(ms) {
     clearTimeout(DM4.t);
@@ -3060,7 +3136,7 @@
   // ---- show work: "Make One Change And Recopy" (just the equations) ----
   function workHTML(st) {
     return st.map(function (w) {
-      return "<section>" + w.eqs.map(function (e, j) { return "<div class=\"r\"><span class=\"m\">" + ((w.ms && w.ms[j]) || "") + "</span><span>" + e.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/[xyz]/g, "<i>$&</i>") + "</span></div>"; }).join("") + "</section>";
+      return "<section>" + w.eqs.map(function (e, j) { return "<div class=\"r\"><span class=\"m\">" + ((w.ms && w.ms[j]) || "") + "</span><span>" + e.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&(?:amp|lt|gt);|[a-z]/g, function (m) { return m.length > 1 ? m : "<i>" + m + "</i>"; }) + "</span></div>"; }).join("") + "</section>";
     }).join("");
   }
   // every problem worked in the session is kept, so Show work can page back and forward through them
