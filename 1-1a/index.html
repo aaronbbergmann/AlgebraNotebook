@@ -1846,7 +1846,7 @@
   }
   // Demo progress is earned only by a demo that plays through to its end: a demo that was ended, left for another mode, or finished by hand
   // while paused earns nothing (1.4: the demo is still running when the problem is solved; 1.1A: the whole demo script has played out)
-  function demoCredit() { return quiz() ? !!PG.demoFin : !!(DM4.run && !DM4.paused); }
+  function demoCredit() { return quiz() ? !!PG.demoFin : !!(DM4.run && !DM4.paused) || locked; }   // a finished demo, or the student took over a paused demo and solved it correctly alone
   function tally(quiet) {
     var earn = mode !== "demo" || demoCredit();
     if (!quiet && earn) celebrate();
