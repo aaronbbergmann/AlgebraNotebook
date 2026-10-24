@@ -1122,9 +1122,12 @@
           drag(e, cell, null, function (t, ev) {
             var d = t.dataset.drop;
             if (d.indexOf("comb:") === 0) {
-              // drop one number on its neighbour (same side of the =) to combine them
-              var pp = d.split(":"), a = +pp[2], b2 = +pp[3];
-              if (+pp[1] === i && (idx === a || idx === b2)) { if (mode === "calculate") openAsk(i, "comb", [a, b2, 0]); else combineK(i, a, b2); }
+              // drop one number on any other number in the equation (same side of the =) to combine them; the sum stays where the left one was
+              var pp = d.split(":"), tk = t.dataset.k === undefined ? -1 : +t.dataset.k;
+              if (+pp[1] === i && tk >= 0 && tk !== idx && q.ks[tk] && !q.ks[tk].r) {
+                var a = idx, b2 = tk; if (kslot(q, q.ks[a], vs) > kslot(q, q.ks[b2], vs)) { a = tk; b2 = idx; }
+                if (mode === "calculate") openAsk(i, "comb", [a, b2, 0]); else combineK(i, a, b2);
+              }
             } else if (d.indexOf("mv:") === 0) mvDropK(i, idx, t);
             else if (sameRowRight(t, ev)) constDrop(i, idx);
           }, mvOn() ? ["row:", "comb:", "mv:"] : ["row:", "comb:"]);
@@ -1144,6 +1147,10 @@
       if (!k.pa || k.r || isFirst(q, k, vs)) return;
       var op = c[kslot(q, k, vs) - 1]; op.classList.add("opc"); op.title = "Rewrite as subtraction";
       op.addEventListener("click", function () { if (!locked && !busy && !calc) convertK(i, idx); });
+    });
+    q.ks.forEach(function (k, idx) {   // every number can be dropped on every other number, not only its neighbour
+      if (k.r || q.raw) return; var cc = c[kslot(q, k, vs)]; cc.dataset.k = idx;
+      if (!/^comb:/.test(cc.dataset.drop || "")) cc.dataset.drop = "comb:" + i + ":" + idx + ":*";
     });
     if (mvOn()) { mvTags(r, i); mvXCell(r, i); }
     if (q.raw) { c[N - 1].classList.add("pend"); c[N - 1].addEventListener("click", function () { if (busy || dmLocked()) return; if (mode === "demo") doCalc(i); else openAsk(i, "simp"); }); }
