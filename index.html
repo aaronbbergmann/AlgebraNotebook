@@ -380,6 +380,8 @@
   html[data-mode=demo] body.solver .ctlbox>.nxRow,.play:not(.pq) .ctlbox>.nxRow{display:none}
   html:not([data-mode=demo]) body.solver .ctlbox>.nxRow{min-height:13rem}
   .exT.grab .exM{cursor:grab;border-radius:.3em}.exT.grab .exM:hover{background:color-mix(in srgb,var(--plus) 16%,transparent)}
+  #opPop{position:fixed;z-index:60;display:flex;gap:.45rem;padding:.55rem;background:var(--bg);border:2px solid var(--ink);border-radius:16px;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.28)}
+  #opPop .btn{width:2.6rem;height:2.6rem;padding:0;border-radius:50%;font-size:1.35rem;line-height:1;display:flex;align-items:center;justify-content:center}
   #dmEnd[hidden]{display:none}
   /* the title area at the top of every activity: the title, and (in Demo) one short phrase on what is happening */
   .stHead{position:sticky;top:-.8rem;z-index:6;margin:-.8rem -1rem .5rem;padding:.8rem 1.2rem .5rem;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
@@ -1162,17 +1164,27 @@
     eqSet(N, b.msg);
   }
   // click the = (or the equation's box): multiply every term on both sides
-  function eqMulAsk() {
+  function eqMulAsk() {   // the = was clicked: + − × ÷, then the amount
     if (locked || busy || EXP.ask || dmLocked()) return;
     if (!$("ask").hidden) closeAsk(true);
-    askKind = "ex"; $("askT").textContent = "Multiply the equation by:"; showInput(); $("askIn").placeholder = "e.g. 2 or 1/2"; EXP.ask = { kind: "mulk" };
+    opPop(document.querySelector("#exRow .exEq") || $("exRow"), function (op) {
+      if (locked || busy || EXP.ask) return;
+      askKind = "ex"; $("askT").textContent = { add: "Add to both sides:", sub: "Subtract from both sides:", mul: "Multiply the equation by:", div: "Divide the equation by:" }[op];
+      showInput(); $("askIn").placeholder = "e.g. 2 or 1/2"; EXP.ask = { kind: "mulk", op: op };
+    });
   }
-  function eqMul(k, ready) {
+  function eqMul(k, ready, dv) {
     var N = eqClone();
     [N.L, N.R].forEach(function (side) { side.forEach(function (t) { if (t.k === "g") t.m = mul(t.m, k); else t.n = mul(t.n, k); }); });
     N.L = eqNorm(N.L); N.R = eqNorm(N.R);
-    var msg = "Multiply both sides by " + sg(k) + ".";
-    if (mode === "calculate" && !ready) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, "Multiply both sides by " + sg(k) + ". Type the new equation:"); $("askIn").placeholder = "e.g. 6x = 3x + 12"; return; }
+    var msg = dv ? "Divide both sides by " + sg(dv) + "." : "Multiply both sides by " + sg(k) + ".";
+    if (mode === "calculate" && !ready) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 6x = 3x + 12"; return; }
+    eqSet(N, msg);
+  }
+  function eqAddAll(k, ready) {   // the same number on both sides (it joins the terms already there)
+    var N = eqClone(); N.L.push({ k: "c", n: k }); N.R.push({ k: "c", n: k });
+    var msg = (k.n > 0 ? "Add " + sg(k) + " to" : "Subtract " + sg(neg(k)) + " from") + " both sides.";
+    if (mode === "calculate" && !ready) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 3x + 2 = x + 6"; return; }
     eqSet(N, msg);
   }
   function eqAsk(info, label) {
@@ -1187,7 +1199,8 @@
       var kk = parse(String($("askIn").value).replace(/−/g, "-"));
       if (!kk) { m.textContent = "Enter a number like 2, -3 or 1/2."; return; }
       closeAsk(false); if (!kk.n) { var rw = $("exRow"); rw.classList.remove("shake"); void rw.offsetWidth; rw.classList.add("shake"); return; }
-      eqMul(kk); return;
+      if (k.op === "add") eqAddAll(kk); else if (k.op === "sub") eqAddAll(neg(kk)); else if (k.op === "div") eqMul(inv(kk), false, kk); else eqMul(kk);
+      return;
     }
     if (k.kind === "mulq") {
       var sd = String($("askIn").value).split("=");
@@ -1393,7 +1406,7 @@
       cell.addEventListener("pointerdown", function (e) { drag(e, cell, null, function (t) { mvDropK(i, idx, t); }, "mv:"); });
     });
     if (BUILT[act].solver && lesson === 1) {   // clicking the = or the equation's box multiplies the whole equation, as in the 3x3
-      var eqc = c[c.length - 2], mulOpen = function () { if (!locked && !busy && !calc && !dmLocked()) openAsk(i, "mul"); };
+      var eqc = c[c.length - 2], mulOpen = function () { eqClick(i, eqc); };
       eqc.addEventListener("click", mulOpen); r.addEventListener("click", function (e) { if (e.target === r) mulOpen(); });
     }
     mvXCell(r, i); var co = c[2].querySelector(".co"); if (co && q[CK.x].n) co.addEventListener("pointerdown", function (e) { drag(e, co, null, function (t) { mvDropX(i, t); }, "mv:"); });
@@ -1401,13 +1414,13 @@
   function wire(r, q, i) {
     var c = r.children, vs = curVs(), N = c.length, eq = c[N - 2];
     eq.addEventListener("pointerdown", function (e) {
-      drag(e, r, function () { openAsk(i, "mul"); }, function (t) { var j = +t.dataset.drop.slice(4); if (j !== i) addEq(i, j); });
+      drag(e, r, function () { eqClick(i, eq); }, function (t) { var j = +t.dataset.drop.slice(4); if (j !== i) addEq(i, j); });
     });
-    eq.addEventListener("click", function (e) { if (e.detail === 0 && !dmLocked()) openAsk(i, "mul"); });
+    eq.addEventListener("click", function (e) { if (e.detail === 0 && !dmLocked()) eqClick(i, eq); });
     // the dark dot beside the equation (or the equation itself) drags it onto another equation to add
     r.addEventListener("pointerdown", function (e) {
       if (e.target !== r) return;
-      drag(e, r, function () { openAsk(i, "mul"); }, function (t) { var j = +t.dataset.drop.slice(4); if (j !== i) addEq(i, j); });
+      drag(e, r, function () { eqClick(i, eq); }, function (t) { var j = +t.dataset.drop.slice(4); if (j !== i) addEq(i, j); });
     });
     function sameRowRight(t, ev) { return t.dataset.drop.indexOf("row:") === 0 && +t.dataset.drop.slice(4) === i && (q.flip && lesson === 1 ? ev.clientX < eq.getBoundingClientRect().left : ev.clientX > eq.getBoundingClientRect().right); }
     vs.forEach(function (v, k) {
@@ -1508,7 +1521,7 @@
     ws = ws.filter(function (q) { var n = valName(q); if (n) { vals[n] = q.c; fresh.push(n); return false; } return true; });
     pop = ws.indexOf(keep);
     var L = lines(), M = L.map(function () { return ""; });
-    if (mulNote && pop >= 0) M[pop] = "⋅ " + mulNote;
+    if (mulNote && pop >= 0) M[pop] = mulNote.charAt(0) === "!" ? mulNote.slice(1) : "⋅ " + mulNote;
     mulNote = null;
     steps.push({ eqs: L, ms: M }); clearLog(); render(pop);
     // a solved value drops from the workspace down to the values bar
@@ -1545,7 +1558,43 @@
     r.classList.remove("shake"); void r.offsetWidth; r.classList.add("shake");
   }
 
-  function mulEq(i, k, ready) {
+  // clicking the = opens four buttons: + − × ÷ (Play Solver); the choice then asks for the amount to apply to the whole equation
+  var OPS = { add: ["+", "Add to both sides"], sub: ["\u2212", "Subtract from both sides"], mul: ["\u00d7", "Multiply every term by"], div: ["\u00f7", "Divide every term by"] };
+  var opPopOff = null;
+  function opPopClose() { var d = $("opPop"); if (d) d.remove(); if (opPopOff) { document.removeEventListener("pointerdown", opPopOff, true); document.removeEventListener("keydown", opPopOff, true); opPopOff = null; } }
+  function opPop(anchor, pick) {
+    opPopClose();
+    var d = document.createElement("div"); d.id = "opPop"; d.setAttribute("role", "menu"); d.setAttribute("aria-label", "Do the same to both sides");
+    d.innerHTML = ["add", "sub", "mul", "div"].map(function (k) { return "<button type=\"button\" class=\"btn\" role=\"menuitem\" data-op=\"" + k + "\" title=\"" + OPS[k][1] + "\" aria-label=\"" + OPS[k][1] + "\">" + OPS[k][0] + "</button>"; }).join("");
+    document.body.appendChild(d);
+    var a = anchor.getBoundingClientRect(), w = d.offsetWidth;
+    d.style.left = Math.max(6, Math.min(innerWidth - w - 6, a.left + a.width / 2 - w / 2)) + "px"; d.style.top = (a.bottom + 10) + "px";
+    d.addEventListener("click", function (e) { var b = e.target.closest("button[data-op]"); if (!b) return; opPopClose(); pick(b.dataset.op); });
+    opPopOff = function (e) { if (e.type === "keydown") { if (e.key === "Escape") opPopClose(); return; } if (!d.contains(e.target)) opPopClose(); };
+    setTimeout(function () { if (opPopOff) { document.addEventListener("pointerdown", opPopOff, true); document.addEventListener("keydown", opPopOff, true); } }, 0);
+  }
+  // the = of an equation was clicked
+  function eqClick(i, anchor) {
+    if (locked || busy || calc || dmLocked()) return;
+    if (BUILT[act].solver && lesson === 1) opPop(anchor, function (k) { openAsk(i, k); }); else openAsk(i, "mul");
+  }
+  // add or subtract the same number on both sides: the number is written next to the other terms, and the right side takes it too
+  function addEqAll(i, k, ready) {
+    if (locked) return; var q = ws[i];
+    if (!k.n) { bad(i); return; }
+    if (q.raw || q.ks.some(function (z) { return z.r; })) { bad(i); return; }
+    var nq = JSON.parse(JSON.stringify(q)); nq.c = add(q.c, k);
+    // the pane shows one number before and one after the variable: use a free place, and the two numbers join when both are taken
+    var sIdx = nq.ks.findIndex(function (z) { return z.v === "s"; }), pIdx = nq.ks.findIndex(function (z) { return z.v === "p"; });
+    if (sIdx < 0) nq.ks.push({ v: "s", k: k }); else if (pIdx < 0) nq.ks.push({ v: "p", k: k }); else { nq.ks[sIdx].k = add(nq.ks[sIdx].k, k); if (!nq.ks[sIdx].k.n) nq.ks.splice(sIdx, 1); }
+    if (mode === "calculate" && !ready) {
+      var want = { a: nq.a, b: nq.b, e: nq.e, c: nq.c }; nq.ks.forEach(function (z) { want.c = add(want.c, neg(z.k)); });
+      runCalc([{ q: (k.n > 0 ? "Add " + sg(k) : "Subtract " + sg(neg(k))) + (k.n > 0 ? " to" : " from") + " both sides of the " + eqName(i, ws.length) + ". Type the new equation:", eq: want }], [i], function () { addEqAll(i, k, true); });
+      return;
+    }
+    snap(); ws[i] = nq; mulNote = "!" + (k.n > 0 ? "+ " + sg(k) : "\u2212 " + sg(neg(k))); done(i);
+  }
+  function mulEq(i, k, ready, dv) {   // dv: the divisor, when the equation is divided (k is then its reciprocal)
     if (locked) return; var q = ws[i];
     if (q.raw || q.ks.some(function (z) { return z.r; })) { bad(i); return; }
     // every term on both sides is multiplied, the numbers beside the variable too (3x - 2 = 10 times 2 is 6x - 4 = 20)
@@ -1554,10 +1603,10 @@
     if (mode === "calculate" && !ready) {
       var want = { a: nq.a, b: nq.b, e: nq.e, c: nq.c };   // the typed equation is compared with its numbers gathered on one side
       nq.ks.forEach(function (z) { want.c = add(want.c, neg(z.k)); });
-      runCalc([{ q: "Multiply the " + eqName(i, ws.length) + " by " + wrap(k) + ". Type the new equation:", eq: want }], [i], function () { mulEq(i, k, true); });
+      runCalc([{ q: (dv ? "Divide the " + eqName(i, ws.length) + " by " + wrap(dv) : "Multiply the " + eqName(i, ws.length) + " by " + wrap(k)) + ". Type the new equation:", eq: want }], [i], function () { mulEq(i, k, true, dv); });
       return;
     }
-    snap(); ws[i] = nq; mulNote = wrap(k); done(i);
+    snap(); ws[i] = nq; mulNote = dv ? "!\u00f7 " + wrap(dv) : wrap(k); done(i);
   }
   // adding two equations leaves just one equation in the workspace
   // (in the 3x3, a sum with exactly two variables is a new 2x2 equation and moves to the top)
@@ -1726,7 +1775,7 @@
     if (!$("ask").hidden) closeAsk(true);
     askIdx = i; askKind = kind; askK = typeof idx === "number" ? idx : 0; askC = Array.isArray(idx) ? idx : null;
     var q = ws[i];
-    $("askT").textContent = kind === "mul" ? "Multiply the outlined equation by:" : kind === "comb" ? "Combine " + combText(q, askC[0], askC[1]) + ":" : kind === "ksimp" ? "Calculate " + kPrompt(q, q.ks[askK], curVs()) + ":" : "Simplify " + q.raw + ":";
+    $("askT").textContent = kind === "add" ? "Add to both sides of the outlined equation:" : kind === "sub" ? "Subtract from both sides of the outlined equation:" : kind === "div" ? "Divide the outlined equation by:" : kind === "mul" ? "Multiply the outlined equation by:" : kind === "comb" ? "Combine " + combText(q, askC[0], askC[1]) + ":" : kind === "ksimp" ? "Calculate " + kPrompt(q, q.ks[askK], curVs()) + ":" : "Simplify " + q.raw + ":";
     rows[i].classList.add("asking");
     showInput();
   }
@@ -1739,12 +1788,13 @@
     var i = askIdx, txt = $("askIn").value, err = function (t) { $("askErr").textContent = t; };
     if (askKind === "ex") { exAskOK(); return; }
     if (askKind === "subfn") { var cr = subCb.check(txt); if (cr !== true) { err(cr); $("askIn").select(); return; } closeAsk(false); subCb.ok(); return; }
-    if (askKind === "mul") {
+    if (askKind === "mul" || askKind === "add" || askKind === "sub" || askKind === "div") {
       var k = parse(txt);
       if (!k) { err("Enter a number like 2, -3 or 1/2."); return; }
       closeAsk(false);
       if (!k.n) { bad(i); return; }
-      mulEq(i, k); return;
+      if (askKind === "add") addEqAll(i, k); else if (askKind === "sub") addEqAll(i, neg(k)); else if (askKind === "div") mulEq(i, inv(k), false, k); else mulEq(i, k);
+      return;
     }
     // one calculation (simplifying, or a substituted term): just type the number
     if (askKind === "comb") {
