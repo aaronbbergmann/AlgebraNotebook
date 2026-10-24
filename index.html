@@ -381,6 +381,7 @@
   html:not([data-mode=demo]) body.solver .ctlbox>.nxRow{min-height:13rem}
   .exT.grab .exM{cursor:grab;border-radius:.3em}.exT.grab .exM:hover{background:color-mix(in srgb,var(--plus) 16%,transparent)}
   #opPop{position:fixed;z-index:60;display:flex;flex-wrap:wrap;align-items:center;gap:.45rem;padding:.55rem;background:var(--bg);border:2px solid var(--ink);border-radius:16px;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.28)}
+  .exNeg{cursor:grab;touch-action:none;border-radius:6px;border-bottom:2px dashed var(--plus)}.exNeg:hover{background:color-mix(in srgb,var(--plus) 20%,transparent)}
   #distBox{position:fixed;z-index:101;pointer-events:none;font-family:"LM","Latin Modern Roman","CMU Serif","STIX Two Text",Georgia,"Times New Roman",serif;font-size:clamp(1.3rem,3.2vw,2.1rem);padding:.6rem 1rem .7rem;background:var(--bg);border:2px solid color-mix(in srgb,var(--ink) 22%,transparent);border-radius:16px;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.2);opacity:0;transform:translate(-50%,18px);transition:opacity .4s,transform .4s}
   #distBox.on{opacity:1;transform:translate(-50%,0)}
   #distBox .dgrid{display:grid;align-items:stretch}
@@ -951,6 +952,11 @@
     var d = document.createElement("div"); d.innerHTML = exHtml(its).replace(/<sup>(\d+)<\/sup>/g, "^$1"); return d.textContent.replace(/([+−])/g, " $1 ").replace(/^ − /, "−").replace(/\( − /g, "(−").trim();
   }
   function exPair(i, j) { var its = EXP.items; return i < j ? [its[i], its[j]] : [its[j], its[i]]; }
+  // a minus sign in front of parentheses is the drag handle that distributes it (it means -1): -(x + 1) becomes -x - 1
+  function exSignOf(el) { var p = el.previousElementSibling; return el.querySelector(":scope > .exG") && !el.querySelector(":scope > .exM") && p && p.classList.contains("exOp") && p.textContent === "\u2212" ? p : null; }
+  function exNegMark(h, key) { if (h && h.classList.contains("exOp")) { h.classList.add("exNeg"); h.dataset.for = key; h.title = "Drag the minus sign onto the parentheses"; } }
+  function distMsg(g, d) { return "Distribute: " + exSay([g]) + " = " + exSay(d) + "." + (g.m.d === 1 && g.m.n === -1 ? " The minus sign means \u22121, so \u22121 times each term." : ""); }
+  function dgWord(m) { return m.d === 1 && Math.abs(m.n) === 1 ? (m.n < 0 ? "the minus sign" : "the plus sign") : "the number"; }
   function exRender(hot) {
     if (!EXP) return;
     if (EXP.eq) { eqRender(hot); return; }
@@ -962,9 +968,9 @@
     if (!live) return;
     [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var k = +el.dataset.op; exDrop(k, k - 1); }); });
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
-      var i = +el.dataset.i, mEl = el.querySelector(":scope > .exM"), gEl = el.querySelector(":scope > .exG");
+      var i = +el.dataset.i, mEl = el.querySelector(":scope > .exM") || exSignOf(el), gEl = el.querySelector(":scope > .exG");
       if (mEl && gEl) {   // the number in front of the parentheses is dragged onto them to distribute
-        gEl.dataset.drop = "exg:" + i;
+        gEl.dataset.drop = "exg:" + i; exNegMark(mEl, String(i));
         mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, mEl, function () { exDistribute(i); }, function (t) { if (t.dataset.drop === "exg:" + i) exDistribute(i); }, "exg:"); });
       }
       el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { exDrop(i, +t.dataset.drop.slice(3)); }, "ex:"); });
@@ -1020,7 +1026,7 @@
   function exDistribute(i) {
     if (locked || busy || EXP.ask) return; var g = EXP.items[i], d = exDist(g);
     if (mode === "calculate") { exAsk("dist", i, -1, exSay([g]) + " ="); return; }
-    var n = EXP.items.slice(); n.splice.apply(n, [i, 1].concat(d)); exSet(n, "Distribute: " + exSay([g]) + " = " + exSay(d) + ".", g);
+    var n = EXP.items.slice(); n.splice.apply(n, [i, 1].concat(d)); exSet(n, distMsg(g, d), g);
   }
   function exAsk(kind, i, j, label) {
     if (!$("ask").hidden) closeAsk(true);
@@ -1038,7 +1044,7 @@
     if (!ok) { m.textContent = "Not quite. Check your work and try again."; $("askIn").select(); return; }
     var A = k.kind === "comb" ? exSay(exPair(k.i, k.j)) : exSay([its[k.i]]);
     if (k.kind === "comb") { var res = exCombineTo(k.i, k.j); exSet(res, A + " = " + exSay([exSum(its[k.i], its[k.j])])); }
-    else { var n = its.slice(); n.splice.apply(n, [k.i, 1].concat(exDist(its[k.i]))); exSet(n, "Distribute: " + A + " = " + exSay(exDist(its[k.i])) + ".", its[k.i]); }
+    else { var n = its.slice(); n.splice.apply(n, [k.i, 1].concat(exDist(its[k.i]))); exSet(n, distMsg(its[k.i], exDist(its[k.i])), its[k.i]); }
   }
   function exCheckSolo() {
     if (EXP.eq) { eqCheckSolo(); return; }
@@ -1092,7 +1098,7 @@
       }, 900);
     }, 400);
   }
-  function exDragDemo(sel, run, after) { exMoveDemo(sel + " > .exM", sel + " > .exG", run, after); }   // the number in front of the parentheses onto them
+  function exDragDemo(sel, run, after, key) { var has = $("exRow").querySelector(sel + " > .exM"); exMoveDemo(has ? sel + " > .exM" : '.exNeg[data-for="' + key + '"]', sel + " > .exG", run, after); }   // the number in front of the parentheses onto them
   function exDemoStep(ms) {
     if (EXP && EXP.eq) { eqDemoStep(ms); return; }
     clearTimeout(DM4.t);
@@ -1102,8 +1108,8 @@
       for (j = 0; j < its.length && gi < 0; j++) if (its[j].k === "g") gi = j;
       var go = function (fn) { DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused) return; fn(); if (!locked) exDemoStep(900); }, 1300); };
       if (gi >= 0) {
-        var g = its[gi]; exRender(); dmCap("Drag " + exSay([{ k: "c", n: g.m }]).replace(/^1$/, "the sign") + " onto the parentheses to distribute it.");
-        exDragDemo('.exT[data-i="' + gi + '"]', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, "Distribute: " + exSay([g]) + " = " + exSay(exDist(g)) + ".", g); }, function () { if (!locked) exDemoStep(900); });
+        var g = its[gi]; exRender(); dmCap("Drag " + (dgWord(g.m) === "the number" ? exSay([{ k: "c", n: g.m }]) : dgWord(g.m)) + " onto the parentheses to distribute it.");
+        exDragDemo('.exT[data-i="' + gi + '"]', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, distMsg(g, exDist(g)), g); }, function () { if (!locked) exDemoStep(900); }, String(gi));
         return;
       }
       for (j = 0; j < its.length && a < 0; j++) for (k = j + 1; k < its.length; k++) if (exLike(its[k], its[j])) { a = j; b = k; break; }
@@ -1170,9 +1176,9 @@
     var dropOf = function (S, i) { return function (t) { if (t.dataset.drop === "eq=") eqDrop(S, i, eqOther(S), -1); else { var p = t.dataset.drop.split(":"); eqDrop(S, i, p[1], +p[2]); } }; };
     [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var S = el.dataset.op[0], k = +el.dataset.op.slice(1); eqDrop(S, k - 1, S, k); }); });
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
-      var S = el.dataset.s, i = +el.dataset.i, t = EXP[S][i], mEl = el.querySelector(":scope > .exM"), gEl = el.querySelector(":scope > .exG");
+      var S = el.dataset.s, i = +el.dataset.i, t = EXP[S][i], mEl = el.querySelector(":scope > .exM") || exSignOf(el), gEl = el.querySelector(":scope > .exG");
       if (mEl && gEl) {
-        gEl.dataset.drop = "exg:" + S + ":" + i;
+        gEl.dataset.drop = "exg:" + S + ":" + i; exNegMark(mEl, S + ":" + i);
         mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, mEl, function () { eqDistribute(S, i); }, function (t2) { if (t2.dataset.drop === "exg:" + S + ":" + i) eqDistribute(S, i); }, "exg:"); });
       }
       el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; drag(e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, dropOf(S, i), ["et:", "eq="]); });
@@ -1208,7 +1214,7 @@
   function eqDistribute(S, i) {
     if (locked || busy || EXP.ask) return;
     var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R);
-    var msg = "Distribute: " + exSay([g]) + " = " + exSay(d) + ".";
+    var msg = distMsg(g, d);
     if (mode === "calculate") { eqAsk({ kind: "dist", b: { N: N, msg: msg, g: g }, d: d }, exSay([g]) + " ="); return; }
     eqSet(N, msg, g);
   }
@@ -1311,14 +1317,14 @@
       if (!EXP || !DM4.run || DM4.paused || locked) return;
       var step = eqNextStep(); if (!step) return;
       eqRender(); dmCap(step.cap);
-      if (step.anim) { exDragDemo(step.anim, step.run, function () { if (!locked) eqDemoStep(900); }); return; }
+      if (step.anim) { exDragDemo(step.anim, step.run, function () { if (!locked) eqDemoStep(900); }, step.key); return; }
       if (step.mv) { exMoveDemo(step.mv[0], step.mv[1], step.run, function () { if (!locked) eqDemoStep(900); }); return; }
       DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused) return; step.run(); if (!locked) eqDemoStep(900); }, 1300);
     }, ms);
   }
   function eqNextStep() {
     var sides = ["L", "R"], q, i, j, S;
-    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return { hot: [S + i], cap: "Drag the number onto the parentheses.", anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, "Distribute: " + exSay([g]) + " = " + exSay(d) + ".", g); }; })(S, i) }; }
+    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return { hot: [S + i], cap: "Drag " + dgWord(EXP[S][i].m) + " onto the parentheses.", key: S + ":" + i, anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, distMsg(g, d), g); }; })(S, i) }; }
     for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"]', '.exT[data-s="' + S + '"][data-i="' + j + '"]'], cap: "Drag a term onto its like term.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
     var xi = function (S) { return EXP[S].findIndex(function (t) { return t.k === "x"; }); }, ci = function (S) { return EXP[S].findIndex(function (t) { return t.k === "c"; }); };
     var xl = xi("L"), xr = xi("R");
@@ -1341,10 +1347,14 @@
       if (lv === 0) { a = 2 + rnd(4); b = 1 + rnd(a - 1); e = (a - b) * x0; L = [X(a)]; R = [X(b), C(e)]; }
       else if (lv <= 2) { e = (a - b) * x0 + d; L = [X(a), C(d)]; R = [X(b), C(e)]; }
       else if (lv === 3) { if (m === b) continue; e = (m - b) * x0 + m * d; L = [{ k: "g", m: mk(m), items: [X(1), C(d)] }]; R = [X(b), C(e)]; }
+      else if (lv === 5) {   // parentheses on both sides, one of them with a minus sign: 4(x - 3) + 2 = 2x - (x + 1)
+        var m1 = 2 + rnd(4), d1 = nz(5), d2 = nz(5), bb = nz(4), cc; if (bb === 1 || m1 === bb - 1) continue; cc = (bb - 1) * x0 - d2 - m1 * x0 - m1 * d1; if (!cc || Math.abs(cc) > 40) continue;
+        L = [{ k: "g", m: mk(m1), items: [X(1), C(d1)] }, C(cc)]; R = [X(bb), { k: "g", m: mk(-1), items: [X(1), C(d2)] }]; e = 1;
+      }
       else { var q = [2, 3, 4][rnd(3)], p = nz(5); if (p % q === 0 || q * 0 !== 0) continue; x0 = q * nz(3); var f = mk(p, q); e = add(add(mul(f, mk(x0)), neg(mk(b * x0))), mk(d)); if (e.d !== 1) continue; e = e.n; L = [{ k: "x", v: "x", n: f }, C(d)]; R = [X(b), C(e)]; }
       if (!e) continue;
-      if (lv >= 2 && rnd(5) < 2) { var tt = L; L = R; R = tt; }
-      if (lv >= 2) { if (rnd(2)) L.reverse(); if (rnd(2)) R.reverse(); }
+      if (lv >= 2 && lv < 5 && rnd(5) < 2) { var tt = L; L = R; R = tt; }
+      if (lv >= 2 && lv < 5) { if (rnd(2)) L.reverse(); if (rnd(2)) R.reverse(); }
       EXP.L = L; EXP.R = R; var done = eqKind(); if (done) continue;
       return { L: L, R: R };
     }
@@ -1398,7 +1408,7 @@
     if (n === 1) { EXP.rel = "="; return eqGen(1 + rnd(2)); }
     var X = function (k) { return { k: "x", v: "x", n: mk(k) }; }, C = function (k) { return { k: "c", n: mk(k) }; };
     for (;;) {
-      var m = -(2 + rnd(4)), x0 = nz(6), d = nz(6), e = m * (x0 + d);
+      var m = rnd(3) === 0 ? -1 : -(2 + rnd(4)), x0 = nz(6), d = nz(6), e = m * (x0 + d);
       if (!e) continue;
       var L = [{ k: "g", m: mk(m), items: [X(1), C(d)] }], R = [C(e)];
       if (rnd(2)) { L = [X(m), C(d)]; R = [C(m * x0 + d)]; if (!R[0].n.n) continue; }
@@ -1412,17 +1422,21 @@
   // THE LEVEL LADDER of Play Solver: Level Up climbs it one step at a time, and every kind of example the solver can do has a rung here.
   // Rule: whenever Play Solver learns something new (a new kind of term, step or equation), add a rung for it (and a generator branch in solverGo) so Level Up shows it.
   var LADDER = [
-    { e: "pane", lv: 0 }, { e: "pane", lv: 1 }, { e: "pane", lv: 2 }, { e: "pane", lv: 3 }, { e: "pane", lv: 4 }, { e: "pane", lv: 5 },   // 0-5: one variable, one side (fractions last)
-    { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 },                                         // 6-10: the variable on both sides, parentheses, fractions
-    { e: "eq", special: true },                                                                                                                // 11: no solution / infinitely many
-    { e: "pane", ineq: 1 }, { e: "pane", ineq: 2 }, { e: "pane", ineq: 3 },                                                                   // 12-14: inequalities (the sign turns around for a negative)
-    { e: "eq", ineq: 1 }, { e: "eq", ineq: 2 }, { e: "eq", ineq: 3, special: true }                                                           // 15-17: two-sided inequalities, negative multipliers, never / always true
+    { e: "pane", lv: 0 }, { e: "pane", lv: 1 }, { e: "pane", lv: 2 }, { e: "pane", lv: 3 }, { e: "pane", lv: 4 }, { e: "pane", lv: 5 },   // one variable, one side (fractions last)
+    { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 },                                         // the variable on both sides, parentheses, fractions
+    { e: "eq", lv: 5 },                                                                                                                        // parentheses on both sides, one with a minus sign: 4(x - 3) + 2 = 2x - (x + 1)
+    { e: "eq", special: true },                                                                                                                // no solution / infinitely many
+    { e: "pane", ineq: 1 }, { e: "pane", ineq: 2 }, { e: "pane", ineq: 3 },                                                                   // inequalities (the sign turns around for a negative)
+    { e: "eq", ineq: 1 }, { e: "eq", ineq: 2 }, { e: "eq", ineq: 3, special: true }                                                           // two-sided inequalities, negative multipliers (incl. -1), never / always true
   ];
-  function ladderPane(q) { if (isIneq(q)) return eqLevel(q) >= 4 ? 14 : q.a.n < 0 ? 13 : 12; return eqLevel(q); }
+  function rung(e, f) { for (var i = 0; i < LADDER.length; i++) if (LADDER[i].e === e && f(LADDER[i])) return i; return 0; }
+  function ladderPane(q) { if (isIneq(q)) { var n = eqLevel(q) >= 4 ? 3 : q.a.n < 0 ? 2 : 1; return rung("pane", function (r) { return r.ineq === n; }); } return rung("pane", function (r) { return r.lv === eqLevel(q); }); }
   function ladderEq(L, R, rel) {
-    var sol = eqSolution(L, R, rel), hasNeg = L.concat(R).some(function (t) { return t.k === "g" && t.m.n < 0; });
-    if (rel && rel !== "=") return sol.kind !== "one" ? 17 : hasNeg ? 16 : 15;
-    return sol.kind !== "one" ? 11 : 6 + eqLevelOf(L, R);
+    var sol = eqSolution(L, R, rel), all = L.concat(R), hasNeg = all.some(function (t) { return t.k === "g" && t.m.n < 0; }), hasMinus1 = all.some(function (t) { return t.k === "g" && t.m.n === -1 && t.m.d === 1; });
+    if (rel && rel !== "=") { var n = sol.kind !== "one" ? 3 : hasNeg ? 2 : 1; return rung("eq", function (r) { return r.ineq === n; }); }
+    if (sol.kind !== "one") return rung("eq", function (r) { return r.special && !r.ineq; });
+    if (hasMinus1) return rung("eq", function (r) { return r.lv === 5; });
+    return rung("eq", function (r) { return r.lv === eqLevelOf(L, R); });
   }
   function solverEq(lv, demo) {   // a variant of the given difficulty; whole-number coefficients when the Demo has to walk through it
     if (demo && lv > 4) lv = 4;
@@ -1459,8 +1473,8 @@
     if (lv === 0) { a = Math.abs(a); c = Math.abs(c); b = Math.abs(b); parts = [X([a]), C(b), X([c])]; }
     else if (lv === 1) parts = [X([a]), C(b), X([c]), C(d)];
     else if (lv === 2) { parts = [{ k: "g", m: mk(m), items: [X([1]), C(b)] }, X([c])]; if (rnd(2)) parts.push(C(d)); else parts.push(U(nz(4))); }
-    else if (lv === 3) parts = [{ k: "g", m: mk(rnd(2) ? m : -m), items: [X([a]), C(b)] }, X([c]), C(d), U(nz(4))];
-    else { var f = [[1, 2], [3, 2], [1, 3], [5, 2]][rnd(4)]; parts = [{ k: "g", m: mk(rnd(2) ? m : -m), items: [X([a]), C(b)] }, X([rnd(2) ? f[0] : -f[0], f[1]]), C(d), X([c]), U(nz(4))]; }
+    else if (lv === 3) parts = [{ k: "g", m: mk(rnd(3) === 0 ? -1 : rnd(2) ? m : -m), items: [X([a]), C(b)] }, X([c]), C(d), U(nz(4))];
+    else { var f = [[1, 2], [3, 2], [1, 3], [5, 2]][rnd(4)]; parts = [{ k: "g", m: mk(rnd(4) === 0 ? -1 : rnd(2) ? m : -m), items: [X([a]), C(b)] }, X([rnd(2) ? f[0] : -f[0], f[1]]), C(d), X([c]), U(nz(4))]; }
     for (var i = parts.length - 1; i > 0; i--) { var j = rnd(i + 1), t = parts[i]; parts[i] = parts[j]; parts[j] = t; }   // shuffle the order
     return exFin(parts) ? exGen(lv) : parts;
   }
