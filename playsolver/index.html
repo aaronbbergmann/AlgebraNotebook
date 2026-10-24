@@ -165,6 +165,12 @@
   .chat .composer .row{flex-wrap:wrap!important;justify-content:flex-start}.chat .composer input{flex:1 1 100%}
   .chat .composer{position:static;margin:.8rem;border:2px solid var(--ink);border-radius:16px;padding:.8rem 1rem;background:var(--bg)}
   .composer[hidden],.sheet[hidden]{display:none}
+  #askArrow{position:fixed;width:84px;height:50px;z-index:70;pointer-events:none;color:var(--no)}
+  #askArrow[hidden]{display:none}
+  #askArrow svg{display:block;width:100%;height:100%;fill:currentColor;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+  #askArrow[data-dir=d] svg{transform:rotate(90deg)}
+  #askArrow.grow{animation:askGrow .7s cubic-bezier(.2,1.4,.4,1) both}
+  @keyframes askGrow{from{transform:scale(.1);opacity:.4}to{transform:scale(1);opacity:1}}
   .composer input{flex:1;min-width:0;padding:.6em .9em;font:600 1.1rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:999px}
   .composer .btn{padding:.6em 1em}
   .err{min-height:1.1em;color:var(--no);font-size:.85rem}
@@ -414,7 +420,6 @@
     <div class="wrap">
       <main class="eqs work" id="wsEl"></main>
       <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="exRow" id="exRow"></div>
-        <div class="exAsk" id="exAsk" hidden><span id="exAskT"></span> <input id="exAskIn" autocomplete="off" aria-label="Result"><button class="btn" id="exAskOk">OK</button><div id="exAskMsg"></div></div>
         <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
@@ -891,11 +896,11 @@
   }
   function exPush() { hist.push(JSON.stringify(EXP.items)); updUndo(); }
   function exSet(items, msg) {
-    exPush(); EXP.items = items; $("exAsk").hidden = true; EXP.ask = null; exRender(); if (msg) note(msg);
+    exPush(); EXP.items = items; closeAsk(false); exRender(); if (msg) note(msg);
     if (exFin(items)) exEnd(); else if (!msg) clearLog();
   }
   function exEnd() {
-    locked = true; exRender(); $("exAsk").hidden = true; EXP.ask = null;
+    locked = true; exRender(); closeAsk(false);
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note("Fully simplified: " + exSay(EXP.items) + ".");
     if (mode === "demo") { onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap("Fully simplified!"); dmFinish("Watch again", function () { exBegin(); }, "", null); }
     else { tally(); nxShow(); }
@@ -922,17 +927,18 @@
     var n = EXP.items.slice(); n.splice.apply(n, [i, 1].concat(d)); exSet(n, "Distribute: " + exSay([g]) + " = " + exSay(d) + ".");
   }
   function exAsk(kind, i, j, label) {
-    EXP.ask = { kind: kind, i: i, j: j }; var A = $("exAsk"); $("exAskT").textContent = label; $("exAskIn").value = ""; $("exAskMsg").textContent = ""; A.hidden = false; $("exAskIn").focus();
+    if (!$("ask").hidden) closeAsk(true);
+    askKind = "ex"; $("askT").textContent = label.replace(/ =$/, ":"); showInput(); $("askIn").placeholder = "e.g. 5x or −2"; EXP.ask = { kind: kind, i: i, j: j };
   }
   function exAskOK() {
-    var k = EXP && EXP.ask; if (!k) return; var r = exParse($("exAskIn").value), its = EXP.items, ok = false, m = $("exAskMsg");
-    if (typeof r === "string") { m.className = "bad"; m.textContent = "Type the result, like 5x or −2."; return; }
+    var k = EXP && EXP.ask; if (!k) return; var r = exParse($("askIn").value), its = EXP.items, ok = false, m = $("askErr");
+    if (typeof r === "string") { m.textContent = "Type the result, like 5x or −2."; return; }
     var want = k.kind === "comb" ? [exCombineTo(k.i, k.j)[Math.min(k.i, k.j)]] : exDist(its[k.i]);
     if (k.kind === "comb" && want[0] && want[0].k !== "g" && want[0].n.n === 0 && its[k.i].k === its[k.j].k) want = [{ k: "c", n: mk(0) }];
     function key(t) { return t.k + ":" + t.n.n + "/" + t.n.d; }
     var nz = function (l) { return l.filter(function (t) { return t.k !== "c" || t.n.n !== 0 || l.length === 1; }); };
     ok = r.every(function (t) { return t.k !== "g"; }) && JSON.stringify(nz(r).map(key).sort()) === JSON.stringify(nz(want).map(key).sort()) || (k.kind === "comb" && r.length === 1 && r[0].k !== "g" && r[0].n.n === 0 && want[0].n.n === 0);
-    if (!ok) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
+    if (!ok) { m.textContent = "Not quite. Check your work and try again."; $("askIn").select(); return; }
     var A = k.kind === "comb" ? exSay(exPair(k.i, k.j)) : exSay([its[k.i]]);
     if (k.kind === "comb") { var res = exCombineTo(k.i, k.j); exSet(res, A + " = " + exSay([{ k: its[k.i].k, n: add(its[k.i].n, its[k.j].n) }])); }
     else { var n = its.slice(); n.splice.apply(n, [k.i, 1].concat(exDist(its[k.i]))); exSet(n, "Distribute: " + A + " = " + exSay(exDist(its[k.i])) + "."); }
@@ -946,7 +952,7 @@
     EXP.items = r; exEnd(); $("exSolo").hidden = true;
   }
   function exUndo() {
-    if (!hist.length) return; EXP.items = JSON.parse(hist.pop()); locked = false; $("next").hidden = true; $("again").hidden = true; $("exAsk").hidden = true; EXP.ask = null;
+    if (!hist.length) return; EXP.items = JSON.parse(hist.pop()); locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false);
     clearLog(); exRender(); updUndo();
   }
   function exHide() { $("exBox").hidden = true; $("wsEl").style.display = ""; }
@@ -956,7 +962,7 @@
     EXP.items = JSON.parse(JSON.stringify(EXP.orig)); EXP.ask = null; logEl.innerHTML = ""; DM4.brk = false;
     $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
     $("top").style.display = "none"; $("vals").style.display = "none"; $("creator").hidden = true; $("answer").hidden = true; $("wsEl").style.display = "none";
-    $("exBox").hidden = false; $("exAsk").hidden = true; $("exSolo").hidden = mode !== "solo"; $("exMsg").textContent = ""; $("exSoloIn").value = "";
+    $("exBox").hidden = false; $("exSolo").hidden = mode !== "solo"; $("exMsg").textContent = ""; $("exSoloIn").value = "";
     exRender(); updUndo();
     if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this expression simplified."); }
     else if (mode === "solo") note("Simplify it on your own, then type your answer.");
@@ -1320,7 +1326,16 @@
   function showInput() {
     $("askIn").value = ""; $("askErr").textContent = "";
     $("askIn").placeholder = askKind === "calc" ? (lesson === 3 ? "e.g. 2x+3y-z=12" : "e.g. 2x+3y=12") : askKind === "simp" ? "e.g. 3 or x = 3" : "e.g. 3";
-    $("ask").hidden = false; placeAsk(); $("askIn").focus();
+    $("ask").hidden = false; placeAsk(); $("askIn").focus(); askArrow(true);
+  }
+  // Calculate mode: a red arrow grows from small to large beside the prompt in the right side panel, so the student sees where to answer
+  function askArrow(on) {
+    var A = $("askArrow"); if (!A) { A = document.createElement("div"); A.id = "askArrow"; A.innerHTML = "<svg viewBox=\"0 0 100 60\" aria-hidden=\"true\"><path d=\"M2 22h58V4l38 26-38 26V38H2z\"/></svg>"; document.body.appendChild(A); }
+    A.hidden = true; A.classList.remove("grow"); if (!on || mode !== "calculate") return;
+    var r = $("ask").getBoundingClientRect(), side = r.left > innerWidth * 0.45, w = 84;
+    A.style.left = (side ? Math.max(4, r.left - w - 6) : Math.max(4, r.left + r.width / 2 - w / 2)) + "px";
+    A.style.top = (side ? r.top + Math.min(r.height, 120) / 2 - 25 : Math.max(4, r.top - 56)) + "px";
+    A.style.transformOrigin = side ? "100% 50%" : "50% 100%"; A.dataset.dir = side ? "r" : "d"; A.hidden = false; void A.offsetWidth; A.classList.add("grow");
   }
 
   // ---- chat prompts: a multiplier, a calculation, or a whole equation ----
@@ -1337,11 +1352,12 @@
   }
   function closeAsk(cancel) {
     if (cancel) calc = null;
-    $("ask").hidden = true;
+    $("ask").hidden = true; askArrow(false); if (EXP) EXP.ask = null;
     rows.forEach(function (r) { r.classList.remove("asking"); });
   }
   function confirmAsk() {
     var i = askIdx, txt = $("askIn").value, err = function (t) { $("askErr").textContent = t; };
+    if (askKind === "ex") { exAskOK(); return; }
     if (askKind === "subfn") { var cr = subCb.check(txt); if (cr !== true) { err(cr); $("askIn").select(); return; } closeAsk(false); subCb.ok(); return; }
     if (askKind === "mul") {
       var k = parse(txt);
@@ -2012,7 +2028,6 @@
 
   $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); this.blur(); });
   $("crAdd").addEventListener("click", crAdd);
-  $("exAskOk").addEventListener("click", exAskOK); $("exAskIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exAskOK(); });
   $("exSoloGo").addEventListener("click", exCheckSolo); $("exSoloIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); });
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
   $("ansGo").addEventListener("click", checkAnswer);
