@@ -1004,7 +1004,7 @@
   // ---- Playground: Equation Solver: Next / Harder / Try another ----
   // When a problem is finished: Next (plum red, "Try in [next mode] Mode"), "Harder Equation" directly below it, and a small "Try another" link.
   // The Next button is the demo button in Demo (Start Demo, Pause demo, Resume demo ... and, when the demo is over, Next) and the right panel's Next in the other modes.
-  var SOL = { lvl: 1, fresh: true };   // lvl: how hard the variants are; fresh: the first Demo still shows 3x-2=10
+  var SOL = { lvl: 0, fresh: true };   // lvl: how hard the variants are; fresh: the first Demo still shows 3x=9
   var SOLMODES = ["demo", "sequence", "calculate", "solo"];
   function solverFinish() { var m = nextMode(); dmFinish(nextLabel(), function () { solverGo(0, m); }, "Try another", function () { solverGo(0, "demo"); }); }
   function nextMode() { return SOLMODES[(SOLMODES.indexOf(mode) + 1) % SOLMODES.length]; }
@@ -1947,7 +1947,7 @@
     if (mode === "demo") { curDm = demoN % 2 + 1; demoN++; }
     if (mode === "create") orig = [];
     else if (useCustom) { orig = useCustom; useCustom = null; if (BUILT[act].solver) { SOL.fresh = false; if (!SOL.keep) SOL.lvl = eqLevel(orig[0]); SOL.keep = false; } }
-    else if (BUILT[act].solver && mode === "demo" && SOL.fresh) { var sd = parseAny("3x-2=10"); orig = [sd]; }   // Playground: Equation Solver demonstrates 3x-2=10
+    else if (BUILT[act].solver && mode === "demo" && SOL.fresh) { var sd = parseAny("3x=9"); orig = [sd]; }   // Playground: Equation Solver: the first Demo is 3x=9
     else orig = makeProblem();
     ws = wsFromOrig();
     sys = []; sysV = []; elim = ""; elimInfo = lesson === 3 && orig.length === 3 && ints(orig) ? bestElim(orig) : null;
@@ -3358,7 +3358,7 @@ var ESPIC = {
       if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
     if (id === act) return;
-    var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 1; act = id; gdCustom = null; if (BUILT[act].quiz || BUILT[act].solver) lesson = 1; if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
+    var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = id; gdCustom = null; if (BUILT[act].quiz || BUILT[act].solver) lesson = 1; if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     leaveQuiz();
