@@ -1114,9 +1114,9 @@
     if (o < 0) {
       r = litRat(p, false); if (typeof r === "string") return r; if (!isOneP(r.D)) return "Dividing by a sum isn't supported here.";
       if (!r.N.length) return { k: "c", n: mk(0) };
-      var u = r.N[0], e = u.s[vk] || 0; if (e !== 0 && e !== 1) return "The " + vk + " has to be to the first power here.";
+      var u = r.N[0], e = u.s[vk] || 0; if (e !== 0 && e !== 1 && e !== 2) return "The " + vk + " can be to the first or second power here, like ax^2 + bx + c.";
       var s2 = {}; Object.keys(u.s).forEach(function (l) { if (l !== vk) s2[l] = u.s[l]; });
-      var t = e === 1 ? { k: "x", v: vk, n: mul(u.n, mk(sgn)) } : { k: "c", n: mul(u.n, mk(sgn)) }; if (sSig(s2)) t.s = s2; return t;
+      var t = e >= 1 ? { k: "x", v: e === 2 ? vk + "^2" : vk, n: mul(u.n, mk(sgn)) } : { k: "c", n: mul(u.n, mk(sgn)) }; if (sSig(s2)) t.s = s2; return t;
     }
     if (!paren) return "Parentheses with letters are not supported here.";
     var depth = 0, c = -1; for (j = o; j < p.length; j++) { if (p[j] === "(") depth++; else if (p[j] === ")") { depth--; if (!depth) { c = j; break; } } }
@@ -2106,7 +2106,7 @@
       if (!EXP || !DM4.run || DM4.paused) return;
       if (KQ) { kindDemo(); return; }
       if (locked) return;
-      var step = eqNextStep(); if (!step) return;
+      var step = eqNextStep(); if (!step) { if (EXP.quad) dmCap("That is as far as the demo goes with x squared for now."); return; }
       eqRender(); dmCap(step.cap);
       if (step.anim) { exDragDemo(step.anim, step.run, function () { if (!locked) eqDemoStep(900); }, step.key); return; }
       if (step.mv) { exMoveDemo(step.mv[0], step.mv[1], step.run, function () { if (!locked) eqDemoStep(900); }); return; }
@@ -2211,13 +2211,16 @@
     if (rel !== "=") { err.textContent = "With letters, use an equals sign: a letter could be positive or negative, so an inequality can't be solved."; return; }
     var L = litTerms(p[0], "x", true), R = litTerms(p[1], "x", true);
     if (typeof L === "string" || typeof R === "string") { err.textContent = typeof L === "string" ? L : R; return; }
-    var pl = litParts(L, null), pr = litParts(R, null);
-    if (!pl.X.length && !pr.X.length) { err.textContent = "Use x as the letter to solve for, like ax = b."; return; }
-    var ls = litSolution(L, R); if (ls.kind !== "one") { err.textContent = "The x terms cancel each other. Type an equation that can be solved for x."; return; }
+    var quad = L.concat(R).some(function (t) { return t.k === "x" && /\^2/.test(t.v || ""); });   // ax^2 + bx + c = 0: x to the second power, with letters as coefficients
+    if (!quad) {
+      var pl = litParts(L, null), pr = litParts(R, null);
+      if (!pl.X.length && !pr.X.length) { err.textContent = "Use x as the letter to solve for, like ax = b."; return; }
+      var ls = litSolution(L, R); if (ls.kind !== "one") { err.textContent = "The x terms cancel each other. Type an equation that can be solved for x."; return; }
+    } else if (L.concat(R).some(function (t) { return t.k === "g"; })) { err.textContent = "With x^2 and letters, type the terms without parentheses, like ax^2 + bx + c = 0."; return; }
     var keep = EXP; EXP = { eq: true, lit: true, L: L, R: R, rel: "=", ask: null }; var k = eqKind();
     if (k) { EXP = keep; err.textContent = "That one is already solved. Type an equation that still needs work."; return; }
-    EXP = { eq: true, lit: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x" };
-    SOL.lvl = ladderEq(L, R, "="); SOL.fresh = false;
+    EXP = { eq: true, lit: true, quad: quad, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x" };
+    SOL.lvl = quad ? SOL.lvl : ladderEq(L, R, "="); SOL.fresh = false;
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
   }
   function eqWanted(s) {   // is this typed equation one for this module? (the variable on both sides, or a variable inside parentheses)
@@ -3606,7 +3609,7 @@
   // Create: after the student's own question is in, ask which mode to work on it in (every mode the exercise has except Create)
   var MPTIP = { demo: "Watch it solved", sequence: "Practice the order of the steps", calculate: "Order the steps and do the calculations", solo: "Solve it yourself" };
   function showPick(host, title) {
-    var B = BUILT[act], ms = (B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"]).filter(function (m) { return m !== "create"; }), el = $("modePick");
+    var B = BUILT[act], ms = (B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"]).filter(function (m) { return m !== "create" && !(m === "solo" && EXP && EXP.quad); }), el = $("modePick");
     el.innerHTML = "<div class=\"mpT\"></div><div class=\"mpRow\">" + ms.map(function (m) { return "<button class=\"btn\" data-m=\"" + m + "\" title=\"" + MPTIP[m] + "\">" + MODES[m] + "</button>"; }).join("") + "</div>";
     el.firstChild.textContent = title || "How would you like to work on it?";
     host.appendChild(el); el.hidden = false;
