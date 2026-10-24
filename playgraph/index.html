@@ -1030,6 +1030,19 @@
     if (!DM4.paused) { DM4.paused = true; clearTimeout(DM4.t); dmUI("paused"); dmCap("Paused. Change anything you like, then press Resume demo."); return; }
     DM4.paused = false; dmUI("playing"); dmCap(""); exDemoStep(300);
   }
+  // the demo shows the drag: the hand picks up the number in front of the parentheses and drops it on them; then run() distributes
+  function exDragDemo(sel, run, after) {
+    var el = $("exRow").querySelector(sel), mEl = el && el.querySelector(":scope > .exM"), gEl = el && el.querySelector(":scope > .exG");
+    var alive = function () { return EXP && DM4.run && !DM4.paused; };
+    if (!mEl || !gEl) { DM4.t = setTimeout(function () { if (!alive()) return; run(); after(); }, 1300); return; }
+    DM4.t = setTimeout(function () {
+      if (!alive()) return; handGo(ctr(mEl), 600);
+      DM4.t = setTimeout(function () {
+        if (!alive()) return; handTap(); handGo(ctr(gEl), 1400);
+        fly(mEl, gEl, function () { handHide(); if (!alive()) { exRender(); return; } run(); after(); }, true);
+      }, 800);
+    }, 500);
+  }
   function exDemoStep(ms) {
     if (EXP && EXP.eq) { eqDemoStep(ms); return; }
     clearTimeout(DM4.t);
@@ -1039,8 +1052,8 @@
       for (j = 0; j < its.length && gi < 0; j++) if (its[j].k === "g") gi = j;
       var go = function (fn) { DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused) return; fn(); if (!locked) exDemoStep(900); }, 1300); };
       if (gi >= 0) {
-        var g = its[gi]; exRender([gi]); dmCap("Distribute " + exSay([{ k: "c", n: g.m }]).replace(/^1$/, "") + " to every term inside the parentheses.");
-        go(function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, "Distribute: " + exSay([g]) + " = " + exSay(exDist(g)) + "."); });
+        var g = its[gi]; exRender([gi]); dmCap("Drag " + exSay([{ k: "c", n: g.m }]).replace(/^1$/, "the sign") + " onto the parentheses to distribute it.");
+        exDragDemo('.exT[data-i="' + gi + '"]', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, "Distribute: " + exSay([g]) + " = " + exSay(exDist(g)) + "."); }, function () { if (!locked) exDemoStep(900); });
         return;
       }
       for (j = 0; j < its.length && a < 0; j++) for (k = j + 1; k < its.length; k++) if (exLike(its[k], its[j])) { a = j; b = k; break; }
@@ -1226,12 +1239,13 @@
       if (!EXP || !DM4.run || DM4.paused || locked) return;
       var step = eqNextStep(); if (!step) return;
       eqRender(step.hot); dmCap(step.cap);
+      if (step.anim) { exDragDemo(step.anim, step.run, function () { if (!locked) eqDemoStep(900); }); return; }
       DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused) return; step.run(); if (!locked) eqDemoStep(900); }, 1300);
     }, ms);
   }
   function eqNextStep() {
     var sides = ["L", "R"], q, i, j, S;
-    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return { hot: [S + i], cap: "Distribute.", run: (function (S, i) { return function () { var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, "Distribute: " + exSay([g]) + " = " + exSay(d) + "."); }; })(S, i) }; }
+    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return { hot: [S + i], cap: "Drag the number onto the parentheses.", anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, "Distribute: " + exSay([g]) + " = " + exSay(d) + "."); }; })(S, i) }; }
     for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { hot: [S + i, S + j], cap: "Combine like terms.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
     var xi = function (S) { return EXP[S].findIndex(function (t) { return t.k === "x"; }); }, ci = function (S) { return EXP[S].findIndex(function (t) { return t.k === "c"; }); };
     var xl = xi("L"), xr = xi("R");
