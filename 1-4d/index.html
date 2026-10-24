@@ -117,6 +117,15 @@
   .fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.15;margin:0 .08em;font-size:.9em}
   .fr>span:first-child{border-bottom:.07em solid currentColor;padding:0 .12em .04em}
   .fr>span:last-child{padding:.04em .12em 0}
+  .exBox{display:flex;flex-direction:column;align-items:center;gap:1rem;margin:1rem auto;width:fit-content;max-width:100%;padding:.4em .8em;border-radius:.4em;background:color-mix(in srgb,var(--ink) 7%,var(--bg))}
+  .exBox[hidden]{display:none}
+  .exRow{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;line-height:1.3}
+  .exOp{padding:0 .3em}.exRow>.exOp:first-child{padding:0 .02em 0 0}.exT{padding:0 .1em;border-radius:6px;white-space:nowrap;transition:background .3s}
+  .exT i{font-style:italic}.exT.hot{background:color-mix(in srgb,var(--plus) 30%,transparent)}
+  .exAsk{font:600 1.1rem system-ui,sans-serif;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:center}
+  .exAsk[hidden]{display:none}
+  .exAsk input{font:600 1.1rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:12px;padding:.35em .6em;width:9em}
+  .exAsk>div{flex-basis:100%;text-align:center;min-height:1.2em}
   #crIn::placeholder{color:color-mix(in srgb,var(--ink) 38%,transparent);opacity:1;font-weight:500}
   body.solver #lesson,body.solver #progBtn{display:none}
   .panel{display:flex;flex-direction:column;align-items:center;gap:.8rem;margin:1rem auto;font-family:system-ui,sans-serif}
@@ -404,6 +413,9 @@
     <div class="top" id="top"><section class="eqs orig" id="origEl" aria-label="Original equations"></section><section class="eqs orig" id="sysEl" aria-label="Two-variable equations"></section><section class="vals" id="vals" aria-label="Solved values"></section></div>
     <div class="wrap">
       <main class="eqs work" id="wsEl"></main>
+      <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="exRow" id="exRow"></div>
+        <div class="exAsk" id="exAsk" hidden><span id="exAskT"></span> <input id="exAskIn" autocomplete="off" aria-label="Result"><button class="btn" id="exAskOk">OK</button><div id="exAskMsg"></div></div>
+        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
         <div class="row" style="flex-wrap:nowrap"><input id="crIn" autocomplete="off" aria-label="Equation"><button class="btn" id="crAdd">Add</button></div>
@@ -772,7 +784,7 @@
     $("origEl").style.visibility = ops ? "visible" : "hidden";
     var plain = mode === "solo" || mode === "create";
     ws.forEach(function (q, i) {
-      if (plain) { var pr = mkRow(q, false, vs); W.appendChild(pr); rows.push(pr); return; }
+      if (plain) { var pr = mkRow(q, false, vs); if (mvOn() && mode === "solo") mvWire(pr, q, i); W.appendChild(pr); rows.push(pr); return; }
       var r = mkRow(q, true, vs); r.dataset.drop = "row:" + i;
       vs.forEach(function (v, k) { if (q[CK[v]].n) r.children[2 * k].dataset.drop = "sub:w:" + i + ":" + v; });
       if (i === pop) r.classList.add("pop");
@@ -817,6 +829,200 @@
     W.style.gridTemplateColumns = css();
   }
 
+  // ---- Playground: Equation Solver also takes an expression (no "="). It is finished when it is fully simplified:
+  //      no parentheses left, and no two terms alike. Terms are { k: "x"|"c", n: coefficient } and groups { k: "g", m: multiplier, items } ----
+  var EXP = null;   // { src, orig, items, ask }
+  function exParse(s) {
+    s = String(s).toLowerCase().replace(/−/g, "-").replace(/[\s*·⋅]/g, "");
+    var i = 0, bad = "I couldn't read that. Use numbers, x, + and −, and one set of parentheses at most, like 3(x+2)-4x+5.";
+    if (!s || /[^0-9x+\-().\/]/.test(s)) return bad;
+    function number() { var m = s.slice(i).match(/^\d+(\.\d+)?(\/\d+)?/); if (!m) return null; i += m[0].length; return parse(m[0]); }
+    function sum(inner) {
+      var out = [];
+      while (i < s.length && s[i] !== ")") {
+        var sg1 = 1, signed = false, t;
+        while (s[i] === "+" || s[i] === "-") { if (s[i] === "-") sg1 = -sg1; i++; signed = true; }
+        if (out.length && !signed) return null;
+        var n = number();
+        if (s[i] === "x") { i++; t = { k: "x", n: mul(n || mk(1), mk(sg1)) }; }
+        else if (s[i] === "(") {
+          if (inner) return null; i++; var g = sum(true); if (!g || !g.length || s[i] !== ")") return null; i++;
+          t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: g };
+        } else if (n) t = { k: "c", n: mul(n, mk(sg1)) }; else return null;
+        out.push(t);
+      }
+      return out;
+    }
+    var r = sum(false);
+    return !r || i < s.length || !r.length ? bad : r;
+  }
+  function exFin(its) { var x = 0, c = 0; for (var j = 0; j < its.length; j++) { if (its[j].k === "g") return false; if (its[j].k === "x") x++; else c++; } return x <= 1 && c <= 1; }
+  function exTot(its) {   // the whole value, as { x, c }
+    var o = { x: mk(0), c: mk(0) };
+    its.forEach(function (t) { if (t.k === "g") { var u = exTot(t.items); o.x = add(o.x, mul(u.x, t.m)); o.c = add(o.c, mul(u.c, t.m)); } else o[t.k] = add(o[t.k], t.n); });
+    return o;
+  }
+  function exDist(g) { return g.items.map(function (t) { return { k: t.k, n: mul(t.n, g.m) }; }); }
+  function exFr(p) { return p.d > 1 ? p.n + "/" + p.d : String(p.n); }
+  function exTerm(t, inner) {   // the term without its sign
+    if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d); return (m.n === 1 && m.d === 1 ? "" : exFr(m)) + "(" + exHtml(t.items) + ")"; }
+    var a = mk(Math.abs(t.n.n), t.n.d); return t.k === "x" ? (a.n === 1 && a.d === 1 ? "" : exFr(a)) + "<i>x</i>" : exFr(a);
+  }
+  function exHtml(its) {
+    return its.map(function (t, i) { var ng = (t.k === "g" ? t.m.n : t.n.n) < 0; return (i ? "<span class=\"exOp\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "") + exTerm(t); }).join("");
+  }
+  function exSay(its) {   // plain text, for the log and the prompts
+    if (its.length === 1 && its[0].k !== "g" && its[0].n.n === 0) return "0";
+    var d = document.createElement("div"); d.innerHTML = exHtml(its); return d.textContent.replace(/([+−])/g, " $1 ").replace(/^ − /, "−").replace(/\( − /g, "(−").trim();
+  }
+  function exPair(i, j) { var its = EXP.items; return i < j ? [its[i], its[j]] : [its[j], its[i]]; }
+  function exRender(hot) {
+    if (!EXP) return;
+    var R = $("exRow"), its = EXP.items, live = (mode === "sequence" || mode === "calculate") && !locked;
+    R.innerHTML = its.map(function (t, i) {
+      var ng = (t.k === "g" ? t.m.n : t.n.n) < 0, op = i ? "<span class=\"exOp\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "";
+      return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live ? " pend" : "") + (hot && hot.indexOf(i) >= 0 ? " hot" : "") + "\" data-i=\"" + i + "\" data-drop=\"ex:" + i + "\"" + (t.k === "g" && live ? " title=\"Click to distribute\"" : "") + ">" + exTerm(t) + "</span>";
+    }).join("");
+    if (!live) return;
+    [].forEach.call(R.querySelectorAll(".exT"), function (el) {
+      var i = +el.dataset.i;
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { exDrop(i, +t.dataset.drop.slice(3)); }, "ex:"); });
+    });
+  }
+  function exPush() { hist.push(JSON.stringify(EXP.items)); updUndo(); }
+  function exSet(items, msg) {
+    exPush(); EXP.items = items; $("exAsk").hidden = true; EXP.ask = null; exRender(); if (msg) note(msg);
+    if (exFin(items)) exEnd(); else if (!msg) clearLog();
+  }
+  function exEnd() {
+    locked = true; exRender(); $("exAsk").hidden = true; EXP.ask = null;
+    if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note("Fully simplified: " + exSay(EXP.items) + ".");
+    if (mode === "demo") { onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap("Fully simplified!"); dmFinish("Watch again", function () { exBegin(); }, "", null); }
+    else { tally(); nxShow(); }
+  }
+  function exCombineTo(i, j) {   // terms i and j are alike: one term takes their place
+    var its = EXP.items.slice(), a = its[i], b = its[j], c = { k: a.k, n: add(a.n, b.n) }, lo = Math.min(i, j), hi = Math.max(i, j);
+    its.splice(hi, 1); its.splice(lo, 1, c); its = its.filter(function (t) { return t.k === "g" || t.n.n !== 0; });
+    return its.length ? its : [{ k: "c", n: mk(0) }];
+  }
+  function exDrop(i, j) {
+    if (locked || busy || EXP.ask || i === j) return;
+    var its = EXP.items, a = its[i], b = its[j];
+    if (a.k !== "g" && b.k === a.k) {
+      if (mode === "calculate") { exAsk("comb", i, j, exSay(exPair(i, j)) + " ="); return; }
+      exSet(exCombineTo(i, j), exSay(exPair(i, j)) + " = " + exSay([{ k: a.k, n: add(a.n, b.n) }]));
+      return;
+    }
+    var n = its.slice(); n.splice(i, 1); n.splice(i < j ? n.indexOf(b) + 1 : n.indexOf(b), 0, a);
+    exSet(n, "");
+  }
+  function exDistribute(i) {
+    if (locked || busy || EXP.ask) return; var g = EXP.items[i], d = exDist(g);
+    if (mode === "calculate") { exAsk("dist", i, -1, exSay([g]) + " ="); return; }
+    var n = EXP.items.slice(); n.splice.apply(n, [i, 1].concat(d)); exSet(n, "Distribute: " + exSay([g]) + " = " + exSay(d) + ".");
+  }
+  function exAsk(kind, i, j, label) {
+    EXP.ask = { kind: kind, i: i, j: j }; var A = $("exAsk"); $("exAskT").textContent = label; $("exAskIn").value = ""; $("exAskMsg").textContent = ""; A.hidden = false; $("exAskIn").focus();
+  }
+  function exAskOK() {
+    var k = EXP && EXP.ask; if (!k) return; var r = exParse($("exAskIn").value), its = EXP.items, ok = false, m = $("exAskMsg");
+    if (typeof r === "string") { m.className = "bad"; m.textContent = "Type the result, like 5x or −2."; return; }
+    var want = k.kind === "comb" ? [exCombineTo(k.i, k.j)[Math.min(k.i, k.j)]] : exDist(its[k.i]);
+    if (k.kind === "comb" && want[0] && want[0].k !== "g" && want[0].n.n === 0 && its[k.i].k === its[k.j].k) want = [{ k: "c", n: mk(0) }];
+    function key(t) { return t.k + ":" + t.n.n + "/" + t.n.d; }
+    var nz = function (l) { return l.filter(function (t) { return t.k !== "c" || t.n.n !== 0 || l.length === 1; }); };
+    ok = r.every(function (t) { return t.k !== "g"; }) && JSON.stringify(nz(r).map(key).sort()) === JSON.stringify(nz(want).map(key).sort()) || (k.kind === "comb" && r.length === 1 && r[0].k !== "g" && r[0].n.n === 0 && want[0].n.n === 0);
+    if (!ok) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
+    var A = k.kind === "comb" ? exSay(exPair(k.i, k.j)) : exSay([its[k.i]]);
+    if (k.kind === "comb") { var res = exCombineTo(k.i, k.j); exSet(res, A + " = " + exSay([{ k: its[k.i].k, n: add(its[k.i].n, its[k.j].n) }])); }
+    else { var n = its.slice(); n.splice.apply(n, [k.i, 1].concat(exDist(its[k.i]))); exSet(n, "Distribute: " + A + " = " + exSay(exDist(its[k.i])) + "."); }
+  }
+  function exCheckSolo() {
+    var r = exParse($("exSoloIn").value), m = $("exMsg"); ansTouched = true;
+    if (typeof r === "string") { m.className = "bad"; m.textContent = r; return; }
+    var a = exTot(r), b = exTot(EXP.items);
+    if (!same(a.x, b.x) || !same(a.c, b.c)) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
+    if (!exFin(r)) { m.className = "bad"; m.textContent = "That is the same value, but it is not fully simplified yet."; return; }
+    EXP.items = r; exEnd(); $("exSolo").hidden = true;
+  }
+  function exUndo() {
+    if (!hist.length) return; EXP.items = JSON.parse(hist.pop()); locked = false; $("next").hidden = true; $("again").hidden = true; $("exAsk").hidden = true; EXP.ask = null;
+    clearLog(); exRender(); updUndo();
+  }
+  function exHide() { $("exBox").hidden = true; $("wsEl").style.display = ""; }
+  function exBegin() {
+    stopDemo(); closeAsk(false); stopParty(); busy = false; calc = null; $("modePick").hidden = true;
+    orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
+    EXP.items = JSON.parse(JSON.stringify(EXP.orig)); EXP.ask = null; logEl.innerHTML = ""; DM4.brk = false;
+    $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
+    $("top").style.display = "none"; $("vals").style.display = "none"; $("creator").hidden = true; $("answer").hidden = true; $("wsEl").style.display = "none";
+    $("exBox").hidden = false; $("exAsk").hidden = true; $("exSolo").hidden = mode !== "solo"; $("exMsg").textContent = ""; $("exSoloIn").value = "";
+    exRender(); updUndo();
+    if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this expression simplified."); }
+    else if (mode === "solo") note("Simplify it on your own, then type your answer.");
+    else note("Drag a term onto a like term to combine them. Drag any other term to move it, and its sign goes with it. Click parentheses to distribute." + (mode === "calculate" ? " You will be asked for each result." : ""));
+  }
+  function exDemoClick() {
+    if (!DM4.run) { DM4.run = true; DM4.paused = false; dmUI("playing"); dmCap(""); exDemoStep(300); return; }
+    if (!DM4.paused) { DM4.paused = true; clearTimeout(DM4.t); dmUI("paused"); dmCap("Paused. Change anything you like, then press Resume demo."); return; }
+    DM4.paused = false; dmUI("playing"); dmCap(""); exDemoStep(300);
+  }
+  function exDemoStep(ms) {
+    clearTimeout(DM4.t);
+    DM4.t = setTimeout(function () {
+      if (!EXP || !DM4.run || DM4.paused || locked) return;
+      var its = EXP.items, gi = -1, a = -1, b = -1, j, k;
+      for (j = 0; j < its.length && gi < 0; j++) if (its[j].k === "g") gi = j;
+      var go = function (fn) { DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused) return; fn(); if (!locked) exDemoStep(900); }, 1300); };
+      if (gi >= 0) {
+        var g = its[gi]; exRender([gi]); dmCap("Distribute " + exSay([{ k: "c", n: g.m }]).replace(/^1$/, "") + " to every term inside the parentheses.");
+        go(function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, "Distribute: " + exSay([g]) + " = " + exSay(exDist(g)) + "."); });
+        return;
+      }
+      for (j = 0; j < its.length && a < 0; j++) for (k = j + 1; k < its.length; k++) if (its[k].k === its[j].k) { a = j; b = k; break; }
+      if (a < 0) return;
+      exRender([a, b]); dmCap("Combine the like terms: " + exSay([its[a], its[b]]) + ".");
+      go(function () { exSet(exCombineTo(a, b), exSay([its[a], its[b]]) + " = " + exSay([{ k: its[a].k, n: add(its[a].n, its[b].n) }])); });
+    }, ms);
+  }
+  function exCreate() {
+    var r = exParse($("crIn").value), err = $("crErr");
+    if (typeof r === "string") { err.textContent = r; return; }
+    if (exFin(r)) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5."; return; }
+    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null };
+    $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your expression is in. Choose how you want to work on it.");
+  }
+
+  // ---- Playground: Equation Solver: terms of one side can be rearranged (the commutative property of addition) by dragging.
+  // A term carries its sign with it: dragging "2" out of 3x \u2212 2 gives \u22122 + 3x. Drop a term on the other side of the variable term, or on a term to swap places.
+  function mvOn() { return !!(BUILT[act].solver && lesson === 1 && !SUB()); }
+  function mvTags(r, i) { var c = r.children; ["p", "x", "s"].forEach(function (v, j) { var d = c[2 * j].dataset.drop; if (!d || d.indexOf("comb:") !== 0) c[2 * j].dataset.drop = "mv:" + i + ":" + v; }); }
+  function moveK(i, idx, to) {
+    if (locked || busy) return; var q = ws[i], k = q && q.ks[idx]; if (!k || k.v === to) return;
+    snap(); var n = JSON.parse(JSON.stringify(q)), kk = n.ks[idx], other = n.ks.filter(function (z) { return z !== kk && z.v === to; })[0];
+    if (other) other.v = kk.v; kk.v = to; ws[i] = n;
+    var L = lines(); steps.push({ eqs: L, ms: L.map(function () { return ""; }) }); clearLog(); render(i); updUndo();
+  }
+  function mvDropK(i, idx, t) {   // a constant dropped on a place: on the variable term it hops to the other side of it
+    var pp = t.dataset.drop.split(":"); if (+pp[1] !== i) return; var k = ws[i].ks[idx]; if (!k) return;
+    var to = pp[2] === "x" ? (k.v === "p" ? "s" : "p") : pp[2]; if (to !== "x") moveK(i, idx, to);
+  }
+  function mvDropX(i, t) {   // the variable term dropped on a constant hops over it
+    var pp = t.dataset.drop.split(":"); if (+pp[1] !== i || pp[2] === "x") return;
+    var j = ws[i].ks.findIndex(function (z) { return z.v === pp[2] && !z.r; }); if (j >= 0) moveK(i, j, pp[2] === "p" ? "s" : "p");
+  }
+  function mvXCell(r, i) {
+    var xc = r.children[2]; if (!xc || !ws[i][CK.x].n) return; xc.classList.add("grab");
+    xc.addEventListener("pointerdown", function (e) { if (e.target.closest && e.target.closest(".co")) return; drag(e, xc, null, function (t) { mvDropX(i, t); }, "mv:"); });
+  }
+  function mvWire(r, q, i) {   // rows that are not otherwise interactive (Solo)
+    var c = r.children, vs = curVs(); mvTags(r, i);
+    q.ks.forEach(function (k, idx) {
+      if (k.r || (k.v !== "p" && k.v !== "s")) return; var cell = c[kslot(q, k, vs)]; cell.classList.add("grab");
+      cell.addEventListener("pointerdown", function (e) { drag(e, cell, null, function (t) { mvDropK(i, idx, t); }, "mv:"); });
+    });
+    mvXCell(r, i); var co = c[2].querySelector(".co"); if (co && q[CK.x].n) co.addEventListener("pointerdown", function (e) { drag(e, co, null, function (t) { mvDropX(i, t); }, "mv:"); });
+  }
   function wire(r, q, i) {
     var c = r.children, vs = curVs(), N = c.length, eq = c[N - 2];
     eq.addEventListener("pointerdown", function (e) {
@@ -833,7 +1039,7 @@
       var co = c[2 * k].querySelector(".co");
       if (!co || !q[CK[v]].n) return;
       co.classList.add("grab");
-      co.addEventListener("pointerdown", function (e) { drag(e, co, null, function (t, ev) { if (sameRowRight(t, ev)) coefDrop(i); }, "row:"); });
+      co.addEventListener("pointerdown", function (e) { drag(e, co, null, function (t, ev) { if (t.dataset.drop.indexOf("mv:") === 0) mvDropX(i, t); else if (sameRowRight(t, ev)) coefDrop(i); }, mvOn() ? ["row:", "mv:"] : "row:"); });
     });
     q.ks.forEach(function (k, idx) {
       var cell = c[kslot(q, k, vs)];
@@ -850,8 +1056,9 @@
               // drop one number on its neighbour (same side of the =) to combine them
               var pp = d.split(":"), a = +pp[2], b2 = +pp[3];
               if (+pp[1] === i && (idx === a || idx === b2)) { if (mode === "calculate") openAsk(i, "comb", [a, b2, 0]); else combineK(i, a, b2); }
-            } else if (sameRowRight(t, ev)) constDrop(i, idx);
-          }, ["row:", "comb:"]);
+            } else if (d.indexOf("mv:") === 0) mvDropK(i, idx, t);
+            else if (sameRowRight(t, ev)) constDrop(i, idx);
+          }, mvOn() ? ["row:", "comb:", "mv:"] : ["row:", "comb:"]);
         });
       }
     });
@@ -869,6 +1076,7 @@
       var op = c[kslot(q, k, vs) - 1]; op.classList.add("opc"); op.title = "Rewrite as subtraction";
       op.addEventListener("click", function () { if (!locked && !busy && !calc) convertK(i, idx); });
     });
+    if (mvOn()) { mvTags(r, i); mvXCell(r, i); }
     if (q.raw) { c[N - 1].classList.add("pend"); c[N - 1].addEventListener("click", function () { if (busy || dmLocked()) return; if (mode === "demo") doCalc(i); else openAsk(i, "simp"); }); }
   }
 
@@ -877,7 +1085,7 @@
     var l = document.elementsFromPoint(ev.clientX, ev.clientY);
     for (var i = 0; i < l.length; i++) {
       var t = l[i].closest((Array.isArray(prefix) ? prefix : [prefix]).map(function (x) { return "[data-drop^=\"" + x + "\"]"; }).join(","));
-      if (t && !el.contains(t)) return t;
+      if (t && !el.contains(t) && !(t.dataset.drop.indexOf("mv:") === 0 && t.contains(el))) return t;
     }
     return null;
   }
@@ -1072,6 +1280,7 @@
     done(i);
   }
   function undo() {
+    if (EXP && BUILT[act].solver && mode !== "create") { exUndo(); return; }
     if (busy || calc) return;
     var nx = $("next"); up = null; $("again").hidden = true;
     if (mode === "solo") { buildAnswer(); nx.hidden = true; updUndo(); return; }
@@ -1354,6 +1563,7 @@
   function dm4Click() {
     if (quiz() || mode !== "demo") return;
     if (dmClickFinish()) return;
+    if (EXP && BUILT[act].solver) { exDemoClick(); return; }
     if (!DM4.run) { dm4Begin(); return; }
     if (!DM4.paused) { DM4.paused = true; clearTimeout(DM4.t); dmUI("paused"); dmCap("Paused. Change anything you like, then press Resume demo."); return; }
     DM4.paused = false; closeAsk(false); calc = null; dmUI("playing"); dmCap(""); peekNext(); dm4Go(300);
@@ -1570,7 +1780,7 @@
   function nxShow() {
     var nx = $("next"), ag = $("again"), stay = up && up.stayText || "";
     if (mode === "demo") { nx.hidden = true; ag.hidden = true; return; }   // the demo button carries it
-    nx.textContent = up ? up.label : BUILT[act].solver ? "Another equation" : "Next"; nx.hidden = false; nx.disabled = false;
+    nx.textContent = up ? up.label : EXP ? "Another expression" : BUILT[act].solver ? "Another equation" : "Next"; nx.hidden = false; nx.disabled = false;
     ag.textContent = stay; ag.hidden = !stay;
   }
   function onSolved() {
@@ -1646,6 +1856,9 @@
 
   function newProblem() {
     if (quiz()) { qzStart(); return; }
+    exHide();
+    if (EXP && BUILT[act].solver && lesson === 1 && mode !== "create") { exBegin(); return; }
+    EXP = null;
     $("modePick").hidden = true; calc = null; hinted = false; mulNote = null; pend = null; stopParty(); stopDemo(); closeAsk(false); busy = false;
     var plain = mode === "solo" || mode === "create";
     if (mode === "demo") { curDm = demoN % 2 + 1; demoN++; }
@@ -1748,11 +1961,12 @@
     $("modeSel").value = b.dataset.m; setMode(b.dataset.m); if (mode !== "create") this.hidden = true;
   });
   function crPrompt() {
-    $("crT").textContent = lesson === 1 ? "Type your equation" : "Type the " + eqName(orig.length, allV().length) + ": type it the way it's written, like " + (lesson === 3 ? "2x+3y-z=12" : "2x+3y=12");
+    $("crT").textContent = lesson === 1 ? (BUILT[act].solver ? "Type your equation or expression" : "Type your equation") : "Type the " + eqName(orig.length, allV().length) + ": type it the way it's written, like " + (lesson === 3 ? "2x+3y-z=12" : "2x+3y=12");
     $("crIn").placeholder = lesson === 1 ? "3x-2=10" : "";
     $("crIn").value = ""; $("crErr").textContent = ""; $("crIn").focus();
   }
   function crAdd() {
+    if (BUILT[act].solver && lesson === 1 && $("crIn").value.indexOf("=") < 0) { exCreate(); return; }
     var r = parseAny($("crIn").value), err = $("crErr");
     if (typeof r === "string") { err.textContent = r; return; }
     var E = orig.concat([r]);
@@ -1798,6 +2012,8 @@
 
   $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); this.blur(); });
   $("crAdd").addEventListener("click", crAdd);
+  $("exAskOk").addEventListener("click", exAskOK); $("exAskIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exAskOK(); });
+  $("exSoloGo").addEventListener("click", exCheckSolo); $("exSoloIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); });
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
   $("ansGo").addEventListener("click", checkAnswer);
   $("ansKind").addEventListener("change", function () { $("ansFields").hidden = this.value !== "one"; });
@@ -1823,6 +2039,7 @@
   $("sheetX").addEventListener("click", function () { $("sheet").hidden = true; });
   $("next").addEventListener("click", function () {
     if (up) { var u = up; up = null; u.go(); return; }
+    if (EXP) { EXP = null; setMode("create"); return; }
     newProblem();
   });
   $("again").addEventListener("click", newProblem);
@@ -3059,7 +3276,7 @@ var ESPIC = {
       if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
     if (id === act) return;
-    var wasSolver = !!BUILT[act].solver; act = id; gdCustom = null; if (BUILT[act].quiz || BUILT[act].solver) lesson = 1; if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
+    var wasSolver = !!BUILT[act].solver; EXP = null; act = id; gdCustom = null; if (BUILT[act].quiz || BUILT[act].solver) lesson = 1; if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     leaveQuiz();
