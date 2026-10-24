@@ -3031,14 +3031,14 @@ var ESPIC = {
       // on the website each activity has its own page; elsewhere (a preview) it opens right here
       if (hub) { location.href = slugOf(id) + "/"; return; }
       welcome = false; theme(); document.body.classList.remove("wel"); $("welcome").hidden = true;
-      if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode(BUILT[act].solver ? "create" : "demo"); } return; }
+      if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
     if (id === act) return;
     var wasSolver = !!BUILT[act].solver; act = id; gdCustom = null; if (BUILT[act].quiz || BUILT[act].solver) lesson = 1; if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     leaveQuiz();
-    if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) { leavePlay(); enterQuiz(); } else { leavePlay(); setMode(BUILT[act].solver ? "create" : "demo"); }
+    if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) { leavePlay(); enterQuiz(); } else { leavePlay(); setMode("demo"); }
   }
   $("actBtn").addEventListener("click", function () { if ($("actList").hidden) openActs(); else closeActs(); });
   $("actBtn").addEventListener("keydown", function (e) { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); openActs(); } });
@@ -4843,7 +4843,7 @@ var ESPIC = {
   }
 
   buildActs(); buildLessons(); updProg();
-  if (BUILT[act].play) { setMode("demo"); enterPlay(); } else if (BUILT[act].quiz) enterQuiz(); else setMode(BUILT[act].solver ? "create" : "demo");
+  if (BUILT[act].play) { setMode("demo"); enterPlay(); } else if (BUILT[act].quiz) enterQuiz(); else setMode("demo");
   if (welcome) { document.body.classList.add("wel"); theme(); $("welcome").hidden = false; }
 </script>
 </body>
