@@ -926,7 +926,10 @@
         if (out.length && !signed) return null;
         var n = number();
         var vv = /[a-z]/.test(s[i] || "") ? variable() : null;
-        if (vv) t = { k: "x", v: vv, n: mul(n || mk(1), mk(sg1)) };
+        if (vv && s[i] === "(" && !inner) {   // x(x - 3): the variable is the first factor
+          i++; var gb = sum(true); if (!gb || !gb.length || s[i] !== ")") return null; i++;
+          t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: [{ k: "x", v: vv, n: mk(1) }], b: gb };
+        } else if (vv) t = { k: "x", v: vv, n: mul(n || mk(1), mk(sg1)) };
         else if (s[i] === "(") {
           if (inner) return null; i++; var g = sum(true); if (!g || !g.length || s[i] !== ")") return null; i++;
           t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: g };
@@ -1197,9 +1200,10 @@
     return g.items.map(function (t) { var u = JSON.parse(JSON.stringify(t)); u.n = mul(t.n, g.m); if (g.m.s && sSig(g.m.s)) { var ns = sMul(t.s || {}, g.m.s, 1); if (sSig(ns)) u.s = ns; else delete u.s; } return u; }); }
   function exVarHtml(v) { return v.replace(/([a-z])(?:\^(\d+))?/g, function (m, l, e) { return "<i>" + l + "</i>" + (e ? "<sup>" + e + "</sup>" : ""); }); }
   function exFr(p) { return p.d > 1 ? p.n + "/" + p.d : String(p.n); }
+  function exPar(t, its) { return t.b && its.length === 1 && its[0].k === "x" && its[0].n.n === 1 && its[0].n.d === 1 && !hasS(its[0]) ? exHtml(its) : "(" + exHtml(its) + ")"; }   // x(x - 3): the lone x factor needs no parentheses
   function exTerm(t, inner) {   // the term without its sign
     if (t.k === "q") return "<span class=\"fr\"><span>" + exHtml(t.num) + "</span><span>" + exHtml(t.den) + "</span></span>";
-    if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">(" + exHtml(t.items) + ")</span>" + (t.b ? "<span class=\"exH\">(" + exHtml(t.b) + ")</span>" : ""); }
+    if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">" + exPar(t, t.items) + "</span>" + (t.b ? "<span class=\"exH\">" + exPar(t, t.b) + "</span>" : ""); }
     if (hasS(t)) return litHtml(t, false);
     var a = mk(Math.abs(t.n.n), t.n.d); return t.k === "x" ? (a.n === 1 && a.d === 1 ? "" : a.d === 1 ? "<span class=\"exK\" title=\"Drag me onto another term to factor out a number they share\">" + a.n + "</span>" : exFr(a)) + exVarHtml(t.v || "x") : exFr(a);
   }
@@ -1795,14 +1799,16 @@
       return { L: L, R: R };
     }
   }
-  function eqZp(lv) {   // the zero product property: 1 (x - 3)(x + 2) = 0; 2 a number in front of x, (2x - 6)(3x + 4) = 0; 3 a number in front of the parentheses, 2(x - 3)(x + 4) = 0
+  function eqZp(lv) {   // the zero product property: 1 (x - 3)(x + 2) = 0; 2 a lone x factor, x(x - 3) = 0; 3 a number in front of x, (2x - 6)(3x + 4) = 0; 4 a number in front of the parentheses, 2(x - 3)(x + 4) = 0
     var X = function (n) { return { k: "x", v: "x", n: mk(n) }; }, C = function (n) { return { k: "c", n: mk(n) }; };
     for (;;) {
-      var r1 = nz(7), r2 = nz(7), a = lv >= 2 ? 1 + rnd(4) : 1, c = lv >= 2 ? 1 + rnd(4) : 1, m = lv >= 3 ? 2 + rnd(3) : 1;
-      if (r1 === r2 || (lv >= 2 && a === 1 && c === 1)) continue;
+      var r1 = nz(7), r2 = nz(7), a = lv >= 3 ? 1 + rnd(4) : 1, c = lv >= 3 ? 1 + rnd(4) : 1, m = lv >= 4 ? 2 + rnd(3) : 1;
+      if (r1 === r2 || (lv === 3 && a === 1 && c === 1)) continue;
       var f1 = [X(a), C(-a * r1)], f2 = [X(c), C(-c * r2)];
-      if (rnd(2)) f1.reverse(); if (rnd(2)) f2.reverse();
-      return { L: [{ k: "g", m: mk(m), items: f1, b: f2 }], R: [C(0)] };
+      if (lv === 2) f1 = [X(1)];
+      if (rnd(2) && lv !== 2) f1.reverse(); if (rnd(2)) f2.reverse();
+      var A = f1, B = f2; if (lv === 2 && rnd(3) === 0) { A = f2; B = f1; }
+      return { L: [{ k: "g", m: mk(m), items: A, b: B }], R: [C(0)] };
     }
   }
   function eqLevelOf(L, R) {
@@ -1914,7 +1920,7 @@
     { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 },                                         // the variable on both sides, parentheses, fractions
     { e: "eq", lv: 5 },                                                                                                                        // parentheses on both sides, one with a minus sign: 4(x - 3) + 2 = 2x - (x + 1)
     { e: "eq", special: true },                                                                                                                // no solution / infinitely many
-    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 }, { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 },                                                       // letters as coefficients: ax = b, ax + b = c, 2ax + 3b = 5c, like terms with letters
+    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 }, { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 },                                                       // letters as coefficients: ax = b, ax + b = c, 2ax + 3b = 5c, like terms with letters
     { e: "pane", ineq: 1 }, { e: "pane", ineq: 2 }, { e: "pane", ineq: 3 },                                                                   // inequalities (the sign turns around for a negative)
     { e: "eq", ineq: 1 }, { e: "eq", ineq: 2 }, { e: "eq", ineq: 3, special: true }                                                           // two-sided inequalities, negative multipliers (incl. -1), never / always true
   ];
@@ -1922,7 +1928,7 @@
   function ladderPane(q) { if (isIneq(q)) { var n = eqLevel(q) >= 4 ? 3 : q.a.n < 0 ? 2 : 1; return rung("pane", function (r) { return r.ineq === n; }); } return rung("pane", function (r) { return r.lv === eqLevel(q); }); }
   function ladderEq(L, R, rel) {
     var gz = zpOf(L, R);
-    if (gz) { var zl = gz.m.n !== 1 || gz.m.d !== 1 ? 3 : gz.items.concat(gz.b).some(function (t) { return t.k === "x" && (t.n.n !== 1 || t.n.d !== 1); }) ? 2 : 1; return rung("eq", function (r) { return r.zp === zl; }); }
+    if (gz) { var zl = gz.m.n !== 1 || gz.m.d !== 1 ? 4 : gz.items.concat(gz.b).some(function (t) { return t.k === "x" && (t.n.n !== 1 || t.n.d !== 1); }) ? 3 : gz.items.length === 1 || gz.b.length === 1 ? 2 : 1; return rung("eq", function (r) { return r.zp === zl; }); }
     var sol = eqSolution(L, R, rel), all = L.concat(R), hasNeg = all.some(function (t) { return t.k === "g" && t.m.n < 0; }), hasMinus1 = all.some(function (t) { return t.k === "g" && t.m.n === -1 && t.m.d === 1; });
     if (litAny(all)) {
       if (all.length >= 3 && all.every(function (t) { return t.k !== "g" && !t.co; }) && Object.keys(all[0].s || {}).some(function (l) { return all[0].s[l] > 0 && all.every(function (t) { return t.s && t.s[l] > 0; }); })) return rung("eq", function (r) { return r.lit === 8; });
