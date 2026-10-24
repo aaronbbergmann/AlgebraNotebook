@@ -118,6 +118,17 @@
   .fr>span:last-child{padding:.04em .12em 0}
   .exBox{display:flex;flex-direction:column;align-items:center;gap:1rem;margin:1rem auto;width:fit-content;max-width:100%;padding:.4em .8em;border-radius:.4em;background:color-mix(in srgb,var(--ink) 7%,var(--bg))}
   .exBox[hidden]{display:none}
+  .exBox.zp{display:grid;grid-template-columns:auto auto auto;justify-content:center;gap:.45rem 0;background:none;padding:0;width:auto}
+  .exBox.zp>*{grid-column:1/-1}
+  .exBox.zp .zpRow{display:grid;grid-template-columns:subgrid;align-items:center;padding:.3em .5em;border-radius:.4em;line-height:1.3;background:color-mix(in srgb,var(--ink) 7%,var(--bg))}
+  .exBox.zp .zpRow[hidden]{display:none}
+  .zpS{display:flex;align-items:center;flex-wrap:nowrap;white-space:nowrap}.zpL{justify-self:end}.zpR{justify-self:start}
+  .zpRow>.exEq{justify-self:center}
+  .zpRow.zpDim{opacity:.55}.zpRow.zpIn{animation:zpIn .6s ease-out}
+  @keyframes zpIn{from{opacity:0;transform:translateY(-.6em)}to{opacity:1;transform:none}}
+  .zpHole{grid-column:1/-1;justify-self:center;font:600 .45em system-ui,sans-serif;color:var(--plus);padding:.5em 1em;border:2px dashed currentColor;border-radius:.6em;opacity:.7}
+  .zpRow.drop{outline:3px solid var(--plus);outline-offset:2px}
+  .exBox.zp .exG,.exBox.zp .exH{cursor:grab;touch-action:none}
   .exRow{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;line-height:1.3}
   .exOpc{cursor:pointer;color:var(--plus);font-weight:800;border-radius:6px;transition:transform .2s}.exOpc:hover{transform:scale(1.4);background:color-mix(in srgb,var(--plus) 20%,transparent)}
   .exEq{padding:0 .5em}.exEq.grab:hover{background:color-mix(in srgb,var(--plus) 20%,transparent)}
@@ -449,7 +460,7 @@
     <div class="top" id="top"><section class="eqs orig" id="origEl" aria-label="Original equations"></section><section class="eqs orig" id="sysEl" aria-label="Two-variable equations"></section><section class="vals" id="vals" aria-label="Solved values"></section></div>
     <div class="wrap">
       <main class="eqs work" id="wsEl"></main>
-      <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="exRow" id="exRow"></div>
+      <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="zpRow" id="zpA" hidden></div><div class="exRow" id="exRow"></div><div class="zpRow" id="zpB" hidden></div>
         <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
@@ -1208,6 +1219,7 @@
   function exRender(hot) {
     if (!EXP) return;
     if (EXP.eq) { eqRender(hot); return; }
+    zpPaint();
     var R = $("exRow"), its = EXP.items, live = (mode === "sequence" || mode === "calculate") && !locked;
     R.innerHTML = its.map(function (t, i) {
       var ng = (t.k === "g" ? t.m.n : t.n.n) < 0, op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + i + "\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "";
@@ -1363,15 +1375,16 @@
     distHide(); stopDemo(); closeAsk(false); stopParty(); busy = false; calc = null; $("modePick").hidden = true;
     orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
     if (EXP.eq) { EXP.L = JSON.parse(JSON.stringify(EXP.orig.L)); EXP.R = JSON.parse(JSON.stringify(EXP.orig.R)); EXP.rel = EXP.orig.rel || "="; } else EXP.items = JSON.parse(JSON.stringify(EXP.orig));
-    EXP.ask = null; logEl.innerHTML = ""; DM4.brk = false;
+    EXP.ask = null; EXP.zp = null; logEl.innerHTML = ""; DM4.brk = false;
     $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
     $("top").style.display = "none"; $("vals").style.display = "none"; $("creator").hidden = true; $("answer").hidden = true; $("wsEl").style.display = "none";
     $("exBox").hidden = false; $("exSolo").hidden = mode !== "solo"; $("exMsg").textContent = ""; $("exSoloIn").value = "";
-    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
+    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.zpq ? "e.g. 3, -2" : EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
     exRender(); updUndo();
     if (EXP.eq) {
       if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this equation solved."); }
       else if (mode === "solo") note("Solve it on your own, then type your answer.");
+      else if (EXP.zpq) note("Drag one of the parentheses up or down. A product is 0 only when one of its factors is 0 (the zero product property), so the equation splits into two equations." + (mode === "calculate" ? " You will be asked for each result." : ""));
       else note("Drag a term across the " + (eqIneq() ? "sign" : "=") + " to move it to the other side (its sign changes). Drop it on a like term to combine them. Drag the number in front of x across to divide." + (eqIneq() ? " Dividing or multiplying by a negative number turns the sign around." : "") + (EXP.lit ? " The letters are numbers too: dividing by a gives b/a." : "") + (mode === "calculate" ? " You will be asked for each result." : ""));
       return;
     }
@@ -1387,7 +1400,7 @@
   }
   // the demo is always the cursor: the hand picks a term (or a coefficient) up, drags it onto its target, and then run() does the step. The hand stays on screen until the demo ends or is paused
   function exMoveDemo(srcSel, dstSel, run, after) {
-    var R = $("exRow"), src = R.querySelector(srcSel), dst = R.querySelector(dstSel);
+    var R = $("exRow"), src = R.querySelector(srcSel), dst = R.querySelector(dstSel) || document.querySelector(dstSel);
     var alive = function () { return EXP && DM4.run && !DM4.paused; };
     if (!src || !dst) { DM4.t = setTimeout(function () { if (!alive()) return; run(); after(); }, 1300); return; }
     DM4.t = setTimeout(function () {
@@ -1452,6 +1465,55 @@
   function eqOther(S) { return S === "L" ? "R" : "L"; }
   function eqVars(its, o) { its.forEach(function (t) { if (t.k === "g") { eqVars(t.items, o); if (t.b) eqVars(t.b, o); } else if (t.k === "x") o[t.v || "x"] = 1; }); return o; }
   function litAlone(a, b) { return a.length === 1 && a[0].k === "x" && same(a[0].n, mk(1)) && !hasS(a[0]) && ((b.length === 1 && b[0].k === "q") || (b.every(function (t) { return t.k === "c"; }) && b.every(function (t, i) { return b.every(function (u, j) { return i === j || exKey(t) !== exKey(u); }); }))); }
+  // ---- the zero product property: (x - 3)(x + 2) = 0. Dragging one factor up or down splits the equation into two equations, stacked like the 2 x 2 activity.
+  function zpOf(L, R) { return L.length === 1 && L[0].k === "g" && L[0].b && R.length === 1 && R[0].k === "c" && !R[0].n.n ? L[0] : null; }
+  function zpRoot(f, vk) { var t = exTot(f), a = t[vk]; return a && a.n ? mul(neg(t[""] || mk(0)), inv(a)) : null; }
+  function zpRoots(g, vk) { return [zpRoot(g.items, vk), zpRoot(g.b, vk)]; }
+  function zpStatic(e) {
+    var sl = EXP.L, sr = EXP.R; EXP.L = e.L; EXP.R = e.R;
+    var h = "<span class=\"zpS zpL\">" + eqSideHtml("L", null, false, null) + "</span><span class=\"exEq\">=</span><span class=\"zpS zpR\">" + eqSideHtml("R", null, false, null) + "</span>";
+    EXP.L = sl; EXP.R = sr; return h.replace(/ data-drop="[^"]*"/g, "");
+  }
+  function zpPaint() {
+    var b = $("exBox"), on = !!(EXP && EXP.eq && EXP.zpq), A = $("zpA"), B = $("zpB"), z = on && EXP.zp;
+    b.classList.toggle("zp", on); $("exRow").classList.toggle("zpRow", on);
+    A.hidden = B.hidden = true; A.className = B.className = "zpRow"; A.removeAttribute("data-drop"); B.removeAttribute("data-drop"); A.innerHTML = B.innerHTML = "";
+    if (!on) return;
+    if (!z) {   // not split yet: two dashed places to drop a factor on
+      if (!locked && (mode === "sequence" || mode === "calculate" || mode === "demo")) {
+        A.hidden = B.hidden = false; A.dataset.drop = "zp:up"; B.dataset.drop = "zp:down";
+        A.innerHTML = "<span class=\"zpHole\">\u2191 drag a factor up</span>"; B.innerHTML = "<span class=\"zpHole\">\u2193 or down</span>";
+      }
+      return;
+    }
+    var o = 1 - z.act, T = o < z.act ? A : B;
+    T.hidden = false; T.innerHTML = zpStatic(z.eqs[o]); if (!z.done[o]) T.classList.add("zpDim"); if (EXP.zpNew) { T.classList.add("zpIn"); $("exRow").classList.add("zpIn"); EXP.zpNew = false; } else $("exRow").classList.remove("zpIn");
+  }
+  function zpWire(R) {   // the two sets of parentheses: drag either one onto the dashed place above or below
+    [].forEach.call(R.querySelectorAll(".exT"), function (el) {
+      [".exG", ".exH"].forEach(function (sel, fi) {
+        var pe = el.querySelector(":scope > " + sel); if (!pe) return;
+        pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, pe, function () { note("Drag this factor up or down: if two numbers multiply to make 0, one of them has to be 0."); }, function (t) { zpSplit(fi, t.dataset.drop === "zp:up"); }, "zp:"); });
+      });
+    });
+  }
+  function zpSplit(fi, up) {   // fi: 0 for the first parentheses, 1 for the second; the dragged factor becomes the top equation when it went up, the bottom one when it went down
+    if (locked || EXP.zp || !EXP.zpq) return;
+    var g = EXP.L[0], F = [g.items, g.b], mkE = function (its) { return { L: JSON.parse(JSON.stringify(its)), R: [{ k: "c", n: mk(0) }] }; }, first = up ? fi : 1 - fi, noM = !(g.m.n === 1 && g.m.d === 1);
+    hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: "=", z: null })); updUndo();
+    EXP.zp = { eqs: [mkE(F[first]), mkE(F[1 - first])], done: [false, false], act: 0 }; EXP.zpNew = true;
+    EXP.L = JSON.parse(JSON.stringify(EXP.zp.eqs[0].L)); EXP.R = JSON.parse(JSON.stringify(EXP.zp.eqs[0].R)); EXP.rel = "=";
+    closeAsk(false); eqRender(); note("A product is 0 only when one of its factors is 0, so " + exSay(EXP.zp.eqs[0].L) + " = 0 or " + exSay(EXP.zp.eqs[1].L) + " = 0." + (noM ? " The number in front can never be 0, so it drops out." : "") + " Solve the top equation first.");
+    var k = eqKind(); if (k) eqEnd(k);
+  }
+  function zpSwitch() {   // the active equation is solved: keep it, and move on to the other one
+    var z = EXP.zp, a = z.act, b = 1 - a, sol = exSay(EXP.L) + " = " + exSay(EXP.R);
+    z.eqs[a] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; z.done[a] = true; z.act = b;
+    EXP.L = JSON.parse(JSON.stringify(z.eqs[b].L)); EXP.R = JSON.parse(JSON.stringify(z.eqs[b].R)); EXP.rel = "="; closeAsk(false);
+    eqRender(); note("One answer: " + sol + ". Now solve the other equation, " + exSay(EXP.L) + " = " + exSay(EXP.R) + ".");
+    var k = eqKind(); if (k) eqEnd(k);
+  }
+  function zpSay() { var o = []; EXP.zp.eqs.forEach(function (e) { var t = exSay(e.L) + " = " + exSay(e.R); if (o.indexOf(t) < 0) o.push(t); }); return o.join(" or "); }
   function eqKind() {   // "one" (x = 4 or 4 = x), "none", "inf", or "" while there is more to do
     if (EXP.lit) return litAlone(EXP.L, EXP.R) || litAlone(EXP.R, EXP.L) ? "one" : "";
     if (EXP.L.length !== 1 || EXP.R.length !== 1) return "";
@@ -1491,13 +1553,15 @@
       var ng = (t.k === "g" ? t.m.n : t.n.n) < 0;
       var op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + S + i + "\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "";
       var body = dv && dv.S === S ? (function () { var a = mk(Math.abs(t.n.n), t.n.d); return "<span class=\"exCo\" title=\"Drag me to the other side to divide\">" + (hasS(t) ? litHtml(t, true) : exFr(a)) + "</span>" + exVarHtml(t.v || "x"); })() : exTerm(t);
-      return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live ? " pend" : "") + (hot && hot.indexOf(S + i) >= 0 ? " hot" : "") + "\" data-s=\"" + S + "\" data-i=\"" + i + "\" data-drop=\"et:" + S + ":" + i + "\">" + body + "</span>";
+      return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live && !EXP.zpq ? " pend" : "") + (hot && hot.indexOf(S + i) >= 0 ? " hot" : "") + "\" data-s=\"" + S + "\" data-i=\"" + i + "\" data-drop=\"et:" + S + ":" + i + "\">" + body + "</span>";
     }).join("");
   }
   function eqRender(hot) {
-    var R = $("exRow"), live = (mode === "sequence" || mode === "calculate") && !locked, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null;
-    R.innerHTML = eqSideHtml("L", hot, live, dv) + "<span class=\"exEq" + (live ? " grab" : "") + "\" data-drop=\"eq=\">" + relGlyph(EXP.rel) + "</span>" + eqSideHtml("R", hot, live, dv);
-    if (!locked) { R.querySelector(".exEq").addEventListener("click", eqMulAsk); R.onclick = function (e) { if (e.target === R) eqMulAsk(); }; }
+    zpPaint();
+    var R = $("exRow"), live = (mode === "sequence" || mode === "calculate") && !locked, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !EXP.zp;
+    R.innerHTML = wrap("L") + "<span class=\"exEq" + (live && !un ? " grab" : "") + "\" data-drop=\"eq=\">" + relGlyph(EXP.rel) + "</span>" + wrap("R");
+    if (!locked && !un) { R.querySelector(".exEq").addEventListener("click", eqMulAsk); R.onclick = function (e) { if (e.target === R) eqMulAsk(); }; } else R.onclick = null;
+    if (live && un) { zpWire(R); return; }
     if (!live) return;
     var dropOf = function (S, i) { return function (t) { if (t.dataset.drop === "eq=") eqDrop(S, i, eqOther(S), -1); else { var p = t.dataset.drop.split(":"); eqDrop(S, i, p[1], +p[2]); } }; };
     [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var S = el.dataset.op[0], k = +el.dataset.op.slice(1); eqDrop(S, k - 1, S, k); }); });
@@ -1638,22 +1702,32 @@
   }
   function eqSet(N, msg, dg) {
     if (dg) distShow(dg);
-    hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: EXP.rel || "=" })); updUndo();
+    hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: EXP.rel || "=", z: EXP.zp || null })); updUndo();
     EXP.L = N.L; EXP.R = N.R; EXP.rel = N.rel || "="; closeAsk(false); eqRender(); if (msg) note(msg);
     var k = eqKind(); if (k) eqEnd(k); else if (!msg) clearLog();
   }
   function eqEnd(kind) {
+    if (EXP.zp) { if (!EXP.zp.done[1 - EXP.zp.act]) { zpSwitch(); return; } EXP.zp.eqs[EXP.zp.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; EXP.zp.done[EXP.zp.act] = true; }
     locked = true; eqRender(); closeAsk(false);
-    var iq = eqIneq(), txt = kind === "one" ? "Solved: " + exSay(EXP.L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(EXP.R) : exSay(EXP.R)) + "." : kind === "none" ? (iq ? "No solution: the inequality is never true." : "No solution: the two sides can never be equal.") : (iq ? "Every number is a solution: the inequality is always true." : "Infinitely many solutions: the two sides are always equal.");
+    var iq = eqIneq(), txt = kind === "one" ? "Solved: " + (EXP.zp ? zpSay() : exSay(EXP.L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(EXP.R) : exSay(EXP.R))) + "." : kind === "none" ? (iq ? "No solution: the inequality is never true." : "No solution: the two sides can never be equal.") : (iq ? "Every number is a solution: the inequality is always true." : "Infinitely many solutions: the two sides are always equal.");
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note(txt);
     if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(kind === "one" ? "Solved!" : kind === "none" ? "No solution" : iq ? "Every number" : "Infinitely many"); solverFinish(); }
     else { tally(); nxShow(); }
   }
   function eqUndo() {
     distHide();
-    var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
+    var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
   }
   function eqCheckSolo() {
+    if (EXP.zpq) {   // the answers are a set: "3, -2", "x = 3 or x = -2"
+      var mz = $("exMsg"), g0 = zpOf(EXP.orig.L, EXP.orig.R), vz = EXP.vk || "x", want = zpRoots(g0, vz), tz = $("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, ""), parts = tz.split(/,|;|or|and/).filter(function (u) { return u; }), got = []; ansTouched = true;
+      for (var pi = 0; pi < parts.length; pi++) { var pv = parse(parts[pi].replace(new RegExp("^" + vz + "="), "")); if (!pv) { mz.className = "bad"; mz.textContent = "Type your answers like 3, \u22122 (separated by commas)."; return; } got.push(pv); }
+      var has = function (arr, v) { return arr.some(function (u) { return same(u, v); }); };
+      if (!got.length || !got.every(function (v) { return has(want, v); })) { mz.className = "bad"; mz.textContent = "Not quite. Check your work and try again."; return; }
+      if (!want.every(function (v) { return has(got, v); })) { mz.className = "bad"; mz.textContent = "That one works, but there is another answer. Type both, like 3, \u22122."; return; }
+      var mkS = function (v) { return { L: [{ k: "x", v: vz, n: mk(1) }], R: [{ k: "c", n: v }] }; };
+      EXP.zp = { eqs: [mkS(want[0]), mkS(want[1])], done: [true, false], act: 1 }; EXP.L = EXP.zp.eqs[1].L; EXP.R = EXP.zp.eqs[1].R; eqEnd("one"); $("exSolo").hidden = true; return;
+    }
     if (EXP.lit) {   // with letters the answer is an expression: b/a, (c - b)/a ...
       var ml = $("exMsg"), wl = litSolution(EXP.orig.L, EXP.orig.R), tl = $("exSoloIn").value.toLowerCase().replace(/\s+/g, "").replace(/^x=/, ""), rl = litRat(tl, true); ansTouched = true;
       if (typeof rl === "string") { ml.className = "bad"; ml.textContent = "Type your answer like b/a or (c − b)/(a + c)."; return; }
@@ -1685,6 +1759,7 @@
   }
   function eqNextStep() {
     var sides = ["L", "R"], q, i, j, S;
+    if (EXP.zpq && !EXP.zp) return { cap: "If two numbers multiply to make 0, one of them must be 0. Drag a factor up.", mv: ['.exT[data-s="L"][data-i="0"] > .exG', "#zpA"], run: function () { zpSplit(0, true); } };
     for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return { hot: [S + i], cap: "Drag " + dgWord(EXP[S][i].m) + " onto the parentheses.", key: S + ":" + i, anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, distMsg(g, d), g); }; })(S, i) }; }
     for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"]', '.exT[data-s="' + S + '"][data-i="' + j + '"]'], cap: "Drag a term onto its like term.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
     var xi = function (S) { return EXP[S].findIndex(function (t) { return t.k === "x"; }); }, ci = function (S) { return EXP[S].findIndex(function (t) { return t.k === "c"; }); };
@@ -1720,6 +1795,16 @@
       return { L: L, R: R };
     }
   }
+  function eqZp(lv) {   // the zero product property: 1 (x - 3)(x + 2) = 0; 2 a number in front of x, (2x - 6)(3x + 4) = 0; 3 a number in front of the parentheses, 2(x - 3)(x + 4) = 0
+    var X = function (n) { return { k: "x", v: "x", n: mk(n) }; }, C = function (n) { return { k: "c", n: mk(n) }; };
+    for (;;) {
+      var r1 = nz(7), r2 = nz(7), a = lv >= 2 ? 1 + rnd(4) : 1, c = lv >= 2 ? 1 + rnd(4) : 1, m = lv >= 3 ? 2 + rnd(3) : 1;
+      if (r1 === r2 || (lv >= 2 && a === 1 && c === 1)) continue;
+      var f1 = [X(a), C(-a * r1)], f2 = [X(c), C(-c * r2)];
+      if (rnd(2)) f1.reverse(); if (rnd(2)) f2.reverse();
+      return { L: [{ k: "g", m: mk(m), items: f1, b: f2 }], R: [C(0)] };
+    }
+  }
   function eqLevelOf(L, R) {
     var all = L.concat(R), s = JSON.stringify(all);
     return all.some(function (t) { return t.k === "g"; }) ? 3 : all.some(function (t) { return t.k === "x" && t.n.d > 1; }) ? 4 : all.some(function (t) { return t.n && t.n.n < 0; }) ? 2 : L.some(function (t) { return t.k === "c"; }) && R.some(function (t) { return t.k === "c"; }) ? 1 : 0;
@@ -1730,13 +1815,17 @@
     if (/[a-wyz]/.test(s)) { eqCreateLit(p, rel, err); return; }
     var L = exParse(p[0]), R = exParse(p[1]);
     if (typeof L === "string" || typeof R === "string") { err.textContent = typeof L === "string" ? L : R; return; }
-    if (L.concat(R).some(function (t) { return t.k === "g" && t.b; })) { err.textContent = "Two sets of parentheses can be multiplied in an expression (no = sign) for now."; return; }
+    var zq = zpOf(L, R) || zpOf(R, L);
+    if (zq && rel === "=" && zpOf(R, L)) { var sw = L; L = R; R = sw; }
+    if (!zq && L.concat(R).some(function (t) { return t.k === "g" && t.b; })) { err.textContent = "Two sets of parentheses can be solved when the other side is 0, like (x - 3)(x + 2) = 0, or multiplied in an expression (no = sign)."; return; }
+    if (zq && rel !== "=") { err.textContent = "Use an equals sign for a product of parentheses, like (x - 3)(x + 2) = 0."; return; }
     var vs = Object.keys(eqVars(L, eqVars(R, {})));
+    if (zq && vs.length === 1 && zpRoots(zq, vs[0]).some(function (v) { return !v; })) { err.textContent = "Each set of parentheses needs the variable, like (x - 3)(x + 2) = 0."; return; }
     if (!vs.length) { err.textContent = "That equation needs a variable."; return; }
     if (vs.length > 1 || /[\^]/.test(s) || vs.some(function (v) { return /\^/.test(v); })) { err.textContent = "Use one variable, to the first power, like 3x=x+2."; return; }
     var keep = EXP; EXP = { eq: true, L: L, R: R, rel: rel, ask: null }; var k = eqKind();
     if (k) { EXP = keep; err.textContent = "That one is already solved. Type an equation that still needs work."; return; }
-    EXP = { eq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: rel }, L: L, R: R, rel: rel, ask: null, vk: vs[0] };
+    EXP = { eq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: rel }, L: L, R: R, rel: rel, ask: null, vk: vs[0], zpq: !!zq, zp: null };
     SOL.lvl = ladderEq(L, R, rel); SOL.fresh = false;
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
   }
@@ -1825,13 +1914,15 @@
     { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 },                                         // the variable on both sides, parentheses, fractions
     { e: "eq", lv: 5 },                                                                                                                        // parentheses on both sides, one with a minus sign: 4(x - 3) + 2 = 2x - (x + 1)
     { e: "eq", special: true },                                                                                                                // no solution / infinitely many
-    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 },                                                       // letters as coefficients: ax = b, ax + b = c, 2ax + 3b = 5c, like terms with letters
+    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 }, { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 },                                                       // letters as coefficients: ax = b, ax + b = c, 2ax + 3b = 5c, like terms with letters
     { e: "pane", ineq: 1 }, { e: "pane", ineq: 2 }, { e: "pane", ineq: 3 },                                                                   // inequalities (the sign turns around for a negative)
     { e: "eq", ineq: 1 }, { e: "eq", ineq: 2 }, { e: "eq", ineq: 3, special: true }                                                           // two-sided inequalities, negative multipliers (incl. -1), never / always true
   ];
   function rung(e, f) { for (var i = 0; i < LADDER.length; i++) if (LADDER[i].e === e && f(LADDER[i])) return i; return 0; }
   function ladderPane(q) { if (isIneq(q)) { var n = eqLevel(q) >= 4 ? 3 : q.a.n < 0 ? 2 : 1; return rung("pane", function (r) { return r.ineq === n; }); } return rung("pane", function (r) { return r.lv === eqLevel(q); }); }
   function ladderEq(L, R, rel) {
+    var gz = zpOf(L, R);
+    if (gz) { var zl = gz.m.n !== 1 || gz.m.d !== 1 ? 3 : gz.items.concat(gz.b).some(function (t) { return t.k === "x" && (t.n.n !== 1 || t.n.d !== 1); }) ? 2 : 1; return rung("eq", function (r) { return r.zp === zl; }); }
     var sol = eqSolution(L, R, rel), all = L.concat(R), hasNeg = all.some(function (t) { return t.k === "g" && t.m.n < 0; }), hasMinus1 = all.some(function (t) { return t.k === "g" && t.m.n === -1 && t.m.d === 1; });
     if (litAny(all)) {
       if (all.length >= 3 && all.every(function (t) { return t.k !== "g" && !t.co; }) && Object.keys(all[0].s || {}).some(function (l) { return all[0].s[l] > 0 && all.every(function (t) { return t.s && t.s[l] > 0; }); })) return rung("eq", function (r) { return r.lit === 8; });
@@ -1924,7 +2015,7 @@
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
       if (st.e === "eq") {
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
-        EXP.lit = !!st.lit; var g2 = st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st.ineq) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
+        EXP.lit = !!st.lit; EXP.zpq = !!st.zp; EXP.zp = null; var g2 = st.zp ? eqZp(st.zp) : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st.ineq) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
         EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)), rel: EXP.rel }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; EXP.vk = "x";
       } else { EXP = null; useCustom = st.ineq ? paneIneq(st.ineq, m === "demo") : solverEq(st.lv, m === "demo"); }
     }
