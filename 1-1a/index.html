@@ -1008,7 +1008,7 @@
   var SOLMODES = ["demo", "sequence", "calculate", "solo"];
   function solverFinish() { var m = nextMode(); dmFinish(nextLabel(), function () { solverGo(0, m); }, "Try another", function () { solverGo(0, "demo"); }); }
   function nextMode() { return SOLMODES[(SOLMODES.indexOf(mode) + 1) % SOLMODES.length]; }
-  function nextLabel() { return "Try in " + MODES[nextMode()] + " Mode"; }
+  function nextLabel() { return MODES[nextMode()] + " Mode"; }
   function hardLabel() { return EXP ? "Harder Expression" : "Harder Equation"; }
   function solverEq(lv, demo) {   // a variant of the given difficulty; whole-number coefficients when the Demo has to walk through it
     if (demo && lv > 4) lv = 4;
