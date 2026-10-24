@@ -368,8 +368,12 @@
   .pgDemo.ready:hover,.pgDemo.paused:hover,.btn.next:hover,body.pq #qzNext:hover:not(:disabled){background:#6E1A4E;border-color:#6E1A4E}
   .dmLink{font-size:.85rem;margin-top:-.2rem;margin-bottom:.8rem;max-width:11rem;text-align:center}
   .nxRow{padding:0;gap:.5rem}
-  body.solver #dmCtl{min-height:9.9rem;justify-content:flex-start}   /* Next, Harder and Try another appear in this space, so Hint, Undo and Show work never move */
-  #next[hidden]~#nxHard,#nxHard[hidden],#dmHard[hidden]{display:none!important}
+  body.solver #dmCtl{min-height:13rem;justify-content:flex-start}   /* Level Up, Try another and End demo share this space, so Hint, Undo and Show work never move */
+  #nxHard[hidden],#dmHard[hidden]{display:none!important}
+  /* Play Solver: the Level Up button and the Try another link are always on screen (Create has no generated problem; Demo keeps them in its own button column) */
+  html:not([data-mode=demo]):not([data-mode=create]) body.solver #nxHard,html:not([data-mode=demo]):not([data-mode=create]) body.solver #again{display:block!important}
+  html:not([data-mode=demo]):not([data-mode=create]) body.solver #next[hidden]{display:block!important;visibility:hidden}   /* Next's place stays reserved until the problem is solved */
+  html:not([data-mode=demo]):not([data-mode=create]) body.solver .nxRow{padding:.9rem 1rem 0}
   .nxRow:has(>:not([hidden])){padding:.9rem 1rem 0}
   #dmEnd[hidden]{display:none}
   /* the title area at the top of every activity: the title, and (in Demo) one short phrase on what is happening */
@@ -448,11 +452,11 @@
   <aside class="chat" aria-label="Controls and tutor chat">
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Exercise</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
-      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo hard" id="dmHard" hidden>Harder Equation</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="reg" aria-pressed="false">Regression</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Solo</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo hard" id="dmHard" hidden>Level Up</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="reg" aria-pressed="false">Regression</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
-    <div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="btn" id="nxHard" hidden>Harder Equation</button><button class="link" id="again" hidden>Stay</button></div>
+    <div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="btn" id="nxHard" hidden>Level Up</button><button class="link" id="again" hidden>Try another</button></div>
     <section class="qz" id="qz" hidden aria-live="polite"><div class="qzT" id="qzT"></div><div id="qzIn"></div><div class="err" id="qzErr"></div><div class="qzRow"><button class="btn" id="qzGo">Check</button><button class="btn" id="qzNext" hidden>Next</button><button class="link" id="qzAgain" hidden>Another round</button></div></section>
     <div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div><div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^2" aria-label="Insert ^2 (squared)">^2</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
     <div class="composer" id="ask" hidden>
@@ -1239,7 +1243,7 @@
   function solverFinish() { var m = nextMode(); dmFinish(nextLabel(), function () { solverGo(0, m); }, "Try another", function () { solverGo(0, "demo"); }); }
   function nextMode() { return SOLMODES[(SOLMODES.indexOf(mode) + 1) % SOLMODES.length]; }
   function nextLabel() { return MODES[nextMode()] + " Mode"; }
-  function hardLabel() { return EXP && !EXP.eq ? "Harder Expression" : "Harder Equation"; }
+  function hardLabel() { return "Level Up"; }
   function solverEq(lv, demo) {   // a variant of the given difficulty; whole-number coefficients when the Demo has to walk through it
     if (demo && lv > 4) lv = 4;
     for (;;) {
@@ -2154,6 +2158,7 @@
       b.classList.toggle("on", st === "playing"); b.classList.toggle("paused", st === "paused"); b.classList.toggle("ready", st === "idle"); b.setAttribute("aria-pressed", st === "playing");
       e.hidden = st !== "paused";
     });
+    if (BUILT[act] && BUILT[act].solver) { $("dmHard").hidden = false; $("dmHard").textContent = hardLabel(); $("dmLink").textContent = "Try another"; $("dmLink").hidden = false; }   // Level Up and Try another are always there
     if (st === "idle") dmCap("");
   }
   function dmCap(t) { var c = $("stCap"); if (c) c.textContent = t || ""; dmHead(); }
@@ -5410,7 +5415,7 @@ var ESPIC = {
   $("pgDemo").addEventListener("click", function () { if (dmClickFinish()) return; if (!pgRun) pgDemo(); else if (!pgPaused) pgPause(); else pgResume(); });
   $("pgEnd").addEventListener("click", function () { pgStop(); });
   $("dmBtn").addEventListener("click", dm4Click);
-  ["pgLink", "dmLink"].forEach(function (id) { $(id).addEventListener("click", function () { var d = DMX; if (d && d.stayGo) { dmUI("idle"); d.stayGo(); } }); });
+  ["pgLink", "dmLink"].forEach(function (id) { $(id).addEventListener("click", function () { var d = DMX; if (d && d.stayGo) { dmUI("idle"); d.stayGo(); } else if (id === "dmLink" && BUILT[act].solver && mode === "demo") { dmUI("idle"); solverGo(0, "demo"); } }); });
   $("dmEnd").addEventListener("click", dm4End);
 
   function enterPlay() {
