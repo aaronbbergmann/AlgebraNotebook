@@ -123,6 +123,7 @@
   .exOpc{cursor:pointer;color:var(--plus);font-weight:800;border-radius:6px;transition:transform .2s}.exOpc:hover{transform:scale(1.4);background:color-mix(in srgb,var(--plus) 20%,transparent)}
   .exEq{padding:0 .5em}.exEq.grab:hover{background:color-mix(in srgb,var(--plus) 20%,transparent)}
   .exCo{border-radius:6px;cursor:grab;touch-action:none;border-bottom:2px dashed var(--plus)}
+  .exK{border-radius:6px;touch-action:none}.exT.grab>.exK{cursor:grab}.exT.grab>.exK:hover{background:color-mix(in srgb,var(--plus) 25%,transparent)}
   .exOp{padding:0 .3em}.exRow>.exOp:first-child{padding:0 .02em 0 0}.exT{padding:0 .1em;border-radius:6px;white-space:nowrap;transition:background .3s}
   .exT i{font-style:italic}.exT.hot{background:color-mix(in srgb,var(--plus) 30%,transparent)}
   .exAsk{font:600 1.1rem system-ui,sans-serif;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:center}
@@ -929,74 +930,158 @@
   // A term may carry s = { letter: power }: ax is { k:"x", v:"x", n:1, s:{ a:1 } }, b is { k:"c", n:1, s:{ b:1 } }, x/a has s:{ a:-1 }. Terms are alike when they have the same letters.
   function sSig(s) { return Object.keys(s || {}).filter(function (l) { return s[l]; }).sort().map(function (l) { return l + (s[l] !== 1 ? "^" + s[l] : ""); }).join(""); }
   function sMul(a, b, k) { var o = {}; Object.keys(a || {}).forEach(function (l) { o[l] = a[l]; }); Object.keys(b || {}).forEach(function (l) { o[l] = (o[l] || 0) + k * b[l]; }); Object.keys(o).forEach(function (l) { if (!o[l]) delete o[l]; }); return o; }
-  function hasS(t) { return !!(t && t.s && sSig(t.s)); }
+  function hasS(t) { return !!(t && (t.co || (t.s && sSig(t.s)))); }
   function lettersStr(s, sign) { return Object.keys(s || {}).sort().filter(function (l) { return sign > 0 ? s[l] > 0 : s[l] < 0; }).map(function (l) { var e = Math.abs(s[l]); return l + (e > 1 ? "^" + e : ""); }).join(""); }
   function litHtml(t, coOnly) {   // a term with letters, without its sign: 3ab, 2b/a ... (coOnly: just the coefficient, without the x)
-    var a = Math.abs(t.n.n), d = t.n.d, ps = lettersStr(t.s, 1), ns = lettersStr(t.s, -1), isX = t.k === "x" && !coOnly;
-    var num = (a !== 1 || (!ps && !isX) ? String(a) : "") + (ps ? exVarHtml(ps) : "") + (isX ? exVarHtml(t.v || "x") : ""); if (!num) num = "1";
+    var a = Math.abs(t.n.n), d = t.n.d, ps = t.co ? "" : lettersStr(t.s, 1), ns = t.co ? "" : lettersStr(t.s, -1), isX = t.k === "x" && !coOnly, cs = t.co ? "(" + exHtml(pTerms(t.co)) + ")" : "";
+    var num = (a !== 1 || (!ps && !isX && !cs) ? String(a) : "") + cs + (ps ? exVarHtml(ps) : "") + (isX ? exVarHtml(t.v || "x") : ""); if (!num) num = "1";
     var den = (d > 1 ? String(d) : "") + (ns ? exVarHtml(ns) : "");
     return den ? "<span class=\"fr\"><span>" + num + "</span><span>" + den + "</span></span>" : num;
   }
-  function litParse(str, paren) {   // text with letters -> a list of { n, s } terms (not combined), or a message
-    var s = String(str).toLowerCase().replace(/\u2212/g, "-").replace(/[\s\u00b7\u22c5]/g, "").replace(/\u00d7/g, "*").replace(/\u00f7/g, "/"), i = 0, err = null, bad = "I couldn't read that. Use numbers, letters, + \u2212 \u00d7 / and ^, like 3ax+2b or (c-b)/a.";
+  // polynomials in the letters (powers may be negative): a list of { n: fraction, s: { letter: power } }; a fraction of two of them is { N, D }
+  function pNorm(P) { var o = {}, ord = []; P.forEach(function (t) { var k = sSig(t.s); if (!o[k]) { o[k] = { n: mk(0), s: t.s || {} }; ord.push(k); } o[k].n = add(o[k].n, t.n); }); ord.sort(); return ord.map(function (k) { return o[k]; }).filter(function (t) { return t.n.n; }); }
+  function pAdd(A, B) { return pNorm(A.concat(B)); }
+  function pNeg(A) { return A.map(function (t) { return { n: neg(t.n), s: t.s }; }); }
+  function pMul(A, B) { var o = []; A.forEach(function (p) { B.forEach(function (q) { o.push({ n: mul(p.n, q.n), s: sMul(p.s, q.s, 1) }); }); }); return pNorm(o); }
+  function pOrder(P) { P = pNorm(P); return P.filter(function (t) { return t.n.n > 0; }).concat(P.filter(function (t) { return t.n.n < 0; })); }
+  function pEq(A, B) { A = pNorm(A); B = pNorm(B); return A.length === B.length && A.every(function (t, i) { return sSig(t.s) === sSig(B[i].s) && same(t.n, B[i].n); }); }
+  function pTerms(P) { return pOrder(P).map(function (t) { var u = { k: "c", n: t.n }; if (sSig(t.s)) u.s = t.s; return u; }); }
+  function pOfTerms(its) { return pNorm(its.map(function (t) { return { n: t.n, s: t.s || {} }; })); }
+  function ONE() { return [{ n: mk(1), s: {} }]; }
+  function isOneP(P) { return P.length === 1 && same(P[0].n, mk(1)) && !sSig(P[0].s); }
+  function ratAbs(v) { if (v.D.length === 1 && !isOneP(v.D)) { var d = v.D[0]; v = { N: pMul(v.N, [{ n: inv(d.n), s: sMul({}, d.s, -1) }]), D: ONE() }; } return v; }   // a single term underneath moves up as a negative power
+  function ratMul(a, b) { return ratAbs({ N: pMul(a.N, b.N), D: pMul(a.D, b.D) }); }
+  function ratAdd(a, b) { return ratAbs({ N: pAdd(pMul(a.N, b.D), pMul(b.N, a.D)), D: pMul(a.D, b.D) }); }
+  function ratEq(a, b) { return pEq(pMul(a.N, b.D), pMul(b.N, a.D)); }
+  function ratClear(v) {   // no fractions or negative powers left inside: 6b / (2a + 2c) becomes 3b / (a + c)
+    var N = pNorm(v.N), D = pNorm(v.D), all = N.concat(D), lc = {}, nl = 1, g = 0, l;
+    all.forEach(function (t) { nl = nl / gcd(nl, t.n.d) * t.n.d; for (l in t.s) if (t.s[l] < 0) lc[l] = Math.max(lc[l] || 0, -t.s[l]); });
+    var by = [{ n: mk(nl), s: lc }]; N = pMul(N, by); D = pMul(D, by);
+    N.concat(D).forEach(function (t) { g = gcd(g, t.n.n); });
+    if (g > 1) { var ik = [{ n: mk(1, g), s: {} }]; N = pMul(N, ik); D = pMul(D, ik); }
+    D = pOrder(D); if (D.length && D.every(function (t) { return t.n.n < 0; })) { N = pNeg(N); D = pNeg(D); }
+    return { N: pOrder(N), D: pOrder(D) };
+  }
+  function litShow(N, D) {   // the answer N/D as the terms of one side
+    N = pNorm(N); if (!N.length) return [{ k: "c", n: mk(0) }]; D = pNorm(D);
+    if (D.length === 1) return pTerms(pMul(N, [{ n: inv(D[0].n), s: sMul({}, D[0].s, -1) }]));
+    var c = ratClear({ N: N, D: D }); return [{ k: "q", n: mk(1), num: pTerms(c.N), den: pTerms(c.D) }];
+  }
+  function effP(t) { return t.co ? t.co.map(function (u) { return { n: mul(u.n, t.n), s: u.s }; }) : [{ n: t.n, s: t.s || {} }]; }
+  function litParts(its, m) {   // a side as { X: what multiplies x, C: the rest }, parentheses multiplied out
+    var X = [], C = [];
+    its.forEach(function (t) {
+      if (t.k === "g") { var u = litParts(t.items, { n: t.m, s: t.m.s || {} }); X = X.concat(u.X); C = C.concat(u.C); return; }
+      if (t.k === "q") return;
+      var P = effP(t); if (m) P = pMul(P, [m]); if (t.k === "x") X = X.concat(P); else C = C.concat(P);
+    });
+    return { X: pNorm(X), C: pNorm(C) };
+  }
+  function litSideRat(its) {   // a whole side as a fraction of polynomials in the letters, x one of them
+    var r = { N: [], D: ONE() };
+    its.forEach(function (t) {
+      var v; if (t.k === "q") v = { N: pOfTerms(t.num), D: pOfTerms(t.den) };
+      else { var u = litParts([t], null); v = { N: pAdd(pMul(u.X, [{ n: mk(1), s: { x: 1 } }]), u.C), D: ONE() }; }
+      r = ratAdd(r, v);
+    });
+    return r;
+  }
+  function litSolution(L, R) {   // x = (what is left) / (what multiplies x)
+    var a = litParts(L, null), b = litParts(R, null), M = pAdd(a.X, pNeg(b.X)), N = pAdd(b.C, pNeg(a.C));
+    if (!M.length) return { kind: "?" };
+    return { kind: "one", N: N, D: M, terms: litShow(N, M) };
+  }
+  function litKey(t) { return t.k + (t.v || "") + "|" + sg(t.n) + "|" + sSig(t.s) + "|" + (t.co ? pNorm(t.co).map(function (u) { return sg(u.n) + sSig(u.s); }).join(",") : ""); }
+  function litAny(its) { return its.some(function (t) { return t.k === "g" ? !!(t.m.s && sSig(t.m.s)) || litAny(t.items) : hasS(t); }); }
+  function litRat(str, paren) {   // text with letters -> a fraction { N, D } of polynomials, or a message
+    var s = String(str).toLowerCase().replace(/−/g, "-").replace(/[\s·⋅]/g, "").replace(/×/g, "*").replace(/÷/g, "/"), i = 0, err = null, bad = "I couldn't read that. Use numbers, letters, + − × / and ^, like 3ax+2b or (c-b)/a.";
     if (!s || /[^0-9a-z+\-*().\/^]/.test(s)) return bad;
-    var one = function (n, so) { return [{ n: n || mk(1), s: so || {} }]; };
-    var mulT = function (A, B) { var o = []; A.forEach(function (p) { B.forEach(function (q) { o.push({ n: mul(p.n, q.n), s: sMul(p.s, q.s, 1) }); }); }); return o; };
-    var invT = function (A) { if (A.length !== 1 || !A[0].n.n) { err = err || "You can only divide by one term, like a or 2b."; return one(); } return [{ n: inv(A[0].n), s: sMul({}, A[0].s, -1) }]; };
+    var one = function (n, so) { return { N: pNorm([{ n: n || mk(1), s: so || {} }]), D: ONE() }; };
+    var inv2 = function (a) { if (!a.N.length) { err = err || "You can't divide by zero."; return one(); } return ratAbs({ N: a.D, D: a.N }); };
     var starts = function () { return i < s.length && /[0-9a-z(]/.test(s[i]); };
     function factor() {
       var m;
       if ((m = s.slice(i).match(/^\d+(\.\d+)?/))) { i += m[0].length; return one(parse(m[0])); }
       if ((m = s.slice(i).match(/^[a-z]/))) { i++; var e = 1, pw = s.slice(i).match(/^\^(-?\d+)/); if (pw) { i += pw[0].length; e = +pw[1]; } var o = {}; o[m[0]] = e; return one(mk(1), o); }
-      if (s[i] === "(") { if (!paren) err = err || "Parentheses with letters are not supported here yet."; i++; var r = expr(); if (s[i] !== ")") { err = err || bad; return r; } i++; return r; }
+      if (s[i] === "(") { if (!paren) err = err || "Parentheses with letters are not supported here."; i++; var r = expr(); if (s[i] !== ")") { err = err || bad; return r; } i++; return r; }
       err = err || bad; return one();
     }
-    function juxt() { var r = factor(); while (!err && starts()) r = mulT(r, factor()); return r; }
+    function juxt() { var r = factor(); while (!err && starts()) r = ratMul(r, factor()); return r; }
     function term() {
       var r = factor();
       while (!err) {
-        if (s[i] === "*") { i++; r = mulT(r, factor()); }
-        else if (s[i] === "/") { i++; var numOnly = r.length === 1 && !sSig(r[0].s) && /\d/.test(s[i] || ""); r = mulT(r, invT(numOnly ? factor() : juxt())); }   // 1/2x is (1/2)x, b/2a is b over 2a
-        else if (starts()) r = mulT(r, factor());
+        if (s[i] === "*") { i++; r = ratMul(r, factor()); }
+        else if (s[i] === "/") { i++; var numOnly = r.N.length === 1 && !sSig(r.N[0].s) && isOneP(r.D) && /\d/.test(s[i] || ""); r = ratMul(r, inv2(numOnly ? factor() : juxt())); }   // 1/2x is (1/2)x, b/2a is b over 2a
+        else if (starts()) r = ratMul(r, factor());
         else break;
       }
       return r;
     }
     function expr() {
-      var out = [], first = true;
+      var out = { N: [], D: ONE() }, first = true;
       while (i < s.length && s[i] !== ")") {
         var sgn = 1, signed = false;
         while (s[i] === "+" || s[i] === "-") { if (s[i] === "-") sgn = -sgn; i++; signed = true; }
         if (!first && !signed) { err = err || bad; return out; }
         first = false; var t = term(); if (err) return out;
-        t.forEach(function (u) { out.push({ n: mul(u.n, mk(sgn)), s: u.s }); });
+        out = ratAdd(out, sgn < 0 ? { N: pNeg(t.N), D: t.D } : t);
       }
+      if (first) err = err || bad;
       return out;
     }
     var r = expr(); if (!err && i < s.length) err = bad;
-    return err ? err : r.length ? r : bad;
+    return err ? err : r;
   }
-  function litTerms(str, vk, paren) {   // as equation terms: the ones with x become { k:"x" }, the rest { k:"c" }
-    var r = litParse(str, paren); if (typeof r === "string") return r; var out = [];
-    for (var j = 0; j < r.length; j++) {
-      var u = r[j], e = u.s[vk] || 0; if (e !== 0 && e !== 1) return "The " + vk + " has to be to the first power here.";
-      var s2 = {}; Object.keys(u.s).forEach(function (l) { if (l !== vk) s2[l] = u.s[l]; });
-      var t = e === 1 ? { k: "x", v: vk, n: u.n } : { k: "c", n: u.n }; if (sSig(s2)) t.s = s2; out.push(t);
+  function litParse(str, paren) {   // text with letters -> a list of { n, s } (zero is a list with a 0), or a message
+    var v = litRat(str, paren); if (typeof v === "string") return v;
+    if (!isOneP(v.D)) return "Dividing by a sum isn't supported here.";
+    return v.N.length ? v.N : [{ n: mk(0), s: {} }];
+  }
+  function litSplit(s) {   // the pieces of a sum: split at the + and - that are not inside parentheses (a piece keeps its sign)
+    var out = [], depth = 0, cur = "", j, c;
+    for (j = 0; j < s.length; j++) {
+      c = s[j]; if (c === "(") depth++; if (c === ")") depth--;
+      if (depth === 0 && (c === "+" || c === "-") && cur && !/[*\/^(+\-]$/.test(cur)) { out.push(cur); cur = ""; }
+      cur += c;
     }
-    return out;
+    if (cur) out.push(cur); return out;
   }
-  function litMap(ts) { var o = {}; ts.forEach(function (t) { var k = sSig(t.s); o[k] = add(o[k] || mk(0), t.n); }); return o; }
-  function litSolution(L, R) {   // the answer to ax + b = c as terms: x = c/a - b/a
-    var all = L.concat(R), xs = all.filter(function (t) { return t.k === "x"; });
-    if (!xs.length || xs.some(function (t) { return exKey(t) !== exKey(xs[0]); })) return { kind: "?" };
-    var M = mk(0), cm = {}, ord = [], addC = function (t, sgn) { var k = sSig(t.s); if (!cm[k]) { cm[k] = { n: mk(0), s: t.s || {} }; ord.push(k); } cm[k].n = add(cm[k].n, sgn < 0 ? neg(t.n) : t.n); };
-    L.forEach(function (t) { if (t.k === "x") M = add(M, t.n); else addC(t, -1); });
-    R.forEach(function (t) { if (t.k === "x") M = add(M, neg(t.n)); else addC(t, 1); });
-    if (!M.n) return { kind: "?" };
-    var terms = []; ord.forEach(function (k) { var c = mul(cm[k].n, inv(M)); if (!c.n) return; var u = { k: "c", n: c }, ss = sMul(cm[k].s, xs[0].s, -1); if (sSig(ss)) u.s = ss; terms.push(u); });
-    if (!terms.length) terms = [{ k: "c", n: mk(0) }];
-    terms = terms.filter(function (t) { return t.n.n > 0; }).concat(terms.filter(function (t) { return t.n.n < 0; }));
-    return { kind: "one", terms: terms, map: litMap(terms) };
+  function litPiece(p, vk, paren) {   // one term of an equation: 3ab, 2x/a, a(x + b), (a + c)x ...
+    var bad = "I couldn't read that. Use numbers, letters, + − × / and ^, like 3ax+2b or a(x+b).", sgn = 1, r, j;
+    while (p[0] === "+" || p[0] === "-") { if (p[0] === "-") sgn = -sgn; p = p.slice(1); }
+    if (!p) return bad;
+    var o = p.indexOf("(");
+    if (o < 0) {
+      r = litRat(p, false); if (typeof r === "string") return r; if (!isOneP(r.D)) return "Dividing by a sum isn't supported here.";
+      if (!r.N.length) return { k: "c", n: mk(0) };
+      var u = r.N[0], e = u.s[vk] || 0; if (e !== 0 && e !== 1) return "The " + vk + " has to be to the first power here.";
+      var s2 = {}; Object.keys(u.s).forEach(function (l) { if (l !== vk) s2[l] = u.s[l]; });
+      var t = e === 1 ? { k: "x", v: vk, n: mul(u.n, mk(sgn)) } : { k: "c", n: mul(u.n, mk(sgn)) }; if (sSig(s2)) t.s = s2; return t;
+    }
+    if (!paren) return "Parentheses with letters are not supported here.";
+    var depth = 0, c = -1; for (j = o; j < p.length; j++) { if (p[j] === "(") depth++; else if (p[j] === ")") { depth--; if (!depth) { c = j; break; } } }
+    if (c < 0) return bad;
+    var pre = p.slice(0, o).replace(/\*$/, ""), inner = p.slice(o + 1, c), suf = p.slice(c + 1).replace(/^\*/, "");
+    if (/[()]/.test(pre + suf)) return "Only one set of parentheses in a term, like a(x + b).";
+    var M = pre + suf ? litRat(pre + suf, false) : { N: ONE(), D: ONE() };
+    if (typeof M === "string") return M; if (!isOneP(M.D) || M.N.length !== 1) return "Write what multiplies the parentheses as one term, like a, 2b or x.";
+    var Mt = M.N[0], I = litTerms(inner, vk, false); if (typeof I === "string") return I;
+    if (I.some(function (t) { return t.k === "x"; })) {   // a(x + b): a group to distribute
+      if (Mt.s[vk]) return "The " + vk + " can't be outside the parentheses when it is inside too.";
+      var m = mul(Mt.n, mk(sgn)); if (sSig(Mt.s)) m.s = Mt.s; return { k: "g", m: m, items: I };
+    }
+    if ((Mt.s[vk] || 0) !== 1) return "Put x inside the parentheses, like a(x + b), or write the sum in front of x, like (a + c)x.";
+    var ms = {}; Object.keys(Mt.s).forEach(function (l) { if (l !== vk) ms[l] = Mt.s[l]; });
+    var co = pNorm(I.map(function (u2) { return { n: mul(u2.n, Mt.n), s: sMul(u2.s || {}, ms, 1) }; }));
+    if (!co.length) return { k: "c", n: mk(0) };
+    if (co.length === 1) { var t3 = { k: "x", v: vk, n: mul(co[0].n, mk(sgn)) }; if (sSig(co[0].s)) t3.s = co[0].s; return t3; }
+    return { k: "x", v: vk, n: mk(sgn), co: pOrder(co) };
+  }
+  function litTerms(str, vk, paren) {   // as equation terms: x terms { k:"x" }, the rest { k:"c" }, a(x + b) as a group { k:"g" }, and (a + c)x as an x term with a sum for its coefficient
+    var s = String(str).toLowerCase().replace(/−/g, "-").replace(/[\s·⋅]/g, "").replace(/×/g, "*");
+    if (!s || /[^0-9a-z+\-*().\/^]/.test(s)) return "I couldn't read that. Use numbers, letters, + − × / and ^, like 3ax+2b or a(x+b).";
+    var ps = litSplit(s), out = [], j; for (j = 0; j < ps.length; j++) { var t = litPiece(ps[j], vk, paren); if (typeof t === "string") return t; out.push(t); }
+    return out;
   }
   function litGroup(its) {   // terms are shown over one common denominator: c/a - b/a becomes (c - b)/a, and k/3c + 1/c becomes (k + 3)/3c
     var gcd2 = function (a, b) { return b ? gcd2(b, a % b) : Math.abs(a); }, D = 1, dl = {}, j, l;
@@ -1021,9 +1106,42 @@
   function kNeg(k) { var r = mk(-k.n, k.d); if (k.s) r.s = k.s; return r; }
   function kInv(k) { var r = mk(k.d, k.n); if (k.s) r.s = sMul({}, k.s, -1); return r; }
   function kSay(k) { return k.s ? exSay([{ k: "c", n: mk(k.n, k.d), s: k.s }]) : sg(k); }
-  function exKey(t) { return t.k === "g" ? null : (t.k === "c" ? "" : t.v || "x") + (hasS(t) ? "#" + sSig(t.s) : ""); }   // what a term is "of": "", "x", "y^2", "xy", "#b", "x#a" ...
+  function exKey(t) { return t.k === "g" ? null : t.k === "q" ? "q" : t.k === "c" ? (hasS(t) ? "#" + sSig(t.s) : "") : t.v || "x"; }   // what a term is "of": "", "x", "y^2", "xy", "#b" (letters in a number; every x term is alike, ax and cx too) ...
   function exLike(a, b) { return a.k !== "g" && b.k !== "g" && exKey(a) === exKey(b); }
-  function exSum(a, b) { var c = { k: a.k, n: add(a.n, b.n) }; if (a.v) c.v = a.v; if (hasS(a)) c.s = a.s; return c; }
+  function exSum(a, b) {
+    if (a.k === "x" && (hasS(a) || hasS(b))) {   // ax + cx = (a + c)x
+      var P = pNorm(effP(a).concat(effP(b))), c0 = { k: "x", v: a.v || "x" };
+      if (!P.length) c0.n = mk(0); else if (P.length === 1) { c0.n = P[0].n; if (sSig(P[0].s)) c0.s = P[0].s; } else { c0.n = mk(1); c0.co = pOrder(P); }
+      return c0;
+    }
+    var c = { k: a.k, n: add(a.n, b.n) }; if (a.v) c.v = a.v; if (hasS(a)) c.s = a.s; return c;
+  }
+  // factoring: the number in front of x is dragged onto another term and the biggest number that goes into both is taken out: 3x + 9 becomes 3(x + 3)
+  function facCoef(t) { return t.k === "x" && !hasS(t) && t.n.d === 1 && Math.abs(t.n.n) > 1 ? Math.abs(t.n.n) : 0; }
+  function facWhole(t) {
+    if (t.k === "g") return t.m.d === 1 && !(t.m.s && sSig(t.m.s)) && t.items.every(function (u) { return u.k !== "g" && !hasS(u) && u.n.d === 1; }) ? Math.abs(t.m.n) : 0;
+    return (t.k === "x" || t.k === "c") && !hasS(t) && t.n.d === 1 ? Math.abs(t.n.n) : 0;
+  }
+  function facBuild(a, b, aFirst) {   // a: the term whose number was dragged, b: the term it landed on -> { g, group, msg } or { err }
+    var ca = facCoef(a), cb = facWhole(b);
+    if (!ca) return { err: "Drag a whole number that sits in front of x." };
+    if (b.k !== "g" && exLike(a, b)) return { err: "Those are like terms: drop one on the other to combine them." };
+    if (!cb) return { err: "That term can't be factored with " + ca + "." };
+    var g = gcd(ca, cb); if (g < 2) return { err: ca + " and " + cb + " have no common factor to take out." };
+    var cp = function (t) { return JSON.parse(JSON.stringify(t)); }, aa = cp(a), inner;
+    aa.n = mul(a.n, mk(1, g));
+    if (b.k === "g") { var fm = mk(b.m.n, g); inner = b.items.map(function (t) { var u = cp(t); u.n = mul(t.n, fm); return u; }); }
+    else { var bb = cp(b); bb.n = mul(b.n, mk(1, g)); inner = [bb]; }
+    var group = { k: "g", m: mk(g), items: aFirst ? [aa].concat(inner) : inner.concat([aa]) };
+    return { g: g, group: group, msg: "Factor out " + g + (g !== ca ? ", the biggest number that goes into both " + ca + " and " + cb : "") + ": " + exSay(aFirst ? [a, b] : [b, a]) + " = " + exSay([group]) + "." };
+  }
+  function facKeys(its) { return JSON.stringify(its.map(function (t) { return exKey(t) + ":" + t.n.n + "/" + t.n.d; }).sort()); }
+  function facOK(r, group) { return r.length === 1 && r[0].k === "g" && same(r[0].m, group.m) && facKeys(r[0].items) === facKeys(group.items); }
+  function facDone(its) { if (its.length !== 1 || its[0].k !== "g") return false; var g = 0; its[0].items.forEach(function (t) { g = gcd(g, t.n.d === 1 ? t.n.n : 1); }); return g <= 1; }   // one group, and nothing more to take out
+  function facAll(its) {   // the common number of a sum with no parentheses and no like terms (0 when there is nothing to factor)
+    if (its.length < 2 || !its.some(function (t) { return facCoef(t); }) || !its.every(function (t) { return t.k !== "g" && facWhole(t); })) return 0;
+    var g = 0; its.forEach(function (t) { g = gcd(g, Math.abs(t.n.n)); }); return g >= 2 ? g : 0;
+  }
   function exFin(its) { var seen = {}; for (var j = 0; j < its.length; j++) { if (its[j].k === "g") return false; var k = exKey(its[j]); if (seen[k]) return false; seen[k] = 1; } return true; }
   function exTot(its) {   // the whole value, by kind of term: { "": number, x: coefficient, "y^2": coefficient ... }
     var o = {};
@@ -1034,13 +1152,14 @@
     return o;
   }
   function exSame(a, b) { var ks = {}; Object.keys(a).concat(Object.keys(b)).forEach(function (k) { ks[k] = 1; }); return Object.keys(ks).every(function (k) { return same(a[k] || mk(0), b[k] || mk(0)); }); }
-  function exDist(g) { return g.items.map(function (t) { var u = JSON.parse(JSON.stringify(t)); u.n = mul(t.n, g.m); return u; }); }
+  function exDist(g) { return g.items.map(function (t) { var u = JSON.parse(JSON.stringify(t)); u.n = mul(t.n, g.m); if (g.m.s && sSig(g.m.s)) { var ns = sMul(t.s || {}, g.m.s, 1); if (sSig(ns)) u.s = ns; else delete u.s; } return u; }); }
   function exVarHtml(v) { return v.replace(/([a-z])(?:\^(\d+))?/g, function (m, l, e) { return "<i>" + l + "</i>" + (e ? "<sup>" + e + "</sup>" : ""); }); }
   function exFr(p) { return p.d > 1 ? p.n + "/" + p.d : String(p.n); }
   function exTerm(t, inner) {   // the term without its sign
-    if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d); return (m.n === 1 && m.d === 1 ? "" : "<span class=\"exM\">" + exFr(m) + "</span>") + "<span class=\"exG\">(" + exHtml(t.items) + ")</span>"; }
+    if (t.k === "q") return "<span class=\"fr\"><span>" + exHtml(t.num) + "</span><span>" + exHtml(t.den) + "</span></span>";
+    if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">(" + exHtml(t.items) + ")</span>"; }
     if (hasS(t)) return litHtml(t, false);
-    var a = mk(Math.abs(t.n.n), t.n.d); return t.k === "x" ? (a.n === 1 && a.d === 1 ? "" : exFr(a)) + exVarHtml(t.v || "x") : exFr(a);
+    var a = mk(Math.abs(t.n.n), t.n.d); return t.k === "x" ? (a.n === 1 && a.d === 1 ? "" : a.d === 1 ? "<span class=\"exK\" title=\"Drag me onto another term to factor out a number they share\">" + a.n + "</span>" : exFr(a)) + exVarHtml(t.v || "x") : exFr(a);
   }
   function exHtml(its) {
     return its.map(function (t, i) { var ng = (t.k === "g" ? t.m.n : t.n.n) < 0; return (i ? "<span class=\"exOp\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "") + exTerm(t); }).join("");
@@ -1054,7 +1173,7 @@
   function exSignOf(el) { var p = el.previousElementSibling; return el.querySelector(":scope > .exG") && !el.querySelector(":scope > .exM") && p && p.classList.contains("exOp") && p.textContent === "\u2212" ? p : null; }
   function exNegMark(h, key) { if (h && h.classList.contains("exOp")) { h.classList.add("exNeg"); h.dataset.for = key; h.title = "Drag the minus sign onto the parentheses"; } }
   function distMsg(g, d) { return "Distribute: " + exSay([g]) + " = " + exSay(d) + "." + (g.m.d === 1 && g.m.n === -1 ? " The minus sign means \u22121, so \u22121 times each term." : ""); }
-  function dgWord(m) { return m.d === 1 && Math.abs(m.n) === 1 ? (m.n < 0 ? "the minus sign" : "the plus sign") : "the number"; }
+  function dgWord(m) { return m.s && sSig(m.s) ? "the letter" : m.d === 1 && Math.abs(m.n) === 1 ? (m.n < 0 ? "the minus sign" : "the plus sign") : "the number"; }
   function exRender(hot) {
     if (!EXP) return;
     if (EXP.eq) { eqRender(hot); return; }
@@ -1071,6 +1190,8 @@
         gEl.dataset.drop = "exg:" + i; exNegMark(mEl, String(i));
         mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, mEl, function () { exDistribute(i); }, function (t) { if (t.dataset.drop === "exg:" + i) exDistribute(i); }, "exg:"); });
       }
+      var kEl = el.querySelector(":scope > .exK");
+      if (kEl) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, kEl, null, function (t) { exFactor(i, +t.dataset.drop.slice(3)); }, "ex:"); });
       el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { exDrop(i, +t.dataset.drop.slice(3)); }, "ex:"); });
     });
   }
@@ -1081,7 +1202,7 @@
   function distHide() { distT.forEach(clearTimeout); distT = []; var d = $("distBox"); if (d) d.remove(); }
   function distShow(g) {
     distHide(); if (!g || g.k !== "g" || g.items.some(function (t) { return t.k === "g"; })) return;
-    var sgn = function (n) { return (n.n < 0 ? "\u2212" : "") + exFr(mk(Math.abs(n.n), n.d)); }, term = function (t) { return (t.n.n < 0 ? "\u2212" : "") + exTerm(t); }, d = exDist(g), n = g.items.length;
+    var sgn = function (n) { return (n.n < 0 ? "\u2212" : "") + (n.s && sSig(n.s) ? litHtml({ k: "c", n: mk(Math.abs(n.n), n.d), s: n.s }, false) : exFr(mk(Math.abs(n.n), n.d))); }, term = function (t) { return (t.n.n < 0 ? "\u2212" : "") + exTerm(t); }, d = exDist(g), n = g.items.length;
     var h = "<div class=\"dgrid\" style=\"grid-template-columns:auto repeat(" + n + ",auto)\"><span></span>" + g.items.map(function (t, j) { return "<span class=\"dtop\" data-j=\"" + j + "\">" + term(t) + "</span>"; }).join("") + "<span class=\"dleft\">" + sgn(g.m) + "</span>" + d.map(function (t, j) { return "<span class=\"dcell\"><span class=\"dp\" data-j=\"" + j + "\">" + term(t) + "</span></span>"; }).join("") + "</div>";
     var el = document.createElement("div"); el.id = "distBox"; el.setAttribute("role", "img"); el.setAttribute("aria-label", "Distributing " + exSay([g]) + " gives " + exSay(d)); el.innerHTML = h; document.body.appendChild(el);
     var st = document.querySelector(".stage").getBoundingClientRect(); el.style.left = (st.left + st.width / 2) + "px"; el.style.bottom = Math.max(10, innerHeight - st.bottom + 14) + "px";
@@ -1097,12 +1218,12 @@
   }
   function exSet(items, msg, dg) {
     exPush(); EXP.items = items; closeAsk(false); exRender(); if (msg) note(msg); if (dg) distShow(dg);
-    if (exFin(items)) exEnd(); else if (!msg) clearLog();
+    if (EXP.fac ? facDone(items) : exFin(items)) exEnd(); else if (!msg) clearLog();
   }
   function exEnd() {
     locked = true; exRender(); closeAsk(false);
-    if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note("Fully simplified: " + exSay(EXP.items) + ".");
-    if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap("Fully simplified!"); solverFinish(); }
+    if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note((EXP.fac ? "Fully factored: " : "Fully simplified: ") + exSay(EXP.items) + ".");
+    if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(EXP.fac ? "Fully factored!" : "Fully simplified!"); solverFinish(); }
     else { tally(); nxShow(); }
   }
   function exCombineTo(i, j) {   // term i is dropped on term j (alike): the sum takes j's place
@@ -1121,6 +1242,13 @@
     var n = its.slice(); n.splice(i, 1); n.splice(i < j ? n.indexOf(b) + 1 : n.indexOf(b), 0, a);
     exSet(n, "");
   }
+  function exFactor(i, j) {
+    if (locked || busy || EXP.ask || i === j) return;
+    var its = EXP.items, f = facBuild(its[i], its[j], i < j); if (f.err) { note(f.err); return; }
+    var n = its.slice(); n[j] = f.group; n.splice(i, 1);
+    if (mode === "calculate") { exAsk("fac", i, j, "Factor out " + f.g + ": " + exSay(exPair(i, j)) + " ="); EXP.ask.f = f; EXP.ask.res = n; $("askIn").placeholder = "e.g. 3(x + 2)"; return; }
+    exSet(n, f.msg);
+  }
   function exDistribute(i) {
     if (locked || busy || EXP.ask) return; var g = EXP.items[i], d = exDist(g);
     if (mode === "calculate") { exAsk("dist", i, -1, exSay([g]) + " ="); return; }
@@ -1134,6 +1262,7 @@
     if (EXP && EXP.eq) { eqAskOK(); return; }
     var k = EXP && EXP.ask; if (!k) return; var r = exParse($("askIn").value), its = EXP.items, ok = false, m = $("askErr");
     if (typeof r === "string") { m.textContent = "Type the result, like 5x or −2."; return; }
+    if (k.kind === "fac") { if (!facOK(r, k.f.group)) { m.textContent = "Not quite. Factor out " + k.f.g + " and write what is left inside parentheses."; $("askIn").select(); return; } exSet(k.res, k.f.msg); return; }
     var want = k.kind === "comb" ? [exCombineTo(k.i, k.j)[k.j > k.i ? k.j - 1 : k.j]] : exDist(its[k.i]);
     if (k.kind === "comb" && want[0] && want[0].k !== "g" && want[0].n.n === 0 && exLike(its[k.i], its[k.j])) want = [{ k: "c", n: mk(0) }];
     function key(t) { return exKey(t) + ":" + t.n.n + "/" + t.n.d; }
@@ -1149,6 +1278,7 @@
     var r = exParse($("exSoloIn").value), m = $("exMsg"); ansTouched = true;
     if (typeof r === "string") { m.className = "bad"; m.textContent = r; return; }
     if (!exSame(exTot(r), exTot(EXP.items))) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
+    if (EXP.fac) { if (!facDone(r)) { m.className = "bad"; m.textContent = "That is the same value, but it is not fully factored yet."; return; } EXP.items = r; exEnd(); $("exSolo").hidden = true; return; }
     if (!exFin(r)) { m.className = "bad"; m.textContent = "That is the same value, but it is not fully simplified yet."; return; }
     EXP.items = r; exEnd(); $("exSolo").hidden = true;
   }
@@ -1166,7 +1296,7 @@
     $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
     $("top").style.display = "none"; $("vals").style.display = "none"; $("creator").hidden = true; $("answer").hidden = true; $("wsEl").style.display = "none";
     $("exBox").hidden = false; $("exSolo").hidden = mode !== "solo"; $("exMsg").textContent = ""; $("exSoloIn").value = "";
-    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
+    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
     exRender(); updUndo();
     if (EXP.eq) {
       if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this equation solved."); }
@@ -1174,8 +1304,9 @@
       else note("Drag a term across the " + (eqIneq() ? "sign" : "=") + " to move it to the other side (its sign changes). Drop it on a like term to combine them. Drag the number in front of x across to divide." + (eqIneq() ? " Dividing or multiplying by a negative number turns the sign around." : "") + (EXP.lit ? " The letters are numbers too: dividing by a gives b/a." : "") + (mode === "calculate" ? " You will be asked for each result." : ""));
       return;
     }
-    if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this expression simplified."); }
-    else if (mode === "solo") note("Simplify it on your own, then type your answer.");
+    if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this expression " + (EXP.fac ? "factored." : "simplified.")); }
+    else if (mode === "solo") note(EXP.fac ? "Factor it on your own, then type your answer, like 3(x + 2)." : "Simplify it on your own, then type your answer.");
+    else if (EXP.fac) note("Drag the number in front of x onto another term to factor out the biggest number they share." + (mode === "calculate" ? " You will be asked for each result." : ""));
     else note("Drag a term onto a like term to combine them. Drag any other term to move it, and its sign goes with it. Click parentheses to distribute." + (mode === "calculate" ? " You will be asked for each result." : ""));
   }
   function exDemoClick() {
@@ -1203,6 +1334,17 @@
     DM4.t = setTimeout(function () {
       if (!EXP || !DM4.run || DM4.paused || locked) return;
       var its = EXP.items, gi = -1, a = -1, b = -1, j, k;
+      if (EXP.fac) {   // factoring: drag the number in front of x onto another term (a group first, if there is one)
+        var bs = null, pass, ii, jj;
+        for (pass = 0; pass < 2 && !bs; pass++) for (ii = 0; ii < its.length && !bs; ii++) for (jj = 0; jj < its.length && !bs; jj++) {
+          if (ii === jj || (pass === 0) !== (its[jj].k === "g")) continue;
+          var fb = facBuild(its[ii], its[jj], ii < jj); if (!fb.err) bs = { i: ii, j: jj, f: fb };
+        }
+        if (!bs) return;
+        exRender(); dmCap("Drag " + facCoef(its[bs.i]) + " onto " + exSay([its[bs.j]]) + " to factor it out.");
+        exMoveDemo('.exT[data-i="' + bs.i + '"] > .exK', '.exT[data-i="' + bs.j + '"]', function () { var nn = its.slice(); nn[bs.j] = bs.f.group; nn.splice(bs.i, 1); exSet(nn, bs.f.msg); }, function () { if (!locked) exDemoStep(900); });
+        return;
+      }
       for (j = 0; j < its.length && gi < 0; j++) if (its[j].k === "g") gi = j;
       var go = function (fn) { DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused) return; fn(); if (!locked) exDemoStep(900); }, 1300); };
       if (gi >= 0) {
@@ -1219,8 +1361,9 @@
   function exCreate() {
     var r = exParse($("crIn").value), err = $("crErr");
     if (typeof r === "string") { err.textContent = r; return; }
-    if (exFin(r)) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5."; return; }
-    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null }; SOL.lvl = exLevel(r); SOL.fresh = false;
+    var fac = exFin(r) && facAll(r) >= 2;
+    if (exFin(r) && !fac) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5, or a sum with a common factor to take out, like 3x+9."; return; }
+    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, fac: fac }; SOL.lvl = exLevel(r); SOL.fresh = false;
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your expression is in. Choose how you want to work on it.");
   }
 
@@ -1232,7 +1375,7 @@
   function eqNorm(its) { var r = its.filter(function (t) { return t.k === "g" || t.n.n !== 0; }); return r.length ? r : [{ k: "c", n: mk(0) }]; }
   function eqOther(S) { return S === "L" ? "R" : "L"; }
   function eqVars(its, o) { its.forEach(function (t) { if (t.k === "g") eqVars(t.items, o); else if (t.k === "x") o[t.v || "x"] = 1; }); return o; }
-  function litAlone(a, b) { return a.length === 1 && a[0].k === "x" && same(a[0].n, mk(1)) && !hasS(a[0]) && b.every(function (t) { return t.k === "c"; }) && b.every(function (t, i) { return b.every(function (u, j) { return i === j || exKey(t) !== exKey(u); }); }); }
+  function litAlone(a, b) { return a.length === 1 && a[0].k === "x" && same(a[0].n, mk(1)) && !hasS(a[0]) && ((b.length === 1 && b[0].k === "q") || (b.every(function (t) { return t.k === "c"; }) && b.every(function (t, i) { return b.every(function (u, j) { return i === j || exKey(t) !== exKey(u); }); }))); }
   function eqKind() {   // "one" (x = 4 or 4 = x), "none", "inf", or "" while there is more to do
     if (EXP.lit) return litAlone(EXP.L, EXP.R) || litAlone(EXP.R, EXP.L) ? "one" : "";
     if (EXP.L.length !== 1 || EXP.R.length !== 1) return "";
@@ -1242,7 +1385,7 @@
     return x.k === "x" && c.k === "c" && same(x.n, mk(1)) ? "one" : "";
   }
   function eqSolution(L, R, rel) {   // { kind, x, rel, c } from the equation as first typed (x rel c once the variable has a side to itself)
-    if (L.concat(R).some(hasS)) { var ls = litSolution(L, R); return ls; }
+    if (litAny(L.concat(R))) { var ls = litSolution(L, R); return ls; }
     var l = exTot(L), r = exTot(R), vk = Object.keys(eqVars(L, eqVars(R, {})))[0], a = add(l[vk] || mk(0), neg(r[vk] || mk(0))), c = add(r[""] || mk(0), neg(l[""] || mk(0))); rel = rel || "=";
     if (a.n) return { kind: "one", x: mul(c, inv(a)), rel: a.n < 0 ? relRev(rel) : rel, c: c };
     return { kind: relHolds(rel, cmpF(mk(0), c)) ? "inf" : "none", c: c, rel: rel };
@@ -1289,6 +1432,8 @@
         mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, mEl, function () { eqDistribute(S, i); }, function (t2) { if (t2.dataset.drop === "exg:" + S + ":" + i) eqDistribute(S, i); }, "exg:"); });
       }
       el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; drag(e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, dropOf(S, i), ["et:", "eq="]); });
+      var kEl = el.querySelector(":scope > .exK");
+      if (kEl) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, kEl, null, function (t2) { var p = t2.dataset.drop.split(":"); if (p[0] === "et") eqFactor(S, i, p[1], +p[2]); else eqFactor(S, i, eqOther(S), -1); }, ["et:", "eq="]); });
       var co = el.querySelector(".exCo");
       if (co) co.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, co, null, function () { eqDivide(); }, ["et:", "eq="]); });
     });
@@ -1318,6 +1463,14 @@
     if (b.want && mode === "calculate") { eqAsk({ kind: "term", b: b }, b.label + " ="); return; }
     eqSet(b.N, b.msg);
   }
+  function eqFactor(S, i, S2, j) {
+    if (locked || busy || EXP.ask) return;
+    if (S !== S2 || i === j) { if (S !== S2) note("To factor, drop the number on a term on the same side."); return; }
+    var N = eqClone(), f = facBuild(N[S][i], N[S][j], i < j); if (f.err) { note(f.err); return; }
+    N[S][j] = f.group; N[S].splice(i, 1); N.L = eqNorm(N.L); N.R = eqNorm(N.R);
+    if (mode === "calculate") { eqAsk({ kind: "fac", b: { N: N, msg: f.msg }, f: f }, "Factor out " + f.g + ": " + exSay(i < j ? [EXP[S][i], EXP[S][j]] : [EXP[S][j], EXP[S][i]]) + " ="); $("askIn").placeholder = "e.g. 3(x + 2)"; return; }
+    eqSet(N, f.msg);
+  }
   function eqDistribute(S, i) {
     if (locked || busy || EXP.ask) return;
     var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R);
@@ -1327,10 +1480,11 @@
   }
   function eqDivide() {
     var s = eqDivReady(); if (!s || locked || busy || EXP.ask) return;
-    if (EXP.lit) {   // every term on the other side is divided by the coefficient, letters and all: b ÷ a = b/a
-      var N2 = eqClone(), t2 = N2[s.S][0], m2 = { n: t2.n, s: t2.s || {} }, ik = inv(m2.n), say = exSay([{ k: "c", n: m2.n, s: m2.s }]);
-      N2[s.O].forEach(function (u) { u.n = mul(u.n, ik); var ns = sMul(u.s || {}, m2.s, -1); if (sSig(ns)) u.s = ns; else delete u.s; });
-      t2.n = mk(1); delete t2.s;
+    if (EXP.lit) {   // every term on the other side is divided by the coefficient, letters and all: b ÷ a = b/a, and over a sum: (c - b)/(a - c)
+      var N2 = eqClone(), t2 = N2[s.S][0], P = effP(t2), say = exSay(pTerms(P)); if (P.length > 1) say = "(" + say + ")";
+      if (P.length > 1) N2[s.O] = litShow(pOfTerms(N2[s.O]), P);
+      else N2[s.O].forEach(function (u) { u.n = mul(u.n, inv(P[0].n)); var ns = sMul(u.s || {}, P[0].s, -1); if (sSig(ns)) u.s = ns; else delete u.s; });
+      t2.n = mk(1); delete t2.s; delete t2.co;
       var msg2 = "Divide both sides by " + say + ".";
       if (mode === "calculate") { eqAsk({ kind: "mulq", b: { N: N2, msg: msg2 } }, msg2.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. x = b/a"; return; }
       eqSet(N2, msg2); return;
@@ -1357,7 +1511,10 @@
   }
   function eqMul(k, ready, dv) {
     var N = eqClone();
-    [N.L, N.R].forEach(function (side) { side.forEach(function (t) { if (t.k === "g") t.m = mul(t.m, k); else { t.n = mul(t.n, k); if (k.s) { var ns = sMul(t.s || {}, k.s, 1); if (sSig(ns)) t.s = ns; else delete t.s; } } }); });
+    [N.L, N.R].forEach(function (side) { side.forEach(function (t) {
+      if (t.k === "g") { var ms = sMul(t.m.s || {}, k.s || {}, 1), mm = mul(t.m, k); if (sSig(ms)) mm.s = ms; t.m = mm; }
+      else { t.n = mul(t.n, k); if (k.s) { if (t.co) t.co = t.co.map(function (u) { return { n: u.n, s: sMul(u.s || {}, k.s, 1) }; }); else { var ns = sMul(t.s || {}, k.s, 1); if (sSig(ns)) t.s = ns; else delete t.s; } } }
+    }); });
     N.L = eqNorm(N.L); N.R = eqNorm(N.R);
     var msg = dv ? "Divide both sides by " + kSay(dv) + "." : "Multiply both sides by " + kSay(k) + ".";
     if (k.n < 0 && N.rel !== "=") { N.rel = relRev(N.rel); msg += " A negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "."; }
@@ -1378,19 +1535,26 @@
     var k = EXP && EXP.ask; if (!k) return; var m = $("askErr"), ep = function (v) { return EXP.lit ? litTerms(v, "x", true) : exParse(v); }, r = k.kind === "mulq" ? [] : ep($("askIn").value);
     if (typeof r === "string") { m.textContent = "Type the result, like 5x or −2."; return; }
     var ok;
+    if (k.kind === "fac") { if (!facOK(r, k.f.group)) { m.textContent = "Not quite. Factor out " + k.f.g + " and write what is left inside parentheses."; $("askIn").select(); return; } eqSet(k.b.N, k.b.msg); return; }
     if (k.kind === "mulq") {
       var sr2 = splitRel(String($("askIn").value)), sd = sr2 ? [sr2.l, sr2.r] : [];
-      var a1 = sd.length === 2 ? ep(sd[0]) : null, a2 = sd.length === 2 ? ep(sd[1]) : null;
+      var a1 = sd.length === 2 && !EXP.lit ? ep(sd[0]) : null, a2 = sd.length === 2 && !EXP.lit ? ep(sd[1]) : null;
       if (sd.length !== 2 || typeof a1 === "string" || typeof a2 === "string") { m.textContent = "Type the whole " + (eqIneq() ? "inequality, like 6x < 3x + 12." : "equation, like 6x = 3x + 12."); return; }
       if (sr2.rel !== (k.b.N.rel || "=")) { m.textContent = "Not quite. Check which way the sign points."; $("askIn").select(); return; }
+      if (EXP.lit) {
+        var v1 = litRat(sd[0], true), v2 = litRat(sd[1], true);
+        if (typeof v1 === "string" || typeof v2 === "string") { m.textContent = "Type the whole equation, like ax + b = c."; return; }
+        if (!(ratEq(v1, litSideRat(k.b.N.L)) && ratEq(v2, litSideRat(k.b.N.R)))) { m.textContent = "Not quite. Do the same to every term on both sides."; $("askIn").select(); return; }
+        eqSet(k.b.N, k.b.msg); return;
+      }
       if (!(exSame(exTot(a1), exTot(k.b.N.L)) && exSame(exTot(a2), exTot(k.b.N.R)))) { m.textContent = "Not quite. Multiply every term on both sides."; $("askIn").select(); return; }
       eqSet(k.b.N, k.b.msg); return;
     }
     if (k.kind === "term") {
       var w = k.b.want, t = r[0];
-      ok = r.length === 1 && t.k !== "g" && (w.n.n === 0 ? t.n.n === 0 : exKey(t) === exKey(w) && same(t.n, w.n));
+      ok = r.length === 1 && t.k !== "g" && (w.n.n === 0 ? t.n.n === 0 : EXP.lit ? litKey(t) === litKey(w) : exKey(t) === exKey(w) && same(t.n, w.n));
     } else {
-      var key = function (t) { return exKey(t) + ":" + t.n.n + "/" + t.n.d; };
+      var key = EXP.lit ? litKey : function (t) { return exKey(t) + ":" + t.n.n + "/" + t.n.d; };
       ok = r.every(function (t) { return t.k !== "g"; }) && JSON.stringify(r.map(key).sort()) === JSON.stringify(k.d.map(key).sort());
     }
     if (!ok) { m.textContent = "Not quite. Check your work and try again."; $("askIn").select(); return; }
@@ -1415,9 +1579,9 @@
   }
   function eqCheckSolo() {
     if (EXP.lit) {   // with letters the answer is an expression: b/a, (c - b)/a ...
-      var ml = $("exMsg"), wl = litSolution(EXP.orig.L, EXP.orig.R), tl = $("exSoloIn").value.toLowerCase().replace(/\s+/g, "").replace(/^x=/, ""), rl = litParse(tl, true); ansTouched = true;
-      if (typeof rl === "string") { ml.className = "bad"; ml.textContent = "Type your answer like b/a or (c \u2212 b)/a."; return; }
-      if (!exSame(litMap(rl), wl.map)) { ml.className = "bad"; ml.textContent = "Not quite. Check your work and try again."; return; }
+      var ml = $("exMsg"), wl = litSolution(EXP.orig.L, EXP.orig.R), tl = $("exSoloIn").value.toLowerCase().replace(/\s+/g, "").replace(/^x=/, ""), rl = litRat(tl, true); ansTouched = true;
+      if (typeof rl === "string") { ml.className = "bad"; ml.textContent = "Type your answer like b/a or (c − b)/(a + c)."; return; }
+      if (!ratEq(rl, { N: wl.N, D: wl.D })) { ml.className = "bad"; ml.textContent = "Not quite. Check your work and try again."; return; }
       EXP.L = [{ k: "x", v: "x", n: mk(1) }]; EXP.R = JSON.parse(JSON.stringify(wl.terms)); eqEnd("one"); $("exSolo").hidden = true; return;
     }
     var m = $("exMsg"), txt = $("exSoloIn").value.toLowerCase().replace(/−/g, "-").replace(/\s+/g, ""), iq = eqIneq(), want = eqSolution(EXP.orig.L, EXP.orig.R, EXP.orig.rel), ok = false;
@@ -1450,7 +1614,7 @@
     var xi = function (S) { return EXP[S].findIndex(function (t) { return t.k === "x"; }); }, ci = function (S) { return EXP[S].findIndex(function (t) { return t.k === "c"; }); };
     var xl = xi("L"), xr = xi("R");
     if (xl >= 0 && xr >= 0) {   // x on both sides: move the smaller x term onto the larger, so the x that is left is positive
-      var big = EXP.L[xl].n.n * EXP.R[xr].n.d - EXP.R[xr].n.n * EXP.L[xl].n.d > 0, from = big ? "R" : "L", to = big ? "L" : "R", fi = big ? xr : xl, ti = big ? xl : xr;
+      var big = EXP.lit || EXP.L[xl].n.n * EXP.R[xr].n.d - EXP.R[xr].n.n * EXP.L[xl].n.d > 0, from = big ? "R" : "L", to = big ? "L" : "R", fi = big ? xr : xl, ti = big ? xl : xr;
       return { mv: ['.exT[data-s="' + from + '"][data-i="' + fi + '"]', '.exT[data-s="' + to + '"][data-i="' + ti + '"]'], cap: "Drag the x term onto the other x term.", run: function () { var b = eqBuild(from, fi, to, ti); eqSet(b.N, b.msg); } };
     }
     var xs = xl >= 0 ? "L" : "R", os = eqOther(xs), cx = ci(xs);
@@ -1499,13 +1663,12 @@
     SOL.lvl = ladderEq(L, R, rel); SOL.fresh = false;
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
   }
-  function eqCreateLit(p, rel, err) {   // letters as coefficients: solve for x, like ax + b = c
+  function eqCreateLit(p, rel, err) {   // letters as coefficients: solve for x, like ax + b = c, a(x + b) = c, ax + cx = b
     if (rel !== "=") { err.textContent = "With letters, use an equals sign: a letter could be positive or negative, so an inequality can't be solved."; return; }
-    var L = litTerms(p[0], "x", false), R = litTerms(p[1], "x", false);
+    var L = litTerms(p[0], "x", true), R = litTerms(p[1], "x", true);
     if (typeof L === "string" || typeof R === "string") { err.textContent = typeof L === "string" ? L : R; return; }
-    var xs = L.concat(R).filter(function (t) { return t.k === "x"; });
-    if (!xs.length) { err.textContent = "Use x as the letter to solve for, like ax = b."; return; }
-    if (xs.some(function (t) { return exKey(t) !== exKey(xs[0]); })) { err.textContent = "Keep one kind of x term, like ax + 2ax = b or ax + b = c (a + c in front of x isn't supported yet)."; return; }
+    var pl = litParts(L, null), pr = litParts(R, null);
+    if (!pl.X.length && !pr.X.length) { err.textContent = "Use x as the letter to solve for, like ax = b."; return; }
     var ls = litSolution(L, R); if (ls.kind !== "one") { err.textContent = "The x terms cancel each other. Type an equation that can be solved for x."; return; }
     var keep = EXP; EXP = { eq: true, lit: true, L: L, R: R, rel: "=", ask: null }; var k = eqKind();
     if (k) { EXP = keep; err.textContent = "That one is already solved. Type an equation that still needs work."; return; }
@@ -1545,12 +1708,18 @@
     var LET = ["a", "b", "c", "m", "n", "p", "k", "h"], Xt = function (nn, so) { var t = { k: "x", v: "x", n: mk(nn) }; if (so) t.s = so; return t; }, Ct = function (nn, so) { var t = { k: "c", n: mk(nn) }; if (so) t.s = so; return t; };
     var S = function (l, e) { var o = {}; o[l] = e || 1; return o; }, pm = function () { return rnd(2) ? 1 : -1; };
     for (;;) {
-      var a = LET[rnd(LET.length)], b = LET[rnd(LET.length)], c = LET[rnd(LET.length)]; if (a === b || a === c || b === c) continue;
+      var a = LET[rnd(LET.length)], b = LET[rnd(LET.length)], c = LET[rnd(LET.length)], d4 = LET[rnd(LET.length)]; if (a === b || a === c || b === c) continue; if (n >= 5 && (d4 === a || d4 === b || d4 === c)) continue;
       var L, R, v = rnd(3), k1 = 2 + rnd(3), k2 = 2 + rnd(3);
       if (n === 1) { L = [Xt(pm(), S(a))]; R = [Ct(1, S(b))]; }
       else if (n === 2) { var sb = pm(); if (v === 0) { L = [Xt(1, S(a)), Ct(sb, S(b))]; R = [Ct(1, S(c))]; } else if (v === 1) { L = [Ct(sb, S(b)), Xt(1, S(a))]; R = [Ct(1, S(c))]; } else { L = [Ct(1, S(c))]; R = [Xt(1, S(a)), Ct(sb, S(b))]; } }
       else if (n === 3) { var w = rnd(4); if (w === 0) { L = [Xt(k1, S(a))]; R = [Ct(k1 * k2, S(b))]; } else if (w === 1) { L = [Xt(k1, S(a)), Ct(k2 * pm(), S(b))]; R = [Ct(2 + rnd(4), S(c))]; } else if (w === 2) { L = [Xt(1, S(a, -1))]; R = [Ct(1, S(b))]; } else { L = [Xt(k1, S(a)), Ct(nz(6))]; R = [Ct(1, S(b))]; } }
-      else { var u = rnd(3); if (u === 0) { L = [Xt(1, S(a)), Xt(k1, S(a))]; R = [Ct(k2 * (1 + k1), S(b))]; } else if (u === 1) { L = [Xt(k1, S(a)), Ct(1, S(b)), Ct(k2, S(b))]; R = [Ct(1, S(c))]; } else { if (k1 === k2) continue; L = [Xt(Math.max(k1, k2), S(a)), Ct(1, S(b))]; R = [Xt(Math.min(k1, k2), S(a)), Ct(1, S(c))]; } }
+      else if (n === 4) { var u = rnd(3); if (u === 0) { L = [Xt(1, S(a)), Xt(k1, S(a))]; R = [Ct(k2 * (1 + k1), S(b))]; } else if (u === 1) { L = [Xt(k1, S(a)), Ct(1, S(b)), Ct(k2, S(b))]; R = [Ct(1, S(c))]; } else { if (k1 === k2) continue; L = [Xt(Math.max(k1, k2), S(a)), Ct(1, S(b))]; R = [Xt(Math.min(k1, k2), S(a)), Ct(1, S(c))]; } }
+      else {   // 5 parentheses with letters: a(x + b) = c; 6 a sum in front of x: ax + cx = b, ax + b = cx + d; 7 both: a(x + b) = cx + d
+        var Gt = function (mm, so, items) { var q = mk(mm); if (so) q.s = so; return { k: "g", m: q, items: items }; }, sb2 = pm();
+        if (n === 5) { var w5 = rnd(3); if (w5 === 0) { L = [Gt(1, S(a), [Xt(1), Ct(sb2, S(b))])]; R = [Ct(1, S(c))]; } else if (w5 === 1) { L = [Gt(1, S(a), [Xt(1), Ct(sb2, S(b))]), Ct(1, S(c))]; R = [Ct(1, S(d4))]; } else { L = [Gt(k1, S(a), [Xt(1), Ct(1, S(b))])]; R = [Ct(1, S(c))]; } }
+        else if (n === 6) { var w6 = rnd(3); if (w6 === 0) { L = [Xt(1, S(a)), Xt(1, S(c))]; R = [Ct(1, S(b))]; } else if (w6 === 1) { L = [Xt(1, S(a)), Ct(sb2, S(b))]; R = [Xt(1, S(c)), Ct(1, S(d4 === a || d4 === b || d4 === c ? "m" : d4))]; } else { L = [Xt(1, S(a)), Xt(-1, S(c))]; R = [Ct(1, S(b))]; } }
+        else { if (rnd(2)) { L = [Gt(1, S(a), [Xt(1), Ct(sb2, S(b))])]; R = [Xt(1, S(c)), Ct(1, S(d4))]; } else { L = [Gt(1, S(a), [Xt(1), Ct(1, S(b))])]; R = [Gt(1, S(c), [Xt(1), Ct(sb2, S(d4))])]; } }
+      }
       if (rnd(4) === 0 && n !== 2) { var tt = L; L = R; R = tt; }
       EXP.L = L; EXP.R = R; EXP.rel = "="; EXP.lit = true; if (eqKind() || litSolution(L, R).kind !== "one") continue;
       return { L: L, R: R };
@@ -1578,7 +1747,7 @@
     { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 },                                         // the variable on both sides, parentheses, fractions
     { e: "eq", lv: 5 },                                                                                                                        // parentheses on both sides, one with a minus sign: 4(x - 3) + 2 = 2x - (x + 1)
     { e: "eq", special: true },                                                                                                                // no solution / infinitely many
-    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 },                                                       // letters as coefficients: ax = b, ax + b = c, 2ax + 3b = 5c, like terms with letters
+    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 },                                                       // letters as coefficients: ax = b, ax + b = c, 2ax + 3b = 5c, like terms with letters
     { e: "pane", ineq: 1 }, { e: "pane", ineq: 2 }, { e: "pane", ineq: 3 },                                                                   // inequalities (the sign turns around for a negative)
     { e: "eq", ineq: 1 }, { e: "eq", ineq: 2 }, { e: "eq", ineq: 3, special: true }                                                           // two-sided inequalities, negative multipliers (incl. -1), never / always true
   ];
@@ -1586,7 +1755,11 @@
   function ladderPane(q) { if (isIneq(q)) { var n = eqLevel(q) >= 4 ? 3 : q.a.n < 0 ? 2 : 1; return rung("pane", function (r) { return r.ineq === n; }); } return rung("pane", function (r) { return r.lv === eqLevel(q); }); }
   function ladderEq(L, R, rel) {
     var sol = eqSolution(L, R, rel), all = L.concat(R), hasNeg = all.some(function (t) { return t.k === "g" && t.m.n < 0; }), hasMinus1 = all.some(function (t) { return t.k === "g" && t.m.n === -1 && t.m.d === 1; });
-    if (all.some(hasS)) { var ln = all.length > 3 || all.some(function (t, i) { return all.some(function (u, j) { return i < j && exLike(t, u) && ((L.indexOf(t) >= 0) === (L.indexOf(u) >= 0) || t.k === "x"); }); }) ? 4 : all.some(function (t) { return t.n.d > 1 || Math.abs(t.n.n) > 1 || (t.s && Object.keys(t.s).some(function (l) { return t.s[l] < 0; })); }) ? 3 : all.length > 2 ? 2 : 1; return rung("eq", function (r) { return r.lit === ln; }); }
+    if (litAny(all)) {
+      var gg = all.some(function (t) { return t.k === "g"; }), fa = pAdd(litParts(L, null).X, pNeg(litParts(R, null).X)).length > 1;
+      if (gg || fa) return rung("eq", function (r) { return r.lit === (gg && fa ? 7 : fa ? 6 : 5); });
+      var ln = all.length > 3 || all.some(function (t, i) { return all.some(function (u, j) { return i < j && exLike(t, u) && ((L.indexOf(t) >= 0) === (L.indexOf(u) >= 0) || t.k === "x"); }); }) ? 4 : all.some(function (t) { return t.n.d > 1 || Math.abs(t.n.n) > 1 || (t.s && Object.keys(t.s).some(function (l) { return t.s[l] < 0; })); }) ? 3 : all.length > 2 ? 2 : 1; return rung("eq", function (r) { return r.lit === ln; });
+    }
     if (rel && rel !== "=") { var n = sol.kind !== "one" ? 3 : hasNeg ? 2 : 1; return rung("eq", function (r) { return r.ineq === n; }); }
     if (sol.kind !== "one") return rung("eq", function (r) { return r.special && !r.ineq; });
     if (hasMinus1) return rung("eq", function (r) { return r.lv === 5; });
@@ -1623,6 +1796,15 @@
   function exGen(lv) {
     var KS = ["x", "y", "x^2", "y^2"], kv = lv >= 1 ? KS[rnd(4)] : "x", other = { x: "x^2", y: "y^2", "x^2": "x", "y^2": "y" }[kv];
     var X = function (n) { return { k: "x", v: kv, n: mk(n[0], n[1] || 1) }; }, U = function (n) { return { k: "x", v: other, n: mk(n) }; }, C = function (n) { return { k: "c", n: mk(n) }; };
+    if (lv >= 5) {   // factoring: a sum whose terms share a number, like 6x + 9 or 4x - 8 + 12y
+      for (;;) {
+        var g5 = 2 + rnd(5), m1 = nz(5), m2 = nz(5), m3 = nz(5), three = rnd(2) === 0, gg = gcd(gcd(Math.abs(m1), Math.abs(m2)), three ? Math.abs(m3) : 0);
+        if (gg !== 1 || (!three && Math.abs(m1) === 1 && Math.abs(m2) === 1 && false)) continue;
+        var ps = [X([g5 * m1]), C(g5 * m2)]; if (three) ps.push(U(g5 * m3));
+        for (var q = ps.length - 1; q > 0; q--) { var w = rnd(q + 1), tt = ps[q]; ps[q] = ps[w]; ps[w] = tt; }
+        return ps;
+      }
+    }
     var big = lv >= 4 ? 9 : 6, a = nz(big > 6 ? 6 : 5), b = nz(big), c = nz(5), d = nz(big), m = 2 + rnd(4), parts;
     if (lv === 0) { a = Math.abs(a); c = Math.abs(c); b = Math.abs(b); parts = [X([a]), C(b), X([c])]; }
     else if (lv === 1) parts = [X([a]), C(b), X([c]), C(d)];
@@ -1634,11 +1816,12 @@
   }
   function exLevel(its) {
     var g = its.filter(function (t) { return t.k === "g"; }).length, ng = its.filter(function (t) { return (t.k === "g" ? t.m.n : t.n.n) < 0; }).length, fr = JSON.stringify(its).indexOf('"d":') >= 0 && its.some(function (t) { return t.k === "x" && t.n.d > 1; });
+    if (!g && exFin(its) && facAll(its) >= 2) return 5;
     return Math.max(0, Math.min(4, g ? (fr ? 4 : ng ? 3 : 2) : ng ? 1 : 0));
   }
   function solverGo(dl, m) {
     SOL.fresh = false; SOL.keep = true;
-    if (EXP && !EXP.eq) { SOL.lvl = Math.max(0, Math.min(4, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; }   // expressions have their own five levels
+    if (EXP && !EXP.eq) { SOL.lvl = Math.max(0, Math.min(5, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5; }   // expressions have their own six levels (5 is factoring)
     else {
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
       if (st.e === "eq") {
