@@ -1859,6 +1859,8 @@
   // "Stay in ... mode" link beneath. It lives in the right side panel; in Demo the demo button itself turns into it (see dmFinish).
   function nxShow() {
     var nx = $("next"), ag = $("again"), stay = up && up.stayText || "";
+    // the student took over a paused (or not yet started) demo and finished it alone: the demo is over, with the same options as a finished demo
+    if (mode === "demo" && BUILT[act].solver && locked && (!DM4.run || DM4.paused)) { DM4.run = DM4.paused = false; clearTimeout(DM4.t); dmUI("idle"); dmCap("Solved!"); solverFinish(); }
     if (mode === "demo") { nx.hidden = true; ag.hidden = true; return; }   // the demo button carries it
     if (BUILT[act].solver) {   // Next, then Harder, then the small Try another link
       nx.textContent = nextLabel(); nx.hidden = false; nx.disabled = false; $("nxHard").hidden = false; $("nxHard").textContent = hardLabel(); ag.textContent = "Try another"; ag.hidden = false; return;
