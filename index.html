@@ -948,7 +948,7 @@
   function exEnd() {
     locked = true; exRender(); closeAsk(false);
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note("Fully simplified: " + exSay(EXP.items) + ".");
-    if (mode === "demo") { onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap("Fully simplified!"); solverFinish(); }
+    if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap("Fully simplified!"); solverFinish(); }
     else { tally(); nxShow(); }
   }
   function exCombineTo(i, j) {   // term i is dropped on term j (alike): the sum takes j's place
@@ -1026,22 +1026,23 @@
   }
   function exDemoClick() {
     if (!DM4.run) { DM4.run = true; DM4.paused = false; dmUI("playing"); dmCap(""); exDemoStep(300); return; }
-    if (!DM4.paused) { DM4.paused = true; clearTimeout(DM4.t); dmUI("paused"); dmCap("Paused. Change anything you like, then press Resume demo."); return; }
+    if (!DM4.paused) { DM4.paused = true; clearTimeout(DM4.t); handHide(); dmUI("paused"); dmCap("Paused. Change anything you like, then press Resume demo."); return; }
     DM4.paused = false; dmUI("playing"); dmCap(""); exDemoStep(300);
   }
-  // the demo shows the drag: the hand picks up the number in front of the parentheses and drops it on them; then run() distributes
-  function exDragDemo(sel, run, after) {
-    var el = $("exRow").querySelector(sel), mEl = el && el.querySelector(":scope > .exM"), gEl = el && el.querySelector(":scope > .exG");
+  // the demo is always the cursor: the hand picks a term (or a coefficient) up, drags it onto its target, and then run() does the step. The hand stays on screen until the demo ends or is paused
+  function exMoveDemo(srcSel, dstSel, run, after) {
+    var R = $("exRow"), src = R.querySelector(srcSel), dst = R.querySelector(dstSel);
     var alive = function () { return EXP && DM4.run && !DM4.paused; };
-    if (!mEl || !gEl) { DM4.t = setTimeout(function () { if (!alive()) return; run(); after(); }, 1300); return; }
+    if (!src || !dst) { DM4.t = setTimeout(function () { if (!alive()) return; run(); after(); }, 1300); return; }
     DM4.t = setTimeout(function () {
-      if (!alive()) return; handGo(ctr(mEl), 600);
+      if (!alive()) return; handGo(ctr(src), 700);
       DM4.t = setTimeout(function () {
-        if (!alive()) return; handTap(); handGo(ctr(gEl), 1400);
-        fly(mEl, gEl, function () { handHide(); if (!alive()) { exRender(); return; } run(); after(); }, true);
-      }, 800);
-    }, 500);
+        if (!alive()) return; handTap(); handGo(ctr(dst), 1400);
+        fly(src, dst, function () { if (!alive()) { exRender(); return; } run(); after(); }, true);
+      }, 900);
+    }, 400);
   }
+  function exDragDemo(sel, run, after) { exMoveDemo(sel + " > .exM", sel + " > .exG", run, after); }   // the number in front of the parentheses onto them
   function exDemoStep(ms) {
     if (EXP && EXP.eq) { eqDemoStep(ms); return; }
     clearTimeout(DM4.t);
@@ -1051,14 +1052,14 @@
       for (j = 0; j < its.length && gi < 0; j++) if (its[j].k === "g") gi = j;
       var go = function (fn) { DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused) return; fn(); if (!locked) exDemoStep(900); }, 1300); };
       if (gi >= 0) {
-        var g = its[gi]; exRender([gi]); dmCap("Drag " + exSay([{ k: "c", n: g.m }]).replace(/^1$/, "the sign") + " onto the parentheses to distribute it.");
+        var g = its[gi]; exRender(); dmCap("Drag " + exSay([{ k: "c", n: g.m }]).replace(/^1$/, "the sign") + " onto the parentheses to distribute it.");
         exDragDemo('.exT[data-i="' + gi + '"]', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, "Distribute: " + exSay([g]) + " = " + exSay(exDist(g)) + "."); }, function () { if (!locked) exDemoStep(900); });
         return;
       }
       for (j = 0; j < its.length && a < 0; j++) for (k = j + 1; k < its.length; k++) if (exLike(its[k], its[j])) { a = j; b = k; break; }
       if (a < 0) return;
-      exRender([a, b]); dmCap("Combine the like terms: " + exSay([its[a], its[b]]) + ".");
-      go(function () { exSet(exCombineTo(b, a), exSay([its[a], its[b]]) + " = " + exSay([exSum(its[a], its[b])])); });
+      exRender(); dmCap("Drag " + exSay([its[b]]) + " onto " + exSay([its[a]]) + " to combine them.");
+      exMoveDemo('.exT[data-i="' + b + '"]', '.exT[data-i="' + a + '"]', function () { exSet(exCombineTo(b, a), exSay([its[a], its[b]]) + " = " + exSay([exSum(its[a], its[b])])); }, function () { if (!locked) exDemoStep(900); });
     }, ms);
   }
   function exCreate() {
@@ -1103,7 +1104,7 @@
     }).join("");
   }
   function eqRender(hot) {
-    var R = $("exRow"), live = (mode === "sequence" || mode === "calculate") && !locked, dv = live ? eqDivReady() : null;
+    var R = $("exRow"), live = (mode === "sequence" || mode === "calculate") && !locked, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null;
     R.innerHTML = eqSideHtml("L", hot, live, dv) + "<span class=\"exEq" + (live ? " grab" : "") + "\" data-drop=\"eq=\">=</span>" + eqSideHtml("R", hot, live, dv);
     if (!locked) { R.querySelector(".exEq").addEventListener("click", eqMulAsk); R.onclick = function (e) { if (e.target === R) eqMulAsk(); }; }
     if (!live) return;
@@ -1214,7 +1215,7 @@
     locked = true; eqRender(); closeAsk(false);
     var txt = kind === "one" ? "Solved: " + exSay(EXP.L) + " = " + exSay(EXP.R) + "." : kind === "none" ? "No solution: the two sides can never be equal." : "Infinitely many solutions: the two sides are always equal.";
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note(txt);
-    if (mode === "demo") { onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(kind === "one" ? "Solved!" : kind === "none" ? "No solution" : "Infinitely many"); solverFinish(); }
+    if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(kind === "one" ? "Solved!" : kind === "none" ? "No solution" : "Infinitely many"); solverFinish(); }
     else { tally(); nxShow(); }
   }
   function eqUndo() {
@@ -1237,24 +1238,25 @@
     DM4.t = setTimeout(function () {
       if (!EXP || !DM4.run || DM4.paused || locked) return;
       var step = eqNextStep(); if (!step) return;
-      eqRender(step.hot); dmCap(step.cap);
+      eqRender(); dmCap(step.cap);
       if (step.anim) { exDragDemo(step.anim, step.run, function () { if (!locked) eqDemoStep(900); }); return; }
+      if (step.mv) { exMoveDemo(step.mv[0], step.mv[1], step.run, function () { if (!locked) eqDemoStep(900); }); return; }
       DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused) return; step.run(); if (!locked) eqDemoStep(900); }, 1300);
     }, ms);
   }
   function eqNextStep() {
     var sides = ["L", "R"], q, i, j, S;
     for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return { hot: [S + i], cap: "Drag the number onto the parentheses.", anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, "Distribute: " + exSay([g]) + " = " + exSay(d) + "."); }; })(S, i) }; }
-    for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { hot: [S + i, S + j], cap: "Combine like terms.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
+    for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"]', '.exT[data-s="' + S + '"][data-i="' + j + '"]'], cap: "Drag a term onto its like term.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
     var xi = function (S) { return EXP[S].findIndex(function (t) { return t.k === "x"; }); }, ci = function (S) { return EXP[S].findIndex(function (t) { return t.k === "c"; }); };
     var xl = xi("L"), xr = xi("R");
     if (xl >= 0 && xr >= 0) {   // x on both sides: move the smaller x term onto the larger, so the x that is left is positive
       var big = EXP.L[xl].n.n * EXP.R[xr].n.d - EXP.R[xr].n.n * EXP.L[xl].n.d > 0, from = big ? "R" : "L", to = big ? "L" : "R", fi = big ? xr : xl, ti = big ? xl : xr;
-      return { hot: [from + fi, to + ti], cap: "Get the x terms together.", run: function () { var b = eqBuild(from, fi, to, ti); eqSet(b.N, b.msg); } };
+      return { mv: ['.exT[data-s="' + from + '"][data-i="' + fi + '"]', '.exT[data-s="' + to + '"][data-i="' + ti + '"]'], cap: "Drag the x term onto the other x term.", run: function () { var b = eqBuild(from, fi, to, ti); eqSet(b.N, b.msg); } };
     }
     var xs = xl >= 0 ? "L" : "R", os = eqOther(xs), cx = ci(xs);
-    if (cx >= 0 && xi(xs) >= 0 && EXP[xs].length > 1) { var tj = ci(os); return { hot: [xs + cx, os + tj], cap: "Move the number to the other side.", run: function () { var b = eqBuild(xs, cx, os, tj); eqSet(b.N, b.msg); } }; }
-    if (eqDivReady()) return { hot: [xs + "0"], cap: "Divide both sides.", run: function () { eqDivide(); } };
+    if (cx >= 0 && xi(xs) >= 0 && EXP[xs].length > 1) { var tj = ci(os); return { mv: ['.exT[data-s="' + xs + '"][data-i="' + cx + '"]', tj >= 0 ? '.exT[data-s="' + os + '"][data-i="' + tj + '"]' : ".exEq"], cap: "Drag the number to the other side.", run: function () { var b = eqBuild(xs, cx, os, tj); eqSet(b.N, b.msg); } }; }
+    if (eqDivReady()) return { mv: ['.exT[data-s="' + eqDivReady().S + '"][data-i="0"] .exCo', ".exEq"], cap: "Drag the number in front of x across the =.", run: function () { eqDivide(); } };
     return null;
   }
   // a variant: x on both sides, with an integer answer
@@ -2381,6 +2383,11 @@
   $("modePick").addEventListener("click", function (e) {
     var b = e.target.closest("button[data-m]"); if (!b) return;
     $("modeSel").value = b.dataset.m; setMode(b.dataset.m); if (mode !== "create") this.hidden = true;
+    // Demo picked after typing your own question: the demo starts by itself (no Start Demo click)
+    if (mode === "demo") setTimeout(function () {
+      if (mode !== "demo") return;
+      if (pq()) { if (!pgRun) $("pgDemo").click(); } else if (!DM4.run) $("dmBtn").click();
+    }, 400);
   });
   function crPrompt() {
     $("crT").textContent = lesson === 1 ? (BUILT[act].solver ? "Type your equation or expression" : "Type your equation") : "Type the " + eqName(orig.length, allV().length) + ": type it the way it's written, like " + (lesson === 3 ? "2x+3y-z=12" : "2x+3y=12");
