@@ -842,9 +842,14 @@
   var EXP = null;   // { src, orig, items, ask }
   function exParse(s) {
     s = String(s).toLowerCase().replace(/−/g, "-").replace(/[\s*·⋅]/g, "");
-    var i = 0, bad = "I couldn't read that. Use numbers, x, + and −, and one set of parentheses at most, like 3(x+2)-4x+5.";
-    if (!s || /[^0-9x+\-().\/]/.test(s)) return bad;
+    var i = 0, bad = "I couldn't read that. Use numbers, letters (x^2 for a power), + and −, and one set of parentheses at most, like 3(x+2)-4x+5.";
+    if (!s || /[^0-9a-z+\-().\/^]/.test(s)) return bad;
     function number() { var m = s.slice(i).match(/^\d+(\.\d+)?(\/\d+)?/); if (!m) return null; i += m[0].length; return parse(m[0]); }
+    function variable() {   // x, y, x^2, xy ...: the letters in order, with their powers
+      var f = {}, any = false, m;
+      while ((m = s.slice(i).match(/^([a-z])(\^([1-9]))?/))) { i += m[0].length; f[m[1]] = (f[m[1]] || 0) + (m[3] ? +m[3] : 1); any = true; }
+      return any ? Object.keys(f).sort().map(function (l) { return l + (f[l] > 1 ? "^" + f[l] : ""); }).join("") : null;
+    }
     function sum(inner) {
       var out = [];
       while (i < s.length && s[i] !== ")") {
@@ -852,7 +857,8 @@
         while (s[i] === "+" || s[i] === "-") { if (s[i] === "-") sg1 = -sg1; i++; signed = true; }
         if (out.length && !signed) return null;
         var n = number();
-        if (s[i] === "x") { i++; t = { k: "x", n: mul(n || mk(1), mk(sg1)) }; }
+        var vv = /[a-z]/.test(s[i] || "") ? variable() : null;
+        if (vv) t = { k: "x", v: vv, n: mul(n || mk(1), mk(sg1)) };
         else if (s[i] === "(") {
           if (inner) return null; i++; var g = sum(true); if (!g || !g.length || s[i] !== ")") return null; i++;
           t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: g };
@@ -864,24 +870,32 @@
     var r = sum(false);
     return !r || i < s.length || !r.length ? bad : r;
   }
-  function exFin(its) { var x = 0, c = 0; for (var j = 0; j < its.length; j++) { if (its[j].k === "g") return false; if (its[j].k === "x") x++; else c++; } return x <= 1 && c <= 1; }
-  function exTot(its) {   // the whole value, as { x, c }
-    var o = { x: mk(0), c: mk(0) };
-    its.forEach(function (t) { if (t.k === "g") { var u = exTot(t.items); o.x = add(o.x, mul(u.x, t.m)); o.c = add(o.c, mul(u.c, t.m)); } else o[t.k] = add(o[t.k], t.n); });
+  function exKey(t) { return t.k === "g" ? null : t.k === "c" ? "" : t.v || "x"; }   // what a term is "of": "", "x", "y^2", "xy" ...
+  function exLike(a, b) { return a.k !== "g" && b.k !== "g" && exKey(a) === exKey(b); }
+  function exSum(a, b) { var c = { k: a.k, n: add(a.n, b.n) }; if (a.v) c.v = a.v; return c; }
+  function exFin(its) { var seen = {}; for (var j = 0; j < its.length; j++) { if (its[j].k === "g") return false; var k = exKey(its[j]); if (seen[k]) return false; seen[k] = 1; } return true; }
+  function exTot(its) {   // the whole value, by kind of term: { "": number, x: coefficient, "y^2": coefficient ... }
+    var o = {};
+    its.forEach(function (t) {
+      if (t.k === "g") { var u = exTot(t.items); Object.keys(u).forEach(function (k) { o[k] = add(o[k] || mk(0), mul(u[k], t.m)); }); }
+      else { var k2 = exKey(t); o[k2] = add(o[k2] || mk(0), t.n); }
+    });
     return o;
   }
-  function exDist(g) { return g.items.map(function (t) { return { k: t.k, n: mul(t.n, g.m) }; }); }
+  function exSame(a, b) { var ks = {}; Object.keys(a).concat(Object.keys(b)).forEach(function (k) { ks[k] = 1; }); return Object.keys(ks).every(function (k) { return same(a[k] || mk(0), b[k] || mk(0)); }); }
+  function exDist(g) { return g.items.map(function (t) { var u = JSON.parse(JSON.stringify(t)); u.n = mul(t.n, g.m); return u; }); }
+  function exVarHtml(v) { return v.replace(/([a-z])(?:\^(\d+))?/g, function (m, l, e) { return "<i>" + l + "</i>" + (e ? "<sup>" + e + "</sup>" : ""); }); }
   function exFr(p) { return p.d > 1 ? p.n + "/" + p.d : String(p.n); }
   function exTerm(t, inner) {   // the term without its sign
     if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d); return (m.n === 1 && m.d === 1 ? "" : exFr(m)) + "(" + exHtml(t.items) + ")"; }
-    var a = mk(Math.abs(t.n.n), t.n.d); return t.k === "x" ? (a.n === 1 && a.d === 1 ? "" : exFr(a)) + "<i>x</i>" : exFr(a);
+    var a = mk(Math.abs(t.n.n), t.n.d); return t.k === "x" ? (a.n === 1 && a.d === 1 ? "" : exFr(a)) + exVarHtml(t.v || "x") : exFr(a);
   }
   function exHtml(its) {
     return its.map(function (t, i) { var ng = (t.k === "g" ? t.m.n : t.n.n) < 0; return (i ? "<span class=\"exOp\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "") + exTerm(t); }).join("");
   }
   function exSay(its) {   // plain text, for the log and the prompts
     if (its.length === 1 && its[0].k !== "g" && its[0].n.n === 0) return "0";
-    var d = document.createElement("div"); d.innerHTML = exHtml(its); return d.textContent.replace(/([+−])/g, " $1 ").replace(/^ − /, "−").replace(/\( − /g, "(−").trim();
+    var d = document.createElement("div"); d.innerHTML = exHtml(its).replace(/<sup>(\d+)<\/sup>/g, "^$1"); return d.textContent.replace(/([+−])/g, " $1 ").replace(/^ − /, "−").replace(/\( − /g, "(−").trim();
   }
   function exPair(i, j) { var its = EXP.items; return i < j ? [its[i], its[j]] : [its[j], its[i]]; }
   function exRender(hot) {
@@ -909,16 +923,16 @@
     else { tally(); nxShow(); }
   }
   function exCombineTo(i, j) {   // terms i and j are alike: one term takes their place
-    var its = EXP.items.slice(), a = its[i], b = its[j], c = { k: a.k, n: add(a.n, b.n) }, lo = Math.min(i, j), hi = Math.max(i, j);
+    var its = EXP.items.slice(), a = its[i], b = its[j], c = exSum(a, b), lo = Math.min(i, j), hi = Math.max(i, j);
     its.splice(hi, 1); its.splice(lo, 1, c); its = its.filter(function (t) { return t.k === "g" || t.n.n !== 0; });
     return its.length ? its : [{ k: "c", n: mk(0) }];
   }
   function exDrop(i, j) {
     if (locked || busy || EXP.ask || i === j) return;
     var its = EXP.items, a = its[i], b = its[j];
-    if (a.k !== "g" && b.k === a.k) {
+    if (exLike(a, b)) {
       if (mode === "calculate") { exAsk("comb", i, j, exSay(exPair(i, j)) + " ="); return; }
-      exSet(exCombineTo(i, j), exSay(exPair(i, j)) + " = " + exSay([{ k: a.k, n: add(a.n, b.n) }]));
+      exSet(exCombineTo(i, j), exSay(exPair(i, j)) + " = " + exSay([exSum(a, b)]));
       return;
     }
     var n = its.slice(); n.splice(i, 1); n.splice(i < j ? n.indexOf(b) + 1 : n.indexOf(b), 0, a);
@@ -937,20 +951,19 @@
     var k = EXP && EXP.ask; if (!k) return; var r = exParse($("askIn").value), its = EXP.items, ok = false, m = $("askErr");
     if (typeof r === "string") { m.textContent = "Type the result, like 5x or −2."; return; }
     var want = k.kind === "comb" ? [exCombineTo(k.i, k.j)[Math.min(k.i, k.j)]] : exDist(its[k.i]);
-    if (k.kind === "comb" && want[0] && want[0].k !== "g" && want[0].n.n === 0 && its[k.i].k === its[k.j].k) want = [{ k: "c", n: mk(0) }];
-    function key(t) { return t.k + ":" + t.n.n + "/" + t.n.d; }
+    if (k.kind === "comb" && want[0] && want[0].k !== "g" && want[0].n.n === 0 && exLike(its[k.i], its[k.j])) want = [{ k: "c", n: mk(0) }];
+    function key(t) { return exKey(t) + ":" + t.n.n + "/" + t.n.d; }
     var nz = function (l) { return l.filter(function (t) { return t.k !== "c" || t.n.n !== 0 || l.length === 1; }); };
     ok = r.every(function (t) { return t.k !== "g"; }) && JSON.stringify(nz(r).map(key).sort()) === JSON.stringify(nz(want).map(key).sort()) || (k.kind === "comb" && r.length === 1 && r[0].k !== "g" && r[0].n.n === 0 && want[0].n.n === 0);
     if (!ok) { m.textContent = "Not quite. Check your work and try again."; $("askIn").select(); return; }
     var A = k.kind === "comb" ? exSay(exPair(k.i, k.j)) : exSay([its[k.i]]);
-    if (k.kind === "comb") { var res = exCombineTo(k.i, k.j); exSet(res, A + " = " + exSay([{ k: its[k.i].k, n: add(its[k.i].n, its[k.j].n) }])); }
+    if (k.kind === "comb") { var res = exCombineTo(k.i, k.j); exSet(res, A + " = " + exSay([exSum(its[k.i], its[k.j])])); }
     else { var n = its.slice(); n.splice.apply(n, [k.i, 1].concat(exDist(its[k.i]))); exSet(n, "Distribute: " + A + " = " + exSay(exDist(its[k.i])) + "."); }
   }
   function exCheckSolo() {
     var r = exParse($("exSoloIn").value), m = $("exMsg"); ansTouched = true;
     if (typeof r === "string") { m.className = "bad"; m.textContent = r; return; }
-    var a = exTot(r), b = exTot(EXP.items);
-    if (!same(a.x, b.x) || !same(a.c, b.c)) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
+    if (!exSame(exTot(r), exTot(EXP.items))) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
     if (!exFin(r)) { m.className = "bad"; m.textContent = "That is the same value, but it is not fully simplified yet."; return; }
     EXP.items = r; exEnd(); $("exSolo").hidden = true;
   }
@@ -988,10 +1001,10 @@
         go(function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, "Distribute: " + exSay([g]) + " = " + exSay(exDist(g)) + "."); });
         return;
       }
-      for (j = 0; j < its.length && a < 0; j++) for (k = j + 1; k < its.length; k++) if (its[k].k === its[j].k) { a = j; b = k; break; }
+      for (j = 0; j < its.length && a < 0; j++) for (k = j + 1; k < its.length; k++) if (exLike(its[k], its[j])) { a = j; b = k; break; }
       if (a < 0) return;
       exRender([a, b]); dmCap("Combine the like terms: " + exSay([its[a], its[b]]) + ".");
-      go(function () { exSet(exCombineTo(a, b), exSay([its[a], its[b]]) + " = " + exSay([{ k: its[a].k, n: add(its[a].n, its[b].n) }])); });
+      go(function () { exSet(exCombineTo(a, b), exSay([its[a], its[b]]) + " = " + exSay([exSum(its[a], its[b])])); });
     }, ms);
   }
   function exCreate() {
@@ -1040,12 +1053,14 @@
     return Math.max(0, Math.min(5, sc));
   }
   function exGen(lv) {
-    var X = function (n) { return { k: "x", n: mk(n[0], n[1] || 1) }; }, C = function (n) { return { k: "c", n: mk(n) }; }, big = lv >= 4 ? 9 : 6, a = nz(big > 6 ? 6 : 5), b = nz(big), c = nz(5), d = nz(big), m = 2 + rnd(4), parts;
+    var KS = ["x", "y", "x^2", "y^2"], kv = lv >= 1 ? KS[rnd(4)] : "x", other = { x: "x^2", y: "y^2", "x^2": "x", "y^2": "y" }[kv];
+    var X = function (n) { return { k: "x", v: kv, n: mk(n[0], n[1] || 1) }; }, U = function (n) { return { k: "x", v: other, n: mk(n) }; }, C = function (n) { return { k: "c", n: mk(n) }; };
+    var big = lv >= 4 ? 9 : 6, a = nz(big > 6 ? 6 : 5), b = nz(big), c = nz(5), d = nz(big), m = 2 + rnd(4), parts;
     if (lv === 0) { a = Math.abs(a); c = Math.abs(c); b = Math.abs(b); parts = [X([a]), C(b), X([c])]; }
     else if (lv === 1) parts = [X([a]), C(b), X([c]), C(d)];
-    else if (lv === 2) { parts = [{ k: "g", m: mk(m), items: [X([1]), C(b)] }, X([c])]; if (rnd(2)) parts.push(C(d)); }
-    else if (lv === 3) parts = [{ k: "g", m: mk(rnd(2) ? m : -m), items: [X([a]), C(b)] }, X([c]), C(d)];
-    else { var f = [[1, 2], [3, 2], [1, 3], [5, 2]][rnd(4)]; parts = [{ k: "g", m: mk(rnd(2) ? m : -m), items: [X([a]), C(b)] }, X([rnd(2) ? f[0] : -f[0], f[1]]), C(d), X([c])]; }
+    else if (lv === 2) { parts = [{ k: "g", m: mk(m), items: [X([1]), C(b)] }, X([c])]; if (rnd(2)) parts.push(C(d)); else parts.push(U(nz(4))); }
+    else if (lv === 3) parts = [{ k: "g", m: mk(rnd(2) ? m : -m), items: [X([a]), C(b)] }, X([c]), C(d), U(nz(4))];
+    else { var f = [[1, 2], [3, 2], [1, 3], [5, 2]][rnd(4)]; parts = [{ k: "g", m: mk(rnd(2) ? m : -m), items: [X([a]), C(b)] }, X([rnd(2) ? f[0] : -f[0], f[1]]), C(d), X([c]), U(nz(4))]; }
     for (var i = parts.length - 1; i > 0; i--) { var j = rnd(i + 1), t = parts[i]; parts[i] = parts[j]; parts[j] = t; }   // shuffle the order
     return exFin(parts) ? exGen(lv) : parts;
   }
