@@ -115,7 +115,7 @@
   .modePick .mpT{font-weight:700;font-size:1.1rem}
   .modePick .mpRow{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center}
   #crIn::placeholder{color:color-mix(in srgb,var(--ink) 38%,transparent);opacity:1;font-weight:500}
-  body.solver #lesson,body.solver #modeSel,body.solver #progBtn{display:none}
+  body.solver #lesson,body.solver #progBtn{display:none}
   .panel{display:flex;flex-direction:column;align-items:center;gap:.8rem;margin:1rem auto;font-family:system-ui,sans-serif}
   .panel[hidden]{display:none}
   #ansFields[hidden],#ansT[hidden],#ansKind[hidden],#ansGo[hidden]{display:none}
@@ -1314,7 +1314,8 @@
     if (!DM4.run) return;
     if (locked) {
       DM4.run = DM4.paused = false; dmUI("idle"); dmCap("Solved!");
-      var u = up; dmFinish(u ? u.label : "Next", function () { if (u) { up = null; u.go(); } else dm4Begin(); }, u ? u.stayText : "", function () { dm4Begin(); });
+      var u = up; if (BUILT[act].solver) { dmFinish("Watch again", function () { dm4Begin(); }, "", null); return; }
+      dmFinish(u ? u.label : "Next", function () { if (u) { up = null; u.go(); } else dm4Begin(); }, u ? u.stayText : "", function () { dm4Begin(); });
       return;
     }
     // a natural place to stop in a long demo: the 3\u00d73 is now two equations in two variables
@@ -1475,7 +1476,7 @@
       [3, "demo", 10, "Demo Mode"], [3, "sequence", 25, "Sequence Mode"], [3, "solo", 40, "Solo Mode"],
       [3, "solo", 70, "Solo Mode, 2nd round", 2], [3, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
-    "Play Solver": { solver: true, title: "Solve", top: 1, modes: ["create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
+    "Play Solver": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
     "Play Data": { play: true, data: true, top: 1, key: "algebraProgress:PlayData", levels: [] },   // a Data Activity (a kind of Graphing activity); for now an exact copy of Play Graph
     "1.4D": { title: "Solve", top: 3, sub: true, key: "algebraProgress", levels: [
@@ -1598,7 +1599,7 @@
     if (welcome) t = "welcome";
     else if (b.classList.contains("quiz")) t = mode;
     else if (b.classList.contains("play")) t = pgRun ? "demo" : "playground";
-    else t = BUILT[act] && BUILT[act].solver ? "playground" : mode;
+    else t = mode;
     r.dataset.mode = t; r.dataset.act = b.classList.contains("play") ? "pg" : "";
     var own = !welcome && !b.classList.contains("quiz") && !b.classList.contains("play");   // an activity whose centre pane is the equation pane (1.4)
     $("dmCtl").hidden = !(own && mode === "demo");
@@ -1625,6 +1626,7 @@
     if (mode === "demo") { curDm = demoN % 2 + 1; demoN++; }
     if (mode === "create") orig = [];
     else if (useCustom) { orig = useCustom; useCustom = null; }
+    else if (BUILT[act].solver && mode === "demo") { var sd = parseAny("3x-2=10"); orig = [sd]; }   // Playground: Equation Solver demonstrates 3x-2=10
     else orig = makeProblem();
     ws = wsFromOrig();
     sys = []; sysV = []; elim = ""; elimInfo = lesson === 3 && orig.length === 3 && ints(orig) ? bestElim(orig) : null;
@@ -1734,8 +1736,7 @@
     if (orig.length < allV().length) { crPrompt(); return; }
     elimInfo = lesson === 3 && ints(orig) ? bestElim(orig) : null;
     $("creator").hidden = true;
-    if (BUILT[act].solver) { $("answer").hidden = false; buildAnswer(); note("Your equation is in. Type your solution to check it."); }   // the playground just checks the answer
-    else { $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation" + (orig.length > 1 ? "s are" : " is") + " in. Choose how you want to work on " + (orig.length > 1 ? "them." : "it.")); }
+    { $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation" + (orig.length > 1 ? "s are" : " is") + " in. Choose how you want to work on " + (orig.length > 1 ? "them." : "it.")); }
   }
 
   // the demo button names the step it is about to do
