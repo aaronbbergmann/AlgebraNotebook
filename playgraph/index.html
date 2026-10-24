@@ -119,6 +119,25 @@
   .fr>span:last-child{padding:.04em .12em 0}
   .exBox{display:flex;flex-direction:column;align-items:center;gap:1rem;margin:1rem auto;width:fit-content;max-width:100%;padding:.4em .8em;border-radius:.4em;background:color-mix(in srgb,var(--ink) 7%,var(--bg))}
   .exBox[hidden]{display:none}
+  #grpBox{position:fixed;z-index:4;font-family:"LM","Latin Modern Roman","CMU Serif","STIX Two Text",Georgia,"Times New Roman",serif;font-size:clamp(1.3rem,3.2vw,2.1rem);padding:.6rem 1rem .5rem;background:var(--bg);border:2px solid color-mix(in srgb,var(--ink) 22%,transparent);border-radius:16px;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.2);opacity:0;transform:translate(-50%,18px);transition:opacity .3s,transform .3s;touch-action:none}
+  #grpBox.on{opacity:1;transform:translate(-50%,0)}
+  #grpBox .ggrid{display:grid;grid-template-columns:auto auto auto;align-items:stretch}
+  #grpBox .gcell,#grpBox .gsp{display:flex;align-items:center;justify-content:center;min-width:2.6em;min-height:1.9em;padding:.1em .45em}
+  #grpBox .gcell{border:1.5px solid color-mix(in srgb,var(--ink) 55%,transparent);background:color-mix(in srgb,var(--ink) 6%,var(--bg));margin:-1.5px 0 0 -1.5px;transition:background .2s}
+  #grpBox .gcell.filled{cursor:pointer}
+  #grpBox .gcell.drop{background:color-mix(in srgb,var(--plus) 30%,var(--bg))}
+  #grpBox .gsp{border:2px dashed transparent;border-radius:.45em}
+  #grpBox .gsp.ready{border-color:var(--plus);cursor:pointer;animation:gpulse 1.4s ease-in-out infinite}
+  #grpBox .gsp.set{cursor:pointer}
+  #grpBox .gtop.set{background:color-mix(in srgb,#2e9e5b 24%,var(--bg))}
+  #grpBox .gleft.set{background:color-mix(in srgb,#f2b705 34%,var(--bg))}
+  #grpBox .gsp input{width:3.6em;font:600 .6em system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:8px;padding:.25em .3em;text-align:center}
+  #grpBox .gmsg{font:600 .42em system-ui,sans-serif;text-align:center;max-width:17em;margin:.6em auto 0;min-height:1.3em;color:var(--ink)}
+  #grpBox .gmsg.bad{color:var(--no)}
+  #grpBox .gclear{display:block;margin:.3em auto 0;font:600 .36em system-ui,sans-serif;background:none;border:0;color:var(--ink);text-decoration:underline;cursor:pointer;opacity:.7}
+  .exT.grpUsed{opacity:.35}
+  @keyframes gpulse{50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--plus) 35%,transparent)}}
+  @media (prefers-reduced-motion:reduce){#grpBox,#grpBox .gsp.ready{transition:none;animation:none}}
   .exBox.zp{display:grid;grid-template-columns:auto auto auto;justify-content:center;gap:.45rem 0;background:none;padding:0;width:auto}
   .exBox.zp>*{grid-column:1/-1}
   .exBox.zp .zpRow{display:grid;grid-template-columns:subgrid;align-items:center;padding:.3em .5em;border-radius:.4em;line-height:1.3;background:color-mix(in srgb,var(--ink) 7%,var(--bg))}
@@ -1230,6 +1249,7 @@
       var ng = (t.k === "g" ? t.m.n : t.n.n) < 0, op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + i + "\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "";
       return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live ? " pend" : "") + (hot && hot.indexOf(i) >= 0 ? " hot" : "") + "\" data-i=\"" + i + "\" data-drop=\"ex:" + i + "\"" + (t.k === "g" && live ? " title=\"Click to distribute\"" : "") + ">" + exTerm(t) + "</span>";
     }).join("");
+    grMark();
     if (!live) return;
     [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var k = +el.dataset.op; exDrop(k, k - 1); }); });
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
@@ -1244,15 +1264,15 @@
         [gEl, hEl].forEach(function (pe) { pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, pe, function () { exDistribute(i); }, function (t) { if (t.dataset.drop === "exg:" + i) exDistribute(i); }, "exg:"); }); });
       }
       var kEl = el.querySelector(":scope > .exK");
-      if (kEl) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, kEl, null, function (t) { exFactor(i, +t.dataset.drop.slice(3)); }, "ex:"); });
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { exDrop(i, +t.dataset.drop.slice(3)); }, "ex:"); });
+      if (kEl && !EXP.grp) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, kEl, null, function (t) { exFactor(i, +t.dataset.drop.slice(3)); }, "ex:"); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { if (t.dataset.drop.indexOf("gb:") === 0) grPlace(+t.dataset.drop.slice(3), i); else exDrop(i, +t.dataset.drop.slice(3)); }, EXP.grp ? ["ex:", "gb:"] : "ex:", EXP.grp ? grShow : null, EXP.grp ? grEnd : null); });
     });
   }
-  function exPush() { hist.push(JSON.stringify(EXP.items)); updUndo(); }
+  function exPush() { grHide(); hist.push(JSON.stringify(EXP.items)); updUndo(); }
   // distributing: a box slides up at the bottom of the screen (the area model): the number outside on the left, the terms in the parentheses on top,
   // and each product inside, in the box where its row and column meet
   var distT = [];
-  function distHide() { distT.forEach(clearTimeout); distT = []; var d = $("distBox"); if (d) d.remove(); }
+  function distHide() { distT.forEach(clearTimeout); distT = []; var d = $("distBox"); if (d) d.remove(); grHide(); }
   function distShow2(g) {   // (A)(B): the area model as a 2 x 2 square: one expression down the left, one across the top, the four products in the boxes
     var A = g.items, B = g.b, nb = B.length, d = exDist(g), term = function (t) { return (t.n.n < 0 ? "\u2212" : "") + exTerm(t); };
     var corner = g.m.n === 1 && g.m.d === 1 ? "" : (g.m.n < 0 ? "\u2212" : "") + exFr(mk(Math.abs(g.m.n), g.m.d));
@@ -1301,12 +1321,14 @@
   }
   function exSet(items, msg, dg) {
     exPush(); EXP.items = items; closeAsk(false); exRender(); if (msg) note(msg); if (dg) distShow(dg);
-    if (EXP.fac ? facDone(items) : exFin(items)) exEnd(); else if (!msg) clearLog();
+    if (exDone(items)) exEnd(); else if (!msg) clearLog();
   }
+  function exProd(its) { return its.length === 1 && its[0].k === "g" && !!its[0].b; }   // a product of two parentheses
+  function exDone(its) { return EXP.grp && exProd(its) ? true : EXP.fac ? facDone(its) : exFin(its); }
   function exEnd() {
     locked = true; exRender(); closeAsk(false);
-    if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note((EXP.fac ? "Fully factored: " : "Fully simplified: ") + exSay(EXP.items) + ".");
-    if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(EXP.fac ? "Fully factored!" : "Fully simplified!"); solverFinish(); }
+    if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note((EXP.fac || (EXP.grp && exProd(EXP.items)) ? "Fully factored: " : "Fully simplified: ") + exSay(EXP.items) + ".");
+    if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(EXP.fac || (EXP.grp && exProd(EXP.items)) ? "Fully factored!" : "Fully simplified!"); solverFinish(); }
     else { tally(); nxShow(); }
   }
   function exCombineTo(i, j) {   // term i is dropped on term j (alike): the sum takes j's place
@@ -1366,6 +1388,7 @@
       EXP.items = r; exEnd(); $("exSolo").hidden = true; return;
     }
     if (!exSame(exTot(r), exTot(EXP.items))) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
+    if (EXP.grp && exProd(r)) { if (!grPrim(r[0].items) || !grPrim(r[0].b)) { m.className = "bad"; m.textContent = "That is the same value, but one of the parentheses can still be factored."; return; } EXP.items = r; exEnd(); $("exSolo").hidden = true; return; }
     if (EXP.fac) { if (!facDone(r)) { m.className = "bad"; m.textContent = "That is the same value, but it is not fully factored yet."; return; } EXP.items = r; exEnd(); $("exSolo").hidden = true; return; }
     if (!exFin(r)) { m.className = "bad"; m.textContent = "That is the same value, but it is not fully simplified yet."; return; }
     EXP.items = r; exEnd(); $("exSolo").hidden = true;
@@ -1380,21 +1403,23 @@
     distHide(); stopDemo(); closeAsk(false); stopParty(); busy = false; calc = null; $("modePick").hidden = true;
     orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
     if (EXP.eq) { EXP.L = JSON.parse(JSON.stringify(EXP.orig.L)); EXP.R = JSON.parse(JSON.stringify(EXP.orig.R)); EXP.rel = EXP.orig.rel || "="; } else EXP.items = JSON.parse(JSON.stringify(EXP.orig));
-    EXP.ask = null; EXP.zp = null; logEl.innerHTML = ""; DM4.brk = false;
+    EXP.ask = null; EXP.zp = null; if (EXP.grq) EXP.zpq = false; logEl.innerHTML = ""; DM4.brk = false;
     $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
     $("top").style.display = "none"; $("vals").style.display = "none"; $("creator").hidden = true; $("answer").hidden = true; $("wsEl").style.display = "none";
     $("exBox").hidden = false; $("exSolo").hidden = mode !== "solo"; $("exMsg").textContent = ""; $("exSoloIn").value = "";
-    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.zpq ? "e.g. 3, -2" : EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
+    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : EXP.grp ? "Answer:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.zpq || EXP.grq ? "e.g. 3, -2" : EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
     exRender(); updUndo();
     if (EXP.eq) {
       if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this equation solved."); }
       else if (mode === "solo") note("Solve it on your own, then type your answer.");
+      else if (EXP.grq) note("Drag a term down into the square to factor by grouping: put each term in a box, then click the spaces on the left and above to type the greatest common factor of each row and column. The factored form goes back into the equation, and then you can split it into two equations." + (mode === "calculate" ? " You will be asked for each result." : ""));
       else if (EXP.zpq) note("Drag one of the parentheses up or down. A product is 0 only when one of its factors is 0 (the zero product property), so the equation splits into two equations." + (mode === "calculate" ? " You will be asked for each result." : ""));
       else note("Drag a term across the " + (eqIneq() ? "sign" : "=") + " to move it to the other side (its sign changes). Drop it on a like term to combine them. Drag the number in front of x across to divide." + (eqIneq() ? " Dividing or multiplying by a negative number turns the sign around." : "") + (EXP.lit ? " The letters are numbers too: dividing by a gives b/a." : "") + (mode === "calculate" ? " You will be asked for each result." : ""));
       return;
     }
-    if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this expression " + (EXP.fac ? "factored." : "simplified.")); }
-    else if (mode === "solo") note(EXP.fac ? "Factor it on your own, then type your answer, like 3(x + 2)." : "Simplify it on your own, then type your answer.");
+    if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this expression " + (EXP.fac ? "factored." : EXP.grp ? "factored by grouping." : "simplified.")); }
+    else if (mode === "solo") note(EXP.fac ? "Factor it on your own, then type your answer, like 3(x + 2)." : EXP.grp ? "Simplify it or factor it on your own, then type your answer, like (x + 3)(x + 5)." : "Simplify it on your own, then type your answer.");
+    else if (EXP.grp) note("Drag a term down into the square to factor by grouping, or drop it on a like term to combine them." + (mode === "calculate" ? " You will be asked for each result." : ""));
     else if (EXP.fac) note("Drag the number in front of x onto another term to factor out the biggest number they share." + (mode === "calculate" ? " You will be asked for each result." : ""));
     else note("Drag a term onto a like term to combine them. Drag any other term to move it, and its sign goes with it. Click parentheses to distribute." + (mode === "calculate" ? " You will be asked for each result." : ""));
   }
@@ -1419,6 +1444,7 @@
   function exDragDemo(sel, run, after, key) { var has = $("exRow").querySelector(sel + " > .exM"); exMoveDemo(has ? sel + " > .exM" : '.exNeg[data-for="' + key + '"]', sel + " > .exG", run, after); }   // the number in front of the parentheses onto them
   function exDemoStep(ms) {
     if (EXP && EXP.eq) { eqDemoStep(ms); return; }
+    if (EXP && EXP.grp) { grDemoStep(ms); return; }
     clearTimeout(DM4.t);
     DM4.t = setTimeout(function () {
       if (!EXP || !DM4.run || DM4.paused || locked) return;
@@ -1457,7 +1483,8 @@
     var fac = false, lit = false, lr = exFin(r) ? litFacTerms($("crIn").value) : null;   // a sum with letters (ax + ab) is read with the letters as coefficients
     if (lr) { r = lr; fac = true; lit = true; } else fac = exFin(r) && facAll(r) >= 2;
     if (exFin(r) && !fac) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5, or a sum with a common factor to take out, like 3x+9 or ax+ab."; return; }
-    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, fac: fac, lit: lit }; SOL.lvl = lit ? 6 : exLevel(r); SOL.fresh = false;
+    var gpx = !fac && !lit && !!grOf(r);   // four terms that factor by grouping: x^2 + 5x + 3x + 15
+    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, fac: fac, lit: lit, grp: gpx }; SOL.lvl = lit ? 6 : exLevel(r); SOL.fresh = false;
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your expression is in. Choose how you want to work on it.");
   }
 
@@ -1518,6 +1545,179 @@
     eqRender(); note("One answer: " + sol + ". Now solve the other equation, " + exSay(EXP.L) + " = " + exSay(EXP.R) + ".");
     var k = eqKind(); if (k) eqEnd(k);
   }
+
+  // ---- factoring by grouping: x^2 + 5x + 3x + 15. Dragging a term down opens a 2 x 2 square. The terms go into the boxes, the greatest common factor of each row (left) and column (above) is typed,
+  // and when all four are found the factored form, (x + 3)(x + 5), replaces the original. In an equation it is then ready for the zero product property.
+  var GRP = null;
+  function mGcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = a % b; a = b; b = t; } return a; }
+  function mDiv(a, b) { return b.n && a.n % b.n === 0 && a.p >= b.p ? { n: a.n / b.n, p: a.p - b.p } : null; }
+  function mMul(a, b) { return { n: a.n * b.n, p: a.p + b.p }; }
+  function mEq(a, b) { return a.n === b.n && a.p === b.p; }
+  function mGcf(a, b) { return { n: mGcd(a.n, b.n), p: Math.min(a.p, b.p) }; }
+  function grMono(t) {   // a whole-number term in one letter: { n, p (the power), l }
+    if (!t || t.k === "g" || t.k === "q" || t.n.d !== 1 || hasS(t)) return null;
+    if (t.k === "c") return { n: t.n.n, p: 0 };
+    var m = /^([a-z])(?:\^([2-9]))?$/.exec(t.v || "x"); return t.k === "x" && m ? { n: t.n.n, p: m[2] ? +m[2] : 1, l: m[1] } : null;
+  }
+  function grTerm(m, l) { return m.p === 0 ? { k: "c", n: mk(m.n) } : { k: "x", v: l + (m.p > 1 ? "^" + m.p : ""), n: mk(m.n) }; }
+  function grTxt(m, l) { return m.p === 0 ? String(m.n) : (m.n === 1 ? "" : m.n === -1 ? "-" : String(m.n)) + l + (m.p > 1 ? "^" + m.p : ""); }
+  function grPrim(its) { var g = 0; for (var i = 0; i < its.length; i++) { var m = grMono(its[i]); if (!m) return true; g = mGcd(g, m.n); } return g <= 1; }
+  function grSolve(a, p, q, d) {   // the two middle terms in either order: the row and column factors, or null when the four terms do not group
+    var tries = [[p, q], [q, p]];
+    for (var z = 0; z < 2; z++) {
+      var M = [{ n: a, p: 2 }, { n: tries[z][0], p: 1 }, { n: tries[z][1], p: 1 }, { n: d, p: 0 }], g0 = mGcf(M[0], M[1]), r0 = { n: (a < 0 ? -1 : 1) * g0.n, p: g0.p };
+      var c0 = mDiv(M[0], r0), c1 = mDiv(M[1], r0); if (!c0 || !c1) continue;
+      var r1 = mDiv(M[2], c0); if (!r1 || !mEq(mMul(r1, c1), M[3])) continue;
+      var gr1 = mGcf(M[2], M[3]), gc0 = mGcf(M[0], M[2]), gc1 = mGcf(M[1], M[3]);
+      if (Math.abs(r1.n) !== gr1.n || r1.p !== gr1.p || Math.abs(c0.n) !== gc0.n || c0.p !== gc0.p || Math.abs(c1.n) !== gc1.n || c1.p !== gc1.p) continue;
+      return { arr: tries[z], rf: [r0, r1], cf: [c0, c1] };
+    }
+    return null;
+  }
+  function grOf(its) {   // four terms ax^2 + px + qx + d that factor by grouping: { a, p, q, d, l, cells: [the item index for each box], sol }
+    if (!its || its.length !== 4) return null; var ms = its.map(grMono); if (ms.some(function (m) { return !m || !m.n; })) return null;
+    var ia = -1, ic = -1, ix = []; ms.forEach(function (m, i) { if (m.p === 2) ia = i; else if (m.p === 0) ic = i; else if (m.p === 1) ix.push(i); });
+    if (ia < 0 || ic < 0 || ix.length !== 2 || ms.some(function (m) { return m.p && m.l !== ms[ia].l; })) return null;
+    var a = ms[ia].n, p = ms[ix[0]].n, q = ms[ix[1]].n, d = ms[ic].n; if (p * q !== a * d) return null;
+    var sol = grSolve(a, p, q, d); if (!sol) return null;
+    return { a: a, p: p, q: q, d: d, l: ms[ia].l, sol: sol, cells: sol.arr[0] === p ? [ia, ix[0], ix[1], ic] : [ia, ix[1], ix[0], ic] };
+  }
+  function grRoots(gp) { return [mk(-gp.p, gp.a), mk(-gp.q, gp.a)]; }
+  function grGen(lv) {   // a variant: (ax + b)(cx + d) multiplied out into four terms; 1 numbers only, 2 numbers in front of x (the terms may come in any order)
+    var X = function (n) { return { k: "x", v: "x", n: mk(n) }; };
+    for (;;) {
+      var a = lv >= 2 ? 1 + rnd(3) : 1, c = lv >= 2 ? 1 + rnd(3) : 1, b = nz(6), d = nz(6);
+      if ((lv >= 2 && a === 1 && c === 1) || mGcd(a, b) !== 1 || mGcd(c, d) !== 1) continue;
+      var ts = [{ k: "x", v: "x^2", n: mk(a * c) }, X(a * d), X(b * c), { k: "c", n: mk(b * d) }];
+      if (lv >= 2 && rnd(2)) for (var i = 3; i > 0; i--) { var j = rnd(i + 1), t = ts[i]; ts[i] = ts[j]; ts[j] = t; }
+      if (grOf(ts)) return ts;
+    }
+  }
+  function grItems() { return EXP.eq ? EXP.L : EXP.items; }
+  function grAvail() { return !!(EXP && !locked && !EXP.ask && (EXP.eq ? EXP.grq && !EXP.zpq : EXP.grp)); }
+  function grTermHtml(t) { return "<span>" + (t.n.n < 0 ? "−" : "") + exTerm(t) + "</span>"; }
+  function grHide() { if (GRP && GRP.t) GRP.t.forEach(clearTimeout); GRP = null; var b = $("grpBox"); if (b) b.remove(); grMark(); }
+  function grMark() {   // the terms that are in the square are dimmed in the equation
+    var R = $("exRow"); if (!R) return;
+    [].forEach.call(R.querySelectorAll(".exT"), function (el) { el.classList.toggle("grpUsed", !!(GRP && (el.dataset.s || "L") === "L" && GRP.cells.some(function (c) { return c && c.i === +el.dataset.i; }))); });
+  }
+  function grShow() {
+    if (GRP || !grAvail() || !grOf(grItems())) return;
+    GRP = { cells: [null, null, null, null], rf: [null, null], cf: [null, null], gp: grOf(grItems()), t: [], msg: "" };
+    var el = document.createElement("div"); el.id = "grpBox"; el.setAttribute("aria-label", "Factoring by grouping");
+    el.innerHTML = "<div class=\"ggrid\"><span></span><span class=\"gsp gtop\" data-sp=\"c0\"></span><span class=\"gsp gtop\" data-sp=\"c1\"></span><span class=\"gsp gleft\" data-sp=\"r0\"></span><span class=\"gcell\" data-k=\"0\" data-drop=\"gb:0\"></span><span class=\"gcell\" data-k=\"1\" data-drop=\"gb:1\"></span><span class=\"gsp gleft\" data-sp=\"r1\"></span><span class=\"gcell\" data-k=\"2\" data-drop=\"gb:2\"></span><span class=\"gcell\" data-k=\"3\" data-drop=\"gb:3\"></span></div><div class=\"gmsg\"></div><button class=\"gclear\" hidden>Clear the square</button>";
+    (document.querySelector(".app") || document.body).appendChild(el);
+    el.addEventListener("click", function (e) {
+      if (e.target.closest(".gclear")) { GRP.cells = [null, null, null, null]; GRP.rf = [null, null]; GRP.cf = [null, null]; GRP.msg = ""; grFill(); grMark(); return; }
+      var c = e.target.closest(".gcell"), sp = e.target.closest(".gsp");
+      if (c && c.classList.contains("filled")) grClear(+c.dataset.k); else if (sp && !sp.querySelector("input")) grEdit(sp.dataset.sp);
+    });
+    var st = document.querySelector(".stage").getBoundingClientRect(), bx = $("exBox").getBoundingClientRect(), h = el.getBoundingClientRect().height + 20;
+    el.style.left = (st.left + st.width / 2) + "px";
+    if (st.bottom - bx.bottom >= h - 40) el.style.bottom = Math.max(10, innerHeight - st.bottom + 14) + "px"; else if (bx.top - st.top >= h) el.style.top = (st.top + 10) + "px"; else el.style.bottom = Math.max(10, innerHeight - st.bottom + 14) + "px";
+    grFill(); requestAnimationFrame(function () { if ($("grpBox") === el) el.classList.add("on"); });
+  }
+  function grFill() {
+    var el = $("grpBox"); if (!el || !GRP) return;
+    GRP.cells.forEach(function (c, k) { var e = el.querySelector("[data-k=\"" + k + "\"]"); e.innerHTML = c ? grTermHtml(c.t) : ""; e.classList.toggle("filled", !!c); e.title = c ? "Click to take it out" : ""; });
+    var two = function (sp) { var i = +sp[1]; return sp[0] === "r" ? GRP.cells[2 * i] && GRP.cells[2 * i + 1] : GRP.cells[i] && GRP.cells[2 + i]; };
+    [["r0", GRP.rf[0]], ["r1", GRP.rf[1]], ["c0", GRP.cf[0]], ["c1", GRP.cf[1]]].forEach(function (a) {
+      var e = el.querySelector("[data-sp=\"" + a[0] + "\"]"), rd = !!two(a[0]); e.innerHTML = a[1] ? grTermHtml(a[1]) : ""; e.classList.toggle("set", !!a[1]); e.classList.toggle("ready", !a[1] && rd && !GRP.done); e.title = rd ? "Click to type the greatest common factor" : "";
+    });
+    var n = GRP.cells.filter(Boolean).length, m = el.querySelector(".gmsg"); m.className = "gmsg" + (GRP.bad ? " bad" : "");
+    m.textContent = GRP.msg || (GRP.done ? "Factored!" : n < 4 ? "Drag each term into a box." : "Now click the spaces on the left and above, and type each greatest common factor.");
+    el.querySelector(".gclear").hidden = !n || !!GRP.done;
+  }
+  function grDirty(k) { GRP.rf[k >> 1] = null; GRP.cf[k & 1] = null; }
+  function grPlace(k, i) {
+    if (!GRP || GRP.done) return; var t = grItems()[i]; if (!t || !grMono(t)) return;
+    GRP.cells.forEach(function (c, j) { if (c && c.i === i) { GRP.cells[j] = null; grDirty(j); } });
+    GRP.cells[k] = { i: i, t: JSON.parse(JSON.stringify(t)) }; grDirty(k); GRP.msg = ""; GRP.bad = false; grFill(); grMark();
+  }
+  function grClear(k) { if (!GRP || GRP.done) return; GRP.cells[k] = null; grDirty(k); GRP.msg = ""; GRP.bad = false; grFill(); grMark(); }
+  function grEnd(t) { if ((!t || t.dataset.drop.indexOf("gb:") !== 0) && GRP && !GRP.done && !GRP.cells.some(Boolean)) grHide(); }
+  function grWire(R) {   // an equation to factor: any term of the left side can be dragged down into the square
+    [].forEach.call(R.querySelectorAll(".exT[data-s=\"L\"]"), function (el) {
+      var i = +el.dataset.i;
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, null, function (t) { grPlace(+t.dataset.drop.slice(3), i); }, "gb:", grShow, grEnd); });
+    });
+  }
+  function grEdit(sp) {
+    var el = $("grpBox"); if (!el || !GRP || GRP.done) return;
+    var i = +sp[1], two = sp[0] === "r" ? [GRP.cells[2 * i], GRP.cells[2 * i + 1]] : [GRP.cells[i], GRP.cells[2 + i]];
+    GRP.msg = ""; GRP.bad = false;
+    if (!two[0] || !two[1]) { GRP.msg = "Put two terms in this " + (sp[0] === "r" ? "row" : "column") + " first."; GRP.bad = true; grFill(); return; }
+    grFill(); var e = el.querySelector("[data-sp=\"" + sp + "\"]"); e.innerHTML = "<input autocomplete=\"off\" aria-label=\"Greatest common factor\" placeholder=\"?\">";
+    var inp = e.querySelector("input"); inp.focus();
+    inp.addEventListener("keydown", function (ev) {
+      ev.stopPropagation();
+      if (ev.key === "Enter") { var err = grSet(sp, inp.value); if (err) { var m = el.querySelector(".gmsg"); m.className = "gmsg bad"; m.textContent = err; inp.select(); } else { GRP.msg = ""; GRP.bad = false; if (!GRP.done) grFill(); } }
+      else if (ev.key === "Escape") grFill();
+    });
+    inp.addEventListener("blur", function () { setTimeout(function () { if (GRP && document.activeElement !== inp && e.contains(inp)) grFill(); }, 150); });
+  }
+  function grSet(sp, str) {   // the typed greatest common factor of a row or a column: an error message, or null when it is right
+    var i = +sp[1], isR = sp[0] === "r", cells = isR ? [GRP.cells[2 * i], GRP.cells[2 * i + 1]] : [GRP.cells[i], GRP.cells[2 + i]], l = GRP.gp.l;
+    var r = exParse(str); if (typeof r === "string" || r.length !== 1) return "Type one term, like 3x or −4.";
+    var m = grMono(r[0]); if (!m || !m.n || (m.p && m.l !== l)) return "Type a whole number times " + l + ", like 3" + l + ", or just a number, like −4.";
+    var m1 = grMono(cells[0].t), m2 = grMono(cells[1].t), g = mGcf(m1, m2), a = exSay([cells[0].t]), b = exSay([cells[1].t]);
+    if (!mDiv(m1, m) || !mDiv(m2, m)) return "That does not go into both " + a + " and " + b + ".";
+    if (Math.abs(m.n) !== g.n || m.p !== g.p) return "That goes into both, but there is a bigger common factor.";
+    var others = isR ? GRP.cf : GRP.rf;
+    for (var j = 0; j < 2; j++) if (others[j]) { var cell = GRP.cells[isR ? 2 * i + j : 2 * j + i]; if (cell && !mEq(mMul(m, grMono(others[j])), grMono(cell.t))) return "The factor on the left times the factor above has to give the box. Check the signs, or try arranging the terms differently."; }
+    (isR ? GRP.rf : GRP.cf)[i] = grTerm(m, l);
+    if (GRP.rf[0] && GRP.rf[1] && GRP.cf[0] && GRP.cf[1]) grComplete();
+    return null;
+  }
+  function grComplete() {
+    GRP.done = true; GRP.msg = ""; grFill();
+    var rf = GRP.rf.map(function (t) { return JSON.parse(JSON.stringify(t)); }), cf = GRP.cf.map(function (t) { return JSON.parse(JSON.stringify(t)); }), neg = function (t) { t.n = mk(-t.n.n, t.n.d); return t; };
+    if (rf[0].n.n < 0 && cf[0].n.n < 0) { rf.forEach(neg); cf.forEach(neg); }
+    var g = { k: "g", m: mk(1), items: rf, b: cf }, was = grItems().slice();
+    GRP.t.push(setTimeout(function () { grApply(g, was); }, 1300));
+  }
+  function grApply(g, was) {
+    var demo = mode === "demo" && DM4.run && !DM4.paused, msg = "Factor by grouping: " + exSay(was) + " = " + exSay([g]) + ".";
+    grHide();
+    if (EXP.eq) {
+      hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: "=", z: null })); updUndo();
+      EXP.L = [g]; EXP.R = [{ k: "c", n: mk(0) }]; EXP.rel = "="; EXP.zpq = true; EXP.zp = null; closeAsk(false); eqRender(); note(msg + " Now drag a factor up or down to split it into two equations.");
+    } else exSet([g], msg);
+    if (demo && !locked) (EXP.eq ? eqDemoStep : exDemoStep)(900);
+  }
+  function grDemoStep(ms) {   // the hand drags each term into its box, then clicks the spaces and types the factors
+    clearTimeout(DM4.t);
+    DM4.t = setTimeout(function () {
+      if (!EXP || !DM4.run || DM4.paused || locked) return;
+      var its = grItems(), gp = grOf(its); if (!gp) return;
+      var alive = function () { return EXP && DM4.run && !DM4.paused && !locked; }, more = function () { grDemoStep(600); };
+      if (!GRP) { exRender(); grShow(); dmCap("Drag each term down into a box."); grDemoStep(1200); return; }
+      if (GRP.done) return;
+      for (var c = 0; c < 4; c++) if (!GRP.cells[c] || GRP.cells[c].i !== gp.cells[c]) {
+        (function (c) {
+          var i = gp.cells[c]; dmCap("Drag " + exSay([its[i]]) + " into a box.");
+          exMoveDemo((EXP.eq ? ".exT[data-s=\"L\"]" : ".exT") + "[data-i=\"" + i + "\"]", "#grpBox .gcell[data-k=\"" + c + "\"]", function () { grPlace(c, i); if (EXP.eq) eqRender(); else exRender(); }, more);
+        })(c);
+        return;
+      }
+      var want = { r0: gp.sol.rf[0], r1: gp.sol.rf[1], c0: gp.sol.cf[0], c1: gp.sol.cf[1] }, have = { r0: GRP.rf[0], r1: GRP.rf[1], c0: GRP.cf[0], c1: GRP.cf[1] }, names = ["r0", "r1", "c0", "c1"];
+      for (var f = 0; f < 4; f++) if (!have[names[f]]) {
+        var sp = names[f], el = $("grpBox").querySelector("[data-sp=\"" + sp + "\"]"), txt = grTxt(want[sp], gp.l);
+        dmCap(sp[0] === "r" ? "Type the common factor of this row." : "Type the common factor of this column.");
+        handGo(ctr(el), 800);
+        DM4.t = setTimeout(function () {
+          if (!alive()) return; handTap(); grEdit(sp); var inp = el.querySelector("input"), k = 0;
+          var typeNext = function () {
+            if (!alive() || !inp || !inp.isConnected) return;
+            if (k < txt.length) { inp.value = txt.slice(0, ++k); DM4.t = setTimeout(typeNext, 320); return; }
+            DM4.t = setTimeout(function () { if (!alive() || !GRP) return; var err = grSet(sp, inp.value); if (!err && !GRP.done) grFill(); more(); }, 500);
+          };
+          DM4.t = setTimeout(typeNext, 400);
+        }, 1000);
+        return;
+      }
+    }, ms);
+  }
   function zpSay() { var o = []; EXP.zp.eqs.forEach(function (e) { var t = exSay(e.L) + " = " + exSay(e.R); if (o.indexOf(t) < 0) o.push(t); }); return o.join(" or "); }
   function eqKind() {   // "one" (x = 4 or 4 = x), "none", "inf", or "" while there is more to do
     if (EXP.lit) return litAlone(EXP.L, EXP.R) || litAlone(EXP.R, EXP.L) ? "one" : "";
@@ -1563,10 +1763,12 @@
   }
   function eqRender(hot) {
     zpPaint();
-    var R = $("exRow"), live = (mode === "sequence" || mode === "calculate") && !locked, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !EXP.zp;
-    R.innerHTML = wrap("L") + "<span class=\"exEq" + (live && !un ? " grab" : "") + "\" data-drop=\"eq=\">" + relGlyph(EXP.rel) + "</span>" + wrap("R");
-    if (!locked && !un) { R.querySelector(".exEq").addEventListener("click", eqMulAsk); R.onclick = function (e) { if (e.target === R) eqMulAsk(); }; } else R.onclick = null;
+    var R = $("exRow"), live = (mode === "sequence" || mode === "calculate") && !locked, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !EXP.zp, gq = EXP.grq && !EXP.zpq;
+    R.innerHTML = wrap("L") + "<span class=\"exEq" + (live && !un && !gq ? " grab" : "") + "\" data-drop=\"eq=\">" + relGlyph(EXP.rel) + "</span>" + wrap("R");
+    grMark();
+    if (!locked && !un && !gq) { R.querySelector(".exEq").addEventListener("click", eqMulAsk); R.onclick = function (e) { if (e.target === R) eqMulAsk(); }; } else R.onclick = null;
     if (live && un) { zpWire(R); return; }
+    if (live && gq) { grWire(R); return; }
     if (!live) return;
     var dropOf = function (S, i) { return function (t) { if (t.dataset.drop === "eq=") eqDrop(S, i, eqOther(S), -1); else { var p = t.dataset.drop.split(":"); eqDrop(S, i, p[1], +p[2]); } }; };
     [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var S = el.dataset.op[0], k = +el.dataset.op.slice(1); eqDrop(S, k - 1, S, k); }); });
@@ -1721,17 +1923,17 @@
   }
   function eqUndo() {
     distHide();
-    var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
+    var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; if (EXP.grq) EXP.zpq = !!zpOf(EXP.L, EXP.R); locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
   }
   function eqCheckSolo() {
-    if (EXP.zpq) {   // the answers are a set: "3, -2", "x = 3 or x = -2"
-      var mz = $("exMsg"), g0 = zpOf(EXP.orig.L, EXP.orig.R), vz = EXP.vk || "x", want = zpRoots(g0, vz), tz = $("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, ""), parts = tz.split(/,|;|or|and/).filter(function (u) { return u; }), got = []; ansTouched = true;
+    if (EXP.zpq || EXP.grq) {   // the answers are a set: "3, -2", "x = 3 or x = -2"
+      var mz = $("exMsg"), g0 = EXP.grq ? null : zpOf(EXP.orig.L, EXP.orig.R), vz = EXP.vk || "x", want = EXP.grq ? grRoots(grOf(EXP.orig.L)) : zpRoots(g0, vz), tz = $("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, ""), parts = tz.split(/,|;|or|and/).filter(function (u) { return u; }), got = []; ansTouched = true;
       for (var pi = 0; pi < parts.length; pi++) { var pv = parse(parts[pi].replace(new RegExp("^" + vz + "="), "")); if (!pv) { mz.className = "bad"; mz.textContent = "Type your answers like 3, \u22122 (separated by commas)."; return; } got.push(pv); }
       var has = function (arr, v) { return arr.some(function (u) { return same(u, v); }); };
       if (!got.length || !got.every(function (v) { return has(want, v); })) { mz.className = "bad"; mz.textContent = "Not quite. Check your work and try again."; return; }
       if (!want.every(function (v) { return has(got, v); })) { mz.className = "bad"; mz.textContent = "That one works, but there is another answer. Type both, like 3, \u22122."; return; }
       var mkS = function (v) { return { L: [{ k: "x", v: vz, n: mk(1) }], R: [{ k: "c", n: v }] }; };
-      EXP.zp = { eqs: [mkS(want[0]), mkS(want[1])], done: [true, false], act: 1 }; EXP.L = EXP.zp.eqs[1].L; EXP.R = EXP.zp.eqs[1].R; eqEnd("one"); $("exSolo").hidden = true; return;
+      EXP.zp = { eqs: [mkS(want[0]), mkS(want[1])], done: [true, false], act: 1 }; EXP.zpq = true; EXP.L = EXP.zp.eqs[1].L; EXP.R = EXP.zp.eqs[1].R; eqEnd("one"); $("exSolo").hidden = true; return;
     }
     if (EXP.lit) {   // with letters the answer is an expression: b/a, (c - b)/a ...
       var ml = $("exMsg"), wl = litSolution(EXP.orig.L, EXP.orig.R), tl = $("exSoloIn").value.toLowerCase().replace(/\s+/g, "").replace(/^x=/, ""), rl = litRat(tl, true); ansTouched = true;
@@ -1752,6 +1954,7 @@
     eqEnd(want.kind); $("exSolo").hidden = true;
   }
   function eqDemoStep(ms) {
+    if (EXP.grq && !EXP.zpq) { grDemoStep(ms); return; }
     clearTimeout(DM4.t);
     DM4.t = setTimeout(function () {
       if (!EXP || !DM4.run || DM4.paused || locked) return;
@@ -1822,6 +2025,17 @@
     if (/[a-wyz]/.test(s)) { eqCreateLit(p, rel, err); return; }
     var L = exParse(p[0]), R = exParse(p[1]);
     if (typeof L === "string" || typeof R === "string") { err.textContent = typeof L === "string" ? L : R; return; }
+    var gq = false;   // x^2 + 5x + 3x + 15 = 0: factor by grouping, then the zero product property
+    if (rel === "=") {
+      if (R.length === 1 && R[0].k === "c" && !R[0].n.n && grOf(L)) gq = true;
+      else if (L.length === 1 && L[0].k === "c" && !L[0].n.n && grOf(R)) { var sw3 = L; L = R; R = sw3; gq = true; }
+    }
+    if (gq) {
+      EXP = { eq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: grOf(L).l, grq: true, zpq: false, zp: null };
+      SOL.lvl = ladderEq(L, R, "="); SOL.fresh = false;
+      $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
+      return;
+    }
     var zq = zpOf(L, R) || zpOf(R, L);
     if (zq && rel === "=" && zpOf(R, L)) { var sw = L; L = R; R = sw; }
     if (!zq && L.concat(R).some(function (t) { return t.k === "g" && t.b; })) { err.textContent = "Two sets of parentheses can be solved when the other side is 0, like (x - 3)(x + 2) = 0, or multiplied in an expression (no = sign)."; return; }
@@ -1852,6 +2066,7 @@
   function eqWanted(s) {   // is this typed equation one for this module? (the variable on both sides, or a variable inside parentheses)
     s = s.toLowerCase(); var sr = splitRel(s); if (!sr) return false; var p = [sr.l, sr.r];
     if (/[a-wyz]/.test(s)) return true;   // letters other than x are coefficients
+    if (/\^/.test(s)) return true;   // x^2 + 5x + 3x + 15 = 0 (factoring by grouping)
     return (/[a-z]/.test(p[0]) && /[a-z]/.test(p[1])) || /\([^)]*[a-z][^)]*\)/.test(s);
   }
 
@@ -1921,13 +2136,15 @@
     { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 },                                         // the variable on both sides, parentheses, fractions
     { e: "eq", lv: 5 },                                                                                                                        // parentheses on both sides, one with a minus sign: 4(x - 3) + 2 = 2x - (x + 1)
     { e: "eq", special: true },                                                                                                                // no solution / infinitely many
-    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 }, { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 },                                                       // letters as coefficients: ax = b, ax + b = c, 2ax + 3b = 5c, like terms with letters
+    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 }, { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", grp: 1 }, { e: "eq", grp: 2 },                                                       // letters as coefficients: ax = b, ax + b = c, 2ax + 3b = 5c, like terms with letters
     { e: "pane", ineq: 1 }, { e: "pane", ineq: 2 }, { e: "pane", ineq: 3 },                                                                   // inequalities (the sign turns around for a negative)
     { e: "eq", ineq: 1 }, { e: "eq", ineq: 2 }, { e: "eq", ineq: 3, special: true }                                                           // two-sided inequalities, negative multipliers (incl. -1), never / always true
   ];
   function rung(e, f) { for (var i = 0; i < LADDER.length; i++) if (LADDER[i].e === e && f(LADDER[i])) return i; return 0; }
   function ladderPane(q) { if (isIneq(q)) { var n = eqLevel(q) >= 4 ? 3 : q.a.n < 0 ? 2 : 1; return rung("pane", function (r) { return r.ineq === n; }); } return rung("pane", function (r) { return r.lv === eqLevel(q); }); }
   function ladderEq(L, R, rel) {
+    var gg4 = R.length === 1 && R[0].k === "c" && !R[0].n.n ? grOf(L) : null;
+    if (gg4) return rung("eq", function (r) { return r.grp === (gg4.a === 1 ? 1 : 2); });
     var gz = zpOf(L, R);
     if (gz) { var zl = gz.m.n !== 1 || gz.m.d !== 1 ? 4 : gz.items.concat(gz.b).some(function (t) { return t.k === "x" && (t.n.n !== 1 || t.n.d !== 1); }) ? 3 : gz.items.length === 1 || gz.b.length === 1 ? 2 : 1; return rung("eq", function (r) { return r.zp === zl; }); }
     var sol = eqSolution(L, R, rel), all = L.concat(R), hasNeg = all.some(function (t) { return t.k === "g" && t.m.n < 0; }), hasMinus1 = all.some(function (t) { return t.k === "g" && t.m.n === -1 && t.m.d === 1; });
@@ -1973,7 +2190,8 @@
   function exGen(lv) {
     var KS = ["x", "y", "x^2", "y^2"], kv = lv >= 1 ? KS[rnd(4)] : "x", other = { x: "x^2", y: "y^2", "x^2": "x", "y^2": "y" }[kv];
     var X = function (n) { return { k: "x", v: kv, n: mk(n[0], n[1] || 1) }; }, U = function (n) { return { k: "x", v: other, n: mk(n) }; }, C = function (n) { return { k: "c", n: mk(n) }; };
-    if (lv >= 7) {   // two sets of parentheses: (3x - 4)(x - 6)
+    if (lv >= 8) return grGen(1 + rnd(2));   // factoring by grouping: x^2 + 5x + 3x + 15
+    if (lv === 7) {   // two sets of parentheses: (3x - 4)(x - 6)
       var pv = rnd(2) ? "x" : "y", Xp = function (n) { return { k: "x", v: pv, n: mk(n) }; }, Cp = function (n) { return { k: "c", n: mk(n) }; };
       var c1 = rnd(3) === 0 ? 2 : 1, a1 = rnd(2) ? 1 : 2 + rnd(2), b1 = nz(6), d1 = nz(6), m1 = rnd(5) === 0 ? -1 : 1;
       return [{ k: "g", m: mk(m1), items: [Xp(a1), Cp(b1)], b: [Xp(c1), Cp(d1)] }];
@@ -2012,17 +2230,18 @@
   function exLevel(its) {
     var g = its.filter(function (t) { return t.k === "g"; }).length, ng = its.filter(function (t) { return (t.k === "g" ? t.m.n : t.n.n) < 0; }).length, fr = JSON.stringify(its).indexOf('"d":') >= 0 && its.some(function (t) { return t.k === "x" && t.n.d > 1; });
     if (its.some(function (t) { return t.k === "g" && t.b; })) return 7;
+    if (grOf(its)) return 8;
     if (!g && exFin(its) && facAll(its) >= 2) return 5;
     return Math.max(0, Math.min(4, g ? (fr ? 4 : ng ? 3 : 2) : ng ? 1 : 0));
   }
   function solverGo(dl, m) {
     SOL.fresh = false; SOL.keep = true;
-    if (EXP && !EXP.eq) { SOL.lvl = Math.max(0, Math.min(7, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; }   // expressions have their own eight levels (5 is factoring, 6 is factoring with letters, 7 is two sets of parentheses)
+    if (EXP && !EXP.eq) { SOL.lvl = Math.max(0, Math.min(8, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 8; }   // expressions have their own eight levels (5 is factoring, 6 is factoring with letters, 7 is two sets of parentheses)
     else {
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
       if (st.e === "eq") {
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
-        EXP.lit = !!st.lit; EXP.zpq = !!st.zp; EXP.zp = null; var g2 = st.zp ? eqZp(st.zp) : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st.ineq) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
+        EXP.lit = !!st.lit; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.grp ? { L: grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st.ineq) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
         EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)), rel: EXP.rel }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; EXP.vk = "x";
       } else { EXP = null; useCustom = st.ineq ? paneIneq(st.ineq, m === "demo") : solverEq(st.lv, m === "demo"); }
     }
@@ -2139,7 +2358,7 @@
     }
     return null;
   }
-  function drag(e, el, onClick, onDrop, prefix) {
+  function drag(e, el, onClick, onDrop, prefix, onStart, onEnd) {
     if (busy || locked || calc || e.button > 0 || dmLocked()) return;
     prefix = prefix || "row:";
     var cap = e.currentTarget, sx = e.clientX, sy = e.clientY, moved = false, hot = null;
@@ -2147,6 +2366,7 @@
     function mv(ev) {
       var dx = ev.clientX - sx, dy = ev.clientY - sy;
       if (!moved && Math.hypot(dx, dy) < 6) return;
+      if (!moved && onStart) onStart();
       moved = true; el.classList.add("drag"); el.style.transform = "translate(" + dx + "px," + dy + "px)";
       var t = under(ev, el, prefix);
       if (hot !== t) { if (hot) hot.classList.remove("drop"); hot = t; if (t) t.classList.add("drop"); }
@@ -2156,6 +2376,7 @@
       var t = moved ? under(ev, el, prefix) : null;
       el.classList.remove("drag"); el.style.transform = ""; if (hot) hot.classList.remove("drop");
       if (!moved) { if (onClick) onClick(); } else if (t) onDrop(t, ev);
+      if (moved && onEnd) onEnd(t);
     }
     cap.addEventListener("pointermove", mv); cap.addEventListener("pointerup", up); cap.addEventListener("pointercancel", up);
   }
