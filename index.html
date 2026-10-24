@@ -109,6 +109,10 @@
   .afield input,#crIn{font:600 1.2rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:12px;padding:.4em .6em}
   .afield input{width:5em}
   #crIn{width:min(24rem,70vw)}
+  .modePick{display:flex;flex-direction:column;align-items:center;gap:.8rem;margin:1rem auto 0;text-align:center}
+  .modePick[hidden]{display:none}
+  .modePick .mpT{font-weight:700;font-size:1.1rem}
+  .modePick .mpRow{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center}
   #crIn::placeholder{color:color-mix(in srgb,var(--ink) 38%,transparent);opacity:1;font-weight:500}
   body.solver #lesson,body.solver #modeSel,body.solver #progBtn{display:none}
   .panel{display:flex;flex-direction:column;align-items:center;gap:.8rem;margin:1rem auto;font-family:system-ui,sans-serif}
@@ -401,6 +405,7 @@
         <div class="row" style="flex-wrap:nowrap"><input id="crIn" autocomplete="off" aria-label="Equation"><button class="btn" id="crAdd">Add</button></div>
         <div class="err" id="crErr"></div>
       </section>
+      <section class="panel modePick" id="modePick" hidden aria-label="Choose a mode"></section>
       <section class="panel" id="answer" hidden>
         <div id="ansT" style="font-weight:700">Your answer:</div>
         <select id="ansKind" aria-label="Type of answer"><option value="one">One solution</option><option value="inf">Infinitely many solutions</option><option value="none">No solution</option></select>
@@ -1046,7 +1051,7 @@
     if (mode === "solo") { buildAnswer(); nx.hidden = true; updUndo(); return; }
     if (mode === "create") {
       if (!orig.length) return;
-      orig.pop(); ws = wsFromOrig(); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }]; workCreate();
+      $("modePick").hidden = true; orig.pop(); ws = wsFromOrig(); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }]; workCreate();
       render(-1); $("answer").hidden = true; $("creator").hidden = false; nx.hidden = true; crPrompt(); updUndo(); return;
     }
     if (!hist.length) return;
@@ -1614,7 +1619,7 @@
 
   function newProblem() {
     if (quiz()) { qzStart(); return; }
-    calc = null; hinted = false; mulNote = null; pend = null; stopParty(); stopDemo(); closeAsk(false); busy = false;
+    $("modePick").hidden = true; calc = null; hinted = false; mulNote = null; pend = null; stopParty(); stopDemo(); closeAsk(false); busy = false;
     var plain = mode === "solo" || mode === "create";
     if (mode === "demo") { curDm = demoN % 2 + 1; demoN++; }
     if (mode === "create") orig = [];
@@ -1702,6 +1707,18 @@
     if (!allV().some(function (v) { return q[CK[v]].n; })) return "That equation needs at least one variable.";
     return q;
   }
+  // Create: after the student's own question is in, ask which mode to work on it in (every mode the exercise has except Create)
+  var MPTIP = { demo: "Watch it solved", sequence: "Practice the order of the steps", calculate: "Order the steps and do the calculations", solo: "Solve it yourself" };
+  function showPick(host, title) {
+    var B = BUILT[act], ms = (B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"]).filter(function (m) { return m !== "create"; }), el = $("modePick");
+    el.innerHTML = "<div class=\"mpT\"></div><div class=\"mpRow\">" + ms.map(function (m) { return "<button class=\"btn\" data-m=\"" + m + "\" title=\"" + MPTIP[m] + "\">" + MODES[m] + "</button>"; }).join("") + "</div>";
+    el.firstChild.textContent = title || "How would you like to work on it?";
+    host.appendChild(el); el.hidden = false;
+  }
+  $("modePick").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-m]"); if (!b) return;
+    $("modeSel").value = b.dataset.m; setMode(b.dataset.m); if (mode !== "create") this.hidden = true;
+  });
   function crPrompt() {
     $("crT").textContent = lesson === 1 ? "Type your equation" : "Type the " + eqName(orig.length, allV().length) + ": type it the way it's written, like " + (lesson === 3 ? "2x+3y-z=12" : "2x+3y=12");
     $("crIn").placeholder = lesson === 1 ? "3x-2=10" : "";
@@ -1715,8 +1732,9 @@
     render(-1); updUndo();
     if (orig.length < allV().length) { crPrompt(); return; }
     elimInfo = lesson === 3 && ints(orig) ? bestElim(orig) : null;
-    $("creator").hidden = true; $("answer").hidden = false; buildAnswer();
-    note(BUILT[act].solver ? "Your equation is in. Type your solution to check it." : "Your equations are in. Type your solution to check it, or choose Demo, Sequence or Calculate from the mode menu to work through them.");
+    $("creator").hidden = true;
+    if (BUILT[act].solver) { $("answer").hidden = false; buildAnswer(); note("Your equation is in. Type your solution to check it."); }   // the playground just checks the answer
+    else { $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation" + (orig.length > 1 ? "s are" : " is") + " in. Choose how you want to work on " + (orig.length > 1 ? "them." : "it.")); }
   }
 
   // the demo button names the step it is about to do
@@ -2584,7 +2602,7 @@
     gdDescUI(); estUI();
     if (!pq() || !QZ.order) return;
     if (est()) { var oe = pqParts(), alle = QZ.step >= 4; $("pgQcue").innerHTML = (QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + [["Table", oe.table], ["Regression", oe.graph], ["Estimate", oe.desc]].map(function (a) { return a[0] + (alle || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; "); return; }
-    if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = "Function?"; return; }
+    if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = QZ.pick ? "" : "Function?"; return; }
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
     var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
     $("pgQcue").innerHTML = (gd() && mode !== "create" && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
@@ -2836,8 +2854,10 @@ var ESPIC = {
   }
   function pqPanel() {
     var fam = qFam(), done = QZ.step >= 4, demo = mode === "demo";
+    if (!(gd() && mode === "create" && QZ.pick)) $("modePick").hidden = true;
     document.body.classList.toggle("crPre", gd() && mode === "create" && !QZ.cr);
-    if (gd() && mode === "create" && !QZ.cr) $("pgQt").innerHTML = "Type a function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2|<i>x</i> \u2212 3| + 1</span>.";
+    if (gd() && mode === "create" && !QZ.cr && QZ.pick) { $("pgQt").textContent = "Your function is in."; showPick($("pgQ"), "How would you like to work on it?"); }
+    else if (gd() && mode === "create" && !QZ.cr) { $("modePick").hidden = true; $("pgQt").innerHTML = "Type a function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2|<i>x</i> \u2212 3| + 1</span>."; }
     else if (est()) $("pgQt").innerHTML = estHTML();
     else if (gd()) $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation.";
     else $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
@@ -2952,7 +2972,7 @@ var ESPIC = {
   }
   function leaveQuiz() {
     if (!document.body.classList.contains("quiz")) return;
-    stopDemo(); busy = false; if (pgRun) pgStop();
+    $("modePick").hidden = true; stopDemo(); busy = false; if (pgRun) pgStop();
     document.body.classList.remove("quiz", "play", "pq", "crPre", "dataAct", "est"); $("estIn").hidden = true; $("pgDescIn").hidden = true; $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
     $("pgTable").style.display = ""; $("pgGraph").style.display = ""; $("pgFam").hidden = false;
   }
@@ -3854,8 +3874,7 @@ var ESPIC = {
   function gdCreateAdopt(t) {
     var r = eqFit(t); if (r.err) { eqMsg(r.err); eqShake(); return; }
     if (r.fam === 0 ? r.k === 0 : r.a === 1 && !r.h && !r.k) { eqMsg("That is the parent function itself. Try one with a transformation."); eqShake(); return; }
-    QZ.order = [r.fam]; QZ.pi = 0; QZ.tr = [{ h: r.h, k: r.k, a: r.a }]; QZ.cr = true; gdCustom = { fam: r.fam, h: r.h, k: r.k, a: r.a };
-    pqSetup(); eqMsg(""); drawPlay(); pqPanel();
+    gdCustom = { fam: r.fam, h: r.h, k: r.k, a: r.a }; QZ.pick = true; eqMsg(""); pqPanel();   // the function is in: now the student chooses the mode to work on it in
   }
   // an equation too long for its line gets a smaller font instead of wrapping onto a second line
   function eqShrink() {
