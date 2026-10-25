@@ -249,7 +249,7 @@
   body.wel .actBtn{width:auto;min-width:10.5em}
   .log .msg{align-self:stretch;max-width:none;background:none;padding:0;border-radius:0;font-size:1rem;line-height:1.45}
   .log .msg+.msg{padding-top:.6rem;border-top:1px solid color-mix(in srgb,var(--ink) 15%,transparent)}
-  /* ---- 1.1A quiz ---- */
+  /* ---- 1.1 quiz ---- */
   body.quiz:not(.pq) .pgCtl,body.quiz #undo,body.quiz #show{display:none!important}
   .pgQ{display:none}
   body.pq .pgQ{display:block;flex:0 0 100%;margin:0 0 .3rem .2rem}
@@ -273,6 +273,18 @@
   body.pq #qz:not(:has(button:not([hidden]))){display:none}
   body.pq .pgDemo{margin-bottom:0}
   body.pq .pgCtl.empty{display:none}
+  /* ---- 1.2, Writing Translations: only the equation box and the graph; the steps live in the right panel ---- */
+  body.wf .pgTable,body.wf #pgDial,body.wf #pgDesc,body.wf #pgDescIn{display:none!important}
+  .wfSteps{text-align:center;padding:.2rem 1rem .6rem;font:400 1.05rem/1.5 system-ui,sans-serif;color:var(--ink)}
+  .wfSteps[hidden]{display:none}
+  .wfSteps .wfLn{padding:.35rem .6rem;margin:.3rem 0;border-radius:10px;background:color-mix(in srgb,var(--plus) 9%,var(--bg));font:400 1.15rem/1.4 "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
+  .wfSteps .wfLn i{font-style:italic}
+  .wfSteps .wfAsk{margin:.5rem 0 .2rem;font:600 .98rem system-ui,sans-serif}
+  .wfSteps .wfRow{display:flex;justify-content:center;align-items:center;gap:.4rem;flex-wrap:wrap;font:400 1.15rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
+  .wfSteps .wfIn{width:7rem;font:500 1.1rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:10px;padding:.3em .5em}
+  .wfSteps .wfIn.bad{border-color:#C0301E;animation:shake .3s}
+  .wfSteps .wfBtn{margin:.2rem .3rem .2rem 0}
+  .pgQt .lm{font:400 1.1em "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
 
   body.quiz .pg{color:var(--ink)}
   .pgTable th,.pgTable td{color:#1B2433}
@@ -305,7 +317,7 @@
   .eqn.free .raw{border-bottom:2px dashed var(--plus);cursor:pointer}
   /* ---- Playground: Equation Table Graph Description ---- */
   :root[data-mode="playground"]{--bg:#FFFFFF;--ink:#1B2433;--plus:#8E2465;--plus-hover:#6E1A4E;--no:#C0301E}
-  /* 1.1 Play and 1.1A keep their plum accent; the background and ink still follow the mode */
+  /* 1.1 Play and 1.1 keep their plum accent; the background and ink still follow the mode */
   :root[data-act="pg"]{--plus:#8E2465;--plus-hover:#6E1A4E;--no:#C0301E}
   .pg{flex:1 0 auto;display:flex;align-items:flex-start;justify-content:center;gap:1.2rem;flex-wrap:wrap;padding:1.2rem .4rem;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
   .pg[hidden],.frame[hidden]{display:none}
@@ -522,6 +534,7 @@
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
+    <section class="wfSteps" id="wfSteps" hidden aria-live="polite"></section>
     <section class="qz" id="qz" hidden aria-live="polite"><div class="qzT" id="qzT"></div><div id="qzIn"></div><div class="err" id="qzErr"></div><div class="qzRow"><button class="btn" id="qzGo">Check</button><button class="btn" id="qzNext" hidden>Next</button><button class="link" id="qzAgain" hidden>Another round</button></div></section>
     <div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div><div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^2" aria-label="Insert ^2 (squared)">^2</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
     <div class="composer" id="ask" hidden>
@@ -3579,7 +3592,7 @@
     ["Play Solver", "Playground: Equation Solver", "Playground: Equation Solver"],
     ["Play Graph", "Playground: Equation Table Graph Description", "Playground: Equation Table Graph Description"],
     ["Play Data", "Playground: Data", "Playground: Data"],
-    ["1.1A", "Parent Functions and Transformations", "1.1 Parent Functions and Transformations"],
+    ["1.1", "Parent Functions and Transformations", "1.1 Parent Functions and Transformations"],
     ["1.2", "Transformations of Linear and Absolute Value Functions", "1.2 Transformations of Linear and Absolute Value Functions"],
     ["1.3", "Modeling with Linear Functions", "1.3 Modeling with Linear Functions"],
     ["1.4A", "Solve Linear Systems: Graphing", "1.4 Solve Linear Systems: Graphing"],
@@ -3587,13 +3600,17 @@
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   var BUILT = {
-    "1.1A": { quiz: true, top: 3, key: "algebraProgress:1.1A", perLesson: true, modesFor: function (l) { return l === 2 ? ["demo", "sequence", "solo", "create"] : ["demo", "sequence", "solo"]; }, lessons: ["Memorizing Parents", "Graphing and Describing Translations", "Estimating a Value from a Graph"], short: ["Parents", "Graph & Describe", "Estimate"], modes: ["demo", "sequence", "solo"], levels: [
+    "1.1": { quiz: true, top: 3, key: "algebraProgress:1.1A", perLesson: true, modesFor: function (l) { return l === 2 ? ["demo", "sequence", "solo", "create"] : ["demo", "sequence", "solo"]; }, lessons: ["Memorizing Parents", "Graphing and Describing Translations", "Estimating a Value from a Graph"], short: ["Parents", "Graph & Describe", "Estimate"], modes: ["demo", "sequence", "solo"], levels: [
       [1, "demo", 10, "Demo Mode"], [1, "sequence", 25, "Sequence Mode"], [1, "solo", 40, "Solo Mode"],
       [1, "solo", 70, "Solo Mode, 2nd round", 2], [1, "solo", 100, "Solo Mode, 3rd round", 3],
       [2, "demo", 10, "Demo Mode"], [2, "sequence", 25, "Sequence Mode"], [2, "solo", 40, "Solo Mode"],
       [2, "solo", 70, "Solo Mode, 2nd round", 2], [2, "solo", 100, "Solo Mode, 3rd round", 3],
       [3, "demo", 10, "Demo Mode"], [3, "sequence", 25, "Sequence Mode"], [3, "solo", 40, "Solo Mode"],
       [3, "solo", 70, "Solo Mode, 2nd round", 2], [3, "solo", 100, "Solo Mode, 3rd round", 3]
+    ] },
+    "1.2": { quiz: true, top: 1, key: "algebraProgress:1.2", perLesson: true, modes: ["demo", "sequence", "calculate", "solo", "create"], lessons: ["Writing Translations", "Writing Reflections", "Writing Stretches and Shrinks", "Combining Transformations", "Profit from a Combination"], short: ["Translations", "Reflections", "Stretches", "Combining", "Profit"], levels: [
+      [1, "demo", 10, "Demo Mode"], [1, "sequence", 25, "Sequence Mode"], [1, "calculate", 40, "Calculate Mode"], [1, "solo", 55, "Solo Mode"],
+      [1, "solo", 80, "Solo Mode, 2nd round", 2], [1, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
     "Play Solver": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -3610,7 +3627,7 @@
   };
   var act = "1.4D";
   // each activity also lives at its own address: …/algebranotebook/1-4b/ opens that activity and stays there
-  function isDataAct(id) { var b = BUILT[id || act]; return !!(b && (b.data || (!id && b.quiz && lesson === 3))); }   // (1.1A's third exercise, Estimating a Value from a Graph, has the same centre pane as a Data Activity)   // Data Activities (Play Data, and more to come) are Graphing activities of a special kind
+  function isDataAct(id) { var b = BUILT[id || act]; return !!(b && (b.data || (!id && b.quiz && act === "1.1" && lesson === 3))); }   // (1.1's third exercise, Estimating a Value from a Graph, has the same centre pane as a Data Activity)   // Data Activities (Play Data, and more to come) are Graphing activities of a special kind
   function slugOf(id) { return id.toLowerCase().replace(/\./g, "-").replace(/\s+/g, ""); }
   var fixedAct = null;
   (function () {
@@ -3649,7 +3666,7 @@
     else if (mode === "solo" && !subx && lesson < topLesson()) up = { label: LNAME[lesson + 1], stayText: "Stay in " + MODES[mode] + " mode", go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
   }
   // Demo progress is earned only by a demo that plays through to its end: a demo that was ended, left for another mode, or finished by hand
-  // while paused earns nothing (1.4: the demo is still running when the problem is solved; 1.1A: the whole demo script has played out)
+  // while paused earns nothing (1.4: the demo is still running when the problem is solved; 1.1: the whole demo script has played out)
   function demoCredit() { return quiz() ? !!PG.demoFin : !!(DM4.run && !DM4.paused) || locked; }   // a finished demo, or the student took over a paused demo and solved it correctly alone
   function tally(quiet) {
     var earn = mode !== "demo" || demoCredit();
@@ -3715,7 +3732,7 @@
   function dmHead() {
     var h = $("stHead"); if (!h) return;
     var b = document.body, pgd = b.classList.contains("play"), dem = document.documentElement.dataset.mode === "demo";
-    // 1.1 Play and 1.1A keep the band so the page does not jump between modes or when the demo's first phrase appears when the demo's first phrase appears; elsewhere it shows when there is a title, or a phrase in Demo
+    // 1.1 Play and 1.1 keep the band so the page does not jump between modes or when the demo's first phrase appears when the demo's first phrase appears; elsewhere it shows when there is a title, or a phrase in Demo
     h.hidden = welcome || !(pgd || $("stT").textContent || (dem && $("stCap").textContent));
   }
   // ONE place decides the colours: the page's theme follows the current mode in every activity (new ones included).
@@ -3929,7 +3946,7 @@
     return "Substitute " + s[1];
   }
 
-  $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); this.blur(); });
+  $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; wfCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); this.blur(); });
   $("crAdd").addEventListener("click", crAdd);
   $("exSoloGo").addEventListener("click", exCheckSolo); $("exSoloIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); });
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
@@ -4303,7 +4320,7 @@
     }
   }
 
-  // ---- 1.1A Memorize Parents: the activity asks; the student answers in the panel or on the graph ----
+  // ---- 1.1 Memorize Parents: the activity asks; the student answers in the panel or on the graph ----
   var QFAM = ["constant", "linear", "absolute value", "quadratic"];
   var QEQ = ["1", "x", "|x|", "x^2"];
   var QSHAPE = ["line", "line", "V", "U"];
@@ -4769,7 +4786,7 @@
     else if (e.key === "ArrowUp") { e.preventDefault(); var n2 = c[Math.max(i - 1, 0)]; n2.focus(); n2.select(); }
     else if (e.key === "Enter" && !TB.mode()) qzCheck();   // Enter in the last cell checks the table
   });
-  // ---- 1.1A uses the 1.1 Play center: the same questions, answered with the equation, the table or the graph (in any order) ----
+  // ---- 1.1 uses the 1.1 Play center: the same questions, answered with the equation, the table or the graph (in any order) ----
   function pq() { return document.body.classList.contains("pq"); }
   // the cue under the question lists what is left to answer, each ending in "?"; a finished part gets a green check instead
   function pqCue() {
@@ -4777,6 +4794,8 @@
     if (!pq() || !QZ.order) return;
     if (est()) { var oe = pqParts(), alle = QZ.step >= 4; $("pgQcue").innerHTML = (QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + [["Table", oe.table], ["Regression", oe.graph], ["Estimate", oe.desc]].map(function (a) { return a[0] + (alle || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; "); return; }
     if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = QZ.pick ? "" : "Function?"; return; }
+    if (wfCr()) { $("pgQcue").innerHTML = QZ.pick ? "" : QZ.cs === "move" ? "Move?" : "Function?"; return; }
+    if (wf()) { var ow = pqParts(), aw = QZ.step >= 4, ck = function (b) { return aw || b ? " <span class=\"cueOk\">\u2713</span>" : "?"; }; $("pgQcue").innerHTML = (QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + " &nbsp; Graph" + ck(ow.graph); return; }
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
     var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
     $("pgQcue").innerHTML = (gd() && mode !== "create" && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
@@ -4824,9 +4843,9 @@
   $("pgDescTx").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); gdDescSubmit(); } });
   $("pgDescTx").addEventListener("input", function () { if (this.value.trim() && gdDescRight(gdParse(this.value))) gdDescSubmit(); });
   function pqMsg(t, cls) { var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = t || ""; }
-  // ---- 1.1A, third exercise: Estimating a Value from a Graph.  The data come from a table in the question; the student enters them in the Data table, graphs the model
+  // ---- 1.1, third exercise: Estimating a Value from a Graph.  The data come from a table in the question; the student enters them in the Data table, graphs the model
   // (a U for a quadratic) through the points, then estimates a height from the graph.  The centre pane is the Play Data pane. ----
-  function est() { return pq() && lesson === 3; }
+  function est() { return pq() && act === "1.1" && lesson === 3; }
   // each scenario: [what, what it does, the quantity, its unit]; none of them is the textbook picture
   // each scenario: [the one-sentence setup, whose height it is, its picture]; none of them is the textbook picture
   var ESC = [
@@ -4960,10 +4979,11 @@ var ESPIC = {
       if (mode === "create" && !QZ.cr) { PG.show.eq = false; PG.eqTxt = "g(x)="; }
     }   // Graph & Describe: g(x) is given; the parent graph, g's graph, the table and the description are the answer
     if (est()) { PG.fam = 1; PG.show = { eq: false, table: false, graph: false, desc: false, parent: false }; PG.eOK = false; PG.eqTxt = ""; $("estIn").hidden = true; }
+    if (wf()) wfPG();
     TB.targets = []; QZ.step = 0; QZ.hn = 0; pqMsg("");
   }
-  // ---- 1.1A, second exercise: Graph & Describe.  g(x) is a translation of the parent; the student graphs both, fills in the table and describes the move ----
-  function gd() { return pq() && lesson === 2; }
+  // ---- 1.1, second exercise: Graph & Describe.  g(x) is a translation of the parent; the student graphs both, fills in the table and describes the move ----
+  function gd() { return pq() && act === "1.1" && lesson === 2; }
   var gdCustom = null;   // Graph & Describe: the function typed in Create, carried into the other modes
   function gdTyped() { return gd() && (soloish() || A() !== 1); }   // the description is typed (not clicked) when practising alone, or when it needs a stretch or a reflection
   function soloish() { return mode === "solo" || mode === "create"; }
@@ -5006,15 +5026,20 @@ var ESPIC = {
     if (!gd() && mode === "demo") o.splice(o.indexOf(3), 1), o.unshift(3);   // Memorizing Parents: the demo starts with the quadratic family
     document.body.classList.toggle("dataAct", isDataAct()); document.body.classList.toggle("est", est());
     if (est()) o = mode === "demo" ? [0] : [0, 1, 2];   // Estimating a Value from a Graph: a round is three problems, the first one the textbook's
+    document.body.classList.toggle("wf", wf());
+    var cuw = wf() && mode !== "create" && wfCustom;
+    if (wf()) o = mode === "demo" || mode === "create" || cuw ? [0] : [0, 1, 2];   // Writing Translations: a round is three problems
     var cu = gd() && mode !== "create" && gdCustom;
     if (gd() && mode === "create") { o = [0]; gdCustom = null; }   // Create: the student types the function, so there is one problem and no family yet
     else if (cu) o = [cu.fam];   // the student's own function runs in whichever mode they pick
     QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : o.map(gdMake), est: est() ? estSet(o.length) : null, cr: false, custom: !!cu }; updProg();
+    if (wf()) { QZ.custom = !!cuw; QZ.tr = []; QZ.wfp = cuw ? [wfCustom] : mode === "create" ? [null] : wfSet(o.length); QZ.cs = "f"; QZ.wd = {}; QZ.wl = []; if (mode === "create") wfCustom = null; }
     if (mode !== "demo") explainOn = false;
     logEl.innerHTML = "";
     $("hint").hidden = soloish(); $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn);
     pqSetup(); drawPlay(); pqPanel();
     if (gd() && mode === "create") setTimeout(function () { var f = $("pgEq").querySelector(".eqIn"); if (f && pq()) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } }, 50);
+    if (wf()) setTimeout(wfFocus, 60);
     if (mode === "demo") logQzExplain();
   }
   function pqNext() {
@@ -5030,18 +5055,24 @@ var ESPIC = {
   }
   function pqPanel() {
     var fam = qFam(), done = QZ.step >= 4, demo = mode === "demo";
-    if (!(gd() && mode === "create" && QZ.pick)) $("modePick").hidden = true;
+    if (!((gd() || wf()) && mode === "create" && QZ.pick)) $("modePick").hidden = true;
     document.body.classList.toggle("crPre", gd() && mode === "create" && !QZ.cr);
-    if (gd() && mode === "create" && !QZ.cr && QZ.pick) { $("pgQt").textContent = "Your function is in."; showPick($("pgQ"), "How would you like to work on it?"); }
+    if (wfCr()) {
+      if (QZ.pick) { $("pgQt").textContent = "Your move is in."; showPick($("pgQ"), "How would you like to work on it?"); }
+      else if (QZ.cs === "move") { $("modePick").hidden = true; $("pgQt").innerHTML = "Now move it. Type how far, like right 3 and down 2."; }
+      else { $("modePick").hidden = true; $("pgQt").innerHTML = "Type a line or an absolute value, like <span class=\"lm\"><i>f</i>(<i>x</i>) = 2<i>x</i> + 1</span>."; }
+    }
+    else if (wf()) $("pgQt").innerHTML = wfQ();
+    else if (gd() && mode === "create" && !QZ.cr && QZ.pick) { $("pgQt").textContent = "Your function is in."; showPick($("pgQ"), "How would you like to work on it?"); }
     else if (gd() && mode === "create" && !QZ.cr) { $("modePick").hidden = true; $("pgQt").innerHTML = "Type a function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2|<i>x</i> \u2212 3| + 1</span>."; }
     else if (est()) $("pgQt").innerHTML = estHTML();
     else if (gd()) $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation.";
     else $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
     pqCue();
     var go = $("qzGo"), nx = $("qzNext");
-    go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr); go.textContent = "Check";
+    go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || (wf() && mode === "sequence"); go.textContent = "Check";
     // the one Next (see nxShow): in Demo the demo button carries it; otherwise it sits here in the side panel
-    nx.hidden = !done || demo; nx.disabled = false; nx.textContent = gd() && mode === "create" ? "Create another" : up ? up.label : "Next";
+    nx.hidden = !done || demo; nx.disabled = false; nx.textContent = (gd() || wf()) && mode === "create" ? "Create another" : up ? up.label : "Next";
     $("qzAgain").hidden = demo || !(done && (QZ.custom || (up && up.stayText))); $("qzAgain").textContent = QZ.custom ? "Try again" : up && up.stayText || "";
     $("pgDemo").style.display = demo ? "" : "none"; $("pgCtl").classList.toggle("empty", !demo && !est());
     if (demo && done) {
@@ -5051,13 +5082,14 @@ var ESPIC = {
         cu ? "Watch again" : u ? u.stayText || "" : "", function () { $("qzAgain").click(); });
     } else if (!pgRun) dmUI("idle");   // a fresh demo waits, its button highlighted
     $("hint").hidden = done || soloish();   // a right answer needs no hint
+    wfSteps();
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
-  function pqParts() { if (est()) return { eq: true, table: estTableOK(), graph: estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
+  function pqParts() { if (wf()) return { eq: !!PG.show.eq, table: true, graph: !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: estTableOK(), graph: estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
   var pqBusy = false;
   function pqEval() {
-    if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order || (gd() && mode === "create" && !QZ.cr)) return;
+    if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order || (gd() && mode === "create" && !QZ.cr) || wfCr()) return;
     pqBusy = true;
     try {
       gdWatch();
@@ -5066,9 +5098,9 @@ var ESPIC = {
       if (!est() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
         QZ.step = 4; var last = QZ.pi === QZ.order.length - 1;
-        pqMsg(est() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
+        pqMsg(est() || wf() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
         if (QZ.custom) {   // the student's own function: no Progress, and Next offers the next mode with the same function
-          pqMsg("Well done!", "ok"); var cm = ["demo", "sequence", "solo"], cn = cm[cm.indexOf(mode) + 1];
+          pqMsg("Well done!", "ok"); var cm = wf() ? ["demo", "sequence", "calculate", "solo"] : ["demo", "sequence", "solo"], cn = cm[cm.indexOf(mode) + 1];
           up = cn ? { label: MODES[cn] + " mode", go: function () { setMode(cn); } } : { label: "Create another", go: function () { setMode("create"); } };
         }
         else if (mode === "create") { pqMsg("Well done!", "ok"); up = null; }   // Create never counts toward Progress
@@ -5093,12 +5125,15 @@ var ESPIC = {
     var t = pqTyped(); if ((PG.show.eq && !PG.editEq) || !t) return;
     if (!pq()) { eqAdopt(t); return; }   // 1.1 Play: the typed function becomes the function
     if (gd() && mode === "create" && !QZ.cr) { gdCreateAdopt(t); return; }
-    if (pq() && !eqTypedOK(t)) { pqEqWrong(t); return; }
+    if (wfCr()) { wfCreateIn(t); return; }
+    if (pq() && !eqTypedOK(t)) { if (wf()) wfWrong(t); else pqEqWrong(t); return; }
     var tg = document.querySelector(".tog[data-part=eq]"); if (tg) { pqMsg(""); tg.click(); }
+    if (wf()) { PG.wfShift = null; var tg2 = document.querySelector(".tog[data-part=graph]"); if (tg2 && !PG.show.graph) tg2.click(); }
   }
   function pqCheck() {
     if (QZ.step >= 4) return; pqEval(); if (QZ.step >= 4) return;
     var ok = pqParts(), need = [], fam = qFam(), t = pqTyped();
+    if (wf()) { if (t) { eqEnter(); return; } QZ.wrong++; pqMsg(mode === "solo" ? "Not quite. Try again." : "Type g(x) in the box."); return; }
     if (est()) {
       if (!ok.table) need.push("the table (" + estRows().length + " of 5 rows)");
       if (!ok.graph) need.push("the regression for the right family");
@@ -5121,6 +5156,7 @@ var ESPIC = {
   function pqHint() {
     var fam = qFam(), n = QZ.hn++, ok = pqParts();
     if (QZ.locked || QZ.step >= 4) return "Press the button below to keep going.";
+    if (wf()) return wfHint(n);
     if (est()) return estHint(n, ok);
     if (gd()) {
       var tt = QZ.tr[QZ.pi], tool = QSHAPE[fam] === "line" ? "/" : QSHAPE[fam];
@@ -5136,6 +5172,7 @@ var ESPIC = {
   }
   function pqExplain() {
     var fam = qFam();
+    if (wf()) return wfExplain();
     if (est()) { var ee = estProb(); return "Enter the data in the table. The points: " + ee.fh + ", so " + (ee.fam === 2 ? "an " : "a ") + ee.fn + " fits: press Change Family to choose it and Regression to graph it. Then " + ee.ex + "."; }
     if (gd()) return "A translation slides the parent without changing its shape. Here g(x) = " + plain(rhsHTML()) + " is the " + QFAM[fam] + " parent moved " + gdWords(QZ.tr[QZ.pi]) + ". Graph the parent (it turns dotted), then graph g(x); the table and the description tell the same story.";
     return "Every family of functions has a parent: its simplest equation. The " + QFAM[fam] + " parent is f(x) = " + plain(qEqHTML(fam)) + ". You can answer with the equation, the table or the graph, in any order: put each x into the equation to fill the table, and the points make a " + (fam < 2 ? "straight line" : fam === 2 ? "V" : "U") + " graph.";
@@ -5149,7 +5186,7 @@ var ESPIC = {
   function leaveQuiz() {
     if (!document.body.classList.contains("quiz")) return;
     $("modePick").hidden = true; stopDemo(); busy = false; if (pgRun) pgStop();
-    document.body.classList.remove("quiz", "play", "pq", "crPre", "dataAct", "est"); $("estIn").hidden = true; $("pgDescIn").hidden = true; $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
+    document.body.classList.remove("quiz", "play", "pq", "crPre", "dataAct", "est", "wf"); $("estIn").hidden = true; $("pgDescIn").hidden = true; $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
     $("pgTable").style.display = ""; $("pgGraph").style.display = ""; $("pgFam").hidden = false;
   }
 
@@ -5209,7 +5246,7 @@ var ESPIC = {
       if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
     if (id === act) return;
-    var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = id; gdCustom = null; if (BUILT[act].quiz || BUILT[act].solver) lesson = 1; if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
+    var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = id; gdCustom = null; wfCustom = null; if (BUILT[act].quiz || BUILT[act].solver) lesson = 1; if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     leaveQuiz();
@@ -5228,7 +5265,7 @@ var ESPIC = {
   document.addEventListener("pointerdown", function (e) { if (!$("actList").hidden && !e.target.closest(".act")) closeActs(); });
   window.addEventListener("resize", function () { if (!$("actList").hidden) placeActs(); });
 
-  // ---- build a table: 1.1A Sequence mode and the table in 1.1 Play ----
+  // ---- build a table: 1.1 Sequence mode and the table in 1.1 Play ----
   // value of the function at v, and the order-of-operations steps that get there (the last entry is the y-value)
   function gval(f, a, h, k, v) { if (f === "constant") return 1 + k; var d = v - h, m = f === "linear" ? d : f === "absolute value" ? Math.abs(d) : d * d; return Math.round((a * m + k) * 10000) / 10000; }
   function sstep(f, a, h, k, v) {
@@ -5616,7 +5653,7 @@ var ESPIC = {
     return body;
   }
   // f(x) for the parent itself, g(x) once it has been transformed
-  function fname() { return A() === 1 && H() === 0 && K() === 0 ? "f" : "g"; }
+  function fname() { if (wf()) return wfCr() && QZ.cs === "move" ? "f" : "g"; return A() === 1 && H() === 0 && K() === 0 ? "f" : "g"; }
   // ---- Data Activities: the equation and the graph are a regression of the data, by family (line, absolute value, quadratic, constant) ----
   var DFIT = { key: "", ok: false, c: null };
   function dataFit() {
@@ -5895,6 +5932,7 @@ var ESPIC = {
     TB.targets = TB.targets.filter(function (t) { return !PG.pts.some(function (z) { return Math.abs(z[0] - t[0]) < 1e-9 && Math.abs(z[1] - t[1]) < 1e-9; }); });
     { // the grid and both axes are always there; Graph only reveals the curve
       gridLayer(S);
+      if (wf() && QZ.wfp && wfCur()) wfDraw(S);
       if (PG.show.parent) {
         curvePts(pf).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#222", "stroke-width": ".07", "stroke-dasharray": ".3 .25" })); });
         for (var u = -2; u <= 2; u++) S.appendChild(svgEl("circle", { cx: u, cy: -pf(u), r: .13, fill: "#222", "pointer-events": "none" }));
@@ -5915,7 +5953,7 @@ var ESPIC = {
     var vg = svgEl("g", { "data-pt": "v", style: "cursor:grab" });
     vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .62, fill: "#2E9E4F", "fill-opacity": ".3" }));
     vg.appendChild(svgEl("circle", { cx: vx, cy: -vy, r: .2, fill: "#2E9E4F" }));
-    if (!pq() && !isDataAct()) S.appendChild(vg);   // in 1.1A the parent never moves, so its two handles stay away
+    if (!pq() && !isDataAct()) S.appendChild(vg);   // in 1.1 the parent never moves, so its two handles stay away
     if (stretches() && !pq() && !isDataAct()) {
       var ag = svgEl("g", { "data-pt": "a", style: "cursor:grab" });
       ag.appendChild(svgEl("circle", { cx: H() + 1, cy: -(K() + PG.a), r: .62, fill: "#6042A6", "fill-opacity": ".3" }));
@@ -5951,7 +5989,13 @@ var ESPIC = {
   document.addEventListener("input", function (e) {
     var el = e.target; if (!el.classList || !el.classList.contains("eqIn")) return;
     PG.eqTxt = el.value; $("pgEqMsg").textContent = ""; [].forEach.call(document.querySelectorAll(".eqIn"), function (o) { if (o !== el) o.value = el.value; }); eqShrink();
+    eqAuto();
   });
+  // a right answer typed into the box is accepted at once, without Return (when no answer is known, Return is still needed)
+  function eqAuto() {
+    if (!pq() || !QZ || !QZ.order || QZ.step >= 4 || PG.show.eq || pqBusy || wfCr() || (gd() && mode === "create" && !QZ.cr)) return;
+    var t = pqTyped(); if (t && eqTypedOK(t)) eqEnter();
+  }
   document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("eqIn")) { e.target.blur(); eqEnter(); } });
   // is a typed equation the same function as the real one? (tested at several x-values, so any equivalent form counts)
   // while an equation is being typed, three buttons put in the x, ^2 and | characters for anyone who cannot find them on the keyboard
@@ -6053,6 +6097,182 @@ var ESPIC = {
     if (r.fam === 0 ? r.k === 0 : r.a === 1 && !r.h && !r.k) { eqMsg("That is the parent function itself. Try one with a transformation."); eqShake(); return; }
     gdCustom = { fam: r.fam, h: r.h, k: r.k, a: r.a }; QZ.pick = true; eqMsg(""); pqPanel();   // the function is in: now the student chooses the mode to work on it in
   }
+  // ---- 1.2, first exercise: Writing Translations.  f (a line or an absolute value) is given, g is f moved right or left and up or down, and the student types g(x) ----
+  function wf() { return pq() && act === "1.2" && lesson === 1; }
+  function wfCr() { return wf() && mode === "create"; }
+  var wfCustom = null;   // Create: the f and the move the student typed, carried into the other modes
+  function wfCur() { return QZ && QZ.wfp ? QZ.wfp[QZ.pi] : null; }
+  function wfNz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
+  // g from f: a line slid sideways is the same line slid up or down, so its sideways move folds into the y-intercept
+  function wfG(p) { p.g = p.fam === 2 ? { fam: 2, a: p.fa, h: p.fh + p.dh, k: p.fk + p.dk } : { fam: 1, a: p.fa, h: 0, k: p.fk + p.dk - p.fa * p.dh }; return p; }
+  function wfMake(both) {
+    for (var t = 0; t < 400; t++) {
+      var ab = rnd(2) === 1, m = both ? 0 : rnd(4);
+      var p = ab ? { fam: 2, fa: [1, 1, 2, -1, 3, -2][rnd(6)], fh: rnd(5) - 2, fk: rnd(7) - 3 } : { fam: 1, fa: [1, 2, 3, -1, -2, -3][rnd(6)], fh: 0, fk: rnd(9) - 4 };
+      p.dh = m === 3 ? 0 : wfNz(5); p.dk = m === 2 ? 0 : wfNz(5); wfG(p);
+      if (p.fam === 1 && p.g.k === p.fk) continue;
+      if (Math.abs(p.g.k) > 8 || Math.abs(p.g.h) > 7) continue;
+      return p;
+    }
+  }
+  // a round: one line, one absolute value and one of either, in a shuffled order
+  function wfSet(n) {
+    if (n === 1) return [wfMake(true)];
+    var out = [], key = function (p) { return JSON.stringify([p.fam, p.fa, p.fh, p.fk, p.dh, p.dk]); }, want = [1, 2, 0];
+    while (out.length < n) { var p = wfMake(false); if ((want[out.length] === 0 || p.fam === want[out.length]) && !out.some(function (o) { return key(o) === key(p); })) out.push(p); }
+    for (var i = out.length - 1; i > 0; i--) { var j = rnd(i + 1), t = out[i]; out[i] = out[j]; out[j] = t; }
+    return out;
+  }
+  var wfX = "<i>x</i>";
+  function wfSg(v) { return " " + (v < 0 ? "−" : "+") + " " + nf(Math.abs(v)); }
+  function wfCo(a) { return a === 1 ? "" : a === -1 ? "−" : nf(a); }
+  // the rule of a line (fam 1: a x + b) or an absolute value (fam 2: a|x - h| + b), with x moved dh to the right and dk added at the end
+  function wfRule(fam, a, h, b, dh, dk) {
+    var inX = dh ? wfX + wfSg(-dh) : wfX, body;
+    if (fam === 1) body = wfCo(a) + (dh ? "(" + inX + ")" : wfX);
+    else body = wfCo(a) + "|" + (h ? (dh ? "(" + inX + ")" : wfX) + wfSg(-h) : inX) + "|";
+    if (b) body += wfSg(b);
+    if (dk) body += wfSg(dk);
+    return body;
+  }
+  function wfRuleF(p, dh, dk) { return wfRule(p.fam, p.fa, p.fh, p.fk, dh || 0, dk || 0); }
+  function wfRuleG(p) { return wfRule(p.fam, p.g.a, p.g.h, p.g.k, 0, 0); }
+  function wfPlain(h) { return h.replace(/<[^>]+>/g, "").replace(/−/g, "-"); }
+  function wfMoves(p) { var w = []; if (p.dh) w.push((p.dh > 0 ? "right " : "left ") + Math.abs(p.dh)); if (p.dk) w.push((p.dk > 0 ? "up " : "down ") + Math.abs(p.dk)); return w.join(" and "); }
+  function wfQ() { var p = wfCur(); return p ? "<i>g</i> is <span class=\"lm\"><i>f</i>(<i>x</i>) = " + wfRuleF(p) + "</span> moved " + wfMoves(p) + ". Type <span class=\"lm\"><i>g</i>(<i>x</i>)</span>." : ""; }
+  // the numbers the Playground uses: g itself (a line slid sideways has no sideways part), or a neutral line while Create waits for f
+  function wfPG() {
+    var p = wfCur(); QZ.wd = {}; QZ.wl = []; PG.wfShift = null; PG.show = { eq: false, table: false, graph: false, desc: false, parent: false }; PG.eqTxt = "g(x)=";
+    if (p) { PG.fam = p.g.fam; PG.a = p.g.a; PG.h = p.g.h; PG.k = p.g.k; PG.pa = [PG.h + 1, PG.k + PG.a]; }
+    else { PG.fam = 1; PG.a = 1; PG.h = 0; PG.k = 0; PG.eqTxt = "f(x)="; QZ.cs = "f"; }
+    wfSteps();
+  }
+  // f in blue, the half-way curve (after the sideways move) dashed, and a label
+  function wfDraw(S) {
+    var p = wfCur(), F = function (x) { return p.fa * (p.fam === 2 ? Math.abs(x - p.fh) : x) + p.fk; }, sh = PG.wfShift;
+    var curve = function (fn, vx) { var lo = ZM.ox - 1.05 * ZM.cur, hi = ZM.ox + 1.05 * ZM.cur, xs = p.fam === 2 && vx > lo && vx < hi ? [lo, vx, hi] : [lo, hi]; return xs.map(function (x) { return x + "," + (-fn(x)); }).join(" "); };
+    if (sh && !PG.show.graph) S.appendChild(svgEl("polyline", { points: curve(function (x) { return F(x - sh.dh) + sh.dk; }, p.fh + sh.dh), fill: "none", stroke: "#7C8494", "stroke-width": ".09", "stroke-dasharray": ".35 .25" }));
+    S.appendChild(svgEl("polyline", { points: curve(F, p.fh), fill: "none", stroke: "#2D70B3", "stroke-width": ".11", "stroke-linejoin": "round" }));
+    for (var q = 0; q < 4; q++) {
+      var lx = [6.5, -6.5, 3.5, -3.5][q], ly = F(lx);
+      if (Math.abs(ly) <= 8.5) { var tx = svgEl("text", { x: lx + .3, y: -ly - .5, fill: "#2D70B3", "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tx.textContent = "f"; S.appendChild(tx); break; }
+    }
+    if (PG.show.graph && p.g) {   // g's label, on the red curve
+      var G = function (x) { return p.g.a * (p.g.fam === 2 ? Math.abs(x - p.g.h) : x) + p.g.k; };
+      for (var q2 = 0; q2 < 4; q2++) { var gx = [-6.5, 6.5, -3.5, 3.5][q2], gy = G(gx); if (Math.abs(gy) <= 8.5 && Math.abs(gy - F(gx)) > 1.6) { var tg = svgEl("text", { x: gx + .3, y: -gy - .5, fill: "#C74440", "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tg.textContent = "g"; S.appendChild(tg); break; } }
+    }
+  }
+  function wfNext() { var p = wfCur(), d = QZ.wd; return p.dh && !d.h ? "h" : p.dk && !d.k ? "k" : "s"; }
+  // a step: the sideways move, the up-or-down move, or the simplifying; each adds a line to the right panel
+  function wfDo(kind) {
+    var p = wfCur(); if (!p || QZ.step >= 4 || wfNext() !== kind) return;
+    var G = "<i>g</i>(<i>x</i>) = ", F = "<i>f</i>(<i>x</i>" + (p.dh ? wfSg(-p.dh) : "") + ") = ";
+    if (kind === "h") { QZ.wd.h = true; PG.wfShift = { dh: p.dh, dk: 0 }; QZ.wl.push(F + wfRuleF(p, p.dh, 0)); }
+    else if (kind === "k") { QZ.wd.k = true; PG.wfShift = { dh: p.dh, dk: p.dk }; QZ.wl.push(G + wfRuleF(p, p.dh, p.dk)); }
+    else { QZ.wl.push(G + wfRuleG(p)); wfReveal(); return; }
+    pqMsg("");
+    if (wfNext() === "s" && mode === "sequence" && QZ.wl[QZ.wl.length - 1] === G + wfRuleG(p)) { wfReveal(); return; }   // nothing is left to simplify
+    drawPlay(); wfSteps();
+  }
+  function wfReveal() {
+    PG.wfShift = null; PG.eqTxt = "";
+    var te = document.querySelector(".tog[data-part=eq]"), tg = document.querySelector(".tog[data-part=graph]");
+    if (!PG.show.eq && te) te.click(); if (!PG.show.graph && tg) tg.click();
+    wfSteps();
+  }
+  // the right panel: the lines so far, and then what to do next (buttons in Demo and Sequence, a typed prompt in Calculate)
+  function wfSteps() {
+    var el = $("wfSteps"); if (!el) return;
+    if (!wf() || !QZ || !QZ.order) { el.hidden = true; el.innerHTML = ""; return; }
+    var h = "", p = wfCur();
+    if (wfCr()) {
+      if (QZ.cs === "move" && !QZ.pick) h = "<div class=\"wfRow\"><input class=\"wfIn wfMv\" style=\"width:13rem\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"right 3 and down 2\" aria-label=\"The move\"><button class=\"btn\" data-wf=\"mv\">Done</button></div>";
+      var keep = el.querySelector(".wfMv"), val = keep ? keep.value : "";
+      el.innerHTML = h; el.hidden = !h; var nm = el.querySelector(".wfMv"); if (nm) nm.value = val;
+      return;
+    }
+    if (mode === "solo" || !p || (mode === "demo" && !pgRun && !QZ.wl.length && QZ.step < 4)) { el.hidden = true; el.innerHTML = ""; return; }
+    var G = "<i>g</i>(<i>x</i>)";
+    QZ.wl.forEach(function (ln) { h += "<div class=\"wfLn\">" + ln + "</div>"; });
+    if (QZ.step < 4) {
+      var nx = wfNext(), dir = function (v, a, b) { return v > 0 ? a : b; };
+      if (mode === "calculate") {
+        if (nx === "h") h += "<div class=\"wfAsk\">" + dir(p.dh, "Right ", "Left ") + Math.abs(p.dh) + ": what replaces <i>x</i>?</div><div class=\"wfRow\"><i>f</i>(<input class=\"wfIn\" data-k=\"h\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"What replaces x\">)</div>";
+        else if (nx === "k") h += "<div class=\"wfAsk\">" + dir(p.dk, "Up ", "Down ") + Math.abs(p.dk) + ": what do you add?</div><div class=\"wfRow\">" + G + " = <i>f</i>(<i>x</i>" + (p.dh ? wfSg(-p.dh) : "") + ") + <input class=\"wfIn\" data-k=\"k\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"What is added\"></div>";
+        else h += "<div class=\"wfAsk\">Now type " + G + " in the box.</div>";
+      } else {
+        h += "<div class=\"wfRow\"><button class=\"btn wfBtn\" data-wf=\"" + nx + "\">" + (nx === "h" ? "Move " + dir(p.dh, "right ", "left ") + Math.abs(p.dh) : nx === "k" ? "Move " + dir(p.dk, "up ", "down ") + Math.abs(p.dk) : "Simplify") + "</button></div>";
+      }
+    }
+    var was = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains("wfIn");
+    el.innerHTML = h; el.hidden = !h;
+    if (was) { var nf2 = el.querySelector(".wfIn"); if (nf2) nf2.focus(); }
+  }
+  $("wfSteps").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-wf]"); if (!b) return;
+    if (e.isTrusted) pgUser();
+    if (b.dataset.wf === "mv") wfMoveGo(); else wfDo(b.dataset.wf);
+  });
+  $("wfSteps").addEventListener("input", function (e) { var el = e.target; if (el.classList.contains("wfIn") && el.dataset.k) wfCheckIn(el, false); });
+  $("wfSteps").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return; var el = e.target; if (!el.classList.contains("wfIn")) return;
+    e.preventDefault(); if (el.classList.contains("wfMv")) wfMoveGo(); else wfCheckIn(el, true);
+  });
+  // Calculate: a typed step is taken as soon as it is right
+  function wfCheckIn(el, enter) {
+    var p = wfCur(), kd = el.dataset.k, f = eqFn(el.value);
+    var want = kd === "h" ? function (x) { return x - p.dh; } : function () { return p.dk; };
+    var test = function (w) { if (!f) return false; for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e2) { return false; } if (!(Math.abs(v - w(x)) < 1e-9)) return false; } return true; };
+    if (test(want)) { wfDo(kd); wfFocus(); return; }
+    if (!enter) return;
+    QZ.wrong++; el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad");
+    pqMsg(kd === "h" && test(function (x) { return x + p.dh; }) ? (p.dh > 0 ? "Moving right means subtracting: use x − " + p.dh + "." : "Moving left means adding: use x + " + Math.abs(p.dh) + ".") : kd === "k" && test(function () { return -p.dk; }) ? "Check the direction: " + (p.dk > 0 ? "up means add." : "down means subtract.") : "Not quite. Try again.");
+  }
+  function wfFocus() {
+    if (!wf() || mode === "demo") return;
+    var wi = $("wfSteps").querySelector(".wfIn");
+    if (wi) { wi.focus(); return; }
+    var f = $("pgEq").querySelector(".eqIn"); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
+  }
+  // the wrong answer: if it is the move in the wrong direction, say so
+  function wfWrong(t) {
+    var p = wfCur(), f = eqFn(t), msg = "Not quite. Try again."; QZ.wrong++;
+    if (mode !== "solo" && f) {
+      var same = function (fn) { for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e) { return false; } if (!(Math.abs(v - fn(x)) < 1e-6)) return false; } return true; };
+      var F = function (x) { return p.fa * (p.fam === 2 ? Math.abs(x - p.fh) : x) + p.fk; };
+      if (p.dh && same(function (x) { return F(x + p.dh) + p.dk; })) msg = (p.dh > 0 ? "Moving right means subtracting inside: " : "Moving left means adding inside: ") + "replace x with x " + (p.dh > 0 ? "− " : "+ ") + Math.abs(p.dh) + ".";
+      else if (p.dk && same(function (x) { return F(x - p.dh) - p.dk; })) msg = "Check the direction: " + (p.dk > 0 ? "up means add " : "down means subtract ") + Math.abs(p.dk) + ".";
+      else if (same(F)) msg = "That is still f(x). Move it " + wfMoves(p) + ".";
+    }
+    pqMsg(msg); eqShake();
+  }
+  function wfHint(n) {
+    var p = wfCur();
+    if (n === 0) return "Right or left changes the input: right 3 means replace x with x − 3, and left 3 means x + 3. Up or down is added at the end.";
+    if (n === 1) return "Start with f(x) = " + wfPlain(wfRuleF(p)) + ". " + (p.dh ? "For " + wfMoves({ dh: p.dh, dk: 0 }) + ", replace x with x " + (p.dh > 0 ? "− " : "+ ") + Math.abs(p.dh) + ". " : "") + (p.dk ? "For " + wfMoves({ dh: 0, dk: p.dk }) + ", " + (p.dk > 0 ? "add " : "subtract ") + Math.abs(p.dk) + " at the end." : "");
+    return "g(x) = " + wfPlain(wfRuleF(p, p.dh, p.dk)) + ". You can simplify it.";
+  }
+  function wfExplain() {
+    var p = wfCur(); return "To move a graph right or left, change the input: right 3 means f(x − 3). To move it up or down, change the output: down 2 means f(x) − 2. Here f(x) = " + wfPlain(wfRuleF(p)) + " moves " + wfMoves(p) + ", so g(x) = " + wfPlain(wfRuleF(p, p.dh, p.dk)) + " = " + wfPlain(wfRuleG(p)) + ".";
+  }
+  // Create: the student types f, then the move, and then picks the mode to practise it in
+  function wfCreateIn(t) {
+    var r = eqFit(t);
+    if (r.err || r.fam === 0 || r.fam === 3 || (r.fam === 1 && !r.a)) { pqMsg("Type a line like 2x + 1 or an absolute value like |x − 2| + 1."); eqShake(); return; }
+    QZ.wfp = [wfG({ fam: r.fam, fa: r.a, fh: r.fam === 2 ? r.h : 0, fk: r.k, dh: 0, dk: 0 })]; QZ.cs = "move"; QZ.pi = 0;
+    PG.fam = r.fam; PG.a = r.a; PG.h = r.fam === 2 ? r.h : 0; PG.k = r.k; PG.show.eq = true; PG.eqTxt = ""; pqMsg("");
+    drawPlay(); pqPanel(); setTimeout(function () { var m = $("wfSteps").querySelector(".wfMv"); if (m) m.focus(); }, 30);
+  }
+  function wfMoveGo() {
+    var inp = $("wfSteps").querySelector(".wfMv"), p = wfCur(); if (!inp || !p) return;
+    var m = gdParse(inp.value);
+    if (!m.n || (!m.h && !m.k)) { pqMsg("Type a move, like right 3 and down 2."); return; }
+    if (Math.abs(m.h) > 8 || Math.abs(m.k) > 8) { pqMsg("Keep each move to 8 or less."); return; }
+    var q = { fam: p.fam, fa: p.fa, fh: p.fh, fk: p.fk, dh: m.h, dk: m.k }; wfG(q);
+    if (q.fam === 1 && q.g.k === q.fk) { pqMsg("That move leaves the line where it is. Try another."); return; }
+    if (Math.abs(q.g.k) > 9 || Math.abs(q.g.h) > 9) { pqMsg("That moves g off the graph. Try a smaller move."); return; }
+    wfCustom = q; QZ.pick = true; pqMsg(""); pqPanel();
+  }
   // an equation too long for its line gets a smaller font instead of wrapping onto a second line
   function eqShrink() {
     var cv = document.createElement("canvas").getContext("2d");
@@ -6074,12 +6294,12 @@ var ESPIC = {
     $("pgEq").innerHTML = typing ? EQIN : eqHTML();
     $("pgEq").title = !pq() && !typing ? "Click the equation to type your own function" : "";
     if (typing) {
-      [].forEach.call(document.querySelectorAll(".eqIn"), function (el) { el.value = PG.eqTxt || ""; if (pq()) el.placeholder = gd() ? "g(x)=..." : "f(x)=..."; });
+      [].forEach.call(document.querySelectorAll(".eqIn"), function (el) { el.value = PG.eqTxt || ""; if (pq()) el.placeholder = gd() || (wf() && !(wfCr() && QZ.cs === "f")) ? "g(x)=..." : "f(x)=..."; });
       if (fw) { var re = fw === "pgEq" ? $("pgEq").querySelector(".eqIn") : $("pgTable").querySelector(".pgMid .eqIn"); if (re) { re.focus(); re.setSelectionRange(re.value.length, re.value.length); } }
     }
     pgDescUpd(); regUpd();
     [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part === "reg" ? "eq" : b.dataset.part] ? "true" : "false"); });
-    TB.sync(); $("qzTools").hidden = false; posDial();
+    TB.sync(); $("qzTools").hidden = wf(); posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
     eqKeysUpd(); pqCue(); pqEval(); eqShrink();
@@ -6456,8 +6676,9 @@ var ESPIC = {
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
     PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
+    if (PQ && wf()) wfPG();
     if (GD) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
-    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 0; PG.eOK = false; PG.eqTxt = ""; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; } drawPlay();
+    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 0; PG.eOK = false; PG.eqTxt = ""; } else if (wf()) { PG.eqTxt = "g(x)="; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; } drawPlay();
     function cap(t) { dmCap(t); }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
@@ -6847,7 +7068,7 @@ var ESPIC = {
     ];
     var TOOLS = steps.slice(steps.indexOf("@tools") + 1, steps.indexOf("@toolsEnd"));   // the buttons beside the graph (shared with the Data demo)
     steps = steps.filter(function (q) { return typeof q === "function"; });
-    if (PQ && !est()) {   // 1.1A: the demo answers this parent's question with the equation, the table and the graph
+    if (PQ && !est()) {   // 1.1: the demo answers this parent's question with the equation, the table and the graph
       var EQT = ["f(x)=1", "f(x)=x", "f(x)=|x|", "f(x)=x^2"][pqFam], ys = function (u) { return qf(pqFam, u); };
       var dragAll = function (i, then) { if (i > 4) { then(); return; } dragRow(i, function () { dragAll(i + 1, then); }); };
       steps = [
@@ -6912,6 +7133,17 @@ var ESPIC = {
         function (n) { cap("The parent, the graph of g, the table and the description all show the same translation: " + gdWords(QZ.tr[QZ.pi]) + "."); pgWait(2600, n); }
       ];
     }
+    if (PQ && wf()) {   // Writing Translations: the hand makes each move with the step buttons, then types g(x)
+      var wp = wfCur(), wb = function (kd) { return $("wfSteps").querySelector("[data-wf=\"" + kd + "\"]"); };
+      var wstep = function (kd, say) { return function (n) { var b = wb(kd); if (!b) { n(); return; } cap(say); tap(b, function () { pgWait(2100, n); }); }; };
+      steps = [
+        function (n) { cap("g is f moved " + wfMoves(wp) + "."); pgWait(2600, n); },
+        wp.dh ? wstep("h", (wp.dh > 0 ? "Right " : "Left ") + Math.abs(wp.dh) + ": replace x with x " + (wp.dh > 0 ? "\u2212 " : "+ ") + Math.abs(wp.dh) + ".") : function (n) { n(); },
+        wp.dk ? wstep("k", (wp.dk > 0 ? "Up " : "Down ") + Math.abs(wp.dk) + ": " + (wp.dk > 0 ? "add " : "subtract ") + Math.abs(wp.dk) + " at the end.") : function (n) { n(); },
+        function (n) { cap("Now type g(x), simplified."); typeEq("g(x) = " + wfPlain(wfRuleG(wp)), function () { eqEnter(); pgWait(1800, n); }); },
+        function (n) { cap("The red graph is f moved " + wfMoves(wp) + "."); pgWait(2800, n); }
+      ];
+    }
     var k = 0;
     if (isDataAct()) {   // a Data Activity: a table of x and y values, plotted and explored on the graph
       // type into a cell the way a student does, then press Return (or step to the next cell with the keyboard)
@@ -6941,7 +7173,7 @@ var ESPIC = {
         })();
       }
       var DYS = [225, 401, 524, 602, 623, 600, 524];
-      if (est()) {   // 1.1A, Estimating a Value from a Graph: the data go into the table, the U goes through them, and the graph gives the estimate
+      if (est()) {   // 1.1, Estimating a Value from a Graph: the data go into the table, the U goes through them, and the graph gives the estimate
         var EP = estProb();
         steps = [
           function (n) { cap("Enter the data"); clickCell(0, "x", function () { (function xs(i) { if (i > 2) { n(); return; } typeHere(EP.x[i], function () { xs(i + 1); }); })(0); }); },
