@@ -5199,6 +5199,7 @@ var ESPIC = {
   function setActivity(id) {
     closeActs(); $("actBtn").blur();   // once an activity is chosen the button is let go
     if (!BUILT[id]) return;
+    try { sessionStorage.removeItem("an.mode." + id); } catch (e) { }   // choosing an activity always starts it in Demo; only a refresh keeps the mode
     // on the website every activity is its own page, so switching goes to that page
     if (hub && id !== act) { location.href = (fixedAct ? "../" : "") + slugOf(id) + "/"; return; }
     if (welcome) {
@@ -7017,7 +7018,7 @@ var ESPIC = {
   }
 
   buildActs(); buildLessons(); updProg();
-  if (BUILT[act].play) { setMode(takeBoot()); enterPlay(); } else if (BUILT[act].quiz) enterQuiz(); else setMode(takeBoot());
+  if (BUILT[act].play) { var bm = takeBoot(); setMode(bm); bootMode = bm; enterPlay(); bootMode = null; } else if (BUILT[act].quiz) enterQuiz(); else setMode(takeBoot());
   if (welcome) { document.body.classList.add("wel"); theme(); $("welcome").hidden = false; }
 </script>
 </body>
