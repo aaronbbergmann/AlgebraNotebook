@@ -6200,7 +6200,7 @@ var ESPIC = {
   }
   // a round gets harder as it goes: the first problem is the simplest, the last the hardest
   function wfSet(n) {
-    if (n === 1) return [wfMake(lesson === 2 ? 1 + rnd(2) : 2)];
+    if (n === 1) return [wfMake(0)];   // the Demo always starts with the simplest kind: a plain line, moved one way (or reflected in the x-axis)
     var out = [], key = function (p) { return JSON.stringify([p.fam, p.fa, p.fh, p.fk, p.dh, p.dk, p.rf]); };
     while (out.length < n) { var p = wfMake(Math.min(out.length, 2)); if (!out.some(function (o) { return key(o) === key(p); })) out.push(p); }
     return out;
