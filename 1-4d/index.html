@@ -4849,7 +4849,7 @@
     if (pq()) { pqNext(); return; }
     if (mode === "demo") qzDemoStep(); else qzNextParent();
   });
-  $("qzAgain").addEventListener("click", function () { if (pq() && mode === "demo" && QZ.step >= 4) pqAnother(); else qzStart(); });
+  $("qzAgain").addEventListener("click", function () { if (pq() && !QZ.custom && QZ.step >= 4) { if (mode === "demo") pqAnother(); else pqRegen(); } else qzStart(); });
   $("qzIn").addEventListener("keydown", function (e) { if (e.key === "Enter" && !busy) qzCheck(); });
   $("pgTable").addEventListener("keydown", function (e) {
     if (busy || TB.mode() === "play" || !e.target.classList.contains("qzCell")) return;
@@ -5121,8 +5121,13 @@ var ESPIC = {
     QZ.pi++; if (est()) zoomHome(true); pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel(); if (mode === "demo") logQzExplain();
   }
   // "Another demo": the demo runs again on a different parent function
+  // "Another in [Mode]": a new variant in the same exercise and mode. A new round is dealt until its problems differ from the last one's.
+  function pqKey() { return JSON.stringify([QZ.order, QZ.wfp, QZ.est, QZ.tr]); }
+  function pqRegen() { var k = pqKey(); for (var i = 0; i < 8; i++) { pqStart(); if (pqKey() !== k) break; } }
   function pqAnother() {
-    up = null; QZ.pi = (QZ.pi + 1) % QZ.order.length; pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel();
+    up = null;
+    if (QZ.order.length > 1 && QZ.pi < QZ.order.length - 1) { QZ.pi++; pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel(); }
+    else pqRegen();
     setTimeout(function () { if (pq() && mode === "demo" && !pgRun) $("pgDemo").click(); }, 400);
   }
   function pqPanel() {
@@ -6258,6 +6263,23 @@ var ESPIC = {
   }
   // f dotted and blue (the parent, always called f); g red. In the stepping modes g starts on top of f and is dragged by the student, with the green Play Graph arrows showing the move
   var CF = "#2D70B3", CG = "#C74440";
+  // while a reflection is being dragged, m = the slope (a line) or the vertical stretch (an absolute value) follows the cursor
+  var wfMp = null;
+  function wfMTxt() {
+    var p = wfCur(), d = QZ.wdr; if (!p || !p.rf || !d || d.s === undefined) return "";
+    var rs = d.s, m = p.rf === "x" ? rs * p.fa : p.fam === 2 ? p.fa / Math.abs(rs) : p.fa / rs;
+    if (!isFinite(m)) return "m = undefined";
+    var r = Math.round(m * 10) / 10; if (!r) r = 0; return "m = " + (r < 0 ? "−" : "") + Math.abs(r).toFixed(1);
+  }
+  function wfMPos(el) {
+    var r = wfMp; el = el || document.getElementById("wfMlab"); if (!r || !el) return;
+    var left = r.x > ZM.ox + .45 * ZM.cur; el.setAttribute("x", r.x + (left ? -1.2 : 1.2)); el.setAttribute("y", -r.y - .5); el.setAttribute("text-anchor", left ? "end" : "start");
+  }
+  function wfMLab(S) {
+    var t = wfMp && wfMTxt(); if (!t) return;
+    var el = svgEl("text", { id: "wfMlab", fill: CG, "font-size": ".95", "font-weight": "700", "font-family": "system-ui,sans-serif", "pointer-events": "none", "stroke-width": ".28", "stroke-linejoin": "round", style: "stroke:var(--bg);paint-order:stroke" });
+    el.textContent = t; S.appendChild(el); wfMPos(el);
+  }
   function wfDraw(S) {
     var p = wfCur(), F = function (x) { return p.fa * (p.fam === 2 ? Math.abs(x - p.fh) : x) + p.fk; }, sh = PG.wfShift, st = wfSteppy(), d = QZ.wdr || { dh: 0, dk: 0 };
     var curve = function (fn, vx) { var lo = ZM.ox - 1.05 * ZM.cur, hi = ZM.ox + 1.05 * ZM.cur, xs = p.fam === 2 && vx > lo && vx < hi ? [lo, vx, hi] : [lo, hi]; return xs.map(function (x) { return x + "," + (-fn(x)); }).join(" "); };
@@ -6293,6 +6315,7 @@ var ESPIC = {
       var GG = PG.show.graph ? G : Gd;
       for (var q2 = 0; q2 < 4; q2++) { var gx = [-6.5, 6.5, -3.5, 3.5][q2], gy2 = GG(gx); if (Math.abs(gy2) <= 8.5 && Math.abs(gy2 - F(gx)) > 1.6) { var tg = svgEl("text", { x: gx + .3, y: -gy2 - .5, fill: CG, "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tg.textContent = "g"; S.appendChild(tg); break; } }
     }
+    wfMLab(S);
   }
   // Show work: f, each step taken, and g
   function wfWork(line) { var w = QZ.ww; if (!w) return; var t = line.replace(/<[^>]+>/g, ""), l = w.steps[w.steps.length - 1]; if (l && l.eqs[0] === t) return; w.steps.push({ eqs: [t], cls: /^f\(/.test(t) ? "cf" : "cg" }); }
@@ -6416,17 +6439,17 @@ var ESPIC = {
     if (pr && pr.rf) {   // a reflection is grabbed at a point of f, away from the axis it is flipped through
       var q0 = qAt(e), gx = Math.round(q0[0]), gy = wfF(pr, gx);
       if (pr.rf === "x" ? !gy : !gx) { pqMsg(pr.rf === "x" ? "Grab the graph away from the x-axis." : "Grab the graph away from the y-axis."); return; }
-      wfDr = { rf: pr.rf, fx: gx, fy: gy };
+      wfDr = { rf: pr.rf, fx: gx, fy: gy }; wfMp = { x: q0[0], y: q0[1] }; wfSetFlip(1, gx, gy); drawPlay();
     } else
     wfDr = { q0: qAt(e), d0: { dh: QZ.wdr.dh, dk: QZ.wdr.dk } };
     document.addEventListener("pointermove", wfDrMove); document.addEventListener("pointerup", wfDrUp); document.addEventListener("pointercancel", wfDrUp);
   });
   function wfDrMove(e) {
     if (!wfDr) return; var q = qAt(e);
-    if (wfDr.rf) { wfSetFlip(wfDr.rf === "x" ? Math.round(q[1]) / wfDr.fy : Math.round(q[0]) / wfDr.fx, wfDr.fx, wfDr.fy); return; } wfSetDrag(wfDr.d0.dh + Math.round(q[0] - wfDr.q0[0]), wfDr.d0.dk + Math.round(q[1] - wfDr.q0[1])); }
+    if (wfDr.rf) { wfMp = { x: q[0], y: q[1] }; wfSetFlip(wfDr.rf === "x" ? Math.round(q[1]) / wfDr.fy : Math.round(q[0]) / wfDr.fx, wfDr.fx, wfDr.fy); wfMPos(); return; } wfSetDrag(wfDr.d0.dh + Math.round(q[0] - wfDr.q0[0]), wfDr.d0.dk + Math.round(q[1] - wfDr.q0[1])); }
   function wfDrUp() {
     document.removeEventListener("pointermove", wfDrMove); document.removeEventListener("pointerup", wfDrUp); document.removeEventListener("pointercancel", wfDrUp);
-    wfDr = null; wfDragEnd();
+    wfDr = null; wfMp = null; var ml = document.getElementById("wfMlab"); if (ml) ml.remove(); wfDragEnd();
   }
   // step 2: the move inside the parentheses (x + 1) is dragged onto f(x) in the question, and both x's of f change.
   // step 3: the question's f is dragged onto g(x), and its rule takes the place of f.
@@ -7495,8 +7518,8 @@ var ESPIC = {
               if (pgRun !== run) return; if (t0 === null) t0 = ts;
               var u = Math.min(1, (ts - t0) / 2200), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, s1 = 1 - 2 * e;
               if (u >= 1) s1 = -1; else s1 = Math.round(s1 * 8) / 8;
-              wfSetFlip(s1, gx, gy); handAt(svgPt(wp.rf === "y" ? s1 * gx : gx, wp.rf === "x" ? s1 * gy : gy));
-              if (u < 1) pgRaf(step); else pgWait(500, function () { wfDragEnd(); pgWait(1400, n); });
+              wfMp = { x: wp.rf === "y" ? s1 * gx : gx, y: wp.rf === "x" ? s1 * gy : gy }; wfSetFlip(s1, gx, gy); wfMPos(); handAt(svgPt(wfMp.x, wfMp.y));
+              if (u < 1) pgRaf(step); else pgWait(500, function () { wfMp = null; var ml = document.getElementById("wfMlab"); if (ml) ml.remove(); wfDragEnd(); pgWait(1400, n); });
             })(performance.now());
           });
           return;
