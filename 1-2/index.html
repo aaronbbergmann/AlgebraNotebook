@@ -251,7 +251,7 @@
   .log .msg{align-self:stretch;max-width:none;background:none;padding:0;border-radius:0;font-size:1rem;line-height:1.45}
   .log .msg+.msg{padding-top:.6rem;border-top:1px solid color-mix(in srgb,var(--ink) 15%,transparent)}
   /* ---- 1.1 quiz ---- */
-  body.quiz:not(.pq) .pgCtl,body.quiz #undo,body.quiz #show{display:none!important}
+  body.quiz:not(.pq) .pgCtl,body.quiz #undo,body.quiz:not(.wf) #show{display:none!important}
   .pgQ{display:none}
   body.pq .pgQ{display:block;flex:0 0 100%;margin:0 0 .3rem .2rem}
   .pgQt{font:600 1.25rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
@@ -3557,7 +3557,7 @@
     go(0);
   }
   function showWork() {
-    var list = works.filter(function (w) { return w.steps.length >= 2; }), cur = works[works.length - 1];
+    var list = wf() ? works.filter(function (w) { return w.wf; }) : works.filter(function (w) { return w.steps.length >= 2; }), cur = works[works.length - 1];
     if (!list.length) list = [{ steps: steps, label: "" }];
     var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
@@ -5083,6 +5083,7 @@ var ESPIC = {
         cu ? "Watch again" : u ? u.stayText || "" : "", function () { $("qzAgain").click(); });
     } else if (!pgRun) dmUI("idle");   // a fresh demo waits, its button highlighted
     $("hint").hidden = done || soloish();   // a right answer needs no hint
+    if (wf()) $("show").hidden = false;
     wfSteps();
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
@@ -5129,7 +5130,7 @@ var ESPIC = {
     if (wfCr()) { wfCreateIn(t); return; }
     if (pq() && !eqTypedOK(t)) { if (wf()) wfWrong(t); else pqEqWrong(t); return; }
     var tg = document.querySelector(".tog[data-part=eq]"); if (tg) { pqMsg(""); tg.click(); }
-    if (wf()) { PG.wfShift = null; var tg2 = document.querySelector(".tog[data-part=graph]"); if (tg2 && !PG.show.graph) tg2.click(); }
+    if (wf()) { PG.wfShift = null; wfFinal(); var tg2 = document.querySelector(".tog[data-part=graph]"); if (tg2 && !PG.show.graph) tg2.click(); }
   }
   function pqCheck() {
     if (QZ.step >= 4) return; pqEval(); if (QZ.step >= 4) return;
@@ -6143,40 +6144,46 @@ var ESPIC = {
   function wfQ() { var p = wfCur(); return p ? "<i>g</i> is <span class=\"lm\"><i>f</i>(<i>x</i>) = " + wfRuleF(p) + "</span> moved " + wfMoves(p) + ". Type <span class=\"lm\"><i>g</i>(<i>x</i>)</span>." : ""; }
   // the numbers the Playground uses: g itself (a line slid sideways has no sideways part), or a neutral line while Create waits for f
   function wfPG() {
-    var p = wfCur(); QZ.wd = {}; QZ.wl = []; PG.wfShift = null; PG.show = { eq: false, table: false, graph: false, desc: false, parent: false }; PG.eqTxt = "g(x)=";
+    var p = wfCur(); QZ.wd = {}; QZ.wl = []; PG.wfShift = null;
+    for (var wi = works.length - 1; wi >= 0; wi--) if (works[wi].wf && works[wi].steps.length < 2) works.splice(wi, 1);   // a problem left unworked is not kept in Show work
+    QZ.ww = null; if (p) { QZ.ww = { steps: [{ eqs: ["f(x) = " + wfPlain(wfRuleF(p)).replace(/-/g, "\u2212")] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); } PG.show = { eq: false, table: false, graph: false, desc: false, parent: false }; PG.eqTxt = "g(x)=";
     if (p) { PG.fam = p.g.fam; PG.a = p.g.a; PG.h = p.g.h; PG.k = p.g.k; PG.pa = [PG.h + 1, PG.k + PG.a]; }
     else { PG.fam = 1; PG.a = 1; PG.h = 0; PG.k = 0; PG.eqTxt = "f(x)="; QZ.cs = "f"; }
     wfSteps();
   }
-  // f in blue, the half-way curve (after the sideways move) dashed, and a label
+  // f dotted (the parent, always called f), the half-way curve (after the sideways move) thin grey, and labels
   function wfDraw(S) {
     var p = wfCur(), F = function (x) { return p.fa * (p.fam === 2 ? Math.abs(x - p.fh) : x) + p.fk; }, sh = PG.wfShift;
     var curve = function (fn, vx) { var lo = ZM.ox - 1.05 * ZM.cur, hi = ZM.ox + 1.05 * ZM.cur, xs = p.fam === 2 && vx > lo && vx < hi ? [lo, vx, hi] : [lo, hi]; return xs.map(function (x) { return x + "," + (-fn(x)); }).join(" "); };
-    if (sh && !PG.show.graph) S.appendChild(svgEl("polyline", { points: curve(function (x) { return F(x - sh.dh) + sh.dk; }, p.fh + sh.dh), fill: "none", stroke: "#7C8494", "stroke-width": ".09", "stroke-dasharray": ".35 .25" }));
-    S.appendChild(svgEl("polyline", { points: curve(F, p.fh), fill: "none", stroke: "#2D70B3", "stroke-width": ".11", "stroke-linejoin": "round" }));
+    if (sh && !PG.show.graph) S.appendChild(svgEl("polyline", { points: curve(function (x) { return F(x - sh.dh) + sh.dk; }, p.fh + sh.dh), fill: "none", stroke: "#9AA3B2", "stroke-width": ".09", "stroke-linejoin": "round" }));   // half-way: thin grey
+    S.appendChild(svgEl("polyline", { points: curve(F, p.fh), fill: "none", stroke: "#222", "stroke-width": ".07", "stroke-dasharray": ".3 .25" }));   // f, the parent: dotted, like every parent graph
+    for (var u = -2; u <= 2; u++) if (Math.abs(F(u)) <= 10) S.appendChild(svgEl("circle", { cx: u, cy: -F(u), r: .13, fill: "#222", "pointer-events": "none" }));
     for (var q = 0; q < 4; q++) {
       var lx = [6.5, -6.5, 3.5, -3.5][q], ly = F(lx);
-      if (Math.abs(ly) <= 8.5) { var tx = svgEl("text", { x: lx + .3, y: -ly - .5, fill: "#2D70B3", "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tx.textContent = "f"; S.appendChild(tx); break; }
+      if (Math.abs(ly) <= 8.5) { var tx = svgEl("text", { x: lx + .3, y: -ly - .5, fill: "#222", "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tx.textContent = "f"; S.appendChild(tx); break; }
     }
     if (PG.show.graph && p.g) {   // g's label, on the red curve
       var G = function (x) { return p.g.a * (p.g.fam === 2 ? Math.abs(x - p.g.h) : x) + p.g.k; };
       for (var q2 = 0; q2 < 4; q2++) { var gx = [-6.5, 6.5, -3.5, 3.5][q2], gy = G(gx); if (Math.abs(gy) <= 8.5 && Math.abs(gy - F(gx)) > 1.6) { var tg = svgEl("text", { x: gx + .3, y: -gy - .5, fill: "#C74440", "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tg.textContent = "g"; S.appendChild(tg); break; } }
     }
   }
+  // Show work: f, each step taken, and g
+  function wfWork(line) { var w = QZ.ww; if (!w) return; var t = line.replace(/<[^>]+>/g, ""), l = w.steps[w.steps.length - 1]; if (l && l.eqs[0] === t) return; w.steps.push({ eqs: [t] }); }
+  function wfFinal() { var p = wfCur(); if (p && p.g) wfWork("<i>g</i>(<i>x</i>) = " + wfRuleG(p)); }
   function wfNext() { var p = wfCur(), d = QZ.wd; return p.dh && !d.h ? "h" : p.dk && !d.k ? "k" : "s"; }
   // a step: the sideways move, the up-or-down move, or the simplifying; each adds a line to the right panel
   function wfDo(kind) {
     var p = wfCur(); if (!p || QZ.step >= 4 || wfNext() !== kind) return;
     var G = "<i>g</i>(<i>x</i>) = ", F = "<i>f</i>(<i>x</i>" + (p.dh ? wfSg(-p.dh) : "") + ") = ";
-    if (kind === "h") { QZ.wd.h = true; PG.wfShift = { dh: p.dh, dk: 0 }; QZ.wl.push(F + wfRuleF(p, p.dh, 0)); }
-    else if (kind === "k") { QZ.wd.k = true; PG.wfShift = { dh: p.dh, dk: p.dk }; QZ.wl.push(G + wfRuleF(p, p.dh, p.dk)); }
+    if (kind === "h") { QZ.wd.h = true; PG.wfShift = { dh: p.dh, dk: 0 }; QZ.wl.push(F + wfRuleF(p, p.dh, 0)); wfWork(F + wfRuleF(p, p.dh, 0)); }
+    else if (kind === "k") { QZ.wd.k = true; PG.wfShift = { dh: p.dh, dk: p.dk }; QZ.wl.push(G + wfRuleF(p, p.dh, p.dk)); wfWork(G + wfRuleF(p, p.dh, p.dk)); }
     else { QZ.wl.push(G + wfRuleG(p)); wfReveal(); return; }
     pqMsg("");
     if (wfNext() === "s" && mode === "sequence" && QZ.wl[QZ.wl.length - 1] === G + wfRuleG(p)) { wfReveal(); return; }   // nothing is left to simplify
     drawPlay(); wfSteps();
   }
   function wfReveal() {
-    PG.wfShift = null; PG.eqTxt = "";
+    PG.wfShift = null; PG.eqTxt = ""; wfFinal();
     var te = document.querySelector(".tog[data-part=eq]"), tg = document.querySelector(".tog[data-part=graph]");
     if (!PG.show.eq && te) te.click(); if (!PG.show.graph && tg) tg.click();
     wfSteps();
