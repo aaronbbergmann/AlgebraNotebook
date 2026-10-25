@@ -3665,10 +3665,10 @@
   function levelUp() {
     up = null; var c = prog[LK() + ":" + mode] || 0;
     if (mode === "create" || c < 2) return;
-    var ml = BUILT[act].modes || ["demo", "sequence", "calculate", "solo"], nx = ml[ml.indexOf(mode) + 1], stayT = "Stay in " + MODES[mode] + " mode";
+    var ml = BUILT[act].modes || ["demo", "sequence", "calculate", "solo"], nx = ml[ml.indexOf(mode) + 1], stayT = "Another in " + MODES[mode] + " Mode";
     if (nx && nx !== "create") up = { label: MODES[nx] + " mode", stayText: stayT, go: function () { setMode(nx); } };   // the next mode is never Create
     else if (mode === "solo" && !subx && lesson < topLesson() && BUILT[act].perLesson) { if (pct() >= 100) up = { label: "Next exercise: " + (BUILT[act].short[lesson] || lessonName(lesson + 1)), stay: true, stayText: "Stay in this exercise", go: function () { lesson++; $("lesson").value = String(lesson); setMode("demo"); } }; }   // at 100% the Next button moves on to the next exercise; a small link stays here
-    else if (mode === "solo" && !subx && lesson < topLesson()) up = { label: LNAME[lesson + 1], stayText: "Stay in " + MODES[mode] + " mode", go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
+    else if (mode === "solo" && !subx && lesson < topLesson()) up = { label: LNAME[lesson + 1], stayText: "Another in " + MODES[mode] + " Mode", go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
   }
   // Demo progress is earned only by a demo that plays through to its end: a demo that was ended, left for another mode, or finished by hand
   // while paused earns nothing (1.4: the demo is still running when the problem is solved; 1.1: the whole demo script has played out)
@@ -3682,7 +3682,7 @@
   }
   // ---- ONE "Next" for every Progress activity ----
   // A finished problem offers a plum-red "Next"; a finished mode offers the next mode's name instead (never Create), with a small
-  // "Stay in ... mode" link beneath. It lives in the right side panel; in Demo the demo button itself turns into it (see dmFinish).
+  // "Another in ... Mode" link beneath. It lives in the right side panel; in Demo the demo button itself turns into it (see dmFinish).
   function nxShow() {
     var nx = $("next"), ag = $("again"), stay = up && up.stayText || "";
     // the student took over a paused (or not yet started) demo and finished it alone: the demo is over, with the same options as a finished demo
@@ -5112,7 +5112,7 @@ var ESPIC = {
         else if (mode === "create") { pqMsg("Well done!", "ok"); up = null; }   // Create never counts toward Progress
         else if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
           tally(); var ml = BUILT[act].modes, nm = ml[ml.indexOf(mode) + 1];
-          up = nm && nm !== "create" ? { label: MODES[nm] + " mode", stayText: "Stay in " + MODES[mode] + " mode", go: function () { setMode(nm); } } : null;
+          up = nm && nm !== "create" ? { label: MODES[nm] + " mode", stayText: "Another in " + MODES[mode] + " Mode", go: function () { setMode(nm); } } : null;
         } else if (last) { QZ.locked = true; counted = false; tally(); }   // Sequence and Solo count a round only when all four parents are done
         pqPanel();
       }
