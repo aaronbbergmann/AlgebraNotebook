@@ -274,6 +274,7 @@
   body.pq .pgDemo{margin-bottom:0}
   body.pq .pgCtl.empty{display:none}
   /* ---- 1.2, Writing Translations: only the equation box and the graph; the steps live in the right panel ---- */
+  body.wfSolo #pgGraphWrap{display:none!important}
   body.wf .pgTable,body.wf #pgDial,body.wf #pgDesc,body.wf #pgDescIn{display:none!important}
   .wfSteps{text-align:center;padding:.2rem 1rem .6rem;font:400 1.05rem/1.5 system-ui,sans-serif;color:var(--ink)}
   .wfSteps[hidden]{display:none}
@@ -287,6 +288,10 @@
   .cf{color:#2D70B3}.cg{color:#C74440}
   .wfChip{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:.05em .35em;border-radius:8px;background:color-mix(in srgb,#2D70B3 12%,transparent);border:1.5px dashed #2D70B3}
   .tbg.cf{color:#2D70B3}
+  .wfX{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:0 .2em;border-radius:6px;border:1.5px dashed #2D70B3;background:color-mix(in srgb,#2D70B3 12%,transparent)}
+  .wfOp{cursor:pointer;border-radius:6px;padding:0 .22em;background:color-mix(in srgb,#C74440 16%,transparent);outline:1.5px dashed #C74440}
+  .wfOp:hover{background:color-mix(in srgb,#C74440 30%,transparent)}
+  .wfChip.wfDropC{outline:3px dashed #C74440;outline-offset:3px}
   #pgEq.wfDrop{outline:3px dashed #C74440;outline-offset:4px;border-radius:8px}
   .wfSteps .wfLn.cf,.wfSteps .wfLn.cg{background:color-mix(in srgb,currentColor 8%,var(--bg))}
   .pgQt .lm{font:400 1.1em "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
@@ -314,7 +319,10 @@
   .qzCells label{font:400 1.05rem "LM","Latin Modern Roman",Georgia,serif;white-space:nowrap}
   .qz input.badc{border-color:var(--no);box-shadow:0 0 0 2px color-mix(in srgb,var(--no) 35%,transparent)}
   .qzRow{display:flex;flex-direction:column;align-items:center;gap:.4rem}
-  .qzRow .btn{padding:.6em 1.1em;font-size:.95rem}
+  .qzRow .btn,#pqNx .btn{padding:.6em 1.1em;font-size:.95rem}
+  #pqNx{display:none;flex-direction:column;align-items:center;gap:.5rem;min-height:5.2rem}
+  #pqNx .btn[hidden],#pqNx .link[hidden]{display:none}
+  html:not([data-mode=demo]) body.pq #pqNx{display:flex}
   .qzRow .btn[hidden],.qzRow .link[hidden]{display:none}
   @media (max-width:760px){.qzTools{flex-direction:row;width:100%;justify-content:center}}
   .eqn.free{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap}
@@ -3647,7 +3655,10 @@
   function loadProg() { try { prog = JSON.parse(localStorage.getItem(BUILT[act].key) || "{}") || {}; } catch (e) { prog = {}; } }
   loadProg();
   function saveProg() { try { localStorage.setItem(BUILT[act].key, JSON.stringify(prog)); } catch (e) {} }
-  function lvDone(l) { var tot = 0; for (var m = MORD.indexOf(l[1]); m < 4; m++) tot += prog[l[0] + ":" + MORD[m]] || 0; return tot >= (l[4] || 1); }
+  function lvDone(l) {
+    // a problem finished in a mode (1.1, 1.2) earns that mode's first level and every level below it at once; the later rounds need whole rounds
+    if (!(l[4] > 1)) for (var m0 = MORD.indexOf(l[1]); m0 < 4; m0++) if (prog[l[0] + ":" + MORD[m0] + ":p"]) return true;
+    var tot = 0; for (var m = MORD.indexOf(l[1]); m < 4; m++) tot += prog[l[0] + ":" + MORD[m]] || 0; return tot >= (l[4] || 1); }
   function pct() { var p = 0; LEVELS.forEach(function (l) { if (BUILT[act].perLesson && l[0] !== lesson) return; if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }   // an activity with perLesson keeps a separate percentage for each exercise
   function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; }
   function openProg() {
@@ -3694,7 +3705,43 @@
     nx.textContent = up ? up.label : EXP ? "Another expression" : BUILT[act].solver ? "Another equation" : "Next"; nx.hidden = false; nx.disabled = false;
     ag.textContent = stay; ag.hidden = !stay;
   }
+  // ---- "Demo next step" (Progress activities, in place of Hint): the demo performs only the student's next step, then puts the work back ----
+  var DNX = false, pgOne = null, DN = null;
+  function dnOn() { return mode !== "demo" && mode !== "solo" && mode !== "create" && !!BUILT[act] && (!!BUILT[act].sub || (!!BUILT[act].quiz && !est())); }
+  function hintLbl() { return mode === "demo" ? "Explain" : dnOn() ? "Demo next step" : "Hint"; }
+  function dnCl(o) { return JSON.parse(JSON.stringify(o)); }
+  function dnTake() {
+    var q = {}; Object.keys(QZ).forEach(function (k) { if (k !== "ww") q[k] = QZ[k]; });
+    DN = { pg: dnCl(PG), qz: dnCl(q), ww: QZ.ww || null, wws: QZ.ww ? QZ.ww.steps.slice() : null };
+  }
+  function dnPut() {
+    var d = DN; if (!d) return; DN = null;
+    Object.keys(PG).forEach(function (k) { delete PG[k]; }); Object.assign(PG, d.pg);
+    Object.keys(QZ).forEach(function (k) { delete QZ[k]; }); Object.assign(QZ, d.qz); if (d.ww) { QZ.ww = d.ww; d.ww.steps = d.wws; }
+    TB.targets = []; TB.busy = false; TB.pop = -1; closePt();
+    try { drawPlay(); TB.draw(); } catch (e) {}
+  }
+  function demoNext() {
+    $("hint").blur();
+    if (BUILT[act].sub) {   // the equation pane: play the next step, wait, then undo it
+      if (busy || calc || locked || DNX) return;
+      peekNext(); if (!pend) return;
+      var h0 = hist.length, m0 = mode; DNX = true; $("hint").disabled = true; if (mode === "calculate") mode = "sequence";   // (Calculate would ask the student to type the step)
+      demoStep();
+      (function wait() {
+        if (busy) { setTimeout(wait, 120); return; }
+        setTimeout(function () {
+          handHide(); mode = m0; while (hist.length > h0) undo(); DNX = false; $("hint").disabled = false; peekNext(); hideKind(); closeAsk(false); clearLog();
+          if (mode === "demo") peekNext();
+        }, 1300);
+      })();
+      return;
+    }
+    if (pgRun || QZ.locked || QZ.step >= 4) return;
+    dnTake(); pgOne = {}; pgDemo();
+  }
   function onSolved() {
+    if (DNX) return;
     tally(); nxShow(); if (mode !== "demo" && !BUILT[act].solver) $("next").focus();   // (in Play Solver Next changes the mode, so Enter on the last answer must not land on it)
   }
   var useCustom = null;
@@ -3795,7 +3842,7 @@
     lastExp = ""; up = null; counted = false; $("again").hidden = true;
     var nx = $("next"); nx.disabled = false; nx.hidden = true; nx.textContent = "Next"; DM4.brk = false;
     if (mode === "demo" && !DM4.run) { dmUI("idle"); dmCap("Press Start Demo to watch this problem solved."); }
-    $("hint").hidden = plain; $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn); updUndo();
+    $("hint").hidden = plain; $("hint").textContent = hintLbl(); $("hint").classList.toggle("on", explainOn); updUndo();
     $("top").style.display = plain ? "none" : ""; $("vals").style.display = plain ? "none" : "";
     var building = mode === "create" && orig.length < allV().length;
     $("creator").hidden = !building; $("answer").hidden = !plain || building;
@@ -3963,6 +4010,7 @@
   $("undo").addEventListener("click", undo);
   $("show").addEventListener("click", showWork);
   $("hint").addEventListener("click", function () {
+    if (dnOn()) { demoNext(); return; }
     if (quiz()) {
       if (mode === "demo") { explainOn = !explainOn; $("hint").classList.toggle("on", explainOn); $("hint").setAttribute("aria-pressed", explainOn); logEl.innerHTML = ""; if (explainOn) logQzExplain(); }
       else note(qzHint());
@@ -4531,7 +4579,7 @@
     QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null };
     if (mode !== "demo") explainOn = false;
     logEl.innerHTML = "";
-    $("hint").hidden = mode === "solo"; $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn);
+    $("hint").hidden = mode === "solo"; $("hint").textContent = hintLbl(); $("hint").classList.toggle("on", explainOn);
     qzRender();
     if (mode === "solo") note("Work through all four parents on your own.");
     if (mode === "demo") logQzExplain();
@@ -4800,7 +4848,7 @@
     if (est()) { var oe = pqParts(), alle = QZ.step >= 4; $("pgQcue").innerHTML = (QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + [["Table", oe.table], ["Regression", oe.graph], ["Estimate", oe.desc]].map(function (a) { return a[0] + (alle || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; "); return; }
     if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = QZ.pick ? "" : "Function?"; return; }
     if (wfCr()) { $("pgQcue").innerHTML = QZ.pick ? "" : QZ.cs === "move" ? "Move?" : "Function?"; return; }
-    if (wf()) { var ow = pqParts(), aw = QZ.step >= 4, ck = function (b) { return aw || b ? " <span class=\"cueOk\">\u2713</span>" : "?"; }; $("pgQcue").innerHTML = (QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + "<span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + " &nbsp; Graph" + ck(ow.graph); return; }
+    if (wf()) { var ow = pqParts(), aw = QZ.step >= 4, ck = function (b) { return aw || b ? " <span class=\"cueOk\">\u2713</span>" : "?"; }; $("pgQcue").innerHTML = (QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + "<span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + (mode === "solo" ? "" : " &nbsp; Graph" + ck(ow.graph)); return; }
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
     var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
     $("pgQcue").innerHTML = (gd() && mode !== "create" && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
@@ -5041,7 +5089,7 @@ var ESPIC = {
     if (wf()) { QZ.custom = !!cuw; QZ.tr = []; QZ.wfp = cuw ? [wfCustom] : mode === "create" ? [null] : wfSet(o.length); QZ.cs = "f"; QZ.wd = {}; QZ.wl = []; if (mode === "create") wfCustom = null; }
     if (mode !== "demo") explainOn = false;
     logEl.innerHTML = "";
-    $("hint").hidden = soloish(); $("hint").textContent = mode === "demo" ? "Explain" : "Hint"; $("hint").classList.toggle("on", explainOn);
+    $("hint").hidden = soloish(); $("hint").textContent = hintLbl(); $("hint").classList.toggle("on", explainOn);
     pqSetup(); drawPlay(); pqPanel();
     if (gd() && mode === "create") setTimeout(function () { var f = $("pgEq").querySelector(".eqIn"); if (f && pq()) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } }, 50);
     if (wf()) setTimeout(wfFocus, 60);
@@ -5075,7 +5123,7 @@ var ESPIC = {
     else $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
     pqCue();
     var go = $("qzGo"), nx = $("qzNext");
-    go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || (wf() && mode === "sequence"); go.textContent = "Check";
+    go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || (wf() && (mode === "sequence" || mode === "calculate")); go.textContent = "Check";
     // the one Next (see nxShow): in Demo the demo button carries it; otherwise it sits here in the side panel
     nx.hidden = !done || demo; nx.disabled = false; nx.textContent = (gd() || wf()) && mode === "create" ? "Create another" : up ? up.label : "Next";
     $("qzAgain").hidden = demo || !(done && (QZ.custom || (up && up.stayText))); $("qzAgain").textContent = QZ.custom ? "Try again" : up && up.stayText || "";
@@ -5104,6 +5152,7 @@ var ESPIC = {
       if (!est() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
         QZ.step = 4; var last = QZ.pi === QZ.order.length - 1;
+        if (!QZ.custom && mode !== "create" && mode !== "demo") { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
         pqMsg(est() || wf() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
         if (QZ.custom) {   // the student's own function: no Progress, and Next offers the next mode with the same function
           pqMsg("Well done!", "ok"); var cm = wf() ? ["demo", "sequence", "calculate", "solo"] : ["demo", "sequence", "solo"], cn = cm[cm.indexOf(mode) + 1];
@@ -5189,10 +5238,12 @@ var ESPIC = {
     $("pg").hidden = false; document.querySelector(".frame").hidden = true; $("pgCtl").hidden = false; $("qz").hidden = false; $("prog").hidden = true;
     setMode(takeBoot());
   }
+  // in 1.1 and 1.2 the Next button and its link sit above Progress and Show work (the same slot as in the equation activities)
+  (function () { var nx = document.createElement("div"); nx.id = "pqNx"; document.querySelector(".ctlbox").insertBefore(nx, document.querySelector(".ctl-btn")); nx.appendChild($("qzNext")); nx.appendChild($("qzAgain")); })();
   function leaveQuiz() {
     if (!document.body.classList.contains("quiz")) return;
     $("modePick").hidden = true; stopDemo(); busy = false; if (pgRun) pgStop();
-    document.body.classList.remove("quiz", "play", "pq", "crPre", "dataAct", "est", "wf"); $("estIn").hidden = true; $("pgDescIn").hidden = true; $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
+    document.body.classList.remove("quiz", "play", "pq", "crPre", "dataAct", "est", "wf", "wfSolo"); $("estIn").hidden = true; $("pgDescIn").hidden = true; $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
     $("pgTable").style.display = ""; $("pgGraph").style.display = ""; $("pgFam").hidden = false;
   }
 
@@ -6007,16 +6058,16 @@ var ESPIC = {
   // is a typed equation the same function as the real one? (tested at several x-values, so any equivalent form counts)
   // while an equation is being typed, three buttons put in the x, ^2 and | characters for anyone who cannot find them on the keyboard
   function eqKeysUpd() {
-    var a = document.activeElement, K = $("eqKeys"), el = a && a.classList && a.classList.contains("eqIn") ? a : null;
+    var a = document.activeElement, K = $("eqKeys"), el = a && a.classList && (a.classList.contains("eqIn") || (a.classList.contains("wfIn") && !a.classList.contains("wfMv"))) ? a : null;   // (the Calculate box of 1.2 gets the same keys)
     if (!el) { K.hidden = true; return; }
-    var r = el.getBoundingClientRect(); K.hidden = false; K.style.top = (r.bottom + 6) + "px"; K.style.left = Math.max(6, r.left + r.width / 2 - K.offsetWidth / 2) + "px";
+    var r = el.getBoundingClientRect(); K.hidden = false; K.style.top = (r.bottom + 6) + "px"; K.style.left = Math.max(6, Math.min(innerWidth - K.offsetWidth - 6, r.left + r.width / 2 - K.offsetWidth / 2)) + "px";
   }
   document.addEventListener("focusin", eqKeysUpd);
   document.addEventListener("focusout", function () { setTimeout(eqKeysUpd, 0); });
   $("eqKeys").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the equation
   $("eqKeys").addEventListener("click", function (e) {
-    var b = e.target.closest("button"), el = document.activeElement; if (!b || !el || !el.classList.contains("eqIn")) return;
-    if (b.dataset.go) { el.blur(); eqEnter(); return; }   // Submit does what Return does
+    var b = e.target.closest("button"), el = document.activeElement; if (!b || !el || !(el.classList.contains("eqIn") || (el.classList.contains("wfIn") && !el.classList.contains("wfMv")))) return;
+    if (b.dataset.go) { if (el.classList.contains("wfIn")) { if (el.dataset.k) wfCheckIn(el, true); else wfMoveGo(); return; } el.blur(); eqEnter(); return; }   // Submit does what Return does   // Submit does what Return does
     var i = el.selectionStart, j = el.selectionEnd; el.setRangeText(b.dataset.ins, i, j, "end");
     el.dispatchEvent(new Event("input", { bubbles: true })); el.focus();
   });
@@ -6112,22 +6163,25 @@ var ESPIC = {
   function wfNz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
   // g from f: a line slid sideways is the same line slid up or down, so its sideways move folds into the y-intercept
   function wfG(p) { p.g = p.fam === 2 ? { fam: 2, a: p.fa, h: p.fh + p.dh, k: p.fk + p.dk } : { fam: 1, a: p.fa, h: 0, k: p.fk + p.dk - p.fa * p.dh }; return p; }
-  function wfMake(both) {
+  // tier 0: the plain line f(x) = x + b moved one way only; tier 1: a line with a slope or an absolute value, still one way only;
+  // tier 2: moved sideways and up or down (like the last problems of the textbook's practice, which grow harder)
+  function wfMake(tier) {
     for (var t = 0; t < 400; t++) {
-      var ab = rnd(2) === 1, m = both ? 0 : rnd(4);
-      var p = ab ? { fam: 2, fa: [1, 1, 2, -1, 3, -2][rnd(6)], fh: rnd(5) - 2, fk: rnd(7) - 3 } : { fam: 1, fa: [1, 2, 3, -1, -2, -3][rnd(6)], fh: 0, fk: rnd(9) - 4 };
-      p.dh = m === 3 ? 0 : wfNz(5); p.dk = m === 2 ? 0 : wfNz(5); wfG(p);
+      var ab = tier === 0 ? false : rnd(2) === 1, p;
+      if (tier === 0) p = { fam: 1, fa: 1, fh: 0, fk: rnd(9) - 4 };
+      else p = ab ? { fam: 2, fa: [1, 1, 2, -1, 3, -2][rnd(6)], fh: rnd(5) - 2, fk: rnd(7) - 3 } : { fam: 1, fa: [2, 3, -1, -2, -3][rnd(5)], fh: 0, fk: rnd(9) - 4 };
+      var side = rnd(2) === 1;   // one way only: sideways or up/down
+      p.dh = tier === 2 ? wfNz(5) : side ? wfNz(tier === 0 ? 4 : 5) : 0; p.dk = tier === 2 ? wfNz(5) : side ? 0 : wfNz(tier === 0 ? 4 : 5); wfG(p);
       if (p.fam === 1 && p.g.k === p.fk) continue;
       if (Math.abs(p.g.k) > 8 || Math.abs(p.g.h) > 7) continue;
       return p;
     }
   }
-  // a round: one line, one absolute value and one of either, in a shuffled order
+  // a round gets harder as it goes: the first problem is the simplest, the last the hardest
   function wfSet(n) {
-    if (n === 1) return [wfMake(true)];
-    var out = [], key = function (p) { return JSON.stringify([p.fam, p.fa, p.fh, p.fk, p.dh, p.dk]); }, want = [1, 2, 0];
-    while (out.length < n) { var p = wfMake(false); if ((want[out.length] === 0 || p.fam === want[out.length]) && !out.some(function (o) { return key(o) === key(p); })) out.push(p); }
-    for (var i = out.length - 1; i > 0; i--) { var j = rnd(i + 1), t = out[i]; out[i] = out[j]; out[j] = t; }
+    if (n === 1) return [wfMake(2)];
+    var out = [], key = function (p) { return JSON.stringify([p.fam, p.fa, p.fh, p.fk, p.dh, p.dk]); };
+    while (out.length < n) { var p = wfMake(Math.min(out.length, 2)); if (!out.some(function (o) { return key(o) === key(p); })) out.push(p); }
     return out;
   }
   var wfX = "<i>x</i>";
@@ -6148,12 +6202,12 @@ var ESPIC = {
   function wfMoves(p) { var w = []; if (p.dh) w.push((p.dh > 0 ? "right " : "left ") + Math.abs(p.dh)); if (p.dk) w.push((p.dk > 0 ? "up " : "down ") + Math.abs(p.dk)); return w.join(" and "); }
   function wfQ() {
     var p = wfCur(); if (!p) return "";
-    var rule = "<i>f</i>(<i>x</i>) = " + wfRuleF(p), f = wfSteppy() ? "<span class=\"lm cf wfChip\" data-wfchip title=\"Drag me onto g(x)\">" + rule + "</span>" : "<span class=\"lm cf\">" + rule + "</span>";
+    var rule = wfChipHTML(p), f = wfSteppy() ? "<span class=\"lm cf wfChip\" data-wfchip title=\"Drag me onto g(x)\">" + rule + "</span>" : "<span class=\"lm cf\">" + rule + "</span>";
     return "The function <span class=\"cg\"><i>g</i>(<i>x</i>)</span> is " + f + " <span class=\"cg\">moved " + wfMoves(p) + "</span>." + (wfSteppy() ? "" : " Type <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>.");
   }
   // the numbers the Playground uses: g itself (a line slid sideways has no sideways part), or a neutral line while Create waits for f
   function wfPG() {
-    var p = wfCur(); QZ.wd = {}; QZ.wl = []; QZ.wdr = { dh: 0, dk: 0 }; QZ.arrowAt = -1; PG.wfShift = null;
+    var p = wfCur(); QZ.wd = {}; QZ.wl = []; QZ.wdr = { dh: 0, dk: 0 }; QZ.wst = 0; QZ.wop = false; QZ.arrowAt = -1; PG.wfShift = null;
     for (var wi = works.length - 1; wi >= 0; wi--) if (works[wi].wf && works[wi].steps.length < 2) works.splice(wi, 1);   // a problem left unworked is not kept in Show work
     QZ.ww = null; if (p) { QZ.ww = { steps: [{ cls: "cf", eqs: ["f(x) = " + wfPlain(wfRuleF(p)).replace(/-/g, "\u2212")] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); } PG.show = { eq: false, table: false, graph: false, desc: false, parent: false }; PG.eqTxt = "g(x)=";
     if (p) { PG.fam = p.g.fam; PG.a = p.g.a; PG.h = p.g.h; PG.k = p.g.k; PG.pa = [PG.h + 1, PG.k + PG.a]; }
@@ -6195,13 +6249,48 @@ var ESPIC = {
   function wfFinal() { var p = wfCur(); if (p && p.g) wfWork("<i>g</i>(<i>x</i>) = " + wfRuleG(p)); }
   function wfSteppy() { return wf() && !wfCr() && (mode === "sequence" || mode === "calculate" || mode === "demo"); }
   function wfF(p, x) { return p.fa * (p.fam === 2 ? Math.abs(x - p.fh) : x) + p.fk; }
-  function wfNext() { return !QZ.wd.m ? "m" : !QZ.wd.r ? "r" : !QZ.wd.s ? "s" : ""; }
-  // what g reads while it is still defined by f: g(x) = f(x - 3) - 2 (the whole thing once f has been replaced by its rule)
+  // every form g takes on the way to its simplest rule, one simplifying step apart: [{h: the rule as html, t: what the step did}]
+  function wfStg(p) {
+    if (p.stg) return p.stg;
+    // marks in a form: \u0001..\u0002 the parentheses to take away, \u0003..\u0004 the operation to click inside the bars, \u0005..\u0006 the operation between two numbers to combine
+    var a = p.fa, dh = p.dh, dk = p.dk, cons = [p.fk, dk].filter(Boolean), S = [], core = null;
+    var xs = wfX + (dh ? wfSg(-dh) : ""), bar = function (inner) { return "|" + inner + "|"; };
+    function cs() { return cons.map(function (c, i) { return i === 1 ? " \u0005" + (c < 0 ? "−" : "+") + "\u0006 " + nf(Math.abs(c)) : wfSg(c); }).join(""); }
+    function ren(c, t, kind, q) { core = c; S.push({ m: c + cs(), t: t || "", kind: kind || "sub", q: q || null }); }
+    var nsg = function (v, first) { return (v < 0 ? "−" : first ? "" : "+") + nf(Math.abs(v)); };
+    if (p.fam === 1) {
+      if (dh) {
+        ren("\u0001" + wfCo(a) + "(" + xs + ")\u0002");
+        var c1 = -a * dh; cons = [c1].concat(cons);
+        ren(wfCo(a) + wfX, "Take away the parentheses.", "paren", a === 1 ? null : { lab: wfCo(a) + "(" + xs + ")", fn: a, dh: dh });
+      } else ren(wfCo(a) + wfX);
+    } else if (dh && p.fh) {
+      var hs = p.fh + dh;
+      ren(wfCo(a) + bar("\u0001(" + xs + ")\u0002" + wfSg(-p.fh)));
+      ren(wfCo(a) + bar(wfX + wfSg(-dh) + " \u0003" + (-p.fh < 0 ? "−" : "+") + "\u0004 " + nf(Math.abs(p.fh))), "Take away the parentheses.", "paren", null);
+      ren(wfCo(a) + bar(hs ? wfX + wfSg(-hs) : wfX), "Combine the numbers inside the absolute value.", "inner", { lab: nsg(-dh, true) + " " + (-p.fh < 0 ? "−" : "+") + " " + nf(Math.abs(p.fh)), ans: -dh - p.fh });
+    } else ren(wfCo(a) + bar(dh ? xs : p.fh ? wfX + wfSg(-p.fh) : wfX));
+    while (cons.length > 1) {
+      var sum = Math.round((cons[0] + cons[1]) * 1e9) / 1e9, lab = nsg(cons[0], true) + " " + (cons[1] < 0 ? "−" : "+") + " " + nf(Math.abs(cons[1]));
+      cons = (sum ? [sum] : []).concat(cons.slice(2)); ren(core, "Combine two numbers.", "pair", { lab: lab, ans: sum });
+    }
+    S.forEach(function (st) { st.h = st.m.replace(/[\u0001-\u0006]/g, ""); });
+    var fin = wfRuleG(p); if (S[S.length - 1].h !== fin) { S[S.length - 1].h = fin; S[S.length - 1].m = fin; }   // (the last form is always g's simplest rule)
+    return (p.stg = S);
+  }
+  // a form with its next step's clickable part marked
+  function wfStgX(p, k) {
+    var S = wfStg(p), st = S[k], nx = S[k + 1], kind = nx ? nx.kind : "", pick = { paren: ["\u0001", "\u0002"], inner: ["\u0003", "\u0004"], pair: ["\u0005", "\u0006"] }[kind] || [];
+    return st.m.replace(/[\u0001-\u0006]/g, function (ch, off, str) { var o = pick.indexOf(ch); return o < 0 ? "" : o === 0 ? "<span class=\"wfOp\" data-wfop=\"" + kind + "\">" : "</span>"; });
+  }
+  function wfNext() { var p = wfCur(); return !QZ.wd.m ? "m" : p.dh && !QZ.wd.i ? "i" : !QZ.wd.r ? "r" : QZ.wst < wfStg(p).length - 1 ? "s" : ""; }
+  // what g reads while it is still defined by f: g(x) = f(x - 3) - 2 (then the whole rule, a step at a time)
   function wfLive() {
     var p = wfCur(), d = QZ.wdr || { dh: 0, dk: 0 };
     if (!p) return "";
-    if (QZ.wd.r) return "<span class=\"cg\"><i>g</i>(<i>x</i>) = " + wfRuleF(p, d.dh, d.dk) + "</span>";
-    return "<span class=\"cg\"><i>g</i>(<i>x</i>) = </span><span class=\"cf\"><i>f</i>(<i>x</i>" + (d.dh ? wfSg(-d.dh) : "") + ")</span>" + (d.dk ? "<span class=\"cg\">" + wfSg(d.dk) + "</span>" : "");
+    if (QZ.wd.r) return "<span class=\"cg\"><i>g</i>(<i>x</i>) = " + wfStgX(p, QZ.wst) + "</span>";
+    var inner = d.dh ? (QZ.wd.m && !QZ.wd.i ? "<span class=\"wfX\" data-wfin title=\"Drag me onto f(x) in the question\">" + wfX + wfSg(-d.dh) + "</span>" : wfX + wfSg(-d.dh)) : wfX;
+    return "<span class=\"cg\"><i>g</i>(<i>x</i>) = </span><span class=\"cf\"><i>f</i>(" + inner + ")</span>" + (d.dk ? "<span class=\"cg\">" + wfSg(d.dk) + "</span>" : "");
   }
   // step 1: dragging the red graph (or its dot) sets the move; the equation follows
   var wfDr = null;
@@ -6217,7 +6306,7 @@ var ESPIC = {
   }
   function wfMoveDone() {
     var p = wfCur(), a = svgPt(p.fh + p.dh, wfF(p, p.fh) + p.dk), line = "<i>g</i>(<i>x</i>) = <i>f</i>(<i>x</i>" + (p.dh ? wfSg(-p.dh) : "") + ")" + (p.dk ? wfSg(p.dk) : "");
-    QZ.wd.m = true; QZ.wl.push(line); wfWork(line); pqMsg(""); drawPlay(); wfSteps(); rvMark("ok", a.x + 22, a.y - 22);
+    QZ.wd.m = true; if (!p.dh) QZ.wd.i = true; QZ.wl.push(line); wfWork(line); pqMsg(""); drawPlay(); wfSteps(); rvMark("ok", a.x + 22, a.y - 22);
   }
   $("pgSvg").addEventListener("pointerdown", function (e) {
     if (e.button > 0 || !wfSteppy() || QZ.wd.m || QZ.step >= 4 || !e.target.closest || !e.target.closest("[data-wfg]")) return;
@@ -6231,37 +6320,49 @@ var ESPIC = {
     document.removeEventListener("pointermove", wfDrMove); document.removeEventListener("pointerup", wfDrUp); document.removeEventListener("pointercancel", wfDrUp);
     wfDr = null; wfDragEnd();
   }
-  // step 2: the question's f(x) = rule is dragged onto g(x), and the rule takes the place of f
+  // step 2: the move inside the parentheses (x + 1) is dragged onto f(x) in the question, and both x's of f change.
+  // step 3: the question's f is dragged onto g(x), and its rule takes the place of f.
   document.addEventListener("pointerdown", function (e) {
-    var c = e.target.closest && e.target.closest("[data-wfchip]"); if (!c || !wfSteppy() || QZ.step >= 4 || e.button > 0) return;
+    var c = e.target.closest && e.target.closest("[data-wfchip],[data-wfin]"); if (!c || !wfSteppy() || QZ.step >= 4 || e.button > 0) return;
+    var inn = c.hasAttribute("data-wfin");
     if (e.isTrusted) pgUser();
     e.preventDefault();
-    var sx = e.clientX, sy = e.clientY, gh = null, dst = $("pgEq");
-    function over(ev) { var r = dst.getBoundingClientRect(); return ev.clientX > r.left - 30 && ev.clientX < r.right + 30 && ev.clientY > r.top - 30 && ev.clientY < r.bottom + 30; }
+    var sx = e.clientX, sy = e.clientY, gh = null, dst = inn ? document.querySelector("[data-wfchip]") : $("pgEq"), cls = inn ? "wfDropC" : "wfDrop";
+    function over(ev) { if (!dst) return false; var r = dst.getBoundingClientRect(); return ev.clientX > r.left - 30 && ev.clientX < r.right + 30 && ev.clientY > r.top - 30 && ev.clientY < r.bottom + 30; }
     function mv(ev) {
       if (!gh) { if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return; gh = document.createElement("div"); gh.className = "tbg cf"; gh.innerHTML = c.innerHTML; document.body.appendChild(gh); }
-      gh.style.left = ev.clientX + "px"; gh.style.top = ev.clientY + "px"; dst.classList.toggle("wfDrop", over(ev));
+      gh.style.left = ev.clientX + "px"; gh.style.top = ev.clientY + "px"; if (dst) dst.classList.toggle(cls, over(ev));
     }
     function up(ev) {
       document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); document.removeEventListener("pointercancel", up);
-      dst.classList.remove("wfDrop"); if (gh) { gh.remove(); if (over(ev)) wfReplace(); }
+      if (dst) dst.classList.remove(cls); if (gh) { gh.remove(); if (over(ev)) { if (inn) wfSubstX(); else wfReplace(); } }
     }
     document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); document.addEventListener("pointercancel", up);
   });
+  function wfChipHTML(p) { return "<i>f</i>(<i>x</i>" + (QZ.wd.i && p.dh ? wfSg(-p.dh) : "") + ") = " + wfRuleF(p, QZ.wd.i ? p.dh : 0, 0); }
+  function wfSubstX() {
+    var p = wfCur(); if (!p || QZ.step >= 4 || !p.dh || QZ.wd.i) return;
+    if (!QZ.wd.m) { pqMsg("First drag the graph " + wfMoves(p) + "."); return; }
+    QZ.wd.i = true; var c = document.querySelector("[data-wfchip]"), line = wfChipHTML(p);
+    if (c) c.innerHTML = line; QZ.wl.push(line); wfWork(line); pqMsg(""); drawPlay(); wfSteps();
+  }
   function wfReplace() {
     var p = wfCur(); if (!p || QZ.step >= 4 || QZ.wd.r) return;
     if (!QZ.wd.m) { pqMsg("First drag the graph " + wfMoves(p) + "."); return; }
-    var d = QZ.wdr, line = "<i>g</i>(<i>x</i>) = " + wfRuleF(p, d.dh, d.dk);
-    QZ.wd.r = true; QZ.wl.push(line); wfWork(line); pqMsg("");
-    if (line === "<i>g</i>(<i>x</i>) = " + wfRuleG(p)) { wfReveal(); return; }   // nothing is left to combine
+    if (!QZ.wd.i) { pqMsg("First drag " + wfPlain(wfX + wfSg(-p.dh)).replace(/-/g, "−") + " from g(x) onto f(x) in the question."); return; }
+    var line = "<i>g</i>(<i>x</i>) = " + wfStg(p)[0].h;
+    QZ.wd.r = true; QZ.wst = 0; QZ.wl.push(line); wfWork(line); pqMsg("");
+    if (wfStg(p).length === 1) { QZ.wd.s = true; wfReveal(); return; }   // nothing is left to combine
     drawPlay(); wfSteps();
   }
-  // step 3: combine like terms (a button in Sequence, a typed answer in Calculate)
+  // step 4: simplify, one step at a time (a button in Sequence, a typed answer in Calculate)
   function wfSimplify() {
-    var p = wfCur(); if (!p || QZ.step >= 4 || !QZ.wd.r || QZ.wd.s) return;
-    var line = "<i>g</i>(<i>x</i>) = " + wfRuleG(p); QZ.wd.s = true; QZ.wl.push(line); wfWork(line); wfReveal();
+    var p = wfCur(); if (!p || QZ.step >= 4 || !QZ.wd.r || QZ.wst >= wfStg(p).length - 1) return;
+    QZ.wop = false; QZ.wst++; var line = "<i>g</i>(<i>x</i>) = " + wfStg(p)[QZ.wst].h; QZ.wl.push(line); wfWork(line);
+    if (QZ.wst >= wfStg(p).length - 1) { QZ.wd.s = true; wfReveal(); } else { drawPlay(); wfSteps(); }
   }
   function wfReveal() {
+    if (DN) { drawPlay(); return; }   // (only a demo of the next step: the problem is not finished)
     PG.eqTxt = ""; wfFinal();
     var te = document.querySelector(".tog[data-part=eq]"), tg = document.querySelector(".tog[data-part=graph]");
     if (!PG.show.eq && te) te.click(); if (!PG.show.graph && tg) tg.click();
@@ -6282,9 +6383,14 @@ var ESPIC = {
     if (QZ.step < 4) {
       var nx = wfNext();
       if (nx === "m") h += "<div class=\"wfAsk\">Drag the red graph to move <span class=\"cg\"><i>g</i> " + wfMoves(p) + "</span>.</div>";
-      else if (nx === "r") h += "<div class=\"wfAsk\">Drag the blue <span class=\"cf\"><i>f</i>(<i>x</i>)</span> from the question onto <span class=\"cg\"><i>g</i>(<i>x</i>)</span>.</div>";
-      else if (nx === "s" && mode === "calculate") h += "<div class=\"wfAsk\">Combine like terms.</div><div class=\"wfRow cg\"><i>g</i>(<i>x</i>) = <input class=\"wfIn\" style=\"width:10rem\" data-k=\"s\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"g of x, simplified\"></div>";
-      else if (nx === "s") h += "<div class=\"wfRow\"><button class=\"btn wfBtn\" data-wf=\"s\">Simplify</button></div>";
+      else if (nx === "i") h += "<div class=\"wfAsk\">Drag <span class=\"cf\">" + wfX + wfSg(-p.dh) + "</span> from <span class=\"cg\"><i>g</i>(<i>x</i>)</span> onto <span class=\"cf\"><i>f</i>(<i>x</i>)</span> in the question.</div>";
+      else if (nx === "r") h += "<div class=\"wfAsk\">Drag the blue <span class=\"cf\"><i>f</i></span> from the question onto <span class=\"cg\"><i>g</i>(<i>x</i>)</span>.</div>";
+      else if (nx === "s") {
+        var sq = wfStg(p)[QZ.wst + 1];
+        if (mode === "calculate" && QZ.wop && sq && sq.q) {
+          h += "<div class=\"wfAsk\">" + (sq.kind === "paren" ? "Take away the parentheses." : "Add the numbers.") + "</div><div class=\"wfRow cg\"><span>" + sq.q.lab + " =</span><input class=\"wfIn\" style=\"width:9.5rem\" data-k=\"s\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"The answer\"></div>";
+        } else h += "<div class=\"wfAsk\">" + (sq && sq.kind === "paren" ? "Click the parentheses to take them away." : "Combine like terms: click the operation between two like terms.") + "</div>";
+      }
     }
     var was = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains("wfIn");
     el.innerHTML = h; el.hidden = !h;
@@ -6301,17 +6407,28 @@ var ESPIC = {
     if (e.key !== "Enter") return; var el = e.target; if (!el.classList.contains("wfIn")) return;
     e.preventDefault(); if (el.classList.contains("wfMv")) wfMoveGo(); else wfCheckIn(el, true);
   });
-  // Calculate: the typed, combined answer is taken as soon as it is right (the same function as g, with no parentheses and nothing left to combine)
+  $("wfSteps").addEventListener("keydown", function (e) { if (e.key === "Escape" && QZ.wop) { QZ.wop = false; askArrow(false); wfSteps(); } });
+  // click the operation between like terms (or the parentheses) in g(x): Sequence does the step; Calculate first asks for it
+  document.addEventListener("click", function (e) {
+    var o = e.target.closest && e.target.closest("[data-wfop]"); if (!o || !wfSteppy() || QZ.step >= 4) return;
+    if (e.isTrusted) pgUser();
+    var p = wfCur(), st = p && QZ.wd.r ? wfStg(p)[QZ.wst + 1] : null; if (!st) return;
+    if (mode === "calculate" && st.q) { QZ.wop = true; QZ.arrowAt = -1; wfSteps(); var wi = $("wfSteps").querySelector(".wfIn"); if (wi) wi.focus(); }
+    else wfSimplify();
+  });
+  // Calculate: the typed answer is taken as soon as it is right
   function wfOps(t) { return (String(t).replace(/\s/g, "").replace(/−/g, "-").replace(/^[-+]/, "").match(/[+\-]/g) || []).length; }
   function wfCheckIn(el, enter) {
-    var p = wfCur(), raw = String(el.value), f = eqFn(raw), eq = !!f, G = p.g;
-    if (f) for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e2) { eq = false; break; } if (!(Math.abs(v - (G.a * (G.fam === 2 ? Math.abs(x - G.h) : x) + G.k)) < 1e-9)) { eq = false; break; } }
-    var simple = eq && !/[()]/.test(raw) && wfOps(raw) === wfOps(wfPlain(wfRuleG(p)));
-    if (simple) { wfSimplify(); return; }
-    if (!enter) return;
-    QZ.wrong++; el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad");
-    pqMsg(eq ? "That is right, but not combined yet: take away the parentheses and combine the numbers." : "Not quite. Try again.");
+    var p = wfCur(), raw = String(el.value), f = eqFn(raw), st = wfStg(p)[QZ.wst + 1]; if (!st || !st.q || !f) { if (enter && f !== undefined) wfBad(el, "Not quite. Try again."); return; }
+    var ok = false, msg = "Not quite. Try again.";
+    if (st.kind === "paren") {
+      var same = true; for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e2) { same = false; break; } if (!(Math.abs(v - st.q.fn * (x - st.q.dh)) < 1e-9)) { same = false; break; } }
+      ok = same && !/[()]/.test(raw); if (same && !ok) msg = "That is right, but the parentheses are still there.";
+    } else { var v0; try { v0 = f(0); } catch (e3) { v0 = NaN; } ok = !/x/i.test(raw) && Math.abs(v0 - st.q.ans) < 1e-9; }
+    if (ok) { QZ.wop = false; wfSimplify(); return; }
+    if (enter) wfBad(el, msg);
   }
+  function wfBad(el, msg) { QZ.wrong++; el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); pqMsg(msg); }
   function wfFocus() {
     if (!wf() || mode === "demo") return;
     var wi = $("wfSteps").querySelector(".wfIn");
@@ -6371,6 +6488,7 @@ var ESPIC = {
   }
   window.addEventListener("resize", function () { if (document.body.classList.contains("play")) eqShrink(); });
   function drawPlay() {
+    document.body.classList.toggle("wfSolo", wf() && mode === "solo");   // 1.2 Solo has no graph at all
     drawGraph();
     $("pgTable").querySelector("tbody").innerHTML = fillMode() ? TB.html() : tableHTML();
     var fe = document.activeElement, fw = fe && fe.classList && fe.classList.contains("eqIn") ? (fe.closest("#pgEq") ? "pgEq" : "mid") : null;
@@ -6751,20 +6869,21 @@ var ESPIC = {
     pgQ.forEach(pgArm); var hd = pgHeld; pgHeld = []; hd.forEach(pgRaf);
   }
   function pgStop() {
-    pgRun = 0; theme(); pgQ.forEach(function (e) { clearTimeout(e.id); }); pgQ = []; pgHeld = []; pgPaused = false; pgSnap = null; closePt(); handHide(); [].forEach.call(document.querySelectorAll(".tbg,.ghost,.fakeCaret"), function (g) { g.remove(); }); document.body.classList.remove("demoTyping"); [].forEach.call(document.querySelectorAll(".simHover,.simPress"), function (g) { g.classList.remove("simHover", "simPress"); }); TB.targets = [];
+    pgRun = 0; dnPut(); theme(); pgQ.forEach(function (e) { clearTimeout(e.id); }); pgQ = []; pgHeld = []; pgPaused = false; pgSnap = null; closePt(); handHide(); [].forEach.call(document.querySelectorAll(".tbg,.ghost,.fakeCaret"), function (g) { g.remove(); }); document.body.classList.remove("demoTyping"); [].forEach.call(document.querySelectorAll(".simHover,.simPress"), function (g) { g.classList.remove("simHover", "simPress"); }); TB.targets = [];
     dmUI("idle");
     if (pq()) { pqEval(); pqPanel(); }
   }
   function pgDemo() {
     if (pgRun) { pgStop(); return; }
-    closePt(); var run = ++pgRun; PG.demoFin = false; zoomHome(true); theme(); pgShift = 0; dmUI("playing");
+    var ONE = pgOne; pgOne = null;
+    closePt(); var run = ++pgRun; PG.demoFin = false; if (!ONE) zoomHome(true); theme(); pgShift = 0; if (!ONE) dmUI("playing");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
-    PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = [];
+    if (!ONE) { PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = []; }
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
-    if (PQ && wf()) wfPG();
-    if (GD) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
-    Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 0; PG.eOK = false; PG.eqTxt = ""; } else if (wf()) { PG.eqTxt = "g(x)="; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; } drawPlay();
-    function cap(t) { dmCap(t); }
+    if (PQ && wf() && !ONE) wfPG();
+    if (GD && !ONE) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
+    if (!ONE) { Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 0; PG.eOK = false; PG.eqTxt = ""; } else if (wf()) { PG.eqTxt = "g(x)="; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; } drawPlay(); }
+    function cap(t) { if (ONE) note(t); else dmCap(t); }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
     // the demo's hand makes a button look hovered when it arrives and pressed when it taps, just as for a real pointer
@@ -7240,9 +7359,20 @@ var ESPIC = {
         handGo(ctr(c), 650);
         pgWait(800, function () { handTap(); pgWait(250, function () { handGo(ctr($("pgEq")), 1400); fly(c, $("pgEq"), function () { if (pgRun !== run) return; wfReplace(); pgWait(1800, n); }, false); }); });
       };
-      var wsimp = function (n) { var b = $("wfSteps").querySelector("[data-wf=\"s\"]"); if (!b) { n(); return; } cap("Combine like terms."); tap(b, function () { pgWait(1800, n); }); };
+      var wsubx = function (n) {
+        var c = document.querySelector("[data-wfin]"), t = document.querySelector("[data-wfchip]"); if (!c || !t || QZ.wd.i) { n(); return; }
+        cap("Drag the move inside the parentheses onto f(x) in the question.");
+        handGo(ctr(c), 650);
+        pgWait(800, function () { handTap(); pgWait(250, function () { handGo(ctr(t), 1400); fly(c, t, function () { if (pgRun !== run) return; wfSubstX(); pgWait(1800, n); }, false); }); });
+      };
+      var wsimp = function (n) {
+        (function again() {
+          if (pgRun !== run) return; var b = document.querySelector("#pgEq [data-wfop]"); if (!b || QZ.step >= 4) { n(); return; }
+          var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Click the parentheses to take them away." : "Click the operation between two numbers to combine them."); tap(b, function () { pgWait(1500, again); });
+        })();
+      };
       steps = [
-        wdrag, wsub, wsimp,
+        wdrag, wsubx, wsub, wsimp,
         function (n) { cap("The red graph is f moved " + wfMoves(wp) + "."); pgWait(2800, n); }
       ];
     }
@@ -7330,7 +7460,47 @@ var ESPIC = {
         function (n) { cap("Your turn"); pgWait(2500, n); }
       ]);
     }
-    (function next() { if (pgRun !== run) return; if (k >= steps.length) { PG.demoFin = true; pgStop(); return; } steps[k++](next); })();
+    // "Demo next step": the one step of the full demo that the student has not done yet (the work is put back when it ends)
+    function dnPick() {
+      var one = function (f) { return [function (n) { f(function () { pgWait(1200, n); }); }]; };
+      if (PQ && wf()) {
+        var nx = wfNext(), last = wfStg(wp).length - 1;
+        if (nx === "m") return [steps[0]];
+        if (nx === "i") return [steps[1]];
+        if (nx === "r") return [steps[2]];
+        if (nx === "s") return one(function (n) {
+          var b = document.querySelector("#pgEq [data-wfop]"); if (!b) { n(); return; }
+          var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Click the parentheses to take them away." : "Click the operation between two numbers to combine them.");
+          handGo(ctr(b), 650); pgWait(850, function () { handTap(); pgWait(300, function () { wfSimplify(); n(); }); });
+        });
+        return [function (n) { cap("Everything is done."); n(); }];
+      }
+      var R = TB.rows(), sym = pqFam !== 1, row = -1, i;
+      for (i = 0; i < R.length; i++) if (!R[i].done) { row = i; break; }
+      var tableStep = function (n) {
+        var r = row;
+        if (r === 3 && sym && R[1].done) { cap("Copy a y-value: drag it from one y cell to another cell with the same answer."); dragY(1, 3, n); return; }
+        if (r === 4 && sym && R[0].done) { cap("Same for the first row: drag its y-value to the last."); dragY(0, 4, n); return; }
+        if (r % 2) { cap("Click a calculation to simplify it."); clickRow(r, n); } else { cap("Type a y-value."); typeRow(r, n); }
+      };
+      var plotted = function (j) { var p = TB.pt(j); return PG.pts.some(function (z) { return z[0] === p[0] && z[1] === p[1]; }); };
+      if (GD) {
+        if (!PG.subd) return [steps[0]];
+        if (row >= 0) return one(tableStep);
+        if (!PG.pdone) return [steps[5]];
+        if (!PG.show.graph) return [steps[7]];
+        if (!PG.dOK) return [gdTyped() ? steps[9] : steps[10]];
+        return [function (n) { cap("Everything is done."); n(); }];
+      }
+      if (!PG.show.eq) return [steps[0]];
+      if (!PG.subd) return [steps[1]];
+      if (row >= 0) return one(tableStep);
+      for (i = 0; i < 5; i++) if (!plotted(i)) { var j = i; return one(function (n) { cap("Drag a row onto the graph."); dragRow(j, n); }); }
+      if (!(PG.shape && shapeOK(PG.shape))) return [steps[7]];
+      return [function (n) { cap("Everything is done."); n(); }];
+    }
+    if (ONE) steps = dnPick();
+    (function next() { if (pgRun !== run) return; if (k >= steps.length) { if (ONE) { pgWait(900, function () { pgStop(); }); return; } PG.demoFin = true; pgStop(); return; } steps[k++](next); })();
   }
   // one button starts, pauses and resumes the demo; End demo appears while it is paused
   $("pgDemo").addEventListener("click", function () { if (dmClickFinish()) return; if (!pgRun) pgDemo(); else if (!pgPaused) pgPause(); else pgResume(); });
