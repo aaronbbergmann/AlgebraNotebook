@@ -5270,6 +5270,7 @@ var ESPIC = {
     if (gd() && mode === "create" && !QZ.cr) { gdCreateAdopt(t); return; }
     if (wfCr()) { wfCreateIn(t); return; }
     if (pq() && !eqTypedOK(t)) { if (wf()) wfWrong(t); else pqEqWrong(t); return; }
+    if (!wfSimp(t)) { QZ.wrong++; pqMsg("That is right, but it is not simplified. Remove the parentheses and combine like terms."); eqShake(); return; }
     var tg = document.querySelector(".tog[data-part=eq]"); if (tg) { pqMsg(""); tg.click(); }
     if (wf()) { PG.wfShift = null; wfFinal(); var tg2 = document.querySelector(".tog[data-part=graph]"); if (tg2 && !PG.show.graph) tg2.click(); }
   }
@@ -6141,7 +6142,7 @@ var ESPIC = {
   // a right answer typed into the box is accepted at once, without Return (when no answer is known, Return is still needed)
   function eqAuto() {
     if (!pq() || !QZ || !QZ.order || QZ.step >= 4 || PG.show.eq || pqBusy || wfCr() || (gd() && mode === "create" && !QZ.cr)) return;
-    var t = pqTyped(); if (t && eqTypedOK(t)) eqEnter();
+    var t = pqTyped(); if (t && eqTypedOK(t) && wfSimp(t)) eqEnter();   // (an unsimplified answer in Combining waits for Return, which tells the student what is left)
   }
   document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("eqIn")) { e.target.blur(); eqEnter(); } });
   // is a typed equation the same function as the real one? (tested at several x-values, so any equivalent form counts)
@@ -6833,6 +6834,12 @@ var ESPIC = {
     QZ.wfp = [wfG({ fam: r.fam, fa: r.a, fh: r.fam === 2 ? r.h : 0, fk: r.k, dh: 0, dk: 0 })]; QZ.cs = "move"; QZ.pi = 0; QZ.cc = []; QZ.cm = "";
     PG.fam = r.fam; PG.a = r.a; PG.h = r.fam === 2 ? r.h : 0; PG.k = r.k; PG.show.eq = true; PG.eqTxt = ""; pqMsg("");
     drawPlay(); pqPanel(); setTimeout(function () { var m = $("wfSteps").querySelector(".wfMv"); if (m) m.focus(); }, 30);
+  }
+  // Combining Transformations, Solo: the answer must be fully simplified: a line is ax + b, an absolute value is a|x - h| + k (no parentheses, no like terms left)
+  function wfSimp(t) {
+    if (!(wf() && lesson === 4 && mode === "solo")) return true;
+    var r = String(t).replace(/\s/g, "").replace(/^[fg]\(x\)=/i, "").replace(/−/g, "-").replace(/\*/g, "").replace(/\u00b7/g, "");
+    return /^[+-]?(\d+)?x([+-]\d+)?$/.test(r) || /^[+-]?(\d+)?\|x([+-]\d+)?\|([+-]\d+)?$/.test(r) || /^[+-]?\d+$/.test(r);
   }
   function wfFacRow() {
     return "<div class=\"wfRow\">" + [["2", "2"], ["3", "3"], ["4", "4"], ["1/2", wfFr(1, 2)], ["1/3", wfFr(1, 3)], ["1/4", wfFr(1, 4)]].map(function (b) { return "<button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"sc\" data-v=\"" + b[0] + "\">" + b[1] + "</button>"; }).join("") + "</div>";
