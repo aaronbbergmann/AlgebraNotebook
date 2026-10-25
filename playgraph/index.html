@@ -494,6 +494,19 @@
     .work{font-size:clamp(1.3rem,5.6vw,2.4rem)}
   }
   @media (prefers-reduced-motion:reduce){.pop,.shake{animation:none}.eqn,.slide,.eq{transition:none}}
+  /* the controls at the top of the side panel are one row of small links: 1.2 > Reflections > Calculate = 40% (the welcome page keeps its own look) */
+  body:not(.wel) .ctlbox>.ctl-sel{flex-direction:row;flex-wrap:nowrap;align-items:baseline;justify-content:center;gap:0;white-space:nowrap}
+  .ctl-sel .cs{display:inline-flex;align-items:baseline;white-space:nowrap}
+  .ctl-sel .cs[hidden]{display:none!important}
+  body:not(.wel) .ctl-sel .cs:not(.first)::before{content:">";margin:0 .3em;opacity:.55;font:600 .8rem system-ui,sans-serif}
+  body:not(.wel) .ctl-sel .cs.eq::before{content:"=";color:var(--ink)}
+  body:not(.wel) .ctlbox .ctl-sel select,body:not(.wel) .ctlbox .ctl-sel select#lesson,body:not(.wel) .ctlbox .ctl-sel select#modeSel,body:not(.wel) .ctlbox .ctl-sel .actBtn,body:not(.wel) .ctlbox .ctl-sel .ctlLink{appearance:none;-webkit-appearance:none;box-sizing:content-box;width:auto;min-width:0;background:transparent;border:0;border-radius:4px;padding:.15em .1em;margin:0;font:600 .82rem system-ui,sans-serif;color:var(--ink);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:color-mix(in srgb,var(--ink) 40%,transparent);cursor:pointer;text-align:left;text-overflow:clip}
+  body:not(.wel) .ctl-sel .actBtn::after{display:none}
+  body:not(.wel) .ctlbox .ctl-sel select{padding-left:0;padding-right:0;margin-left:-.1em;margin-right:-.3em}
+  body:not(.wel) .ctl-sel .actBtn span{white-space:nowrap}
+  body:not(.wel) .ctlbox .ctl-sel select:hover,body:not(.wel) .ctlbox .ctl-sel .actBtn:hover,body:not(.wel) .ctlbox .ctl-sel .ctlLink:hover{text-decoration-color:currentColor;background:color-mix(in srgb,var(--plus) 14%,transparent)}
+  body.solver #progLnk,.play:not(.pq) #progLnk,body.wel #progLnk{display:none!important}
+  #progBtn{display:none!important}
 </style>
 </head>
 <body>
@@ -3666,7 +3679,7 @@
     if (!(l[4] > 1)) for (var m0 = MORD.indexOf(l[1]); m0 < 4; m0++) if (prog[l[0] + ":" + MORD[m0] + ":p"]) return true;
     var tot = 0; for (var m = MORD.indexOf(l[1]); m < 4; m++) tot += prog[l[0] + ":" + MORD[m]] || 0; return tot >= (l[4] || 1); }
   function pct() { var p = 0; LEVELS.forEach(function (l) { if (BUILT[act].perLesson && l[0] !== lesson) return; if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }   // an activity with perLesson keeps a separate percentage for each exercise
-  function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; }
+  function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; var pl = $("progLnk"); if (pl) pl.textContent = pct() + "%"; }
   function openProg() {
     var p = pct(), h = "<h2 id=\"progT\">" + shortOf(act) + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = 0;
     var names = { 1: lessonName(1), 2: lessonName(2), 3: lessonName(3) };
@@ -5278,7 +5291,7 @@ var ESPIC = {
   function shortOf(id) { return id === "1.4D" ? "1.4 Algebra" : id; }
   function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
   function buildActs() {
-    $("actLbl").textContent = welcome ? "Choose an activity" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
+    $("actLbl").textContent = welcome ? "Choose an activity" : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
     if (fixedAct) document.title = fullTitle(act) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(act));
     $("actList").innerHTML = ACTS.map(function (a) {
       var ok = !!BUILT[a[0]], sel = !welcome && a[0] === act;
@@ -7669,6 +7682,28 @@ var ESPIC = {
     document.body.classList.remove("play", "dataAct"); if ($("regVals")) $("regVals").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false; $("pgCtl").hidden = true;
   }
 
+  // the controls at the top of the side panel: 1.2 > Reflections > Calculate = 40%, each a small link that opens the same menu (or the progress list)
+  (function () {
+    var sel = document.querySelector(".ctl-sel");
+    function wrap(el, cls) { var w = document.createElement("span"); w.className = "cs" + (cls ? " " + cls : ""); el.parentNode.insertBefore(w, el); w.appendChild(el); return w; }
+    wrap(sel.querySelector(".act")); wrap($("lesson")); wrap($("modeSel"));
+    var pl = document.createElement("button"); pl.type = "button"; pl.id = "progLnk"; pl.className = "ctlLink"; pl.title = "Progress"; pl.textContent = "0%";
+    var pw = document.createElement("span"); pw.className = "cs eq"; pw.appendChild(pl); sel.appendChild(pw);
+    pl.addEventListener("click", openProg);
+    var cv = document.createElement("canvas").getContext("2d");
+    function fit() {
+      [$("lesson"), $("modeSel")].forEach(function (e) {   // a select is as wide as the word it shows
+        var cs = getComputedStyle(e); if (cs.display === "none" || document.activeElement === e) return;
+        var o = e.options[e.selectedIndex]; if (!o) return; cv.font = cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily;
+        var w = Math.ceil(cv.measureText(o.text).width) + 4; if (e.style.width !== w + "px") e.style.width = w + "px";
+      });
+      var first = true;
+      [].forEach.call(sel.querySelectorAll(".cs"), function (w) {
+        var hid = getComputedStyle(w.firstElementChild).display === "none"; w.hidden = hid; w.classList.toggle("first", !hid && first); if (!hid) first = false;
+      });
+    }
+    fit(); setInterval(fit, 250); updProg();
+  })();
   buildActs(); buildLessons(); updProg();
   if (BUILT[act].play) { var bm = takeBoot(); setMode(bm); bootMode = bm; enterPlay(); bootMode = null; } else if (BUILT[act].quiz) enterQuiz(); else setMode(takeBoot());
   if (welcome) { document.body.classList.add("wel"); theme(); $("welcome").hidden = false; }
