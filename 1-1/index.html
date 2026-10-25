@@ -179,6 +179,7 @@
   body:not(.solver) #ansGo{display:none!important}   /* a typed right answer is accepted at once, so Progress activities need no Check answer button */
   body.pq.noSub .eqKeys .eqGo{display:none}   /* likewise the keypad's Submit, except in Create (the student's own function has no right answer to wait for) */
   body.pq #qzGo{display:none!important}
+  body.solver .exCo,body.solver .exExp,body.solver .pend,body.solver .exNeg,body.solver .eqn.free .raw{border-bottom-color:transparent}   /* Play Solve has no blue dotted underlines */
   #askOk[hidden]{display:none}
   .ok{color:var(--plus);font-weight:700}.bad{color:var(--no);font-weight:700}
   .grab{cursor:grab;touch-action:none;border-radius:6px}
@@ -447,7 +448,7 @@
   .nxRow{padding:0;gap:.5rem}
   body.solver #dmCtl{min-height:13rem;justify-content:flex-start}   /* Level Up, Try another and End demo share this space, so Hint, Undo and Show work never move */
   #nxHard[hidden],#dmHard[hidden]{display:none!important}
-  /* Play Solver: the Level Up button and the Try another link are always on screen (Create has no generated problem; Demo keeps them in its own button column) */
+  /* Play Solve: the Level Up button and the Try another link are always on screen (Create has no generated problem; Demo keeps them in its own button column) */
   html:not([data-mode=demo]):not([data-mode=create]) body.solver #nxHard,html:not([data-mode=demo]):not([data-mode=create]) body.solver #again{display:block!important}
   html:not([data-mode=demo]):not([data-mode=create]) body.solver #next[hidden]{display:block!important;visibility:hidden}   /* Next's place stays reserved until the problem is solved */
   html:not([data-mode=demo]):not([data-mode=create]) body.solver .nxRow{padding:.9rem 1rem 0}
@@ -1036,7 +1037,7 @@
     var r = sum(false);
     return !r || i < s.length || !r.length ? bad : r;
   }
-  // ---- letters as coefficients (Play Solver, equations): in ax + b = c the letters a, b, c are numbers whose values are not known, and the answer is x = (c - b)/a.
+  // ---- letters as coefficients (Play Solve, equations): in ax + b = c the letters a, b, c are numbers whose values are not known, and the answer is x = (c - b)/a.
   // A term may carry s = { letter: power }: ax is { k:"x", v:"x", n:1, s:{ a:1 } }, b is { k:"c", n:1, s:{ b:1 } }, x/a has s:{ a:-1 }. Terms are alike when they have the same letters.
   function sSig(s) { return Object.keys(s || {}).filter(function (l) { return s[l]; }).sort().map(function (l) { return l + (s[l] !== 1 ? "^" + s[l] : ""); }).join(""); }
   function sMul(a, b, k) { var o = {}; Object.keys(a || {}).forEach(function (l) { o[l] = a[l]; }); Object.keys(b || {}).forEach(function (l) { o[l] = (o[l] || 0) + k * b[l]; }); Object.keys(o).forEach(function (l) { if (!o[l]) delete o[l]; }); return o; }
@@ -1331,7 +1332,7 @@
   function exWork() {
     if (!EXP || !$("exBox") || $("exBox").hidden) return;
     var L = exLines(), key = L.join("\n");
-    if (!steps.length) { steps.push({ eqs: L, ms: L.map(function () { return ""; }) }); works.push({ steps: steps, label: MODES[mode] + " mode, Play Solver" }); if (works.length > 300) works.shift(); }
+    if (!steps.length) { steps.push({ eqs: L, ms: L.map(function () { return ""; }) }); works.push({ steps: steps, label: MODES[mode] + " mode, Play Solve" }); if (works.length > 300) works.shift(); }
     else {
       var k = -1; for (var i = steps.length - 1; i >= 0; i--) if (steps[i].eqs.join("\n") === key) { k = i; break; }
       if (k >= 0) steps.length = k + 1; else steps.push({ eqs: L, ms: L.map(function () { return ""; }) });
@@ -1529,6 +1530,7 @@
   function exHide() { $("exBox").hidden = true; $("wsEl").style.display = ""; }
   function exBegin() {
     hideKind(); distHide(); stopDemo(); closeAsk(false); stopParty(); busy = false; calc = null; $("modePick").hidden = true;
+    if (BUILT[act].solver) $("stT").textContent = svTitle();
     orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
     if (EXP.eq) { EXP.L = JSON.parse(JSON.stringify(EXP.orig.L)); EXP.R = JSON.parse(JSON.stringify(EXP.orig.R)); EXP.rel = EXP.orig.rel || "="; } else EXP.items = JSON.parse(JSON.stringify(EXP.orig));
     EXP.ask = null; EXP.zp = null; if (EXP.grq) EXP.zpq = false; logEl.innerHTML = ""; DM4.brk = false;
@@ -1538,14 +1540,14 @@
     $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : EXP.grp ? "Answer:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.zpq || EXP.grq ? "e.g. 3, -2" : EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
     exRender(); updUndo();
     if (EXP.eq) {
-      if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this equation solved."); }
+      if (mode === "demo") { dmUI("idle"); dmCap(BUILT[act].solver ? "" : "Press Start Demo to watch this equation solved."); }
       else if (mode === "solo") note("Solve it on your own, then type your answer.");
       else if (EXP.grq) note("Drag a term down into the square to factor by grouping: put each term in a box, then click the spaces on the left and above to type the greatest common factor of each row and column. The factored form goes back into the equation, and then you can split it into two equations." + (mode === "calculate" ? " You will be asked for each result." : ""));
       else if (EXP.zpq) note("Drag one of the parentheses up or down. A product is 0 only when one of its factors is 0 (the zero product property), so the equation splits." + (EXP.L[0] && EXP.L[0].c ? " One factor splits off and the other two stay together, ready to split again." : "") + (mode === "calculate" ? " You will be asked for each result." : ""));
       else note("Drag a term across the " + (eqIneq() ? "sign" : "=") + " to move it to the other side (its sign changes). Drop it on a like term to combine them. Drag the number in front of x across to divide." + (eqIneq() ? " Dividing or multiplying by a negative number turns the sign around." : "") + (EXP.lit ? " The letters are numbers too: dividing by a gives b/a." : "") + (mode === "calculate" ? " You will be asked for each result." : ""));
       return;
     }
-    if (mode === "demo") { dmUI("idle"); dmCap("Press Start Demo to watch this expression " + (EXP.fac ? "factored." : EXP.grp ? "factored by grouping." : "simplified.")); }
+    if (mode === "demo") { dmUI("idle"); dmCap(BUILT[act].solver ? "" : "Press Start Demo to watch this expression " + (EXP.fac ? "factored." : EXP.grp ? "factored by grouping." : "simplified.")); }
     else if (mode === "solo") note(EXP.fac ? "Factor it on your own, then type your answer, like 3(x + 2)." : EXP.grp ? "Simplify it or factor it on your own, then type your answer, like (x + 3)(x + 5)." : "Simplify it on your own, then type your answer.");
     else if (EXP.grp) note("Drag a term down into the square to factor by grouping, or drop it on a like term to combine them." + (mode === "calculate" ? " You will be asked for each result." : ""));
     else if (EXP.fac) note("Drag the number in front of x onto another term to factor out the biggest number they share." + (mode === "calculate" ? " You will be asked for each result." : ""));
@@ -2042,7 +2044,7 @@
       var kEl = el.querySelector(":scope > .exK");
       if (kEl) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, kEl, null, function (t2) { var p = t2.dataset.drop.split(":"); if (p[0] === "et") eqFactor(S, i, p[1], +p[2]); else eqFactor(S, i, eqOther(S), -1); }, ["et:", "eq="]); });
       var co = el.querySelector(".exCo");
-      if (co) co.addEventListener("pointerdown", function (e) { if (EXP.ask) return; co._hotAll = function (on) { [].forEach.call(R.querySelectorAll(".exT, .exEq, .exOp"), function (x) { x.classList.toggle("drop", on); }); }; zdr(idx, e, co, null, function () { eqDivide(); }, ["et:", "eq="]); });   // dividing acts on every term of both sides, so they all light up
+      if (co) co.addEventListener("pointerdown", function (e) { if (EXP.ask) return; divCross(co, R.querySelector(".exEq")); co._hotAll = function (on) { [].forEach.call(R.querySelectorAll(".exT, .exEq, .exOp"), function (x) { x.classList.toggle("drop", on); }); }; zdr(idx, e, co, null, function () { eqDivide(); }, ["et:", "eq="]); });   // dividing acts on every term of both sides, so they all light up
     });
   }
   function eqBuild(S, i, S2, j) {
@@ -2512,8 +2514,8 @@
   function paneIneq(n, demo) {   // 1: positive coefficient (3x + 2 < 14); 2: negative coefficient (the sign turns); 3: two numbers around a negative coefficient, maybe the variable on the right
     var q = solverEq(n === 1 ? rnd(2) : n === 2 ? 2 : 4, demo); q[0].rel = eqPickRel(); return q;
   }
-  // THE LEVEL LADDER of Play Solver: Level Up climbs it one step at a time, and every kind of example the solver can do has a rung here.
-  // Rule: whenever Play Solver learns something new (a new kind of term, step or equation), add a rung for it (and a generator branch in solverGo) so Level Up shows it.
+  // THE LEVEL LADDER of Play Solve: Level Up climbs it one step at a time, and every kind of example the solver can do has a rung here.
+  // Rule: whenever Play Solve learns something new (a new kind of term, step or equation), add a rung for it (and a generator branch in solverGo) so Level Up shows it.
   var LADDER = [
     { e: "pane", lv: 0 }, { e: "pane", lv: 1 }, { e: "pane", lv: 2 }, { e: "pane", lv: 3 }, { e: "pane", lv: 4 }, { e: "pane", lv: 5 }, { e: "pane", lv: 6 },   // one variable, one side (fractions last)
     { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 },                                         // the variable on both sides, parentheses, fractions
@@ -2649,9 +2651,10 @@
   }
   function solverGo(dl, m) {
     SOL.fresh = false; SOL.keep = true;
-    if (EXP && !EXP.eq) { SOL.lvl = Math.max(0, Math.min(10, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10; }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
+    if (EXP && !EXP.eq) { SV = "x"; SOL.lvl = Math.max(0, Math.min(10, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10; }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
     else {
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
+      SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
       if (st.e === "eq") {
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
         EXP.lit = !!st.lit; EXP.quad = false; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.grp ? { L: grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st.ineq) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
@@ -2716,6 +2719,14 @@
     }
     mvXCell(r, i); var co = c[2].querySelector(".co"); if (co && q[CK.x].n) co.addEventListener("pointerdown", function (e) { drag(e, co, null, function (t) { mvDropX(i, t); }, "mv:"); });
   }
+  // Play Solve: dragging a coefficient over the = divides, so a ÷ appears in front of it as soon as it is on the other side (the row does not shift)
+  function divCross(co, eqEl) {
+    var c0 = co.innerHTML, neg = /^[\u2212-]/.test(co.textContent.trim()); co._eqEl = eqEl;
+    co._cross = function (on) {
+      if (on) { var w0 = co.getBoundingClientRect().width; co.style.display = "inline-block"; co.style.width = w0 + "px"; co.style.whiteSpace = "nowrap"; co.innerHTML = "\u00f7" + (neg ? "(" + c0 + ")" : c0); }
+      else { co.style.display = co.style.width = co.style.whiteSpace = ""; co.innerHTML = c0; }
+    };
+  }
   function wire(r, q, i) {
     var c = r.children, vs = curVs(), N = c.length, eq = c[N - 2];
     eq.addEventListener("pointerdown", function (e) {
@@ -2732,7 +2743,7 @@
       var co = c[2 * k].querySelector(".co");
       if (!co || !q[CK[v]].n) return;
       co.classList.add("grab");
-      co.addEventListener("pointerdown", function (e) { drag(e, co, null, function (t, ev) { if (t.dataset.drop.indexOf("mv:") === 0) mvDropX(i, t); else if (sameRowRight(t, ev)) coefDrop(i); }, mvOn() ? ["row:", "mv:"] : "row:"); });
+      co.addEventListener("pointerdown", function (e) { if (BUILT[act].solver) divCross(co, eq); drag(e, co, null, function (t, ev) { if (t.dataset.drop.indexOf("mv:") === 0) mvDropX(i, t); else if (sameRowRight(t, ev)) coefDrop(i); }, mvOn() ? ["row:", "mv:"] : "row:"); });
     });
     q.ks.forEach(function (k, idx) {
       var cell = c[kslot(q, k, vs)];
@@ -2910,7 +2921,7 @@
     r.classList.remove("shake"); void r.offsetWidth; r.classList.add("shake");
   }
 
-  // clicking the = opens four buttons: + − × ÷ (Play Solver); the choice then asks for the amount to apply to the whole equation
+  // clicking the = opens four buttons: + − × ÷ (Play Solve); the choice then asks for the amount to apply to the whole equation
   var OPS = { add: ["+", "Add to both sides"], sub: ["\u2212", "Subtract from both sides"], mul: ["\u00d7", "Multiply every term by"], div: ["\u00f7", "Divide every term by"] };
   var opPopOff = null, opPopDone = null;
   function opPopClose() { var d = $("opPop"); if (d) d.remove(); if (opPopDone) { var fn = opPopDone; opPopDone = null; fn(); } if (opPopOff) { document.removeEventListener("pointerdown", opPopOff, true); document.removeEventListener("keydown", opPopOff, true); opPopOff = null; } }
@@ -3597,6 +3608,7 @@
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
       list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + workHTML(w.steps) + "</div>"; }).join("");
     var css = ".wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
+    body = svHTML(body);
     var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;max-width:34rem;margin:2rem auto;padding:0 1rem}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#7A3FB5}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
     try { w = window.open("", "_blank"); } catch (e) {}
     if (w) { w.document.write(doc); w.document.close(); }
@@ -3624,7 +3636,7 @@
 
   // ---- activities: AlgebraNotebook is a collection; each built activity sets its top lesson and its progress levels ----
   var ACTS = [
-    ["Play Solver", "Playground: Equation Solver", "Playground: Equation Solver"],
+    ["Play Solve", "Playground: Equation Solver", "Playground: Equation Solver"],
     ["Play Graph", "Playground: Equation Table Graph Description", "Playground: Equation Table Graph Description"],
     ["Play Data", "Playground: Data", "Playground: Data"],
     ["1.1", "Parent Functions and Transformations", "1.1 Parent Functions and Transformations"],
@@ -3649,7 +3661,7 @@
       [2, "demo", 10, "Demo Mode"], [2, "sequence", 25, "Sequence Mode"], [2, "calculate", 40, "Calculate Mode"], [2, "solo", 55, "Solo Mode"],
       [2, "solo", 80, "Solo Mode, 2nd round", 2], [2, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
-    "Play Solver": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
+    "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
     "Play Data": { play: true, data: true, top: 1, key: "algebraProgress:PlayData", levels: [] },   // a Data Activity (a kind of Graphing activity); for now an exact copy of Play Graph
     "1.4D": { title: "Solve", top: 3, sub: true, key: "algebraProgress", levels: [
@@ -3766,8 +3778,44 @@
   }
   function onSolved() {
     if (DNX) return;
-    tally(); nxShow(); if (mode !== "demo" && !BUILT[act].solver) $("next").focus();   // (in Play Solver Next changes the mode, so Enter on the last answer must not land on it)
+    tally(); nxShow(); if (mode !== "demo" && !BUILT[act].solver) $("next").focus();   // (in Play Solve Next changes the mode, so Enter on the last answer must not land on it)
   }
+  // ---- Play Solve: the letter being solved for. The engines always work in x; a generated problem picks one of x y z m n p t u v w and
+  // everything on screen that is a standalone x is shown as that letter (and what the student types is read back as x) ----
+  var SV = "x", SVL = ["x", "y", "z", "m", "n", "p", "t", "u", "v", "w"];
+  function svRand() { return window.__SV || SVL[Math.floor(Math.random() * SVL.length)]; }
+  function svOn() { return SV !== "x" && !!BUILT[act] && !!BUILT[act].solver; }
+  function svTitle() { return !(EXP && !EXP.eq) ? "Solve for " + SV : "Solve"; }
+  (function () {
+    var RX = /(?<![A-Za-z])x(?![A-Za-z])/g, skipSel = ".ctl-sel,#actList,.eqKeys,script,style,textarea";
+    function fixText(n) {
+      if (!svOn()) return; var t = n.nodeValue; if (!t || t.indexOf("x") < 0) return; var e = n.parentElement; if (e && e.closest(skipSel)) return;
+      var u = t.replace(RX, SV); if (u !== t) n.nodeValue = u;
+    }
+    function fixAttrs(e) { ["placeholder", "aria-label", "title"].forEach(function (a) { var v = e.getAttribute && e.getAttribute(a); if (v && v.indexOf("x") >= 0) { var u = v.replace(RX, SV); if (u !== v) e.setAttribute(a, u); } }); }
+    function fix(root) {
+      if (!svOn()) return;
+      if (root.nodeType === 3) { fixText(root); return; }
+      if (root.nodeType !== 1 || root.closest(skipSel)) return;
+      fixAttrs(root); [].forEach.call(root.querySelectorAll("[placeholder],[aria-label],[title]"), fixAttrs);
+      var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), n; while ((n = w.nextNode())) fixText(n);
+    }
+    window.svFix = fix;
+    new MutationObserver(function (ms) {
+      if (!svOn()) return;
+      ms.forEach(function (m) {
+        if (m.type === "characterData") fixText(m.target); else if (m.type === "attributes") fixAttrs(m.target); else [].forEach.call(m.addedNodes, fix);
+      });
+    }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["placeholder", "aria-label", "title"] });
+    // what the student types is read back in x; what the engine puts in a box is shown in the letter
+    var d = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+    Object.defineProperty(HTMLInputElement.prototype, "value", {
+      configurable: true,
+      get: function () { var v = d.get.call(this); return svOn() && v ? v.replace(new RegExp("(?<![A-Za-z])" + SV + "(?![A-Za-z])", "g"), "x") : v; },
+      set: function (v) { d.set.call(this, svOn() && v ? String(v).replace(RX, SV) : v); }
+    });
+  })();
+  function svHTML(h) { if (!svOn()) return h; var d = document.createElement("div"); d.innerHTML = h; svFix(d); return d.innerHTML; }
   var useCustom = null;
   function ints(E) { return E.every(function (q) { return allV().every(function (v) { return q[CK[v]].d === 1; }); }); }
   // can the demo walk through this system? (whole-number coefficients, and no zero coefficients to eliminate)
@@ -3804,7 +3852,7 @@
     if (st === "idle") dmCap("");
   }
   function dmCap(t) { var c = $("stCap"); if (c) c.textContent = t || ""; dmHead(); }
-  function dmTitle(t) { var c = $("stT"); if (c) c.textContent = t || ""; dmHead(); }
+  function dmTitle(t) { var c = $("stT"); if (t === "Solve" && BUILT[act] && BUILT[act].solver) t = svTitle(); if (c) c.textContent = t || ""; dmHead(); }
   function dmHead() {
     var h = $("stHead"); if (!h) return;
     var b = document.body, pgd = b.classList.contains("play"), dem = document.documentElement.dataset.mode === "demo";
@@ -3853,10 +3901,12 @@
     $("modePick").hidden = true; calc = null; hinted = false; mulNote = null; pend = null; stopParty(); stopDemo(); closeAsk(false); busy = false;
     var plain = mode === "solo" || mode === "create";
     if (mode === "demo") { curDm = demoN % 2 + 1; demoN++; }
+    if (BUILT[act].solver && mode === "create") SV = "x";   // the student's own equation keeps its x
     if (mode === "create") orig = [];
     else if (useCustom) { orig = useCustom; useCustom = null; if (BUILT[act].solver) { SOL.fresh = false; if (!SOL.keep) SOL.lvl = ladderPane(orig[0]); SOL.keep = false; } }
-    else if (BUILT[act].solver && mode === "demo" && SOL.fresh) { var sa = 2 + rnd(8), sd = parseAny(sa + "x=" + sa * (2 + rnd(8))); orig = [sd]; }   // Playground: Equation Solver: the first Demo is 3x=9
-    else orig = makeProblem();
+    else if (BUILT[act].solver && mode === "demo" && SOL.fresh) { SV = svRand(); var sa = 2 + rnd(8), sd = parseAny(sa + "x=" + sa * (2 + rnd(8))); orig = [sd]; }   // Playground: Equation Solver: the first Demo is 3x=9
+    else { if (BUILT[act].solver) SV = svRand(); orig = makeProblem(); }
+    if (BUILT[act].solver) $("stT").textContent = svTitle();
     ws = wsFromOrig();
     sys = []; sysV = []; elim = ""; elimInfo = lesson === 3 && orig.length === 3 && ints(orig) ? bestElim(orig) : null;
     hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = [];
@@ -3865,7 +3915,7 @@
     if (explainOn && logEl.children.length) { var dv2 = document.createElement("div"); dv2.className = "msg"; dv2.textContent = "New problem"; dv2.style.opacity = ".6"; logEl.appendChild(dv2); } else logEl.innerHTML = "";
     lastExp = ""; up = null; counted = false; $("again").hidden = true;
     var nx = $("next"); nx.disabled = false; nx.hidden = true; nx.textContent = "Next"; DM4.brk = false;
-    if (mode === "demo" && !DM4.run) { dmUI("idle"); dmCap("Press Start Demo to watch this problem solved."); }
+    if (mode === "demo" && !DM4.run) { dmUI("idle"); dmCap(BUILT[act].solver ? "" : "Press Start Demo to watch this problem solved."); }
     $("hint").hidden = plain; $("hint").textContent = hintLbl(); $("hint").classList.toggle("on", explainOn); updUndo();
     $("top").style.display = plain ? "none" : ""; $("vals").style.display = plain ? "none" : "";
     var building = mode === "create" && orig.length < allV().length;
