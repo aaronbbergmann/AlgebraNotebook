@@ -286,7 +286,9 @@
   .wfSteps .wfIn.bad{border-color:#C0301E;animation:shake .3s}
   .wfSteps .wfBtn{margin:.2rem .3rem .2rem 0}
   .cf{color:#2D70B3}.cg{color:#C74440}
-  .wfChip{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:.05em .35em;border-radius:8px;background:color-mix(in srgb,#2D70B3 12%,transparent);border:1.5px dashed #2D70B3}
+  .wfChip{user-select:none;-webkit-user-select:none;padding:.05em .35em;border-radius:8px;background:color-mix(in srgb,#2D70B3 12%,transparent);border:1.5px dashed #2D70B3}
+  .wfRhs{cursor:grab;touch-action:none;padding:0 .25em;border-radius:6px;background:color-mix(in srgb,#2D70B3 14%,transparent);box-shadow:0 0 0 1.5px #2D70B3}
+  .wfRhs:hover{background:color-mix(in srgb,#2D70B3 26%,transparent)}
   .tbg.cf{color:#2D70B3}
   .wfX{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:0 .2em;border-radius:6px;border:1.5px dashed #2D70B3;background:color-mix(in srgb,#2D70B3 12%,transparent)}
   .wfOp{cursor:pointer;border-radius:6px;padding:0 .22em;background:color-mix(in srgb,#C74440 16%,transparent);outline:1.5px dashed #C74440}
@@ -6228,7 +6230,7 @@ var ESPIC = {
   function wfRyF(p) { return p.fam === 1 ? wfCo(p.fa) + "(−" + wfX + ")" + (p.fk ? wfSg(p.fk) : "") : wfCo(p.fa) + "|−" + wfX + (p.fh ? wfSg(-p.fh) : "") + "|" + (p.fk ? wfSg(p.fk) : ""); }
   function wfQ() {
     var p = wfCur(); if (!p) return "";
-    var rule = wfChipHTML(p), f = wfSteppy() ? "<span class=\"lm cf wfChip\" data-wfchip title=\"Drag me onto g(x)\">" + rule + "</span>" : "<span class=\"lm cf\">" + rule + "</span>";
+    var rule = wfChipHTML(p), f = wfSteppy() ? "<span class=\"lm cf wfChip\" data-wfchip>" + rule + "</span>" : "<span class=\"lm cf\">" + rule + "</span>";
     return "The function <span class=\"cg\"><i>g</i>(<i>x</i>)</span> is " + f + " <span class=\"cg\">" + wfWhat(p) + "</span>." + (wfSteppy() ? "" : " Type <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>.");
   }
   // the numbers the Playground uses: g itself (a line slid sideways has no sideways part), or a neutral line while Create waits for f
@@ -6415,7 +6417,7 @@ var ESPIC = {
   // step 2: the move inside the parentheses (x + 1) is dragged onto f(x) in the question, and both x's of f change.
   // step 3: the question's f is dragged onto g(x), and its rule takes the place of f.
   document.addEventListener("pointerdown", function (e) {
-    var c = e.target.closest && e.target.closest("[data-wfchip],[data-wfin]"); if (!c || !wfSteppy() || QZ.step >= 4 || e.button > 0) return;
+    var c = e.target.closest && e.target.closest("[data-wfrhs],[data-wfin]"); if (!c || !wfSteppy() || QZ.step >= 4 || e.button > 0) return;
     var inn = c.hasAttribute("data-wfin");
     if (e.isTrusted) pgUser();
     e.preventDefault();
@@ -6431,11 +6433,12 @@ var ESPIC = {
     }
     document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); document.addEventListener("pointercancel", up);
   });
-  function wfChipHTML(p) {
-    if (p.rf && QZ.wd.i) return p.rf === "x" ? "−<i>f</i>(<i>x</i>) = −(" + wfRuleF(p) + ")" : "<i>f</i>(−<i>x</i>) = " + wfRyF(p);
-    return wfChipT(p);
+  // the question's f: "f(x) = rule". Only the rule, the right half, is picked up and dropped on g(x); the left side and the = stay put
+  function wfChipParts(p) {
+    if (p.rf && QZ.wd.i) return p.rf === "x" ? ["−<i>f</i>(<i>x</i>)", "−(" + wfRuleF(p) + ")"] : ["<i>f</i>(−<i>x</i>)", wfRyF(p)];
+    return ["<i>f</i>(<i>x</i>" + (QZ.wd.i && p.dh ? wfSg(-p.dh) : "") + ")", wfRuleF(p, QZ.wd.i ? p.dh : 0, 0)];
   }
-  function wfChipT(p) { return "<i>f</i>(<i>x</i>" + (QZ.wd.i && p.dh ? wfSg(-p.dh) : "") + ") = " + wfRuleF(p, QZ.wd.i ? p.dh : 0, 0); }
+  function wfChipHTML(p) { var q = wfChipParts(p); return q[0] + " = " + (wfSteppy() ? "<span class=\"wfRhs\" data-wfrhs title=\"Drag me onto g(x)\">" + q[1] + "</span>" : q[1]); }
   function wfSubstX() {
     var p = wfCur(); if (!p || QZ.step >= 4 || !wfNi(p) || QZ.wd.i) return;
     if (!QZ.wd.m) { pqMsg(p.rf ? "First flip the graph in the " + p.rf + "-axis." : "First drag the graph " + wfMoves(p) + "."); return; }
@@ -6480,7 +6483,7 @@ var ESPIC = {
       var nx = wfNext();
       if (nx === "m") h += p.rf ? "<div class=\"wfAsk\">Grab the red graph and flip it over the <span class=\"cg\">" + p.rf + "-axis</span>.</div>" : "<div class=\"wfAsk\">Drag the red graph to move <span class=\"cg\"><i>g</i> " + wfMoves(p) + "</span>.</div>";
       else if (nx === "i") h += "<div class=\"wfAsk\">Drag <span class=\"cf\">" + wfInnerTx(p) + "</span> from <span class=\"cg\"><i>g</i>(<i>x</i>)</span> onto <span class=\"cf\"><i>f</i>(<i>x</i>)</span> in the question.</div>";
-      else if (nx === "r") h += "<div class=\"wfAsk\">Drag the blue <span class=\"cf\"><i>f</i></span> from the question onto <span class=\"cg\"><i>g</i>(<i>x</i>)</span>.</div>";
+      else if (nx === "r") h += "<div class=\"wfAsk\">Drag the blue right side of <span class=\"cf\"><i>f</i>(<i>x</i>)</span> from the question onto <span class=\"cg\"><i>g</i>(<i>x</i>)</span>.</div>";
       else if (nx === "s") {
         var sq = wfStg(p)[QZ.wst + 1];
         if (mode === "calculate" && QZ.wop && sq && sq.q) {
@@ -7497,10 +7500,10 @@ var ESPIC = {
         });
       };
       var wsub = function (n) {
-        var c = document.querySelector("[data-wfchip]"); if (!c || QZ.wd.r) { n(); return; }
-        cap("Replace f with its rule: drag f(x) onto g(x).");
+        var c = document.querySelector("[data-wfrhs]"); if (!c || QZ.wd.r) { n(); return; }
+        cap("Replace f with its rule: drag the right side of f(x) onto g(x).");
         handGo(ctr(c), 650);
-        pgWait(800, function () { handTap(); pgWait(250, function () { c = document.querySelector("[data-wfchip]") || c; handGo(ctr($("pgEq")), 1400); fly(c, $("pgEq"), function () { if (pgRun !== run) return; wfReplace(); pgWait(1800, n); }, false); }); });
+        pgWait(800, function () { handTap(); pgWait(250, function () { c = document.querySelector("[data-wfrhs]") || c; handGo(ctr($("pgEq")), 1400); fly(c, $("pgEq"), function () { if (pgRun !== run) return; wfReplace(); pgWait(1800, n); }, false); }); });
       };
       var wsubx = function (n) {
         var c = $("pgEq").querySelector("[data-wfin]"), t = document.querySelector("[data-wfchip]"); if (!c || !t || QZ.wd.i) { n(); return; }
