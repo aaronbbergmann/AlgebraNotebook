@@ -176,6 +176,10 @@
   .panel{display:flex;flex-direction:column;align-items:center;gap:.8rem;margin:1rem auto;font-family:system-ui,sans-serif}
   .panel[hidden]{display:none}
   #ansFields[hidden],#ansT[hidden],#ansKind[hidden],#ansGo[hidden]{display:none}
+  body:not(.solver) #ansGo{display:none!important}   /* a typed right answer is accepted at once, so Progress activities need no Check answer button */
+  body.pq.noSub .eqKeys .eqGo{display:none}   /* likewise the keypad's Submit, except in Create (the student's own function has no right answer to wait for) */
+  body.pq #qzGo{display:none!important}
+  #askOk[hidden]{display:none}
   .ok{color:var(--plus);font-weight:700}.bad{color:var(--no);font-weight:700}
   .grab{cursor:grab;touch-action:none;border-radius:6px}
   .grab:hover{background:color-mix(in srgb,var(--plus) 20%,transparent)}
@@ -3153,6 +3157,7 @@
   function showInput() {
     $("askIn").value = ""; $("askErr").textContent = "";
     $("askIn").placeholder = askKind === "calc" ? (lesson === 3 ? "e.g. 2x+3y-z=12" : "e.g. 2x+3y=12") : askKind === "simp" ? (ws[askIdx] && ws[askIdx].rawS ? "e.g. 3/2" : "e.g. 3 or x = 3") : "e.g. 3";
+    $("askOk").hidden = !/^(mul|add|sub|div)$/.test(askKind);   // a right answer is accepted as it is typed; only an amount the student chooses waits for Send or Return
     $("ask").hidden = false; placeAsk(); $("askIn").focus(); askArrow(true); askSeq++;
   }
   // Calculate mode: a red arrow grows from small to large beside the prompt in the right side panel, so the student sees where to answer
@@ -5133,7 +5138,7 @@ var ESPIC = {
   function pqPanel() {
     var fam = qFam(), done = QZ.step >= 4, demo = mode === "demo";
     if (!((gd() || wf()) && mode === "create" && QZ.pick)) $("modePick").hidden = true;
-    document.body.classList.toggle("crPre", gd() && mode === "create" && !QZ.cr);
+    document.body.classList.toggle("crPre", gd() && mode === "create" && !QZ.cr); document.body.classList.toggle("noSub", mode !== "create");
     if (wfCr()) {
       if (QZ.pick) { $("pgQt").textContent = "Your move is in."; showPick($("pgQ"), "How would you like to work on it?"); }
       else if (QZ.cs === "move") { $("modePick").hidden = true; $("pgQt").innerHTML = "Now move it. Type how far, like right 3 and down 2."; }
