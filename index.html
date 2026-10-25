@@ -285,16 +285,16 @@
   .wfSteps .wfIn{width:7rem;font:500 1.1rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:10px;padding:.3em .5em}
   .wfSteps .wfIn.bad{border-color:#C0301E;animation:shake .3s}
   .wfSteps .wfBtn{margin:.2rem .3rem .2rem 0}
-  .cf{color:#2D70B3}.cg{color:#C74440}
-  .wfChip{user-select:none;-webkit-user-select:none;padding:.05em .35em;border-radius:8px;background:color-mix(in srgb,#2D70B3 12%,transparent);border:1.5px dashed #2D70B3}
+  .cf{color:#2D70B3}.cg{color:#7A3FB5}
+  .wfChip{user-select:none;-webkit-user-select:none;padding:.05em .35em;border-radius:8px}
   .wfRhs{cursor:grab;touch-action:none;padding:0 .25em;border-radius:6px;background:color-mix(in srgb,#2D70B3 14%,transparent);box-shadow:0 0 0 1.5px #2D70B3}
   .wfRhs:hover{background:color-mix(in srgb,#2D70B3 26%,transparent)}
   .tbg.cf{color:#2D70B3}
   .wfX{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:0 .2em;border-radius:6px;border:1.5px dashed #2D70B3;background:color-mix(in srgb,#2D70B3 12%,transparent)}
-  .wfOp{cursor:pointer;border-radius:6px;padding:0 .22em;background:color-mix(in srgb,#C74440 16%,transparent);outline:1.5px dashed #C74440}
-  .wfOp:hover{background:color-mix(in srgb,#C74440 30%,transparent)}
-  .wfChip.wfDropC{outline:3px dashed #C74440;outline-offset:3px}
-  #pgEq.wfDrop{outline:3px dashed #C74440;outline-offset:4px;border-radius:8px}
+  .wfOp{cursor:pointer;border-radius:6px;padding:0 .22em}
+  .wfOp:hover{background:color-mix(in srgb,#7A3FB5 18%,transparent)}
+  .wfChip.wfDropC{background:color-mix(in srgb,#7A3FB5 20%,transparent)}
+  #pgEq.wfDrop{background:color-mix(in srgb,#7A3FB5 14%,transparent);border-radius:8px}
   .wfSteps .wfLn.cf,.wfSteps .wfLn.cg{background:color-mix(in srgb,currentColor 8%,var(--bg))}
   .pgQt .lm{font:400 1.1em "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
 
@@ -3591,7 +3591,7 @@
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
       list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + workHTML(w.steps) + "</div>"; }).join("");
     var css = ".wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
-    var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;max-width:34rem;margin:2rem auto;padding:0 1rem}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#C74440}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
+    var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;max-width:34rem;margin:2rem auto;padding:0 1rem}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#7A3FB5}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
     try { w = window.open("", "_blank"); } catch (e) {}
     if (w) { w.document.write(doc); w.document.close(); }
     else { $("sheetBody").innerHTML = body; $("sheet").hidden = false; workNavInit($("sheetBody")); }
@@ -6018,8 +6018,8 @@ var ESPIC = {
         curvePts(pf).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#222", "stroke-width": ".07", "stroke-dasharray": ".3 .25" })); });
         for (var u = -2; u <= 2; u++) S.appendChild(svgEl("circle", { cx: u, cy: -pf(u), r: .13, fill: "#222", "pointer-events": "none" }));
       }
-      if (PG.show.graph && dataOK()) curvePts(g).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#C74440", "stroke-width": ".13", "stroke-linejoin": "round" })); spHit(S, pts, "c"); });
-      if (PG.show.graph && !isDataAct()) for (var v = -2; v <= 2; v++) { var y = g(v + H()); if (Math.abs(y - ZM.oy) <= 1.05 * ZM.curY) S.appendChild(svgEl("circle", { cx: v + H(), cy: -y, r: .2, fill: "#C74440", "pointer-events": "none" })); }
+      if (PG.show.graph && dataOK()) curvePts(g).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: wf() ? CG : "#C74440", "stroke-width": ".13", "stroke-linejoin": "round" })); spHit(S, pts, "c"); });
+      if (PG.show.graph && !isDataAct()) for (var v = -2; v <= 2; v++) { var y = g(v + H()); if (Math.abs(y - ZM.oy) <= 1.05 * ZM.curY) S.appendChild(svgEl("circle", { cx: v + H(), cy: -y, r: .2, fill: wf() ? CG : "#C74440", "pointer-events": "none" })); }
     }
     // the two transformation handles sit underneath every other dot
     // the two points are always there to drag, even with the graph hidden
@@ -6261,7 +6261,7 @@ var ESPIC = {
     wfSteps();
   }
   // f dotted and blue (the parent, always called f); g red. In the stepping modes g starts on top of f and is dragged by the student, with the green Play Graph arrows showing the move
-  var CF = "#2D70B3", CG = "#C74440";
+  var CF = "#2D70B3", CG = "#7A3FB5";
   // while a reflection is being dragged, m = the slope (a line) or the vertical stretch (an absolute value) follows the cursor
   var wfMp = null;
   function wfMTxt() {
@@ -6517,7 +6517,7 @@ var ESPIC = {
     if (mode === "solo" || !p || (mode === "demo" && !pgRun && !QZ.wl.length && QZ.step < 4)) { el.hidden = true; el.innerHTML = ""; askArrow(false); return; }
     if (QZ.step < 4) {
       var nx = wfNext();
-      if (nx === "m") h += p.rf ? "<div class=\"wfAsk\">Grab the red graph and flip it over the <span class=\"cg\">" + p.rf + "-axis</span>.</div>" : "<div class=\"wfAsk\">Drag the red graph to move <span class=\"cg\"><i>g</i> " + wfMoves(p) + "</span>.</div>";
+      if (nx === "m") h += p.rf ? "<div class=\"wfAsk\">Grab the purple graph and flip it over the <span class=\"cg\">" + p.rf + "-axis</span>.</div>" : "<div class=\"wfAsk\">Drag the purple graph to move <span class=\"cg\"><i>g</i> " + wfMoves(p) + "</span>.</div>";
       else if (nx === "i") h += "<div class=\"wfAsk\">Drag <span class=\"cf\">" + wfInnerTx(p) + "</span> from <span class=\"cg\"><i>g</i>(<i>x</i>)</span> onto <span class=\"cf\"><i>f</i>(<i>x</i>)</span> in the question.</div>";
       else if (nx === "r") h += "<div class=\"wfAsk\">Drag the blue right side of <span class=\"cf\"><i>f</i>(<i>x</i>)</span> from the question onto <span class=\"cg\"><i>g</i>(<i>x</i>)</span>.</div>";
       else if (nx === "s") {
@@ -7556,7 +7556,7 @@ var ESPIC = {
       };
       steps = [
         wdrag, wsubx, wsub, wsimp,
-        function (n) { cap("The red graph is f " + wfWhat(wp) + "."); pgWait(2800, n); }
+        function (n) { cap("The purple graph is f " + wfWhat(wp) + "."); pgWait(2800, n); }
       ];
     }
     var k = 0;
