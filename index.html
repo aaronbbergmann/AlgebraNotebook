@@ -160,6 +160,7 @@
   .exCo{border-radius:6px;cursor:grab;touch-action:none;border-bottom:2px dashed var(--plus)}
   .exExp{display:inline-block;cursor:grab;touch-action:none;border-radius:6px;padding:0 .1em;border-bottom:2px dashed var(--plus)}.exExp.exSqrt{font-size:1.5em;vertical-align:baseline;line-height:1;border-bottom:0}
   .exPm,.exRad.grab{cursor:pointer;border-radius:6px}.exPm{padding:0 .1em}.exPm:hover,.exRad.grab:hover{background:color-mix(in srgb,var(--plus) 25%,transparent)}.exRad{display:inline-flex;align-items:flex-end}.exRad .rbar{border-top:2px solid currentColor;padding:0 .12em;margin-left:-.05em}
+  .frS,.exU{cursor:pointer}.eqn .frS{border-bottom:0!important}.frS .fr>span:first-child,.exU .fr>span:first-child{border-bottom:.12em solid var(--plus)}.frS:hover .fr>span:first-child,.exU:hover .fr>span:first-child{border-bottom-color:currentColor}
   .exK{border-radius:6px;touch-action:none}.exT.grab>.exK{cursor:grab}.exT.grab>.exK:hover{background:color-mix(in srgb,var(--plus) 25%,transparent)}
   .exOp{padding:0 .3em}.exRow>.exOp:first-child{padding:0 .02em 0 0}.exT{padding:0 .1em;border-radius:6px;white-space:nowrap;transition:background .3s}
   .exT i{font-style:italic}.exT.hot{background:color-mix(in srgb,var(--plus) 30%,transparent)}
@@ -1249,6 +1250,7 @@
     return pm + (t.k === "r" ? "<span class=\"exRad\" title=\"Click to find the square root\"><span class=\"rsg\">\u221a</span><span class=\"rbar\">" + exFr(t.r) + "</span></span>" : exFr(mk(Math.abs(t.n.n), t.n.d)));
   }
   function exTerm(t, inner) {   // the term without its sign
+    if (t.u) return Math.abs(t.u.n) + "/" + t.u.d;   // a fraction that has not been simplified yet: 6/4
     if (t.k === "r" || t.pm) return exPmRad(t);
     if (t.k === "q") return "<span class=\"fr\"><span>" + exHtml(t.num) + "</span><span>" + exHtml(t.den) + "</span></span>";
     if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">" + exPar(t, t.items) + "</span>" + (t.b ? "<span class=\"exH\">" + exPar(t, t.b) + "</span>" : "") + (t.c ? "<span class=\"exH exJ\">" + exPar(t, t.c) + "</span>" : ""); }
@@ -1820,7 +1822,7 @@
   function eqKind() {   // "one" (x = 4 or 4 = x), "none", "inf", or "" while there is more to do
     if (EXP.lit) return litAlone(EXP.L, EXP.R) || litAlone(EXP.R, EXP.L) ? "one" : "";
     if (EXP.L.length !== 1 || EXP.R.length !== 1) return "";
-    var a = EXP.L[0], b = EXP.R[0]; if (a.k === "g" || b.k === "g" || a.k === "r" || b.k === "r" || a.pm || b.pm) return "";
+    var a = EXP.L[0], b = EXP.R[0]; if (a.k === "g" || b.k === "g" || a.k === "r" || b.k === "r" || a.pm || b.pm || a.u || b.u) return "";
     if (a.k === "c" && b.k === "c") return relHolds(EXP.rel || "=", cmpF(a.n, b.n)) ? "inf" : "none";
     var x = a.k === "x" ? a : b, c = a.k === "x" ? b : a;
     return x.k === "x" && (x.v || "x") === "x" && c.k === "c" && same(x.n, mk(1)) ? "one" : "";
@@ -1844,6 +1846,14 @@
     var N = eqClone(), line = exSay(EXP.L) + " = " + exSay(EXP.R);
     N[s.S] = [{ k: "x", v: "x", n: mk(1) }]; N[s.O] = [{ k: "r", n: mk(1), r: mk(s.r * s.r), pm: true }];
     eqSet(N, "The exponent crosses the = and becomes a square root: " + line + " becomes " + exSay(N.L) + " = " + exSay(N.R) + ". A positive and a negative number can both square to " + s.r * s.r + ", so the answer is \u00b1 the root.");
+  }
+  function eqFrSimp(S, i) {   // click the fraction bar: 6/4 becomes 3/2
+    if (locked || busy || EXP.ask) return;
+    var t = EXP[S][i]; if (!t || !t.u) return;
+    var N = eqClone(), c = N[S][i], raw = Math.abs(t.u.n) + "/" + t.u.d, red = exFr(mk(Math.abs(t.n.n), t.n.d)); delete c.u;
+    var say = raw + " simplifies to " + red + ".";
+    if (mode === "calculate") { eqAsk({ kind: "term", b: { N: N, msg: say, want: { k: "c", n: t.n, simp: true } } }, "Simplified ="); $("askIn").placeholder = "e.g. 3/2"; return; }
+    eqSet(N, say);
   }
   function eqSimp(S, i) {   // click the square root: find its value
     if (locked || busy || EXP.ask) return;
@@ -1922,7 +1932,7 @@
   }
   function eqRenderRow(R, hot, idx, fin) {   // one equation in a row; idx is its place in a split (the zero product property), -1 when not split
     if (idx >= 0) R.dataset.zrow = idx; else R.removeAttribute("data-zrow");
-    var live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked && !fin, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !!zpOf(EXP.L, EXP.R), gq = EXP.grq && !EXP.zpq, rad = EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm; });
+    var live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked && !fin, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !!zpOf(EXP.L, EXP.R), gq = EXP.grq && !EXP.zpq, rad = EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.u; });
     R.innerHTML = wrap("L") + "<span class=\"exEq" + (live && !un && !gq ? " grab" : "") + "\" data-drop=\"eq=\">" + relGlyph(EXP.rel) + "</span>" + wrap("R");
     grMark();
     var mulAsk = function () { if (EXP.ask || locked) return; if (idx >= 0 && EXP.zp && idx !== EXP.zp.act) { zpFocus(idx); eqRender(); } eqMulAsk(); };
@@ -1941,6 +1951,7 @@
       var S = el.dataset.s, i = +el.dataset.i, t = EXP[S][i], mEl = el.querySelector(":scope > .exM") || exSignOf(el), gEl = el.querySelector(":scope > .exG");
       if (rad) {   // ± and square roots are clicked, nothing is dragged
         var pe = el.querySelector(".exPm"), re = el.querySelector(".exRad");
+        if (t.u) { el.classList.add("grab", "exU"); el.title = "Click the fraction bar to simplify"; el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqFrSimp(S, i); }); }
         if (pe) { pe.classList.add("grab"); pe.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqPm(); }); }
         if (re) { re.classList.add("grab"); re.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqSimp(S, i); }); }
         return;
@@ -2014,8 +2025,9 @@
       if (mode === "calculate") { eqAsk({ kind: "mulq", b: { N: N3, msg: msg3 } }, "Divide both sides by " + sg(a3) + ". Type the new equation:"); $("askIn").placeholder = "e.g. x = 2/3x + 2"; return; }
       eqSet(N3, msg3); return;
     }
-    var N = eqClone(), t = N[s.S][0], c = N[s.O][0], a = t.n, q = mul(c.n, inv(a));
-    t.n = mk(1); c.n = q;
+    var N = eqClone(), t = N[s.S][0], c = N[s.O][0], a = t.n, q = mul(c.n, inv(a)), red = a.d === 1 && c.n.d === 1 && Math.abs(a.n) > 1 && gcd(c.n.n, a.n) > 1 && c.n.n % a.n !== 0 && c.k === "c";   // 6/4 stays as it is until its bar is clicked
+    t.n = mk(1); if (red) c.u = { n: c.n.n * (a.n < 0 ? -1 : 1), d: Math.abs(a.n) }; c.n = q;
+    if (red) { eqSet(N, "Divide both sides by " + sg(a) + ": " + sg(EXP[s.O][0].n) + " \u00f7 " + sg(a) + " = " + (c.u.n < 0 ? "\u2212" : "") + Math.abs(c.u.n) + "/" + c.u.d + ". Click the fraction bar to simplify."); return; }
     var b = { N: N, msg: "Divide both sides by " + sg(a) + ": " + sg(EXP[s.O][0].n) + " ÷ " + sg(a) + " = " + sg(q) + ".", want: { k: "c", n: q } };
     if (a.n < 0 && N.rel !== "=") { N.rel = relRev(N.rel); b.msg += " Dividing by a negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "."; }
     if (mode === "calculate") { eqAsk({ kind: "term", b: b }, sg(EXP[s.O][0].n) + " ÷ " + sg(a) + " ="); return; }
@@ -2089,7 +2101,7 @@
   }
   function eqAsk(info, label) {
     if (!$("ask").hidden) closeAsk(true);
-    askKind = "ex"; $("askT").textContent = label.replace(/ =$/, ":"); showInput(); $("askIn").placeholder = "e.g. 5x or −2"; EXP.ask = info;
+    askKind = "ex"; $("askT").textContent = label.replace(/ =$/, ":"); showInput(); $("askIn").placeholder = "e.g. 5x or −2"; EXP.ask = info; if (label === "Simplified =") $("askT").textContent = label;
   }
   function eqAskOK() {
     var k = EXP && EXP.ask; if (!k) return; var m = $("askErr"), ep = function (v) { return EXP.lit ? litTerms(v, "x", true) : exParse(v); }, r = k.kind === "mulq" ? [] : ep($("askIn").value);
@@ -2111,7 +2123,8 @@
       eqSet(k.b.N, k.b.msg); return;
     }
     if (k.kind === "term") {
-      var w = k.b.want, t = r[0];
+      var w = k.b.want, t = r[0], fm = w.simp ? /(\d+)\/(\d+)\s*$/.exec($("askIn").value) : null;
+      if (fm && gcd(+fm[1], +fm[2]) > 1) { m.textContent = "That fraction can still be simplified."; $("askIn").select(); return; }
       ok = r.length === 1 && t.k !== "g" && (w.n.n === 0 ? t.n.n === 0 : EXP.lit ? litKey(t) === litKey(w) : exKey(t) === exKey(w) && same(t.n, w.n));
     } else {
       var key = EXP.lit ? litKey : function (t) { return exKey(t) + ":" + t.n.n + "/" + t.n.d; };
@@ -2189,6 +2202,7 @@
   function eqNextStep() {
     var sides = ["L", "R"], q, i, j, S;
     if (EXP.zp && EXP.zp.done[EXP.zp.act]) { var nx = EXP.zp.done.indexOf(false); if (nx >= 0) zpFocus(nx); }
+    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].u) return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"]', cap: "Click the fraction bar to simplify.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(S, i) }; }
     if (EXP.zpq && zpOf(EXP.L, EXP.R)) return { cap: "If two numbers multiply to make 0, one of them must be 0. Drag a factor up.", mv: ['#exRow .exT[data-s="L"][data-i="0"] > .exG', zpAnchor(true)], run: function () { var a = $("zpAnchor"); if (a) a.remove(); zpSplit(0, true); } };
     for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return { hot: [S + i], cap: "Drag " + dgWord(EXP[S][i].m) + " onto the parentheses.", key: S + ":" + i, anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, distMsg(g, d), g); }; })(S, i) }; }
     for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"]', '.exT[data-s="' + S + '"][data-i="' + j + '"]'], cap: "Drag a term onto its like term.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
@@ -2217,6 +2231,10 @@
       if (lv === 0) { a = 2 + rnd(4); b = 1 + rnd(a - 1); e = (a - b) * x0; L = [X(a)]; R = [X(b), C(e)]; }
       else if (lv <= 2) { e = (a - b) * x0 + d; L = [X(a), C(d)]; R = [X(b), C(e)]; }
       else if (lv === 3) { if (m === b) continue; e = (m - b) * x0 + m * d; L = [{ k: "g", m: mk(m), items: [X(1), C(d)] }]; R = [X(b), C(e)]; }
+      else if (lv === 6) {   // the answer is a fraction that can be simplified: 7x + 2 = 3x + 8 gives 4x = 6, x = 6/4
+        var k6 = [4, 6, 8, 10][rnd(4)], b6 = 1 + rnd(3), m6 = nz(20); if (mGcd(m6, k6) < 2 || m6 % k6 === 0) continue;
+        e = m6 + d; if (!e) continue; L = [X(b6 + k6), C(d)]; R = [X(b6), C(e)]; if (rnd(2)) L.reverse(); if (rnd(2)) R.reverse(); EXP.L = L; EXP.R = R; return { L: L, R: R };
+      }
       else if (lv === 5) {   // parentheses on both sides, one of them with a minus sign: 4(x - 3) + 2 = 2x - (x + 1)
         var m1 = 2 + rnd(4), d1 = nz(5), d2 = nz(5), bb = nz(4), cc; if (bb === 1 || m1 === bb - 1) continue; cc = (bb - 1) * x0 - d2 - m1 * x0 - m1 * d1; if (!cc || Math.abs(cc) > 40) continue;
         L = [{ k: "g", m: mk(m1), items: [X(1), C(d1)] }, C(cc)]; R = [X(bb), { k: "g", m: mk(-1), items: [X(1), C(d2)] }]; e = 1;
@@ -2378,16 +2396,20 @@
   // THE LEVEL LADDER of Play Solver: Level Up climbs it one step at a time, and every kind of example the solver can do has a rung here.
   // Rule: whenever Play Solver learns something new (a new kind of term, step or equation), add a rung for it (and a generator branch in solverGo) so Level Up shows it.
   var LADDER = [
-    { e: "pane", lv: 0 }, { e: "pane", lv: 1 }, { e: "pane", lv: 2 }, { e: "pane", lv: 3 }, { e: "pane", lv: 4 }, { e: "pane", lv: 5 },   // one variable, one side (fractions last)
+    { e: "pane", lv: 0 }, { e: "pane", lv: 1 }, { e: "pane", lv: 2 }, { e: "pane", lv: 3 }, { e: "pane", lv: 4 }, { e: "pane", lv: 5 }, { e: "pane", lv: 6 },   // one variable, one side (fractions last)
     { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 },                                         // the variable on both sides, parentheses, fractions
-    { e: "eq", lv: 5 },                                                                                                                        // parentheses on both sides, one with a minus sign: 4(x - 3) + 2 = 2x - (x + 1)
+    { e: "eq", lv: 5 }, { e: "eq", lv: 6 },                                                                                                                        // parentheses on both sides, one with a minus sign: 4(x - 3) + 2 = 2x - (x + 1)
     { e: "eq", special: true },                                                                                                                // no solution / infinitely many
     { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 }, { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 }, { e: "eq", grp: 1 }, { e: "eq", grp: 2 }, { e: "eq", sq: 1 }, { e: "eq", sq: 2 }, { e: "eq", sq: 3 },                                                       // letters as coefficients: ax = b, ax + b = c, 2ax + 3b = 5c, like terms with letters
     { e: "pane", ineq: 1 }, { e: "pane", ineq: 2 }, { e: "pane", ineq: 3 },                                                                   // inequalities (the sign turns around for a negative)
     { e: "eq", ineq: 1 }, { e: "eq", ineq: 2 }, { e: "eq", ineq: 3, special: true }                                                           // two-sided inequalities, negative multipliers (incl. -1), never / always true
   ];
   function rung(e, f) { for (var i = 0; i < LADDER.length; i++) if (LADDER[i].e === e && f(LADDER[i])) return i; return 0; }
-  function ladderPane(q) { if (isIneq(q)) { var n = eqLevel(q) >= 4 ? 3 : q.a.n < 0 ? 2 : 1; return rung("pane", function (r) { return r.ineq === n; }); } return rung("pane", function (r) { return r.lv === eqLevel(q); }); }
+  function paneUnred(q) {   // the last step divides a whole number by a whole number that shares a factor with it, and the answer is not a whole number
+    var sm = q.ks.reduce(function (t, k) { return add(t, k.k); }, mk(0)), c = add(q.c, neg(sm));
+    return !q.flip && q.a.d === 1 && c.d === 1 && Math.abs(q.a.n) > 1 && gcd(c.n, q.a.n) > 1 && c.n % q.a.n !== 0;
+  }
+  function ladderPane(q) { if (!isIneq(q) && paneUnred(q)) return rung("pane", function (r) { return r.lv === 6; }); if (isIneq(q)) { var n = eqLevel(q) >= 4 ? 3 : q.a.n < 0 ? 2 : 1; return rung("pane", function (r) { return r.ineq === n; }); } return rung("pane", function (r) { return r.lv === eqLevel(q); }); }
   function ladderEq(L, R, rel) {
     var gg4 = R.length === 1 && R[0].k === "c" && !R[0].n.n ? grOf(L) : null;
     if (gg4) return rung("eq", function (r) { return r.grp === (gg4.a === 1 ? 1 : 2); });
@@ -2403,11 +2425,19 @@
     }
     if (rel && rel !== "=") { var n = sol.kind !== "one" ? 3 : hasNeg ? 2 : 1; return rung("eq", function (r) { return r.ineq === n; }); }
     if (sol.kind !== "one") return rung("eq", function (r) { return r.special && !r.ineq; });
+    var ul = exTot(L), ur = exTot(R), ua = add(ul.x || mk(0), neg(ur.x || mk(0))), uc = add(ur[""] || mk(0), neg(ul[""] || mk(0)));   // the last division leaves a fraction that can be simplified
+    if (!all.some(function (t) { return t.k === "g"; }) && ua.d === 1 && uc.d === 1 && Math.abs(ua.n) > 1 && gcd(uc.n, ua.n) > 1 && uc.n % ua.n !== 0) return rung("eq", function (r) { return r.lv === 6 && !r.ineq; });
     if (hasMinus1) return rung("eq", function (r) { return r.lv === 5; });
     return rung("eq", function (r) { return r.lv === eqLevelOf(L, R); });
   }
   function solverEq(lv, demo) {   // a variant of the given difficulty; whole-number coefficients when the Demo has to walk through it
-    if (demo && lv > 4) lv = 4;
+    if (demo && lv > 4 && lv !== 6) lv = 4;
+    if (lv === 6) {   // the answer is a fraction that can be simplified: 4x + 3 = 11 + ... shown as 8/6 until the bar is clicked (6x = 9 gives 9/6)
+      for (;;) {
+        var A6 = [4, 6, 8, 10, 12][rnd(5)] * (rnd(3) ? 1 : -1), m6 = nz(24), k6 = nz(9); if (mGcd(m6, A6) < 2 || m6 % A6 === 0 || !(m6 + k6)) continue;
+        var q6 = mkEq(A6, 0, 0, 0); q6.ks = [{ v: rnd(2) ? "p" : "s", k: mk(k6) }]; q6.c = mk(m6 + k6); return [q6];
+      }
+    }
     for (;;) {
       var big = lv >= 4 ? 12 : 9, a = nz(lv >= 4 ? 7 : 5), x = nz(big), k1 = nz(big), k2 = nz(big), ks = [], q, sum;
       if (Math.abs(a) < 2) a = a < 0 ? -2 : 2;
@@ -2627,7 +2657,7 @@
       if (!/^comb:/.test(cc.dataset.drop || "")) cc.dataset.drop = "comb:" + i + ":" + idx + ":*";
     });
     if (mvOn()) { mvTags(r, i); mvXCell(r, i); }
-    if (q.raw) { c[N - 1].classList.add("pend"); c[N - 1].addEventListener("click", function () { if (busy || dmLocked()) return; if (mode === "demo") doCalc(i); else openAsk(i, "simp"); }); }
+    if (q.raw) { c[N - 1].classList.add("pend"); if (q.rawS) { c[N - 1].title = "Click the fraction bar to simplify"; c[N - 1].classList.add("frS"); } c[N - 1].addEventListener("click", function () { if (busy || dmLocked()) return; if (mode === "demo" || (q.rawS && mode === "sequence")) doCalc(i); else openAsk(i, "simp"); }); }
   }
 
   // ---- generic drag: the dragged element follows the pointer; drop zones carry data-drop ----
@@ -2732,7 +2762,9 @@
   // a pending calculation (x = 6/2) becomes its answer
   function doCalc(i) {
     if (locked || !ws[i] || !ws[i].raw) return;
-    snap(); var n = JSON.parse(JSON.stringify(ws[i])); delete n.raw; ws[i] = n; done(i);
+    var was = ws[i].rawS ? ws[i].raw : "";
+    snap(); var n = JSON.parse(JSON.stringify(ws[i])); delete n.raw; delete n.rawS; ws[i] = n; done(i);
+    if (was) note(was.replace("-", "\u2212") + " simplifies to " + sg(n.c) + ".");
   }
   // + (−1) can be rewritten as − 1
   function convertK(i, idx) {
@@ -2879,10 +2911,13 @@
     n[key] = mk(1); if (q.flip) n.flip = true;
     if (q.rel) n.rel = co.n < 0 ? relRev(q.rel) : q.rel;   // dividing by a negative coefficient turns the sign around
     if (q.rel && co.n < 0) relTurned = true;
-    if (mode === "calculate") n.raw = sg(q.c) + "/" + wrap(co);
+    var red = co.d === 1 && q.c.d === 1 && Math.abs(co.n) > 1 && gcd(q.c.n, co.n) > 1 && q.c.n % co.n !== 0;   // 6/4: the fraction stays as it is until its bar is clicked
+    if (red) { n.raw = (q.c.n * (co.n < 0 ? -1 : 1)) + "/" + Math.abs(co.n); n.rawS = true; }
+    else if (mode === "calculate") n.raw = sg(q.c) + "/" + wrap(co);
     ws[i] = n; done(i);
     if (q.rel && co.n < 0) note("Dividing both sides by a negative number turns the sign around: " + q.rel + " becomes " + n.rel + ".");
-    if (mode === "calculate") openAsk(ws.indexOf(n), "simp");
+    else if (red) note("Click the fraction bar to simplify " + n.raw.replace("-", "\u2212") + ".");
+    if (mode === "calculate" && !red) openAsk(ws.indexOf(n), "simp");
   }
   // drag a constant over to the other side: combine it into the right side
   function constDrop(i, idx) {
@@ -2979,7 +3014,7 @@
   }
   function showInput() {
     $("askIn").value = ""; $("askErr").textContent = "";
-    $("askIn").placeholder = askKind === "calc" ? (lesson === 3 ? "e.g. 2x+3y-z=12" : "e.g. 2x+3y=12") : askKind === "simp" ? "e.g. 3 or x = 3" : "e.g. 3";
+    $("askIn").placeholder = askKind === "calc" ? (lesson === 3 ? "e.g. 2x+3y-z=12" : "e.g. 2x+3y=12") : askKind === "simp" ? (ws[askIdx] && ws[askIdx].rawS ? "e.g. 3/2" : "e.g. 3 or x = 3") : "e.g. 3";
     $("ask").hidden = false; placeAsk(); $("askIn").focus(); askArrow(true);
   }
   // Calculate mode: a red arrow grows from small to large beside the prompt in the right side panel, so the student sees where to answer
@@ -3000,7 +3035,7 @@
     if (!$("ask").hidden) closeAsk(true);
     askIdx = i; askKind = kind; askK = typeof idx === "number" ? idx : 0; askC = Array.isArray(idx) ? idx : null;
     var q = ws[i];
-    $("askT").textContent = kind === "add" ? "Add to both sides of the outlined equation:" : kind === "sub" ? "Subtract from both sides of the outlined equation:" : kind === "div" ? "Divide the outlined equation by:" : kind === "mul" ? "Multiply the outlined equation by:" : kind === "comb" ? "Combine " + combText(q, askC[0], askC[1]) + ":" : kind === "ksimp" ? "Calculate " + kPrompt(q, q.ks[askK], curVs()) + ":" : "Simplify " + q.raw + ":";
+    $("askT").textContent = kind === "add" ? "Add to both sides of the outlined equation:" : kind === "sub" ? "Subtract from both sides of the outlined equation:" : kind === "div" ? "Divide the outlined equation by:" : kind === "mul" ? "Multiply the outlined equation by:" : kind === "comb" ? "Combine " + combText(q, askC[0], askC[1]) + ":" : kind === "ksimp" ? "Calculate " + kPrompt(q, q.ks[askK], curVs()) + ":" : q.rawS ? "Simplified =" : "Simplify " + q.raw + ":";
     rows[i].classList.add("asking");
     showInput();
   }
@@ -3061,9 +3096,10 @@
       var kk = askKind === "ksimp" ? q1.ks[askK] : null, n1 = kk ? parse(txt) : numOrEq(txt, leftOf(q1));
       if (!n1) { err(kk ? "Type a number, like 6 or 3/2." : "Type a number, like 6, or the equation, like " + plain(fmt(q1)).split("=")[0].trim() + " = 6."); return; }
       if (!same(n1, kk ? kTarget(q1, kk, curVs()) : q1.c)) { err("Not quite. Try again."); $("askIn").select(); return; }
+      var fm = q1.rawS ? /(\d+)\/(\d+)\s*$/.exec(txt) : null; if (fm && gcd(+fm[1], +fm[2]) > 1) { err("That fraction can still be simplified."); $("askIn").select(); return; }
       closeAsk(false);
       if (kk) { simpSub(i, askK, true); return; }
-      delete q1.raw; done(i); return;
+      delete q1.raw; delete q1.rawS; done(i); return;
     }
     var got = parseEq(txt) || (lesson === 1 ? parseEqN(txt) : null);
     if (!got) { err("Type the whole equation, like " + (lesson === 3 ? "2x+3y-z=12." : "2x+3y=12.")); return; }
@@ -3081,6 +3117,7 @@
     if (locked) return "You solved it!";
     if (calc) return "Multiply every term by the number, then type the whole new equation.";
     if (ws.some(function (q) { return q.ks.some(function (k) { return k.r; }); })) return mode === "sequence" ? "Click the multiplication to calculate it." : "Do the multiplication in the parentheses and type the result.";
+    if (ws.some(function (q) { return q.rawS; })) return "Click the fraction bar to simplify the fraction.";
     if (ws.some(function (q) { return q.raw; })) return "Work out the calculation on the right side and type the result.";
     if (lesson === 3 && sys.length < 2) {
       if (!elimInfo) return "Choose a variable, make its terms opposites in two of the equations, then add them.";
@@ -3743,7 +3780,7 @@
     if (t === "const") return k && k.k.n < 0
       ? "There is a negative number, " + sg(k.k) + ", on the variable's side. Adding " + sg(ab(k.k)) + " to both sides cancels it, because adding the opposite makes 0."
       : "There is a + " + (k ? sg(k.k) : "number") + " on the variable's side. Subtracting it from both sides cancels it and leaves the variable's term alone.";
-    if (t === "calc") return "Now do the arithmetic to turn it into a single number.";
+    if (t === "calc") return q && q.rawS ? "The top and bottom of the fraction share a factor. Dividing both by it simplifies the fraction." : "Now do the arithmetic to turn it into a single number.";
     if (t === "comb") return "Two plain numbers are on the same side of the equation, so we can combine them into one number first. That is called combining like terms.";
     if (t === "simp") return "Putting a value in for a variable made a multiplication" + (k ? ", " + kview(q, k, curVs()).prompt : "") + ". Multiplying gives a single number.";
     return "We found " + s[1] + " = " + (vals[s[1]] ? sg(vals[s[1]]) : "a number") + ". Putting that value in place of " + s[1] + " in an equation leaves one fewer unknown, so we can solve for the next variable.";
@@ -3757,7 +3794,7 @@
     if (t === "coef") return "Divide both sides";
     if (t === "const") return q && q.ks[s[2]] && q.ks[s[2]].k.n < 0 ? "Add to both sides" : "Subtract from both sides";
     if (t === "comb") return "Combine like terms";
-    if (t === "calc") return "Calculate " + (q ? q.raw : "");
+    if (t === "calc") return q && q.rawS ? "Simplify " + q.raw.replace("-", "\u2212") : "Calculate " + (q ? q.raw : "");
     if (t === "simp") return q && q.ks[s[2]] ? "Calculate " + kview(q, q.ks[s[2]], curVs()).prompt : "Calculate";
     return "Substitute " + s[1];
   }
