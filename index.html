@@ -250,7 +250,7 @@
   .log .msg{align-self:stretch;max-width:none;background:none;padding:0;border-radius:0;font-size:1rem;line-height:1.45}
   .log .msg+.msg{padding-top:.6rem;border-top:1px solid color-mix(in srgb,var(--ink) 15%,transparent)}
   /* ---- 1.1 quiz ---- */
-  body.quiz:not(.pq) .pgCtl,body.quiz #undo,body.quiz:not(.wf) #show{display:none!important}
+  body.quiz:not(.pq) .pgCtl,body.quiz:not(.wf) #undo,body.quiz:not(.wf) #show{display:none!important}
   .pgQ{display:none}
   body.pq .pgQ{display:block;flex:0 0 100%;margin:0 0 .3rem .2rem}
   .pgQt{font:600 1.25rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
@@ -821,7 +821,7 @@
     logEl.appendChild(d); while (logEl.children.length > 80) logEl.removeChild(logEl.firstChild); logEl.scrollTop = logEl.scrollHeight;
   }
   function head() {}
-  function updUndo() { $("undo").hidden = !(mode === "create" ? orig.length : mode === "solo" ? ansTouched : hist.length); $("undo").disabled = false; }
+  function updUndo() { if (wf()) { wfUndoVis(); return; } $("undo").hidden = !(mode === "create" ? orig.length : mode === "solo" ? ansTouched : hist.length); $("undo").disabled = false; }
 
   // ---- display ----
   // which variables the workspace shows: all three, or just the two left after the first step
@@ -3095,6 +3095,7 @@
     done(i);
   }
   function undo() {
+    if (wf()) { wfUndo(); return; }
     hideKind();
     if (EXP && BUILT[act].solver && mode !== "create") { exUndo(); return; }
     if (busy || calc) return;
@@ -5137,7 +5138,7 @@ var ESPIC = {
         cu ? "Watch again" : u ? u.stayText || "" : "", function () { $("qzAgain").click(); });
     } else if (!pgRun) dmUI("idle");   // a fresh demo waits, its button highlighted
     $("hint").hidden = done || soloish();   // a right answer needs no hint
-    if (wf()) $("show").hidden = false;
+    if (wf()) { $("show").hidden = false; wfUndoVis(); }
     wfSteps();
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
@@ -6232,7 +6233,7 @@ var ESPIC = {
   }
   // the numbers the Playground uses: g itself (a line slid sideways has no sideways part), or a neutral line while Create waits for f
   function wfPG() {
-    var p = wfCur(); QZ.wd = {}; QZ.wl = []; QZ.wdr = { dh: 0, dk: 0, s: 1 }; QZ.wst = 0; QZ.wop = false; QZ.arrowAt = -1; PG.wfShift = null;
+    var p = wfCur(); QZ.wd = {}; QZ.wl = []; QZ.wh = []; QZ.wdr = { dh: 0, dk: 0, s: 1 }; QZ.wst = 0; QZ.wop = false; QZ.arrowAt = -1; PG.wfShift = null;
     for (var wi = works.length - 1; wi >= 0; wi--) if (works[wi].wf && works[wi].steps.length < 2) works.splice(wi, 1);   // a problem left unworked is not kept in Show work
     QZ.ww = null; if (p) { QZ.ww = { steps: [{ cls: "cf", eqs: ["f(x) = " + wfPlain(wfRuleF(p)).replace(/-/g, "\u2212")] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); } PG.show = { eq: false, table: false, graph: false, desc: false, parent: false }; PG.eqTxt = "g(x)=";
     if (p) { PG.fam = p.g.fam; PG.a = p.g.a; PG.h = p.g.h; PG.k = p.g.k; PG.pa = [PG.h + 1, PG.k + PG.a]; }
@@ -6348,6 +6349,20 @@ var ESPIC = {
     var inner = d.dh ? (QZ.wd.m && !QZ.wd.i ? "<span class=\"wfX\" data-wfin title=\"Drag me onto f(x) in the question\">" + wfX + wfSg(-d.dh) + "</span>" : wfX + wfSg(-d.dh)) : wfX;
     return "<span class=\"cg\"><i>g</i>(<i>x</i>) = </span><span class=\"cf\"><i>f</i>(" + inner + ")</span>" + (d.dk ? "<span class=\"cg\">" + wfSg(d.dk) + "</span>" : "");
   }
+  // Undo (Sequence and Calculate): each step is remembered just before it is taken, and Undo goes back one
+  function wfSnap() {
+    if (!QZ.wh) QZ.wh = [];
+    var d = QZ.wdr || { dh: 0, dk: 0, s: 1 };
+    QZ.wh.push({ wd: JSON.parse(JSON.stringify(QZ.wd)), wdr: QZ.wd.m ? JSON.parse(JSON.stringify(d)) : { dh: 0, dk: 0, s: 1 }, wst: QZ.wst, wl: QZ.wl.slice(), ws: QZ.ww ? QZ.ww.steps.length : 0 });
+    wfUndoVis();
+  }
+  function wfUndoVis() { $("undo").hidden = !(wf() && wfSteppy() && mode !== "demo" && QZ.wh && QZ.wh.length && QZ.step < 4); $("undo").disabled = false; }
+  function wfUndo() {
+    if (!QZ || !QZ.wh || !QZ.wh.length || QZ.step >= 4 || pgRun) return;
+    var h = QZ.wh.pop(); QZ.wd = h.wd; QZ.wdr = h.wdr; QZ.wst = h.wst; QZ.wl = h.wl; if (QZ.ww) QZ.ww.steps.length = h.ws;
+    QZ.wop = false; askArrow(false); PG.wfShift = null; pqMsg("");
+    drawPlay(); pqPanel(); wfSteps(); wfUndoVis();
+  }
   // step 1: dragging the red graph (or its dot) sets the move; the equation follows
   var wfDr = null;
   function wfSetDrag(dh, dk) {
@@ -6373,6 +6388,7 @@ var ESPIC = {
     QZ.wrong++; pqMsg("The question says to move " + wfMoves(p) + ".");
   }
   function wfMoveDone() {
+    wfSnap();
     var p = wfCur(), d = QZ.wdr, a = p.rf ? svgPt(p.rf === "y" ? -d.fx : d.fx, p.rf === "x" ? -d.fy : d.fy) : svgPt(p.fh + p.dh, wfF(p, p.fh) + p.dk), line = p.rf ? (p.rf === "x" ? "<i>g</i>(<i>x</i>) = −<i>f</i>(<i>x</i>)" : "<i>g</i>(<i>x</i>) = <i>f</i>(−<i>x</i>)") : "<i>g</i>(<i>x</i>) = <i>f</i>(<i>x</i>" + (p.dh ? wfSg(-p.dh) : "") + ")" + (p.dk ? wfSg(p.dk) : "");
     QZ.wd.m = true; if (!wfNi(p)) QZ.wd.i = true; QZ.wl.push(line); wfWork(line); pqMsg(""); drawPlay(); wfSteps(); rvMark("ok", a.x + 22, a.y - 22);
   }
@@ -6423,7 +6439,7 @@ var ESPIC = {
   function wfSubstX() {
     var p = wfCur(); if (!p || QZ.step >= 4 || !wfNi(p) || QZ.wd.i) return;
     if (!QZ.wd.m) { pqMsg(p.rf ? "First flip the graph in the " + p.rf + "-axis." : "First drag the graph " + wfMoves(p) + "."); return; }
-    QZ.wd.i = true; var c = document.querySelector("[data-wfchip]"), line = wfChipHTML(p);
+    wfSnap(); QZ.wd.i = true; var c = document.querySelector("[data-wfchip]"), line = wfChipHTML(p);
     if (c) c.innerHTML = line; QZ.wl.push(line); wfWork(line); pqMsg(""); drawPlay(); wfSteps();
   }
   function wfReplace() {
@@ -6431,14 +6447,14 @@ var ESPIC = {
     if (!QZ.wd.m) { pqMsg(p.rf ? "First flip the graph in the " + p.rf + "-axis." : "First drag the graph " + wfMoves(p) + "."); return; }
     if (!QZ.wd.i) { pqMsg("First drag " + wfPlain(wfInnerTx(p)).replace(/-/g, "−") + " from g(x) onto f(x) in the question."); return; }
     var line = "<i>g</i>(<i>x</i>) = " + wfStg(p)[0].h;
-    QZ.wd.r = true; QZ.wst = 0; QZ.wl.push(line); wfWork(line); pqMsg("");
+    wfSnap(); QZ.wd.r = true; QZ.wst = 0; QZ.wl.push(line); wfWork(line); pqMsg("");
     if (wfStg(p).length === 1) { QZ.wd.s = true; wfReveal(); return; }   // nothing is left to combine
     drawPlay(); wfSteps();
   }
   // step 4: simplify, one step at a time (a button in Sequence, a typed answer in Calculate)
   function wfSimplify() {
     var p = wfCur(); if (!p || QZ.step >= 4 || !QZ.wd.r || QZ.wst >= wfStg(p).length - 1) return;
-    QZ.wop = false; QZ.wst++; var line = "<i>g</i>(<i>x</i>) = " + wfStg(p)[QZ.wst].h; QZ.wl.push(line); wfWork(line);
+    wfSnap(); QZ.wop = false; QZ.wst++; var line = "<i>g</i>(<i>x</i>) = " + wfStg(p)[QZ.wst].h; QZ.wl.push(line); wfWork(line);
     if (QZ.wst >= wfStg(p).length - 1) { QZ.wd.s = true; wfReveal(); } else { drawPlay(); wfSteps(); }
   }
   function wfReveal() {
