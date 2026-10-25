@@ -356,6 +356,7 @@
   body.pq:not(.est) .tog[data-part=reg]{display:none!important}
   body.est:not(.pq) .tog[data-part=reg]{display:none!important}
   .estP{font-weight:500;font-size:1.05rem;line-height:1.45;font-family:inherit;color:var(--ink);max-width:44rem}
+  .estP.w5{max-width:34rem}
   .estWrap{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap}
   .estMain{flex:0 1 auto;min-width:0}
   svg.estPic{flex:none;width:10.5rem;height:8.75rem;color:var(--ink);background:color-mix(in srgb,var(--plus) 7%,transparent);border-radius:.6rem}
@@ -1434,7 +1435,7 @@
   function exDone(its) { return EXP.grp && exProd(its) ? true : EXP.fac ? facDone(its) : exFin(its); }
   function exEnd() {
     locked = true; exRender(); closeAsk(false);
-    if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note((EXP.fac || (EXP.grp && exProd(EXP.items)) ? "Fully factored: " : "Fully simplified: ") + exSay(EXP.items) + ".");
+    if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note((EXP.fac || (EXP.grp && exProd(EXP.items)) ? "Fully factored: " : "Fully simplified: ") + exSay(EXP.items) + ".");
     if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(EXP.fac || (EXP.grp && exProd(EXP.items)) ? "Fully factored!" : "Fully simplified!"); solverFinish(); }
     else { tally(); nxShow(); }
   }
@@ -2260,7 +2261,7 @@
       if (left) { closeAsk(false); eqRender(); note("One answer: " + sol + ". " + (left > 1 ? "Solve the other equations, in any order." : "Now solve the other equation.")); return; } EXP.zp.eqs[EXP.zp.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; EXP.zp.done[EXP.zp.act] = true; }
     locked = true; eqRender(); closeAsk(false);
     var iq = eqIneq(), txt = kind === "one" ? "Solved: " + (EXP.zp ? zpSay() : exSay(EXP.L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(EXP.R) : exSay(EXP.R))) + "." : kind === "none" ? (iq ? "No solution: the inequality is never true." : "No solution: the two sides can never be equal.") : (iq ? "Every number is a solution: the inequality is always true." : "Infinitely many solutions: the two sides are always equal.");
-    if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = "Correct!"; } else note(txt);
+    if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note(txt);
     if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(kind === "one" ? "Solved!" : kind === "none" ? "No solution" : iq ? "Every number" : "Infinitely many"); solverFinish(); }
     else { tally(); nxShow(); }
   }
@@ -3619,13 +3620,20 @@
   var NEXTMODE = { demo: "sequence", sequence: "calculate", calculate: "solo" }, LNAME = { 2: "2×2 Systems", 3: "3×3 Systems" };
   // ---- celebration: one congratulatory phrase over the screen for 3 seconds (clicks pass through) ----
   var party = null, partyTimer = null, lastPhrase = "";
-  var PHRASES = ["Tasty!", "Cool!", "Nice!", "Stands on business!", "It's a W!", "Hundo!", "Great job!", "Well done!", "Yeeesss!", "Sooo good!", "Goated!", "Pro status unlocked!"];
+  var PHRASES = ["Tasty!", "Cool!", "Nice!", "Stands on business!", "It's a W!", "Hundo!", "Great job!", "Well done!", "Yeeesss!", "Sooo good!", "Goated!", "Pro status unlocked!",
+    "Nice work!", "Excellent!", "Awesome!", "Brilliant!", "Nailed it!", "You got it!", "Exactly right!", "Spot on!", "Perfect!", "Fantastic!", "Terrific!", "That's the way!", "Outstanding!", "Impressive!", "Way to go!", "Bingo!", "Right on!", "Superb!", "You've got this!", "Correct, and nicely done!", "Look at you go!", "Now that's algebra!", "High five!"];
+  // one phrase for each finished problem in Solo: the message and the celebration drawn within a moment of each other are the same phrase, and a phrase never repeats right away
+  var cheerAt = 0;
+  function cheer() {
+    if (Date.now() - cheerAt < 1500 && lastPhrase) return lastPhrase;
+    var t; do { t = PHRASES[rnd(PHRASES.length)]; } while (t === lastPhrase);
+    lastPhrase = t; cheerAt = Date.now(); return t;
+  }
   function stopParty() { clearTimeout(partyTimer); if (party) { party.remove(); party = null; } }
   function celebrate() {
-    if (mode === "demo") return;   // no celebration for watching a demo
+    if (mode !== "solo") return;   // only a problem finished in Solo mode is celebrated, with one phrase
     stopParty();
-    var t; do { t = PHRASES[rnd(PHRASES.length)]; } while (t === lastPhrase);
-    lastPhrase = t;
+    var t = cheer();
     var P = document.createElement("div"), e = document.createElement("div"), reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     P.id = "party"; P.setAttribute("aria-hidden", "true"); e.className = "slay"; e.textContent = t; P.appendChild(e); document.body.appendChild(P); party = P;
     P.animate([{ background: "rgba(20,10,40,0)" }, { background: "rgba(20,10,40,.78)", offset: .12 }, { background: "rgba(20,10,40,.78)", offset: .8 }, { background: "rgba(20,10,40,0)" }], { duration: 3000, fill: "both", easing: "linear" });
@@ -3656,7 +3664,7 @@
       [3, "demo", 10, "Demo Mode"], [3, "sequence", 25, "Sequence Mode"], [3, "solo", 40, "Solo Mode"],
       [3, "solo", 70, "Solo Mode, 2nd round", 2], [3, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
-    "1.2": { quiz: true, top: 4, key: "algebraProgress:1.2", perLesson: true, modes: ["demo", "sequence", "calculate", "solo", "create"], lessons: ["Writing Translations", "Writing Reflections", "Writing Stretches and Shrinks", "Combining Transformations", "Profit from a Combination"], short: ["Translations", "Reflections", "Stretches", "Combining", "Profit"], levels: [
+    "1.2": { quiz: true, top: 5, key: "algebraProgress:1.2", perLesson: true, modes: ["demo", "sequence", "calculate", "solo", "create"], lessons: ["Writing Translations", "Writing Reflections", "Writing Stretches and Shrinks", "Combining Transformations", "Profit from a Combination"], short: ["Translations", "Reflections", "Stretches", "Combining", "Profit"], levels: [
       [1, "demo", 10, "Demo Mode"], [1, "sequence", 25, "Sequence Mode"], [1, "calculate", 40, "Calculate Mode"], [1, "solo", 55, "Solo Mode"],
       [1, "solo", 80, "Solo Mode, 2nd round", 2], [1, "solo", 100, "Solo Mode, 3rd round", 3],
       [2, "demo", 10, "Demo Mode"], [2, "sequence", 25, "Sequence Mode"], [2, "calculate", 40, "Calculate Mode"], [2, "solo", 55, "Solo Mode"],
@@ -3664,7 +3672,9 @@
       [3, "demo", 10, "Demo Mode"], [3, "sequence", 25, "Sequence Mode"], [3, "calculate", 40, "Calculate Mode"], [3, "solo", 55, "Solo Mode"],
       [3, "solo", 80, "Solo Mode, 2nd round", 2], [3, "solo", 100, "Solo Mode, 3rd round", 3],
       [4, "demo", 10, "Demo Mode"], [4, "sequence", 25, "Sequence Mode"], [4, "calculate", 40, "Calculate Mode"], [4, "solo", 55, "Solo Mode"],
-      [4, "solo", 80, "Solo Mode, 2nd round", 2], [4, "solo", 100, "Solo Mode, 3rd round", 3]
+      [4, "solo", 80, "Solo Mode, 2nd round", 2], [4, "solo", 100, "Solo Mode, 3rd round", 3],
+      [5, "demo", 10, "Demo Mode"], [5, "sequence", 25, "Sequence Mode"], [5, "calculate", 40, "Calculate Mode"], [5, "solo", 55, "Solo Mode"],
+      [5, "solo", 80, "Solo Mode, 2nd round", 2], [5, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -3971,7 +3981,7 @@
     }
     if (miss) { m.className = "bad"; m.textContent = lesson === 1 && isIneq(orig[0]) ? "Type your answer like x < 3 or x ≥ 1/2." : "Enter a number for each variable, like 3, -2 or 1/2."; return; }
     if (!ok) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
-    m.className = "ok"; m.textContent = "Correct!";
+    m.className = "ok"; m.textContent = mode === "solo" ? cheer() : "Correct!";
     // the answer fields and buttons give way to the correct solution
     var sl = cl === "one" ? solveSys(orig).map(function (t, j) { return "<span class=\"chip\"><i class=\"var\">" + allV()[j] + "</i> " + (lesson === 1 && isIneq(orig[0]) ? relGlyph(orig[0].a.n < 0 ? relRev(qRel(orig[0])) : qRel(orig[0])) : "=") + " " + sg(t) + "</span>"; }).join("") : "<span class=\"chip\">" + (cl === "inf" ? "Infinitely many solutions" : "No solution") + "</span>";
     $("ansSol").innerHTML = sl; $("ansSol").style.display = "flex"; $("ansSol").style.flexDirection = "row";
@@ -4647,7 +4657,7 @@
       if (QZ.pi === 3) { QZ.locked = true; counted = false; tally(); }
     }
     qzRender();
-    if (!QZ.locked) { var e = $("qzErr"); e.className = "ok"; e.textContent = "Correct!"; }
+    if (!QZ.locked) { var e = $("qzErr"); e.className = "ok"; e.textContent = mode === "solo" ? cheer() : "Correct!"; }
     if (mode === "demo") logQzExplain();
   }
   function qzNextParent() {
@@ -4932,8 +4942,8 @@
     if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = ""; return; }   // (one thing to answer: nothing to list)
     if (wfCr()) { $("pgQcue").innerHTML = ""; return; }
     if (wf()) { var ow = pqParts(), aw = QZ.step >= 4, ck = function (b) { return aw || b ? " <span class=\"cueOk\">\u2713</span>" : "?"; }; var pn = QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : "", P0 = wfProb();
-      if (P0 && P0.comb && wfSteppy()) { $("pgQcue").innerHTML = (pn ? pn + " · " : "") + "Transformation " + ((QZ.wsg || 0) + 1) + " of " + P0.comb.length + (wfLast() ? ": <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + " &nbsp; Graph" + ck(ow.graph) : ""); return; }
-      $("pgQcue").innerHTML = mode === "solo" ? pn : (pn ? pn + ": " : "") + "<span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + " &nbsp; Graph" + ck(ow.graph); return; }   // one thing to answer (Solo): only the problem count is shown
+      if (P0 && P0.comb && wfSteppy()) { $("pgQcue").innerHTML = (pn ? pn + " · " : "") + "Transformation " + ((QZ.wsg || 0) + 1) + " of " + P0.comb.length + (wfLast() ? ": <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + (lesson === 5 ? " &nbsp; Profit" : " &nbsp; Graph") + ck(ow.graph) : ""); return; }
+      $("pgQcue").innerHTML = mode === "solo" && lesson !== 5 ? pn : (pn ? pn + ": " : "") + "<span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + (lesson === 5 ? " &nbsp; Profit" : " &nbsp; Graph") + ck(ow.graph); return; }   // one thing to answer (Solo): only the problem count is shown
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
     var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
     $("pgQcue").innerHTML = (gd() && mode !== "create" && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
@@ -5200,9 +5210,9 @@ var ESPIC = {
     if (!((gd() || wf()) && mode === "create" && QZ.pick)) $("modePick").hidden = true;
     document.body.classList.toggle("crPre", gd() && mode === "create" && !QZ.cr); document.body.classList.toggle("noSub", mode !== "create");
     if (wfCr()) {
-      if (QZ.pick) { $("pgQt").textContent = lesson === 4 ? "Your transformations are in." : lesson === 3 ? "Your stretch or shrink is in." : lesson === 2 ? "Your reflection is in." : "Your move is in."; showPick($("pgQ"), "How would you like to work on it?"); }
-      else if (QZ.cs === "move") { $("modePick").hidden = true; $("pgQt").innerHTML = lesson === 4 ? (QZ.cm === "m" ? "Type how far, like right 3 and down 2." : QZ.cm === "s" ? "Choose a vertical stretch or shrink factor." : QZ.cc && QZ.cc.length ? "Choose the second transformation." : "Choose the first transformation.") : lesson === 3 ? "Choose a vertical stretch or shrink factor." : lesson === 2 ? "Choose an axis of reflection." : "Now move it. Type how far, like right 3 and down 2."; }
-      else { $("modePick").hidden = true; $("pgQt").innerHTML = "Type a line or an absolute value, like <span class=\"lm\"><i>f</i>(<i>x</i>) = 2<i>x</i> + 1</span>."; }
+      if (QZ.pick) { $("pgQt").textContent = lesson === 5 ? "Your profit problem is in." : lesson === 4 ? "Your transformations are in." : lesson === 3 ? "Your stretch or shrink is in." : lesson === 2 ? "Your reflection is in." : "Your move is in."; showPick($("pgQ"), "How would you like to work on it?"); }
+      else if (QZ.cs === "move") { $("modePick").hidden = true; $("pgQt").innerHTML = lesson === 5 ? (QZ.cm === "c" ? "Type the fixed cost in dollars, like 12." : "Choose the percent of the revenue that is the profit before the fixed cost.") : lesson === 4 ? (QZ.cm === "m" ? "Type how far, like right 3 and down 2." : QZ.cm === "s" ? "Choose a vertical stretch or shrink factor." : QZ.cc && QZ.cc.length ? "Choose the second transformation." : "Choose the first transformation.") : lesson === 3 ? "Choose a vertical stretch or shrink factor." : lesson === 2 ? "Choose an axis of reflection." : "Now move it. Type how far, like right 3 and down 2."; }
+      else { $("modePick").hidden = true; $("pgQt").innerHTML = lesson === 5 ? "Type the revenue for selling <i>x</i> items at one price, like <span class=\"lm\"><i>f</i>(<i>x</i>) = 25<i>x</i></span>." : "Type a line or an absolute value, like <span class=\"lm\"><i>f</i>(<i>x</i>) = 2<i>x</i> + 1</span>."; }
     }
     else if (wf()) $("pgQt").innerHTML = wfQ();
     else if (gd() && mode === "create" && !QZ.cr && QZ.pick) { $("pgQt").textContent = "Your function is in."; showPick($("pgQ"), "How would you like to work on it?"); }
@@ -5229,7 +5239,7 @@ var ESPIC = {
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
-  function pqParts() { if (wf()) return { eq: !!PG.show.eq, table: true, graph: !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: estTableOK(), graph: estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
+  function pqParts() { if (wf()) return { eq: !!PG.show.eq, table: true, graph: lesson === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: estTableOK(), graph: estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
   var pqBusy = false;
   function pqEval() {
     if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order || (gd() && mode === "create" && !QZ.cr) || wfCr()) return;
@@ -5242,9 +5252,9 @@ var ESPIC = {
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
         QZ.step = 4; var last = QZ.pi === QZ.order.length - 1;
         if (!QZ.custom && mode !== "create" && mode !== "demo") { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
-        pqMsg(est() || wf() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
+        pqMsg(mode === "solo" ? cheer() : est() || wf() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
         if (QZ.custom) {   // the student's own function: no Progress, and Next offers the next mode with the same function
-          pqMsg("Well done!", "ok"); var cm = wf() ? ["demo", "sequence", "calculate", "solo"] : ["demo", "sequence", "solo"], cn = cm[cm.indexOf(mode) + 1];
+          pqMsg(mode === "solo" ? cheer() : "Well done!", "ok"); var cm = wf() ? ["demo", "sequence", "calculate", "solo"] : ["demo", "sequence", "solo"], cn = cm[cm.indexOf(mode) + 1];
           up = { label: "Next", go: function () { gdCustom = null; wfCustom = null; if (mode === "demo") pqAnother(); else pqRegen(); } };   // as if a problem in this mode had just been finished: another one in the same mode
         }
         else if (mode === "create") { pqMsg("Well done!", "ok"); up = null; }   // Create never counts toward Progress
@@ -5273,12 +5283,12 @@ var ESPIC = {
     if (pq() && !eqTypedOK(t)) { if (wf()) wfWrong(t); else pqEqWrong(t); return; }
     if (!wfSimp(t)) { QZ.wrong++; pqMsg("That is right, but it is not simplified. Remove the parentheses and combine like terms."); eqShake(); return; }
     var tg = document.querySelector(".tog[data-part=eq]"); if (tg) { pqMsg(""); tg.click(); }
-    if (wf()) { PG.wfShift = null; wfFinal(); var tg2 = document.querySelector(".tog[data-part=graph]"); if (tg2 && !PG.show.graph) tg2.click(); }
+    if (wf()) { PG.wfShift = null; wfFinal(); var tg2 = document.querySelector(".tog[data-part=graph]"); if (tg2 && !PG.show.graph) tg2.click(); wfSteps(); }
   }
   function pqCheck() {
     if (QZ.step >= 4) return; pqEval(); if (QZ.step >= 4) return;
     var ok = pqParts(), need = [], fam = qFam(), t = pqTyped();
-    if (wf()) { if (t) { eqEnter(); return; } QZ.wrong++; pqMsg(mode === "solo" ? "Not quite. Try again." : "Type g(x) in the box."); return; }
+    if (wf()) { if (wf5Ev()) { var ei5 = $("wfSteps").querySelector("[data-k=e]"); if (ei5) { wf5Check(ei5, true); return; } } if (t) { eqEnter(); return; } QZ.wrong++; pqMsg(mode === "solo" ? "Not quite. Try again." : "Type g(x) in the box."); return; }
     if (est()) {
       if (!ok.table) need.push("the table (" + estRows().length + " of 5 rows)");
       if (!ok.graph) need.push("the regression for the right family");
@@ -6247,7 +6257,7 @@ var ESPIC = {
     gdCustom = { fam: r.fam, h: r.h, k: r.k, a: r.a }; QZ.pick = true; eqMsg(""); pqPanel();   // the function is in: now the student chooses the mode to work on it in
   }
   // ---- 1.2, first exercise: Writing Translations.  f (a line or an absolute value) is given, g is f moved right or left and up or down, and the student types g(x) ----
-  function wf() { return pq() && act === "1.2" && lesson >= 1 && lesson <= 4; }   // lesson 1 Writing Translations, 2 Writing Reflections, 3 Writing Stretches and Shrinks, 4 Combining Transformations
+  function wf() { return pq() && act === "1.2" && lesson >= 1 && lesson <= 5; }   // lesson 1 Writing Translations, 2 Writing Reflections, 3 Writing Stretches and Shrinks, 4 Combining Transformations
   function wfCr() { return wf() && mode === "create"; }
   var wfCustom = null;   // Create: the f and the move the student typed, carried into the other modes
   // Combining Transformations: P.comb holds the two single transformations.  In Demo, Sequence and Calculate they are worked one stage at a time (the first makes h from f,
@@ -6268,8 +6278,8 @@ var ESPIC = {
   function wfStr(p) { return !!p && !!p.scn; }
   function wfSc(p) { return p && p.scn ? p.scn / p.scd : -1; }
   function wfFr(n, d) { return d === 1 ? String(n) : "<span class=\"fr\"><span>" + n + "</span><span>" + d + "</span></span>"; }
-  function wfScH(p) { return wfFr(p.scn, p.scd); }
-  function wfScT(p) { return p.scd === 1 ? String(p.scn) : p.scn + "/" + p.scd; }
+  function wfScH(p) { return p.scTxt ? p.scTxt : wfFr(p.scn, p.scd); }
+  function wfScT(p) { return p.scTxt ? p.scTxt : p.scd === 1 ? String(p.scn) : p.scn + "/" + p.scd; }
   function wfRound(v) { return Math.round(v * 1e9) / 1e9; }
   // g from f: a line slid sideways is the same line slid up or down, so its sideways move folds into the y-intercept
   function wfG(p) {
@@ -6343,12 +6353,62 @@ var ESPIC = {
       return P;
     }
   }
+
+  // ---- 1.2, fifth exercise: Profit from a Combination.  A word problem: the revenue is f(x) = a x; the profit is a percent of the revenue (a shrink, h) minus a fixed cost (a move down, g).
+  // It is a Combining Transformations problem in two stages with a story, a picture and no graph, and it ends by evaluating the profit for a number of items.
+  function wf5() { return wf() && lesson === 5; }
+  function wf5Svg(inner) { return '<svg class="estPic" viewBox="0 0 120 100" role="img" aria-hidden="true" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">' + inner + '</svg>'; }
+  var WF5 = [
+    { id: "tix", s: function (a) { return "A school band sells concert tickets for $" + a + " each."; }, u: "tickets", v: "sold", cost: "renting the hall", lo: 5, hi: 60,
+      pic: '<path d="M14 30h92v14a9 9 0 0 0 0 18v14H14V62a9 9 0 0 0 0-18z" fill="var(--plus)" fill-opacity=".3"/><path d="M78 30v46" stroke-dasharray="3 5" stroke-width="2"/><path d="M28 50h32M28 60h22" stroke-width="2"/><path d="M92 40l2.5 5 5.5.8-4 3.8 1 5.4-5-2.7-5 2.7 1-5.4-4-3.8 5.5-.8z" stroke-width="1.5" fill="#d98a1c" fill-opacity=".6"/><path d="M0 92h120" stroke-width="2.5"/>' },
+    { id: "bread", s: function (a) { return "A bakery sells loaves of bread for $" + a + " each."; }, u: "loaves", v: "sold", cost: "the oven rental", lo: 4, hi: 30,
+      pic: '<path d="M18 66q-6-30 22-34h40q28 4 22 34v10H18z" fill="#d98a1c" fill-opacity=".35"/><path d="M42 42l6 14M60 40l6 14M78 42l6 14" stroke-width="2.5"/><path d="M8 90h104" stroke-width="2.5"/>' },
+    { id: "shirt", s: function (a) { return "A swim team sells T-shirts for $" + a + " each."; }, u: "T-shirts", v: "sold", cost: "the printing setup", lo: 10, hi: 40,
+      pic: '<path d="M40 16l-26 15 9 17 12-7v46h50V41l12 7 9-17-26-15q-6 11-22 11t-22-11z" fill="var(--plus)" fill-opacity=".3"/><circle cx="60" cy="58" r="9" stroke-width="2"/><path d="M56 58h8M60 54v8" stroke-width="1.5"/>' },
+    { id: "lemon", s: function (a) { return "A stand sells cups of lemonade for $" + a + " each."; }, u: "cups", v: "sold", cost: "the stand permit", lo: 2, hi: 12,
+      pic: '<path d="M34 28h52l-6 60H40z" fill="#e6c619" fill-opacity=".35"/><path d="M32 28h56" stroke-width="4"/><path d="M62 28l14-20" stroke-width="3"/><circle cx="60" cy="54" r="10" fill="#e6c619" fill-opacity=".45" stroke-width="2"/><path d="M60 44v20M50 54h20M53 47l14 14M67 47l-14 14" stroke-width="1.5"/>' },
+    { id: "poster", s: function (a) { return "A print shop sells posters for $" + a + " each."; }, u: "posters", v: "sold", cost: "the shop's daily rent", lo: 5, hi: 40,
+      pic: '<rect x="28" y="8" width="64" height="84" rx="3" fill="var(--plus)" fill-opacity=".14"/><circle cx="50" cy="34" r="8" fill="#d98a1c" fill-opacity=".5" stroke-width="2"/><path d="M34 78l16-22 12 13 10-11 14 20z" stroke-width="2.5" fill="currentColor" fill-opacity=".15"/><path d="M38 18h44" stroke-width="3"/>' },
+    { id: "plant", s: function (a) { return "A garden club sells potted plants for $" + a + " each."; }, u: "plants", v: "sold", cost: "the booth fee", lo: 5, hi: 40,
+      pic: '<path d="M38 62h44l-6 30H44z" fill="#b5651d" fill-opacity=".45"/><path d="M34 62h52" stroke-width="4"/><path d="M60 62V32" stroke-width="3"/><path d="M60 48q-26-2-28-24q24 0 28 24zM60 40q24-2 28-22q-24-2-28 22z" fill="#3d8f4f" fill-opacity=".5" stroke-width="2.5"/>' },
+    { id: "truck", s: function (a) { return "A food truck sells lunch plates for $" + a + " each."; }, u: "plates", v: "sold", cost: "the parking permit", lo: 8, hi: 40,
+      pic: '<path d="M8 74V38h56v36" fill="var(--plus)" fill-opacity=".16"/><path d="M64 50h24l14 14v10H64z"/><circle cx="30" cy="78" r="9"/><circle cx="86" cy="78" r="9"/><path d="M16 48h40v14H16z" stroke-width="2"/><path d="M6 38q30-16 60 0" stroke="#d98a1c" stroke-width="3"/><path d="M0 92h120" stroke-width="2.5"/>' },
+    { id: "bike", s: function (a) { return "A shop repairs bicycles for $" + a + " each."; }, u: "bicycles", v: "repaired", cost: "the shop's daily rent", lo: 20, hi: 60,
+      pic: '<circle cx="32" cy="68" r="17"/><circle cx="90" cy="68" r="17"/><path d="M32 68l20-32h28l10 32M52 36l16 32H32M46 28h14M78 36l-4-10h10" stroke-width="3"/><path d="M0 92h120" stroke-width="2.5"/>' },
+    { id: "cookie", s: function (a) { return "A club sells cookies at a bake sale for $" + a + " each."; }, u: "cookies", v: "sold", cost: "the table fee", lo: 2, hi: 10,
+      pic: '<circle cx="60" cy="52" r="32" fill="#c8852d" fill-opacity=".4"/><circle cx="47" cy="42" r="3.5" fill="currentColor" stroke="none"/><circle cx="70" cy="38" r="3.5" fill="currentColor" stroke="none"/><circle cx="62" cy="60" r="3.5" fill="currentColor" stroke="none"/><circle cx="44" cy="62" r="3.5" fill="currentColor" stroke="none"/><circle cx="78" cy="58" r="3.5" fill="currentColor" stroke="none"/><path d="M0 92h120" stroke-width="2.5"/>' }
+  ];
+  var WF5P = [[1, 2, "0.5"], [1, 4, "0.25"], [1, 5, "0.2"], [1, 10, "0.1"], [3, 10, "0.3"], [2, 5, "0.4"], [3, 5, "0.6"], [3, 4, "0.75"], [4, 5, "0.8"]];
+  var WF5C = [6, 8, 10, 12, 15, 18, 20, 24, 25, 30, 35, 40, 45, 50, 60, 75, 80];
+  function wf5Pct(q) { return wfRound(q[0] / q[1] * 100); }
+  // the story of a problem: sc = scenario, a = price, pc = [n, d, text], c = fixed cost; N = how many items the last question asks about
+  function wf5Build(sc, a, pc, c) {
+    var f = { fam: 1, fa: a, fh: 0, fk: 0 }, ops = [{ rf: "x", scn: pc[0], scd: pc[1] }, { dk: -c }], st = wfChain(f, ops), P, pct = wf5Pct(pc);
+    st[0].scTxt = pc[2]; st[0].words = "multiplied by " + pc[2] + " (" + pct + "% of the revenue)"; st[1].words = "lowered by the $" + c + " fixed cost";
+    P = wfBuildC(f, ops); P.comb = st; P.g = st[1].g;
+    var ns = [10, 20, 25, 30, 40, 50, 60, 100].filter(function (n) { var v = P.g.a * n + P.g.k; return v > 0 && v <= 3000 && n * a >= 0; });
+    P.ctx = { sc: sc.id, story: sc.s(a), u: sc.u, v: sc.v, cost: sc.cost, pct: pct, pcTxt: pc[2], c: c, N: ns[rnd(ns.length)], pic: wf5Svg(sc.pic) };
+    return P;
+  }
+  // tier 0: halves, quarters, fifths and small costs; tier 1: also 40%, 60%, 80%; tier 2: also 30% and 75%, and larger prices and costs
+  function wfMakeP(tier) {
+    for (var t = 0; t < 800; t++) {
+      var sc = WF5[rnd(WF5.length)], pcs = tier === 0 ? [WF5P[0], WF5P[1], WF5P[2]] : tier === 1 ? [WF5P[0], WF5P[2], WF5P[5], WF5P[6], WF5P[8]] : [WF5P[4], WF5P[5], WF5P[6], WF5P[7], WF5P[8], WF5P[3]];
+      var pc = pcs[rnd(pcs.length)], as = [];
+      for (var a = sc.lo; a <= sc.hi; a++) if ((a * pc[0]) % pc[1] === 0 && a * pc[0] / pc[1] >= 2 && a * pc[0] / pc[1] <= 60) as.push(a);
+      if (!as.length) continue;
+      var cs = WF5C.filter(function (c) { return tier === 0 ? c <= 20 : tier === 1 ? c <= 45 : c >= 12; }), a0 = as[rnd(as.length)], c0 = cs[rnd(cs.length)];
+      var P = wf5Build(sc, a0, pc, c0); if (!P.ctx.N) continue;
+      return P;
+    }
+  }
   // tier 0: the plain line f(x) = x + b moved one way only; tier 1: a line with a slope or an absolute value, still one way only;
   // tier 2: moved sideways and up or down (like the last problems of the textbook's practice, which grow harder)
   function wfMake(tier) {
     if (lesson === 2) return wfMakeR(tier);
     if (lesson === 3) return wfMakeS(tier);
     if (lesson === 4) return wfMakeC(tier);
+    if (lesson === 5) return wfMakeP(tier);
     for (var t = 0; t < 400; t++) {
       var ab = tier === 0 ? false : rnd(2) === 1, p;
       if (tier === 0) p = { fam: 1, fa: 1, fh: 0, fk: rnd(9) - 4 };
@@ -6364,7 +6424,7 @@ var ESPIC = {
   function wfSet(n) {
     if (n === 1) return [wfMake(0)];   // the Demo always starts with the simplest kind: a plain line, moved one way (or reflected in the x-axis, or stretched)
     var out = [], key = function (p) { return JSON.stringify([p.fam, p.fa, p.fh, p.fk, p.dh, p.dk, p.rf, p.scn, p.scd, p.comb && p.comb.map(function (c) { return [c.dh, c.dk, c.rf, c.scn, c.scd]; })]); };
-    while (out.length < n) { var p = wfMake(Math.min(out.length, 2)); if (!out.some(function (o) { return key(o) === key(p); })) out.push(p); }
+    while (out.length < n) { var p = wfMake(Math.min(out.length, 2)); if (!out.some(function (o) { return key(o) === key(p) || (p.ctx && o.ctx && o.ctx.sc === p.ctx.sc); })) out.push(p); }
     return out;
   }
   var wfX = "<i>x</i>";
@@ -6383,15 +6443,58 @@ var ESPIC = {
   function wfRuleG(p) { return wfRule(p.fam, p.g.a, p.g.h, p.g.k, 0, 0); }
   function wfPlain(h) { return h.replace(/<span class="fr"><span>(\d+)<\/span><span>(\d+)<\/span><\/span>/g, "($1/$2)").replace(/<[^>]+>/g, "").replace(/−/g, "-"); }
   function wfMoves(p) { var w = []; if (p.dh) w.push((p.dh > 0 ? "right " : "left ") + Math.abs(p.dh)); if (p.dk) w.push((p.dk > 0 ? "up " : "down ") + Math.abs(p.dk)); return w.join(" and "); }
-  function wfWhat(p) { if (p.comb) return p.comb.map(wfWhat).join(", then "); return wfStr(p) ? (p.scd === 1 ? "vertically stretched by a factor of " + p.scn : "vertically shrunk by a factor of " + wfScT(p)) : p.rf ? "reflected in the " + p.rf + "-axis" : "moved " + wfMoves(p); }
-  function wfNc(p) { return !!p && !!p.rf && mode === "calculate"; }   // Calculate, reflections: after the flip the student chooses \u2212x or \u2212f(x)
+  function wfWhat(p) { if (p.words) return p.words; if (p.comb) return p.comb.map(wfWhat).join(", then "); return wfStr(p) ? (p.scd === 1 ? "vertically stretched by a factor of " + p.scn : "vertically shrunk by a factor of " + wfScT(p)) : p.rf ? "reflected in the " + p.rf + "-axis" : "moved " + wfMoves(p); }
+  function wfNc(p) { return !!p && !!p.rf && mode === "calculate" && lesson !== 5; }   // Calculate, reflections: after the flip the student chooses \u2212x or \u2212f(x)
   function wfNi(p) { return !!(p.dh || p.rf); }   // is there a step 2 (the change inside f(x) is dragged onto f in the question)?
   function wfInnerTx(p) { return wfStr(p) ? wfScH(p) : p.rf === "x" ? "−" : p.rf === "y" ? "−" + wfX : wfX + wfSg(-p.dh); }
   // f(-x) written out: a line a(-x) + b, or an absolute value a|-x - h| + b
   function wfRyF(p) { return p.fam === 1 ? wfCo(p.fa) + "(−" + wfX + ")" + (p.fk ? wfSg(p.fk) : "") : wfCo(p.fa) + "|−" + wfX + (p.fh ? wfSg(-p.fh) : "") + "|" + (p.fk ? wfSg(p.fk) : ""); }
   function wfQ() { return wfNm(wfQ0()); }
+  function wf5Q(p) {
+    var P = wfProb(), c = P && P.ctx; if (!c) return "";
+    var xd = "Let <i>x</i> be the number of " + c.u + " " + c.v + ".", prof = "The profit is " + c.pct + "% of the revenue, minus $" + c.c + " for " + c.cost + ".", t;
+    if (!wfSteppy()) t = c.story + " " + xd + " The revenue is <span class=\"lm cf\"><i>f</i>(<i>x</i>) = " + wfRuleF(P) + "</span> dollars. " + prof + " Type <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>, the profit.";
+    else t = c.story + " " + xd + " " + prof + " The function <span class=\"cg\"><i>g</i>(<i>x</i>)</span> is <span class=\"lm cf wfChip\" data-wfchip>" + wfChipHTML(p) + "</span> <span class=\"cg\">" + wfWhat(p) + "</span>.";
+    return "<div class=\"estWrap\"><div class=\"estMain\"><div class=\"estP w5\">" + t + "</div></div>" + c.pic + "</div>";
+  }
+  function wf5Ev() { return wf5() && !wfCr() && !!QZ && QZ.step < 4 && !!PG.show.eq && !QZ.we && !!wfProb() && !!wfProb().ctx; }
+  function wf5EvHTML() {
+    var P = wfProb(), c = P.ctx;
+    return "<div class=\"wfAsk\">Find the profit for " + c.N + " " + c.u + " " + c.v + ".</div><div class=\"wfRow cg\"><span><i>g</i>(" + c.N + ") =</span><input id=\"wfEv\" class=\"wfIn\" style=\"width:8.5rem\" data-k=\"e\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"The profit in dollars\"><span>dollars</span></div>";
+  }
+  function wf5Check(el, enter) {
+    var P = wfProb(), c = P.ctx, raw = String(el.value), t = raw.replace(/[\s$,]/g, "").replace(/\u2212/g, "-");
+    if (!t || !/^-?(\d+\.?\d*|\.\d+)$/.test(t)) { if (enter && t) wfBad(el, "Type a number."); return; }
+    var v = +t, want = P.g.a * c.N + P.g.k;
+    if (Math.abs(v - want) < 1e-9) {
+      if (DN) return;   // (only a demo of this step)
+      QZ.we = true; wfWork("g(" + c.N + ") = " + P.g.a + "(" + c.N + ") " + (P.g.k < 0 ? "\u2212" : "+") + " " + Math.abs(P.g.k) + " = " + want); pqMsg(""); drawPlay(); wfSteps(); return;
+    }
+    if (!enter) return;
+    wfBad(el, v === P.fa * c.N ? "That is the revenue, f(" + c.N + "). The profit is g(" + c.N + ")." : v === P.g.a * c.N ? "That is before the fixed cost is taken off. Use g(x) = " + wfPlain(wfRuleG(P)).replace(/-/g, "\u2212") + "." : "Not quite. Put x = " + c.N + " into g(x) = " + wfPlain(wfRuleG(P)).replace(/-/g, "\u2212") + ".");
+  }
+  // the first change is told, not dragged (there is no graph): it is in place when a stage begins
+  function wf5Pre() {
+    if (!wf5() || !wfSteppy()) return;
+    var p = wfCur(); if (!p) return;
+    QZ.wdr = p.rf ? { dh: 0, dk: 0, s: wfSc(p) } : { dh: p.dh, dk: p.dk }; QZ.wd.m = true; if (!wfNi(p)) QZ.wd.i = true;
+    var line = p.rf ? "<i>g</i>(<i>x</i>) = " + wfScH(p) + "<i>f</i>(<i>x</i>)" : "<i>g</i>(<i>x</i>) = <i>f</i>(<i>x</i>)" + (p.dk ? wfSg(p.dk) : "");
+    QZ.wl.push(line); wfWork(line);
+  }
+  function wf5Hint(n) {
+    var P = wfProb(), c = P.ctx, g = wfPlain(wfRuleG(P)).replace(/-/g, "\u2212"), want = P.g.a * c.N + P.g.k;
+    if (wf5Ev()) return n === 0 ? "Replace x with " + c.N + " in g(x) = " + g + "." : "g(" + c.N + ") = " + P.g.a + "(" + c.N + ") " + (P.g.k < 0 ? "\u2212" : "+") + " " + Math.abs(P.g.k) + " = " + want + ".";
+    if (n === 0) return "Make the two changes in order: first take " + c.pct + "% of the revenue (multiply f(x) by " + c.pcTxt + "), then take off the fixed cost of $" + c.c + ".";
+    if (n === 1) return "The revenue is f(x) = " + wfPlain(wfRuleF(P)) + ". Multiply it by " + c.pcTxt + ": " + c.pcTxt + "(" + wfPlain(wfRuleF(P)) + ") = " + wfPlain(wfRuleG(P.comb[0])) + ". Then subtract " + c.c + ".";
+    return "g(x) = " + g + ".";
+  }
+  function wf5Explain() {
+    var P = wfProb(), c = P.ctx, want = P.g.a * c.N + P.g.k;
+    return "Taking a percent of the revenue is a vertical shrink: multiply f(x) by " + c.pcTxt + ". A fixed cost is taken off afterwards, so the graph moves down by $" + c.c + ". Here f(x) = " + wfPlain(wfRuleF(P)) + ", so h(x) = " + c.pcTxt + "(" + wfPlain(wfRuleF(P)) + ") = " + wfPlain(wfRuleG(P.comb[0])) + " and g(x) = " + wfPlain(wfRuleG(P)).replace(/-/g, "\u2212") + ". For " + c.N + " " + c.u + ", g(" + c.N + ") = " + want + " dollars.";
+  }
   function wfQ0() {
     var p = wfCur(); if (!p) return "";
+    if (wf5()) return wf5Q(p);
     var rule = wfChipHTML(p), f = wfSteppy() ? "<span class=\"lm cf wfChip\" data-wfchip>" + rule + "</span>" : "<span class=\"lm cf\">" + rule + "</span>";
     return "The function <span class=\"cg\"><i>g</i>(<i>x</i>)</span> is " + f + " <span class=\"cg\">" + wfWhat(p) + "</span>." + (wfSteppy() ? "" : " Type <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>.");
   }
@@ -6402,6 +6505,7 @@ var ESPIC = {
     QZ.ww = null; if (p) { QZ.ww = { steps: [{ cls: "cf", eqs: ["f(x) = " + wfPlain(wfRuleF(p)).replace(/-/g, "\u2212")] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); } PG.show = { eq: false, table: false, graph: false, desc: false, parent: false }; PG.eqTxt = "g(x)=";
     if (p) { PG.fam = p.g.fam; PG.a = p.g.a; PG.h = p.g.h; PG.k = p.g.k; PG.pa = [PG.h + 1, PG.k + PG.a]; }
     else { PG.fam = 1; PG.a = 1; PG.h = 0; PG.k = 0; PG.eqTxt = "f(x)="; QZ.cs = "f"; }
+    QZ.we = false; wf5Pre();
     wfSteps();
   }
   // f dotted and blue (the parent, always called f); g red. In the stepping modes g starts on top of f and is dragged by the student, with the green Play Graph arrows showing the move
@@ -6666,7 +6770,7 @@ var ESPIC = {
   function wfStageNext() {
     var P = wfProb(); if (!P || !P.comb || wfLast()) return false;
     QZ.wsg = (QZ.wsg || 0) + 1; QZ.wd = {}; QZ.wl = []; QZ.wh = []; QZ.wst = 0; QZ.wop = false; QZ.wdr = { dh: 0, dk: 0, s: 1 }; QZ.arrowAt = -1; PG.wfShift = null;
-    var q = wfCur(); PG.fam = q.g.fam; PG.a = q.g.a; PG.h = q.g.h; PG.k = q.g.k; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = "g(x)=";
+    var q = wfCur(); PG.fam = q.g.fam; PG.a = q.g.a; PG.h = q.g.h; PG.k = q.g.k; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = "g(x)="; wf5Pre();
     pqMsg(""); drawPlay(); pqPanel(); wfSteps();
     return true;
   }
@@ -6684,7 +6788,11 @@ var ESPIC = {
     if (!wf() || !QZ || !QZ.order) { el.hidden = true; el.innerHTML = ""; askArrow(false); return; }
     var h = "", p = wfCur();
     if (wfCr()) {
-      if (QZ.cs === "move" && !QZ.pick && lesson === 4) {
+      if (QZ.cs === "move" && !QZ.pick && lesson === 5) {
+        if (QZ.cm === "c") h = "<div class=\"wfRow\"><span class=\"cg\">$</span><input class=\"wfIn wfMv\" style=\"width:7rem\" inputmode=\"numeric\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"12\" aria-label=\"The fixed cost\"><button class=\"btn\" data-wf=\"mv\">Done</button></div>";
+        else h = "<div class=\"wfRow\">" + WF5P.map(function (q, i) { return "<button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"p" + i + "\">" + wf5Pct(q) + "%</button>"; }).join("") + "</div>";
+      }
+      else if (QZ.cs === "move" && !QZ.pick && lesson === 4) {
         if (QZ.cm === "m") h = "<div class=\"wfRow\"><input class=\"wfIn wfMv\" style=\"width:13rem\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"right 3 and down 2\" aria-label=\"The move\"><button class=\"btn\" data-wf=\"mv\">Done</button></div>";
         else if (QZ.cm === "s") h = wfFacRow();
         else h = "<div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"m\">Move it</button><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"rx\">Reflect in the x-axis</button><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"ry\">Reflect in the y-axis</button><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"s\">Stretch or shrink it</button></div>";
@@ -6694,6 +6802,13 @@ var ESPIC = {
       else if (QZ.cs === "move" && !QZ.pick) h = "<div class=\"wfRow\"><input class=\"wfIn wfMv\" style=\"width:13rem\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"" + (lesson === 2 ? "x-axis or y-axis" : "right 3 and down 2") + "\" aria-label=\"The move\"><button class=\"btn\" data-wf=\"mv\">Done</button></div>";
       var keep = el.querySelector(".wfMv"), val = keep ? keep.value : "";
       el.innerHTML = h; el.hidden = !h; askArrow(false); var nm = el.querySelector(".wfMv"); if (nm) nm.value = val;
+      return;
+    }
+    if (wf5Ev()) {
+      var kp = el.querySelector("#wfEv"), kv = kp ? kp.value : ""; el.innerHTML = wf5EvHTML(); el.hidden = false; var ei = el.querySelector(".wfIn");
+      if (kv) ei.value = kv;
+      if (mode !== "demo") ei.focus();
+      if (QZ.arrowAt !== -2) { QZ.arrowAt = -2; askArrow(true, ei.parentNode); }
       return;
     }
     if (mode === "solo" || !p || (mode === "demo" && !pgRun && !QZ.wl.length && QZ.step < 4)) { el.hidden = true; el.innerHTML = ""; askArrow(false); return; }
@@ -6737,6 +6852,7 @@ var ESPIC = {
   // Calculate: the typed answer is taken as soon as it is right
   function wfOps(t) { return (String(t).replace(/\s/g, "").replace(/−/g, "-").replace(/^[-+]/, "").match(/[+\-]/g) || []).length; }
   function wfCheckIn(el, enter) {
+    if (el.dataset.k === "e") { wf5Check(el, enter); return; }
     var p = wfCur(), raw = String(el.value), f = eqFn(raw), st = wfStg(p)[QZ.wst + 1]; if (!st || !st.q || !f) { if (enter && f !== undefined) wfBad(el, "Not quite. Try again."); return; }
     var ok = false, msg = "Not quite. Try again.";
     if (st.q.g) {   // a reflection in the x-axis: the whole rule, with no parentheses
@@ -6802,6 +6918,7 @@ var ESPIC = {
   }
   function wfHint(n) {
     var p = wfCur();
+    if (wf5()) return wf5Hint(n);
     if (p.comb) {
       if (n === 0) return "Make the changes one at a time, in order: first " + wfWhat(p.comb[0]) + ", then " + wfWhat(p.comb[1]) + ".";
       if (n === 1) return "Start with f(x) = " + wfPlain(wfRuleF(p)) + ". After the first change you have h(x) = " + wfPlain(wfRuleG(p.comb[0])) + ". Now make the second change to h.";
@@ -6823,6 +6940,7 @@ var ESPIC = {
   }
   function wfExplain() {
     var p = wfCur();
+    if (wf5()) return wf5Explain();
     if (p.comb) return "To combine transformations, make them one at a time, in order. Here f(x) = " + wfPlain(wfRuleF(p)) + " is first " + wfWhat(p.comb[0]) + ", which gives h(x) = " + wfPlain(wfRuleG(p.comb[0])) + ", and then " + wfWhat(p.comb[1]) + ", which gives g(x) = " + wfPlain(wfRuleG(p)) + ".";
     if (wfStr(p)) return "A vertical stretch or shrink multiplies every output by the same factor, so the graph is pulled away from the x-axis (a stretch) or squeezed toward it (a shrink): c f(x). Here f(x) = " + wfPlain(wfRuleF(p)) + " " + wfWhat(p) + " gives g(x) = " + wfPlain(wfScH(p)) + "(" + wfPlain(wfRuleF(p)) + ") = " + wfPlain(wfRuleG(p)) + ".";
     if (p.rf) return "A reflection in the x-axis flips the graph over, so every output changes sign: −f(x). A reflection in the y-axis changes the sign of the input: f(−x). Here f(x) = " + wfPlain(wfRuleF(p)) + " reflected in the " + p.rf + "-axis gives g(x) = " + wfPlain(p.rf === "x" ? "−(" + wfRuleF(p) + ")" : wfRyF(p)) + " = " + wfPlain(wfRuleG(p)) + ".";
@@ -6830,6 +6948,13 @@ var ESPIC = {
   }
   // Create: the student types f, then the move, and then picks the mode to practise it in
   function wfCreateIn(t) {
+    if (lesson === 5) {
+      var f5 = eqFn(t), a5, ok5 = !!f5;
+      if (ok5) try { a5 = f5(1); ok5 = Math.abs(f5(0)) < 1e-9 && Math.abs(f5(2) - 2 * a5) < 1e-9 && Math.abs(f5(-3) + 3 * a5) < 1e-9 && Math.abs(a5 - Math.round(a5)) < 1e-9 && a5 >= 2 && a5 <= 80; } catch (e6) { ok5 = false; }
+      if (!ok5) { pqMsg("Type the revenue as a whole number times x, like 25x."); eqShake(); return; }
+      a5 = Math.round(a5); QZ.wfp = [wfG({ fam: 1, fa: a5, fh: 0, fk: 0, dh: 0, dk: 0 })]; QZ.cs = "move"; QZ.pi = 0; QZ.cc = []; QZ.cm = ""; QZ.cp = null;
+      PG.fam = 1; PG.a = a5; PG.h = 0; PG.k = 0; PG.show.eq = true; PG.eqTxt = ""; pqMsg(""); drawPlay(); pqPanel(); return;
+    }
     var r = eqFit(t);
     if (r.err || r.fam === 0 || r.fam === 3 || (r.fam === 1 && !r.a)) { pqMsg("Type a line like 2x + 1 or an absolute value like |x − 2| + 1."); eqShake(); return; }
     QZ.wfp = [wfG({ fam: r.fam, fa: r.a, fh: r.fam === 2 ? r.h : 0, fk: r.k, dh: 0, dk: 0 })]; QZ.cs = "move"; QZ.pi = 0; QZ.cc = []; QZ.cm = "";
@@ -6838,7 +6963,7 @@ var ESPIC = {
   }
   // Combining Transformations, Solo: the answer must be fully simplified: a line is ax + b, an absolute value is a|x - h| + k (no parentheses, no like terms left)
   function wfSimp(t) {
-    if (!(wf() && lesson === 4 && mode === "solo")) return true;
+    if (!(wf() && (lesson === 4 || lesson === 5) && mode === "solo")) return true;
     var r = String(t).replace(/\s/g, "").replace(/^[fg]\(x\)=/i, "").replace(/−/g, "-").replace(/\*/g, "").replace(/\u00b7/g, "");
     return /^[+-]?(\d+)?x([+-]\d+)?$/.test(r) || /^[+-]?(\d+)?\|x([+-]\d+)?\|([+-]\d+)?$/.test(r) || /^[+-]?\d+$/.test(r);
   }
@@ -6866,8 +6991,24 @@ var ESPIC = {
     if (ops.length === 2) { wfCustom = wfBuildC({ fam: base.fam, fa: base.fa, fh: base.fh, fk: base.fk }, ops); QZ.pick = true; }
     pqMsg(""); pqPanel();
   }
+  // Create, Profit from a Combination: the student types the revenue, chooses the percent, and types the fixed cost; a story is picked to go with them
+  function wf5Create(v, inp) {
+    var base = wfProb(); if (!base) return;
+    if (v && /^p\d$/.test(v)) {
+      var pc = WF5P[+v.slice(1)];
+      if ((base.fa * pc[0]) % pc[1]) { pqMsg("That percent of this revenue gives cents. Choose another percent, or start over with another price."); return; }
+      QZ.cp = pc; QZ.cm = "c"; pqMsg(""); pqPanel(); setTimeout(function () { var m = $("wfSteps").querySelector(".wfMv"); if (m) m.focus(); }, 30); return;
+    }
+    if (!inp || !QZ.cp) return;
+    var t = String(inp.value).replace(/[\s$]/g, ""), c = +t;
+    if (!/^\d+$/.test(t) || c < 1 || c > 99) { pqMsg("Type a whole number of dollars from 1 to 99."); return; }
+    var sc = WF5[rnd(WF5.length)], P = wf5Build(sc, base.fa, QZ.cp, c);
+    if (!P.ctx.N) { pqMsg("That cost is too large for this revenue. Type a smaller cost."); return; }
+    wfCustom = P; QZ.pick = true; pqMsg(""); pqPanel();
+  }
   function wfMoveGo(axis) {
     var inp = $("wfSteps").querySelector(".wfMv"), p = wfCur(); if (!p || (!inp && !axis)) return;
+    if (lesson === 5) { wf5Create(axis, inp); return; }
     if (lesson === 4) { wfCombOp(axis, inp); return; }
     if (lesson === 3) {
       var fm = /^(\d)(?:\/(\d))?$/.exec(axis || ""); if (!fm) { pqMsg("Choose a factor."); return; }
@@ -6905,7 +7046,7 @@ var ESPIC = {
   }
   window.addEventListener("resize", function () { if (document.body.classList.contains("play")) eqShrink(); });
   function drawPlay() {
-    document.body.classList.toggle("wfSolo", wf() && mode === "solo");   // 1.2 Solo has no graph at all
+    document.body.classList.toggle("wfSolo", wf() && (mode === "solo" || lesson === 5));   // 1.2 Solo has no graph at all, and Profit from a Combination is a word problem without one
     drawGraph();
     $("pgTable").querySelector("tbody").innerHTML = fillMode() ? TB.html() : tableHTML();
     var fe = document.activeElement, fw = fe && fe.classList && fe.classList.contains("eqIn") ? (fe.closest("#pgEq") ? "pgEq" : "mid") : null;
@@ -7759,6 +7900,7 @@ var ESPIC = {
       var wp = wfCur(), wax = 0, way = 0;
       var wdrag = function (n) {
         wax = wp.fam === 2 ? wp.fh : 0; way = wfF(wp, wax);
+        if (wf5()) { cap(QZ.wsg ? "Then the fixed cost is taken off: g(x) is f(x) " + wfWhat(wp) + "." : "The profit is a percent of the revenue, minus a fixed cost. First, g(x) is f(x) " + wfWhat(wp) + "."); pgWait(2800, n); return; }
         if (wp.rf) {   // a reflection: the hand grabs a point of f and flips the graph through the axis
           var gx = 0, gy = 0, cands = wp.rf === "x" ? [0, 1, -1, 2, -2, 3, -3] : [2, -2, 1, -1, 3, -3];
           for (var ci = 0; ci < cands.length; ci++) { var cx = cands[ci]; if (Math.abs(wfF(wp, cx)) <= 8 && (wp.rf === "x" ? wfF(wp, cx) !== 0 : cx !== 0)) { gx = cx; gy = wfF(wp, cx); break; } }
@@ -7807,9 +7949,16 @@ var ESPIC = {
           var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Click the parentheses to take them away." : st && st.q && st.q.abs !== undefined ? "Click inside the absolute value to take away the negative." : "Click the operation between two numbers to combine them."); tap(b, function () { pgWait(1500, again); });
         })();
       };
+      var weval = function (n) {
+        var ei = $("wfEv"); if (!ei) { n(); return; }
+        var P5 = wfProb(), c5 = P5.ctx;
+        cap("Find the profit for " + c5.N + " " + c5.u + " " + c5.v + ": put x = " + c5.N + " into g(x).");
+        typeBox("wfEv", String(P5.g.a * c5.N + P5.g.k), function () { pgWait(900, n); });
+      };
       steps = [wdrag, wsubx, wsub, wsimp];
       if (wfProb().comb) steps = steps.concat([function (n) { wp = wfCur(); cap("Now the second transformation: g(x) is f(x) " + wfWhat(wp) + "."); pgWait(2600, n); }, wdrag, wsubx, wsub, wsimp]);
-      steps.push(function (n) { cap("The purple graph is f " + wfWhat(wfProb()) + "."); pgWait(2800, n); });
+      if (wf5()) steps.push(weval, function (n) { cap("The profit is g(x) = " + wfPlain(wfRuleG(wfProb())).replace(/-/g, "\u2212") + "."); pgWait(2800, n); });
+      else steps.push(function (n) { cap("The purple graph is f " + wfWhat(wfProb()) + "."); pgWait(2800, n); });
     }
     var k = 0;
     if (isDataAct()) {   // a Data Activity: a table of x and y values, plotted and explored on the graph
@@ -7900,6 +8049,7 @@ var ESPIC = {
       var one = function (f) { return [function (n) { f(function () { pgWait(1200, n); }); }]; };
       if (PQ && wf()) {
         wp = wfCur(); var nx = wfNext(), last = wfStg(wp).length - 1;
+        if (wf5Ev()) return one(weval);
         if (nx === "m") return [steps[0]];
         if (nx === "c") return one(function (n) {
           var v = wp.rf === "y" ? "x" : "fx", b = document.querySelector("#wfSteps button[data-v=\"" + v + "\"]"); if (!b) { n(); return; }
