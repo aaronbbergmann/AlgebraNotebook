@@ -344,8 +344,8 @@
   .ptEdit input:focus{outline:2px solid #2D70B3;outline-offset:1px}
   .ptX{align-self:flex-end;width:1.5rem;height:1.5rem;margin:-.3rem -.4rem 0 0;border:0;border-radius:50%;background:transparent;font:600 1.2rem/1 system-ui,sans-serif;color:#1B2433;cursor:pointer}
   .ptX:hover{background:#E7E7E7}
-  .dial{display:none;position:absolute;left:3px;top:0;width:15px;height:15px;border-radius:50%;background:#1B2433;box-shadow:0 0 0 2px #fff,0 1px 4px rgba(0,0,0,.4);cursor:ns-resize;touch-action:none;transition:transform .25s ease-out;z-index:5}
-  .dial::after{content:"";position:absolute;inset:-9px}.dial.drag{transition:none}
+  .dial{display:none;position:absolute;left:1px;top:0;width:18px;height:44px;color:#1B2433;cursor:ns-resize;touch-action:none;transition:transform .25s ease-out;z-index:5}
+  .dial svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff);pointer-events:none}.dial::after{content:"";position:absolute;inset:-6px}.dial.drag{transition:none}
   body.play .dial{display:block}body.play .pgTable tbody td:first-child{cursor:ns-resize;touch-action:none}
   .pgSide{position:relative;box-sizing:border-box;padding-left:1.5rem;flex:1 1 16rem;max-width:26rem;display:flex;flex-direction:column;gap:.9rem}
   .pgTable{border:1.5px solid #B8BCC2;border-collapse:collapse;table-layout:fixed;width:100%;font:400 1.05rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;text-align:center}
@@ -476,7 +476,7 @@
       <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope. Or drag it onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
       <div class="pgGraphWrap" id="pgGraphWrap"><div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div><div class="zmRow" id="zmRow" role="group" aria-label="Zoom the graph"><button type="button" id="zmData" title="Data: zoom to fit all the data" aria-label="Zoom to fit all the data"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 3.5v17h17"/><circle cx="8" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="11.5" cy="11" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/></svg></button><button type="button" id="zmIn" title="Zoom in" aria-label="Zoom in">+</button><button type="button" id="zmOut" title="Zoom out" aria-label="Zoom out">−</button><button type="button" id="zmHome" title="Home: back to the default view" aria-label="Home view"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"/><path d="M6 10v9.5h4.5v-5.5h3v5.5H18V10"/></svg></button></div></div>
       <div class="pgSide">
-        <div class="dial" id="pgDial" role="slider" aria-label="Scroll the table" title="Drag up or down to scroll the table"></div>
+        <div class="dial" id="pgDial" role="slider" aria-label="Scroll the table" title="Drag up or down to scroll the table"><svg viewBox="0 0 18 44" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M9 1.8 16.3 12.6H1.7Z"/><circle cx="9" cy="22" r="5.4"/><path d="M1.7 31.4H16.3L9 42.2Z"/></svg></div>
         <table class="pgTable" id="pgTable" aria-label="Table"><colgroup><col style="width:18%"><col><col style="width:18%"></colgroup><thead><tr><th>x</th><th class="pgMid"></th><th>y</th></tr></thead><tbody></tbody></table>
         <div class="pgEq" id="pgEq" aria-live="polite"></div>
         <div class="pgEqMsg" id="pgEqMsg" aria-live="polite"></div>
@@ -5799,7 +5799,7 @@ var ESPIC = {
   function dialOn() { return !!(PG.show.table || PG.subd); }
   function posDial() {
     var D = $("pgDial"); D.style.display = dialOn() ? "" : "none"; var tr = $("pgTable").querySelectorAll("tbody tr")[2]; if (!tr) return;
-    var a = tr.getBoundingClientRect(), b = D.parentNode.getBoundingClientRect(); D.style.top = (a.top - b.top + a.height / 2 - 7.5) + "px";
+    var a = tr.getBoundingClientRect(), b = D.parentNode.getBoundingClientRect(); D.style.top = (a.top - b.top + a.height / 2 - 22) + "px";
   }
   window.addEventListener("resize", function () { if (document.body.classList.contains("play")) posDial(); });
   var EQIN = "<input class=\"eqIn\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Type the equation\">";
@@ -6238,7 +6238,7 @@ var ESPIC = {
     }
     return null;
   }
-  // ---- the scroll dial: drag the dot (or any x-value) up or down to turn the table like a wheel; the dot springs back when let go ----
+  // ---- the scroll dial: drag the scroll button (or any x-value) up or down to turn the table like a wheel; the dot springs back when let go ----
   (function () {
     var D = $("pgDial"), T = $("pgTable");
     function rowH() { var tr = T.querySelector("tbody tr"); return tr ? tr.getBoundingClientRect().height : 38; }
@@ -6401,7 +6401,7 @@ var ESPIC = {
         pgWait(1400, function () { g.remove(); if (!miss) TB.targets = TB.targets.filter(function (t) { return !(t[0] === p[0] && t[1] === p[1]); }); if (!PG.pts.some(function (z) { return z[0] === q[0] && z[1] === q[1]; })) PG.pts.push(q); drawPlay(); pgWait(600, then); });
       });
     }
-    // the hand drags the dial down and back up: the table scrolls, then the dot springs home
+    // the hand drags the dial down and back up: the table scrolls, then the button springs home
     function dialDemo(steps, then) {
       var D = $("pgDial"), a = ctr(D), tr = $("pgTable").querySelector("tbody tr"), rh = tr ? tr.getBoundingClientRect().height : 38, off0 = PG.off || 0, ms = 1400, t0 = null;
       handGo(a, 650);
@@ -6666,7 +6666,7 @@ var ESPIC = {
             return;
           } typeRow(i, function () { TB.setX(i, String(i + 1)); TB.draw(); xs(i + 1); }, String(i + 1), "x"); })(0); return; }
         cap("Drag the equation onto any center cell. One drop puts each row's x-value into the equation."); dragEq(0, n); },
-      function (n) { if (isDataAct()) { n(); return; } cap("Scroll the table with the dot until the vertex, x = 3, is in the middle row."); dialDemo(-3, n); },
+      function (n) { if (isDataAct()) { n(); return; } cap("Scroll the table with the arrows until the vertex, x = 3, is in the middle row."); dialDemo(-3, n); },
       function (n) { cap(isDataAct() ? "Then click a y cell and type the answer yourself." : "Three ways to get a y-value. First: click a y cell and type the answer yourself."); typeRow(0, n); },
       function (n) { if (isDataAct()) { n(); return; } cap("Second: click the expression to simplify it one step at a time."); clickRow(1, n); },
       function (n) { cap((isDataAct() ? "Or copy" : "Third: copy") + " a y-value. A parabola is symmetric, so x = 4 matches x = 2."); dragY(1, 3, n); },
@@ -6733,7 +6733,7 @@ var ESPIC = {
       var scroll = shifts() && H() !== 0;
       steps = [
         function (n) { cap("g(x) is given. Start with the table: drag g(x) onto any center cell."); dragEq(0, n); },
-        function (n) { if (!scroll) { n(); return; } cap("The x-values are centered at 0, but the vertex of g is at x = " + nf(H()) + ". Drag the dot to scroll the table until x = " + nf(H()) + " is in the middle row."); dialDemo(-H(), n); },
+        function (n) { if (!scroll) { n(); return; } cap("The x-values are centered at 0, but the vertex of g is at x = " + nf(H()) + ". Drag the arrows to scroll the table until x = " + nf(H()) + " is in the middle row."); dialDemo(-H(), n); },
         function (n) {
           if (pqFam !== 1) { cap("Type a y-value, click a calculation to simplify, and do the middle row."); typeRow(0, function () { clickRow(1, function () { typeRow(2, n); }); }); return; }   // symmetric families: the rest are copied next
           cap("Type a y-value, click calculations to simplify, and fill in the rest."); typeRow(0, function () { clickRow(1, function () { typeRow(2, function () { clickRow(3, function () { typeRow(4, n); }); }); }); });
