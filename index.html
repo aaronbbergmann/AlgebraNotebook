@@ -958,7 +958,7 @@
     s = String(s).toLowerCase().replace(/−/g, "-").replace(/[\s*·⋅]/g, "");
     var i = 0, rawN = null, bad = "I couldn't read that. Use numbers, letters (x^2 for a power), + and −, and one set of parentheses at most, like 3(x+2)-4x+5.";
     if (!s || /[^0-9a-z+\-().\/^]/.test(s)) return bad;
-    function number() { var m = s.slice(i).match(/^\d+(\.\d+)?(\/\d+)?/); if (!m) return null; i += m[0].length; rawN = null; var fm = /^(\d+)\/(\d+)$/.exec(m[0]); if (exKeepU && fm && +fm[2] > 1 && +fm[1] % +fm[2] && gcd(+fm[1], +fm[2]) > 1) rawN = { n: +fm[1], d: +fm[2] }; return parse(m[0]); }
+    function number() { rawN = null; var m = s.slice(i).match(/^\d+(\.\d+)?(\/\d+)?/); if (!m) return null; i += m[0].length; var fm = /^(\d+)\/(\d+)$/.exec(m[0]); if (exKeepU && fm && +fm[2] > 1 && +fm[1] % +fm[2] && gcd(+fm[1], +fm[2]) > 1) rawN = { n: +fm[1], d: +fm[2] }; return parse(m[0]); }
     function variable() {   // x, y, x^2, xy ...: the letters in order, with their powers
       var f = {}, any = false, m;
       while ((m = s.slice(i).match(/^([a-z])(\^([1-9]))?/))) { i += m[0].length; f[m[1]] = (f[m[1]] || 0) + (m[3] ? +m[3] : 1); any = true; }
@@ -976,7 +976,7 @@
           i++; var gb = sum(true); if (!gb || !gb.length || s[i] !== ")") return null; i++;
           t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: [{ k: "x", v: vv, n: mk(1) }], b: gb };
           if (s[i] === "(") { i++; var gc0 = sum(true); if (!gc0 || !gc0.length || s[i] !== ")") return null; i++; t.c = gc0; }   // x(x + 1)(x + 2)
-        } else if (vv) t = { k: "x", v: vv, n: mul(n || mk(1), mk(sg1)) };
+        } else if (vv) { t = { k: "x", v: vv, n: mul(n || mk(1), mk(sg1)) }; if (n && rawN) t.u = { n: sg1 * rawN.n, d: rawN.d }; }   // 6/4x keeps its 6/4 until it is clicked
         else if (s[i] === "(") {
           if (inner) return null; i++; var g = sum(true); if (!g || !g.length || s[i] !== ")") return null; i++;
           t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: g };
@@ -1254,12 +1254,13 @@
     return pm + (t.k === "r" ? "<span class=\"exRad\" title=\"Click to find the square root\"><span class=\"rsg\">\u221a</span><span class=\"rbar\">" + exFr(t.r) + "</span></span>" : exFr(mk(Math.abs(t.n.n), t.n.d)));
   }
   function exTerm(t, inner) {   // the term without its sign
-    if (t.u) return Math.abs(t.u.n) + "/" + t.u.d;   // a fraction that has not been simplified yet: 6/4
+    if (t.u && t.k === "c") return Math.abs(t.u.n) + "/" + t.u.d;   // a fraction that has not been simplified yet: 6/4
     if (t.k === "r" || t.pm) return exPmRad(t);
     if (t.k === "q") return "<span class=\"fr\"><span>" + exHtml(t.num) + "</span><span>" + exHtml(t.den) + "</span></span>";
     if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">" + exPar(t, t.items) + "</span>" + (t.b ? "<span class=\"exH\">" + exPar(t, t.b) + "</span>" : "") + (t.c ? "<span class=\"exH exJ\">" + exPar(t, t.c) + "</span>" : ""); }
     if (hasS(t)) return litHtml(t, false);
-    var a = mk(Math.abs(t.n.n), t.n.d); return t.k === "x" ? (a.n === 1 && a.d === 1 ? "" : a.d === 1 ? "<span class=\"exK\" title=\"Drag me onto another term to factor out a number they share\">" + a.n + "</span>" : exFr(a)) + exVarHtml(t.v || "x") : exFr(a);
+    var a = mk(Math.abs(t.n.n), t.n.d); if (t.u && t.k === "x") return Math.abs(t.u.n) + "/" + t.u.d + exVarHtml(t.v || "x");   // 6/4x
+    return t.k === "x" ? (a.n === 1 && a.d === 1 ? "" : a.d === 1 ? "<span class=\"exK\" title=\"Drag me onto another term to factor out a number they share\">" + a.n + "</span>" : exFr(a)) + exVarHtml(t.v || "x") : exFr(a);
   }
   function exHtml(its) {
     return its.map(function (t, i) { var ng = (t.k === "g" ? t.m.n : t.n.n) < 0; return (i ? "<span class=\"exOp\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "") + exTerm(t); }).join("");
@@ -1874,9 +1875,9 @@
   function eqFrSimp(S, i) {   // click the fraction: 6/4 becomes 3/2
     if (locked || busy || EXP.ask) return;
     var t = EXP[S][i]; if (!t || !t.u) return;
-    var N = eqClone(), c = N[S][i], raw = Math.abs(t.u.n) + "/" + t.u.d, red = exFr(mk(Math.abs(t.n.n), t.n.d)); delete c.u;
+    var N = eqClone(), c = N[S][i], isX = t.k === "x", vh = isX ? exSay([{ k: "x", v: t.v, n: mk(1) }]) : "", raw = Math.abs(t.u.n) + "/" + t.u.d + vh, red = exFr(mk(Math.abs(t.n.n), t.n.d)) + vh; delete c.u;
     var say = raw + " simplifies to " + red + ".";
-    if (mode === "calculate") { eqAsk({ kind: "term", b: { N: N, msg: say, want: { k: "c", n: t.n, simp: true } } }, "Simplified ="); $("askIn").placeholder = "e.g. 3/2"; return; }
+    if (mode === "calculate") { eqAsk({ kind: "term", b: { N: N, msg: say, want: isX ? { k: "x", v: t.v, n: t.n, simp: true } : { k: "c", n: t.n, simp: true } } }, "Simplified ="); $("askIn").placeholder = isX ? "e.g. 3/2" + (t.v || "x") : "e.g. 3/2"; return; }
     eqSet(N, say);
   }
   function eqSimp(S, i) {   // click the square root: find its value
@@ -1939,7 +1940,7 @@
     return its.map(function (t, i) {
       var ng = (t.k === "g" ? t.m.n : t.n.n) < 0;
       var op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + S + i + "\">" + (ng ? "−" : "+") + "</span>" : ng && !(dv && dv.S === S) ? "<span class=\"exOp\">−</span>" : "";   // the minus sign of the term being divided by belongs to its handle, so the whole −1 lights up and moves
-      var body = dv && dv.S === S ? (function () { var a = mk(Math.abs(t.n.n), t.n.d); return "<span class=\"exCo\" title=\"Drag me to the other side to divide\">" + (ng && !i ? "−" : "") + (hasS(t) ? litHtml(t, true) : exFr(a)) + "</span>" + exVarHtml(t.v || "x"); })() : exTerm(t);
+      var body = dv && dv.S === S && !t.u ? (function () { var a = mk(Math.abs(t.n.n), t.n.d); return "<span class=\"exCo\" title=\"Drag me to the other side to divide\">" + (ng && !i ? "−" : "") + (hasS(t) ? litHtml(t, true) : exFr(a)) + "</span>" + exVarHtml(t.v || "x"); })() : exTerm(t);
       return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live && !EXP.zpq ? " pend" : "") + (hot && hot.indexOf(S + i) >= 0 ? " hot" : "") + "\" data-s=\"" + S + "\" data-i=\"" + i + "\" data-drop=\"et:" + S + ":" + i + "\">" + body + "</span>";
     }).join("");
   }
@@ -2186,7 +2187,7 @@
       eqSet(k.b.N, k.b.msg); return;
     }
     if (k.kind === "term") {
-      var w = k.b.want, t = r[0], fm = w.simp ? /(\d+)\/(\d+)\s*$/.exec($("askIn").value) : null;
+      var w = k.b.want, t = r[0], fm = w.simp ? /(\d+)\/(\d+)(?:[a-z](?:\^\d)?)?\s*$/.exec($("askIn").value) : null;
       if (fm && gcd(+fm[1], +fm[2]) > 1) { m.textContent = "That fraction can still be simplified."; $("askIn").select(); return; }
       ok = r.length === 1 && t.k !== "g" && (w.n.n === 0 ? t.n.n === 0 : EXP.lit ? litKey(t) === litKey(w) : exKey(t) === exKey(w) && same(t.n, w.n));
     } else {
@@ -2400,11 +2401,11 @@
     return (/[a-z]/.test(p[0]) && /[a-z]/.test(p[1])) || /\([^)]*[a-z][^)]*\)/.test(s);
   }
   function rawFr(s) {   // a number that is a fraction which can still be simplified (6/4, not 3/2, 6/3 or the 6/4 in 6/4x)
-    var re = /(\d+)\/(\d+)(?![\d.\/a-z(])/g, m, t = String(s).replace(/\s+/g, "").replace(/\u2212/g, "-");
+    var re = /(\d+)\/(\d+)(?![\d.\/(])/g, m, t = String(s).replace(/\s+/g, "").replace(/\u2212/g, "-");
     while ((m = re.exec(t))) { var n = +m[1], d = +m[2], j = m.index; if (d > 1 && n % d && gcd(n, d) > 1 && !/[\d.\/]$/.test(t.slice(0, j))) return true; }
     return false;
   }
-  function uClean(arr) { arr.forEach(function (t) { if (t.u && !(t.k === "c" && Math.abs(t.u.n) * t.n.d === Math.abs(t.n.n) * t.u.d && t.u.d > 1)) delete t.u; }); }
+  function uClean(arr) { arr.forEach(function (t) { if (t.u && !((t.k === "c" || t.k === "x") && !hasS(t) && Math.abs(t.u.n) * t.n.d === Math.abs(t.n.n) * t.u.d && t.u.d > 1)) delete t.u; }); }
 
   // ---- Playground: Equation Solver: Next / Harder / Try another ----
   // When a problem is finished: Next (plum red, "Try in [next mode] Mode"), "Harder Equation" directly below it, and a small "Try another" link.
