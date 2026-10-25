@@ -161,6 +161,8 @@
   .exExp{display:inline-block;cursor:grab;touch-action:none;border-radius:6px;padding:0 .1em;border-bottom:2px dashed var(--plus)}.exExp.exSqrt{font-size:1.5em;vertical-align:baseline;line-height:1;border-bottom:0}
   .exPm,.exRad.grab{cursor:pointer;border-radius:6px}.exPm{padding:0 .1em}.exPm:hover,.exRad.grab:hover{background:color-mix(in srgb,var(--plus) 25%,transparent)}.exRad{display:inline-flex;align-items:flex-end}.exRad .rbar{border-top:2px solid currentColor;padding:0 .12em;margin-left:-.05em}
   .frS,.exU{cursor:pointer}.eqn .frS{border-bottom:0!important}.frS .fr>span:first-child,.exU .fr>span:first-child{border-bottom:.12em solid var(--plus)}.frS:hover .fr>span:first-child,.exU:hover .fr>span:first-child{border-bottom-color:currentColor}
+  .absorb{display:inline-block;animation:absorb .65s ease-out both;transform-origin:50% 60%}
+  @keyframes absorb{0%{transform:scale(.45)}30%{transform:scale(1.45)}55%{transform:scale(.85)}78%{transform:scale(1.1)}100%{transform:scale(1)}}
   .exK{border-radius:6px;touch-action:none}.exT.grab>.exK{cursor:grab}.exT.grab>.exK:hover{background:color-mix(in srgb,var(--plus) 25%,transparent)}
   .exOp{padding:0 .3em}.exRow>.exOp:first-child{padding:0 .02em 0 0}.exT{padding:0 .1em;border-radius:6px;white-space:nowrap;transition:background .3s}
   .exT i{font-style:italic}.exT.hot{background:color-mix(in srgb,var(--plus) 30%,transparent)}
@@ -181,6 +183,7 @@
   .drag{z-index:5;position:relative;transition:none;background:var(--bg);box-shadow:0 .3em 1em rgba(0,0,0,.3)}
   .slide{transition:transform 1.1s ease-in-out;z-index:5}
   .drop{outline:3px solid var(--plus)}
+  .eqn .drop,.exT.drop,.exEq .drop{box-shadow:0 0 0 7px color-mix(in srgb,var(--plus) 16%,transparent);border-radius:6px}
   .dragOp{z-index:5;position:relative;transition:none;background:var(--bg);border-radius:6px}
   .asking{outline:3px dashed var(--plus)}
   .var.tgt{background:color-mix(in srgb,var(--plus) 35%,transparent);border-radius:6px;transform:scale(1.5)}
@@ -950,11 +953,12 @@
   // ---- Playground: Equation Solver also takes an expression (no "="). It is finished when it is fully simplified:
   //      no parentheses left, and no two terms alike. Terms are { k: "x"|"c", n: coefficient } and groups { k: "g", m: multiplier, items } ----
   var EXP = null;   // { src, orig, items, ask }
+  var exKeepU = false;   // true while a typed equation is read: a fraction like 6/4 stays as typed (it is simplified by clicking it)
   function exParse(s) {
     s = String(s).toLowerCase().replace(/−/g, "-").replace(/[\s*·⋅]/g, "");
-    var i = 0, bad = "I couldn't read that. Use numbers, letters (x^2 for a power), + and −, and one set of parentheses at most, like 3(x+2)-4x+5.";
+    var i = 0, rawN = null, bad = "I couldn't read that. Use numbers, letters (x^2 for a power), + and −, and one set of parentheses at most, like 3(x+2)-4x+5.";
     if (!s || /[^0-9a-z+\-().\/^]/.test(s)) return bad;
-    function number() { var m = s.slice(i).match(/^\d+(\.\d+)?(\/\d+)?/); if (!m) return null; i += m[0].length; return parse(m[0]); }
+    function number() { var m = s.slice(i).match(/^\d+(\.\d+)?(\/\d+)?/); if (!m) return null; i += m[0].length; rawN = null; var fm = /^(\d+)\/(\d+)$/.exec(m[0]); if (exKeepU && fm && +fm[2] > 1 && +fm[1] % +fm[2] && gcd(+fm[1], +fm[2]) > 1) rawN = { n: +fm[1], d: +fm[2] }; return parse(m[0]); }
     function variable() {   // x, y, x^2, xy ...: the letters in order, with their powers
       var f = {}, any = false, m;
       while ((m = s.slice(i).match(/^([a-z])(\^([1-9]))?/))) { i += m[0].length; f[m[1]] = (f[m[1]] || 0) + (m[3] ? +m[3] : 1); any = true; }
@@ -978,7 +982,7 @@
           t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: g };
           if (s[i] === "(") { i++; var g2 = sum(true); if (!g2 || !g2.length || s[i] !== ")") return null; i++; t.b = g2; }   // two sets of parentheses: (3x - 4)(x - 6)
           if (t.b && s[i] === "(") { i++; var g3 = sum(true); if (!g3 || !g3.length || s[i] !== ")") return null; i++; t.c = g3; }   // three sets: (x + 1)(x + 2)(x + 3)
-        } else if (n) t = { k: "c", n: mul(n, mk(sg1)) }; else return null;
+        } else if (n) { t = { k: "c", n: mul(n, mk(sg1)) }; if (rawN && s[i] !== "(" && !inner) t.u = { n: sg1 * rawN.n, d: rawN.d }; } else return null;
         out.push(t);
       }
       return out;
@@ -1298,8 +1302,9 @@
       return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live ? " pend" : "") + (hot && hot.indexOf(i) >= 0 ? " hot" : "") + "\" data-i=\"" + i + "\" data-drop=\"ex:" + i + "\"" + (t.k === "g" && live ? " title=\"Click to distribute\"" : "") + ">" + exTerm(t) + "</span>";
     }).join("");
     grMark();
+    if (ABS && ABS.side === "") absorbNow(R, '.exT[data-i="' + ABS.idx + '"]');
     if (!live) return;
-    [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var k = +el.dataset.op; exDrop(k, k - 1); }); });
+    [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var k = +el.dataset.op; exDrop(k, k - 1, { ta: R.querySelector('.exT[data-i="' + (k - 1) + '"]'), tb: R.querySelector('.exT[data-i="' + k + '"]'), op: el, res: k - 1 }); }); });
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
       var i = +el.dataset.i, mEl = el.querySelector(":scope > .exM") || exSignOf(el), gEl = el.querySelector(":scope > .exG");
       if (mEl && gEl) {   // the number in front of the parentheses is dragged onto them to distribute
@@ -1389,12 +1394,17 @@
     its[j] = c; its.splice(i, 1); its = its.filter(function (t) { return t.k === "g" || t.n.n !== 0; });
     return its.length ? its : [{ k: "c", n: mk(0) }];
   }
-  function exDrop(i, j) {
+  function exGo(items, msg, anim) {   // a click on the + or −: slide into it, then the sum swells
+    if (!anim) { exSet(items, msg); return; }
+    slideInto([anim.ta, anim.tb], anim.op, function () { if (anim.res >= 0) ABS = { side: "", idx: anim.res, t: Date.now() }; exSet(items, msg); });
+  }
+  function exDrop(i, j, anim) {
     if (locked || busy || EXP.ask || i === j) return;
     var its = EXP.items, a = its[i], b = its[j];
     if (exLike(a, b)) {
-      if (mode === "calculate") { exAsk("comb", i, j, exSay(exPair(i, j)) + " ="); return; }
-      exSet(exCombineTo(i, j), exSay(exPair(i, j)) + " = " + exSay([exSum(a, b)]));
+      if (anim) { var sm = exSum(a, b); if (sm.n && !sm.n.n && !sm.co) anim.res = -1; }
+      if (mode === "calculate") { exAsk("comb", i, j, exSay(exPair(i, j)) + " ="); if (EXP.ask) EXP.ask.anim = anim; return; }
+      exGo(exCombineTo(i, j), exSay(exPair(i, j)) + " = " + exSay([exSum(a, b)]), anim);
       return;
     }
     var n = its.slice(); n.splice(i, 1); n.splice(i < j ? n.indexOf(b) + 1 : n.indexOf(b), 0, a);
@@ -1446,7 +1456,7 @@
     ok = r.every(function (t) { return t.k !== "g"; }) && JSON.stringify(nz(r).map(key).sort()) === JSON.stringify(nz(want).map(key).sort()) || (k.kind === "comb" && r.length === 1 && r[0].k !== "g" && r[0].n.n === 0 && want[0].n.n === 0);
     if (!ok) { m.textContent = "Not quite. Check your work and try again."; $("askIn").select(); return; }
     var A = k.kind === "comb" ? exSay(exPair(k.i, k.j)) : exSay([its[k.i]]);
-    if (k.kind === "comb") { var res = exCombineTo(k.i, k.j); exSet(res, A + " = " + exSay([exSum(its[k.i], its[k.j])])); }
+    if (k.kind === "comb") { var res = exCombineTo(k.i, k.j); exGo(res, A + " = " + exSay([exSum(its[k.i], its[k.j])]), k.anim); }
     else { var n = its.slice(); n.splice.apply(n, [k.i, 1].concat(exDist(its[k.i]))); exSet(n, distMsg(its[k.i], exDist(its[k.i])), its[k.i]); }
   }
   function exCheckSolo() {
@@ -1742,6 +1752,16 @@
       el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, null, function (t) { grPlace(+t.dataset.drop.slice(3), i); }, "gb:", grShow, grEnd); });
     });
   }
+  // a factor was accepted: the cursor moves on to an empty factor on the other side (a row's after a column's and the other way round), when its two terms are in the box
+  function grAfter(sp) {
+    GRP.msg = ""; GRP.bad = false; if (GRP.done) return; grFill();
+    var order = sp[0] === "r" ? ["c0", "c1", "r0", "r1"] : ["r0", "r1", "c0", "c1"];
+    for (var q = 0; q < 4; q++) {
+      var k = order[q], i = +k[1], r = k[0] === "r", two = r ? [GRP.cells[2 * i], GRP.cells[2 * i + 1]] : [GRP.cells[i], GRP.cells[2 + i]];
+      if ((r ? GRP.rf : GRP.cf)[i] || !two[0] || !two[1]) continue;
+      grEdit(k); return;
+    }
+  }
   function grEdit(sp) {
     var el = $("grpBox"); if (!el || !GRP || GRP.done) return;
     var i = +sp[1], two = sp[0] === "r" ? [GRP.cells[2 * i], GRP.cells[2 * i + 1]] : [GRP.cells[i], GRP.cells[2 + i]];
@@ -1749,9 +1769,13 @@
     if (!two[0] || !two[1]) { GRP.msg = "Put two terms in this " + (sp[0] === "r" ? "row" : "column") + " first."; GRP.bad = true; grFill(); return; }
     grFill(); var e = el.querySelector("[data-sp=\"" + sp + "\"]"); e.innerHTML = "<input autocomplete=\"off\" aria-label=\"Greatest common factor\" placeholder=\"?\">";
     var inp = e.querySelector("input"); inp.focus();
+    inp.addEventListener("input", function () {
+      if (!inp.value.trim()) return; var err = grSet(sp, inp.value);
+      if (!err) grAfter(sp);
+    });
     inp.addEventListener("keydown", function (ev) {
       ev.stopPropagation();
-      if (ev.key === "Enter") { var err = grSet(sp, inp.value); if (err) { var m = el.querySelector(".gmsg"); m.className = "gmsg bad"; m.textContent = err; inp.select(); } else { GRP.msg = ""; GRP.bad = false; if (!GRP.done) grFill(); } }
+      if (ev.key === "Enter") { var err = grSet(sp, inp.value); if (err) { var m = el.querySelector(".gmsg"); m.className = "gmsg bad"; m.textContent = err; inp.select(); } else grAfter(sp); }
       else if (ev.key === "Escape") grFill();
     });
     inp.addEventListener("blur", function () { setTimeout(function () { if (GRP && document.activeElement !== inp && e.contains(inp)) grFill(); }, 150); });
@@ -1847,7 +1871,7 @@
     N[s.S] = [{ k: "x", v: "x", n: mk(1) }]; N[s.O] = [{ k: "r", n: mk(1), r: mk(s.r * s.r), pm: true }];
     eqSet(N, "The exponent crosses the = and becomes a square root: " + line + " becomes " + exSay(N.L) + " = " + exSay(N.R) + ". A positive and a negative number can both square to " + s.r * s.r + ", so the answer is \u00b1 the root.");
   }
-  function eqFrSimp(S, i) {   // click the fraction bar: 6/4 becomes 3/2
+  function eqFrSimp(S, i) {   // click the fraction: 6/4 becomes 3/2
     if (locked || busy || EXP.ask) return;
     var t = EXP[S][i]; if (!t || !t.u) return;
     var N = eqClone(), c = N[S][i], raw = Math.abs(t.u.n) + "/" + t.u.d, red = exFr(mk(Math.abs(t.n.n), t.n.d)); delete c.u;
@@ -1920,6 +1944,7 @@
     }).join("");
   }
   function eqRender(hot) {
+    if (EXP && EXP.eq) { uClean(EXP.L || []); uClean(EXP.R || []); if (EXP.zp) EXP.zp.eqs.forEach(function (q) { uClean(q.L || []); uClean(q.R || []); }); }
     eqRender0(hot); exWork();
     var g = EXP && EXP.eq && !EXP.zp ? EXP.rel : null;
     if (g && EXP.relPrev && EXP.relPrevO === EXP.orig && relRev(EXP.relPrev) === g && g !== EXP.relPrev) EXP.relAt = Date.now();   // the inequality sign turns over
@@ -1935,13 +1960,14 @@
     var live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked && !fin, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !!zpOf(EXP.L, EXP.R), gq = EXP.grq && !EXP.zpq, rad = EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.u; });
     R.innerHTML = wrap("L") + "<span class=\"exEq" + (live && !un && !gq ? " grab" : "") + "\" data-drop=\"eq=\">" + relGlyph(EXP.rel) + "</span>" + wrap("R");
     grMark();
+    if (ABS && ABS.side && R.id === "exRow") absorbNow(R, '.exT[data-s="' + ABS.side + '"][data-i="' + ABS.idx + '"]');
     var mulAsk = function () { if (EXP.ask || locked) return; if (idx >= 0 && EXP.zp && idx !== EXP.zp.act) { zpFocus(idx); eqRender(); } eqMulAsk(); };
     if (!locked && !un && !gq && !fin && !rad) { R.querySelector(".exEq").addEventListener("click", mulAsk); R.onclick = function (e) { if (e.target === R) mulAsk(); }; } else R.onclick = null;
     if (live && un) { zpWire(R, idx); return; }
     if (live && gq) { grWire(R); return; }
     if (!live) return;
     var dropOf = function (S, i) { return function (t) { if (t.dataset.drop === "eq=") eqDrop(S, i, eqOther(S), -1); else { var p = t.dataset.drop.split(":"); eqDrop(S, i, p[1], +p[2]); } }; };
-    [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { if (EXP.ask) return; if (idx >= 0) zpFocus(idx); var S = el.dataset.op[0], k = +el.dataset.op.slice(1); eqDrop(S, k - 1, S, k); }); });
+    [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { if (EXP.ask) return; if (idx >= 0) zpFocus(idx); var S = el.dataset.op[0], k = +el.dataset.op.slice(1); eqDrop(S, k - 1, S, k, { ta: R.querySelector('.exT[data-s="' + S + '"][data-i="' + (k - 1) + '"]'), tb: R.querySelector('.exT[data-s="' + S + '"][data-i="' + k + '"]'), op: el, S: S, res: k - 1 }); }); });
     if (EXP.sq && !rad) [].forEach.call(R.querySelectorAll(".exT sup"), function (sp) {   // the exponent of x^2 is dragged across the = and becomes a square root
       sp.classList.add("exExp"); sp.title = "Drag the exponent across the = to take the square root"; sp._eqEl = R.querySelector(".exEq");
       sp._cross = function (on) { if (on) sp.style.width = sp.getBoundingClientRect().width + "px"; else sp.style.width = ""; sp.textContent = on ? "\u221a" : "2"; sp.classList.toggle("exSqrt", on); };
@@ -1951,7 +1977,7 @@
       var S = el.dataset.s, i = +el.dataset.i, t = EXP[S][i], mEl = el.querySelector(":scope > .exM") || exSignOf(el), gEl = el.querySelector(":scope > .exG");
       if (rad) {   // ± and square roots are clicked, nothing is dragged
         var pe = el.querySelector(".exPm"), re = el.querySelector(".exRad");
-        if (t.u) { el.classList.add("grab", "exU"); el.title = "Click the fraction bar to simplify"; el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqFrSimp(S, i); }); }
+        if (t.u) { el.classList.add("grab", "exU"); el.title = "Click the fraction to simplify"; el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqFrSimp(S, i); }); }
         if (pe) { pe.classList.add("grab"); pe.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqPm(); }); }
         if (re) { re.classList.add("grab"); re.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqSimp(S, i); }); }
         return;
@@ -1991,11 +2017,16 @@
     N.L = eqNorm(N.L); N.R = eqNorm(N.R);
     return { N: N, msg: msg, want: want, label: label };
   }
-  function eqDrop(S, i, S2, j) {
+  function eqGo(N, msg, anim, dg) {   // a click on the + or −: the terms slide into it first, and the sum swells when it appears
+    if (!anim) { eqSet(N, msg, dg); return; }
+    slideInto([anim.ta, anim.tb], anim.op, function () { if (anim.res >= 0) ABS = { side: anim.S, idx: anim.res, t: Date.now() }; eqSet(N, msg, dg); });
+  }
+  function eqDrop(S, i, S2, j, anim) {
     if (locked || busy || EXP.ask) return;
     var b = eqBuild(S, i, S2, j); if (!b) return;
-    if (b.want && mode === "calculate") { eqAsk({ kind: "term", b: b }, b.label + " ="); return; }
-    eqSet(b.N, b.msg);
+    if (anim && b.want && b.want.n && !b.want.n.n && !b.want.co) anim.res = -1;
+    if (b.want && mode === "calculate") { b.anim = anim; eqAsk({ kind: "term", b: b }, b.label + " ="); return; }
+    eqGo(b.N, b.msg, anim);
   }
   function eqDivGroup(S, i) {   // the number in front of the parentheses dragged to the other side: every term on both sides is divided by it
     if (locked || busy || EXP.ask) return;
@@ -2059,7 +2090,7 @@
     }
     var N = eqClone(), t = N[s.S][0], c = N[s.O][0], a = t.n, q = mul(c.n, inv(a)), red = a.d === 1 && c.n.d === 1 && Math.abs(a.n) > 1 && gcd(c.n.n, a.n) > 1 && c.n.n % a.n !== 0 && c.k === "c";   // 6/4 stays as it is until its bar is clicked
     t.n = mk(1); if (red) c.u = { n: c.n.n * (a.n < 0 ? -1 : 1), d: Math.abs(a.n) }; c.n = q;
-    if (red) { eqSet(N, "Divide both sides by " + sg(a) + ": " + sg(EXP[s.O][0].n) + " \u00f7 " + sg(a) + " = " + (c.u.n < 0 ? "\u2212" : "") + Math.abs(c.u.n) + "/" + c.u.d + ". Click the fraction bar to simplify."); return; }
+    if (red) { eqSet(N, "Divide both sides by " + sg(a) + ": " + sg(EXP[s.O][0].n) + " \u00f7 " + sg(a) + " = " + (c.u.n < 0 ? "\u2212" : "") + Math.abs(c.u.n) + "/" + c.u.d + ". Click the fraction to simplify."); return; }
     var b = { N: N, msg: "Divide both sides by " + sg(a) + ": " + sg(EXP[s.O][0].n) + " ÷ " + sg(a) + " = " + sg(q) + ".", want: { k: "c", n: q } };
     if (a.n < 0 && N.rel !== "=") { N.rel = relRev(N.rel); b.msg += " Dividing by a negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "."; }
     if (mode === "calculate") { eqAsk({ kind: "term", b: b }, sg(EXP[s.O][0].n) + " ÷ " + sg(a) + " ="); return; }
@@ -2163,7 +2194,7 @@
       ok = r.every(function (t) { return t.k !== "g"; }) && JSON.stringify(r.map(key).sort()) === JSON.stringify(k.d.map(key).sort());
     }
     if (!ok) { m.textContent = "Not quite. Check your work and try again."; $("askIn").select(); return; }
-    eqSet(k.b.N, k.b.msg, k.b.g);
+    eqGo(k.b.N, k.b.msg, k.b.anim, k.b.g);
   }
   function eqSet(N, msg, dg) {
     if (dg) distShow(dg);
@@ -2236,7 +2267,7 @@
     if (EXP.zp && EXP.zp.done[EXP.zp.act]) { var nx = EXP.zp.done.indexOf(false); if (nx >= 0) zpFocus(nx); }
     var dvk = EXP.dvq && !EXP.zpq && EXP.rel === "=" ? dvOK(EXP.L, EXP.R) : null;
     if (dvk) { var dg = EXP[dvk.S][dvk.i]; return { mv: ['.exT[data-s="' + dvk.S + '"][data-i="' + dvk.i + '"] > .exM', ".exEq"], cap: "Drag the " + dg.m.n + " to the other side: it divides every term by " + dg.m.n + ".", run: function () { eqDivGroup(dvk.S, dvk.i); } }; }
-    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].u) return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"]', cap: "Click the fraction bar to simplify.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(S, i) }; }
+    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].u) return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"]', cap: "Click the fraction to simplify.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(S, i) }; }
     if (EXP.zpq && zpOf(EXP.L, EXP.R)) return { cap: "If two numbers multiply to make 0, one of them must be 0. Drag a factor up.", mv: ['#exRow .exT[data-s="L"][data-i="0"] > .exG', zpAnchor(true)], run: function () { var a = $("zpAnchor"); if (a) a.remove(); zpSplit(0, true); } };
     for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return { hot: [S + i], cap: "Drag " + dgWord(EXP[S][i].m) + " onto the parentheses.", key: S + ":" + i, anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, distMsg(g, d), g); }; })(S, i) }; }
     for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"]', '.exT[data-s="' + S + '"][data-i="' + j + '"]'], cap: "Drag a term onto its like term.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
@@ -2309,7 +2340,7 @@
     var s = $("crIn").value.toLowerCase().replace(/−/g, "-"), sr = splitRel(s), p = sr ? [sr.l, sr.r] : [], rel = sr ? sr.rel : "=", err = $("crErr");
     if (p.length !== 2 || !p[0].trim() || !p[1].trim()) { err.textContent = "Type an equation with one = sign (or < > ≥ ≤), like 3x=x+2 or 2x+1<x+6."; return; }
     if (/[a-wyz]/.test(s)) { eqCreateLit(p, rel, err); return; }
-    var L = exParse(p[0]), R = exParse(p[1]);
+    exKeepU = true; var L, R; try { L = exParse(p[0]); R = exParse(p[1]); } finally { exKeepU = false; }
     if (typeof L === "string" || typeof R === "string") { err.textContent = typeof L === "string" ? L : R; return; }
     var gq = false;   // x^2 + 5x + 3x + 15 = 0: factor by grouping, then the zero product property
     if (rel === "=") {
@@ -2365,8 +2396,15 @@
     s = s.toLowerCase(); var sr = splitRel(s); if (!sr) return false; var p = [sr.l, sr.r];
     if (/[a-wyz]/.test(s)) return true;   // letters other than x are coefficients
     if (/\^/.test(s)) return true;   // x^2 + 5x + 3x + 15 = 0 (factoring by grouping)
+    if (rawFr(s)) return true;   // 6/4 typed as it is: the fraction is left unsimplified until it is clicked
     return (/[a-z]/.test(p[0]) && /[a-z]/.test(p[1])) || /\([^)]*[a-z][^)]*\)/.test(s);
   }
+  function rawFr(s) {   // a number that is a fraction which can still be simplified (6/4, not 3/2, 6/3 or the 6/4 in 6/4x)
+    var re = /(\d+)\/(\d+)(?![\d.\/a-z(])/g, m, t = String(s).replace(/\s+/g, "").replace(/\u2212/g, "-");
+    while ((m = re.exec(t))) { var n = +m[1], d = +m[2], j = m.index; if (d > 1 && n % d && gcd(n, d) > 1 && !/[\d.\/]$/.test(t.slice(0, j))) return true; }
+    return false;
+  }
+  function uClean(arr) { arr.forEach(function (t) { if (t.u && !(t.k === "c" && Math.abs(t.u.n) * t.n.d === Math.abs(t.n.n) * t.u.d && t.u.d > 1)) delete t.u; }); }
 
   // ---- Playground: Equation Solver: Next / Harder / Try another ----
   // When a problem is finished: Next (plum red, "Try in [next mode] Mode"), "Harder Equation" directly below it, and a small "Try another" link.
@@ -2679,7 +2717,7 @@
       var op = c[m[2]]; op.classList.add("opc"); op.title = "Combine like terms";
       op.addEventListener("click", function () {
         if (locked || calc || busy) return;
-        if (mode === "calculate") openAsk(i, "comb", m); else combineK(i, m[0], m[1]);
+        if (mode === "calculate") openAsk(i, "comb", m); else slideCombine(i, m[0], m[1], undefined, op);
       });
     });
     q.ks.forEach(function (k, idx) {
@@ -2692,17 +2730,31 @@
       if (!/^comb:/.test(cc.dataset.drop || "")) cc.dataset.drop = "comb:" + i + ":" + idx + ":*";
     });
     if (mvOn()) { mvTags(r, i); mvXCell(r, i); }
-    if (q.raw) { c[N - 1].classList.add("pend"); if (q.rawS) { c[N - 1].title = "Click the fraction bar to simplify"; c[N - 1].classList.add("frS"); } c[N - 1].addEventListener("click", function () { if (busy || dmLocked()) return; if (mode === "demo" || (q.rawS && mode === "sequence")) doCalc(i); else openAsk(i, "simp"); }); }
+    if (q.raw) { c[N - 1].classList.add("pend"); if (q.rawS) { c[N - 1].title = "Click the fraction to simplify"; c[N - 1].classList.add("frS"); } c[N - 1].addEventListener("click", function () { if (busy || dmLocked()) return; if (mode === "demo" || (q.rawS && mode === "sequence")) doCalc(i); else openAsk(i, "simp"); }); }
   }
 
   // ---- generic drag: the dragged element follows the pointer; drop zones carry data-drop ----
+  var DROP_PX = 18, DROP_PY = 28;   // the drop targets reach this far beyond their edges (sideways, up and down), so a drop does not have to be exact
   function under(ev, el, prefix) {
-    var l = document.elementsFromPoint(ev.clientX, ev.clientY);
+    var sel = (Array.isArray(prefix) ? prefix : [prefix]).map(function (x) { return "[data-drop^=\"" + x + "\"]"; }).join(",");
+    function ok(t) { return t && !el.contains(t) && !(t.dataset.drop.indexOf("mv:") === 0 && t.contains(el)) && !(t !== el && t.classList.contains("exT") && t.contains(el)); }
+    var l = document.elementsFromPoint(ev.clientX, ev.clientY), hit = null;
     for (var i = 0; i < l.length; i++) {
-      var t = l[i].closest((Array.isArray(prefix) ? prefix : [prefix]).map(function (x) { return "[data-drop^=\"" + x + "\"]"; }).join(","));
-      if (t && !el.contains(t) && !(t.dataset.drop.indexOf("mv:") === 0 && t.contains(el)) && !(t !== el && t.classList.contains("exT") && t.contains(el))) return t;   // a handle inside a term (the number in front, the exponent) is never dropped on its own term
+      var t = l[i].closest(sel);
+      if (ok(t)) { hit = t; break; }
     }
-    return null;
+    if (!hit || hit.dataset.drop.indexOf("row:") === 0) {   // nothing exactly under the pointer (or just the empty row): the closest target within reach wins
+      var best = null, bd = 1e9, cs = document.querySelectorAll(sel), x = ev.clientX, y = ev.clientY;
+      for (var j = 0; j < cs.length; j++) {
+        var c = cs[j]; if (!ok(c) || c === hit || c.dataset.drop.indexOf("row:") === 0 || !c.offsetParent) continue;
+        var r = c.getBoundingClientRect(); if (!r.width || !r.height) continue;
+        var dx = Math.max(r.left - x, 0, x - r.right), dy = Math.max(r.top - y, 0, y - r.bottom);
+        if (dx > DROP_PX || dy > DROP_PY) continue;
+        var d = dx / DROP_PX + dy / DROP_PY; if (d < bd) { bd = d; best = c; }
+      }
+      if (best) return best;
+    }
+    return hit;   // (a handle inside a term, the number in front or the exponent, is never dropped on its own term)
   }
   // the + or − in front of a term belongs to it: it travels with the dragged term, and it lights up with a term that is a drop target
   function opOf(el) {
@@ -2951,7 +3003,7 @@
     else if (mode === "calculate") n.raw = sg(q.c) + "/" + wrap(co);
     ws[i] = n; done(i);
     if (q.rel && co.n < 0) note("Dividing both sides by a negative number turns the sign around: " + q.rel + " becomes " + n.rel + ".");
-    else if (red) note("Click the fraction bar to simplify " + n.raw.replace("-", "\u2212") + ".");
+    else if (red) note("Click the fraction to simplify " + n.raw.replace("-", "\u2212") + ".");
     if (mode === "calculate" && !red) openAsk(ws.indexOf(n), "simp");
   }
   // drag a constant over to the other side: combine it into the right side
@@ -2993,6 +3045,12 @@
     if (mode === "calculate" && k.r && ws[at]) openAsk(at, "ksimp", ws[at].ks.length - 1);
   }
   // click the + between two constants: they combine into one (3x + 2 + 1 = 9 becomes 3x + 3 = 9)
+  var absorbNext = false;
+  function slideCombine(i, a, b, keep, opEl, force) {   // from a click on the + or −: slide, combine, swell. Without a symbol (a drop) it just combines.
+    var q = ws[i], r = rows[i]; if (!q || !r || !opEl || locked || (busy && !force)) { combineK(i, a, b, keep); return; }
+    var vs = curVs(), ea = q.ks[a] && r.children[kslot(q, q.ks[a], vs)], eb = q.ks[b] && r.children[kslot(q, q.ks[b], vs)];
+    slideInto([ea, eb], opEl, function () { absorbNext = true; combineK(i, a, b, keep); absorbNext = false; });
+  }
   function combineK(i, a, b, keep) {   // keep = the one that stays (the one dropped on); the sum appears where it is. Default: the left one.
     if (locked) return; var q = ws[i]; if (!q.ks[a] || !q.ks[b]) return;
     snap();
@@ -3000,6 +3058,7 @@
     ka.k = add(ka.k, kb.k); n.ks.splice(n.ks.indexOf(kb), 1);
     if (!ka.k.n) n.ks.splice(n.ks.indexOf(ka), 1);
     ws[i] = n; done(i);
+    if (absorbNext && n.ks.indexOf(ka) >= 0) { var rr = rows[ws.indexOf(n)]; if (rr) absorbEl(rr.children[kslot(n, ka, curVs())]); }
   }
   function combText(q, a, b) { var A = q.ks[a].k, B = q.ks[b].k; return sg(A) + (B.n < 0 ? " − " : " + ") + sg(ab(B)); }
   // show the inserted value, e.g. 2(3) + 4y = 14, then simplify it to 6 + 4y = 14
@@ -3050,7 +3109,7 @@
   function showInput() {
     $("askIn").value = ""; $("askErr").textContent = "";
     $("askIn").placeholder = askKind === "calc" ? (lesson === 3 ? "e.g. 2x+3y-z=12" : "e.g. 2x+3y=12") : askKind === "simp" ? (ws[askIdx] && ws[askIdx].rawS ? "e.g. 3/2" : "e.g. 3 or x = 3") : "e.g. 3";
-    $("ask").hidden = false; placeAsk(); $("askIn").focus(); askArrow(true);
+    $("ask").hidden = false; placeAsk(); $("askIn").focus(); askArrow(true); askSeq++;
   }
   // Calculate mode: a red arrow grows from small to large beside the prompt in the right side panel, so the student sees where to answer
   function askArrow(on) {
@@ -3100,9 +3159,19 @@
     }, 900);
   }
   document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("#kindAsk [data-k]"); if (b) kindPick(b.dataset.k); });
+  var askSeq = 0, autoOn = false;
+  // Typing the right answer is enough: the moment the text is correct it is accepted, with no Return or button. While it is not (yet) right, nothing is said and nothing moves; Return still checks it and says what is wrong.
+  function autoTry(run, open, quiet) {
+    if (autoOn) return false; var seq = askSeq, keep = quiet.map(function (e) { return [e, e.textContent, e.className]; });
+    autoOn = true; var inp = document.activeElement, sel = inp && inp.select; if (inp) inp.select = function () {};
+    try { run(); } finally { if (inp) { try { delete inp.select; } catch (x) { } } autoOn = false; }
+    var still = open() && seq === askSeq;
+    if (still) keep.forEach(function (k) { k[0].textContent = k[1]; k[0].className = k[2]; });
+    return !still;
+  }
   function closeAsk(cancel) {
     if (cancel) calc = null;
-    $("ask").hidden = true; askArrow(false); if (EXP) EXP.ask = null;
+    $("ask").hidden = true; askArrow(false); askSeq++; if (EXP) EXP.ask = null;
     rows.forEach(function (r) { r.classList.remove("asking"); });
   }
   function confirmAsk() {
@@ -3123,7 +3192,7 @@
       if (!q2 || !q2.ks[askC[0]] || !q2.ks[askC[1]]) { closeAsk(false); return; }
       if (!n2) { err("Type a number, like 3 or -1."); return; }
       if (!same(n2, add(q2.ks[askC[0]].k, q2.ks[askC[1]].k))) { err("Not quite. Try again."); $("askIn").select(); return; }
-      closeAsk(false); combineK(i, askC[0], askC[1], askC[3]); return;
+      closeAsk(false); slideCombine(i, askC[0], askC[1], askC[3], askC[2] ? rows[i].children[askC[2]] : null); return;
     }
     if (askKind === "simp" || askKind === "ksimp") {
       var q1 = ws[i];
@@ -3152,7 +3221,7 @@
     if (locked) return "You solved it!";
     if (calc) return "Multiply every term by the number, then type the whole new equation.";
     if (ws.some(function (q) { return q.ks.some(function (k) { return k.r; }); })) return mode === "sequence" ? "Click the multiplication to calculate it." : "Do the multiplication in the parentheses and type the result.";
-    if (ws.some(function (q) { return q.rawS; })) return "Click the fraction bar to simplify the fraction.";
+    if (ws.some(function (q) { return q.rawS; })) return "Click the fraction to simplify the fraction.";
     if (ws.some(function (q) { return q.raw; })) return "Work out the calculation on the right side and type the result.";
     if (lesson === 3 && sys.length < 2) {
       if (!elimInfo) return "Choose a variable, make its terms opposites in two of the equations, then add them.";
@@ -3253,6 +3322,24 @@
     return allV().some(function (n) { return q[CK[n]].n && !isOne(q[CK[n]]); }) ? ["coef", 0] : null;
   }
   // a copy of src, enlarged, glides to dst, then cb runs
+  // clicking the + or - between like terms: the two terms slide into the symbol, then the sum takes their place and swells and settles as if it had taken the impact
+  var ABS = null;   // the sum that has just appeared: { side ("L" / "R" / "" for expressions), idx, t }
+  function slideInto(els, opEl, then) {
+    els = els.filter(function (e) { return e && e.isConnected; });
+    if (!els.length || !opEl || !opEl.isConnected) { then(); return; }
+    var oc = ctr(opEl), was = busy; busy = true;
+    els.forEach(function (e) {
+      var c = ctr(e); if (e.classList.contains("exT")) e.style.display = "inline-block";
+      e.style.position = "relative"; e.style.zIndex = 3; e.style.transition = "transform .4s cubic-bezier(.5,0,.8,.6), opacity .4s ease-in";
+      e.style.transform = "translate(" + (oc.x - c.x) + "px," + (oc.y - c.y) + "px) scale(.3)"; e.style.opacity = ".1";
+    });
+    setTimeout(function () { busy = was; then(); }, 430);
+  }
+  function absorbEl(el) { if (!el) return; el.classList.remove("absorb"); void el.offsetWidth; el.classList.add("absorb"); setTimeout(function () { el.classList.remove("absorb"); }, 750); }
+  function absorbNow(root, sel) {   // after a render: the new sum swells (a re-render during the swell carries on from where it was)
+    if (!ABS || Date.now() - ABS.t > 700) return; var e = root.querySelector(sel); if (!e) return;
+    e.classList.add("absorb"); e.style.animationDelay = "-" + (Date.now() - ABS.t) + "ms"; setTimeout(function () { e.classList.remove("absorb"); e.style.animationDelay = ""; }, 750 - (Date.now() - ABS.t));
+  }
   function fly(src, dst, cb, hide) {
     var op = opOf(src), a = src.getBoundingClientRect(), b = dst.getBoundingClientRect(), g = src.cloneNode(true), cs = getComputedStyle(src);
     if (op) {   // the + or − in front of the term flies with it
@@ -3408,7 +3495,7 @@
       ca.classList.add("hl"); cb2.classList.add("hl");
       if (pr) {
         cr[pr[2]].classList.add("opc", "hl"); handGo(ctr(cr[pr[2]]), 600); tapAt = 1000;
-        act = function () { combineK(i, s[2], s[3]); };
+        act = function () { slideCombine(i, s[2], s[3], undefined, cr[pr[2]], true); release(1300); return true; };
       } else {   // not next to each other (the variable is between them): drag one onto the other
         handGo(ctr(cb2), 600); tapAt = 1000;
         act = function () { handGo(ctr(ca), 700); fly(cb2, ca, function () { combineK(i, s[2], s[3], s[2]); release(900); }, true); return true; };
@@ -3644,7 +3731,7 @@
     dmTitle(own && BUILT[act] && BUILT[act].title || ""); dmHead();
   }
   function setMode(m) {
-    if (quiz()) { mode = m; theme(); $("modeSel").value = m; $("modeSel").style.color = ""; qzStart(); return; }
+    if (quiz()) { mode = m; theme(); saveMode(); $("modeSel").value = m; $("modeSel").style.color = ""; qzStart(); return; }
     var sel = $("modeSel");
     // equations typed in Create carry over to the mode the student picks
     if (mode === "create" && m !== "create" && m !== "solo" && SUB() && orig.length === allV().length && !orig.some(function (q) { return q.sol; })) { sel.value = "create"; note("For substitution, one equation has to be solved for a variable, like y = 2x - 6. Press Undo and type it that way."); return; }
@@ -3652,10 +3739,16 @@
       if (m === "demo" && !demoOK(orig)) { sel.value = "create"; note("The demo can't walk through this one: a coefficient is zero or not a whole number. Try Calculate or Sequence."); return; }
       useCustom = JSON.parse(JSON.stringify(orig));
     }
-    dm4Reset(); mode = m; theme();
+    dm4Reset(); mode = m; theme(); saveMode();
     sel.value = m; sel.style.color = "";
     newProblem();
   }
+  // a refresh keeps the mode (Demo, Sequence, Calculate, Solo, Create) of this activity for as long as the tab is open
+  function saveMode() { try { sessionStorage.setItem("an.mode." + act, mode); } catch (e) {} }
+  var bootMode = (function () {
+    try { var m = sessionStorage.getItem("an.mode." + act), B = BUILT[act], ok = B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"]; return m && MODES[m] && ok.indexOf(m) >= 0 ? m : null; } catch (e) { return null; }
+  })();
+  function takeBoot() { var m = bootMode || "demo"; bootMode = null; return m; }
 
   function newProblem() {
     hideKind();
@@ -3873,6 +3966,18 @@
   $("askOk").addEventListener("click", confirmAsk);
   $("askNo").addEventListener("click", function () { closeAsk(true); });
   $("askIn").addEventListener("keydown", function (e) { if (e.key === "Enter") confirmAsk(); });
+  $("askIn").addEventListener("input", function () {
+    if ($("ask").hidden || !this.value.trim() || (!(EXP && EXP.ask) && /^(mul|add|sub|div)$/.test(askKind))) return;   // an amount the student chooses has no right answer to wait for
+    autoTry(confirmAsk, function () { return !$("ask").hidden; }, [$("askErr")]);
+  });
+  $("exSoloIn").addEventListener("input", function () {
+    if ($("exSolo").hidden || !this.value.trim()) return; var at = ansTouched;
+    if (!autoTry(exCheckSolo, function () { return !$("exSolo").hidden; }, [$("exMsg")])) ansTouched = at;
+  });
+  $("ansFields").addEventListener("input", function (e) {
+    if ($("answer").hidden || $("ansFields").hidden || !e.target.value || !e.target.value.trim()) return; var at = ansTouched;
+    if (!autoTry(checkAnswer, function () { return !$("ansGo").hidden; }, [$("ansMsg")])) ansTouched = at;
+  });
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
     if (!$("prog").hidden) $("prog").hidden = true; else if (!$("ask").hidden) closeAsk(true); else if (!$("sheet").hidden) $("sheet").hidden = true;
@@ -4350,8 +4455,8 @@
     }
   }
   // Demo mode has no Check button: the page checks as the student works and moves on when the answer is right
-  function qzAuto() {
-    if (mode !== "demo" || busy || QZ.locked || !quiz()) return;
+  function qzAuto(typed) {   // Demo checks everything as the student works; the other modes accept a typed equation or table as soon as it is right
+    if ((mode !== "demo" && !typed) || busy || QZ.locked || !quiz()) return;
     var fam = qFam(), st = qStep();
     if (st === "eq") { var t = qNorm(($("qzEq") || {}).value || ""); if (t === QEQ[fam]) qzAdvance(); }
     else if (st === "table") { if (TB.rows().every(function (r) { return r.done; })) qzAdvance(); }
@@ -4369,13 +4474,13 @@
   }
   function cellOK(i) { var el = $("qzY" + i); if (!el) return false; var n = parse(String(el.value).replace(/−/g, "-")); return !!n && same(n, mk(qf(qFam(), i - 2))); }
   document.addEventListener("input", function (e) {
-    if (mode !== "demo" || busy || !quiz() || pq()) return;
-    if (e.target.id === "qzEq") qzAuto();
+    if (busy || !quiz() || pq()) return;
+    if (e.target.id === "qzEq") qzAuto(true);
     else if (!TB.mode() && e.target.classList && e.target.classList.contains("qzCell")) {
       var i = +e.target.id.slice(3);
       if (cellOK(i)) {
         var nx = [0, 1, 2, 3, 4].filter(function (j) { return !cellOK(j); })[0];
-        if (nx === undefined) qzAuto(); else { var c = $("qzY" + nx); c.focus(); c.select(); }
+        if (nx === undefined) qzAuto(true); else { var c = $("qzY" + nx); c.focus(); c.select(); }
       }
     }
   });
@@ -4716,6 +4821,7 @@
     el.setRangeText((before && !/\s$/.test(before) ? " " : "") + b.dataset.ins + " ", i, j, "end"); el.focus();
   });
   $("pgDescTx").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); gdDescSubmit(); } });
+  $("pgDescTx").addEventListener("input", function () { if (this.value.trim() && gdDescRight(gdParse(this.value))) gdDescSubmit(); });
   function pqMsg(t, cls) { var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = t || ""; }
   // ---- 1.1A, third exercise: Estimating a Value from a Graph.  The data come from a table in the question; the student enters them in the Data table, graphs the model
   // (a U for a quadratic) through the points, then estimates a height from the graph.  The centre pane is the Play Data pane. ----
@@ -4834,6 +4940,7 @@ var ESPIC = {
     box.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
   }
   $("estGo").addEventListener("click", estSubmit);
+  $("estTx").addEventListener("input", function () { var e = estProb(), v = ptNum(this.value); if (e && this.value.trim() && isFinite(v) && Math.abs(v - e.ans) <= e.tol) estSubmit(); });
   $("estTx").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); estSubmit(); } });
   function estHint(n, ok) {
     var e = estProb();
@@ -5036,7 +5143,7 @@ var ESPIC = {
     stopDemo(); stopParty(); closeAsk(false);
     document.body.classList.add("quiz", "play", "pq"); document.body.classList.toggle("dataAct", isDataAct()); document.body.classList.toggle("est", isDataAct());
     $("pg").hidden = false; document.querySelector(".frame").hidden = true; $("pgCtl").hidden = false; $("qz").hidden = false; $("prog").hidden = true;
-    setMode("demo");
+    setMode(takeBoot());
   }
   function leaveQuiz() {
     if (!document.body.classList.contains("quiz")) return;
@@ -6909,7 +7016,7 @@ var ESPIC = {
   }
 
   buildActs(); buildLessons(); updProg();
-  if (BUILT[act].play) { setMode("demo"); enterPlay(); } else if (BUILT[act].quiz) enterQuiz(); else setMode("demo");
+  if (BUILT[act].play) { setMode(takeBoot()); enterPlay(); } else if (BUILT[act].quiz) enterQuiz(); else setMode(takeBoot());
   if (welcome) { document.body.classList.add("wel"); theme(); $("welcome").hidden = false; }
 </script>
 </body>
