@@ -3655,11 +3655,15 @@
       [3, "demo", 10, "Demo Mode"], [3, "sequence", 25, "Sequence Mode"], [3, "solo", 40, "Solo Mode"],
       [3, "solo", 70, "Solo Mode, 2nd round", 2], [3, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
-    "1.2": { quiz: true, top: 2, key: "algebraProgress:1.2", perLesson: true, modes: ["demo", "sequence", "calculate", "solo", "create"], lessons: ["Writing Translations", "Writing Reflections", "Writing Stretches and Shrinks", "Combining Transformations", "Profit from a Combination"], short: ["Translations", "Reflections", "Stretches", "Combining", "Profit"], levels: [
+    "1.2": { quiz: true, top: 4, key: "algebraProgress:1.2", perLesson: true, modes: ["demo", "sequence", "calculate", "solo", "create"], lessons: ["Writing Translations", "Writing Reflections", "Writing Stretches and Shrinks", "Combining Transformations", "Profit from a Combination"], short: ["Translations", "Reflections", "Stretches", "Combining", "Profit"], levels: [
       [1, "demo", 10, "Demo Mode"], [1, "sequence", 25, "Sequence Mode"], [1, "calculate", 40, "Calculate Mode"], [1, "solo", 55, "Solo Mode"],
       [1, "solo", 80, "Solo Mode, 2nd round", 2], [1, "solo", 100, "Solo Mode, 3rd round", 3],
       [2, "demo", 10, "Demo Mode"], [2, "sequence", 25, "Sequence Mode"], [2, "calculate", 40, "Calculate Mode"], [2, "solo", 55, "Solo Mode"],
-      [2, "solo", 80, "Solo Mode, 2nd round", 2], [2, "solo", 100, "Solo Mode, 3rd round", 3]
+      [2, "solo", 80, "Solo Mode, 2nd round", 2], [2, "solo", 100, "Solo Mode, 3rd round", 3],
+      [3, "demo", 10, "Demo Mode"], [3, "sequence", 25, "Sequence Mode"], [3, "calculate", 40, "Calculate Mode"], [3, "solo", 55, "Solo Mode"],
+      [3, "solo", 80, "Solo Mode, 2nd round", 2], [3, "solo", 100, "Solo Mode, 3rd round", 3],
+      [4, "demo", 10, "Demo Mode"], [4, "sequence", 25, "Sequence Mode"], [4, "calculate", 40, "Calculate Mode"], [4, "solo", 55, "Solo Mode"],
+      [4, "solo", 80, "Solo Mode, 2nd round", 2], [4, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -4926,7 +4930,9 @@
     if (est()) { var oe = pqParts(), alle = QZ.step >= 4; $("pgQcue").innerHTML = (QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + [["Table", oe.table], ["Regression", oe.graph], ["Estimate", oe.desc]].map(function (a) { return a[0] + (alle || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; "); return; }
     if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = ""; return; }   // (one thing to answer: nothing to list)
     if (wfCr()) { $("pgQcue").innerHTML = ""; return; }
-    if (wf()) { var ow = pqParts(), aw = QZ.step >= 4, ck = function (b) { return aw || b ? " <span class=\"cueOk\">\u2713</span>" : "?"; }; var pn = QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : ""; $("pgQcue").innerHTML = mode === "solo" ? pn : (pn ? pn + ": " : "") + "<span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + " &nbsp; Graph" + ck(ow.graph); return; }   // one thing to answer (Solo): only the problem count is shown
+    if (wf()) { var ow = pqParts(), aw = QZ.step >= 4, ck = function (b) { return aw || b ? " <span class=\"cueOk\">\u2713</span>" : "?"; }; var pn = QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : "", P0 = wfProb();
+      if (P0 && P0.comb && wfSteppy()) { $("pgQcue").innerHTML = (pn ? pn + " · " : "") + "Transformation " + ((QZ.wsg || 0) + 1) + " of " + P0.comb.length + (wfLast() ? ": <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + " &nbsp; Graph" + ck(ow.graph) : ""); return; }
+      $("pgQcue").innerHTML = mode === "solo" ? pn : (pn ? pn + ": " : "") + "<span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + " &nbsp; Graph" + ck(ow.graph); return; }   // one thing to answer (Solo): only the problem count is shown
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
     var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
     $("pgQcue").innerHTML = (gd() && mode !== "create" && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
@@ -4973,7 +4979,7 @@
   });
   $("pgDescTx").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); gdDescSubmit(); } });
   $("pgDescTx").addEventListener("input", function () { if (this.value.trim() && gdDescRight(gdParse(this.value))) gdDescSubmit(); });
-  function pqMsg(t, cls) { var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = t || ""; }
+  function pqMsg(t, cls) { var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = (wf() ? wfNm(t) : t) || ""; }
   // ---- 1.1, third exercise: Estimating a Value from a Graph.  The data come from a table in the question; the student enters them in the Data table, graphs the model
   // (a U for a quadratic) through the points, then estimates a height from the graph.  The centre pane is the Play Data pane. ----
   function est() { return pq() && act === "1.1" && lesson === 3; }
@@ -5193,8 +5199,8 @@ var ESPIC = {
     if (!((gd() || wf()) && mode === "create" && QZ.pick)) $("modePick").hidden = true;
     document.body.classList.toggle("crPre", gd() && mode === "create" && !QZ.cr); document.body.classList.toggle("noSub", mode !== "create");
     if (wfCr()) {
-      if (QZ.pick) { $("pgQt").textContent = "Your move is in."; showPick($("pgQ"), "How would you like to work on it?"); }
-      else if (QZ.cs === "move") { $("modePick").hidden = true; $("pgQt").innerHTML = lesson === 2 ? "Choose an axis of reflection." : "Now move it. Type how far, like right 3 and down 2."; }
+      if (QZ.pick) { $("pgQt").textContent = lesson === 4 ? "Your transformations are in." : lesson === 3 ? "Your stretch or shrink is in." : lesson === 2 ? "Your reflection is in." : "Your move is in."; showPick($("pgQ"), "How would you like to work on it?"); }
+      else if (QZ.cs === "move") { $("modePick").hidden = true; $("pgQt").innerHTML = lesson === 4 ? (QZ.cm === "m" ? "Type how far, like right 3 and down 2." : QZ.cm === "s" ? "Choose a vertical stretch or shrink factor." : QZ.cc && QZ.cc.length ? "Choose the second transformation." : "Choose the first transformation.") : lesson === 3 ? "Choose a vertical stretch or shrink factor." : lesson === 2 ? "Choose an axis of reflection." : "Now move it. Type how far, like right 3 and down 2."; }
       else { $("modePick").hidden = true; $("pgQt").innerHTML = "Type a line or an absolute value, like <span class=\"lm\"><i>f</i>(<i>x</i>) = 2<i>x</i> + 1</span>."; }
     }
     else if (wf()) $("pgQt").innerHTML = wfQ();
@@ -6239,14 +6245,33 @@ var ESPIC = {
     gdCustom = { fam: r.fam, h: r.h, k: r.k, a: r.a }; QZ.pick = true; eqMsg(""); pqPanel();   // the function is in: now the student chooses the mode to work on it in
   }
   // ---- 1.2, first exercise: Writing Translations.  f (a line or an absolute value) is given, g is f moved right or left and up or down, and the student types g(x) ----
-  function wf() { return pq() && act === "1.2" && (lesson === 1 || lesson === 2); }   // lesson 1 Writing Translations, lesson 2 Writing Reflections
+  function wf() { return pq() && act === "1.2" && lesson >= 1 && lesson <= 4; }   // lesson 1 Writing Translations, 2 Writing Reflections, 3 Writing Stretches and Shrinks, 4 Combining Transformations
   function wfCr() { return wf() && mode === "create"; }
   var wfCustom = null;   // Create: the f and the move the student typed, carried into the other modes
-  function wfCur() { return QZ && QZ.wfp ? QZ.wfp[QZ.pi] : null; }
+  // Combining Transformations: P.comb holds the two single transformations.  In Demo, Sequence and Calculate they are worked one stage at a time (the first makes h from f,
+  // the second makes g from h); in Solo the student types g at once, so the whole problem is the current one
+  function wfCur() { var P = QZ && QZ.wfp ? QZ.wfp[QZ.pi] : null; return P && P.comb && wfSteppy() ? P.comb[QZ.wsg || 0] : P; }
+  function wfProb() { return QZ && QZ.wfp ? QZ.wfp[QZ.pi] : null; }
+  function wfLast() { var P = wfProb(); return !P || !P.comb || (QZ.wsg || 0) >= P.comb.length - 1; }
+  // while a combined problem is stage by stage, the middle function is called h: f and g are renamed in what the student reads
+  function wfNm(t) {
+    if (typeof t !== "string" || !t || !(typeof QZ !== "undefined") || !QZ || !QZ.wfp || !pq() || !wf()) return t;
+    var P = QZ.wfp[QZ.pi]; if (!P || !P.comb || !wfSteppy()) return t;
+    var L = (QZ.wsg || 0) === 0 ? "g" : "f";
+    return t.replace(new RegExp("<i>" + L + "</i>", "g"), "<i>h</i>").replace(new RegExp("(^|[^A-Za-z])" + L + "\\(x\\)", "g"), "$1h(x)");
+  }
+  function wfLetter(L) { var P = QZ && QZ.wfp && QZ.wfp[QZ.pi]; if (!P || !P.comb || !wfSteppy()) return L; return (QZ.wsg || 0) === 0 ? (L === "g" ? "h" : L) : (L === "f" ? "h" : L); }
   function wfNz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
+  // Writing Stretches and Shrinks reuses the reflection in the x-axis: g(x) = c f(x), with c = scn/scd (a stretch 2, 3, 4 or a shrink 1/2, 1/3, 1/4) in place of -1
+  function wfStr(p) { return !!p && !!p.scn; }
+  function wfSc(p) { return p && p.scn ? p.scn / p.scd : -1; }
+  function wfFr(n, d) { return d === 1 ? String(n) : "<span class=\"fr\"><span>" + n + "</span><span>" + d + "</span></span>"; }
+  function wfScH(p) { return wfFr(p.scn, p.scd); }
+  function wfScT(p) { return p.scd === 1 ? String(p.scn) : p.scn + "/" + p.scd; }
+  function wfRound(v) { return Math.round(v * 1e9) / 1e9; }
   // g from f: a line slid sideways is the same line slid up or down, so its sideways move folds into the y-intercept
   function wfG(p) {
-    if (p.rf === "x") { p.g = { fam: p.fam, a: -p.fa, h: p.fam === 2 ? p.fh : 0, k: -p.fk }; return p; }   // reflected in the x-axis: -f(x)
+    if (p.rf === "x") { var sc = wfSc(p); p.g = { fam: p.fam, a: wfRound(sc * p.fa), h: p.fam === 2 ? p.fh : 0, k: wfRound(sc * p.fk) }; return p; }   // reflected in the x-axis: -f(x); a stretch or shrink: c f(x)
     if (p.rf === "y") { p.g = p.fam === 2 ? { fam: 2, a: p.fa, h: -p.fh, k: p.fk } : { fam: 1, a: -p.fa, h: 0, k: p.fk }; return p; }   // reflected in the y-axis: f(-x)
     p.g = p.fam === 2 ? { fam: 2, a: p.fa, h: p.fh + p.dh, k: p.fk + p.dk } : { fam: 1, a: p.fa, h: 0, k: p.fk + p.dk - p.fa * p.dh }; return p;
   }
@@ -6263,10 +6288,65 @@ var ESPIC = {
       return p;
     }
   }
+  // Writing Stretches and Shrinks (vertical only): tier 0 a line stretched; tier 1 a line shrunk or an absolute value stretched; tier 2 an absolute value shrunk or stretched
+  function wfMakeS(tier) {
+    for (var t = 0; t < 400; t++) {
+      var shr = tier === 0 ? false : tier === 1 ? rnd(2) === 1 : rnd(3) > 0, ab = tier === 2 ? true : tier === 1 ? !shr : false;
+      var d = shr ? [2, 3, 4][rnd(3)] : 1, n = shr ? 1 : [2, 3, 4][rnd(3)], p;
+      if (!ab) p = { fam: 1, fa: d * [1, 2, -1, -2][rnd(4)], fh: 0, fk: d * wfNz(shr ? 2 : 3), rf: "x" };
+      else p = { fam: 2, fa: d * [1, 2, -1, 3][rnd(4)], fh: rnd(7) - 3, fk: d * (rnd(5) - 2), rf: "x" };
+      p.scn = n; p.scd = d; p.dh = 0; p.dk = 0; wfG(p);
+      if (Math.abs(p.fk) > 8 || Math.abs(p.fa) > 8 || Math.abs(p.g.k) > 8 || Math.abs(p.g.a) > 9) continue;
+      if (!Number.isInteger(p.g.a) || !Number.isInteger(p.g.k)) continue;
+      return p;
+    }
+  }
+  // Combining Transformations: f is changed twice, in order, by two different kinds of change (a move one way, a reflection, a vertical stretch or shrink).
+  // The first change is stage one (f to h), the second is stage two (h to g); every function on the way has whole-number coefficients and fits the graph.
+  function wfShapeF(g) { return { fam: g.fam, fa: g.a, fh: g.fam === 2 ? g.h : 0, fk: g.k }; }
+  function wfChain(f, ops) {
+    var st = [], cur = { fam: f.fam, fa: f.fa, fh: f.fam === 2 ? f.fh : 0, fk: f.fk };
+    ops.forEach(function (o) {
+      var q = { fam: cur.fam, fa: cur.fa, fh: cur.fh, fk: cur.fk, dh: o.dh || 0, dk: o.dk || 0 };
+      if (o.rf) q.rf = o.rf; if (o.scn) { q.scn = o.scn; q.scd = o.scd; }
+      wfG(q); st.push(q); cur = wfShapeF(q.g);
+    });
+    return st;
+  }
+  function wfChainOK(st) {
+    return st.every(function (q) { return Number.isInteger(q.g.a) && Number.isInteger(q.g.k) && Number.isInteger(q.g.h) && Math.abs(q.g.k) <= 8 && Math.abs(q.g.h) <= 7 && Math.abs(q.g.a) <= 9; });
+  }
+  function wfBuildC(f, ops) {
+    var st = wfChain(f, ops);
+    return { fam: f.fam, fa: f.fa, fh: f.fam === 2 ? f.fh : 0, fk: f.fk, dh: 0, dk: 0, comb: st, g: st[st.length - 1].g };
+  }
+  function wfOpMake(kind) {
+    if (kind === "T") return rnd(2) === 1 ? { dh: wfNz(4), dk: 0 } : { dh: 0, dk: wfNz(4) };
+    if (kind === "R") return { rf: rnd(2) === 1 ? "x" : "y" };
+    var d = rnd(2) === 1 ? [2, 3, 4][rnd(3)] : 1; return { rf: "x", scn: d === 1 ? [2, 3][rnd(2)] : 1, scd: d };
+  }
+  function wfMakeC(tier) {
+    var pairs = tier === 0 ? [["S", "T"], ["R", "T"]] : tier === 1 ? [["S", "T"], ["R", "T"], ["T", "S"], ["T", "R"]] : [["T", "R"], ["T", "S"], ["R", "S"], ["S", "R"], ["R", "T"], ["S", "T"]];
+    for (var t = 0; t < 800; t++) {
+      var ab = tier === 0 ? false : tier === 1 ? rnd(2) === 1 : true, pr = pairs[rnd(pairs.length)], f;
+      if (ab) f = { fam: 2, fa: [1, 2, -1, 3, -2][rnd(5)], fh: rnd(5) - 2, fk: rnd(7) - 3 };
+      else f = { fam: 1, fa: [1, 2, 3, -1, -2][rnd(5)], fh: 0, fk: rnd(9) - 4 };
+      var ops = [wfOpMake(pr[0]), wfOpMake(pr[1])];
+      if (ops[0].rf === "y" && ops[1].rf) continue;
+      var P = wfBuildC(f, ops);
+      if (!wfChainOK(P.comb)) continue;
+      if (P.comb.some(function (q) { return q.fam === 1 && !q.rf && q.dk === 0 && q.g.k === q.fk; })) continue;   // a line moved sideways only ends up as the same line shifted: fine, but never unchanged
+      if (P.comb[0].g.a === f.fa && P.comb[0].g.h === (f.fam === 2 ? f.fh : 0) && P.comb[0].g.k === f.fk) continue;
+      if (P.g.a === f.fa && P.g.h === (f.fam === 2 ? f.fh : 0) && P.g.k === f.fk) continue;
+      return P;
+    }
+  }
   // tier 0: the plain line f(x) = x + b moved one way only; tier 1: a line with a slope or an absolute value, still one way only;
   // tier 2: moved sideways and up or down (like the last problems of the textbook's practice, which grow harder)
   function wfMake(tier) {
     if (lesson === 2) return wfMakeR(tier);
+    if (lesson === 3) return wfMakeS(tier);
+    if (lesson === 4) return wfMakeC(tier);
     for (var t = 0; t < 400; t++) {
       var ab = tier === 0 ? false : rnd(2) === 1, p;
       if (tier === 0) p = { fam: 1, fa: 1, fh: 0, fk: rnd(9) - 4 };
@@ -6280,8 +6360,8 @@ var ESPIC = {
   }
   // a round gets harder as it goes: the first problem is the simplest, the last the hardest
   function wfSet(n) {
-    if (n === 1) return [wfMake(0)];   // the Demo always starts with the simplest kind: a plain line, moved one way (or reflected in the x-axis)
-    var out = [], key = function (p) { return JSON.stringify([p.fam, p.fa, p.fh, p.fk, p.dh, p.dk, p.rf]); };
+    if (n === 1) return [wfMake(0)];   // the Demo always starts with the simplest kind: a plain line, moved one way (or reflected in the x-axis, or stretched)
+    var out = [], key = function (p) { return JSON.stringify([p.fam, p.fa, p.fh, p.fk, p.dh, p.dk, p.rf, p.scn, p.scd, p.comb && p.comb.map(function (c) { return [c.dh, c.dk, c.rf, c.scn, c.scd]; })]); };
     while (out.length < n) { var p = wfMake(Math.min(out.length, 2)); if (!out.some(function (o) { return key(o) === key(p); })) out.push(p); }
     return out;
   }
@@ -6299,22 +6379,23 @@ var ESPIC = {
   }
   function wfRuleF(p, dh, dk) { return wfRule(p.fam, p.fa, p.fh, p.fk, dh || 0, dk || 0); }
   function wfRuleG(p) { return wfRule(p.fam, p.g.a, p.g.h, p.g.k, 0, 0); }
-  function wfPlain(h) { return h.replace(/<[^>]+>/g, "").replace(/−/g, "-"); }
+  function wfPlain(h) { return h.replace(/<span class="fr"><span>(\d+)<\/span><span>(\d+)<\/span><\/span>/g, "($1/$2)").replace(/<[^>]+>/g, "").replace(/−/g, "-"); }
   function wfMoves(p) { var w = []; if (p.dh) w.push((p.dh > 0 ? "right " : "left ") + Math.abs(p.dh)); if (p.dk) w.push((p.dk > 0 ? "up " : "down ") + Math.abs(p.dk)); return w.join(" and "); }
-  function wfWhat(p) { return p.rf ? "reflected in the " + p.rf + "-axis" : "moved " + wfMoves(p); }
+  function wfWhat(p) { if (p.comb) return p.comb.map(wfWhat).join(", then "); return wfStr(p) ? (p.scd === 1 ? "vertically stretched by a factor of " + p.scn : "vertically shrunk by a factor of " + wfScT(p)) : p.rf ? "reflected in the " + p.rf + "-axis" : "moved " + wfMoves(p); }
   function wfNc(p) { return !!p && !!p.rf && mode === "calculate"; }   // Calculate, reflections: after the flip the student chooses \u2212x or \u2212f(x)
   function wfNi(p) { return !!(p.dh || p.rf); }   // is there a step 2 (the change inside f(x) is dragged onto f in the question)?
-  function wfInnerTx(p) { return p.rf === "x" ? "−" : p.rf === "y" ? "−" + wfX : wfX + wfSg(-p.dh); }
+  function wfInnerTx(p) { return wfStr(p) ? wfScH(p) : p.rf === "x" ? "−" : p.rf === "y" ? "−" + wfX : wfX + wfSg(-p.dh); }
   // f(-x) written out: a line a(-x) + b, or an absolute value a|-x - h| + b
   function wfRyF(p) { return p.fam === 1 ? wfCo(p.fa) + "(−" + wfX + ")" + (p.fk ? wfSg(p.fk) : "") : wfCo(p.fa) + "|−" + wfX + (p.fh ? wfSg(-p.fh) : "") + "|" + (p.fk ? wfSg(p.fk) : ""); }
-  function wfQ() {
+  function wfQ() { return wfNm(wfQ0()); }
+  function wfQ0() {
     var p = wfCur(); if (!p) return "";
     var rule = wfChipHTML(p), f = wfSteppy() ? "<span class=\"lm cf wfChip\" data-wfchip>" + rule + "</span>" : "<span class=\"lm cf\">" + rule + "</span>";
     return "The function <span class=\"cg\"><i>g</i>(<i>x</i>)</span> is " + f + " <span class=\"cg\">" + wfWhat(p) + "</span>." + (wfSteppy() ? "" : " Type <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>.");
   }
   // the numbers the Playground uses: g itself (a line slid sideways has no sideways part), or a neutral line while Create waits for f
   function wfPG() {
-    var p = wfCur(); QZ.wd = {}; QZ.wl = []; QZ.wh = []; QZ.wdr = { dh: 0, dk: 0, s: 1 }; QZ.wst = 0; QZ.wop = false; QZ.arrowAt = -1; PG.wfShift = null;
+    QZ.wsg = 0; var p = wfCur(); QZ.wd = {}; QZ.wl = []; QZ.wh = []; QZ.wdr = { dh: 0, dk: 0, s: 1 }; QZ.wst = 0; QZ.wop = false; QZ.arrowAt = -1; PG.wfShift = null;
     for (var wi = works.length - 1; wi >= 0; wi--) if (works[wi].wf && works[wi].steps.length < 2) works.splice(wi, 1);   // a problem left unworked is not kept in Show work
     QZ.ww = null; if (p) { QZ.ww = { steps: [{ cls: "cf", eqs: ["f(x) = " + wfPlain(wfRuleF(p)).replace(/-/g, "\u2212")] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); } PG.show = { eq: false, table: false, graph: false, desc: false, parent: false }; PG.eqTxt = "g(x)=";
     if (p) { PG.fam = p.g.fam; PG.a = p.g.a; PG.h = p.g.h; PG.k = p.g.k; PG.pa = [PG.h + 1, PG.k + PG.a]; }
@@ -6373,17 +6454,17 @@ var ESPIC = {
     if (st && !PG.show.graph && !QZ.wd.m && QZ.step < 4) S.appendChild(svgEl("polyline", { points: rf ? rcurve() : curve(Gd, p.fh + d.dh), fill: "none", stroke: "rgba(0,0,0,0)", "stroke-width": "1", "stroke-linejoin": "round", "data-wfg": "1", style: "cursor:grab;pointer-events:stroke" }));
     for (var q = 0; q < 4; q++) {
       var lx = [6.5, -6.5, 3.5, -3.5][q], ly = F(lx);
-      if (Math.abs(ly) <= 8.5) { var tx = svgEl("text", { x: lx + .3, y: -ly - .5, fill: CF, "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tx.textContent = "f"; S.appendChild(tx); break; }
+      if (Math.abs(ly) <= 8.5) { var tx = svgEl("text", { x: lx + .3, y: -ly - .5, fill: CF, "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tx.textContent = wfLetter("f"); S.appendChild(tx); break; }
     }
     var G = p.g ? function (x) { return p.g.a * (p.g.fam === 2 ? Math.abs(x - p.g.h) : x) + p.g.k; } : null;
     if (G && (PG.show.graph || (st && (rf ? QZ.wd.m : (d.dh || d.dk))))) {   // g's label, on the red curve
       var GG = PG.show.graph ? G : Gd;
-      for (var q2 = 0; q2 < 4; q2++) { var gx = [-6.5, 6.5, -3.5, 3.5][q2], gy2 = GG(gx); if (Math.abs(gy2) <= 8.5 && Math.abs(gy2 - F(gx)) > 1.6) { var tg = svgEl("text", { x: gx + .3, y: -gy2 - .5, fill: CG, "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tg.textContent = "g"; S.appendChild(tg); break; } }
+      for (var q2 = 0; q2 < 4; q2++) { var gx = [-6.5, 6.5, -3.5, 3.5][q2], gy2 = GG(gx); if (Math.abs(gy2) <= 8.5 && Math.abs(gy2 - F(gx)) > 1.6) { var tg = svgEl("text", { x: gx + .3, y: -gy2 - .5, fill: CG, "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tg.textContent = wfLetter("g"); S.appendChild(tg); break; } }
     }
     wfMLab(S);
   }
   // Show work: f, each step taken, and g
-  function wfWork(line) { var w = QZ.ww; if (!w) return; var t = line.replace(/<[^>]+>/g, ""), l = w.steps[w.steps.length - 1]; if (l && l.eqs[0] === t) return; w.steps.push({ eqs: [t], cls: /^f\(/.test(t) ? "cf" : "cg" }); }
+  function wfWork(line) { var w = QZ.ww; if (!w) return; line = wfNm(line); var t = line.replace(/<[^>]+>/g, ""), l = w.steps[w.steps.length - 1]; if (l && l.eqs[0] === t) return; w.steps.push({ eqs: [t], cls: /^f\(/.test(t) ? "cf" : "cg" }); }
   function wfFinal() { var p = wfCur(); if (p && p.g) wfWork("<i>g</i>(<i>x</i>) = " + wfRuleG(p)); }
   function wfSteppy() { return wf() && !wfCr() && (mode === "sequence" || mode === "calculate" || mode === "demo"); }
   function wfF(p, x) { return p.fa * (p.fam === 2 ? Math.abs(x - p.fh) : x) + p.fk; }
@@ -6391,9 +6472,9 @@ var ESPIC = {
   function wfStgR(p) {   // a reflection: -(f's rule) loses its parentheses; a(-x) loses them; |-x - h| becomes |x + h|
     var a = p.fa, S = [], g = wfRuleG(p), m1;
     if (p.rf === "x") {
-      var body = wfRuleF(p);
-      S.push({ m: "\u0001−(" + body + ")\u0002", t: "", kind: "sub", q: null });
-      S.push({ m: g, t: "Take away the parentheses.", kind: "paren", q: { lab: "−(" + body + ")", g: true, ask: "Take away the parentheses." } });
+      var body = wfRuleF(p), cH = wfStr(p) ? wfScH(p) : "−";
+      S.push({ m: "\u0001" + cH + "(" + body + ")\u0002", t: "", kind: "sub", q: null });
+      S.push({ m: g, t: wfStr(p) ? "Multiply to take away the parentheses." : "Take away the parentheses.", kind: "paren", q: { lab: cH + "(" + body + ")", g: true, ask: wfStr(p) ? "Multiply to take away the parentheses." : "Take away the parentheses." } });
     } else if (p.fam === 1) {
       S.push({ m: wfCo(a) + "\u0001(−" + wfX + ")\u0002" + (p.fk ? wfSg(p.fk) : ""), t: "", kind: "sub", q: null });
       S.push({ m: g, t: "Take away the parentheses.", kind: "paren", q: { lab: wfCo(a) + "(−" + wfX + ")", fn: -a, dh: 0, ask: "Take away the parentheses." } });
@@ -6440,7 +6521,8 @@ var ESPIC = {
   }
   function wfNext() { var p = wfCur(); return !QZ.wd.m ? "m" : wfNc(p) && !QZ.wd.c ? "c" : wfNi(p) && !QZ.wd.i ? "i" : !QZ.wd.r ? "r" : QZ.wst < wfStg(p).length - 1 ? "s" : ""; }
   // what g reads while it is still defined by f: g(x) = f(x - 3) - 2 (then the whole rule, a step at a time)
-  function wfLive() {
+  function wfLive() { return wfNm(wfLive0()); }
+  function wfLive0() {
     var p = wfCur(), d = QZ.wdr || { dh: 0, dk: 0 };
     if (!p) return "";
     if (QZ.wd.r) return "<span class=\"cg\"><i>g</i>(<i>x</i>) = " + wfStgX(p, QZ.wst) + "</span>";
@@ -6448,7 +6530,7 @@ var ESPIC = {
       var dr = QZ.wd.m && !QZ.wd.i && !(wfNc(p) && !QZ.wd.c), gf = "<span class=\"cg\"><i>g</i>(<i>x</i>) = </span>";
       if (!QZ.wd.m) return gf + "<span class=\"cf\"><i>f</i>(<i>x</i>)</span>";
       var hn = function (t) { return dr ? "<span class=\"wfX\" data-wfin title=\"Drag me onto f(x) in the question\">" + t + "</span>" : t; };
-      return gf + (p.rf === "x" ? "<span class=\"cg\">" + hn("−") + "</span><span class=\"cf\"><i>f</i>(<i>x</i>)</span>" : "<span class=\"cf\"><i>f</i>(" + hn("−" + wfX) + ")</span>");
+      return gf + (p.rf === "x" ? "<span class=\"cg\">" + hn(wfInnerTx(p)) + "</span><span class=\"cf\"><i>f</i>(<i>x</i>)</span>" : "<span class=\"cf\"><i>f</i>(" + hn("−" + wfX) + ")</span>");
     }
     var inner = d.dh ? (QZ.wd.m && !QZ.wd.i ? "<span class=\"wfX\" data-wfin title=\"Drag me onto f(x) in the question\">" + wfX + wfSg(-d.dh) + "</span>" : wfX + wfSg(-d.dh)) : wfX;
     return "<span class=\"cg\"><i>g</i>(<i>x</i>) = </span><span class=\"cf\"><i>f</i>(" + inner + ")</span>" + (d.dk ? "<span class=\"cg\">" + wfSg(d.dk) + "</span>" : "");
@@ -6476,15 +6558,15 @@ var ESPIC = {
   }
   // a reflection: the graph is grabbed at a point and flipped through the axis (s runs from 1 to -1)
   function wfSetFlip(s, fx, fy) {
-    s = Math.max(-3, Math.min(3, s)); if (QZ.wdr && QZ.wdr.s === s && QZ.wdr.fx === fx) return;
+    s = Math.max(-5, Math.min(5, s)); if (QZ.wdr && QZ.wdr.s === s && QZ.wdr.fx === fx) return;
     QZ.wdr = { dh: 0, dk: 0, s: s, fx: fx, fy: fy }; drawPlay();
   }
   function wfDragEnd() {
     var p = wfCur(), d = QZ.wdr;
     if (p && p.rf) {
       if (QZ.wd.m || QZ.step >= 4 || !d || d.s === undefined || d.s === 1) return;
-      if (Math.abs(d.s + 1) < 1e-9) wfMoveDone();
-      else { QZ.wrong++; pqMsg("Flip it all the way, to its mirror image in the " + p.rf + "-axis."); QZ.wdr = { dh: 0, dk: 0, s: 1 }; drawPlay(); }
+      if (Math.abs(d.s - wfSc(p)) < 1e-9) wfMoveDone();
+      else { QZ.wrong++; pqMsg(wfStr(p) ? "The question says " + wfWhat(p) + ": every point ends up " + wfScT(p) + " times as far from the x-axis." : "Flip it all the way, to its mirror image in the " + p.rf + "-axis."); QZ.wdr = { dh: 0, dk: 0, s: 1 }; drawPlay(); }
       return;
     }
     if (!p || QZ.wd.m || QZ.step >= 4 || (!d.dh && !d.dk)) return;
@@ -6493,7 +6575,7 @@ var ESPIC = {
   }
   function wfMoveDone() {
     wfSnap();
-    var p = wfCur(), d = QZ.wdr, a = p.rf ? svgPt(p.rf === "y" ? -d.fx : d.fx, p.rf === "x" ? -d.fy : d.fy) : svgPt(p.fh + p.dh, wfF(p, p.fh) + p.dk), line = p.rf ? (p.rf === "x" ? "<i>g</i>(<i>x</i>) = −<i>f</i>(<i>x</i>)" : "<i>g</i>(<i>x</i>) = <i>f</i>(−<i>x</i>)") : "<i>g</i>(<i>x</i>) = <i>f</i>(<i>x</i>" + (p.dh ? wfSg(-p.dh) : "") + ")" + (p.dk ? wfSg(p.dk) : "");
+    var p = wfCur(), d = QZ.wdr, a = p.rf ? svgPt(p.rf === "y" ? -d.fx : d.fx, p.rf === "x" ? wfSc(p) * d.fy : d.fy) : svgPt(p.fh + p.dh, wfF(p, p.fh) + p.dk), line = p.rf ? (p.rf === "x" ? "<i>g</i>(<i>x</i>) = " + (wfStr(p) ? wfScH(p) : "−") + "<i>f</i>(<i>x</i>)" : "<i>g</i>(<i>x</i>) = <i>f</i>(−<i>x</i>)") : "<i>g</i>(<i>x</i>) = <i>f</i>(<i>x</i>" + (p.dh ? wfSg(-p.dh) : "") + ")" + (p.dk ? wfSg(p.dk) : "");
     QZ.wd.m = true; if (!wfNi(p)) QZ.wd.i = true; QZ.wl.push(line); wfWork(line); pqMsg(""); drawPlay(); wfSteps(); rvMark("ok", a.x + 22, a.y - 22);
   }
   $("pgSvg").addEventListener("pointerdown", function (e) {
@@ -6504,14 +6586,20 @@ var ESPIC = {
     if (pr && pr.rf) {   // a reflection is grabbed at a point of f, away from the axis it is flipped through
       var q0 = qAt(e), gx = Math.round(q0[0]), gy = wfF(pr, gx);
       if (pr.rf === "x" ? !gy : !gx) { pqMsg(pr.rf === "x" ? "Grab the graph away from the x-axis." : "Grab the graph away from the y-axis."); return; }
-      wfDr = { rf: pr.rf, fx: gx, fy: gy }; wfMp = { x: q0[0], y: q0[1] }; wfSetFlip(1, gx, gy); drawPlay();
+      wfDr = { rf: pr.rf, fx: gx, fy: gy, sc: wfStr(pr) ? wfSc(pr) : undefined }; wfMp = { x: q0[0], y: q0[1] }; wfSetFlip(1, gx, gy); drawPlay();
     } else
     wfDr = { q0: qAt(e), d0: { dh: QZ.wdr.dh, dk: QZ.wdr.dk } };
     document.addEventListener("pointermove", wfDrMove); document.addEventListener("pointerup", wfDrUp); document.addEventListener("pointercancel", wfDrUp);
   });
+  // a stretch or shrink follows the cursor in half units and clicks into place at the right factor; a flip goes in whole units
+  function wfDrY(y) {
+    if (wfDr.sc === undefined) return Math.round(y) / wfDr.fy;
+    var yy = Math.round(y * 2) / 2, ty = wfDr.sc * wfDr.fy; if (Math.abs(y - ty) < .35) yy = ty;
+    return yy / wfDr.fy;
+  }
   function wfDrMove(e) {
     if (!wfDr) return; var q = qAt(e);
-    if (wfDr.rf) { wfMp = { x: q[0], y: q[1] }; wfSetFlip(wfDr.rf === "x" ? Math.round(q[1]) / wfDr.fy : Math.round(q[0]) / wfDr.fx, wfDr.fx, wfDr.fy); wfMPos(); return; } wfSetDrag(wfDr.d0.dh + Math.round(q[0] - wfDr.q0[0]), wfDr.d0.dk + Math.round(q[1] - wfDr.q0[1])); }
+    if (wfDr.rf) { wfMp = { x: q[0], y: q[1] }; wfSetFlip(wfDr.rf === "x" ? wfDrY(q[1]) : Math.round(q[0]) / wfDr.fx, wfDr.fx, wfDr.fy); wfMPos(); return; } wfSetDrag(wfDr.d0.dh + Math.round(q[0] - wfDr.q0[0]), wfDr.d0.dk + Math.round(q[1] - wfDr.q0[1])); }
   function wfDrUp() {
     document.removeEventListener("pointermove", wfDrMove); document.removeEventListener("pointerup", wfDrUp); document.removeEventListener("pointercancel", wfDrUp);
     wfDr = null; wfMp = null; var ml = document.getElementById("wfMlab"); if (ml) ml.remove(); wfDragEnd();
@@ -6537,27 +6625,29 @@ var ESPIC = {
   });
   // the question's f: "f(x) = rule". Only the rule, the right half, is picked up and dropped on g(x); the left side and the = stay put
   function wfChipParts(p) {
-    if (p.rf && QZ.wd.i) return p.rf === "x" ? ["−<i>f</i>(<i>x</i>)", "−(" + wfRuleF(p) + ")"] : ["<i>f</i>(−<i>x</i>)", wfRyF(p)];
+    if (p.rf && QZ.wd.i) return p.rf === "x" ? [(wfStr(p) ? wfScH(p) : "−") + "<i>f</i>(<i>x</i>)", (wfStr(p) ? wfScH(p) : "−") + "(" + wfRuleF(p) + ")"] : ["<i>f</i>(−<i>x</i>)", wfRyF(p)];
     return ["<i>f</i>(<i>x</i>" + (QZ.wd.i && p.dh ? wfSg(-p.dh) : "") + ")", wfRuleF(p, QZ.wd.i ? p.dh : 0, 0)];
   }
-  function wfChipHTML(p) { var q = wfChipParts(p); return q[0] + " = " + (wfSteppy() ? "<span class=\"wfRhs\" data-wfrhs title=\"Drag me onto g(x)\">" + q[1] + "</span>" : q[1]); }
+  function wfChipHTML(p) { return wfNm(wfChipHTML0(p)); }
+  function wfChipHTML0(p) { var q = wfChipParts(p); return q[0] + " = " + (wfSteppy() ? "<span class=\"wfRhs\" data-wfrhs title=\"Drag me onto g(x)\">" + q[1] + "</span>" : q[1]); }
   // Calculate, reflections: over the y-axis the answer is \u2212x, over the x-axis it is \u2212f(x)
   function wfChoose(v, b) {
     var p = wfCur(); if (!p || !wfNc(p) || QZ.wd.c || QZ.step >= 4) return;
     var right = p.rf === "y" ? "x" : "fx";
-    if (v !== right) { wfBad(b, v === "x" ? "Not quite. \u2212x changes the input, which reflects in the y-axis." : "Not quite. \u2212f(x) changes the output, which reflects in the x-axis."); return; }
+    if (v !== right) { wfBad(b, wfStr(p) ? "Not quite. A vertical stretch or shrink changes the output, so the factor multiplies all of f(x)." : v === "x" ? "Not quite. \u2212x changes the input, which reflects in the y-axis." : "Not quite. \u2212f(x) changes the output, which reflects in the x-axis."); return; }
     wfSnap(); QZ.wd.c = true; pqMsg(""); var r = b.getBoundingClientRect(); drawPlay(); wfSteps(); rvMark("ok", r.right + 12, r.top - 6);
   }
+  function wfFirst(p) { return wfStr(p) ? "First " + (p.scd === 1 ? "stretch" : "shrink") + " the graph vertically." : p.rf ? "First flip the graph in the " + p.rf + "-axis." : "First drag the graph " + wfMoves(p) + "."; }
   function wfSubstX() {
     var p = wfCur(); if (!p || QZ.step >= 4 || !wfNi(p) || QZ.wd.i) return;
-    if (!QZ.wd.m) { pqMsg(p.rf ? "First flip the graph in the " + p.rf + "-axis." : "First drag the graph " + wfMoves(p) + "."); return; }
+    if (!QZ.wd.m) { pqMsg(wfFirst(p)); return; }
     if (wfNc(p) && !QZ.wd.c) { pqMsg("First choose \u2212x or \u2212f(x)."); return; }
     wfSnap(); QZ.wd.i = true; var c = document.querySelector("[data-wfchip]"), line = wfChipHTML(p);
     if (c) c.innerHTML = line; QZ.wl.push(line); wfWork(line); pqMsg(""); drawPlay(); wfSteps();
   }
   function wfReplace() {
     var p = wfCur(); if (!p || QZ.step >= 4 || QZ.wd.r) return;
-    if (!QZ.wd.m) { pqMsg(p.rf ? "First flip the graph in the " + p.rf + "-axis." : "First drag the graph " + wfMoves(p) + "."); return; }
+    if (!QZ.wd.m) { pqMsg(wfFirst(p)); return; }
     if (!QZ.wd.i) { pqMsg("First drag " + wfPlain(wfInnerTx(p)).replace(/-/g, "−") + " from g(x) onto f(x) in the question."); return; }
     var line = "<i>g</i>(<i>x</i>) = " + wfStg(p)[0].h;
     wfSnap(); QZ.wd.r = true; QZ.wst = 0; QZ.wl.push(line); wfWork(line); pqMsg("");
@@ -6570,7 +6660,16 @@ var ESPIC = {
     wfSnap(); QZ.wop = false; QZ.wst++; var line = "<i>g</i>(<i>x</i>) = " + wfStg(p)[QZ.wst].h; QZ.wl.push(line); wfWork(line);
     if (QZ.wst >= wfStg(p).length - 1) { QZ.wd.s = true; wfReveal(); } else { drawPlay(); wfSteps(); }
   }
+  // Combining Transformations: when the first transformation is simplified, its g becomes the blue h and the second transformation begins
+  function wfStageNext() {
+    var P = wfProb(); if (!P || !P.comb || wfLast()) return false;
+    QZ.wsg = (QZ.wsg || 0) + 1; QZ.wd = {}; QZ.wl = []; QZ.wh = []; QZ.wst = 0; QZ.wop = false; QZ.wdr = { dh: 0, dk: 0, s: 1 }; QZ.arrowAt = -1; PG.wfShift = null;
+    var q = wfCur(); PG.fam = q.g.fam; PG.a = q.g.a; PG.h = q.g.h; PG.k = q.g.k; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = "g(x)=";
+    pqMsg(""); drawPlay(); pqPanel(); wfSteps();
+    return true;
+  }
   function wfReveal() {
+    if (wfStageNext()) return;
     if (DN) { drawPlay(); return; }   // (only a demo of the next step: the problem is not finished)
     PG.eqTxt = ""; wfFinal();
     var te = document.querySelector(".tog[data-part=eq]"), tg = document.querySelector(".tog[data-part=graph]");
@@ -6583,7 +6682,13 @@ var ESPIC = {
     if (!wf() || !QZ || !QZ.order) { el.hidden = true; el.innerHTML = ""; askArrow(false); return; }
     var h = "", p = wfCur();
     if (wfCr()) {
-      if (QZ.cs === "move" && !QZ.pick && lesson === 2) h = "<div class=\"wfRow\"><button class=\"btn\" data-wf=\"rf\" data-v=\"x\">x-axis</button><button class=\"btn\" data-wf=\"rf\" data-v=\"y\">y-axis</button></div>";
+      if (QZ.cs === "move" && !QZ.pick && lesson === 4) {
+        if (QZ.cm === "m") h = "<div class=\"wfRow\"><input class=\"wfIn wfMv\" style=\"width:13rem\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"right 3 and down 2\" aria-label=\"The move\"><button class=\"btn\" data-wf=\"mv\">Done</button></div>";
+        else if (QZ.cm === "s") h = wfFacRow();
+        else h = "<div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"m\">Move it</button><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"rx\">Reflect in the x-axis</button><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"ry\">Reflect in the y-axis</button><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"s\">Stretch or shrink it</button></div>";
+      }
+      else if (QZ.cs === "move" && !QZ.pick && lesson === 3) h = wfFacRow();
+      else if (QZ.cs === "move" && !QZ.pick && lesson === 2) h = "<div class=\"wfRow\"><button class=\"btn\" data-wf=\"rf\" data-v=\"x\">x-axis</button><button class=\"btn\" data-wf=\"rf\" data-v=\"y\">y-axis</button></div>";
       else if (QZ.cs === "move" && !QZ.pick) h = "<div class=\"wfRow\"><input class=\"wfIn wfMv\" style=\"width:13rem\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"" + (lesson === 2 ? "x-axis or y-axis" : "right 3 and down 2") + "\" aria-label=\"The move\"><button class=\"btn\" data-wf=\"mv\">Done</button></div>";
       var keep = el.querySelector(".wfMv"), val = keep ? keep.value : "";
       el.innerHTML = h; el.hidden = !h; askArrow(false); var nm = el.querySelector(".wfMv"); if (nm) nm.value = val;
@@ -6592,8 +6697,8 @@ var ESPIC = {
     if (mode === "solo" || !p || (mode === "demo" && !pgRun && !QZ.wl.length && QZ.step < 4)) { el.hidden = true; el.innerHTML = ""; askArrow(false); return; }
     if (QZ.step < 4) {
       var nx = wfNext();
-      if (nx === "m") h += p.rf ? "<div class=\"wfAsk\">Grab the purple graph and flip it over the <span class=\"cg\">" + p.rf + "-axis</span>.</div>" : "<div class=\"wfAsk\">Drag the purple graph to move <span class=\"cg\"><i>g</i> " + wfMoves(p) + "</span>.</div>";
-      else if (nx === "c") h += "<div class=\"wfAsk\">To reflect <span class=\"cf\"><i>f</i>(<i>x</i>)</span> in the <span class=\"cg\">" + p.rf + "-axis</span>, change it to:</div><div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"c\" data-v=\"x\">\u2212<i>x</i></button><button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"c\" data-v=\"fx\">\u2212<i>f</i>(<i>x</i>)</button></div>";
+      if (nx === "m") h += wfStr(p) ? "<div class=\"wfAsk\">Grab the purple graph and " + (p.scd === 1 ? "pull it away from" : "squeeze it toward") + " the x-axis until it is <span class=\"cg\">" + wfWhat(p) + "</span>.</div>" : p.rf ? "<div class=\"wfAsk\">Grab the purple graph and flip it over the <span class=\"cg\">" + p.rf + "-axis</span>.</div>" : "<div class=\"wfAsk\">Drag the purple graph to move <span class=\"cg\"><i>g</i> " + wfMoves(p) + "</span>.</div>";
+      else if (nx === "c") h += wfStr(p) ? "<div class=\"wfAsk\">To make <span class=\"cf\"><i>f</i>(<i>x</i>)</span> <span class=\"cg\">" + wfWhat(p) + "</span>, change it to:</div><div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"c\" data-v=\"x\">" + wfScH(p) + "<i>x</i></button><button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"c\" data-v=\"fx\">" + wfScH(p) + "<i>f</i>(<i>x</i>)</button></div>" : "<div class=\"wfAsk\">To reflect <span class=\"cf\"><i>f</i>(<i>x</i>)</span> in the <span class=\"cg\">" + p.rf + "-axis</span>, change it to:</div><div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"c\" data-v=\"x\">\u2212<i>x</i></button><button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"c\" data-v=\"fx\">\u2212<i>f</i>(<i>x</i>)</button></div>";
       else if (nx === "i") h += "<div class=\"wfAsk\">Drag <span class=\"cf\">" + wfInnerTx(p) + "</span> from <span class=\"cg\"><i>g</i>(<i>x</i>)</span> onto <span class=\"cf\"><i>f</i>(<i>x</i>)</span> in the question.</div>";
       else if (nx === "r") h += "<div class=\"wfAsk\">Drag the blue right side of <span class=\"cf\"><i>f</i>(<i>x</i>)</span> from the question onto <span class=\"cg\"><i>g</i>(<i>x</i>)</span>.</div>";
       else if (nx === "s") {
@@ -6604,14 +6709,14 @@ var ESPIC = {
       }
     }
     var was = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains("wfIn");
-    el.innerHTML = h; el.hidden = !h;
+    h = wfNm(h); el.innerHTML = h; el.hidden = !h;
     var inp = el.querySelector(".wfIn");
     if (inp) { if (was || mode === "calculate") inp.focus(); if (QZ.arrowAt !== QZ.wl.length) { QZ.arrowAt = QZ.wl.length; askArrow(true, inp.parentNode); } } else askArrow(false);
   }
   $("wfSteps").addEventListener("click", function (e) {
     var b = e.target.closest("button[data-wf]"); if (!b) return;
     if (e.isTrusted) pgUser();
-    if (b.dataset.wf === "rf") wfMoveGo(b.dataset.v); else if (b.dataset.wf === "mv") wfMoveGo(); else if (b.dataset.wf === "s") wfSimplify(); else if (b.dataset.wf === "c") wfChoose(b.dataset.v, b);
+    if (b.dataset.wf === "sc" || b.dataset.wf === "ct") wfMoveGo(b.dataset.v); else if (b.dataset.wf === "rf") wfMoveGo(b.dataset.v); else if (b.dataset.wf === "mv") wfMoveGo(); else if (b.dataset.wf === "s") wfSimplify(); else if (b.dataset.wf === "c") wfChoose(b.dataset.v, b);
   });
   $("wfSteps").addEventListener("input", function (e) { var el = e.target; if (el.classList.contains("wfIn") && el.dataset.k) wfCheckIn(el, false); });
   $("wfSteps").addEventListener("keydown", function (e) {
@@ -6657,6 +6762,25 @@ var ESPIC = {
   // the wrong answer: if it is the move in the wrong direction, say so
   function wfWrong(t) {
     var p = wfCur(), f = eqFn(t), msg = "Not quite. Try again."; QZ.wrong++;
+    if (p.comb && f) {
+      var c0 = p.comb[0], c1 = p.comb[1], op = function (c) { return { dh: c.dh, dk: c.dk, rf: c.rf, scn: c.scn, scd: c.scd }; };
+      var smC = function (fn) { for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e) { return false; } if (!(Math.abs(v - fn(x)) < 1e-6)) return false; } return true; };
+      var Gof = function (g) { return function (x) { return g.a * (g.fam === 2 ? Math.abs(x - g.h) : x) + g.k; }; };
+      var rv = wfChain({ fam: p.fam, fa: p.fa, fh: p.fh, fk: p.fk }, [op(c1), op(c0)]);
+      if (smC(function (x) { return wfF(p, x); })) msg = "That is still f(x). Make both changes: " + wfWhat(p) + ".";
+      else if (smC(Gof(c0.g))) msg = "That is only the first change (" + wfWhat(c0) + "). The second change is still to do: " + wfWhat(c1) + ".";
+      else if (smC(Gof(rv[1].g))) msg = "The order matters. First " + wfWhat(c0) + ", then " + wfWhat(c1) + ".";
+      pqMsg(msg); eqShake(); return;
+    }
+    if (wfStr(p) && f) {
+      var smS = function (fn) { for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e) { return false; } if (!(Math.abs(v - fn(x)) < 1e-6)) return false; } return true; };
+      var F1 = function (x) { return wfF(p, x); };
+      if (smS(F1)) msg = "That is still f(x). It is " + wfWhat(p) + ": multiply f(x) by " + wfScT(p) + ".";
+      else if (smS(function (x) { return F1(wfSc(p) * x); })) msg = "That multiplies x, which is a horizontal change. A vertical " + (p.scd === 1 ? "stretch" : "shrink") + " multiplies the whole output.";
+      else if (smS(function (x) { return F1(x) + wfSc(p); })) msg = "That adds " + wfScT(p) + ". A vertical " + (p.scd === 1 ? "stretch" : "shrink") + " multiplies f(x) by " + wfScT(p) + ".";
+      else if (smS(function (x) { return F1(x) / wfSc(p); })) msg = "That goes the wrong way. " + (p.scd === 1 ? "A stretch makes the outputs bigger: multiply by " + p.scn + "." : "A shrink makes the outputs smaller: multiply by " + wfScT(p) + ".");
+      pqMsg(msg); eqShake(); return;
+    }
     if (p.rf && f) {
       var sm = function (fn) { for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e) { return false; } if (!(Math.abs(v - fn(x)) < 1e-6)) return false; } return true; };
       var F0 = function (x) { return wfF(p, x); };
@@ -6676,6 +6800,16 @@ var ESPIC = {
   }
   function wfHint(n) {
     var p = wfCur();
+    if (p.comb) {
+      if (n === 0) return "Make the changes one at a time, in order: first " + wfWhat(p.comb[0]) + ", then " + wfWhat(p.comb[1]) + ".";
+      if (n === 1) return "Start with f(x) = " + wfPlain(wfRuleF(p)) + ". After the first change you have h(x) = " + wfPlain(wfRuleG(p.comb[0])) + ". Now make the second change to h.";
+      return "g(x) = " + wfPlain(wfRuleG(p)) + ".";
+    }
+    if (wfStr(p)) {
+      if (n === 0) return "A vertical stretch or shrink multiplies every output by the same number: a stretch by a factor of 3 is 3f(x), a shrink by a factor of 1/3 is (1/3)f(x).";
+      if (n === 1) return "Start with f(x) = " + wfPlain(wfRuleF(p)) + ". Multiply all of it by " + wfScT(p) + ": " + wfPlain(wfScH(p)) + "(" + wfPlain(wfRuleF(p)) + ").";
+      return "g(x) = " + wfPlain(wfScH(p)) + "(" + wfPlain(wfRuleF(p)) + "). Multiply it out to simplify.";
+    }
     if (p.rf) {
       if (n === 0) return "A reflection in the x-axis changes the sign of the output: −f(x). A reflection in the y-axis changes the sign of the input: f(−x).";
       if (n === 1) return "Start with f(x) = " + wfPlain(wfRuleF(p)) + ". " + (p.rf === "x" ? "For the x-axis, put a minus in front of all of f(x): −(" + wfPlain(wfRuleF(p)) + ")." : "For the y-axis, replace x with −x: " + wfPlain(wfRyF(p)) + ".");
@@ -6687,6 +6821,8 @@ var ESPIC = {
   }
   function wfExplain() {
     var p = wfCur();
+    if (p.comb) return "To combine transformations, make them one at a time, in order. Here f(x) = " + wfPlain(wfRuleF(p)) + " is first " + wfWhat(p.comb[0]) + ", which gives h(x) = " + wfPlain(wfRuleG(p.comb[0])) + ", and then " + wfWhat(p.comb[1]) + ", which gives g(x) = " + wfPlain(wfRuleG(p)) + ".";
+    if (wfStr(p)) return "A vertical stretch or shrink multiplies every output by the same factor, so the graph is pulled away from the x-axis (a stretch) or squeezed toward it (a shrink): c f(x). Here f(x) = " + wfPlain(wfRuleF(p)) + " " + wfWhat(p) + " gives g(x) = " + wfPlain(wfScH(p)) + "(" + wfPlain(wfRuleF(p)) + ") = " + wfPlain(wfRuleG(p)) + ".";
     if (p.rf) return "A reflection in the x-axis flips the graph over, so every output changes sign: −f(x). A reflection in the y-axis changes the sign of the input: f(−x). Here f(x) = " + wfPlain(wfRuleF(p)) + " reflected in the " + p.rf + "-axis gives g(x) = " + wfPlain(p.rf === "x" ? "−(" + wfRuleF(p) + ")" : wfRyF(p)) + " = " + wfPlain(wfRuleG(p)) + ".";
     return "To move a graph right or left, change the input: right 3 means f(x − 3). To move it up or down, change the output: down 2 means f(x) − 2. Here f(x) = " + wfPlain(wfRuleF(p)) + " moves " + wfMoves(p) + ", so g(x) = " + wfPlain(wfRuleF(p, p.dh, p.dk)) + " = " + wfPlain(wfRuleG(p)) + ".";
   }
@@ -6694,12 +6830,44 @@ var ESPIC = {
   function wfCreateIn(t) {
     var r = eqFit(t);
     if (r.err || r.fam === 0 || r.fam === 3 || (r.fam === 1 && !r.a)) { pqMsg("Type a line like 2x + 1 or an absolute value like |x − 2| + 1."); eqShake(); return; }
-    QZ.wfp = [wfG({ fam: r.fam, fa: r.a, fh: r.fam === 2 ? r.h : 0, fk: r.k, dh: 0, dk: 0 })]; QZ.cs = "move"; QZ.pi = 0;
+    QZ.wfp = [wfG({ fam: r.fam, fa: r.a, fh: r.fam === 2 ? r.h : 0, fk: r.k, dh: 0, dk: 0 })]; QZ.cs = "move"; QZ.pi = 0; QZ.cc = []; QZ.cm = "";
     PG.fam = r.fam; PG.a = r.a; PG.h = r.fam === 2 ? r.h : 0; PG.k = r.k; PG.show.eq = true; PG.eqTxt = ""; pqMsg("");
     drawPlay(); pqPanel(); setTimeout(function () { var m = $("wfSteps").querySelector(".wfMv"); if (m) m.focus(); }, 30);
   }
+  function wfFacRow() {
+    return "<div class=\"wfRow\">" + [["2", "2"], ["3", "3"], ["4", "4"], ["1/2", wfFr(1, 2)], ["1/3", wfFr(1, 3)], ["1/4", wfFr(1, 4)]].map(function (b) { return "<button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"sc\" data-v=\"" + b[0] + "\">" + b[1] + "</button>"; }).join("") + "</div>";
+  }
+  // Create, Combining Transformations: the student chooses two changes of f, one at a time
+  function wfCombOp(v, inp) {
+    var base = wfProb(); if (!base) return;
+    if (v === "m" || v === "s") { QZ.cm = v; pqMsg(""); pqPanel(); setTimeout(function () { var m = $("wfSteps").querySelector(".wfMv"); if (m) m.focus(); }, 30); return; }
+    var op = null, fm;
+    if (v === "rx" || v === "ry") op = { rf: v.charAt(1) };
+    else if (v && (fm = /^(\d)(?:\/(\d))?$/.exec(v))) op = { rf: "x", scn: +fm[1], scd: fm[2] ? +fm[2] : 1 };
+    else if (!v && inp) {
+      var m = gdParse(inp.value);
+      if (!m.n || (!m.h && !m.k)) { pqMsg("Type a move, like right 3 and down 2."); return; }
+      if (Math.abs(m.h) > 8 || Math.abs(m.k) > 8) { pqMsg("Keep each move to 8 or less."); return; }
+      op = { dh: m.h, dk: m.k };
+    }
+    if (!op) return;
+    var ops = (QZ.cc || []).concat([op]), st = wfChain({ fam: base.fam, fa: base.fa, fh: base.fh, fk: base.fk }, ops), last = st[st.length - 1];
+    if (!wfChainOK(st)) { pqMsg("That makes fractions or puts the graph off the page. Try another change, or another function."); return; }
+    if (last.g.a === last.fa && last.g.h === (last.fam === 2 ? last.fh : 0) && last.g.k === last.fk) { pqMsg("That change leaves the function where it is. Try another."); return; }
+    QZ.cc = ops; QZ.cm = "";
+    if (ops.length === 2) { wfCustom = wfBuildC({ fam: base.fam, fa: base.fa, fh: base.fh, fk: base.fk }, ops); QZ.pick = true; }
+    pqMsg(""); pqPanel();
+  }
   function wfMoveGo(axis) {
     var inp = $("wfSteps").querySelector(".wfMv"), p = wfCur(); if (!p || (!inp && !axis)) return;
+    if (lesson === 4) { wfCombOp(axis, inp); return; }
+    if (lesson === 3) {
+      var fm = /^(\d)(?:\/(\d))?$/.exec(axis || ""); if (!fm) { pqMsg("Choose a factor."); return; }
+      var qs = { fam: p.fam, fa: p.fa, fh: p.fh, fk: p.fk, dh: 0, dk: 0, rf: "x", scn: +fm[1], scd: fm[2] ? +fm[2] : 1 }; wfG(qs);
+      if (!Number.isInteger(qs.g.a) || !Number.isInteger(qs.g.k)) { pqMsg("That makes fractions for this f. Try another factor, or a function whose numbers divide evenly."); return; }
+      if (Math.abs(qs.g.k) > 9 || Math.abs(qs.g.a) > 9 || Math.abs(qs.g.h) > 9) { pqMsg("That puts g off the graph. Try another factor or function."); return; }
+      wfCustom = qs; QZ.pick = true; pqMsg(""); pqPanel(); return;
+    }
     if (lesson === 2) {
       var rf = axis === "x" || axis === "y" ? axis : "";
       if (!rf) { pqMsg("Choose the x-axis or the y-axis."); return; }
@@ -7124,7 +7292,7 @@ var ESPIC = {
     if (PQ && wf() && !ONE) wfPG();
     if (GD && !ONE) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; }
     if (!ONE) { Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 0; PG.eOK = false; PG.eqTxt = ""; } else if (wf()) { PG.eqTxt = "g(x)="; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; } drawPlay(); }
-    function cap(t) { if (ONE) note(t); else dmCap(t); }
+    function cap(t) { t = wf() ? wfNm(t) : t; if (ONE) note(t); else dmCap(t); }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
     // the demo's hand makes a button look hovered when it arrives and pressed when it taps, just as for a real pointer
@@ -7580,26 +7748,27 @@ var ESPIC = {
       ];
     }
     if (PQ && wf()) {   // Writing Translations: the hand drags the red graph, drags f onto g, and taps Simplify
-      var wp = wfCur(), wax = wp.fam === 2 ? wp.fh : 0, way = wfF(wp, wax);
+      var wp = wfCur(), wax = 0, way = 0;
       var wdrag = function (n) {
+        wax = wp.fam === 2 ? wp.fh : 0; way = wfF(wp, wax);
         if (wp.rf) {   // a reflection: the hand grabs a point of f and flips the graph through the axis
           var gx = 0, gy = 0, cands = wp.rf === "x" ? [0, 1, -1, 2, -2, 3, -3] : [2, -2, 1, -1, 3, -3];
           for (var ci = 0; ci < cands.length; ci++) { var cx = cands[ci]; if (Math.abs(wfF(wp, cx)) <= 8 && (wp.rf === "x" ? wfF(wp, cx) !== 0 : cx !== 0)) { gx = cx; gy = wfF(wp, cx); break; } }
-          cap("The function g(x) is f " + wfWhat(wp) + ". Flip the graph over the " + wp.rf + "-axis.");
+          cap("The function g(x) is f(x) " + wfWhat(wp) + ". " + (wfStr(wp) ? (wp.scd === 1 ? "Pull the graph away from the x-axis." : "Squeeze the graph toward the x-axis.") : "Flip the graph over the " + wp.rf + "-axis."));
           handGo(svgPt(gx, gy), 650);
           pgWait(900, function () {
             handTap(); var t0 = null;
             (function step(ts) {
               if (pgRun !== run) return; if (t0 === null) t0 = ts;
-              var u = Math.min(1, (ts - t0) / 2200), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, s1 = 1 - 2 * e;
-              if (u >= 1) s1 = -1; else s1 = Math.round(s1 * 8) / 8;
+              var u = Math.min(1, (ts - t0) / 2200), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, s1 = 1 + (wfSc(wp) - 1) * e;
+              if (u >= 1) s1 = wfSc(wp); else s1 = Math.round(s1 * 8) / 8;
               wfMp = { x: wp.rf === "y" ? s1 * gx : gx, y: wp.rf === "x" ? s1 * gy : gy }; wfSetFlip(s1, gx, gy); wfMPos(); handAt(svgPt(wfMp.x, wfMp.y));
               if (u < 1) pgRaf(step); else pgWait(500, function () { wfMp = null; var ml = document.getElementById("wfMlab"); if (ml) ml.remove(); wfDragEnd(); pgWait(1400, n); });
             })(performance.now());
           });
           return;
         }
-        cap("The function g(x) is f " + wfWhat(wp) + ". Drag the graph.");
+        cap("The function g(x) is f(x) " + wfWhat(wp) + ". Drag the graph.");
         handGo(svgPt(wax, way), 650);
         pgWait(900, function () {
           handTap(); var t0 = null;
@@ -7619,7 +7788,7 @@ var ESPIC = {
       };
       var wsubx = function (n) {
         var c = $("pgEq").querySelector("[data-wfin]"), t = document.querySelector("[data-wfchip]"); if (!c || !t || QZ.wd.i) { n(); return; }
-        cap(wp.rf ? "Drag the negative onto f(x) in the question." : "Drag the move inside the parentheses onto f(x) in the question.");
+        cap(wfStr(wp) ? "Drag the factor onto f(x) in the question." : wp.rf ? "Drag the negative onto f(x) in the question." : "Drag the move inside the parentheses onto f(x) in the question.");
         handGo(ctr(c), 650);
         // the equation may be redrawn while the hand travels: pick the pieces up again from the page just before the drag
         pgWait(800, function () { handTap(); pgWait(250, function () { c = $("pgEq").querySelector("[data-wfin]") || c; t = document.querySelector("[data-wfchip]") || t; handGo(ctr(t), 1400); fly(c, t, function () { if (pgRun !== run) return; wfSubstX(); pgWait(1800, n); }, false); }); });
@@ -7630,10 +7799,9 @@ var ESPIC = {
           var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Click the parentheses to take them away." : st && st.q && st.q.abs !== undefined ? "Click inside the absolute value to take away the negative." : "Click the operation between two numbers to combine them."); tap(b, function () { pgWait(1500, again); });
         })();
       };
-      steps = [
-        wdrag, wsubx, wsub, wsimp,
-        function (n) { cap("The purple graph is f " + wfWhat(wp) + "."); pgWait(2800, n); }
-      ];
+      steps = [wdrag, wsubx, wsub, wsimp];
+      if (wfProb().comb) steps = steps.concat([function (n) { wp = wfCur(); cap("Now the second transformation: g(x) is f(x) " + wfWhat(wp) + "."); pgWait(2600, n); }, wdrag, wsubx, wsub, wsimp]);
+      steps.push(function (n) { cap("The purple graph is f " + wfWhat(wfProb()) + "."); pgWait(2800, n); });
     }
     var k = 0;
     if (isDataAct()) {   // a Data Activity: a table of x and y values, plotted and explored on the graph
@@ -7723,11 +7891,11 @@ var ESPIC = {
     function dnPick() {
       var one = function (f) { return [function (n) { f(function () { pgWait(1200, n); }); }]; };
       if (PQ && wf()) {
-        var nx = wfNext(), last = wfStg(wp).length - 1;
+        wp = wfCur(); var nx = wfNext(), last = wfStg(wp).length - 1;
         if (nx === "m") return [steps[0]];
         if (nx === "c") return one(function (n) {
           var v = wp.rf === "y" ? "x" : "fx", b = document.querySelector("#wfSteps button[data-v=\"" + v + "\"]"); if (!b) { n(); return; }
-          cap("Reflecting in the " + wp.rf + "-axis: choose " + (v === "x" ? "\u2212x." : "\u2212f(x)."));
+          cap(wfStr(wp) ? "A vertical " + (wp.scd === 1 ? "stretch" : "shrink") + " multiplies f(x): choose " + wfPlain(wfScH(wp)) + "f(x)." : "Reflecting in the " + wp.rf + "-axis: choose " + (v === "x" ? "\u2212x." : "\u2212f(x)."));
           handGo(ctr(b), 650); pgWait(850, function () { handTap(); pgWait(300, function () { wfChoose(v, b); n(); }); });
         });
         if (nx === "i") return [steps[1]];
