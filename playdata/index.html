@@ -7501,13 +7501,14 @@ var ESPIC = {
         var c = document.querySelector("[data-wfchip]"); if (!c || QZ.wd.r) { n(); return; }
         cap("Replace f with its rule: drag f(x) onto g(x).");
         handGo(ctr(c), 650);
-        pgWait(800, function () { handTap(); pgWait(250, function () { handGo(ctr($("pgEq")), 1400); fly(c, $("pgEq"), function () { if (pgRun !== run) return; wfReplace(); pgWait(1800, n); }, false); }); });
+        pgWait(800, function () { handTap(); pgWait(250, function () { c = document.querySelector("[data-wfchip]") || c; handGo(ctr($("pgEq")), 1400); fly(c, $("pgEq"), function () { if (pgRun !== run) return; wfReplace(); pgWait(1800, n); }, false); }); });
       };
       var wsubx = function (n) {
-        var c = document.querySelector("[data-wfin]"), t = document.querySelector("[data-wfchip]"); if (!c || !t || QZ.wd.i) { n(); return; }
+        var c = $("pgEq").querySelector("[data-wfin]"), t = document.querySelector("[data-wfchip]"); if (!c || !t || QZ.wd.i) { n(); return; }
         cap(wp.rf ? "Drag the negative onto f(x) in the question." : "Drag the move inside the parentheses onto f(x) in the question.");
         handGo(ctr(c), 650);
-        pgWait(800, function () { handTap(); pgWait(250, function () { handGo(ctr(t), 1400); fly(c, t, function () { if (pgRun !== run) return; wfSubstX(); pgWait(1800, n); }, false); }); });
+        // the equation may be redrawn while the hand travels: pick the pieces up again from the page just before the drag
+        pgWait(800, function () { handTap(); pgWait(250, function () { c = $("pgEq").querySelector("[data-wfin]") || c; t = document.querySelector("[data-wfchip]") || t; handGo(ctr(t), 1400); fly(c, t, function () { if (pgRun !== run) return; wfSubstX(); pgWait(1800, n); }, false); }); });
       };
       var wsimp = function (n) {
         (function again() {
