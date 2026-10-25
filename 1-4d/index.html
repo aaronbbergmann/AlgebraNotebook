@@ -6150,7 +6150,7 @@ var ESPIC = {
   function wfQ() {
     var p = wfCur(); if (!p) return "";
     var rule = "<i>f</i>(<i>x</i>) = " + wfRuleF(p), f = wfSteppy() ? "<span class=\"lm cf wfChip\" data-wfchip title=\"Drag me onto g(x)\">" + rule + "</span>" : "<span class=\"lm cf\">" + rule + "</span>";
-    return "<span class=\"cg\"><i>g</i></span> is " + f + " <span class=\"cg\">moved " + wfMoves(p) + "</span>." + (wfSteppy() ? "" : " Type <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>.");
+    return "The function <span class=\"cg\"><i>g</i>(<i>x</i>)</span> is " + f + " <span class=\"cg\">moved " + wfMoves(p) + "</span>." + (wfSteppy() ? "" : " Type <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>.");
   }
   // the numbers the Playground uses: g itself (a line slid sideways has no sideways part), or a neutral line while Create waits for f
   function wfPG() {
@@ -6280,7 +6280,6 @@ var ESPIC = {
       return;
     }
     if (mode === "solo" || !p || (mode === "demo" && !pgRun && !QZ.wl.length && QZ.step < 4)) { el.hidden = true; el.innerHTML = ""; askArrow(false); return; }
-    QZ.wl.forEach(function (ln) { h += "<div class=\"wfLn " + (/^<i>f/.test(ln) ? "cf" : "cg") + "\">" + ln + "</div>"; });
     if (QZ.step < 4) {
       var nx = wfNext();
       if (nx === "m") h += "<div class=\"wfAsk\">Drag the red graph to move <span class=\"cg\"><i>g</i> " + wfMoves(p) + "</span>.</div>";
@@ -7224,7 +7223,7 @@ var ESPIC = {
     if (PQ && wf()) {   // Writing Translations: the hand drags the red graph, drags f onto g, and taps Simplify
       var wp = wfCur(), wax = wp.fam === 2 ? wp.fh : 0, way = wfF(wp, wax);
       var wdrag = function (n) {
-        cap("g is f moved " + wfMoves(wp) + ". Drag the graph.");
+        cap("The function g(x) is f moved " + wfMoves(wp) + ". Drag the graph.");
         handGo(svgPt(wax, way), 650);
         pgWait(900, function () {
           handTap(); var t0 = null;
