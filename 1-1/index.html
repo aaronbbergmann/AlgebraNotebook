@@ -3785,7 +3785,7 @@
     if (mode === "demo") { curDm = demoN % 2 + 1; demoN++; }
     if (mode === "create") orig = [];
     else if (useCustom) { orig = useCustom; useCustom = null; if (BUILT[act].solver) { SOL.fresh = false; if (!SOL.keep) SOL.lvl = ladderPane(orig[0]); SOL.keep = false; } }
-    else if (BUILT[act].solver && mode === "demo" && SOL.fresh) { var sd = parseAny("3x=9"); orig = [sd]; }   // Playground: Equation Solver: the first Demo is 3x=9
+    else if (BUILT[act].solver && mode === "demo" && SOL.fresh) { var sa = 2 + rnd(8), sd = parseAny(sa + "x=" + sa * (2 + rnd(8))); orig = [sd]; }   // Playground: Equation Solver: the first Demo is 3x=9
     else orig = makeProblem();
     ws = wsFromOrig();
     sys = []; sysV = []; elim = ""; elimInfo = lesson === 3 && orig.length === 3 && ints(orig) ? bestElim(orig) : null;
@@ -7086,6 +7086,7 @@ var ESPIC = {
         }); });
       });
     }
+    var DH = 2 + rnd(3), DK = 1 + rnd(3), DA = 2 + rnd(2), DTX = "g(x) = " + DA + "(x-" + DH + ")^2+" + DK;   // each run aims at a different parabola: vertex (DH, DK), stretch DA
     var steps = [
       function (n) { cap("Start with the equation. It names the family and every transformation."); pgWait(2200, n); },
       function (n) { cap("Press Graph to see the curve first."); tap(tog("graph"), n); },
@@ -7097,10 +7098,10 @@ var ESPIC = {
       function (n) { cap("Every drag changes the equation again."); drag("v", [1, -3], n); },
       function (n) { cap("Drag the purple point below the x-axis: a negative stretch flips the graph upside down."); drag("a", [0, -2], n); },
       function (n) { drag("a", [0, 3], n); },
-      function (n) { cap("Let's aim for g(x) = 2(x \u2212 3)\u00b2 + 1. First the vertex..."); drag("v", [3, 1], n); },
-      function (n) { cap("...and then the stretch of 2."); drag("a", [0, 2], n); },
+      function (n) { cap("Let's aim for g(x) = " + DA + "(x \u2212 " + DH + ")\u00b2 + " + DK + ". First the vertex..."); drag("v", [DH, DK], n); },
+      function (n) { cap("...and then the stretch of " + DA + "."); drag("a", [0, DA], n); },
       function (n) { pauseHere(n); },
-      function (n) { cap("Hide the equation, then type it yourself."); tap(tog("eq"), function () { typeEq("g(x) = 2(x-3)^2+1", n); }); },
+      function (n) { cap("Hide the equation, then type it yourself."); tap(tog("eq"), function () { typeEq(DTX, n); }); },
       function (n) { cap("Press Equation to check it: a green check means right."); tap(tog("eq"), function () { pgWait(2200, n); }); },
       function (n) { cap("Hide the description, then describe the transformation with the Transformation button."); tap(tog("desc"), n); },
       function (n) { cap("Transformation: click the vertex, then the stretch point, to measure each change."); trDemo(n); },
@@ -7116,16 +7117,16 @@ var ESPIC = {
             if (!a0) { n(); return; } handGo(ctr(a0), 600);
             pgWait(900, function () { TB.focus(0, "x", true); handTap(); pgWait(900, function () { key("ArrowRight"); pgWait(1300, function () { key("ArrowLeft"); pgWait(1300, function () { key("ArrowRight"); pgWait(1000, n); }); }); }); });
             return;
-          } typeRow(i, function () { TB.setX(i, String(i + 1)); TB.draw(); xs(i + 1); }, String(i + 1), "x"); })(0); return; }
+          } typeRow(i, function () { TB.setX(i, String(i + DH - 2)); TB.draw(); xs(i + 1); }, String(i + DH - 2), "x"); })(0); return; }
         cap("Drag the equation onto any center cell. One drop puts each row's x-value into the equation."); dragEq(0, n); },
-      function (n) { if (isDataAct()) { n(); return; } cap("Scroll the table with the arrows until the vertex, x = 3, is in the middle row."); dialDemo(-3, n); },
+      function (n) { if (isDataAct()) { n(); return; } cap("Scroll the table with the arrows until the vertex, x = " + DH + ", is in the middle row."); dialDemo(-DH, n); },
       function (n) { cap(isDataAct() ? "Then click a y cell and type the answer yourself." : "Three ways to get a y-value. First: click a y cell and type the answer yourself."); typeRow(0, n); },
       function (n) { if (isDataAct()) { n(); return; } cap("Second: click the expression to simplify it one step at a time."); clickRow(1, n); },
-      function (n) { cap((isDataAct() ? "Or copy" : "Third: copy") + " a y-value. A parabola is symmetric, so x = 4 matches x = 2."); dragY(1, 3, n); },
-      function (n) { cap("The same works for x = 5: copy the 9 from x = 1."); dragY(0, 4, n); },
-      function (n) { cap("Now the middle row, but type a wrong answer on purpose."); typeRow(2, n, "4"); },
+      function (n) { cap((isDataAct() ? "Or copy" : "Third: copy") + " a y-value. A parabola is symmetric, so x = " + (DH + 1) + " matches x = " + (DH - 1) + "."); dragY(1, 3, n); },
+      function (n) { cap("The same works for x = " + (DH + 2) + ": copy the " + (4 * DA + DK) + " from x = " + (DH - 2) + "."); dragY(0, 4, n); },
+      function (n) { cap("Now the middle row, but type a wrong answer on purpose."); typeRow(2, n, String(DK + 3)); },
       function (n) { cap("Press Table to check: right answers get a green check."); tap(tog("table"), function () { pgWait(2200, n); }); },
-      function (n) { autoZoomStep("1", n); },
+      function (n) { autoZoomStep(String(DH - 2), n); },
       function (n) { if (isDataAct()) { n(); return; } pauseHere(n); },
       "@tools",
       function (n) { cap("The buttons beside the graph place things by hand. The dot button plots a point."); dropShape("pt", -3, -3, n); },
@@ -7144,8 +7145,8 @@ var ESPIC = {
       "@toolsEnd",
       function (n) { cap("Clear the graph again."); tapClear(n); },
       function (n) { cap("Drag each row onto the graph to plot its point. The yellow dot shows where it belongs."); dragRows(0, n); },
-      function (n) { cap("Now click the parabola button and click the vertex, (3, 1)."); clickTool("U", [3, 1], null, n); },
-      function (n) { cap("Drag its side point to set the stretch of 2."); stretch(2, n, 1); },
+      function (n) { cap("Now click the parabola button and click the vertex, (" + DH + ", " + DK + ")."); clickTool("U", [DH, DK], null, n); },
+      function (n) { cap("Drag its side point to set the stretch of " + DA + "."); stretch(DA, n, 1); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
       function (n) { cap("While you type, the x, ^2 and | | buttons under the box enter those symbols for you."); tap($("pgEq"), function () { typeKeys(["g(x) = ", "x", "^2", " - 3"], function () { eqEnter(); pgWait(1400, n); }); }); },
       function (n) { cap("Click the equation to type a function of your own."); tap($("pgEq"), function () { typeEq("g(x) = -|x+2|+4", function () { eqEnter(); pgWait(1200, n); }); }); },
@@ -7275,7 +7276,7 @@ var ESPIC = {
           key("ArrowUp"); pgWait(120, up);
         })();
       }
-      var DYS = [225, 401, 524, 602, 623, 600, 524];
+      var DSX = [5, 10][rnd(2)], DSC = 0.8 + rnd(5) * 0.1, DYS = [225, 401, 524, 602, 623, 600, 524].map(function (v) { return Math.round(v * DSC) + rnd(9) - 4; });   // each run: a new step for x and a new scale for y (the same rise-and-fall)
       if (est()) {   // 1.1, Estimating a Value from a Graph: the data go into the table, the U goes through them, and the graph gives the estimate
         var EP = estProb();
         steps = [
@@ -7311,7 +7312,7 @@ var ESPIC = {
         function (n) {
           cap("Type x-values");
           PG.fam = 1; PG.drows = null; PG.pts = []; PG.sp = []; Object.keys(PG.show).forEach(function (q) { PG.show[q] = false; }); PG.show.eq = false; drawPlay();
-          clickCell(0, "x", function () { typeHere(5, function () { typeHere(10, function () { typeHere(15, n); }); }); });
+          clickCell(0, "x", function () { typeHere(DSX, function () { typeHere(2 * DSX, function () { typeHere(3 * DSX, n); }); }); });
         },
         function (n) {
           cap("Return auto-fills");
