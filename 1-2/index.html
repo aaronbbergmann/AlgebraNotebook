@@ -367,6 +367,21 @@
   .m3Body{display:flex;gap:1.4rem;align-items:flex-start;flex-wrap:wrap;margin-top:.5rem}
   .m3FigW{flex:0 1 22rem;min-width:15rem}
   .estT{margin-top:.6rem}
+  .m3Lab.on{cursor:pointer;text-decoration:underline;fill:#2D70B3}
+  .m3Lab.on:hover{fill:#7A3FB5}
+  .m3Tray{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin:.5rem 0;min-height:2.3rem}
+  .m3Tile{font:500 1.05rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;padding:.25em .7em;border-radius:.6rem;background:color-mix(in srgb,#2D70B3 16%,var(--bg));border:2px solid #2D70B3;color:var(--ink);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;white-space:nowrap}
+  .m3Tile.sel{outline:3px solid #7A3FB5;outline-offset:1px}
+  .m3Ghost{box-shadow:0 .3em .9em rgba(0,0,0,.35);transform:scale(1.15)}
+  .m3Fm{display:flex;align-items:center;justify-content:center;gap:.5rem;margin:.5rem 0;font:400 1.35rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
+  .m3Frac{display:inline-flex;flex-direction:column;align-items:stretch;text-align:center;gap:.15rem}
+  .m3Bar{display:block;border-top:2px solid var(--ink)}
+  .m3Slot{display:inline-block;min-width:3.2rem;padding:.1em .45em;border:2px dashed color-mix(in srgb,var(--ink) 55%,transparent);border-radius:.5rem;text-align:center;color:color-mix(in srgb,var(--ink) 60%,transparent);font-style:italic}
+  .m3Slot.ok{border-style:solid;border-color:#2E9E4F;color:var(--ink);font-style:normal}
+  .m3Slot.ready:not(.ok){border-color:#7A3FB5;cursor:pointer}
+  .m3Slot.bad{border-color:#C0301E;animation:shake .3s}
+  .m3Sent{font:400 1.1rem/1.9 system-ui,sans-serif;text-align:center;margin:.4rem 0}
+  .m3Sent .m3Slot{min-width:0;font-style:normal;padding:.05em .4em}
   .m3Dot{cursor:pointer}
   .m3Dot circle:last-child{transition:r .1s}
   .m3Done{flex:1 1 13rem;margin-top:.3rem;font:400 1.05rem/1.5 system-ui,sans-serif;color:var(--ink)}
@@ -7108,27 +7123,36 @@ var ESPIC = {
   function m3Svg(k) { return M3PIC[k].charAt(0) === "<" && M3PIC[k].indexOf("<svg") === 0 ? M3PIC[k] : wf5Svg(M3PIC[k]); }
   // ---- the figure: axes with the units named, a line, marked points, and dots that can be clicked.  o = {xmax, ymax, xs, ys, xl, yl, line:{m,b}, pts:[{x,y,lab,cls}], dots:[{x,y,i,on}], scat:[[x,y]]}
   function m3Fig(o) {
-    var W = 340, H = 262, L = 58, R = 14, T = 14, B = 48, pw = W - L - R, ph = H - T - B;
+    var W = 340, H = 270, L = 58, R = 14, T = 22, B = 48, pw = W - L - R, ph = H - T - B;
     var X = function (x) { return L + x / o.xmax * pw; }, Y = function (y) { return T + ph - y / o.ymax * ph; };
-    var s = "<svg class=\"m3Fig\" viewBox=\"0 0 " + W + " " + H + "\" role=\"img\" aria-label=\"" + (o.alt || "Graph") + "\" font-family=\"system-ui,sans-serif\" font-size=\"11\" fill=\"currentColor\">", v;
+    var halo = " stroke=\"var(--bg)\" stroke-width=\"3\" paint-order=\"stroke\"";
+    var tsp = function (parts, fb) { return parts ? parts.map(function (p, i) { return (i ? " " : "") + "<tspan class=\"m3Lab" + (o.labOn ? " on" : "") + "\" data-m3lab=\"" + p[1] + "\">" + p[0] + "</tspan>"; }).join("") : fb; };
+    var s = "<svg class=\"m3Fig\" viewBox=\"0 0 " + W + " " + H + "\" data-g=\"" + [L, T, pw, ph, o.xmax, o.ymax].join(",") + "\" role=\"img\" aria-label=\"" + (o.alt || "Graph") + "\" font-family=\"system-ui,sans-serif\" font-size=\"11\" fill=\"currentColor\">", v;
     for (v = 0; v <= o.xmax + 1e-9; v += o.xs) s += "<path d=\"M" + X(v) + " " + T + "V" + (T + ph) + "\" stroke=\"currentColor\" stroke-opacity=\".14\"/><text x=\"" + X(v) + "\" y=\"" + (T + ph + 15) + "\" text-anchor=\"middle\">" + v + "</text>";
     for (v = 0; v <= o.ymax + 1e-9; v += o.ys) s += "<path d=\"M" + L + " " + Y(v) + "H" + (L + pw) + "\" stroke=\"currentColor\" stroke-opacity=\".14\"/><text x=\"" + (L - 6) + "\" y=\"" + (Y(v) + 4) + "\" text-anchor=\"end\">" + v + "</text>";
     s += "<path d=\"M" + L + " " + T + "V" + (T + ph) + "H" + (L + pw) + "\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"/>";
-    s += "<text x=\"" + (L + pw / 2) + "\" y=\"" + (H - 6) + "\" text-anchor=\"middle\" font-weight=\"600\">" + o.xl + "</text>";
-    s += "<text transform=\"translate(13 " + (T + ph / 2) + ") rotate(-90)\" text-anchor=\"middle\" font-weight=\"600\">" + o.yl + "</text>";
+    s += "<text x=\"" + (L + pw / 2) + "\" y=\"" + (H - 6) + "\" text-anchor=\"middle\" font-weight=\"600\">" + tsp(o.xt, o.xl) + "</text>";
+    s += "<text transform=\"translate(13 " + (T + ph / 2) + ") rotate(-90)\" text-anchor=\"middle\" font-weight=\"600\">" + tsp(o.yt, o.yl) + "</text>";
     if (o.line) {
       var x0 = 0, x1 = o.xmax, y0 = o.line.b, y1 = o.line.b + o.line.m * x1;
       if (y1 < 0) { x1 = -o.line.b / o.line.m; y1 = 0; } if (y1 > o.ymax) { x1 = (o.ymax - o.line.b) / o.line.m; y1 = o.ymax; }
       s += "<path d=\"M" + X(x0) + " " + Y(y0) + "L" + X(x1) + " " + Y(y1) + "\" fill=\"none\" stroke=\"#7A3FB5\" stroke-width=\"2.6\" stroke-linecap=\"round\"/>";
     }
+    if (o.guide) s += "<path d=\"M" + L + " " + Y(o.guide.y) + "H" + X(o.guide.x) + "V" + (T + ph) + "\" fill=\"none\" stroke=\"#2E9E4F\" stroke-width=\"1.8\" stroke-dasharray=\"5 4\"/>";
+    (o.arrows || []).forEach(function (a) {   // like the translation arrows of Play Graph: a line with a head, and its value beside it
+      var ax = X(a.x1), ay = Y(a.y1), bx = X(a.x2), by = Y(a.y2), dx = bx - ax, dy = by - ay, d = Math.hypot(dx, dy); if (d < 1) return;
+      var ux = dx / d, uy = dy / d, hl = Math.min(10, d * .5), cx = bx - ux * hl, cy = by - uy * hl;
+      s += "<path d=\"M" + ax + " " + ay + "L" + cx + " " + cy + "\" stroke=\"" + a.col + "\" stroke-width=\"2.8\" fill=\"none\"/><path d=\"M" + bx + " " + by + "L" + (cx - uy * hl * .55) + " " + (cy + ux * hl * .55) + "L" + (cx + uy * hl * .55) + " " + (cy - ux * hl * .55) + "Z\" fill=\"" + a.col + "\"/>";
+      if (a.lab) s += "<text x=\"" + a.lx + "\" y=\"" + a.ly + "\" text-anchor=\"" + (a.an || "middle") + "\" font-weight=\"700\" fill=\"" + a.col + "\"" + halo + ">" + a.lab + "</text>";
+    });
     (o.scat || []).forEach(function (p) { s += "<circle cx=\"" + X(p[0]) + "\" cy=\"" + Y(p[1]) + "\" r=\"4.2\" fill=\"#2D70B3\" stroke=\"var(--bg)\" stroke-width=\"1\"/>"; });
     (o.pts || []).forEach(function (p) {
-      s += "<circle cx=\"" + X(p.x) + "\" cy=\"" + Y(p.y) + "\" r=\"5\" fill=\"#7A3FB5\" stroke=\"var(--bg)\" stroke-width=\"1.4\"/>";
-      if (p.lab) s += "<text x=\"" + (X(p.x) + (p.x > o.xmax * .6 ? -9 : 9)) + "\" y=\"" + (Y(p.y) + (p.dy || -9)) + "\" text-anchor=\"" + (p.x > o.xmax * .6 ? "end" : "start") + "\" font-weight=\"700\" stroke=\"var(--bg)\" stroke-width=\"3\" paint-order=\"stroke\">(" + p.x + ", " + p.y + ")</text>";
+      s += "<circle cx=\"" + X(p.x) + "\" cy=\"" + Y(p.y) + "\" r=\"" + (p.hollow ? 6.5 : 5) + "\" fill=\"" + (p.hollow ? "var(--bg)" : "#7A3FB5") + "\" stroke=\"" + (p.hollow ? "#7A3FB5\" stroke-width=\"2.4" : "var(--bg)\" stroke-width=\"1.4") + "\"/>";
+      if (p.lab) s += "<text x=\"" + (X(p.x) + (p.left || p.x > o.xmax * .6 ? -9 : 9)) + "\" y=\"" + (Y(p.y) + (p.dy || -9)) + "\" text-anchor=\"" + (p.left || p.x > o.xmax * .6 ? "end" : "start") + "\" font-weight=\"700\"" + halo + ">(" + p.x + ", " + p.y + ")</text>";
     });
     (o.dots || []).forEach(function (d) {
       s += "<g class=\"m3Dot" + (d.on ? " on" : "") + "\" data-m3pt=\"" + d.i + "\" tabindex=\"0\" role=\"button\" aria-label=\"point " + d.x + ", " + d.y + "\"><circle cx=\"" + X(d.x) + "\" cy=\"" + Y(d.y) + "\" r=\"13\" fill=\"transparent\"/><circle cx=\"" + X(d.x) + "\" cy=\"" + Y(d.y) + "\" r=\"6\" fill=\"" + (d.on ? "#7A3FB5" : "var(--bg)") + "\" stroke=\"#7A3FB5\" stroke-width=\"2.2\"/></g>";
-      if (d.on) s += "<text x=\"" + (X(d.x) + 9) + "\" y=\"" + (Y(d.y) + (o.line && o.line.m < 0 ? -9 : 17)) + "\" font-weight=\"700\" stroke=\"var(--bg)\" stroke-width=\"3\" paint-order=\"stroke\">(" + d.x + ", " + d.y + ")</text>";
+      if (d.on) s += "<text x=\"" + (X(d.x) + 9) + "\" y=\"" + (Y(d.y) + (o.line && o.line.m < 0 ? -9 : 17)) + "\" font-weight=\"700\"" + halo + ">(" + d.x + ", " + d.y + ")</text>";
     });
     return s + "</svg>";
   }
@@ -7138,7 +7162,7 @@ var ESPIC = {
   }
   // ---- steps.  A step: {id, lab (Solo's short name), fine (only in Demo, Sequence and Calculate), ask, pre (before the box), post (after it), type: num | eq | pick | pts | btn,
   //   ans (a number, or a function of the problem), tol, a & b (an equation), opts (pick), wrong(v) -> message, hint:[two hints], line (for Show work), nums (extra wrong choices)}
-  function m3L(pb) { pb = pb || m3Cur(); return pb ? pb.steps.filter(function (s) { return mode === "solo" ? !s.fine : true; }) : []; }
+  function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine : true; }) : []; }
   function m3Step() { if (!QZ || QZ.m3done) return null; return m3L()[QZ.m3i] || null; }
   function m3V(v) { return typeof v === "function" ? v(m3Cur(), QZ.m3x || {}) : v; }
   function m3Ok(st, raw) {
@@ -7154,11 +7178,12 @@ var ESPIC = {
   }
   function m3Accept(st, show) {
     var pb = m3Cur(), line = typeof st.line === "function" ? st.line(pb, QZ.m3x || {}, show) : (st.line || ((st.pre ? st.pre.replace(/<[^>]+>/g, "") + " " : "") + show));
+    if (st.after) st.after(QZ.m3x);
     QZ.m3l.push(line); if (QZ.ww) QZ.ww.steps.push({ eqs: [line], cls: "cg" });
     QZ.m3i++; if (QZ.m3i >= m3L().length) QZ.m3done = true;
     QZ.hn = 0; pqMsg(""); drawPlay(); pqPanel();
   }
-  function m3Bad(el, msg) { QZ.wrong++; if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } pqMsg(msg || "Not quite. Try again."); }
+  function m3Bad(el, msg) { QZ.wrong++; if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } pqMsg(String(msg || "Not quite. Try again.").replace(/<[^>]+>/g, "")); }
   function m3Try(el, enter) {
     var st = m3Step(); if (!st || st.type === "pick" || st.type === "pts" || st.type === "btn") return;
     var r = m3Ok(st, el.value); if (r.ok) { m3Accept(st, r.show); return; }
@@ -7210,7 +7235,10 @@ var ESPIC = {
     if (!pb || !st || QZ.step >= 4 || (mode === "demo" && !pgRun && !QZ.m3l.length)) { el.hidden = true; el.innerHTML = ""; askArrow(false); $("undo").hidden = true; return; }
     $("undo").hidden = true;
     var keep = el.querySelector(".m3In"), kv = keep ? keep.value : "", kk = keep ? keep.dataset.key : "", key = QZ.pi + ":" + QZ.m3i, h = "<div class=\"wfAsk\">" + m3V(st.ask) + "</div>", t = st.type || "num";
-    if (t === "pick") h += "<div class=\"wfRow m3Opts\">" + st.opts.map(function (o, i) { return "<button type=\"button\" class=\"btn wfBtn\" data-m3=\"pick\" data-v=\"" + i + "\">" + o.t + "</button>"; }).join("") + "</div>";
+    if (t === "yint" || t === "rr" || t === "clickpt") h += "";
+    else if (t === "frac" || t === "eqd") h += m3Tray(pb, t === "frac" ? ["rise", "run", "b"] : ["m", "b"]) + m3Form(pb, t);
+    else if (t === "sent") h += m3Sent(pb);
+    else if (t === "pick") h += "<div class=\"wfRow m3Opts\">" + st.opts.map(function (o, i) { return "<button type=\"button\" class=\"btn wfBtn\" data-m3=\"pick\" data-v=\"" + i + "\">" + o.t + "</button>"; }).join("") + "</div>";
     else if (t === "btn") h += "<div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn\" data-m3=\"go\">" + st.btn + "</button></div>";
     else if (t === "pts") h += "";
     else if (mode === "sequence") h += "<div class=\"wfRow m3Opts\">" + m3Opts(st).map(function (o, i) { return "<button type=\"button\" class=\"btn wfBtn lm\" data-m3=\"opt\" data-v=\"" + i + "\">" + o.t + "</button>"; }).join("") + "</div>";
@@ -7223,6 +7251,121 @@ var ESPIC = {
   $("wfSteps").addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("button[data-m3]"); if (!b || !m3()) return; if (e.isTrusted) pgUser(); m3Click(b); });
   $("pgQt").addEventListener("click", function (e) { var d = e.target.closest && e.target.closest("[data-m3pt]"); if (!d || !m3()) return; if (e.isTrusted) pgUser(); m3Dot(+d.dataset.m3pt); });
   $("pgQt").addEventListener("keydown", function (e) { var d = e.target.closest && e.target.closest("[data-m3pt]"); if (d && m3() && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); m3Dot(+d.dataset.m3pt); } });
+  // ---- Equation from a Graph, Demo and Sequence: the student works on the graph itself.  Click the y-intercept, click two points to draw the rise and the run,
+  // drag the values into slope = rise / run and y = mx + b, click the axis labels to say what the slope means, click the point that answers the question.
+  function m3Pos(svg, cx, cy) {   // a click on the figure: where it is in the figure, and in the graph's units
+    var g = svg.dataset.g.split(",").map(Number), pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy; var q = pt.matrixTransform(svg.getScreenCTM().inverse());
+    var X = function (x) { return g[0] + x / g[4] * g[2]; }, Y = function (y) { return g[1] + g[3] - y / g[5] * g[3]; };
+    return { vx: q.x, vy: q.y, X: X, Y: Y, x: (q.x - g[0]) / g[2] * g[4], y: (g[1] + g[3] - q.y) / g[3] * g[5], g: g };
+  }
+  function m3Scr(x, y) {   // the screen position of a point of the graph
+    var svg = document.querySelector("svg.m3Fig"), g = svg.dataset.g.split(",").map(Number), pt = svg.createSVGPoint();
+    pt.x = g[0] + x / g[4] * g[2]; pt.y = g[1] + g[3] - y / g[5] * g[3]; var q = pt.matrixTransform(svg.getScreenCTM()); return { x: q.x, y: q.y };
+  }
+  function m3Redraw() { $("pgQt").innerHTML = m3Q(); m3Steps(); }
+  function m3Plot(p) {
+    var st = m3Step(), pb = m3Cur(); if (!st || !pb || pb.kind !== 1) return; var t = st.type, x = QZ.m3x, near = function (qx, qy) { return Math.hypot(p.vx - p.X(qx), p.vy - p.Y(qy)) <= 16; };
+    var ph = p.g[3] / p.g[5], offLine = Math.abs(p.y - (pb.m * p.x + pb.b)) * ph;
+    if (t === "yint") {
+      if (near(0, pb.b)) { x.b = true; m3Accept(st, ""); }
+      else m3Bad(null, offLine < 14 && p.x > .3 ? "That point is on the line, but the <i>y</i>-intercept is where the line crosses the <i>y</i>-axis, the vertical axis." : "Click the point where the line meets the vertical axis.");
+    } else if (t === "rr") {
+      x.rs = x.rs || []; var hit = near(0, pb.b) ? "a" : near(pb.x2, pb.y2) ? "b" : "";
+      if (!hit) { m3Bad(null, "Click one of the two marked points on the line."); return; }
+      if (x.rs.indexOf(hit) < 0) x.rs.push(hit);
+      if (x.rs.length < 2) { pqMsg(""); m3Redraw(); return; }
+      x.rr = true; m3Accept(st, "");
+    } else if (t === "clickpt") {
+      var k = Math.max(0, Math.min(p.g[4], Math.round(p.x))), yk = pb.m * k + pb.b;
+      if (!near(k, yk)) { m3Bad(null, "Click on the line."); return; }
+      if (k === pb.k) { x.pt = true; m3Accept(st, ""); }
+      else m3Bad(null, "That point is (" + k + ", " + m3F(yk) + "). The question gives <i>y</i> = " + pb.T + ": find the point on the line at that height.");
+    }
+  }
+  function m3Tiles(pb, x) {
+    var fr = x.fr || {}, eq = x.eq || {};
+    return {
+      rise: x.rr ? { t: "rise = " + m3F(pb.y2 - pb.b), used: !!fr.t } : null,
+      run: x.rr ? { t: "run = " + pb.x2, used: !!fr.b } : null,
+      m: x.mt ? { t: "<i>m</i> = " + m3F(pb.m), used: !!eq.m } : null,
+      b: x.b ? { t: "<i>b</i> = " + m3F(pb.b), used: !!eq.b } : null
+    };
+  }
+  function m3Tray(pb, ids) {
+    var x = QZ.m3x, T = m3Tiles(pb, x);
+    return "<div class=\"m3Tray\">" + ids.map(function (id) { var o = T[id]; if (!o || o.used) return ""; return "<span class=\"m3Tile" + (x.sel === id ? " sel" : "") + "\" data-m3tile=\"" + id + "\" tabindex=\"0\" role=\"button\">" + o.t + "</span>"; }).join("") + "</div>";
+  }
+  function m3Form(pb, t) {
+    var x = QZ.m3x, fr = x.fr || {}, eq = x.eq || {}, sl = function (id, filled, txt, ph) { return "<span class=\"m3Slot" + (filled ? " ok" : "") + (x.sel ? " ready" : "") + "\" data-m3slot=\"" + id + "\">" + (filled ? txt : ph) + "</span>"; };
+    if (t === "frac") return "<div class=\"m3Fm\"><span>slope =</span><span class=\"m3Frac\">" + sl("top", fr.t, m3F(pb.y2 - pb.b), "rise") + "<span class=\"m3Bar\"></span>" + sl("bot", fr.b, pb.x2, "run") + "</span></div>";
+    return "<div class=\"m3Fm\"><i>y</i> =" + sl("m", eq.m, m3F(pb.m), "<i>m</i>") + "<i>x</i> +" + sl("b", eq.b, m3F(pb.b), "<i>b</i>") + "</div>";
+  }
+  function m3Sent(pb) {
+    var x = QZ.m3x, sn = x.sn || {}, sc = pb.sc, up = pb.m > 0, f = function (k, txt) { return "<span class=\"m3Slot s" + (sn[k] ? " ok" : "") + "\">" + (sn[k] ? txt : "&nbsp;&nbsp;&nbsp;&nbsp;") + "</span>"; };
+    var dirTxt = (sc.pl ? "go " : "goes ") + (up ? "up" : "down");
+    return "<div class=\"m3Sent\">The slope " + m3F(pb.m) + " means: the " + f("n", sc.yw) + " " + f("d", dirTxt) + " " + m3F(Math.abs(pb.m)) + " " + f("u", sc.yu) + " for each " + f("v", sc.x1) + ".</div>" +
+      (sn.d ? "" : "<div class=\"wfRow\">" + ["up", "down"].map(function (d) { return "<button type=\"button\" class=\"btn wfBtn\" data-m3dir=\"" + d + "\">" + (sc.pl ? "go " : "goes ") + d + "</button>"; }).join("") + "</div>");
+  }
+  function m3SentCheck(st, pb) {
+    var sn = QZ.m3x.sn, sc = pb.sc;
+    if (sn.n && sn.d && sn.u && sn.v) { m3Accept(st, "The slope " + m3F(pb.m) + " means: the " + sc.yw + " " + (sc.pl ? "go " : "goes ") + (pb.m > 0 ? "up " : "down ") + m3F(Math.abs(pb.m)) + " " + sc.yu + " for each " + sc.x1 + "."); }
+    else { pqMsg(""); m3Steps(); }
+  }
+  function m3Lab(role) {
+    var st = m3Step(), pb = m3Cur(); if (!st || st.type !== "sent" || !pb) return; var x = QZ.m3x; x.sn = x.sn || {};
+    if (role === "xn") { m3Bad(null, "That names what the <i>x</i>-axis measures. The slope tells the change for each one " + pb.sc.x1 + ": click the unit."); return; }
+    x.sn[role === "yn" ? "n" : role === "yu" ? "u" : "v"] = 1; m3SentCheck(st, pb);
+  }
+  function m3Dir(d) {
+    var st = m3Step(), pb = m3Cur(); if (!st || st.type !== "sent" || !pb) return; var x = QZ.m3x; x.sn = x.sn || {};
+    if ((d === "up") !== (pb.m > 0)) { m3Bad(null, "Look at the graph: the line goes " + (pb.m > 0 ? "up" : "down") + " as you move right."); return; }
+    x.sn.d = 1; m3SentCheck(st, pb);
+  }
+  function m3Drop(id, slot) {
+    var st = m3Step(), pb = m3Cur(), x = QZ.m3x; if (!st || !pb) return; x.sel = null;
+    var el = document.querySelector("#wfSteps [data-m3slot=\"" + slot + "\"]"), want = { top: "rise", bot: "run", m: "m", b: "b" }[slot];
+    if (st.type === "frac" ? (slot !== "top" && slot !== "bot") : st.type === "eqd" ? (slot !== "m" && slot !== "b") : true) return;
+    if (id !== want) {
+      var msg = st.type === "frac" ? (id === "rise" || id === "run" ? "Rise goes on top and run on the bottom: slope = rise ÷ run." : "This formula uses only the rise and the run.")
+        : id === "m" ? "The slope <i>m</i> multiplies <i>x</i>. The <i>y</i>-intercept <i>b</i> goes at the end." : "The <i>y</i>-intercept <i>b</i> goes at the end. The slope goes with <i>x</i>.";
+      m3Steps(); el = document.querySelector("#wfSteps [data-m3slot=\"" + slot + "\"]"); m3Bad(el, msg); return;
+    }
+    if (st.type === "frac") { x.fr = x.fr || {}; x.fr[slot === "top" ? "t" : "b"] = 1; if (x.fr.t && x.fr.b) { m3Accept(st, ""); return; } }
+    else { x.eq = x.eq || {}; x.eq[slot] = 1; if (x.eq.m && x.eq.b) { m3Accept(st, ""); return; } }
+    pqMsg(""); m3Steps();
+  }
+  var m3Drag = null;
+  $("wfSteps").addEventListener("pointerdown", function (e) {
+    var t = e.target.closest && e.target.closest(".m3Tile"); if (!t || !m3()) return; e.preventDefault(); if (e.isTrusted) pgUser();
+    var r = t.getBoundingClientRect(), g = t.cloneNode(true); g.className = "m3Tile m3Ghost"; g.style.cssText = "position:fixed;left:" + r.left + "px;top:" + r.top + "px;z-index:60;pointer-events:none;display:none"; document.body.appendChild(g);
+    m3Drag = { id: t.dataset.m3tile, g: g, ox: e.clientX - r.left, oy: e.clientY - r.top, x0: e.clientX, y0: e.clientY, moved: false };
+  });
+  document.addEventListener("pointermove", function (e) {
+    var d = m3Drag; if (!d) return; if (!d.moved && Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 5) return; d.moved = true;
+    d.g.style.display = ""; d.g.style.left = (e.clientX - d.ox) + "px"; d.g.style.top = (e.clientY - d.oy) + "px";
+  });
+  document.addEventListener("pointerup", function (e) {
+    var d = m3Drag; if (!d) return; m3Drag = null; d.g.remove(); if (!m3() || !QZ.m3x) return;
+    if (!d.moved) { QZ.m3x.sel = QZ.m3x.sel === d.id ? null : d.id; m3Steps(); return; }
+    var el = document.elementFromPoint(e.clientX, e.clientY), s = el && el.closest && el.closest("[data-m3slot]");
+    if (s) m3Drop(d.id, s.dataset.m3slot); else m3Steps();
+  });
+  $("wfSteps").addEventListener("click", function (e) {
+    if (!m3()) return; var s = e.target.closest && e.target.closest("[data-m3slot]"), d = e.target.closest && e.target.closest("[data-m3dir]");
+    if (s && QZ.m3x && QZ.m3x.sel) { if (e.isTrusted) pgUser(); m3Drop(QZ.m3x.sel, s.dataset.m3slot); }
+    else if (d) { if (e.isTrusted) pgUser(); m3Dir(d.dataset.m3dir); }
+  });
+  $("wfSteps").addEventListener("keydown", function (e) {
+    if (!m3() || (e.key !== "Enter" && e.key !== " ")) return; var t = e.target.closest && e.target.closest(".m3Tile"), s = e.target.closest && e.target.closest("[data-m3slot]");
+    if (t) { e.preventDefault(); QZ.m3x.sel = QZ.m3x.sel === t.dataset.m3tile ? null : t.dataset.m3tile; m3Steps(); var n = document.querySelector("#wfSteps .m3Tile.sel"); if (n) n.focus(); }
+    else if (s && QZ.m3x.sel) { e.preventDefault(); m3Drop(QZ.m3x.sel, s.dataset.m3slot); }
+  });
+  $("pgQt").addEventListener("click", function (e) {
+    if (!m3() || !QZ.m3x) return; var lab = e.target.closest && e.target.closest("[data-m3lab]");
+    if (lab) { if (e.isTrusted) pgUser(); m3Lab(lab.dataset.m3lab); return; }
+    var svg = e.target.closest && e.target.closest("svg.m3Fig"); if (!svg || e.target.closest("[data-m3pt]")) return;
+    if (e.isTrusted) pgUser(); m3Plot(m3Pos(svg, e.clientX, e.clientY));
+  });
   function m3Cue() {
     var pb = m3Cur(), L = m3L(), pn = QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : "", all = QZ.step >= 4 || QZ.m3done;
     if (mode === "solo") return (pn ? pn + ": " : "") + L.map(function (s, i) { return s.lab + (all || i < QZ.m3i ? " <span class=\"cueOk\">✓</span>" : "?"); }).join(" &nbsp; ");
@@ -7249,7 +7392,7 @@ var ESPIC = {
   function m3Make1(tier) {
     for (var t = 0; t < 800; t++) {
       var sc = m3Pick(M3A); if (tier === 0 && sc.sg < 0) continue;
-      var b = m3Pick(sc.bs), m = m3Pick(sc.ms), xmax; if (b === Math.abs(m)) continue;
+      var b = m3Pick(sc.bs), m = m3Pick(sc.ms), xmax; if (b === Math.abs(m) || Math.abs(m) === 1) continue;
       if (sc.sg > 0) xmax = m3Pick([6, 8, 10]); else { if (b % -m) continue; xmax = b / -m; if (xmax < 4 || xmax > 12) continue; }
       var x2 = 2 + rnd(xmax - 3), ks = [], kk; for (kk = 2; kk < xmax; kk++) if (kk !== x2) ks.push(kk);
       var k = m3Pick(ks), y2 = b + m * x2, T = b + m * k; if (T <= 0 || y2 <= 0) continue;
@@ -7261,19 +7404,47 @@ var ESPIC = {
         { t: sc.yv + " " + (sc.pl ? "go " : "goes ") + (up ? "down " : "up ") + m3U(sc, amt) + " for each " + sc.x1 + ".", ok: false, why: "Look at the graph: the line goes " + (up ? "up" : "down") + " as you move right." },
         { t: sc.yv + (sc.pl ? " are " : " is ") + m3U(sc, b) + " at the start.", ok: false, why: "That is what the y-intercept means. The slope is the change for each " + sc.x1 + "." }
       ]);
-      var cap = sc.xn.toLowerCase() === sc.xu ? sc.xn : sc.xn + " (" + sc.xu + ")", pb = { kind: 1, sc: sc, b: b, m: m };
+      var cap = sc.xn.toLowerCase() === sc.xu ? sc.xn : sc.xn + " (" + sc.xu + ")", pb = { kind: 1, sc: sc, b: b, m: m, x2: x2, y2: y2, k: k, T: T };
       pb.head = sc.s; pb.pic = m3Svg(sc.pic);
       pb.story = sc.s + " Write an equation of the line, tell what its slope means, and answer the question at the end.";
-      pb.fig = function () { return m3Fig({ xmax: xmax, ymax: ymax, xs: xmax <= 10 ? 1 : 2, ys: ys, xl: cap, yl: sc.yn + " (" + sc.yu + ")", alt: sc.s, line: { m: m, b: b }, pts: [{ x: 0, y: b }, { x: x2, y: y2, lab: true, dy: up ? 18 : -9 }] }); };
+      pb.fig = function (x) {
+        x = x || {}; var o = { xmax: xmax, ymax: ymax, xs: xmax <= 10 ? 1 : 2, ys: ys, xl: cap, yl: sc.yn + " (" + sc.yu + ")", alt: sc.s, line: { m: m, b: b } };
+        if (mode !== "sequence" && mode !== "demo") { o.pts = [{ x: 0, y: b }, { x: x2, y: y2, lab: true, dy: up ? 18 : -9 }]; return m3Fig(o); }
+        var cs = m3Step(), rs = x.rs || [];
+        o.xt = sc.xn.toLowerCase() === sc.xu ? [[sc.xn, "xu"]] : [[sc.xn, "xn"], ["(" + sc.xu + ")", "xu"]]; o.yt = [[sc.yn, "yn"], ["(" + sc.yu + ")", "yu"]]; o.labOn = !!(cs && cs.type === "sent");
+        o.pts = [];
+        if (x.b) o.pts.push({ x: 0, y: b, lab: !x.rr, dy: up ? 18 : -9 });
+        o.pts.push({ x: x2, y: y2, lab: !x.rr, dy: up ? 18 : -9, hollow: !x.rr && rs.indexOf("b") < 0 });
+        if (x.rr) {
+          var RG = "#2E9E4F", RB = "#2D70B3", Xp = function (v) { return 58 + v / xmax * 268; }, Yp = function (v) { return 22 + 200 - v / ymax * 200; }, below = up && Yp(b) < 196;
+          o.arrows = [
+            { x1: 0, y1: b, x2: x2, y2: b, col: RG, lab: "run = " + x2, lx: Xp(x2 / 2), ly: Yp(b) + (below ? 15 : -7) },
+            { x1: x2, y1: b, x2: x2, y2: y2, col: RB, lab: "rise = " + m3F(y2 - b), lx: Xp(x2) + (Xp(x2) + 78 > 336 ? -8 : 8), ly: (Yp(b) + Yp(y2)) / 2 + 4, an: Xp(x2) + 78 > 336 ? "end" : "start" }
+          ];
+        }
+        if (x.pt) { o.guide = { x: k, y: T }; o.pts.push({ x: k, y: T, lab: true, left: true, dy: up ? -8 : 16 }); }
+        return m3Fig(o);
+      };
       pb.steps = [
         { id: "b", fine: 1, lab: "b", ask: "Where does the line cross the <i>y</i>-axis? That number is <i>b</i>.", pre: "<i>b</i> =", ans: b, hint: ["The <i>y</i>-intercept is the point where the line meets the vertical axis, at <i>x</i> = 0.", "The line crosses the vertical axis at " + b + "."], line: "<i>b</i> = " + m3F(b) },
         { id: "rise", fine: 1, lab: "rise", ask: "The line also goes through (" + x2 + ", " + y2 + "). Find the rise from (0, " + b + ") to (" + x2 + ", " + y2 + "): " + y2 + " − " + b + ".", pre: "rise =", ans: y2 - b, hint: ["Rise is how much <i>y</i> changes: the new <i>y</i> minus the old <i>y</i>.", y2 + " − " + b + " = " + m3F(y2 - b) + "."], line: "rise = " + y2 + " − " + b + " = " + m3F(y2 - b) },
         { id: "run", fine: 1, lab: "run", ask: "Find the run from <i>x</i> = 0 to <i>x</i> = " + x2 + ".", pre: "run =", ans: x2, hint: ["Run is how much <i>x</i> changes.", x2 + " − 0 = " + x2 + "."], line: "run = " + x2 + " − 0 = " + x2 },
-        { id: "m", fine: 1, lab: "m", ask: "The slope is rise ÷ run: " + m3F(y2 - b) + " ÷ " + x2 + ".", pre: "<i>m</i> =", ans: m, wrong: function (v) { return v === -m ? "Check the sign: the line goes " + (up ? "up" : "down") + " as you move right." : v * m === 1 ? "Rise goes on top: slope = rise ÷ run." : ""; }, hint: ["Slope = rise ÷ run.", m3F(y2 - b) + " ÷ " + x2 + " = " + m3F(m) + "."], line: "<i>m</i> = " + m3F(y2 - b) + " ÷ " + x2 + " = " + m3F(m) },
+        { id: "m", fine: 1, lab: "m", after: function (x) { x.mt = true; }, ask: "The slope is rise ÷ run: " + m3F(y2 - b) + " ÷ " + x2 + ".", pre: "<i>m</i> =", ans: m, wrong: function (v) { return v === -m ? "Check the sign: the line goes " + (up ? "up" : "down") + " as you move right." : v * m === 1 ? "Rise goes on top: slope = rise ÷ run." : ""; }, hint: ["Slope = rise ÷ run.", m3F(y2 - b) + " ÷ " + x2 + " = " + m3F(m) + "."], line: "<i>m</i> = " + m3F(y2 - b) + " ÷ " + x2 + " = " + m3F(m) },
         { id: "eq", lab: "Equation", ask: "Write the equation of the line: <i>y</i> = <i>mx</i> + <i>b</i> with your numbers.", pre: "", type: "eq", a: m, b: b, hint: ["Put the slope in for <i>m</i> and the <i>y</i>-intercept in for <i>b</i>.", "The slope is " + m3F(m) + " and <i>b</i> is " + b + ": " + m3Eq(m, b) + "."], line: function (p, x, s) { return m3EqH(m, b); }, wrongEq: function (f) { return Math.abs(f(0) - b) < 1e-6 ? "The <i>y</i>-intercept is right. Check the slope." : Math.abs(f(1) - f(0) - m) < 1e-6 ? "The slope is right. Check where the line crosses the <i>y</i>-axis." : "Not quite. Try again."; } },
         { id: "mean", lab: "Slope", ask: "What does the slope mean in this story?", type: "pick", opts: opts, hint: ["The slope is the change in " + sc.yn.toLowerCase() + " for each 1 " + sc.x1 + ".", "The slope is " + m3F(m) + ": " + mean] , line: "The slope " + m3F(m) + " means: " + mean.charAt(0).toLowerCase() + mean.slice(1) },
         { id: "sub", fine: 1, lab: "subtract", ask: "To answer, solve " + T + " = " + m3Co(m) + "<i>x</i> + " + b + ". First subtract " + b + " from both sides.", pre: T + " − " + b + " =", ans: T - b, hint: ["Take " + b + " away from both sides to get the <i>x</i> term alone.", T + " − " + b + " = " + m3F(T - b) + "."], line: T + " − " + b + " = " + m3F(T - b) },
         { id: "x", lab: sc.xu.charAt(0).toUpperCase() + sc.xu.slice(1), ask: sc.tq(T), pre: "<i>x</i> =", post: sc.xu, ans: k, hint: ["Solve " + T + " = " + m3Co(m) + "<i>x</i> + " + b + " for <i>x</i>.", "Subtract " + b + ", then divide by " + m3F(m) + ": " + m3F(T - b) + " ÷ " + m3F(m) + " = " + k + "."], line: "<i>x</i> = " + m3F(T - b) + " ÷ " + m3F(m) + " = " + k }
+      ];
+      var yw = sc.yv.replace(/^The /, ""); sc.yw = yw;
+      pb.isteps = [
+        { id: "yint", lab: "y-intercept", type: "yint", ask: "Click the point where the line crosses the <i>y</i>-axis.", hint: ["The <i>y</i>-intercept is where the line meets the vertical axis, at <i>x</i> = 0.", "Click the line right where it touches the vertical axis."], line: "<i>y</i>-intercept: (0, " + b + "), so <i>b</i> = " + b },
+        { id: "rr", lab: "rise and run", type: "rr", ask: "Click the two marked points on the line. Arrows will show the rise and the run.", hint: ["Click the <i>y</i>-intercept, then the other point.", "The arrows go across (run) and up or down (rise) between the two points."], line: "rise = " + y2 + " − " + b + " = " + m3F(y2 - b) + ", run = " + x2 + " − 0 = " + x2 },
+        { id: "frac", lab: "slope formula", type: "frac", ask: "Slope = rise ÷ run. Drag the rise and the run into the formula.", hint: ["Rise goes on top of the fraction and run on the bottom.", "Drag the rise tile to the top and the run tile to the bottom."], line: "slope = rise ÷ run = " + m3F(y2 - b) + " ÷ " + x2 },
+        pb.steps[3],
+        { id: "eqd", lab: "Equation", type: "eqd", ask: "Write the equation: drag the slope and the <i>y</i>-intercept into <i>y</i> = <i>mx</i> + <i>b</i>.", hint: ["The slope <i>m</i> goes in front of <i>x</i>. The <i>y</i>-intercept <i>b</i> goes at the end.", "Drag the <i>m</i> tile and the <i>b</i> tile into the blanks."], line: m3EqH(m, b) },
+        { id: "sent", lab: "Slope", type: "sent", ask: "What does the slope mean in this story? Click the labels on the axes to fill in the sentence.", hint: ["The slope is the change in " + sc.yn.toLowerCase() + " for each 1 " + sc.x1 + ".", "Click " + sc.yn + ", then its unit, then the unit of the <i>x</i>-axis. Choose up or down."], line: "The slope " + m3F(m) + " means: the " + yw + " " + (sc.pl ? "go " : "goes ") + (up ? "up " : "down ") + amt + " " + sc.yu + " for each " + sc.x1 + "." },
+        { id: "pt", lab: "Point", type: "clickpt", ask: sc.tq(T) + " Click the point on the line that helps answer it.", hint: ["The question gives <i>y</i> = " + T + ". Find the point on the line at that height.", "Click the line where <i>y</i> is " + T + "."], line: "The point (" + k + ", " + T + ") is on the line" },
+        pb.steps[6], pb.steps[7]
       ];
       pb.ex = "The line crosses the <i>y</i>-axis at " + b + ", so <i>b</i> = " + b + ". From (0, " + b + ") to (" + x2 + ", " + y2 + ") the rise is " + m3F(y2 - b) + " and the run is " + x2 + ", so the slope is " + m3F(m) + ". The equation is " + m3Eq(m, b) + ". " + mean + " To find <i>x</i> when <i>y</i> = " + T + ", solve " + T + " = " + m3Co(m) + "x + " + b + ": <i>x</i> = " + k + ".";
       return pb;
@@ -8326,9 +8497,28 @@ var ESPIC = {
       var m3Svg1 = function (el, then) {   // (an SVG element has no click(): send the event)
         handGo(ctr(el), 650); pgWait(850, function () { handTap(); el.classList.add("simHover"); el.dispatchEvent(new MouseEvent("click", { bubbles: true })); pgWait(650, then); });
       };
+      var m3HClick = function (q, then) { handGo(q, 650); pgWait(850, function () { handTap(); var sv = document.querySelector("svg.m3Fig"); if (sv) sv.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: q.x, clientY: q.y })); pgWait(800, then); }); };
+      var m3Tile = function (id, slot, then) {
+        var s = document.querySelector("#wfSteps [data-m3tile=\"" + id + "\"]"), d = document.querySelector("#wfSteps [data-m3slot=\"" + slot + "\"]"); if (!s || !d) { then(); return; }
+        handGo(ctr(s), 650); pgWait(800, function () { handTap(); pgWait(250, function () { handGo(ctr(d), 1400); fly(s, d, function () { if (pgRun !== run) return; m3Drop(id, slot); pgWait(700, then); }, false); }); });
+      };
+      var m3Tap = function (el, f, then) { if (!el) { then(); return; } handGo(ctr(el), 650); pgWait(850, function () { handTap(); f(); pgWait(800, then); }); };
       var m3Do = function (n) {
         var st = m3Step(); if (!st) { n(); return; }
         var t = st.type || "num"; cap(m3Say(st.ask));
+        var P1 = m3Cur();
+        if (t === "yint") { pgWait(1600, function () { m3HClick(m3Scr(0, P1.b), n); }); return; }
+        if (t === "rr") { pgWait(1600, function () { m3HClick(m3Scr(0, P1.b), function () { m3HClick(m3Scr(P1.x2, P1.y2), n); }); }); return; }
+        if (t === "frac") { pgWait(1600, function () { m3Tile("rise", "top", function () { m3Tile("run", "bot", n); }); }); return; }
+        if (t === "eqd") { pgWait(1600, function () { m3Tile("m", "m", function () { m3Tile("b", "b", n); }); }); return; }
+        if (t === "clickpt") { pgWait(1600, function () { m3HClick(m3Scr(P1.k, P1.T), n); }); return; }
+        if (t === "sent") {
+          var lab = function (r) { return document.querySelector("svg.m3Fig [data-m3lab=\"" + r + "\"]"); };
+          pgWait(1600, function () { m3Tap(lab("yn"), function () { m3Lab("yn"); }, function () {
+            m3Tap(document.querySelector("#wfSteps [data-m3dir=\"" + (P1.m > 0 ? "up" : "down") + "\"]"), function () { m3Dir(P1.m > 0 ? "up" : "down"); }, function () {
+              m3Tap(lab("yu"), function () { m3Lab("yu"); }, function () { m3Tap(lab("xu"), function () { m3Lab("xu"); }, n); }); }); }); });
+          return;
+        }
         if (t === "pts") {
           var d1 = document.querySelector("[data-m3pt=\"1\"]"), d2n = function () { var d2 = document.querySelector("[data-m3pt=\"3\"]"); if (!d2) { n(); return; } m3Svg1(d2, function () { pgWait(500, n); }); };
           if (!d1) { n(); return; } pgWait(1800, function () { m3Svg1(d1, d2n); }); return;
