@@ -3699,7 +3699,7 @@
     ["1.2", "Transformations of Linear and Absolute Value Functions", "1.2 Transformations of Linear and Absolute Value Functions"],
     ["1.3", "Modeling with Linear Functions", "1.3 Modeling with Linear Functions"],
     ["1.4D", "Solve Systems of Linear Equations in 3 Variables", "1.4 Solve Systems of Linear Equations in 3 Variables"],
-    ["RevT1", "Review for Chapter 1 Test", "RevT1 Review for Chapter 1 Test"]
+    ["RevT1", "Review for Chapter 1 Test", "Review for Chapter 1 Test"]
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   var BUILT = {
@@ -3777,23 +3777,35 @@
   })();
   // with no activity in the address, show the welcome page until one is chosen
   var welcome = !fixedAct, hub = /github\.io$/i.test(location.hostname);
-  var LEVELS = BUILT[act].levels, MORD = ["demo", "sequence", "calculate", "solo"];
+  var LEVELS = levelsNow(), MORD = ["demo", "sequence", "calculate", "solo"];
   function topLesson() { return BUILT[act].top; }
-  function loadProg() { try { prog = JSON.parse(localStorage.getItem(BUILT[act].key) || "{}") || {}; } catch (e) { prog = {}; } }
+  // RevT1 keeps its own progress: every item has its own levels (from the modes of the exercise it runs), stored under the review's key by item number
+  function revLevels() {
+    var out = [], nm = { demo: "Demo", sequence: "Sequence", calculate: "Calculate", solo: "Solo" };
+    BUILT[rev].items.forEach(function (it, i) {
+      var B = BUILT[it.act], ml = (B.modesFor ? B.modesFor(it.lesson) : B.modes || []).filter(function (m) { return m !== "create"; }), pc = ml.indexOf("calculate") >= 0 ? [10, 25, 40, 55, 80, 100] : [10, 25, 40, 70, 100];
+      ml.forEach(function (m, k) { out.push([i, m, pc[k], nm[m] + " Mode"]); });
+      out.push([i, "solo", pc[ml.length], "Solo Mode, 2nd round", 2], [i, "solo", pc[ml.length + 1], "Solo Mode, 3rd round", 3]);
+    });
+    return out;
+  }
+  function levelsNow() { return rev ? revLevels() : BUILT[act].levels; }
+  function progKey() { return rev ? BUILT[rev].key : BUILT[act].key; }
+  function loadProg() { try { prog = JSON.parse(localStorage.getItem(progKey()) || "{}") || {}; } catch (e) { prog = {}; } }
   loadProg();
-  function saveProg() { try { localStorage.setItem(BUILT[act].key, JSON.stringify(prog)); } catch (e) {} }
+  function saveProg() { try { localStorage.setItem(progKey(), JSON.stringify(prog)); } catch (e) {} }
   function lvDone(l) {
     // a problem finished in a mode (1.1, 1.2) earns that mode's first level and every level below it at once; the later rounds need whole rounds
     if (!(l[4] > 1)) for (var m0 = MORD.indexOf(l[1]); m0 < 4; m0++) if (prog[l[0] + ":" + MORD[m0] + ":p"]) return true;
     var tot = 0; for (var m = MORD.indexOf(l[1]); m < 4; m++) tot += prog[l[0] + ":" + MORD[m]] || 0; return tot >= (l[4] || 1); }
-  function lvSkip(l) { var B = BUILT[act]; if (B.sep) return B.sep.indexOf(l[0]) >= 0 ? l[0] !== LK() : B.sep.indexOf(LK()) >= 0; return !!B.perLesson && l[0] !== lesson; }   // 1.4: Graphing keeps a percentage of its own
+  function lvSkip(l) { if (rev) return l[0] !== revI; var B = BUILT[act]; if (B.sep) return B.sep.indexOf(l[0]) >= 0 ? l[0] !== LK() : B.sep.indexOf(LK()) >= 0; return !!B.perLesson && l[0] !== lesson; }   // 1.4: Graphing keeps a percentage of its own
   function pct() { var p = 0; LEVELS.forEach(function (l) { if (lvSkip(l)) return; if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }   // an activity with perLesson keeps a separate percentage for each exercise
   function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; var pl = $("progLnk"); if (pl) pl.textContent = pct() + "%"; }
   function openProg() {
-    var p = pct(), h = "<h2 id=\"progT\">" + (rev || shortOf(act)) + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = 0;
+    var p = pct(), h = "<h2 id=\"progT\">" + (rev || shortOf(act)) + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = rev ? -1 : 0;
     LEVELS.forEach(function (l, i) {
       if (lvSkip(l)) return;
-      if (l[0] !== last) { if (last) h += "</ul>"; last = l[0]; h += "<h3>Exercise: " + lessonName(last) + "</h3><ul>"; }
+      if (l[0] !== last) { if (last !== -1 && last) h += "</ul>"; last = l[0]; h += "<h3>Exercise: " + (rev ? BUILT[rev].items[last].q : lessonName(last)) + "</h3><ul>"; }
       var d = lvDone(l);
       h += "<li class=\"lv" + (d ? " done" : "") + "\"><span class=\"ck\">" + (d ? "✓" : "○") + "</span><span class=\"pc\">" + l[2] + "%</span><span>" + l[3] + "</span></li>";
     });
@@ -4230,7 +4242,7 @@
   // ---- 1.4B substitution: equations are lists of terms on each side ----
   // a term is {k:"t", c, v} (v "" for a number), {k:"g", c, in:[terms]} (c times parentheses) or {k:"p", c, val} (c times a substituted value)
   function SUB() { return act === "1.4D" && subx && lesson === 2; }
-  function LK() { return subx ? 4 : gl() ? "g" : lesson; }
+  function LK() { return rev ? revI : subx ? 4 : gl() ? "g" : lesson; }
   function T(c, v) { return { k: "t", c: c, v: v || "" }; }
   function cp(o) { return JSON.parse(JSON.stringify(o)); }
   function toExpr(q) {
@@ -5493,7 +5505,7 @@ var ESPIC = {
     if (fresh || it.act !== act) {
       var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = it.act; gdCustom = null; wfCustom = null; lesson = it.lesson; subx = !!it.subx;
       if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
-      LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
+      LEVELS = levelsNow(); loadProg(); buildActs(); buildLessons(); updProg();
       if (mode === "create") orig = []; useCustom = null;
       leaveQuiz();
       if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) { leavePlay(); enterQuiz(); } else { leavePlay(); setMode("demo"); }
@@ -5517,7 +5529,7 @@ var ESPIC = {
     }
     if (id === act && !wasRev) return;
     var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = id; gdCustom = null; wfCustom = null; if (BUILT[act].quiz || BUILT[act].solver || BUILT[act].sub) { lesson = BUILT[act].sub ? 4 : 1; subx = false; } if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
-    LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
+    LEVELS = levelsNow(); loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     leaveQuiz();
     if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) { leavePlay(); enterQuiz(); } else { leavePlay(); setMode("demo"); }
