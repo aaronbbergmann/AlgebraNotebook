@@ -3697,7 +3697,8 @@
     ["1.1", "Parent Functions and Transformations", "1.1 Parent Functions and Transformations"],
     ["1.2", "Transformations of Linear and Absolute Value Functions", "1.2 Transformations of Linear and Absolute Value Functions"],
     ["1.3", "Modeling with Linear Functions", "1.3 Modeling with Linear Functions"],
-    ["1.4D", "Solve Systems of Linear Equations in 3 Variables", "1.4 Solve Systems of Linear Equations in 3 Variables"]
+    ["1.4D", "Solve Systems of Linear Equations in 3 Variables", "1.4 Solve Systems of Linear Equations in 3 Variables"],
+    ["RevT1", "Review for Chapter 1 Test", "RevT1 Review for Chapter 1 Test"]
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   var BUILT = {
@@ -3746,6 +3747,21 @@
       ["g", "solo", 80, "Solo Mode, 2nd round", 2], ["g", "solo", 100, "Solo Mode, 3rd round", 3]
     ] }
   };
+  // RevT1 holds no exercises of its own: each item runs one of the original exercises (the same code), so a change to an original shows up here too.
+  // Its progress is the original's progress.  Questions refer to Algebra 2 Chapter 1 Test 1.
+  BUILT["RevT1"] = { review: true, key: "algebraProgress:RevT1", levels: [], top: 0, items: [
+    { q: "Q1 Families", full: "Question 1: name the family of each equation and graph", act: "1.1", lesson: 1 },
+    { q: "Q2 Solutions", full: "Question 2: how many solutions does the system have", act: "1.4D", lesson: 2 },
+    { q: "Q3 Graph", full: "Question 3: graph the function and its parent, describe the transformation", act: "1.1", lesson: 2 },
+    { q: "Q4 Rule", full: "Question 4: write the rule of the transformation, then g", act: "1.2", lesson: 4 },
+    { q: "Q5 Line", full: "Question 5: write a linear equation through two points", act: "1.3", lesson: 1 },
+    { q: "Q6 Graphing", full: "Question 6: solve the linear system graphically", act: "1.4D", lesson: 4 },
+    { q: "Q6 Substitution", full: "Question 6: check the solution algebraically, by substitution", act: "1.4D", lesson: 2, subx: true },
+    { q: "Q6 Elimination", full: "Question 6: check the solution algebraically, by elimination", act: "1.4D", lesson: 2 },
+    { q: "Q7 Three Variables", full: "Question 7: solve the system of three linear equations", act: "1.4D", lesson: 3 },
+    { q: "Q8 Word Problem", full: "Question 8: read a word problem about two plans, write the equations and find where they meet", act: "1.4D", lesson: 4 }
+  ] };
+  var rev = null, revI = 0;
   var act = "1.4D";
   // each activity also lives at its own address: …/algebranotebook/1-4b/ opens that activity and stays there
   function isDataAct(id) { var b = BUILT[id || act]; return !!(b && (b.data || (!id && b.quiz && act === "1.1" && lesson === 3))); }   // (1.1's third exercise, Estimating a Value from a Graph, has the same centre pane as a Data Activity)   // Data Activities (Play Data, and more to come) are Graphing activities of a special kind
@@ -3756,6 +3772,7 @@
     for (var id in BUILT) if (slugOf(id) === seg) fixedAct = id;
     if (fixedAct) act = fixedAct;
     if (BUILT[act].sub) lesson = 4;   // 1.4 opens on its first exercise, Graphing
+    if (fixedAct && BUILT[fixedAct].review) { rev = fixedAct; var it0 = BUILT[rev].items[0]; act = it0.act; lesson = it0.lesson; subx = !!it0.subx; }   // a review page starts on its first item
   })();
   // with no activity in the address, show the welcome page until one is chosen
   var welcome = !fixedAct, hub = /github\.io$/i.test(location.hostname);
@@ -3772,7 +3789,7 @@
   function pct() { var p = 0; LEVELS.forEach(function (l) { if (lvSkip(l)) return; if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }   // an activity with perLesson keeps a separate percentage for each exercise
   function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; var pl = $("progLnk"); if (pl) pl.textContent = pct() + "%"; }
   function openProg() {
-    var p = pct(), h = "<h2 id=\"progT\">" + shortOf(act) + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = 0;
+    var p = pct(), h = "<h2 id=\"progT\">" + (rev || shortOf(act)) + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = 0;
     LEVELS.forEach(function (l, i) {
       if (lvSkip(l)) return;
       if (l[0] !== last) { if (last) h += "</ul>"; last = l[0]; h += "<h3>Exercise: " + lessonName(last) + "</h3><ul>"; }
@@ -3787,6 +3804,7 @@
     if (mode === "create" || c < 2) return;
     var ml = BUILT[act].modes || ["demo", "sequence", "calculate", "solo"], nx = ml[ml.indexOf(mode) + 1], stayT = "Try another in " + MODES[mode] + " mode";
     if (nx && nx !== "create") up = { label: MODES[nx] + " mode", stayText: stayT, go: function () { setMode(nx); } };   // the next mode is never Create
+    else if (rev && mode === "solo") { var ri = BUILT[rev].items; if (pct() >= 100 && revI < ri.length - 1) up = { label: "Next: " + ri[revI + 1].q, stay: true, stayText: "Stay in this exercise", go: function () { revGo(revI + 1); } }; }   // a review: the Next button moves on to its next item
     else if (mode === "solo" && !subx && lesson < topLesson() && BUILT[act].perLesson) { if (pct() >= 100) up = { label: "Next exercise: " + (BUILT[act].short[lesson] || lessonName(lesson + 1)), stay: true, stayText: "Stay in this exercise", go: function () { lesson++; $("lesson").value = String(lesson); setMode("demo"); } }; }   // at 100% the Next button moves on to the next exercise; a small link stays here
     else if (mode === "solo" && !subx && act === "1.4D" && lesson === 4) { if (pct() >= 100) up = { label: "Next exercise: " + LNAME[1], stay: true, stayText: "Stay in this exercise", go: function () { lesson = 1; $("lesson").value = "1"; setMode("demo"); } }; }   // 1.4: Graphing is first in the menu; at 100% the Next button moves on to One Variable
     else if (mode === "solo" && !subx && (act === "1.4D" ? lesson < 3 : lesson < topLesson())) { var nl = lesson + 1; up = { label: LNAME[nl], stayText: "Try another in " + MODES[mode] + " mode", go: function () { lesson = nl; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } }; }   // 1.4: Graphing is first in the menu, so it leads to One Variable and 3×3 is the last
@@ -4151,7 +4169,7 @@
     return "Substitute " + s[1];
   }
 
-  $("lesson").addEventListener("change", function () { subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; wfCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
+  $("lesson").addEventListener("change", function () { if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; wfCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
   $("crAdd").addEventListener("click", crAdd);
   $("exSoloGo").addEventListener("click", exCheckSolo); $("exSoloIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); });
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
@@ -5429,6 +5447,10 @@ var ESPIC = {
   $("lesson").addEventListener("keydown", function (e) { if (e.key === "Escape") setTimeout(function () { lessonNames(false); }, 0); else if (/^(Arrow|Enter| )/.test(e.key)) lessonNames(true); });
   ["change", "blur"].forEach(function (ev) { $("lesson").addEventListener(ev, function () { setTimeout(function () { lessonNames(false); }, 0); }); });
   function buildLessons() {
+    if (rev) {   // a review: the menu lists its items
+      $("lesson").innerHTML = BUILT[rev].items.map(function (o, i) { return "<option value=\"" + i + "\" title=\"" + o.full + "\">" + o.q + "</option>"; }).join(""); $("lesson").value = String(revI);
+      document.body.classList.toggle("solver", !!BUILT[act].solver); buildModes(); return;
+    }
     if (lesson > topLesson()) lesson = topLesson();
     var h = "", sh = BUILT[act].short; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\" title=\"" + lessonName(l) + "\"" + (sh && sh[l - 1] ? " data-short=\"" + sh[l - 1] + "\" data-full=\"" + lessonName(l) + "\"" : "") + ">" + (sh && sh[l - 1] || lessonName(l)) + "</option>";
     if (!BUILT[act].sub) subx = false; else { var k1 = h.indexOf("</option>") + 9; h = h.slice(0, k1) + "<option value=\"s\" title=\"Substitution\">Substitution</option>" + h.slice(k1); }
@@ -5446,10 +5468,10 @@ var ESPIC = {
   function shortOf(id) { return id === "1.4D" ? "1.4 Algebra" : id; }
   function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
   function buildActs() {
-    $("actLbl").textContent = welcome ? "Choose an activity" : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
-    if (fixedAct) document.title = fullTitle(act) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(act));
+    $("actLbl").textContent = welcome ? "Choose an activity" : rev ? "RevT1" : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
+    if (fixedAct) document.title = fullTitle(rev || act) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(rev || act));
     $("actList").innerHTML = ACTS.map(function (a) {
-      var ok = !!BUILT[a[0]], sel = !welcome && a[0] === act;
+      var ok = !!BUILT[a[0]], sel = !welcome && a[0] === (rev || act);
       return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? fullTitle(a[0]) : fullTitle(a[0]) + " (coming soon)") + "</li>";
     }).join("");
   }
@@ -5464,19 +5486,35 @@ var ESPIC = {
     var cur = $("actList").querySelector("li.sel") || $("actList").querySelector("li:not(.soon)"); if (cur) cur.focus();
   }
   function closeActs(back) { if ($("actList").hidden) return; $("actList").hidden = true; $("actBtn").setAttribute("aria-expanded", "false"); if (back) $("actBtn").focus(); }
+  // a review item: switch to the original exercise it stands for
+  function revGo(i, fresh) {
+    var it = BUILT[rev].items[i]; revI = i; try { sessionStorage.removeItem("an.mode." + it.act); } catch (e) { }
+    if (fresh || it.act !== act) {
+      var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = it.act; gdCustom = null; wfCustom = null; lesson = it.lesson; subx = !!it.subx;
+      if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
+      LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
+      if (mode === "create") orig = []; useCustom = null;
+      leaveQuiz();
+      if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) { leavePlay(); enterQuiz(); } else { leavePlay(); setMode("demo"); }
+    } else {
+      lesson = it.lesson; subx = !!it.subx; gdCustom = null; wfCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); $("lesson").value = String(i);
+    }
+  }
   function setActivity(id) {
     closeActs(); $("actBtn").blur();   // once an activity is chosen the button is let go
     if (!BUILT[id]) return;
     try { sessionStorage.removeItem("an.mode." + id); } catch (e) { }   // choosing an activity always starts it in Demo; only a refresh keeps the mode
     // on the website every activity is its own page, so switching goes to that page
-    if (hub && id !== act) { location.href = (fixedAct ? "../" : "") + slugOf(id) + "/"; return; }
+    if (hub && id !== (rev || act)) { location.href = (fixedAct ? "../" : "") + slugOf(id) + "/"; return; }
+    if (BUILT[id].review) { if (welcome) { welcome = false; theme(); document.body.classList.remove("wel"); $("welcome").hidden = true; } rev = id; revGo(0, true); return; }
+    var wasRev = !!rev; rev = null;
     if (welcome) {
       // on the website each activity has its own page; elsewhere (a preview) it opens right here
       if (hub) { location.href = slugOf(id) + "/"; return; }
       welcome = false; theme(); document.body.classList.remove("wel"); $("welcome").hidden = true;
       if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
-    if (id === act) return;
+    if (id === act && !wasRev) return;
     var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = id; gdCustom = null; wfCustom = null; if (BUILT[act].quiz || BUILT[act].solver || BUILT[act].sub) { lesson = BUILT[act].sub ? 4 : 1; subx = false; } if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
