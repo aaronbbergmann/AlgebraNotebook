@@ -3753,6 +3753,7 @@
     var seg = decodeURIComponent(location.pathname).replace(/\/index\.html$/i, "").replace(/\/+$/, "").split("/").pop().toLowerCase();
     for (var id in BUILT) if (slugOf(id) === seg) fixedAct = id;
     if (fixedAct) act = fixedAct;
+    if (BUILT[act].sub) lesson = 4;   // 1.4 opens on its first exercise, Graphing
   })();
   // with no activity in the address, show the welcome page until one is chosen
   var welcome = !fixedAct, hub = /github\.io$/i.test(location.hostname);
@@ -5474,7 +5475,7 @@ var ESPIC = {
       if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
     if (id === act) return;
-    var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = id; gdCustom = null; wfCustom = null; if (BUILT[act].quiz || BUILT[act].solver || BUILT[act].sub) { lesson = 1; subx = false; } if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
+    var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = id; gdCustom = null; wfCustom = null; if (BUILT[act].quiz || BUILT[act].solver || BUILT[act].sub) { lesson = BUILT[act].sub ? 4 : 1; subx = false; } if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
     LEVELS = BUILT[act].levels; loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     leaveQuiz();
