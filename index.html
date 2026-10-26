@@ -3659,7 +3659,7 @@
     else { $("sheetBody").innerHTML = body; $("sheet").hidden = false; workNavInit($("sheetBody")); }
   }
 
-  var NEXTMODE = { demo: "sequence", sequence: "calculate", calculate: "solo" }, LNAME = { 2: "2×2 Systems", 3: "3×3 Systems", 4: "Graphing" };
+  var NEXTMODE = { demo: "sequence", sequence: "calculate", calculate: "solo" }, LNAME = { 1: "One Variable", 2: "2×2 Systems", 3: "3×3 Systems", 4: "Graphing" };
   // ---- celebration: one congratulatory phrase over the screen for 3 seconds (clicks pass through) ----
   var party = null, partyTimer = null, lastPhrase = "";
   var PHRASES = ["Tasty!", "Cool!", "Nice!", "Stands on business!", "It's a W!", "Hundo!", "Great job!", "Well done!", "Yeeesss!", "Sooo good!", "Goated!", "Pro status unlocked!",
@@ -3783,7 +3783,8 @@
     var ml = BUILT[act].modes || ["demo", "sequence", "calculate", "solo"], nx = ml[ml.indexOf(mode) + 1], stayT = "Try another in " + MODES[mode] + " mode";
     if (nx && nx !== "create") up = { label: MODES[nx] + " mode", stayText: stayT, go: function () { setMode(nx); } };   // the next mode is never Create
     else if (mode === "solo" && !subx && lesson < topLesson() && BUILT[act].perLesson) { if (pct() >= 100) up = { label: "Next exercise: " + (BUILT[act].short[lesson] || lessonName(lesson + 1)), stay: true, stayText: "Stay in this exercise", go: function () { lesson++; $("lesson").value = String(lesson); setMode("demo"); } }; }   // at 100% the Next button moves on to the next exercise; a small link stays here
-    else if (mode === "solo" && !subx && lesson < topLesson()) up = { label: LNAME[lesson + 1], stayText: "Try another in " + MODES[mode] + " mode", go: function () { lesson++; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } };
+    else if (mode === "solo" && !subx && act === "1.4D" && lesson === 4) { if (pct() >= 100) up = { label: "Next exercise: " + LNAME[1], stay: true, stayText: "Stay in this exercise", go: function () { lesson = 1; $("lesson").value = "1"; setMode("demo"); } }; }   // 1.4: Graphing is first in the menu; at 100% the Next button moves on to One Variable
+    else if (mode === "solo" && !subx && (act === "1.4D" ? lesson < 3 : lesson < topLesson())) { var nl = lesson + 1; up = { label: LNAME[nl], stayText: "Try another in " + MODES[mode] + " mode", go: function () { lesson = nl; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } }; }   // 1.4: Graphing is first in the menu, so it leads to One Variable and 3×3 is the last
   }
   // Demo progress is earned only by a demo that plays through to its end: a demo that was ended, left for another mode, or finished by hand
   // while paused earns nothing (1.4: the demo is still running when the problem is solved; 1.1: the whole demo script has played out)
@@ -5426,6 +5427,7 @@ var ESPIC = {
     if (lesson > topLesson()) lesson = topLesson();
     var h = "", sh = BUILT[act].short; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\" title=\"" + lessonName(l) + "\"" + (sh && sh[l - 1] ? " data-short=\"" + sh[l - 1] + "\" data-full=\"" + lessonName(l) + "\"" : "") + ">" + (sh && sh[l - 1] || lessonName(l)) + "</option>";
     if (!BUILT[act].sub) subx = false; else { var k1 = h.indexOf("</option>") + 9; h = h.slice(0, k1) + "<option value=\"s\" title=\"Substitution\">Substitution</option>" + h.slice(k1); }
+    if (BUILT[act].sub) { var k4 = h.lastIndexOf("<option value=\"4\""); if (k4 > 0) h = h.slice(k4) + h.slice(0, k4); }   // 1.4: Graphing comes first in the menu
     $("lesson").innerHTML = h; $("lesson").value = subx ? "s" : String(lesson);
     document.body.classList.toggle("solver", !!BUILT[act].solver);
     buildModes();
