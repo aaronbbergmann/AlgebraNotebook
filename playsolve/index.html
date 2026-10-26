@@ -7133,11 +7133,13 @@ var ESPIC = {
     s += "<path d=\"M" + L + " " + T + "V" + (T + ph) + "H" + (L + pw) + "\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"/>";
     s += "<text x=\"" + (L + pw / 2) + "\" y=\"" + (H - 6) + "\" text-anchor=\"middle\" font-weight=\"600\">" + tsp(o.xt, o.xl) + "</text>";
     s += "<text transform=\"translate(13 " + (T + ph / 2) + ") rotate(-90)\" text-anchor=\"middle\" font-weight=\"600\">" + tsp(o.yt, o.yl) + "</text>";
-    if (o.line) {
-      var x0 = 0, x1 = o.xmax, y0 = o.line.b, y1 = o.line.b + o.line.m * x1;
-      if (y1 < 0) { x1 = -o.line.b / o.line.m; y1 = 0; } if (y1 > o.ymax) { x1 = (o.ymax - o.line.b) / o.line.m; y1 = o.ymax; }
-      s += "<path d=\"M" + X(x0) + " " + Y(y0) + "L" + X(x1) + " " + Y(y1) + "\" fill=\"none\" stroke=\"#7A3FB5\" stroke-width=\"2.6\" stroke-linecap=\"round\"/>";
-    }
+    var lns = (o.lines || []).slice(); if (o.line) lns.unshift({ m: o.line.m, b: o.line.b, col: "#7A3FB5" });
+    lns.forEach(function (l) {
+      var x0 = 0, x1 = o.xmax, y0 = l.b, y1 = l.b + l.m * x1;
+      if (y1 < 0) { x1 = -l.b / l.m; y1 = 0; } if (y1 > o.ymax) { x1 = (o.ymax - l.b) / l.m; y1 = o.ymax; }
+      s += "<path d=\"M" + X(x0) + " " + Y(y0) + "L" + X(x1) + " " + Y(y1) + "\" fill=\"none\" stroke=\"" + l.col + "\" stroke-width=\"2.6\" stroke-linecap=\"round\"/>";
+      if (l.lab) s += "<text x=\"" + (X(x1) - 4) + "\" y=\"" + (Y(y1) + (l.below ? 24 : y1 >= o.ymax - 1e-9 ? 15 : -7)) + "\" text-anchor=\"end\" font-weight=\"700\" fill=\"" + l.col + "\"" + halo + ">" + l.lab + "</text>";
+    });
     if (o.guide) s += "<path d=\"M" + L + " " + Y(o.guide.y) + "H" + X(o.guide.x) + "V" + (T + ph) + "\" fill=\"none\" stroke=\"#2E9E4F\" stroke-width=\"1.8\" stroke-dasharray=\"5 4\"/>";
     (o.arrows || []).forEach(function (a) {   // like the translation arrows of Play Graph: a line with a head, and its value beside it
       var ax = X(a.x1), ay = Y(a.y1), bx = X(a.x2), by = Y(a.y2), dx = bx - ax, dy = by - ay, d = Math.hypot(dx, dy); if (d < 1) return;
@@ -7147,7 +7149,9 @@ var ESPIC = {
     });
     (o.scat || []).forEach(function (p) { s += "<circle cx=\"" + X(p[0]) + "\" cy=\"" + Y(p[1]) + "\" r=\"4.2\" fill=\"#2D70B3\" stroke=\"var(--bg)\" stroke-width=\"1\"/>"; });
     (o.pts || []).forEach(function (p) {
-      s += "<circle cx=\"" + X(p.x) + "\" cy=\"" + Y(p.y) + "\" r=\"" + (p.hollow ? 6.5 : 5) + "\" fill=\"" + (p.hollow ? "var(--bg)" : "#7A3FB5") + "\" stroke=\"" + (p.hollow ? "#7A3FB5\" stroke-width=\"2.4" : "var(--bg)\" stroke-width=\"1.4") + "\"/>";
+      var c = p.col || "#7A3FB5";
+      if (p.ring) s += "<circle cx=\"" + X(p.x) + "\" cy=\"" + Y(p.y) + "\" r=\"10\" fill=\"none\" stroke=\"" + c + "\" stroke-width=\"2\" stroke-dasharray=\"3 3\"/>";
+      s += "<circle cx=\"" + X(p.x) + "\" cy=\"" + Y(p.y) + "\" r=\"" + (p.hollow ? 6.5 : 5) + "\" fill=\"" + (p.hollow ? "var(--bg)" : c) + "\" stroke=\"" + (p.hollow ? c + "\" stroke-width=\"2.4" : "var(--bg)\" stroke-width=\"1.4") + "\"/>";
       if (p.lab) s += "<text x=\"" + (X(p.x) + (p.left || p.x > o.xmax * .6 ? -9 : 9)) + "\" y=\"" + (Y(p.y) + (p.dy || -9)) + "\" text-anchor=\"" + (p.left || p.x > o.xmax * .6 ? "end" : "start") + "\" font-weight=\"700\"" + halo + ">(" + p.x + ", " + p.y + ")</text>";
     });
     (o.dots || []).forEach(function (d) {
@@ -7162,7 +7166,7 @@ var ESPIC = {
   }
   // ---- steps.  A step: {id, lab (Solo's short name), fine (only in Demo, Sequence and Calculate), ask, pre (before the box), post (after it), type: num | eq | pick | pts | btn,
   //   ans (a number, or a function of the problem), tol, a & b (an equation), opts (pick), wrong(v) -> message, hint:[two hints], line (for Show work), nums (extra wrong choices)}
-  function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine : true; }) : []; }
+  function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.csteps && mode === "calculate" ? pb.csteps : pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine : true; }) : []; }
   function m3Step() { if (!QZ || QZ.m3done) return null; return m3L()[QZ.m3i] || null; }
   function m3V(v) { return typeof v === "function" ? v(m3Cur(), QZ.m3x || {}) : v; }
   function m3Ok(st, raw) {
@@ -7185,7 +7189,13 @@ var ESPIC = {
   }
   function m3Bad(el, msg) { QZ.wrong++; if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } pqMsg(String(msg || "Not quite. Try again.").replace(/<[^>]+>/g, "")); }
   function m3Try(el, enter) {
-    var st = m3Step(); if (!st || st.type === "pick" || st.type === "pts" || st.type === "btn") return;
+    var st = m3Step(); if (!st || st.type === "pick" || st.type === "pts" || st.type === "btn" || ["yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross"].indexOf(st.type) >= 0) return;
+    if (st.type === "sent") {   // Calculate: the amount of the change is typed
+      var pbs = m3Cur(), vs = m3Num(el.value);
+      if (!isNaN(vs) && Math.abs(vs - Math.abs(pbs.m)) < 1e-9) { QZ.m3x.sn = QZ.m3x.sn || {}; QZ.m3x.sn.a = 1; m3SentCheck(st, pbs); }
+      else if (enter && String(el.value).trim()) m3Bad(el, "Not quite. Look at the slope you found.");
+      return;
+    }
     var r = m3Ok(st, el.value); if (r.ok) { m3Accept(st, r.show); return; }
     if (enter && String(el.value).trim()) m3Bad(el, r.msg);
   }
@@ -7235,7 +7245,7 @@ var ESPIC = {
     if (!pb || !st || QZ.step >= 4 || (mode === "demo" && !pgRun && !QZ.m3l.length)) { el.hidden = true; el.innerHTML = ""; askArrow(false); $("undo").hidden = true; return; }
     $("undo").hidden = true;
     var keep = el.querySelector(".m3In"), kv = keep ? keep.value : "", kk = keep ? keep.dataset.key : "", key = QZ.pi + ":" + QZ.m3i, h = "<div class=\"wfAsk\">" + m3V(st.ask) + "</div>", t = st.type || "num";
-    if (t === "yint" || t === "rr" || t === "clickpt") h += "";
+    if (["yint", "rr", "clickpt", "plotT", "lineT", "plotQ1", "plotQ2", "cross"].indexOf(t) >= 0) h += "";
     else if (t === "frac" || t === "eqd") h += m3Tray(pb, t === "frac" ? ["rise", "run", "b"] : ["m", "b"]) + m3Form(pb, t);
     else if (t === "sent") h += m3Sent(pb);
     else if (t === "pick") h += "<div class=\"wfRow m3Opts\">" + st.opts.map(function (o, i) { return "<button type=\"button\" class=\"btn wfBtn\" data-m3=\"pick\" data-v=\"" + i + "\">" + o.t + "</button>"; }).join("") + "</div>";
@@ -7264,7 +7274,7 @@ var ESPIC = {
   }
   function m3Redraw() { $("pgQt").innerHTML = m3Q(); m3Steps(); }
   function m3Plot(p) {
-    var st = m3Step(), pb = m3Cur(); if (!st || !pb || pb.kind !== 1) return; var t = st.type, x = QZ.m3x, near = function (qx, qy) { return Math.hypot(p.vx - p.X(qx), p.vy - p.Y(qy)) <= 16; };
+    var st = m3Step(), pb = m3Cur(); if (!st || !pb) return; if (pb.kind === 2) { m3Plot2(p, st, pb); return; } if (pb.kind !== 1) return; var t = st.type, x = QZ.m3x, near = function (qx, qy) { return Math.hypot(p.vx - p.X(qx), p.vy - p.Y(qy)) <= 16; };
     var ph = p.g[3] / p.g[5], offLine = Math.abs(p.y - (pb.m * p.x + pb.b)) * ph;
     if (t === "yint") {
       if (near(0, pb.b)) { x.b = true; m3Accept(st, ""); }
@@ -7282,13 +7292,34 @@ var ESPIC = {
       else m3Bad(null, "That point is (" + k + ", " + m3F(yk) + "). The question gives <i>y</i> = " + pb.T + ": find the point on the line at that height.");
     }
   }
+  // Comparing Linear Equations: plot the table, draw its line, graph the other plan, find where the lines cross
+  function m3Plot2(p, st, pb) {
+    var t = st.type, x = QZ.m3x, near = function (qx, qy) { return Math.hypot(p.vx - p.X(qx), p.vy - p.Y(qy)) <= 16; };
+    if (t === "plotT") {
+      x.tp = x.tp || []; var hit = -1; pb.rows.forEach(function (r, i) { if (hit < 0 && near(r, pb.tys[i])) hit = i; });
+      if (hit < 0) { m3Bad(null, "That is not a point from the table. Read each x and its y, then find where they meet."); return; }
+      if (x.tp.indexOf(hit) >= 0) return; x.tp.push(hit);
+      if (x.tp.length < pb.rows.length) { pqMsg(""); m3Redraw(); } else m3Accept(st, "");
+    } else if (t === "lineT") {
+      x.ls = x.ls || []; var h2 = -1; (x.tp || []).forEach(function (i) { if (h2 < 0 && near(pb.rows[i], pb.tys[i])) h2 = i; });
+      if (h2 < 0) { m3Bad(null, "Click two of the points you plotted."); return; }
+      if (x.ls.indexOf(h2) >= 0) return; x.ls.push(h2);
+      if (x.ls.length < 2) { pqMsg(""); m3Redraw(); } else { x.tl = true; m3Accept(st, ""); }
+    } else if (t === "plotQ1") {
+      if (near(0, pb.bQ)) { x.q1 = true; m3Accept(st, ""); } else m3Bad(null, "Put x = 0 into the equation: that is where the plan starts.");
+    } else if (t === "plotQ2") {
+      if (near(1, pb.yq1)) { x.q2 = true; x.ql = true; m3Accept(st, ""); } else m3Bad(null, "When x = 1 the cost is " + pb.yq1 + ". Click that point.");
+    } else if (t === "cross") {
+      if (near(pb.xs, pb.ystar)) { x.cr = true; m3Accept(st, ""); } else m3Bad(null, "The two plans cost the same where the two lines cross.");
+    }
+  }
   function m3Tiles(pb, x) {
     var fr = x.fr || {}, eq = x.eq || {};
     return {
-      rise: x.rr ? { t: "rise = " + m3F(pb.y2 - pb.b), used: !!fr.t } : null,
-      run: x.rr ? { t: "run = " + pb.x2, used: !!fr.b } : null,
+      rise: x.rv ? { t: "rise = " + m3F(pb.y2 - pb.b), used: !!fr.t } : null,
+      run: x.nv ? { t: "run = " + pb.x2, used: !!fr.b } : null,
       m: x.mt ? { t: "<i>m</i> = " + m3F(pb.m), used: !!eq.m } : null,
-      b: x.b ? { t: "<i>b</i> = " + m3F(pb.b), used: !!eq.b } : null
+      b: x.bv ? { t: "<i>b</i> = " + m3F(pb.b), used: !!eq.b } : null
     };
   }
   function m3Tray(pb, ids) {
@@ -7302,13 +7333,14 @@ var ESPIC = {
   }
   function m3Sent(pb) {
     var x = QZ.m3x, sn = x.sn || {}, sc = pb.sc, up = pb.m > 0, f = function (k, txt) { return "<span class=\"m3Slot s" + (sn[k] ? " ok" : "") + "\">" + (sn[k] ? txt : "&nbsp;&nbsp;&nbsp;&nbsp;") + "</span>"; };
-    var dirTxt = (sc.pl ? "go " : "goes ") + (up ? "up" : "down");
-    return "<div class=\"m3Sent\">The slope " + m3F(pb.m) + " means: the " + f("n", sc.yw) + " " + f("d", dirTxt) + " " + m3F(Math.abs(pb.m)) + " " + f("u", sc.yu) + " for each " + f("v", sc.x1) + ".</div>" +
+    var dirTxt = (sc.pl ? "go " : "goes ") + (up ? "up" : "down"), cal = mode === "calculate";
+    return "<div class=\"m3Sent\">The slope " + m3F(pb.m) + " means: the " + f("n", sc.yw) + " " + f("d", dirTxt) + " " + (cal ? f("a", m3F(Math.abs(pb.m))) : m3F(Math.abs(pb.m))) + " " + f("u", sc.yu) + " for each " + f("v", sc.x1) + ".</div>" +
+      (cal && !sn.a ? "<div class=\"wfRow cg\"><span>How much does it change?</span><input id=\"m3In\" class=\"m3In\" data-key=\"" + QZ.pi + ":" + QZ.m3i + "\" style=\"width:6rem\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"How much it changes\"></div>" : "") +
       (sn.d ? "" : "<div class=\"wfRow\">" + ["up", "down"].map(function (d) { return "<button type=\"button\" class=\"btn wfBtn\" data-m3dir=\"" + d + "\">" + (sc.pl ? "go " : "goes ") + d + "</button>"; }).join("") + "</div>");
   }
   function m3SentCheck(st, pb) {
     var sn = QZ.m3x.sn, sc = pb.sc;
-    if (sn.n && sn.d && sn.u && sn.v) { m3Accept(st, "The slope " + m3F(pb.m) + " means: the " + sc.yw + " " + (sc.pl ? "go " : "goes ") + (pb.m > 0 ? "up " : "down ") + m3F(Math.abs(pb.m)) + " " + sc.yu + " for each " + sc.x1 + "."); }
+    if (sn.n && sn.d && sn.u && sn.v && (mode !== "calculate" || sn.a)) { m3Accept(st, "The slope " + m3F(pb.m) + " means: the " + sc.yw + " " + (sc.pl ? "go " : "goes ") + (pb.m > 0 ? "up " : "down ") + m3F(Math.abs(pb.m)) + " " + sc.yu + " for each " + sc.x1 + "."); }
     else { pqMsg(""); m3Steps(); }
   }
   function m3Lab(role) {
@@ -7409,17 +7441,18 @@ var ESPIC = {
       pb.story = sc.s + " Write an equation of the line, tell what its slope means, and answer the question at the end.";
       pb.fig = function (x) {
         x = x || {}; var o = { xmax: xmax, ymax: ymax, xs: xmax <= 10 ? 1 : 2, ys: ys, xl: cap, yl: sc.yn + " (" + sc.yu + ")", alt: sc.s, line: { m: m, b: b } };
-        if (mode !== "sequence" && mode !== "demo") { o.pts = [{ x: 0, y: b }, { x: x2, y: y2, lab: true, dy: up ? 18 : -9 }]; return m3Fig(o); }
+        if (mode !== "sequence" && mode !== "demo" && mode !== "calculate") { o.pts = [{ x: 0, y: b }, { x: x2, y: y2, lab: true, dy: up ? 18 : -9 }]; return m3Fig(o); }
         var cs = m3Step(), rs = x.rs || [];
         o.xt = sc.xn.toLowerCase() === sc.xu ? [[sc.xn, "xu"]] : [[sc.xn, "xn"], ["(" + sc.xu + ")", "xu"]]; o.yt = [[sc.yn, "yn"], ["(" + sc.yu + ")", "yu"]]; o.labOn = !!(cs && cs.type === "sent");
         o.pts = [];
-        if (x.b) o.pts.push({ x: 0, y: b, lab: !x.rr, dy: up ? 18 : -9 });
-        o.pts.push({ x: x2, y: y2, lab: !x.rr, dy: up ? 18 : -9, hollow: !x.rr && rs.indexOf("b") < 0 });
+        var cal = mode === "calculate";   // (Calculate: the numbers are for the student to find)
+        if (x.b) o.pts.push({ x: 0, y: b, lab: !x.rr && !cal, dy: up ? 18 : -9 });
+        o.pts.push({ x: x2, y: y2, lab: cal || !x.rr, dy: up ? 18 : -9, hollow: !x.rr && rs.indexOf("b") < 0 });
         if (x.rr) {
           var RG = "#2E9E4F", RB = "#2D70B3", Xp = function (v) { return 58 + v / xmax * 268; }, Yp = function (v) { return 22 + 200 - v / ymax * 200; }, below = up && Yp(b) < 196;
           o.arrows = [
-            { x1: 0, y1: b, x2: x2, y2: b, col: RG, lab: "run = " + x2, lx: Xp(x2 / 2), ly: Yp(b) + (below ? 15 : -7) },
-            { x1: x2, y1: b, x2: x2, y2: y2, col: RB, lab: "rise = " + m3F(y2 - b), lx: Xp(x2) + (Xp(x2) + 78 > 336 ? -8 : 8), ly: (Yp(b) + Yp(y2)) / 2 + 4, an: Xp(x2) + 78 > 336 ? "end" : "start" }
+            { x1: 0, y1: b, x2: x2, y2: b, col: RG, lab: cal ? "" : "run = " + x2, lx: Xp(x2 / 2), ly: Yp(b) + (below ? 15 : -7) },
+            { x1: x2, y1: b, x2: x2, y2: y2, col: RB, lab: cal ? "" : "rise = " + m3F(y2 - b), lx: Xp(x2) + (Xp(x2) + 78 > 336 ? -8 : 8), ly: (Yp(b) + Yp(y2)) / 2 + 4, an: Xp(x2) + 78 > 336 ? "end" : "start" }
           ];
         }
         if (x.pt) { o.guide = { x: k, y: T }; o.pts.push({ x: k, y: T, lab: true, left: true, dy: up ? -8 : 16 }); }
@@ -7437,14 +7470,26 @@ var ESPIC = {
       ];
       var yw = sc.yv.replace(/^The /, ""); sc.yw = yw;
       pb.isteps = [
-        { id: "yint", lab: "y-intercept", type: "yint", ask: "Click the point where the line crosses the <i>y</i>-axis.", hint: ["The <i>y</i>-intercept is where the line meets the vertical axis, at <i>x</i> = 0.", "Click the line right where it touches the vertical axis."], line: "<i>y</i>-intercept: (0, " + b + "), so <i>b</i> = " + b },
-        { id: "rr", lab: "rise and run", type: "rr", ask: "Click the two marked points on the line. Arrows will show the rise and the run.", hint: ["Click the <i>y</i>-intercept, then the other point.", "The arrows go across (run) and up or down (rise) between the two points."], line: "rise = " + y2 + " − " + b + " = " + m3F(y2 - b) + ", run = " + x2 + " − 0 = " + x2 },
+        { id: "yint", lab: "y-intercept", type: "yint", ask: "Click the point where the line crosses the <i>y</i>-axis.", hint: ["The <i>y</i>-intercept is where the line meets the vertical axis, at <i>x</i> = 0.", "Click the line right where it touches the vertical axis."], after: function (x) { x.bv = true; }, line: "<i>y</i>-intercept: (0, " + b + "), so <i>b</i> = " + b },
+        { id: "rr", lab: "rise and run", type: "rr", after: function (x) { x.rv = x.nv = true; }, ask: "Click the two marked points on the line. Arrows will show the rise and the run.", hint: ["Click the <i>y</i>-intercept, then the other point.", "The arrows go across (run) and up or down (rise) between the two points."], line: "rise = " + y2 + " − " + b + " = " + m3F(y2 - b) + ", run = " + x2 + " − 0 = " + x2 },
         { id: "frac", lab: "slope formula", type: "frac", ask: "Slope = rise ÷ run. Drag the rise and the run into the formula.", hint: ["Rise goes on top of the fraction and run on the bottom.", "Drag the rise tile to the top and the run tile to the bottom."], line: "slope = rise ÷ run = " + m3F(y2 - b) + " ÷ " + x2 },
         pb.steps[3],
         { id: "eqd", lab: "Equation", type: "eqd", ask: "Write the equation: drag the slope and the <i>y</i>-intercept into <i>y</i> = <i>mx</i> + <i>b</i>.", hint: ["The slope <i>m</i> goes in front of <i>x</i>. The <i>y</i>-intercept <i>b</i> goes at the end.", "Drag the <i>m</i> tile and the <i>b</i> tile into the blanks."], line: m3EqH(m, b) },
         { id: "sent", lab: "Slope", type: "sent", ask: "What does the slope mean in this story? Click the labels on the axes to fill in the sentence.", hint: ["The slope is the change in " + sc.yn.toLowerCase() + " for each 1 " + sc.x1 + ".", "Click " + sc.yn + ", then its unit, then the unit of the <i>x</i>-axis. Choose up or down."], line: "The slope " + m3F(m) + " means: the " + yw + " " + (sc.pl ? "go " : "goes ") + (up ? "up " : "down ") + amt + " " + sc.yu + " for each " + sc.x1 + "." },
         { id: "pt", lab: "Point", type: "clickpt", ask: sc.tq(T) + " Click the point on the line that helps answer it.", hint: ["The question gives <i>y</i> = " + T + ". Find the point on the line at that height.", "Click the line where <i>y</i> is " + T + "."], line: "The point (" + k + ", " + T + ") is on the line" },
         pb.steps[6], pb.steps[7]
+      ];
+      pb.csteps = [
+        { id: "yint", lab: "y-intercept", type: "yint", ask: "Click the point where the line crosses the <i>y</i>-axis.", hint: pb.isteps[0].hint, line: "The line crosses the <i>y</i>-axis at the point marked" },
+        { id: "bT", lab: "b", ask: "What is the <i>y</i>-intercept? Read <i>b</i> from the graph.", pre: "<i>b</i> =", ans: b, after: function (x) { x.bv = true; }, hint: ["Look at where the marked point is on the vertical axis.", "The line crosses the vertical axis at " + b + "."], line: "<i>b</i> = " + b },
+        Object.assign({}, pb.isteps[1], { after: null, line: "The points (0, " + b + ") and (" + x2 + ", " + y2 + ") are marked" }),
+        { id: "riseT", lab: "rise", ask: "Find the rise, the change in <i>y</i> from the <i>y</i>-intercept to (" + x2 + ", " + y2 + ").", pre: "rise =", ans: y2 - b, after: function (x) { x.rv = true; }, wrong: function (v) { return v === b - y2 ? "Check the sign: the line goes " + (up ? "up" : "down") + " as you move right." : ""; }, hint: ["Rise is the new <i>y</i> minus the old <i>y</i>.", y2 + " \u2212 " + b + " = " + m3F(y2 - b) + "."], line: "rise = " + y2 + " \u2212 " + b + " = " + m3F(y2 - b) },
+        { id: "runT", lab: "run", ask: "Find the run, the change in <i>x</i> between the same two points.", pre: "run =", ans: x2, after: function (x) { x.nv = true; }, hint: ["Run is the new <i>x</i> minus the old <i>x</i>.", x2 + " \u2212 0 = " + x2 + "."], line: "run = " + x2 + " \u2212 0 = " + x2 },
+        pb.isteps[2],
+        Object.assign({}, pb.steps[3], { ask: "Find the slope: rise \u00f7 run." }),
+        pb.isteps[4],
+        Object.assign({}, pb.isteps[5], { ask: "What does the slope mean in this story? Click the labels on the axes to fill in the sentence, and type how much it changes." }),
+        pb.isteps[6], pb.steps[6], pb.steps[7]
       ];
       pb.ex = "The line crosses the <i>y</i>-axis at " + b + ", so <i>b</i> = " + b + ". From (0, " + b + ") to (" + x2 + ", " + y2 + ") the rise is " + m3F(y2 - b) + " and the run is " + x2 + ", so the slope is " + m3F(m) + ". The equation is " + m3Eq(m, b) + ". " + mean + " To find <i>x</i> when <i>y</i> = " + T + ", solve " + T + " = " + m3Co(m) + "x + " + b + ": <i>x</i> = " + k + ".";
       return pb;
@@ -7466,10 +7511,23 @@ var ESPIC = {
       var tIsHigh = rnd(2) === 1, mT = tIsHigh ? mh : ml, bT = tIsHigh ? bh : bl, mQ = tIsHigh ? ml : mh, bQ = tIsHigh ? bl : bh;
       var nT = tIsHigh ? sc.A : sc.B, nQ = tIsHigh ? sc.B : sc.A; if (rnd(2)) { var sw = nT; nT = nQ; nQ = sw; }   // (which name goes with the table is mixed up)
       var rows = tier === 0 ? [0, 1, 2, 3] : tier === 1 ? [1, 2, 3, 4] : m3Pick([[2, 4, 6, 8], [1, 3, 5, 7]]), ys = rows.map(function (x) { return mT * x + bT; });
-      var r0 = rows[0], r1 = rows[1], y0 = ys[0], y1 = ys[1], ystar = mh * xs + bh, e = bl - bh, d = mh - ml, pb = { kind: 2, sc: sc };
+      var r0 = rows[0], r1 = rows[1], y0 = ys[0], y1 = ys[1], ystar = mh * xs + bh, e = bl - bh, d = mh - ml, pb = { kind: 2, sc: sc, rows: rows, tys: ys, mQ: mQ, bQ: bQ, mT: mT, bT: bT, yq1: mQ + bQ, xs: xs, ystar: ystar };
       pb.head = sc.s; pb.pic = m3Svg(sc.pic);
       pb.story = sc.s + " The table shows the total cost (dollars) for <b>" + nT + "</b>. For <b>" + nQ + "</b>, the total cost is <span class=\"lm\">" + m3EqH(mQ, bQ) + "</span>, where <i>x</i> is the number of " + sc.xu + ".";
-      pb.tbl = m3Tbl(sc.xn, "Total cost ($)", rows, ys); pb.fig = function () { return ""; };
+      pb.tbl = m3Tbl(sc.xn, "Total cost ($)", rows, ys);
+      var xmax2 = Math.max(xs + 2, rows[rows.length - 1] + 1); if (xmax2 % 2) xmax2++;
+      var need2 = Math.max(ys[ys.length - 1], bQ + mQ * 2, ystar * 1.3, 10), ystp = m3Step1(need2), ymax2 = Math.ceil(need2 / ystp) * ystp, PUR = "#7A3FB5", ORG = "#D97706";
+      pb.fig = function (x) {   // (Solo has no graph)
+        if (mode === "solo") return ""; x = x || {}; var tp = x.tp || [], ls = x.ls || [];
+        var o = { xmax: xmax2, ymax: ymax2, xs: xmax2 <= 10 ? 1 : 2, ys: ystp, xl: sc.xn, yl: "Total cost (dollars)", alt: sc.s, lines: [], pts: [] };
+        var endT = bT + mT * xmax2, endQ = bQ + mQ * xmax2;
+        if (x.tl) o.lines.push({ m: mT, b: bT, col: PUR, lab: nT, below: endT < endQ });
+        if (x.ql) o.lines.push({ m: mQ, b: bQ, col: ORG, lab: nQ, below: endQ <= endT });
+        tp.forEach(function (i) { o.pts.push({ x: rows[i], y: ys[i], col: PUR, ring: !x.tl && ls.indexOf(i) >= 0 }); });
+        if (x.q1) o.pts.push({ x: 0, y: bQ, col: ORG }); if (x.q2) o.pts.push({ x: 1, y: mQ + bQ, col: ORG });
+        if (x.cr) o.pts.push({ x: xs, y: ystar, col: "#2E9E4F", lab: true, left: true, dy: -10 });
+        return m3Fig(o);
+      };
       var which = m3Sh([{ t: nT, ok: mT > mQ, why: "Compare the rates: " + nT + " has " + m3F(mT) + " per " + sc.x1 + " and " + nQ + " has " + m3F(mQ) + "." }, { t: nQ, ok: mQ > mT, why: "Compare the rates: " + nT + " has " + m3F(mT) + " per " + sc.x1 + " and " + nQ + " has " + m3F(mQ) + "." }]);
       pb.steps = [
         { id: "rise", fine: 1, lab: "rise", ask: "Use the table for " + nT + ". Find the rise, the change in cost from " + sc.x1 + " " + r0 + " to " + sc.x1 + " " + r1 + ".", pre: y1 + " − " + y0 + " =", ans: y1 - y0, hint: ["Subtract the first cost from the second cost.", y1 + " − " + y0 + " = " + (y1 - y0) + "."], line: "rise = " + y1 + " − " + y0 + " = " + (y1 - y0) },
@@ -7483,6 +7541,18 @@ var ESPIC = {
         { id: "x", lab: sc.xn, ask: "After how many " + sc.xu + " do the two plans cost the same?", pre: "<i>x</i> =", post: sc.xu, ans: xs, hint: ["Solve " + d + "<i>x</i> = " + e + ".", "Divide: " + e + " ÷ " + d + " = " + xs + "."], line: "<i>x</i> = " + e + " ÷ " + d + " = " + xs },
         { id: "y", lab: "Cost", ask: "What does each plan cost then?", pre: "<i>y</i> =", post: "dollars", ans: ystar, hint: ["Put <i>x</i> = " + xs + " into either equation.", m3Co(mh) + "(" + xs + ") + " + bh + " = " + ystar + "."], line: "<i>y</i> = " + mh + "(" + xs + ") + " + bh + " = " + ystar }
       ];
+      var S2 = pb.steps, PC = " (" + "purple" + ")", OC = " (orange)";
+      pb.isteps = [
+        { id: "plotT", lab: "plot", type: "plotT", ask: "Plot the points from the table for " + nT + ". Click each point on the graph.", hint: ["For each column of the table, find the <i>x</i> on the bottom axis and the <i>y</i> on the side axis.", "Click where they meet."], line: "Plotted the points from the table for " + nT },
+        { id: "lineT", lab: "line", type: "lineT", ask: "Draw the line through the points: click two of the points you plotted.", hint: ["The points are in a straight line.", "Click any two of the points."], line: nT + "'s line is drawn (purple)" },
+        S2[0], S2[1], S2[2], S2[3], S2[4], S2[5],
+        { id: "plotQ1", lab: "start", type: "plotQ1", ask: "Now graph " + nQ + " (orange): " + m3EqH(mQ, bQ) + ". Click the point where it starts, at <i>x</i> = 0.", hint: ["Put <i>x</i> = 0 into the equation.", "At <i>x</i> = 0 the cost is " + bQ + "."], line: nQ + " starts at (0, " + bQ + ")" },
+        { id: "y1", fine: 1, lab: "x = 1", ask: "Find the cost for " + nQ + " when <i>x</i> = 1: put 1 in for <i>x</i> in " + m3EqH(mQ, bQ) + ".", pre: "<i>y</i> =", ans: mQ + bQ, hint: ["Replace <i>x</i> with 1 and calculate.", m3Co(mQ) + "(1) + " + bQ + " = " + (mQ + bQ) + "."], line: "<i>y</i> = " + mQ + "(1) + " + bQ + " = " + (mQ + bQ) },
+        { id: "plotQ2", lab: "second point", type: "plotQ2", ask: "Click the point of " + nQ + " where <i>x</i> = 1.", hint: ["You just found the cost when <i>x</i> = 1.", "Click at <i>x</i> = 1 and <i>y</i> = " + (mQ + bQ) + "."], line: nQ + "'s line is drawn (orange)" },
+        { id: "cross", lab: "crossing", type: "cross", ask: "The plans cost the same where the two lines cross. Click that point.", hint: ["Look for the point that is on both lines.", "The lines cross at (" + xs + ", " + ystar + ")."], line: "The lines cross at (" + xs + ", " + ystar + ")" },
+        S2[6], S2[7], S2[8], S2[9]
+      ];
+      pb.csteps = pb.isteps;
       pb.ex = nT + "'s rate is " + (y1 - y0) + " ÷ " + (r1 - r0) + " = " + mT + ", and its table starts at <i>b</i> = " + bT + ", so " + m3Eq(mT, bT) + ". " + (mT > mQ ? nT : nQ) + " has the greater rate. The plans are equal when " + m3Co(mh) + "x + " + bh + " = " + m3Co(ml) + "x + " + bl + ", so " + d + "x = " + e + " and <i>x</i> = " + xs + " " + sc.xu + ", when each costs $" + ystar + ".";
       return pb;
     }
@@ -8507,6 +8577,11 @@ var ESPIC = {
         var st = m3Step(); if (!st) { n(); return; }
         var t = st.type || "num"; cap(m3Say(st.ask));
         var P1 = m3Cur();
+        if (t === "plotT") { pgWait(1600, function () { (function nx(i) { if (i >= P1.rows.length) { n(); return; } m3HClick(m3Scr(P1.rows[i], P1.tys[i]), function () { nx(i + 1); }); })(0); }); return; }
+        if (t === "lineT") { pgWait(1600, function () { m3HClick(m3Scr(P1.rows[0], P1.tys[0]), function () { m3HClick(m3Scr(P1.rows[1], P1.tys[1]), n); }); }); return; }
+        if (t === "plotQ1") { pgWait(1600, function () { m3HClick(m3Scr(0, P1.bQ), n); }); return; }
+        if (t === "plotQ2") { pgWait(1600, function () { m3HClick(m3Scr(1, P1.yq1), n); }); return; }
+        if (t === "cross") { pgWait(1600, function () { m3HClick(m3Scr(P1.xs, P1.ystar), n); }); return; }
         if (t === "yint") { pgWait(1600, function () { m3HClick(m3Scr(0, P1.b), n); }); return; }
         if (t === "rr") { pgWait(1600, function () { m3HClick(m3Scr(0, P1.b), function () { m3HClick(m3Scr(P1.x2, P1.y2), n); }); }); return; }
         if (t === "frac") { pgWait(1600, function () { m3Tile("rise", "top", function () { m3Tile("run", "bot", n); }); }); return; }
@@ -8516,7 +8591,7 @@ var ESPIC = {
           var lab = function (r) { return document.querySelector("svg.m3Fig [data-m3lab=\"" + r + "\"]"); };
           pgWait(1600, function () { m3Tap(lab("yn"), function () { m3Lab("yn"); }, function () {
             m3Tap(document.querySelector("#wfSteps [data-m3dir=\"" + (P1.m > 0 ? "up" : "down") + "\"]"), function () { m3Dir(P1.m > 0 ? "up" : "down"); }, function () {
-              m3Tap(lab("yu"), function () { m3Lab("yu"); }, function () { m3Tap(lab("xu"), function () { m3Lab("xu"); }, n); }); }); }); });
+              m3Tap(lab("yu"), function () { m3Lab("yu"); }, function () { m3Tap(lab("xu"), function () { m3Lab("xu"); }, function () { if ($("m3In")) typeBox("m3In", String(Math.abs(P1.m)), function () { pgWait(600, n); }); else n(); }); }); }); }); });
           return;
         }
         if (t === "pts") {
