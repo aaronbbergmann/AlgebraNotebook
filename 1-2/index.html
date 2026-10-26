@@ -387,7 +387,7 @@
   .m3Done{flex:1 1 13rem;margin-top:.3rem;font:400 1.05rem/1.5 system-ui,sans-serif;color:var(--ink)}
   .m3Done div{padding:.15rem 0}
   .glTbls{display:flex;gap:1.2rem;flex-wrap:wrap;margin-top:.6rem}
-  .glTbl{flex:1 1 13rem;min-width:12rem;max-width:20rem}
+  .glTbl{flex:1 1 15rem;min-width:14rem;max-width:21rem}
   .glCap{font:600 1rem system-ui,sans-serif;margin-bottom:.2rem}
   .glPT{border:1.5px solid #B8BCC2;border-collapse:collapse;table-layout:fixed;width:100%;font:400 1.05rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;text-align:center}
   .glPT th{font-style:normal;font-weight:400;white-space:nowrap;background:#F2F2F2;padding:.55em 0;border-bottom:1px solid #B8BCC2;color:#1B2433}
@@ -399,6 +399,9 @@
   .glPT td input.qzCell{box-sizing:border-box;width:100%;height:2.15em;margin:0;border:0;border-radius:0;background:#fff;color:#1B2433;text-align:center;font:inherit;padding:0}
   .glPT td input.qzCell:focus{outline:2px solid #2D70B3;outline-offset:-2px}
   .glPT td input.qzCell.badc{background:#FDECEA;box-shadow:inset 0 0 0 2px #C0301E}
+  .glPT th.pgMid{padding:0}.glPT th.pgMid input.qzCell{box-sizing:border-box;width:100%;height:2.4em;border:0;background:#fff;color:#1B2433;text-align:center;font:inherit;padding:0}
+  .glPT th.pgMid input.qzCell:focus{outline:2px solid #2D70B3;outline-offset:-2px}.glPT th.pgMid input.qzCell.badc{background:#FDECEA;box-shadow:inset 0 0 0 2px #C0301E}
+  .glPT th.glCurH{box-shadow:inset 0 0 0 2px #2D70B3}.glPT tr.glCurR td{box-shadow:inset 0 2px 0 #2D70B3,inset 0 -2px 0 #2D70B3}
   .glHandle{cursor:grab;touch-action:none}.glHandle.drag{cursor:grabbing}.glHandle:focus{outline:none}.glHandle:focus-visible circle:nth-child(2){stroke-width:3}
   .estP .lm{font-family:"LM","Latin Modern Roman","CMU Serif",Georgia,serif}
   .estWrap{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap}
@@ -7191,7 +7194,7 @@ var ESPIC = {
   }
   // ---- steps.  A step: {id, lab (Solo's short name), fine (only in Demo, Sequence and Calculate), ask, pre (before the box), post (after it), type: num | eq | pick | pts | btn,
   //   ans (a number, or a function of the problem), tol, a & b (an equation), opts (pick), wrong(v) -> message, hint:[two hints], line (for Show work), nums (extra wrong choices)}
-  var M3ACT = ["yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab"];   // the steps that are answered on the graph
+  var M3ACT = ["yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab", "geq", "grow"];   // the steps that are answered on the graph
   function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.csteps && mode === "calculate" ? pb.csteps : pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine : true; }) : []; }
   function m3Step() { if (!QZ || QZ.m3done) return null; return m3L()[QZ.m3i] || null; }
   function m3V(v) { return typeof v === "function" ? v(m3Cur(), QZ.m3x || {}) : v; }
@@ -7279,29 +7282,32 @@ var ESPIC = {
     else if (t === "pts") h += "";
     else if (mode === "sequence") h += "<div class=\"wfRow m3Opts\">" + m3Opts(st).map(function (o, i) { return "<button type=\"button\" class=\"btn wfBtn lm\" data-m3=\"opt\" data-v=\"" + i + "\">" + o.t + "</button>"; }).join("") + "</div>";
     else h += "<div class=\"wfRow cg\">" + (st.pre ? "<span>" + st.pre + "</span>" : "") + "<input id=\"m3In\" class=\"m3In\" data-key=\"" + key + "\" style=\"width:" + (t === "eq" ? "11" : "8") + "rem\" inputmode=\"" + (t === "eq" ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Your answer\">" + (st.post ? "<span>" + st.post + "</span>" : "") + "</div>";
-    el.innerHTML = h; el.hidden = false;
+    el.innerHTML = h; el.hidden = false; if (gl()) glFocus();
     var inp = el.querySelector(".m3In"); if (inp) { if (kk === key && kv) inp.value = kv; if (mode !== "demo") inp.focus(); if (QZ.arrowAt !== QZ.m3i) { QZ.arrowAt = QZ.m3i; askArrow(true, inp.parentNode); } } else askArrow(false);
   }
   $("wfSteps").addEventListener("input", function (e) { if (m3() && e.target.classList.contains("m3In")) m3Try(e.target, false); });
   $("wfSteps").addEventListener("keydown", function (e) { if (e.key === "Enter" && m3() && e.target.classList.contains("m3In")) { e.preventDefault(); m3Try(e.target, true); } });
   $("wfSteps").addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("button[data-m3]"); if (!b || !m3()) return; if (e.isTrusted) pgUser(); m3Click(b); });
   $("pgQt").addEventListener("click", function (e) { var d = e.target.closest && e.target.closest("[data-m3pt]"); if (!d || !m3()) return; if (e.isTrusted) pgUser(); m3Dot(+d.dataset.m3pt); });
-  // Graphing, Solo: the student types each y into the table; a right y stays, and when a table is complete its line is drawn
+  // Graphing: the tables are filled in on the page (equation in the header, then x and y in each row), the way Play Graph's tables are
   $("pgQt").addEventListener("input", function (e) {
     var el = e.target; if (!m3() || !QZ.m3x || !el.classList || !el.dataset.l) return; var pb = m3Cur(), x = QZ.m3x; if (!pb || pb.kind !== 5) return;
-    var L = el.dataset.l, i = +el.dataset.i;
-    if (el.classList.contains("min")) { (x["m" + L] = x["m" + L] || [])[i] = el.value; return; }
-    if (!el.classList.contains("glY")) return;
-    el.classList.remove("badc"); (x["v" + L] = x["v" + L] || [])[i] = el.value; var v = m3Num(el.value), yv = pb[L === "a" ? "A" : "B"].ys[i];
-    if (!isNaN(v) && Math.abs(v - yv) < 1e-9) {
-      (x["o" + L] = x["o" + L] || [])[i] = true; pqMsg(""); m3Redraw(); glCheck();
-      var nx = document.querySelector("#pgQt .glY[data-l=\"" + L + "\"]") || document.querySelector("#pgQt .glY"); if (nx && m3Step()) nx.focus();
+    var L = el.dataset.l, i = +el.dataset.i, P = L === "a" ? pb.A : pb.B; el.classList.remove("badc");
+    if (el.classList.contains("glEq")) { x["ev" + L] = el.value; if (m3Ok({ type: "eq", a: P.m, b: P.b }, el.value).ok) { x["e" + L] = true; pqMsg(""); m3Redraw(); glCheck(); } return; }
+    if (el.classList.contains("glX")) {
+      (x["xv" + L] = x["xv" + L] || [])[i] = el.value; var xn = m3Num(el.value), md = el.closest("tr").querySelector("td.mid");
+      if (md) md.textContent = x["e" + L] && String(el.value).trim() !== "" && !isNaN(xn) ? P.sub(xn).replace(/<[^>]+>/g, "") : ""; glTry(L, i, false); return;
     }
+    if (el.classList.contains("glY")) { (x["yv" + L] = x["yv" + L] || [])[i] = el.value; glTry(L, i, false); }
   });
   $("pgQt").addEventListener("change", function (e) {
-    var el = e.target; if (!m3() || !el.classList || !el.classList.contains("glY") || !String(el.value).trim()) return; var pb = m3Cur(); if (!pb || pb.kind !== 5) return;
-    var v = m3Num(el.value), yv = pb[el.dataset.l === "a" ? "A" : "B"].ys[+el.dataset.i]; if (!isNaN(v) && Math.abs(v - yv) < 1e-9) return;
-    el.classList.add("badc"); QZ.wrong++; pqMsg("Not quite. Put <i>x</i> into the equation and calculate.".replace(/<[^>]+>/g, ""));
+    var el = e.target; if (!m3() || !el.classList || !el.dataset.l || !QZ.m3x) return; var pb = m3Cur(); if (!pb || pb.kind !== 5) return; var L = el.dataset.l, i = +el.dataset.i, P = L === "a" ? pb.A : pb.B;
+    if (el.classList.contains("glEq")) { if (String(el.value).trim() && !QZ.m3x["e" + L]) { el.classList.add("badc"); QZ.wrong++; pqMsg(m3Ok({ type: "eq", a: P.m, b: P.b }, el.value).msg || "Not quite. Try again."); } return; }
+    if (el.classList.contains("glX") || el.classList.contains("glY")) { if (String(el.value).trim() && !glRowOk(QZ.m3x, L, i)) glTry(L, i, true); }
+  });
+  $("pgQt").addEventListener("keydown", function (e) {
+    var el = e.target; if (!m3() || !el.classList || !el.classList.contains("qzCell") || !el.dataset.l) return;
+    if (e.key === "Enter" || e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); var c = [].slice.call(document.querySelectorAll("#pgQt input.qzCell")), k = c.indexOf(el) + (e.key === "ArrowUp" ? -1 : 1), n = c[Math.max(0, Math.min(c.length - 1, k))]; if (n && n !== el) { n.focus(); n.select(); } }
   });
   // Graphing: drag the green point to where the two lines cross
   $("pgQt").addEventListener("pointerdown", function (e) {
@@ -7371,8 +7377,8 @@ var ESPIC = {
   function gl() { return act === "1.4D" && lesson === 4 && !subx; }
   var GLA = "#7A3FB5", GLB = "#D97706", GLC = "#2E9E4F";
   function glAll(a) { return !!(a && a[0] && a[1] && a[2]); }
-  function glN(x, L) { return mode === "solo" ? ((x["o" + L] || []).filter(Boolean).length) : (x["c" + L] || 0); }   // rows of table L that are done
-  function glRowOk(x, L, i) { return mode === "solo" ? !!(x["o" + L] || [])[i] : i < (x["c" + L] || 0); }
+  function glN(x, L) { return (x["o" + L] || []).filter(Boolean).length; }   // rows of table L that are done
+  function glRowOk(x, L, i) { return !!(x["o" + L] || [])[i]; }
   function glGeo(pb) { var W = 340, H = 270, Lm = 58, T = 22, pw = W - Lm - 14, ph = H - T - 48; return { X: function (v) { return Lm + v / pb.xmax * pw; }, Y: function (v) { return T + ph - v / pb.ymax * ph; } }; }
   function glHandle(pb, x) {
     var g = glGeo(pb), hx = x.hx == null ? pb.hx0 : x.hx, hy = x.hy == null ? pb.hy0 : x.hy;
@@ -7394,19 +7400,49 @@ var ESPIC = {
     var x = QZ.m3x; if (st.type !== "gdrag" || (x.dragT && Date.now() - x.dragT < 500)) return;
     glMove(p.x, p.y); glDrop();
   }
-  function glCheck() {   // Solo: a table that is complete finishes its step, whichever table the student filled first
+  // the student types into the tables on the page, like Play Graph: an equation in the header, then x and y in each row.  A right row stays and plots its point;
+  // three right rows join in a line.  The steps on the right only say what to do next.
+  function glCheck() {
     var x = QZ.m3x, st; if (!x) return;
-    while ((st = m3Step()) && st.type === "gtab" && glAll(x["o" + st.L])) m3Accept(st, "");
+    while ((st = m3Step())) {
+      var ok = st.type === "geq" ? x["e" + st.L] : st.type === "grow" ? (x["o" + st.L] || [])[st.i] : st.type === "gtab" ? glAll(x["o" + st.L]) : false;
+      if (!ok) break; m3Accept(st, "");
+    }
+  }
+  function glRowCode(pb, x, L, i) {   // 0 not finished, 1 right, -1 x is not allowed, -2 x already used, -3 wrong y, -4 off the graph
+    var P = L === "a" ? pb.A : pb.B, xs = (x["xv" + L] || [])[i], ys = (x["yv" + L] || [])[i];
+    if (xs == null || String(xs).trim() === "" || ys == null || String(ys).trim() === "") return 0;
+    var xn = m3Num(xs), yn = m3Num(ys); if (isNaN(xn) || isNaN(yn)) return -1;
+    if (xn !== Math.round(xn) || xn < 0 || xn > pb.xmax) return -1;
+    var used = (x["o" + L] || []).some(function (d, j) { return d && j !== i && x["rx" + L][j] === xn; }); if (used) return -2;
+    if (Math.abs(yn - (P.m * xn + P.b)) > 1e-9) return -3;
+    if (P.m * xn + P.b > pb.ymax) return -4; return 1;
+  }
+  function glTry(L, i, final) {
+    var pb = m3Cur(), x = QZ.m3x; if (!pb || pb.kind !== 5 || !x) return; var c = glRowCode(pb, x, L, i), P = L === "a" ? pb.A : pb.B;
+    if (c === 1) {
+      (x["o" + L] = x["o" + L] || [])[i] = true; (x["rx" + L] = x["rx" + L] || [])[i] = m3Num(x["xv" + L][i]); pqMsg(""); m3Redraw(); glCheck(); return;
+    }
+    if (!final || !c) return; var el = $((c === -3 || c === -4 ? "glY" : "glX") + L + i); if (el) { el.classList.add("badc"); }
+    QZ.wrong++; pqMsg(c === -1 ? "Choose a whole number for x from 0 to " + pb.xmax + "." : c === -2 ? "That x is already in the table. Choose a different x." : c === -4 ? "That point would be off the graph. Choose a smaller x." : "Not quite. Put x = " + m3F(m3Num(x["xv" + L][i])) + " into the equation and calculate.");
+  }
+  function glFocus() {   // the cursor goes to the next box to fill in
+    if (!gl() || mode === "demo" || !QZ || !QZ.m3x || QZ.m3done) return; var st = m3Step(), x = QZ.m3x, el = null; if (!st || !st.L) return; var L = st.L;
+    if (st.type === "geq") el = $("glEq" + L);
+    else for (var i = 0; i < 3; i++) if (!(x["o" + L] || [])[i]) { var xv = (x["xv" + L] || [])[i]; el = $((xv == null || xv === "" ? "glX" : "glY") + L + i); break; }
+    if (el && document.activeElement !== el) el.focus();
   }
   function glTbl(pb, x, L, P, col) {
-    var cur = m3Step(), eqOn = !!x["e" + L], solo = mode === "solo", sv = x["v" + L] || [], mv = x["m" + L] || [], rows = "";
-    P.rows.forEach(function (xv, i) {
-      var done = glRowOk(x, L, i), isCur = !solo && cur && cur.cell && cur.cell[0] === L && cur.cell[1] === i;
-      rows += "<tr><td class=\"xv\">" + m3F(xv) + "</td>"
-        + "<td class=\"mid\">" + (done ? P.sub(xv) : solo ? "<input class=\"qzCell min\" data-l=\"" + L + "\" data-i=\"" + i + "\" value=\"" + (mv[i] || "").replace(/\"/g, "") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"work for x = " + m3F(xv) + "\">" : "") + "</td>"
-        + "<td class=\"yv" + (isCur ? " glCur" : "") + "\">" + (done ? m3F(P.ys[i]) : solo ? "<input class=\"qzCell glY\" data-l=\"" + L + "\" data-i=\"" + i + "\" value=\"" + (sv[i] || "").replace(/\"/g, "") + "\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"y when x = " + m3F(xv) + "\">" : "") + "</td></tr>";
-    });
-    return "<div class=\"glTbl\"><div class=\"glCap\" style=\"color:" + col + "\">" + P.n + "</div><table class=\"glPT\"><colgroup><col style=\"width:18%\"><col><col style=\"width:22%\"></colgroup><thead><tr><th><i>x</i></th><th class=\"pgMid\">" + (eqOn ? P.rh : "equation") + "</th><th><i>y</i></th></tr></thead><tbody>" + rows + "</tbody></table></div>";
+    var cur = m3Step(), eqOn = !!x["e" + L], xv = x["xv" + L] || [], yv = x["yv" + L] || [], rows = "", q = function (v) { return String(v == null ? "" : v).replace(/[\"<>&]/g, ""); };
+    for (var i = 0; i < 3; i++) {
+      var done = glRowOk(x, L, i), xn = done ? x["rx" + L][i] : m3Num(xv[i] || ""), isCur = cur && cur.type === "grow" && cur.L === L && cur.i === i;
+      var mid = (eqOn && !isNaN(xn) && String(xv[i] == null ? "" : xv[i]).trim() !== "") || done ? P.sub(xn) : "";
+      rows += "<tr" + (isCur ? " class=\"glCurR\"" : "") + "><td class=\"xv\">" + (done ? m3F(xn) : "<input class=\"qzCell glX\" id=\"glX" + L + i + "\" data-l=\"" + L + "\" data-i=\"" + i + "\" value=\"" + q(xv[i]) + "\" inputmode=\"numeric\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"x value\">") + "</td>"
+        + "<td class=\"mid\">" + mid + "</td>"
+        + "<td class=\"yv\">" + (done ? m3F(P.m * xn + P.b) : "<input class=\"qzCell glY\" id=\"glY" + L + i + "\" data-l=\"" + L + "\" data-i=\"" + i + "\" value=\"" + q(yv[i]) + "\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"y value\">") + "</td></tr>";
+    }
+    var th = eqOn ? P.rh : "<input class=\"qzCell glEq\" id=\"glEq" + L + "\" data-l=\"" + L + "\" value=\"" + q(x["ev" + L]) + "\" placeholder=\"y = \" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"equation for " + P.n + "\">";
+    return "<div class=\"glTbl\"><div class=\"glCap\" style=\"color:" + col + "\">" + P.n + "</div><table class=\"glPT\"><colgroup><col style=\"width:18%\"><col><col style=\"width:22%\"></colgroup><thead><tr><th><i>x</i></th><th class=\"pgMid" + (cur && cur.type === "geq" && cur.L === L ? " glCurH" : "") + "\">" + th + "</th><th><i>y</i></th></tr></thead><tbody>" + rows + "</tbody></table></div>";
   }
   function m3MakeG(tier) {
     for (var t = 0; t < 1500; t++) {
@@ -7425,7 +7461,7 @@ var ESPIC = {
         x = x || {}; var o = { xmax: xmax, ymax: ymax, xs: xmax <= 10 ? 1 : 2, ys: ystp, xl: sc.xn, yl: "Total cost (dollars)", alt: sc.s, lines: [], pts: [] }, both = glAll([glN(x, "a") >= 3, glN(x, "b") >= 3, true]);
         [["a", A, GLA, B], ["b", B, GLB, A]].forEach(function (q) {
           var L = q[0], P = q[1], col = q[2], Q = q[3];
-          P.rows.forEach(function (xv, i) { if (glRowOk(x, L, i)) o.pts.push({ x: xv, y: P.ys[i], col: col }); });
+          for (var i = 0; i < 3; i++) if (glRowOk(x, L, i)) o.pts.push({ x: x["rx" + L][i], y: P.m * x["rx" + L][i] + P.b, col: col });
           if (glN(x, L) >= 3) o.lines.push({ m: P.m, b: P.b, col: col, lab: P.n, below: both && P.b + P.m * xmax < Q.b + Q.m * xmax });
         });
         if (x.cr) o.pts.push({ x: xs, y: ystar, col: GLC, lab: true, left: true, dy: -10 });
@@ -7433,17 +7469,17 @@ var ESPIC = {
         return s;
       };
       function term(P, v) { return m3F(P.m) + "(" + m3F(v) + ") + " + P.b; }
-      function eqS(L, P) { return { id: "e" + L, lab: "equation " + L.toUpperCase(), ask: "Write the equation for <b>" + P.n + "</b>. Use <i>x</i> for the number of " + sc.xu + " and <i>y</i> for the total cost.", pre: "", type: "eq", a: P.m, b: P.b,
-        hint: ["The cost starts at $" + P.b + " and goes up $" + P.m + " for each " + sc.x1 + ". Use <i>y</i> = <i>mx</i> + <i>b</i>.", m3Eq(P.m, P.b) + "."], line: P.n + ": " + m3EqH(P.m, P.b), after: function (xx) { xx["e" + L] = true; } }; }
-      function cell(L, P, i) { var xv = P.rows[i], yv = P.ys[i];
-        return { id: "c" + L + i, fine: 1, lab: "table", cell: [L, i], ask: "Complete the table for <b>" + P.n + "</b>: put <i>x</i> = " + m3F(xv) + " into <span class=\"lm\">" + m3EqH(P.m, P.b) + "</span>.", pre: "<i>y</i> = " + term(P, xv) + " =", ans: yv,
-          hint: ["Replace <i>x</i> with " + m3F(xv) + " and calculate.", term(P, xv) + " = " + m3F(yv) + "."], line: P.n + ": <i>x</i> = " + m3F(xv) + " gives <i>y</i> = " + m3F(yv),
-          after: function (xx) { xx["c" + L] = (xx["c" + L] || 0) + 1; } }; }
+      function eqS(L, P) { return { id: "e" + L, lab: "equation " + L.toUpperCase(), L: L, type: "geq", ask: "Write the equation for <b>" + P.n + "</b> in the box above its table. Use <i>x</i> for the number of " + sc.xu + " and <i>y</i> for the total cost.",
+        hint: ["The cost starts at $" + P.b + " and goes up $" + P.m + " for each " + sc.x1 + ". Use <i>y</i> = <i>mx</i> + <i>b</i>.", m3Eq(P.m, P.b) + "."], line: P.n + ": " + m3EqH(P.m, P.b) }; }
+      function rowS(L, P, i) { var xv = P.rows[i];
+        return { id: "r" + L + i, fine: 1, lab: "table", L: L, i: i, type: "grow", ask: "Fill in row " + (i + 1) + " of the table for <b>" + P.n + "</b>: type an <i>x</i> from 0 to " + xmax + ", then put it into the equation and type the <i>y</i>.",
+          hint: ["Pick any whole number for <i>x</i>, like " + m3F(xv) + ". Put it in for <i>x</i> in <span class=\"lm\">" + m3EqH(P.m, P.b) + "</span> and calculate.", "For example, <i>x</i> = " + m3F(xv) + " gives " + term(P, xv) + " = " + m3F(P.ys[i]) + "."],
+          line: function (pp, xx) { var xr = xx["rx" + L][i]; return P.n + ": <i>x</i> = " + m3F(xr) + " gives <i>y</i> = " + m3F(P.m * xr + P.b); } }; }
       var drag = { id: "cr", lab: "crossing", type: "gdrag", ask: "The two cost the same where the lines cross. Drag the green point to that crossing.", hint: ["Look for the place where the purple line and the orange line meet.", "They meet at (" + m3F(xs) + ", " + m3F(ystar) + ")."],
         line: "The lines cross at (" + m3F(xs) + ", " + m3F(ystar) + "): after " + m3F(xs) + " " + sc.xu + " both cost $" + m3F(ystar) };
-      pb.isteps = [eqS("a", A), cell("a", A, 0), cell("a", A, 1), cell("a", A, 2), eqS("b", B), cell("b", B, 0), cell("b", B, 1), cell("b", B, 2), drag];
+      pb.isteps = [eqS("a", A), rowS("a", A, 0), rowS("a", A, 1), rowS("a", A, 2), eqS("b", B), rowS("b", B, 0), rowS("b", B, 1), rowS("b", B, 2), drag];
       pb.csteps = pb.isteps;
-      function tabS(L, P) { return { id: "t" + L, lab: "table " + L.toUpperCase(), type: "gtab", L: L, ask: "Complete the table for <b>" + P.n + "</b>: type each <i>y</i>. When all three are right, the points are joined by a line.", hint: ["Put each <i>x</i> into <span class=\"lm\">" + m3EqH(P.m, P.b) + "</span> and calculate.", "For example, <i>x</i> = " + m3F(P.rows[0]) + " gives " + term(P, P.rows[0]) + " = " + m3F(P.ys[0]) + "."], line: P.n + ": the table is done and the line is drawn" }; }
+      function tabS(L, P) { return { id: "t" + L, lab: "table " + L.toUpperCase(), type: "gtab", L: L, ask: "Complete the table for <b>" + P.n + "</b>: type three different <i>x</i> values from 0 to " + xmax + " and the <i>y</i> for each. When all three rows are right, the points are joined by a line.", hint: ["Pick whole numbers for <i>x</i>, like " + P.rows.map(m3F).join(", ") + ". Put each one into <span class=\"lm\">" + m3EqH(P.m, P.b) + "</span> and calculate.", "For example, <i>x</i> = " + m3F(P.rows[0]) + " gives " + term(P, P.rows[0]) + " = " + m3F(P.ys[0]) + "."], line: P.n + ": the table is done and the line is drawn" }; }
       pb.steps = [eqS("a", A), eqS("b", B), tabS("a", A), tabS("b", B), drag];
       pb.ex = A.n + " is " + m3EqH(A.m, A.b) + " and " + B.n + " is " + m3EqH(B.m, B.b) + ". Fill in each table and the points join in a line. The two cost the same where the lines cross, at (" + m3F(xs) + ", " + m3F(ystar) + "): after " + m3F(xs) + " " + sc.xu + " both cost $" + m3F(ystar) + ". Check: " + term(A, xs) + " = " + m3F(ystar) + " and " + term(B, xs) + " = " + m3F(ystar) + ".";
       return pb;
@@ -8718,6 +8754,8 @@ var ESPIC = {
         if (t === "plotQ1") { pgWait(1600, function () { m3HClick(m3Scr(0, P1.bQ), n); }); return; }
         if (t === "plotQ2") { pgWait(1600, function () { m3HClick(m3Scr(1, P1.yq1), n); }); return; }
         if (t === "cross") { pgWait(1600, function () { m3HClick(m3Scr(P1.xs, P1.ystar), n); }); return; }
+        if (t === "geq") { var Pq = st.L === "a" ? P1.A : P1.B; pgWait(1400, function () { typeBox("glEq" + st.L, m3Eq(Pq.m, Pq.b).replace(/\u2212/g, "-"), function () { pgWait(500, n); }); }); return; }
+        if (t === "grow") { var Pr = st.L === "a" ? P1.A : P1.B, xr = Pr.rows[st.i]; pgWait(1400, function () { typeBox("glX" + st.L + st.i, String(xr), function () { typeBox("glY" + st.L + st.i, String(Pr.m * xr + Pr.b), function () { pgWait(500, n); }); }); }); return; }
         if (t === "gdrag") {
           pgWait(1600, function () {
             var x = QZ.m3x, h0 = x.hx == null ? P1.hx0 : x.hx, k0 = x.hy == null ? P1.hy0 : x.hy; handGo(m3Scr(h0, k0), 650);
