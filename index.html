@@ -3718,7 +3718,6 @@
     ["RevT1", "Review for Chapter 1 Test", "Review for Chapter 1 Test"],
     ["2.1", "Transformations of Quadratic Functions", "2.1 Transformations of Quadratic Functions"],
     ["2.2", "Characteristics of Quadratic Functions", "2.2 Characteristics of Quadratic Functions"],
-    ["2.3", "Focus of a Parabola", "2.3 Focus of a Parabola"],
     ["2.4", "Modeling with Quadratic Functions", "2.4 Modeling with Quadratic Functions"]
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
@@ -3763,7 +3762,6 @@
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
     "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare"]),
-    "2.3": c2Built("2.3", ["Deriving an Equation", "Vertex at the Origin", "Translated Parabola", "Parabolic Reflectors"], ["Derive", "Origin", "Translated", "Reflectors"]),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression"], ["Vertex & Point", "Intercepts", "Three Points", "Regression"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -8061,7 +8059,7 @@ var ESPIC = {
   // a figure, and steps (Demo, Sequence and Calculate take every small step; Solo takes only the big ones).  The figure here is a whole coordinate plane that can draw
   // parabolas (opening up, down, left or right), lines of symmetry, a directrix, points and data; a "gpt" step is answered by clicking points on it, and an "fn" step by
   // typing a function (any equivalent form is accepted: vertex form, standard form or intercept form).  Every problem is a new variant on every visit.
-  function c2On() { return pq() && ((act === "2.1" && lesson === 4) || act === "2.2" || act === "2.3" || act === "2.4"); }
+  function c2On() { return pq() && ((act === "2.1" && lesson === 4) || act === "2.2" || act === "2.4"); }
   var c2X = "<i>x</i>", c2Y = "<i>y</i>", C2B = "#2D70B3", C2P = "#7A3FB5", C2G = "#2E9E4F", C2O = "#C9731B";
   function c2R(v, d) { var m = Math.pow(10, d == null ? 6 : d); v = Math.round(v * m) / m; return Object.is(v, -0) ? 0 : v; }
   function c2F(v, d) { v = c2R(v, d == null ? 4 : d); return (v < 0 ? "−" : "") + Math.abs(v); }
@@ -8243,12 +8241,6 @@ var ESPIC = {
     punt: '<ellipse cx="22" cy="78" rx="10" ry="6" fill="#b5651d" fill-opacity=".5" transform="rotate(-25 22 78)"/><path d="M30 72q36-70 82 16" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M0 90h120" stroke="#3d8f4f" stroke-width="3"/>',
     frog: '<ellipse cx="24" cy="80" rx="14" ry="8" fill="#3d8f4f" fill-opacity=".5"/><circle cx="18" cy="72" r="4" fill="var(--bg)"/><circle cx="30" cy="72" r="4" fill="var(--bg)"/><path d="M38 76q30-56 74 12" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M0 90h120" stroke-width="2.5"/>',
     balloon: '<path d="M12 86l10-20 10 20" stroke-width="3"/><circle cx="22" cy="60" r="7" fill="#2D70B3" fill-opacity=".45"/><path d="M30 56q36-56 82 30" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M0 90h120" stroke-width="2.5"/>',
-    dish: '<path d="M16 34q44 64 88 0" stroke-width="4" fill="var(--plus)" fill-opacity=".14"/><path d="M60 66V90M44 90h32" stroke-width="3"/><path d="M60 64L60 20" stroke-width="2"/><circle cx="60" cy="18" r="5" fill="#d98a1c" fill-opacity=".7"/>',
-    sun: '<circle cx="98" cy="18" r="10" fill="#e6c619" fill-opacity=".7"/><path d="M12 44q42 56 84 0" stroke-width="4" fill="var(--plus)" fill-opacity=".14"/><path d="M54 70V92M40 92h28" stroke-width="3"/><circle cx="54" cy="34" r="5" fill="#d9534f" fill-opacity=".6"/><path d="M90 26L58 32" stroke="#e6c619" stroke-width="2"/>',
-    lamp: '<path d="M30 20q50 30 0 60" stroke-width="4" fill="#e6c619" fill-opacity=".15"/><circle cx="42" cy="50" r="5" fill="#e6c619" fill-opacity=".8"/><path d="M50 40h56M50 50h60M50 60h56" stroke="#e6c619" stroke-width="2.5" stroke-dasharray="5 4"/>',
-    mic: '<path d="M28 18q60 32 0 64" stroke-width="4" fill="var(--plus)" fill-opacity=".14"/><rect x="40" y="44" width="16" height="12" rx="4" fill="currentColor" fill-opacity=".3"/><path d="M48 56v24M36 92h24M48 80v12" stroke-width="3"/><path d="M78 40q8 10 0 20M88 34q12 16 0 32" stroke-width="2"/>',
-    antenna: '<path d="M24 16q52 34 0 68" stroke-width="4" fill="var(--plus)" fill-opacity=".14"/><path d="M24 50h40" stroke-width="2"/><circle cx="64" cy="50" r="4" fill="#d98a1c"/><path d="M20 84l-8 8h24z" stroke-width="2.5"/>',
-    cooker: '<path d="M14 40q46 56 92 0" stroke-width="4" fill="#e6c619" fill-opacity=".2"/><path d="M14 40l-4 50M106 40l4 50" stroke-width="2.5"/><path d="M34 52h52" stroke="#b5651d" stroke-width="5"/>',
     human: '<circle cx="18" cy="70" r="5"/><path d="M14 76l-6 10M22 76l8 6" stroke-width="2.5"/><path d="M8 82l18-14" stroke-width="7"/><path d="M28 62q34-50 70 14" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M92 74h22v6H92z" fill="#d9534f" fill-opacity=".4"/><path d="M96 80v10M110 80v10" stroke-width="2"/><path d="M0 92h120" stroke-width="2.5"/>',
     ramp: '<path d="M4 90l30-18v18" fill="var(--plus)" fill-opacity=".3"/><circle cx="28" cy="62" r="4"/><circle cx="40" cy="62" r="4"/><path d="M28 62l6-6 6 6" stroke-width="2"/><path d="M40 58q32-42 64 10" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M96 90l20-14v14" fill="var(--plus)" fill-opacity=".3"/><path d="M0 92h120" stroke-width="2.5"/>',
     ball: '<path d="M6 92V52h18v40" fill="var(--plus)" fill-opacity=".2"/><circle cx="28" cy="48" r="5" fill="#d98a1c" fill-opacity=".6"/><path d="M32 46q30-36 70 30" stroke-width="2.5" stroke-dasharray="4 4"/><circle cx="104" cy="80" r="4"/><path d="M104 84v8" stroke-width="2"/><path d="M0 92h120" stroke-width="2.5"/>',
@@ -8466,111 +8458,6 @@ var ESPIC = {
       return pb;
     }
   }
-  // ---- 2.3 Focus of a Parabola.  y = x²/(4p) has focus (0, p) and directrix y = −p; x = y²/(4p) has focus (p, 0) and directrix x = −p; both shift with the vertex (h, k).
-  function c2Pp(p) { return c2Q(p); }
-  function c2C4(p) { return c2Q(1 / (4 * p)); }   // the coefficient 1/(4p) [html, typed]
-  // y = (1/(4p))(x - h)^2 + k or x = (1/(4p))(y - k)^2 + h   [html, typed]
-  function c2Pe(p, h, k, hor) { return hor ? c2Vf(1 / (4 * p), k, h, "y", c2X) : c2Vf(1 / (4 * p), h, k, "x", c2Y); }
-  function c2PeFn(p, h, k, hor) { return hor ? function (y) { return (y - k) * (y - k) / (4 * p) + h; } : function (x) { return (x - h) * (x - h) / (4 * p) + k; }; }
-  function c2PeWrong(p, h, k, hor) { return [c2Pe(-p, h, k, hor)[0], c2Pe(p, h, k, !hor)[0], (hor ? c2Vf(4 * p, k, h, "y", c2X) : c2Vf(4 * p, h, k, "x", c2Y))[0], c2Pe(p, -h, -k, hor)[0]]; }
-  // Example 1: Deriving an Equation (focus (0, p), directrix y = -p)
-  function c2M231(tier) {
-    var p = c2Pick(tier === 0 ? [1, 2, 3] : tier === 1 ? [-1, -2, -3] : [4, -4, 0.5, -0.5]), P = c2Pp(p), mP = c2Pp(-p), E = c2Pe(p, 0, 0, false), F = c2PeFn(p, 0, 0, false);
-    var yp = "(" + c2Y + c2Sg(-p) + ")", ym = "(" + c2Y + c2Sg(p) + ")", pb = { kind: 20 };
-    pb.head = "Focus (0, " + P[1] + "), directrix y = " + mP[1]; pb.pic = "";
-    pb.story = "Write an equation of the parabola with focus <span class=\"lm cf\"><i>F</i>(0, " + P[0] + ")</span> and directrix <span class=\"lm cf\">" + c2Y + " = " + mP[0] + "</span>.";
-    var px = 2 * Math.abs(p), py = p, ya = Math.max(4, Math.ceil(Math.abs(p) * 2 + 1));
-    pb.fig = function (x) {
-      x = x || {};
-      return c2Fig({ xmin: -10, xmax: 10, ymin: -ya, ymax: ya, gx: 1, gy: ya > 8 ? 2 : 1, tx: 5, ty: ya > 8 ? 4 : 2, alt: "Focus and directrix",
-        curves: [{ fn: F, col: x.eq ? C2P : C2B, w: x.eq ? 2.8 : 1.6, dash: x.eq ? "" : "5 4" }], hl: [{ y: -p, col: C2O, lab: c2Y + " = " + mP[0] }],
-        segs: [{ x1: 0, y1: p, x2: px, y2: py, col: C2G }, { x1: px, y1: py, x2: px, y2: -p, col: C2G }],
-        pts: [{ x: 0, y: p, col: C2G, lab: "<i>F</i>(0, " + P[0] + ")", an: "end", dy: p > 0 ? -8 : 16 }, { x: px, y: py, col: C2P, lab: "<i>P</i>(" + c2X + ", " + c2Y + ")", dy: p > 0 ? -8 : 16 }, { x: px, y: -p, col: C2O, lab: "<i>D</i>(" + c2X + ", " + mP[0] + ")", dy: p > 0 ? 16 : -8 }, { x: 0, y: 0, col: C2P }] });
-    };
-    pb.steps = [
-      { id: "vx", fine: 1, lab: "vertex", type: "pick", ask: "The vertex is halfway between the focus and the directrix. Where is it?", opts: c2Pk("(0, 0)", [["(0, " + P[0] + ")", "That is the focus. The vertex is halfway between the focus and the directrix."], ["(" + P[0] + ", 0)", "The vertex is on the " + c2Y + "-axis, below or above the focus."], ["(0, " + c2Q(2 * p)[0] + ")", "Halfway between " + P[0] + " and " + mP[0] + " is 0."]]), hint: ["Halfway between " + c2Y + " = " + P[0] + " and " + c2Y + " = " + mP[0] + ".", "(" + P[0] + " + " + mP[0] + ") ÷ 2 = 0: the vertex is (0, 0)."], line: "vertex (0, 0)" },
-      { id: "pd", fine: 1, lab: "PD", type: "pick", ask: "<i>P</i>(" + c2X + ", " + c2Y + ") is any point on the parabola, and <i>D</i>(" + c2X + ", " + mP[0] + ") is the point of the directrix straight " + (p > 0 ? "below" : "above") + " it. Which expression is the distance <i>PD</i>?", opts: c2Pk("|" + c2Y + " − (" + mP[0] + ")|", [["|" + c2Y + " − " + (p < 0 ? "(" + P[0] + ")" : P[0]) + "|", "D is on the directrix " + c2Y + " = " + mP[0] + ", not at the focus."], ["|" + c2X + " − (" + mP[0] + ")|", "P and D have the same " + c2X + ": the distance is the difference of the " + c2Y + "-values."], ["√(" + c2X + "² + " + ym + "²)", "P and D are on the same vertical line, so the distance is just |" + c2Y + " − (" + mP[0] + ")|."]]), hint: ["P and D have the same " + c2X + "-coordinate.", "<i>PD</i> = |" + c2Y + " − (" + mP[0] + ")| = |" + c2Y + c2Sg(p) + "|."], line: "<i>PD</i> = |" + c2Y + c2Sg(p) + "|" },
-      { id: "pf", fine: 1, lab: "PF", type: "pick", ask: "Which expression is the distance <i>PF</i>, from <i>P</i>(" + c2X + ", " + c2Y + ") to <i>F</i>(0, " + P[0] + ")?", opts: c2Pk("√(" + c2X + "² + " + yp + "²)", [["√(" + c2X + "² + " + ym + "²)", "F is at (0, " + P[0] + "): subtract " + P[0] + " from " + c2Y + "."], ["|" + c2Y + c2Sg(-p) + "|", "P and F are not on the same vertical line: use the distance formula."], [c2X + "² + " + yp + "²", "The distance formula takes the square root."]]), hint: ["Use the distance formula √((x₂ − x₁)² + (y₂ − y₁)²).", "<i>PF</i> = √((" + c2X + " − 0)² + " + yp + "²) = √(" + c2X + "² + " + yp + "²)."], line: "<i>PF</i> = √(" + c2X + "² + " + yp + "²)" },
-      { id: "co", fine: 1, lab: "combine", ask: "By the definition of a parabola, <i>PD</i> = <i>PF</i>. Square both sides: " + ym + "² = " + c2X + "² + " + yp + "². Expand and combine like terms. What number goes in front of " + c2Y + "?", pre: "", post: c2Y + " = " + c2X + "²", ans: 4 * p, wrong: function (v) { return v === 2 * p ? "Both sides have a " + c2Y + " term: " + c2Q(2 * p)[0] + c2Y + " on the left and " + c2Q(-2 * p)[0] + c2Y + " on the right." : v === -4 * p ? "Check the sign." : ""; }, hint: ["Expanding gives " + c2Y + "² " + (p > 0 ? "+ " : "− ") + c2Q(Math.abs(2 * p))[0] + c2Y + " + " + c2Q(p * p)[0] + " = " + c2X + "² + " + c2Y + "² " + (p > 0 ? "− " : "+ ") + c2Q(Math.abs(2 * p))[0] + c2Y + " + " + c2Q(p * p)[0] + ". The " + c2Y + "² and the " + c2Q(p * p)[0] + " cancel.", c2Q(2 * p)[0] + c2Y + " − (" + c2Q(-2 * p)[0] + c2Y + ") = " + c2Q(4 * p)[0] + c2Y + ", so " + c2Q(4 * p)[0] + c2Y + " = " + c2X + "²."], line: c2Q(4 * p)[0] + c2Y + " = " + c2X + "²" },
-      { id: "eq", lab: "Equation", type: "fn", ask: c2S("Divide both sides by " + c2Q(4 * p)[0] + " to write the equation of the parabola.", "Write an equation of the parabola."), fn: F, eg: "y = 1/8x^2", typed: E[1], fo: c2Fo(E[0], c2PeWrong(p, 0, 0, false)), after: function (x) { x.eq = true; }, wrongFn: function (f) { return c2Same(f, function (q) { return -F(q); }) ? "Check the sign: the focus is " + (p > 0 ? "above" : "below") + " the vertex, so the parabola opens " + (p > 0 ? "up" : "down") + "." : c2Same(f, function (q) { return 4 * p * q * q; }) ? "Divide by " + c2Q(4 * p)[0] + "; don't multiply." : ""; }, hint: ["The equation is " + c2Y + " = " + c2X + "² ÷ (4<i>p</i>) with <i>p</i> = " + P[0] + ".", E[0] + "."], line: E[0] }
-    ];
-    pb.ex = "The vertex (0, 0) is halfway between the focus and the directrix. For a point <i>P</i>(" + c2X + ", " + c2Y + ") on the parabola, <i>PD</i> = |" + c2Y + c2Sg(p) + "| and <i>PF</i> = √(" + c2X + "² + " + yp + "²). Setting them equal and squaring gives " + c2Q(4 * p)[0] + c2Y + " = " + c2X + "², so " + E[0] + ".";
-    return pb;
-  }
-  // Examples 2 and 3: Writing and Graphing an Equation of a Parabola, vertex at the origin (2) or at (h, k) (3), from the focus or the directrix
-  function c2M23v(tier, moved) {
-    for (var t = 0; t < 1000; t++) {
-      var hor = tier === 0 ? false : rnd(2) === 1, p = c2Pick(tier === 0 ? [1, -1, 2, -2] : tier === 1 ? [1, -1, 2, -2, 3, -3] : moved ? [2, -2, 3, -3, 4, -4] : [3, -3, 4, -4, 0.5, -0.5]);
-      var h = moved ? c2Rng(-4, 4) : 0, k = moved ? c2Rng(-4, 4) : 0; if (moved && !h && !k) continue;
-      var useF = rnd(2) === 1, fx = hor ? h + p : h, fy = hor ? k : k + p, dv = hor ? h - p : k - p, VV = hor ? c2X : c2Y;
-      if (Math.abs(fx) > 8 || Math.abs(fy) > 8 || Math.abs(dv) > 8) continue;
-      var E = c2Pe(p, h, k, hor), F = c2PeFn(p, h, k, hor), pb = { kind: 20 }, gv = "(" + c2F(h) + ", " + c2F(k) + ")";
-      var given = useF ? "focus <span class=\"lm cf\">" + c2Pt(fx, fy).replace(/(\d+\.5)/g, function (m) { return c2Q(+m)[0]; }) + "</span>" : "directrix <span class=\"lm cf\">" + VV + " = " + c2Q(dv)[0] + "</span>";
-      pb.head = "vertex " + gv + ", " + (useF ? "focus " + c2Pt(fx, fy) : "directrix " + (hor ? "x" : "y") + " = " + c2T(dv)); pb.pic = "";
-      pb.story = "Write an equation of the parabola with vertex <span class=\"lm cf\">" + gv + "</span> and " + given + ". Then graph the parabola.";
-      pb.fig = function (x) {
-        x = x || {}; var o = { xmin: -10, xmax: 10, ymin: -10, ymax: 10, gx: 1, tx: 5, alt: "Coordinate plane", pts: [{ x: h, y: k, col: C2P, lab: "vertex", dy: (hor ? -10 : (p > 0 ? 16 : -8)) }] };
-        if (useF || x.cv) o.pts.push({ x: fx, y: fy, col: C2G, lab: "focus", dy: hor ? 16 : (p > 0 ? -8 : 16) });
-        if (!useF || x.cv) o[hor ? "vl" : "hl"] = [hor ? { x: dv, col: C2O, lab: c2X + " = " + c2Q(dv)[0] } : { y: dv, col: C2O, lab: c2Y + " = " + c2Q(dv)[0] }];
-        if (x.cv) o.curves = [{ fn: F, col: C2P, inv: hor }];
-        return c2Base(o, x);
-      };
-      var dirW = hor ? (p > 0 ? "right" : "left") : (p > 0 ? "up" : "down");
-      var steps = [
-        { id: "o", fine: 1, lab: "axis", type: "pick", ask: "Is the axis of symmetry vertical (the parabola opens up or down) or horizontal (it opens left or right)?", opts: c2Pk(hor ? "Horizontal: " + c2X + " = " + (moved ? "(1/(4<i>p</i>))(" + c2Y + " − <i>k</i>)² + <i>h</i>" : c2Y + "²/(4<i>p</i>)") : "Vertical: " + c2Y + " = " + (moved ? "(1/(4<i>p</i>))(" + c2X + " − <i>h</i>)² + <i>k</i>" : c2X + "²/(4<i>p</i>)"), [[hor ? "Vertical: it opens up or down" : "Horizontal: it opens left or right", useF ? "The focus is " + (hor ? "beside" : "above or below") + " the vertex." : "The directrix is a " + (hor ? "vertical" : "horizontal") + " line, and the axis of symmetry is perpendicular to it."]]), hint: [useF ? "Compare the focus with the vertex: which coordinate is different?" : "The directrix is perpendicular to the axis of symmetry.", hor ? "The axis of symmetry is horizontal, so the parabola opens left or right." : "The axis of symmetry is vertical, so the parabola opens up or down."], line: (hor ? "horizontal" : "vertical") + " axis of symmetry" }
-      ];
-      if (moved) steps.push(
-        { id: "h", fine: 1, lab: "h", ask: "The vertex is (<i>h</i>, <i>k</i>). What is <i>h</i>?", pre: "<i>h</i> =", ans: h, hint: ["<i>h</i> is the " + c2X + "-coordinate of the vertex.", "<i>h</i> = " + c2F(h) + "."], line: "<i>h</i> = " + c2F(h) },
-        { id: "k", fine: 1, lab: "k", ask: "What is <i>k</i>?", pre: "<i>k</i> =", ans: k, hint: ["<i>k</i> is the " + c2Y + "-coordinate of the vertex.", "<i>k</i> = " + c2F(k) + "."], line: "<i>k</i> = " + c2F(k) });
-      var pHint = useF ? (hor ? "The focus is (<i>h</i> + <i>p</i>, <i>k</i>): <i>p</i> = " + c2Q(fx)[0] + " − " + c2F(h) : "The focus is (<i>h</i>, <i>k</i> + <i>p</i>): <i>p</i> = " + c2Q(fy)[0] + " − " + c2F(k)) : (hor ? "The directrix is " + c2X + " = <i>h</i> − <i>p</i>: <i>p</i> = " + c2F(h) + " − (" + c2Q(dv)[0] + ")" : "The directrix is " + c2Y + " = <i>k</i> − <i>p</i>: <i>p</i> = " + c2F(k) + " − (" + c2Q(dv)[0] + ")");
-      steps.push(
-        { id: "p", lab: "p", ask: c2S("<i>p</i> is the distance from the vertex to the focus, negative when the parabola opens " + (hor ? "left" : "down") + ". Find <i>p</i>.", "Find <i>p</i>."), pre: "<i>p</i> =", ans: p, wrong: function (v) { return v === -p ? "Check the sign: the focus is on the " + (hor ? (p > 0 ? "right" : "left") : (p > 0 ? "upper" : "lower")) + " side of the vertex, away from the directrix." : ""; }, hint: [pHint + ".", "<i>p</i> = " + c2Pp(p)[0] + ": the parabola opens " + dirW + "."], line: "<i>p</i> = " + c2Pp(p)[0] },
-        { id: "eq", lab: "Equation", type: "fn", v: hor ? "y" : "x", ask: c2S("Substitute into " + (hor ? c2X + " = (1/(4<i>p</i>))(" + c2Y + " − <i>k</i>)² + <i>h</i>" : c2Y + " = (1/(4<i>p</i>))(" + c2X + " − <i>h</i>)² + <i>k</i>") + " and simplify.", "Write an equation of the parabola."), fn: F, eg: hor ? "x = 1/8(y − 2)^2 + 1" : "y = 1/8(x − 2)^2 + 1", typed: E[1], fo: c2Fo(E[0], c2PeWrong(p, h, k, hor)), wrongFn: function (f) { return ""; }, hint: ["Use <i>p</i> = " + c2Pp(p)[0] + (moved ? ", <i>h</i> = " + c2F(h) + " and <i>k</i> = " + c2F(k) : "") + ": 1/(4<i>p</i>) = " + c2C4(p)[0] + ".", E[0] + "."], line: E[0] },
-        { id: "gr", lab: "Graph", type: "gpt", ask: "Graph it: plot two points on the parabola with whole-number coordinates (not the vertex).", any: F, inv: hor, n: 2, not: [[h, k]], after: function (x) { x.cv = true; }, hint: ["Choose " + (hor ? c2Y : c2X) + " and find " + (hor ? c2X : c2Y) + " with your equation. Try " + (hor ? c2Y + " = " + c2F(k + 2 * Math.abs(p)) : c2X + " = " + c2F(h + 2 * Math.abs(p))) + ".", "Two points that work: " + (hor ? c2Pt(F(k + 2 * Math.abs(p)), k + 2 * Math.abs(p)) + " and " + c2Pt(F(k - 2 * Math.abs(p)), k - 2 * Math.abs(p)) : c2Pt(h + 2 * Math.abs(p), F(h + 2 * Math.abs(p))) + " and " + c2Pt(h - 2 * Math.abs(p), F(h - 2 * Math.abs(p)))) + "."], line: "two points plotted, and the parabola drawn" });
-      var u1 = (hor ? k : h) + 2 * Math.abs(p), u2 = (hor ? k : h) - 2 * Math.abs(p);   // two grid points of the parabola must be on the graph
-      if (!Number.isInteger(F(u1)) || Math.abs(u1) > 9 || Math.abs(u2) > 9 || Math.abs(F(u1)) > 9) continue;
-      pb.steps = steps;
-      pb.ex = "The " + (useF ? "focus is " + (hor ? "beside" : (p > 0 ? "above" : "below")) + " the vertex" : "directrix is a " + (hor ? "vertical" : "horizontal") + " line") + ", so the axis of symmetry is " + (hor ? "horizontal" : "vertical") + " and <i>p</i> = " + c2Pp(p)[0] + ". So " + E[0] + ". It opens " + dirW + ".";
-      return pb;
-    }
-  }
-  // Example 4: Using the Equation of a Parabola (a parabolic reflector: the receiver is at the focus)
-  var C2S234 = [
-    { pic: "sun", s: "A solar power dish uses a parabolic reflector to focus sunlight onto an engine at its focus.", rcv: "engine", u: "meters", Ws: [6, 7, 8, 8.5, 9, 10], ps: [3, 3.5, 4, 4.5, 5], hor: false },
-    { pic: "dish", s: "A satellite dish reflects signals onto a receiver at its focus.", rcv: "receiver", u: "inches", Ws: [18, 20, 24, 30, 36], ps: [8, 9, 10, 12, 15], hor: false },
-    { pic: "cooker", s: "A solar cooker focuses sunlight onto a pot at its focus.", rcv: "pot", u: "inches", Ws: [24, 30, 36, 40], ps: [10, 12, 15, 16], hor: false },
-    { pic: "lamp", s: "A flashlight's mirror is a parabola with the bulb at its focus, so the light leaves in a straight beam.", rcv: "bulb", u: "centimeters", Ws: [6, 8, 10, 12], ps: [1, 1.5, 2, 2.5], hor: true },
-    { pic: "mic", s: "A parabolic microphone has its microphone at the focus of the dish.", rcv: "microphone", u: "inches", Ws: [16, 18, 20, 24], ps: [4, 5, 6, 8], hor: true },
-    { pic: "antenna", s: "A microwave antenna has its receiver at the focus of the dish.", rcv: "receiver", u: "feet", Ws: [10, 12, 14, 16], ps: [6, 8, 10, 12], hor: true }
-  ];
-  function c2M234(tier) {
-    for (var t = 0; t < 400; t++) {
-      var sc = c2Pick(C2S234), W = c2Pick(sc.Ws), p = c2Pick(sc.ps), hw = W / 2, dep = c2R(hw * hw / (4 * p), 2), hor = sc.hor && (tier > 0 || rnd(2) === 1);
-      if (dep < 0.4 || dep >= p * 1.6) continue;
-      var u = sc.u, E = c2Pe(p, 0, 0, hor), F = c2PeFn(p, 0, 0, hor), pb = { kind: 20, sc: sc }, side = hor ? "to the right of" : "above";
-      pb.head = sc.s; pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + " The dish is " + W + " " + u + " wide and the " + sc.rcv + " is " + p + " " + u + " " + side + " the vertex. Write an equation for the cross section of the dish with its vertex at (0, 0). How deep is the dish?";
-      var R = Math.max(hw, p) * 1.25, xa = c2Axis(-R, R, false), lo = Math.min(-0.5, -R * 0.1), ya = c2Axis(lo, Math.max(p, dep) * 1.3, false);
-      pb.fig = function (x) {
-        x = x || {}; var o = hor ? { xmin: ya.min, xmax: ya.max, ymin: xa.min, ymax: xa.max, gx: ya.g, gy: xa.g, tx: ya.t, ty: xa.t } : { xmin: xa.min, xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t };
-        o.alt = "Cross section of the dish"; o.curves = [{ fn: F, col: x.eq ? C2P : C2B, lo: -hw, hi: hw, inv: hor, w: 3.4 }];
-        o.pts = [{ x: hor ? p : 0, y: hor ? 0 : p, col: C2G, lab: sc.rcv, dy: hor ? -8 : -8, an: "start" }, { x: 0, y: 0, col: C2P }];
-        o.segs = hor ? [{ x1: dep, y1: -hw, x2: dep, y2: hw, col: C2O, dash: "5 4" }] : [{ x1: -hw, y1: dep, x2: hw, y2: dep, col: C2O, dash: "5 4" }];
-        o.txt = hor ? [{ x: dep, y: hw + (xa.max - hw) * .45, t: W + " " + u, col: C2O, an: "middle" }] : [{ x: 0, y: dep + (ya.max - dep) * .3, t: W + " " + u + " wide", col: C2O }];
-        if (x.dv) o.txt.push(hor ? { x: dep / 2, y: -hw - (hw - xa.min) * .0 - xa.g * .7, t: "depth ≈ " + c2F(dep), col: C2P } : { x: hw * .55, y: dep / 2, t: "depth ≈ " + c2F(dep), col: C2P, an: "start" });
-        return c2Fig(o);
-      };
-      pb.steps = [
-        { id: "p", fine: 1, lab: "p", ask: "The " + sc.rcv + " is at the focus. How far is the focus from the vertex? That is <i>p</i>.", pre: "<i>p</i> =", post: u, ans: p, hint: ["The " + sc.rcv + " is " + p + " " + u + " " + side + " the vertex.", "<i>p</i> = " + p + "."], line: "<i>p</i> = " + p },
-        { id: "eq", lab: "Equation", type: "fn", v: hor ? "y" : "x", ask: c2S("The vertex is (0, 0) and the axis of symmetry is " + (hor ? "horizontal" : "vertical") + ", so " + (hor ? c2X + " = " + c2Y + "²/(4<i>p</i>)" : c2Y + " = " + c2X + "²/(4<i>p</i>)") + ". Write the equation.", "Write an equation for the cross section."), fn: F, rtol: 2e-3, xs: [-hw, -1, 0, 1, hw, hw / 2], eg: hor ? "x = 1/20y^2" : "y = 1/18x^2", typed: E[1], fo: c2Fo(E[0], c2PeWrong(p, 0, 0, hor).slice(0, 3)), after: function (x) { x.eq = true; }, hint: ["Put <i>p</i> = " + p + " into 1/(4<i>p</i>): 1/(4 · " + p + ") = " + c2C4(p)[0] + ".", E[0] + "."], line: E[0] },
-        { id: "hw", fine: 1, lab: "half width", ask: "The edge of the dish is half its width from the axis of symmetry. How far is that?", pre: (hor ? c2Y : c2X) + " =", post: u, ans: hw, hint: ["Half of " + W + ".", W + " ÷ 2 = " + hw + "."], line: "the edge is at " + (hor ? c2Y : c2X) + " = " + hw },
-        { id: "d", lab: "Depth", ask: c2S("The depth is the " + (hor ? c2X : c2Y) + "-value at the edge. Find it, to the nearest hundredth.", "How deep is the dish? Round to the nearest hundredth."), pre: "depth ≈", post: u, ans: dep, tol: 0.011, after: function (x) { x.dv = true; }, hint: ["Put " + (hor ? c2Y : c2X) + " = " + hw + " into your equation.", c2C4(p)[0] + "(" + hw + ")² ≈ " + c2F(dep) + "."], line: "depth ≈ " + c2F(dep) + " " + u }
-      ];
-      pb.ex = "The " + sc.rcv + " is at the focus, so <i>p</i> = " + p + " and " + E[0] + ". The edge is " + hw + " " + u + " from the axis, so the depth is " + c2C4(p)[0] + "(" + hw + ")² ≈ " + c2F(dep) + " " + u + ".";
-      return pb;
-    }
-  }
-
   // ---- 2.4 Modeling with Quadratic Functions
   // Example 1: Writing an Equation Using the Vertex and a Point
   var C2S241 = [
@@ -8743,7 +8630,7 @@ var ESPIC = {
   function c2Make(tier) {
     c2Dec = act === "2.1" || act === "2.4" || (act === "2.2" && lesson === 5);
     var pb = act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225][lesson - 1](tier)
-      : act === "2.3" ? (lesson === 1 ? c2M231(tier) : lesson === 2 ? c2M23v(tier, false) : lesson === 3 ? c2M23v(tier, true) : c2M234(tier)) : [c2M241, c2M242, c2M243, c2M244][lesson - 1](tier);
+      : [c2M241, c2M242, c2M243, c2M244][lesson - 1](tier);
     pb.head = m3Plain(pb.head);   // (Show work's first line is plain text)
     return pb;
   }
