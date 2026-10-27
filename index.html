@@ -3715,9 +3715,20 @@
     ["1.2", "Transformations of Linear and Absolute Value Functions", "1.2 Transformations of Linear and Absolute Value Functions"],
     ["1.3", "Modeling with Linear Functions", "1.3 Modeling with Linear Functions"],
     ["1.4D", "Solve Systems of Linear Equations in 3 Variables", "1.4 Solve Systems of Linear Equations in 3 Variables"],
-    ["RevT1", "Review for Chapter 1 Test", "Review for Chapter 1 Test"]
+    ["RevT1", "Review for Chapter 1 Test", "Review for Chapter 1 Test"],
+    ["2.1", "Transformations of Quadratic Functions", "2.1 Transformations of Quadratic Functions"],
+    ["2.2", "Characteristics of Quadratic Functions", "2.2 Characteristics of Quadratic Functions"],
+    ["2.3", "Focus of a Parabola", "2.3 Focus of a Parabola"],
+    ["2.4", "Modeling with Quadratic Functions", "2.4 Modeling with Quadratic Functions"]
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
+  // Chapter 2 activities all keep the 1.2 / 1.3 pattern: per exercise Demo 10, Sequence 25, Calculate 40, Solo 55, then two more Solo rounds 80 and 100
+  function c2Built(id, lessons, short, modesFor) {
+    var lv = []; lessons.forEach(function (n, i) { var l = i + 1; lv.push([l, "demo", 10, "Demo Mode"], [l, "sequence", 25, "Sequence Mode"], [l, "calculate", 40, "Calculate Mode"], [l, "solo", 55, "Solo Mode"], [l, "solo", 80, "Solo Mode, 2nd round", 2], [l, "solo", 100, "Solo Mode, 3rd round", 3]); });
+    var b = { quiz: true, top: lessons.length, key: "algebraProgress:" + id, perLesson: true, modes: ["demo", "sequence", "calculate", "solo"], lessons: lessons, short: short, levels: lv };
+    if (modesFor) b.modesFor = modesFor;
+    return b;
+  }
   var BUILT = {
     "1.1": { quiz: true, top: 3, key: "algebraProgress:1.1A", perLesson: true, modesFor: function (l) { return l === 2 ? ["demo", "sequence", "solo", "create"] : ["demo", "sequence", "solo"]; }, lessons: ["Memorizing Parents", "Graphing and Describing Translations", "Estimating a Value from a Graph"], short: ["Parents", "Graph & Describe", "Estimate"], modes: ["demo", "sequence", "solo"], levels: [
       [1, "demo", 10, "Demo Mode"], [1, "sequence", 25, "Sequence Mode"], [1, "solo", 40, "Solo Mode"],
@@ -3749,6 +3760,10 @@
       [4, "demo", 10, "Demo Mode"], [4, "sequence", 25, "Sequence Mode"], [4, "calculate", 40, "Calculate Mode"], [4, "solo", 55, "Solo Mode"],
       [4, "solo", 80, "Solo Mode, 2nd round", 2], [4, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
+    "2.1": c2Built("2.1", ["Writing Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
+    "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare"]),
+    "2.3": c2Built("2.3", ["Deriving an Equation", "Vertex at the Origin", "Translated Parabola", "Parabolic Reflectors"], ["Derive", "Origin", "Translated", "Reflectors"]),
+    "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression"], ["Vertex & Point", "Intercepts", "Three Points", "Regression"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
     "Play Data": { play: true, data: true, top: 1, key: "algebraProgress:PlayData", levels: [] },   // a Data Activity (a kind of Graphing activity); for now an exact copy of Play Graph
@@ -5050,8 +5065,8 @@
     if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = ""; return; }   // (one thing to answer: nothing to list)
     if (wfCr()) { $("pgQcue").innerHTML = ""; return; }
     if (wf()) { var ow = pqParts(), aw = QZ.step >= 4, ck = function (b) { return aw || b ? " <span class=\"cueOk\">\u2713</span>" : "?"; }; var pn = QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : "", P0 = wfProb();
-      if (P0 && P0.comb && wfSteppy()) { $("pgQcue").innerHTML = (pn ? pn + " · " : "") + "Transformation " + ((QZ.wsg || 0) + 1) + " of " + P0.comb.length + (wfLast() ? ": <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + (lesson === 5 ? " &nbsp; Profit" : " &nbsp; Graph") + ck(ow.graph) : ""); return; }
-      $("pgQcue").innerHTML = mode === "solo" && lesson !== 5 ? pn : (pn ? pn + ": " : "") + "<span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + (lesson === 5 ? " &nbsp; Profit" : " &nbsp; Graph") + ck(ow.graph); return; }   // one thing to answer (Solo): only the problem count is shown
+      if (P0 && P0.comb && wfSteppy()) { $("pgQcue").innerHTML = (pn ? pn + " · " : "") + "Transformation " + ((QZ.wsg || 0) + 1) + " of " + P0.comb.length + (wfLast() ? ": <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + (wfL() === 5 ? " &nbsp; Profit" : " &nbsp; Graph") + ck(ow.graph) : ""); return; }
+      $("pgQcue").innerHTML = mode === "solo" && wfL() !== 5 ? pn : (pn ? pn + ": " : "") + "<span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + (wfL() === 5 ? " &nbsp; Profit" : " &nbsp; Graph") + ck(ow.graph); return; }   // one thing to answer (Solo): only the problem count is shown
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
     var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
     $("pgQcue").innerHTML = (gd() && mode !== "create" && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
@@ -5321,9 +5336,9 @@ var ESPIC = {
     if (!((gd() || wf()) && mode === "create" && QZ.pick)) $("modePick").hidden = true;
     document.body.classList.toggle("crPre", gd() && mode === "create" && !QZ.cr); document.body.classList.toggle("noSub", mode !== "create");
     if (wfCr()) {
-      if (QZ.pick) { $("pgQt").textContent = lesson === 5 ? "Your profit problem is in." : lesson === 4 ? "Your transformations are in." : lesson === 3 ? "Your stretch or shrink is in." : lesson === 2 ? "Your reflection is in." : "Your move is in."; showPick($("pgQ"), "How would you like to work on it?"); }
-      else if (QZ.cs === "move") { $("modePick").hidden = true; $("pgQt").innerHTML = lesson === 5 ? (QZ.cm === "c" ? "Type the fixed cost in dollars, like 12." : "Choose the percent of the revenue that is the profit before the fixed cost.") : lesson === 4 ? (QZ.cm === "m" ? "Type how far, like right 3 and down 2." : QZ.cm === "s" ? "Choose a vertical stretch or shrink factor." : QZ.cc && QZ.cc.length ? "Choose the second transformation." : "Choose the first transformation.") : lesson === 3 ? "Choose a vertical stretch or shrink factor." : lesson === 2 ? "Choose an axis of reflection." : "Now move it. Type how far, like right 3 and down 2."; }
-      else { $("modePick").hidden = true; $("pgQt").innerHTML = lesson === 5 ? "Type the revenue for selling <i>x</i> items at one price, like <span class=\"lm\"><i>f</i>(<i>x</i>) = 25<i>x</i></span>." : "Type a line or an absolute value, like <span class=\"lm\"><i>f</i>(<i>x</i>) = 2<i>x</i> + 1</span>."; }
+      if (QZ.pick) { $("pgQt").textContent = wfL() === 5 ? "Your profit problem is in." : wfL() === 4 ? "Your transformations are in." : wfL() === 3 ? "Your stretch or shrink is in." : wfL() === 2 ? "Your reflection is in." : "Your move is in."; showPick($("pgQ"), "How would you like to work on it?"); }
+      else if (QZ.cs === "move") { $("modePick").hidden = true; $("pgQt").innerHTML = wfL() === 5 ? (QZ.cm === "c" ? "Type the fixed cost in dollars, like 12." : "Choose the percent of the revenue that is the profit before the fixed cost.") : wfL() === 4 ? (QZ.cm === "m" ? "Type how far, like right 3 and down 2." : QZ.cm === "s" ? "Choose a vertical stretch or shrink factor." : QZ.cc && QZ.cc.length ? "Choose the second transformation." : "Choose the first transformation.") : wfL() === 3 ? "Choose a vertical stretch or shrink factor." : wfL() === 2 ? "Choose an axis of reflection." : "Now move it. Type how far, like right 3 and down 2."; }
+      else { $("modePick").hidden = true; $("pgQt").innerHTML = wfL() === 5 ? "Type the revenue for selling <i>x</i> items at one price, like <span class=\"lm\"><i>f</i>(<i>x</i>) = 25<i>x</i></span>." : (wfQd() ? "Type a parabola, like <span class=\"lm\"><i>f</i>(<i>x</i>) = <i>x</i>²</span> or <span class=\"lm\"><i>f</i>(<i>x</i>) = (<i>x</i> − 1)² + 2</span>." : "Type a line or an absolute value, like <span class=\"lm\"><i>f</i>(<i>x</i>) = 2<i>x</i> + 1</span>."); }
     }
     else if (m3()) $("pgQt").innerHTML = m3Q();
     else if (wf()) $("pgQt").innerHTML = wfQ();
@@ -5352,7 +5367,7 @@ var ESPIC = {
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
-  function pqParts() { if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: lesson === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: estTableOK(), graph: estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
+  function pqParts() { if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: wfL() === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: estTableOK(), graph: estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
   var pqBusy = false;
   function pqEval() {
     if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order || (gd() && mode === "create" && !QZ.cr) || wfCr()) return;
@@ -6398,7 +6413,10 @@ var ESPIC = {
     gdCustom = { fam: r.fam, h: r.h, k: r.k, a: r.a }; QZ.pick = true; eqMsg(""); pqPanel();   // the function is in: now the student chooses the mode to work on it in
   }
   // ---- 1.2, first exercise: Writing Translations.  f (a line or an absolute value) is given, g is f moved right or left and up or down, and the student types g(x) ----
-  function wf() { return pq() && act === "1.2" && lesson >= 1 && lesson <= 5; }   // lesson 1 Writing Translations, 2 Writing Reflections, 3 Writing Stretches and Shrinks, 4 Combining Transformations
+  function wf() { return pq() && ((act === "1.2" && lesson >= 1 && lesson <= 5) || (act === "2.1" && lesson >= 1 && lesson <= 3)); }
+  // which 1.2 exercise does the work: 2.1 reuses it with the parabola f(x) = x² (1 Translations; 2 Reflections and Stretches and 3 Writing a Transformed Quadratic are both combinations)
+  function wfL() { return act === "2.1" ? [0, 1, 4, 4][lesson] || 0 : lesson; }
+  function wfQd() { return act === "2.1"; }   // lesson 1 Writing Translations, 2 Writing Reflections, 3 Writing Stretches and Shrinks, 4 Combining Transformations
   function wfCr() { return wf() && mode === "create"; }
   var wfCustom = null;   // Create: the f and the move the student typed, carried into the other modes
   // Combining Transformations: P.comb holds the two single transformations.  In Demo, Sequence and Calculate they are worked one stage at a time (the first makes h from f,
@@ -6424,9 +6442,9 @@ var ESPIC = {
   function wfRound(v) { return Math.round(v * 1e9) / 1e9; }
   // g from f: a line slid sideways is the same line slid up or down, so its sideways move folds into the y-intercept
   function wfG(p) {
-    if (p.rf === "x") { var sc = wfSc(p); p.g = { fam: p.fam, a: wfRound(sc * p.fa), h: p.fam === 2 ? p.fh : 0, k: wfRound(sc * p.fk) }; return p; }   // reflected in the x-axis: -f(x); a stretch or shrink: c f(x)
-    if (p.rf === "y") { p.g = p.fam === 2 ? { fam: 2, a: p.fa, h: -p.fh, k: p.fk } : { fam: 1, a: -p.fa, h: 0, k: p.fk }; return p; }   // reflected in the y-axis: f(-x)
-    p.g = p.fam === 2 ? { fam: 2, a: p.fa, h: p.fh + p.dh, k: p.fk + p.dk } : { fam: 1, a: p.fa, h: 0, k: p.fk + p.dk - p.fa * p.dh }; return p;
+    if (p.rf === "x") { var sc = wfSc(p); p.g = { fam: p.fam, a: wfRound(sc * p.fa), h: p.fam >= 2 ? p.fh : 0, k: wfRound(sc * p.fk) }; return p; }   // reflected in the x-axis: -f(x); a stretch or shrink: c f(x)
+    if (p.rf === "y") { p.g = p.fam >= 2 ? { fam: p.fam, a: p.fa, h: -p.fh, k: p.fk } : { fam: 1, a: -p.fa, h: 0, k: p.fk }; return p; }   // reflected in the y-axis: f(-x)
+    p.g = p.fam >= 2 ? { fam: p.fam, a: p.fa, h: p.fh + p.dh, k: p.fk + p.dk } : { fam: 1, a: p.fa, h: 0, k: p.fk + p.dk - p.fa * p.dh }; return p;
   }
   // Writing Reflections: tier 0 a line in the x-axis; tier 1 a line in the y-axis or an absolute value in the x-axis; tier 2 an absolute value in the y-axis (|-x - h| has to be rewritten)
   function wfMakeR(tier) {
@@ -6456,9 +6474,9 @@ var ESPIC = {
   }
   // Combining Transformations: f is changed twice, in order, by two different kinds of change (a move one way, a reflection, a vertical stretch or shrink).
   // The first change is stage one (f to h), the second is stage two (h to g); every function on the way has whole-number coefficients and fits the graph.
-  function wfShapeF(g) { return { fam: g.fam, fa: g.a, fh: g.fam === 2 ? g.h : 0, fk: g.k }; }
+  function wfShapeF(g) { return { fam: g.fam, fa: g.a, fh: g.fam >= 2 ? g.h : 0, fk: g.k }; }
   function wfChain(f, ops) {
-    var st = [], cur = { fam: f.fam, fa: f.fa, fh: f.fam === 2 ? f.fh : 0, fk: f.fk };
+    var st = [], cur = { fam: f.fam, fa: f.fa, fh: f.fam >= 2 ? f.fh : 0, fk: f.fk };
     ops.forEach(function (o) {
       var q = { fam: cur.fam, fa: cur.fa, fh: cur.fh, fk: cur.fk, dh: o.dh || 0, dk: o.dk || 0 };
       if (o.rf) q.rf = o.rf; if (o.scn) { q.scn = o.scn; q.scd = o.scd; }
@@ -6467,11 +6485,12 @@ var ESPIC = {
     return st;
   }
   function wfChainOK(st) {
+    if (st.length && st[0].fam === 3) return st.every(wfQok);
     return st.every(function (q) { return Number.isInteger(q.g.a) && Number.isInteger(q.g.k) && Number.isInteger(q.g.h) && Math.abs(q.g.k) <= 8 && Math.abs(q.g.h) <= 7 && Math.abs(q.g.a) <= 9; });
   }
   function wfBuildC(f, ops) {
     var st = wfChain(f, ops);
-    return { fam: f.fam, fa: f.fa, fh: f.fam === 2 ? f.fh : 0, fk: f.fk, dh: 0, dk: 0, comb: st, g: st[st.length - 1].g };
+    return { fam: f.fam, fa: f.fa, fh: f.fam >= 2 ? f.fh : 0, fk: f.fk, dh: 0, dk: 0, comb: st, g: st[st.length - 1].g };
   }
   function wfOpMake(kind) {
     if (kind === "T") return rnd(2) === 1 ? { dh: wfNz(4), dk: 0 } : { dh: 0, dk: wfNz(4) };
@@ -6489,15 +6508,53 @@ var ESPIC = {
       var P = wfBuildC(f, ops);
       if (!wfChainOK(P.comb)) continue;
       if (P.comb.some(function (q) { return q.fam === 1 && !q.rf && q.dk === 0 && q.g.k === q.fk; })) continue;   // a line moved sideways only ends up as the same line shifted: fine, but never unchanged
-      if (P.comb[0].g.a === f.fa && P.comb[0].g.h === (f.fam === 2 ? f.fh : 0) && P.comb[0].g.k === f.fk) continue;
-      if (P.g.a === f.fa && P.g.h === (f.fam === 2 ? f.fh : 0) && P.g.k === f.fk) continue;
+      if (P.comb[0].g.a === f.fa && P.comb[0].g.h === (f.fam >= 2 ? f.fh : 0) && P.comb[0].g.k === f.fk) continue;
+      if (P.g.a === f.fa && P.g.h === (f.fam >= 2 ? f.fh : 0) && P.g.k === f.fk) continue;
+      return P;
+    }
+  }
+
+  // ---- 2.1 Transformations of Quadratic Functions: the 1.2 engine with the parabola (fam 3).  f is the parent f(x) = x², or later in a round a parabola in vertex form.
+  // A stretch or shrink of a parabola may leave a decimal like 0.5 (a multiple of 1/4); every vertex stays on whole numbers and on the graph.
+  function wfQok(q) { return Math.abs(q.g.a * 4 - Math.round(q.g.a * 4)) < 1e-9 && q.g.a !== 0 && Math.abs(q.g.a) <= 5 && Number.isInteger(q.g.h) && Number.isInteger(q.g.k) && Math.abs(q.g.h) <= 7 && Math.abs(q.g.k) <= 8; }
+  // Translations: tier 0 the parent moved one way; tier 1 the parent (or a parabola with a stretch) moved one way; tier 2 a parabola in vertex form moved both ways
+  function wfMakeQT(tier) {
+    for (var t = 0; t < 400; t++) {
+      var p = tier < 2 || rnd(3) === 0 ? { fam: 3, fa: tier === 1 && rnd(3) === 0 ? [2, -1, 3][rnd(3)] : 1, fh: 0, fk: 0 } : { fam: 3, fa: [1, 1, 2, -1][rnd(4)], fh: wfNz(3), fk: rnd(7) - 3 };
+      var side = rnd(2) === 1;
+      p.dh = tier === 2 ? wfNz(6) : side ? wfNz(tier === 0 ? 4 : 6) : 0; p.dk = tier === 2 ? wfNz(5) : side ? 0 : wfNz(tier === 0 ? 4 : 6); wfG(p);
+      if (!wfQok(p)) continue;
+      return p;
+    }
+  }
+  // 2.1 exercise 2, Reflections and Stretches (the textbook's Example 2a, vertical only): tier 0 one stretch or shrink; tier 1 one reflection in the x-axis (or a
+  // reflection in the y-axis of a parabola whose vertex is off the y-axis); tier 2 a stretch or shrink and a reflection in the x-axis, in either order.
+  // 2.1 exercise 3, Writing a Transformed Quadratic (Example 3): a stretch, shrink or reflection and a move, in order; the vertex is named at the end of the work.
+  function wfMakeQC(tier, ex) {
+    for (var t = 0; t < 900; t++) {
+      var f = { fam: 3, fa: 1, fh: 0, fk: 0 }, ops, P;
+      if (ex === 2 && tier < 2) {
+        if (tier === 1 && rnd(3) === 0) { f = { fam: 3, fa: [1, 2, -1][rnd(3)], fh: wfNz(3), fk: rnd(5) - 2 }; ops = [{ rf: "y" }]; }
+        else ops = [tier === 0 ? wfOpMake("S") : { rf: "x" }];
+        if (tier === 0 && rnd(3) === 0) f = { fam: 3, fa: 1, fh: 0, fk: [2, -2, 4, -4][rnd(4)] };
+        var q = { fam: 3, fa: f.fa, fh: f.fh, fk: f.fk, dh: 0, dk: 0 }; if (ops[0].rf) q.rf = ops[0].rf; if (ops[0].scn) { q.scn = ops[0].scn; q.scd = ops[0].scd; } wfG(q);
+        if (!wfQok(q) || (q.g.a === q.fa && q.g.h === q.fh && q.g.k === q.fk)) continue;
+        return q;
+      }
+      var pairs = ex === 2 ? [["S", "R"], ["R", "S"]] : tier === 0 ? [["S", "T"], ["R", "T"]] : tier === 1 ? [["S", "T"], ["R", "T"], ["T", "R"]] : [["S", "T"], ["R", "T"], ["T", "S"], ["T", "R"]];
+      var pr = pairs[rnd(pairs.length)];
+      ops = pr.map(function (k) { var o = wfOpMake(k); if (o.rf === "y" && !o.scn) o.rf = "x"; return o; });
+      if (ex === 3 && tier === 2 && rnd(3) === 0) f = { fam: 3, fa: 1, fh: wfNz(3), fk: rnd(5) - 2 };
+      P = wfBuildC(f, ops);
+      if (!P.comb.every(wfQok)) continue;
+      if (P.comb.some(function (c) { return c.g.a === c.fa && c.g.h === c.fh && c.g.k === c.fk; })) continue;
       return P;
     }
   }
 
   // ---- 1.2, fifth exercise: Profit from a Combination.  A word problem: the revenue is f(x) = a x; the profit is a percent of the revenue (a shrink, h) minus a fixed cost (a move down, g).
   // It is a Combining Transformations problem in two stages with a story, a picture and no graph, and it ends by evaluating the profit for a number of items.
-  function wf5() { return wf() && lesson === 5; }
+  function wf5() { return wf() && wfL() === 5; }
   function wf5Svg(inner) { return '<svg class="estPic" viewBox="0 0 120 100" role="img" aria-hidden="true" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">' + inner + '</svg>'; }
   var WF5 = [
     { id: "tix", s: function (a) { return "A school band sells concert tickets for $" + a + " each."; }, u: "tickets", v: "sold", cost: "renting the hall", lo: 5, hi: 60,
@@ -6546,10 +6603,11 @@ var ESPIC = {
   // tier 0: the plain line f(x) = x + b moved one way only; tier 1: a line with a slope or an absolute value, still one way only;
   // tier 2: moved sideways and up or down (like the last problems of the textbook's practice, which grow harder)
   function wfMake(tier) {
-    if (lesson === 2) return wfMakeR(tier);
-    if (lesson === 3) return wfMakeS(tier);
-    if (lesson === 4) return wfMakeC(tier);
-    if (lesson === 5) return wfMakeP(tier);
+    if (wfQd()) return lesson === 1 ? wfMakeQT(tier) : wfMakeQC(tier, lesson);
+    if (wfL() === 2) return wfMakeR(tier);
+    if (wfL() === 3) return wfMakeS(tier);
+    if (wfL() === 4) return wfMakeC(tier);
+    if (wfL() === 5) return wfMakeP(tier);
     for (var t = 0; t < 400; t++) {
       var ab = tier === 0 ? false : rnd(2) === 1, p;
       if (tier === 0) p = { fam: 1, fa: 1, fh: 0, fk: rnd(9) - 4 };
@@ -6570,12 +6628,12 @@ var ESPIC = {
   }
   var wfX = "<i>x</i>";
   function wfSg(v) { return " " + (v < 0 ? "−" : "+") + " " + nf(Math.abs(v)); }
-  function wfCo(a) { return a === 1 ? "" : a === -1 ? "−" : nf(a); }
+  function wfCo(a) { if (wfQd() && !Number.isInteger(a)) { for (var d = 2; d <= 4; d++) if (Number.isInteger(Math.round(a * d * 1e9) / 1e9)) return (a < 0 ? "−" : "") + wfFr(Math.abs(Math.round(a * d)), d); } return a === 1 ? "" : a === -1 ? "−" : nf(a); }
   // the rule of a line (fam 1: a x + b) or an absolute value (fam 2: a|x - h| + b), with x moved dh to the right and dk added at the end
   function wfRule(fam, a, h, b, dh, dk) {
     var inX = dh ? wfX + wfSg(-dh) : wfX, body;
     if (fam === 1) body = wfCo(a) + (dh ? "(" + inX + ")" : wfX);
-    else body = wfCo(a) + "|" + (h ? (dh ? "(" + inX + ")" : wfX) + wfSg(-h) : inX) + "|";
+    else body = wfCo(a) + wfBar(fam, h ? (dh ? "(" + inX + ")" : wfX) + wfSg(-h) : inX);
     if (b) body += wfSg(b);
     if (dk) body += wfSg(dk);
     return body;
@@ -6585,11 +6643,11 @@ var ESPIC = {
   function wfPlain(h) { return h.replace(/<span class="fr"><span>(\d+)<\/span><span>(\d+)<\/span><\/span>/g, "($1/$2)").replace(/<[^>]+>/g, "").replace(/−/g, "-"); }
   function wfMoves(p) { var w = []; if (p.dh) w.push((p.dh > 0 ? "right " : "left ") + Math.abs(p.dh)); if (p.dk) w.push((p.dk > 0 ? "up " : "down ") + Math.abs(p.dk)); return w.join(" and "); }
   function wfWhat(p) { if (p.words) return p.words; if (p.comb) return p.comb.map(wfWhat).join(", then "); return wfStr(p) ? (p.scd === 1 ? "vertically stretched by a factor of " + p.scn : "vertically shrunk by a factor of " + wfScT(p)) : p.rf ? "reflected in the " + p.rf + "-axis" : "moved " + wfMoves(p); }
-  function wfNc(p) { return !!p && !!p.rf && mode === "calculate" && lesson !== 5 && !wfSl(); }   // Calculate, reflections: after the flip the student chooses \u2212x or \u2212f(x)
+  function wfNc(p) { return !!p && !!p.rf && mode === "calculate" && wfL() !== 5 && !wfSl(); }   // Calculate, reflections: after the flip the student chooses \u2212x or \u2212f(x)
   function wfNi(p) { return !!(p.dh || p.rf); }   // is there a step 2 (the change inside f(x) is dragged onto f in the question)?
   function wfInnerTx(p) { return wfStr(p) ? wfScH(p) : p.rf === "x" ? "−" : p.rf === "y" ? "−" + wfX : wfX + wfSg(-p.dh); }
   // f(-x) written out: a line a(-x) + b, or an absolute value a|-x - h| + b
-  function wfRyF(p) { return p.fam === 1 ? wfCo(p.fa) + "(−" + wfX + ")" + (p.fk ? wfSg(p.fk) : "") : wfCo(p.fa) + "|−" + wfX + (p.fh ? wfSg(-p.fh) : "") + "|" + (p.fk ? wfSg(p.fk) : ""); }
+  function wfRyF(p) { return p.fam === 1 ? wfCo(p.fa) + "(−" + wfX + ")" + (p.fk ? wfSg(p.fk) : "") : wfCo(p.fa) + wfBar(p.fam, "−" + wfX + (p.fh ? wfSg(-p.fh) : "")) + (p.fk ? wfSg(p.fk) : ""); }
   function wfQ() { return wfNm(wfQ0()); }
   function wf5Q(p) {
     var P = wfProb(), c = P && P.ctx; if (!c) return "";
@@ -6656,7 +6714,7 @@ var ESPIC = {
   function wfMTxt() {
     var p = wfCur(), d = QZ.wdr; if (!p || !p.rf || !d || d.s === undefined) return "";
     var rs = d.s;
-    if (p.fam === 2) {   // an absolute value is grabbed by a point of it: the label gives where that point has been taken
+    if (p.fam >= 2) {   // an absolute value is grabbed by a point of it: the label gives where that point has been taken
       var nn = function (v) { var r = Math.round(v * 10) / 10; if (!r) r = 0; return (r < 0 ? "\u2212" : "") + String(Math.abs(r)); };
       return "(" + nn(p.rf === "y" ? rs * d.fx : d.fx) + ", " + nn(p.rf === "x" ? rs * d.fy : d.fy) + ")";
     }
@@ -6673,37 +6731,38 @@ var ESPIC = {
     var el = svgEl("text", { id: "wfMlab", fill: CG, "font-size": ".95", "font-weight": "700", "font-family": "system-ui,sans-serif", "pointer-events": "none", "stroke-width": ".28", "stroke-linejoin": "round", style: "stroke:var(--bg);paint-order:stroke" });
     el.textContent = t; S.appendChild(el); wfMPos(el);
   }
+  function wfSamp(lo, hi) { var a = []; for (var i = 0; i <= 120; i++) a.push(lo + (hi - lo) * i / 120); return a; }
   function wfDraw(S) {
-    var p = wfCur(), F = function (x) { return p.fa * (p.fam === 2 ? Math.abs(x - p.fh) : x) + p.fk; }, sh = PG.wfShift, st = wfSteppy(), d = QZ.wdr || { dh: 0, dk: 0 }, sl = wfSl() ? (QZ.wsl || wfSlDef()) : null, SG = null;
-    var curve = function (fn, vx) { var lo = ZM.ox - 1.05 * ZM.cur, hi = ZM.ox + 1.05 * ZM.cur, xs = p.fam === 2 && vx > lo && vx < hi ? [lo, vx, hi] : [lo, hi]; return xs.map(function (x) { return x + "," + (-fn(x)); }).join(" "); };
+    var p = wfCur(), F = function (x) { return p.fa * wfVE(p.fam, x - p.fh, x) + p.fk; }, sh = PG.wfShift, st = wfSteppy(), d = QZ.wdr || { dh: 0, dk: 0 }, sl = wfSl() ? (QZ.wsl || wfSlDef()) : null, SG = null;
+    var curve = function (fn, vx) { var lo = ZM.ox - 1.05 * ZM.cur, hi = ZM.ox + 1.05 * ZM.cur, xs = p.fam === 3 ? wfSamp(lo, hi) : p.fam >= 2 && vx > lo && vx < hi ? [lo, vx, hi] : [lo, hi]; return xs.map(function (x) { return x + "," + (-fn(x)); }).join(" "); };
     if (sh && !PG.show.graph) S.appendChild(svgEl("polyline", { points: curve(function (x) { return F(x - sh.dh) + sh.dk; }, p.fh + sh.dh), fill: "none", stroke: "#9AA3B2", "stroke-width": ".09", "stroke-linejoin": "round" }));   // half-way: thin grey
     var rf = p.rf, rs = d.s === undefined ? 1 : d.s;
     var Gd = rf === "x" ? function (x) { return rs * F(x); } : rf === "y" ? function (x) { return rs === 0 ? F(0) : F(x / rs); } : function (x) { return F(x - d.dh) + d.dk; };
     // a reflection is drawn point by point: x-axis (x, s F(x)), y-axis (s x, F(x)), with s from 1 down to -1 as the graph is flipped
-    var rcurve = function () { var xs = [], lo = ZM.ox - 1.05 * ZM.cur, hi = ZM.ox + 1.05 * ZM.cur, stp = (hi - lo) / 60; for (var xx = lo; xx <= hi + 1e-9; xx += stp) xs.push(xx); if (p.fam === 2) xs.push(p.fh); xs.sort(function (u, v) { return u - v; });
+    var rcurve = function () { var xs = [], lo = ZM.ox - 1.05 * ZM.cur, hi = ZM.ox + 1.05 * ZM.cur, stp = (hi - lo) / 60; for (var xx = lo; xx <= hi + 1e-9; xx += stp) xs.push(xx); if (p.fam >= 2) xs.push(p.fh); xs.sort(function (u, v) { return u - v; });
       return xs.map(function (x) { return (rf === "y" ? rs * x : x) + "," + (-(rf === "x" ? rs * F(x) : F(x))); }).join(" "); };
     if (sl && !PG.show.graph) {   // 1.2 with sliders: g follows the controls (it only shows; nothing here is dragged)
-      SG = wfSlFn(p, sl); var svx = p.fam === 2 ? (sl.nx ? -(p.fh + sl.h) : p.fh + sl.h) : 0;
+      SG = wfSlFn(p, sl); var svx = p.fam >= 2 ? (sl.nx ? -(p.fh + sl.h) : p.fh + sl.h) : 0;
       S.appendChild(svgEl("polyline", { points: curve(SG, svx), fill: "none", stroke: CG, "stroke-width": ".13", "stroke-linejoin": "round", "pointer-events": "none" }));
       for (var sv = -2; sv <= 2; sv++) { var sx = svx + sv, sy = SG(sx); if (Math.abs(sy) <= 10) S.appendChild(svgEl("circle", { cx: sx, cy: -sy, r: .2, fill: CG, "pointer-events": "none" })); }
       if (!sl.nx && !sl.nf && sl.a === 3 && (sl.h || sl.k)) {   // a pure move: the translation arrows of Play Graph
-        var tax = p.fam === 2 ? p.fh : 0, tay = F(tax);
+        var tax = p.fam >= 2 ? p.fh : 0, tay = F(tax);
         if (sl.h) tmArrow(S, tax, tay, tax + sl.h, tay, TMG);
         if (sl.k) tmArrow(S, tax + sl.h, tay, tax + sl.h, tay + sl.k, TMG);
       }
     } else if (st && !PG.show.graph) {   // the student's g: red, on top of f until it is dragged
       var gp = rf ? rcurve() : curve(Gd, p.fh + d.dh);
       S.appendChild(svgEl("polyline", { points: gp, fill: "none", stroke: CG, "stroke-width": ".13", "stroke-linejoin": "round", "pointer-events": "none" }));
-      if (rf) { for (var vr = -2; vr <= 2; vr++) { var rx = vr + (p.fam === 2 ? p.fh : 0), rgx = rf === "y" ? rs * rx : rx, rgy = rf === "x" ? rs * F(rx) : F(rx); if (Math.abs(rgy) <= 10) S.appendChild(svgEl("circle", { cx: rgx, cy: -rgy, r: .2, fill: CG, "pointer-events": "none" })); } }
-      else for (var v = -2; v <= 2; v++) { var gy = Gd(v + d.dh + (p.fam === 2 ? p.fh : 0)); if (Math.abs(gy) <= 10) S.appendChild(svgEl("circle", { cx: v + d.dh + (p.fam === 2 ? p.fh : 0), cy: -gy, r: .2, fill: CG, "pointer-events": "none" })); }
+      if (rf) { for (var vr = -2; vr <= 2; vr++) { var rx = vr + (p.fam >= 2 ? p.fh : 0), rgx = rf === "y" ? rs * rx : rx, rgy = rf === "x" ? rs * F(rx) : F(rx); if (Math.abs(rgy) <= 10) S.appendChild(svgEl("circle", { cx: rgx, cy: -rgy, r: .2, fill: CG, "pointer-events": "none" })); } }
+      else for (var v = -2; v <= 2; v++) { var gy = Gd(v + d.dh + (p.fam >= 2 ? p.fh : 0)); if (Math.abs(gy) <= 10) S.appendChild(svgEl("circle", { cx: v + d.dh + (p.fam >= 2 ? p.fh : 0), cy: -gy, r: .2, fill: CG, "pointer-events": "none" })); }
     }
     S.appendChild(svgEl("polyline", { points: curve(F, p.fh), fill: "none", stroke: CF, "stroke-width": ".07", "stroke-dasharray": ".3 .25", "pointer-events": "none" }));   // f, the parent: dotted, like every parent graph
-    for (var u = -2; u <= 2; u++) { var fx = u + (p.fam === 2 ? p.fh : 0); if (Math.abs(F(fx)) <= 10) S.appendChild(svgEl("circle", { cx: fx, cy: -F(fx), r: .13, fill: CF, "pointer-events": "none" })); }
+    for (var u = -2; u <= 2; u++) { var fx = u + (p.fam >= 2 ? p.fh : 0); if (Math.abs(F(fx)) <= 10) S.appendChild(svgEl("circle", { cx: fx, cy: -F(fx), r: .13, fill: CF, "pointer-events": "none" })); }
     if (st && rf && rs !== 1 && d.fx !== undefined) {   // the grabbed point and where it has been taken
       var tox = rf === "y" ? rs * d.fx : d.fx, toy = rf === "x" ? rs * d.fy : d.fy; if (tox !== d.fx || toy !== d.fy) tmArrow(S, d.fx, d.fy, tox, toy, TMG);
     }
     if (st && !rf && (d.dh || d.dk)) {   // the translation arrows of Play Graph: across, then up or down
-      var ax = p.fam === 2 ? p.fh : 0, ay = F(ax);
+      var ax = p.fam >= 2 ? p.fh : 0, ay = F(ax);
       if (d.dh) tmArrow(S, ax, ay, ax + d.dh, ay, TMG);
       if (d.dk) tmArrow(S, ax + d.dh, ay, ax + d.dh, ay + d.dk, TMG);
     }
@@ -6712,7 +6771,7 @@ var ESPIC = {
       var lx = [6.5, -6.5, 3.5, -3.5][q], ly = F(lx);
       if (Math.abs(ly) <= 8.5) { var tx = svgEl("text", { x: lx + .3, y: -ly - .5, fill: CF, "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tx.textContent = wfLetter("f"); S.appendChild(tx); break; }
     }
-    var G = p.g ? function (x) { return p.g.a * (p.g.fam === 2 ? Math.abs(x - p.g.h) : x) + p.g.k; } : null;
+    var G = p.g ? function (x) { return p.g.a * wfVE(p.g.fam, x - p.g.h, x) + p.g.k; } : null;
     if (G && (PG.show.graph || (sl && !wfSlSame(sl, wfSlDef())) || (!sl && st && (rf ? QZ.wd.m : (d.dh || d.dk))))) {   // g's label, on the red curve
       var GG = PG.show.graph ? G : sl ? SG : Gd;
       for (var q2 = 0; q2 < 4; q2++) { var gx = [-6.5, 6.5, -3.5, 3.5][q2], gy2 = GG(gx); if (Math.abs(gy2) <= 8.5 && Math.abs(gy2 - F(gx)) > 1.6) { var tg = svgEl("text", { x: gx + .3, y: -gy2 - .5, fill: CG, "font-size": "1", "font-style": "italic", "font-family": "Georgia,serif", "pointer-events": "none" }); tg.textContent = wfLetter("g"); S.appendChild(tg); break; } }
@@ -6721,14 +6780,18 @@ var ESPIC = {
   }
   // Show work: f, each step taken, and g
   function wfWork(line) { var w = QZ.ww; if (!w) return; line = wfNm(line); var t = line.replace(/<[^>]+>/g, ""), l = w.steps[w.steps.length - 1]; if (l && l.eqs[0] === t) return; w.steps.push({ eqs: [t], cls: /^f\(/.test(t) ? "cf" : "cg" }); }
-  function wfFinal() { var p = wfCur(); if (p && p.g) wfWork("<i>g</i>(<i>x</i>) = " + wfRuleG(p)); }
+  function wfFinal() { var p = wfCur(); if (p && p.g) { wfWork("<i>g</i>(<i>x</i>) = " + wfRuleG(p)); if (wfQd() && wfLast()) wfWork("The vertex of <i>g</i> is (" + nf(p.g.h) + ", " + nf(p.g.k) + ")"); } }
   function wfSteppy() { return wf() && !wfCr() && (mode === "sequence" || mode === "calculate" || mode === "demo"); }
-  function wfF(p, x) { return p.fa * (p.fam === 2 ? Math.abs(x - p.fh) : x) + p.fk; }
+  function wfF(p, x) { return p.fa * wfVE(p.fam, x - p.fh, x) + p.fk; }
+  // the vertex-form families: 2 = absolute value a|x - h| + k, 3 = parabola a(x - h)² + k (2.1 reuses this engine with the parabola); u = x - h, x for a line
+  function wfVE(fam, u, x) { return fam === 3 ? u * u : fam === 2 ? Math.abs(u) : x; }
+  function wfBar(fam, inner) { return fam === 3 ? (inner === wfX ? wfX + "²" : "(" + inner + ")²") : "|" + inner + "|"; }
+  function wfVN(fam) { return fam === 3 ? "the parentheses being squared" : "the absolute value"; }
   // ---- 1.2, lessons 1 to 4 in Demo, Sequence and Calculate: three sliders and two buttons build g(x) = ±(a f(±x − h) + k); the graph only shows what they do.
   // Outside = k (-8 to 8), Inside = h (-8 to 8), Multiply Outside = a (1/4 1/3 1/2 1 2 3 4 5); -x flips the input, -f(x) wraps all of g in a minus.
   // When the controls say what the question says, the equation is taken; then f's rule is dragged onto g, and g is simplified by clicking, as before.
   var WFA = [[1, 4], [1, 3], [1, 2], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1]];
-  function wfSl() { return wfSteppy() && lesson >= 1 && lesson <= 4; }
+  function wfSl() { return wfSteppy() && wfL() >= 1 && wfL() <= 4; }
   function wfSlDef() { return { k: 0, h: 0, a: 3, nx: false, nf: false }; }
   function wfSlA(S) { return WFA[S.a][0] / WFA[S.a][1]; }
   function wfSlIdx(n, d) { for (var i = 0; i < WFA.length; i++) if (WFA[i][0] === n && WFA[i][1] === d) return i; return 3; }
@@ -6791,8 +6854,8 @@ var ESPIC = {
       S.push({ m: wfCo(a) + "\u0001(−" + wfX + ")\u0002" + (p.fk ? wfSg(p.fk) : ""), t: "", kind: "sub", q: null });
       S.push({ m: g, t: "Take away the parentheses.", kind: "paren", q: { lab: wfCo(a) + "(−" + wfX + ")", fn: -a, dh: 0, ask: "Take away the parentheses." } });
     } else {
-      S.push({ m: wfCo(a) + "|\u0003−" + wfX + (p.fh ? wfSg(-p.fh) : "") + "\u0004|" + (p.fk ? wfSg(p.fk) : ""), t: "", kind: "sub", q: null });
-      S.push({ m: g, t: "Rewrite the absolute value without the negative on x.", kind: "inner", q: { lab: "|−" + wfX + (p.fh ? wfSg(-p.fh) : "") + "|", abs: p.fh, ask: "Rewrite the absolute value so x is not negative." } });
+      S.push({ m: wfCo(a) + wfBar(p.fam, "\u0003−" + wfX + (p.fh ? wfSg(-p.fh) : "") + "\u0004") + (p.fk ? wfSg(p.fk) : ""), t: "", kind: "sub", q: null });
+      S.push({ m: g, t: "Rewrite " + wfVN(p.fam) + " without the negative on x.", kind: "inner", q: { lab: wfBar(p.fam, "−" + wfX + (p.fh ? wfSg(-p.fh) : "")), abs: p.fh, fam: p.fam, ask: "Rewrite " + wfVN(p.fam) + " so x is not negative." } });
     }
     S.forEach(function (st) { st.h = st.m.replace(/[\u0001-\u0006]/g, ""); });
     return S;
@@ -6802,7 +6865,7 @@ var ESPIC = {
     if (p.rf) return (p.stg = wfStgR(p));
     // marks in a form: \u0001..\u0002 the parentheses to take away, \u0003..\u0004 the operation to click inside the bars, \u0005..\u0006 the operation between two numbers to combine
     var a = p.fa, dh = p.dh, dk = p.dk, cons = [p.fk, dk].filter(Boolean), S = [], core = null;
-    var xs = wfX + (dh ? wfSg(-dh) : ""), bar = function (inner) { return "|" + inner + "|"; };
+    var xs = wfX + (dh ? wfSg(-dh) : ""), bar = function (inner) { return wfBar(p.fam, inner); };
     function cs() { return cons.map(function (c, i) { return i === 1 ? " \u0005" + (c < 0 ? "−" : "+") + "\u0006 " + nf(Math.abs(c)) : wfSg(c); }).join(""); }
     function ren(c, t, kind, q) { core = c; S.push({ m: c + cs(), t: t || "", kind: kind || "sub", q: q || null }); }
     var nsg = function (v, first) { return (v < 0 ? "−" : first ? "" : "+") + nf(Math.abs(v)); };
@@ -6816,7 +6879,7 @@ var ESPIC = {
       var hs = p.fh + dh;
       ren(wfCo(a) + bar("\u0001(" + xs + ")\u0002" + wfSg(-p.fh)));
       ren(wfCo(a) + bar(wfX + wfSg(-dh) + " \u0003" + (-p.fh < 0 ? "−" : "+") + "\u0004 " + nf(Math.abs(p.fh))), "Take away the parentheses.", "paren", null);
-      ren(wfCo(a) + bar(hs ? wfX + wfSg(-hs) : wfX), "Combine the numbers inside the absolute value.", "inner", { lab: nsg(-dh, true) + " " + (-p.fh < 0 ? "−" : "+") + " " + nf(Math.abs(p.fh)), ans: -dh - p.fh });
+      ren(wfCo(a) + bar(hs ? wfX + wfSg(-hs) : wfX), "Combine the numbers inside " + wfVN(p.fam) + ".", "inner", { lab: nsg(-dh, true) + " " + (-p.fh < 0 ? "−" : "+") + " " + nf(Math.abs(p.fh)), ans: -dh - p.fh });
     } else ren(wfCo(a) + bar(dh ? xs : p.fh ? wfX + wfSg(-p.fh) : wfX));
     while (cons.length > 1) {
       var sum = Math.round((cons[0] + cons[1]) * 1e9) / 1e9, lab = nsg(cons[0], true) + " " + (cons[1] < 0 ? "−" : "+") + " " + nf(Math.abs(cons[1]));
@@ -6998,18 +7061,18 @@ var ESPIC = {
     if (!wf() || !QZ || !QZ.order) { el.hidden = true; el.innerHTML = ""; askArrow(false); return; }
     var h = "", p = wfCur();
     if (wfCr()) {
-      if (QZ.cs === "move" && !QZ.pick && lesson === 5) {
+      if (QZ.cs === "move" && !QZ.pick && wfL() === 5) {
         if (QZ.cm === "c") h = "<div class=\"wfRow\"><span class=\"cg\">$</span><input class=\"wfIn wfMv\" style=\"width:7rem\" inputmode=\"numeric\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"12\" aria-label=\"The fixed cost\"><button class=\"btn\" data-wf=\"mv\">Done</button></div>";
         else h = "<div class=\"wfRow\">" + WF5P.map(function (q, i) { return "<button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"p" + i + "\">" + wf5Pct(q) + "%</button>"; }).join("") + "</div>";
       }
-      else if (QZ.cs === "move" && !QZ.pick && lesson === 4) {
+      else if (QZ.cs === "move" && !QZ.pick && wfL() === 4) {
         if (QZ.cm === "m") h = "<div class=\"wfRow\"><input class=\"wfIn wfMv\" style=\"width:13rem\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"right 3 and down 2\" aria-label=\"The move\"><button class=\"btn\" data-wf=\"mv\">Done</button></div>";
         else if (QZ.cm === "s") h = wfFacRow();
         else h = "<div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"m\">Move it</button><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"rx\">Reflect in the x-axis</button><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"ry\">Reflect in the y-axis</button><button type=\"button\" class=\"btn wfBtn\" data-wf=\"ct\" data-v=\"s\">Stretch or shrink it</button></div>";
       }
-      else if (QZ.cs === "move" && !QZ.pick && lesson === 3) h = wfFacRow();
-      else if (QZ.cs === "move" && !QZ.pick && lesson === 2) h = "<div class=\"wfRow\"><button class=\"btn\" data-wf=\"rf\" data-v=\"x\">x-axis</button><button class=\"btn\" data-wf=\"rf\" data-v=\"y\">y-axis</button></div>";
-      else if (QZ.cs === "move" && !QZ.pick) h = "<div class=\"wfRow\"><input class=\"wfIn wfMv\" style=\"width:13rem\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"" + (lesson === 2 ? "x-axis or y-axis" : "right 3 and down 2") + "\" aria-label=\"The move\"><button class=\"btn\" data-wf=\"mv\">Done</button></div>";
+      else if (QZ.cs === "move" && !QZ.pick && wfL() === 3) h = wfFacRow();
+      else if (QZ.cs === "move" && !QZ.pick && wfL() === 2) h = "<div class=\"wfRow\"><button class=\"btn\" data-wf=\"rf\" data-v=\"x\">x-axis</button><button class=\"btn\" data-wf=\"rf\" data-v=\"y\">y-axis</button></div>";
+      else if (QZ.cs === "move" && !QZ.pick) h = "<div class=\"wfRow\"><input class=\"wfIn wfMv\" style=\"width:13rem\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"" + (wfL() === 2 ? "x-axis or y-axis" : "right 3 and down 2") + "\" aria-label=\"The move\"><button class=\"btn\" data-wf=\"mv\">Done</button></div>";
       var keep = el.querySelector(".wfMv"), val = keep ? keep.value : "";
       el.innerHTML = h; el.hidden = !h; askArrow(false); var nm = el.querySelector(".wfMv"); if (nm) nm.value = val;
       return;
@@ -7033,7 +7096,7 @@ var ESPIC = {
         var sq = wfStg(p)[QZ.wst + 1];
         if (mode === "calculate" && QZ.wop && sq && sq.q) {
           h += "<div class=\"wfAsk\">" + (sq.q.ask || (sq.kind === "paren" ? "Take away the parentheses." : "Add the numbers.")) + "</div><div class=\"wfRow cg\"><span>" + sq.q.lab + " =</span><input class=\"wfIn\" style=\"width:9.5rem\" data-k=\"s\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"The answer\"></div>";
-        } else h += "<div class=\"wfAsk\">" + (sq && sq.kind === "paren" ? "Click the parentheses to take them away." : sq && sq.q && sq.q.abs !== undefined ? "Click inside the absolute value: " + sq.q.lab + " is the same as |" + wfX + wfSg(sq.q.abs) + "|." : "Combine like terms: click the operation between two like terms.") + "</div>";
+        } else h += "<div class=\"wfAsk\">" + (sq && sq.kind === "paren" ? "Click the parentheses to take them away." : sq && sq.q && sq.q.abs !== undefined ? "Click inside " + wfVN(sq.q.fam) + ": " + sq.q.lab + " is the same as " + wfBar(sq.q.fam, wfX + wfSg(sq.q.abs)) + "." : "Combine like terms: click the operation between two like terms.") + "</div>";
       }
     }
     var was = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains("wfIn");
@@ -7067,12 +7130,12 @@ var ESPIC = {
     var p = wfCur(), raw = String(el.value), f = eqFn(raw), st = wfStg(p)[QZ.wst + 1]; if (!st || !st.q || !f) { if (enter && f !== undefined) wfBad(el, "Not quite. Try again."); return; }
     var ok = false, msg = "Not quite. Try again.";
     if (st.q.g) {   // a reflection in the x-axis: the whole rule, with no parentheses
-      var Gf = function (x) { return p.g.a * (p.g.fam === 2 ? Math.abs(x - p.g.h) : x) + p.g.k; }, sg = true;
+      var Gf = function (x) { return p.g.a * wfVE(p.g.fam, x - p.g.h, x) + p.g.k; }, sg = true;
       for (var xg = -3; xg <= 3; xg++) { var vg; try { vg = f(xg); } catch (e4) { sg = false; break; } if (!(Math.abs(vg - Gf(xg)) < 1e-9)) { sg = false; break; } }
       ok = sg && !/[()]/.test(raw); if (sg && !ok) msg = "That is right, but the parentheses are still there.";
     } else if (st.q.abs !== undefined) {   // |-x - h| written as |x + h|
-      var sa = true; for (var xa = -3; xa <= 3; xa++) { var va; try { va = f(xa); } catch (e5) { sa = false; break; } if (!(Math.abs(va - Math.abs(xa + st.q.abs)) < 1e-9)) { sa = false; break; } }
-      ok = sa && !/\|\s*[-−]\s*x/.test(raw); if (sa && !ok) msg = "That is right, but x is still negative inside the bars.";
+      var sa = true; for (var xa = -3; xa <= 3; xa++) { var va; try { va = f(xa); } catch (e5) { sa = false; break; } if (!(Math.abs(va - wfVE(st.q.fam || 2, xa + st.q.abs, xa)) < 1e-9)) { sa = false; break; } }
+      ok = sa && !/(\||\()\s*[-−]\s*x/.test(raw); if (sa && !ok) msg = "That is right, but x is still negative inside.";
     } else if (st.kind === "paren") {
       var same = true; for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e2) { same = false; break; } if (!(Math.abs(v - st.q.fn * (x - st.q.dh)) < 1e-9)) { same = false; break; } }
       ok = same && !/[()]/.test(raw); if (same && !ok) msg = "That is right, but the parentheses are still there.";
@@ -7094,7 +7157,7 @@ var ESPIC = {
     if (p.comb && f) {
       var c0 = p.comb[0], c1 = p.comb[1], op = function (c) { return { dh: c.dh, dk: c.dk, rf: c.rf, scn: c.scn, scd: c.scd }; };
       var smC = function (fn) { for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e) { return false; } if (!(Math.abs(v - fn(x)) < 1e-6)) return false; } return true; };
-      var Gof = function (g) { return function (x) { return g.a * (g.fam === 2 ? Math.abs(x - g.h) : x) + g.k; }; };
+      var Gof = function (g) { return function (x) { return g.a * wfVE(g.fam, x - g.h, x) + g.k; }; };
       var rv = wfChain({ fam: p.fam, fa: p.fa, fh: p.fh, fk: p.fk }, [op(c1), op(c0)]);
       if (smC(function (x) { return wfF(p, x); })) msg = "That is still f(x). Make both changes: " + wfWhat(p) + ".";
       else if (smC(Gof(c0.g))) msg = "That is only the first change (" + wfWhat(c0) + "). The second change is still to do: " + wfWhat(c1) + ".";
@@ -7120,7 +7183,7 @@ var ESPIC = {
     }
     if (mode !== "solo" && f) {
       var same = function (fn) { for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e) { return false; } if (!(Math.abs(v - fn(x)) < 1e-6)) return false; } return true; };
-      var F = function (x) { return p.fa * (p.fam === 2 ? Math.abs(x - p.fh) : x) + p.fk; };
+      var F = function (x) { return p.fa * wfVE(p.fam, x - p.fh, x) + p.fk; };
       if (p.dh && same(function (x) { return F(x + p.dh) + p.dk; })) msg = (p.dh > 0 ? "Moving right means subtracting inside: " : "Moving left means adding inside: ") + "replace x with x " + (p.dh > 0 ? "− " : "+ ") + Math.abs(p.dh) + ".";
       else if (p.dk && same(function (x) { return F(x - p.dh) - p.dk; })) msg = "Check the direction: " + (p.dk > 0 ? "up means add " : "down means subtract ") + Math.abs(p.dk) + ".";
       else if (same(F)) msg = "That is still f(x). Move it " + wfMoves(p) + ".";
@@ -7159,7 +7222,7 @@ var ESPIC = {
   }
   // Create: the student types f, then the move, and then picks the mode to practise it in
   function wfCreateIn(t) {
-    if (lesson === 5) {
+    if (wfL() === 5) {
       var f5 = eqFn(t), a5, ok5 = !!f5;
       if (ok5) try { a5 = f5(1); ok5 = Math.abs(f5(0)) < 1e-9 && Math.abs(f5(2) - 2 * a5) < 1e-9 && Math.abs(f5(-3) + 3 * a5) < 1e-9 && Math.abs(a5 - Math.round(a5)) < 1e-9 && a5 >= 2 && a5 <= 80; } catch (e6) { ok5 = false; }
       if (!ok5) { pqMsg("Type the revenue as a whole number times x, like 25x."); eqShake(); return; }
@@ -7167,15 +7230,17 @@ var ESPIC = {
       PG.fam = 1; PG.a = a5; PG.h = 0; PG.k = 0; PG.show.eq = true; PG.eqTxt = ""; pqMsg(""); drawPlay(); pqPanel(); return;
     }
     var r = eqFit(t);
-    if (r.err || r.fam === 0 || r.fam === 3 || (r.fam === 1 && !r.a)) { pqMsg("Type a line like 2x + 1 or an absolute value like |x − 2| + 1."); eqShake(); return; }
-    QZ.wfp = [wfG({ fam: r.fam, fa: r.a, fh: r.fam === 2 ? r.h : 0, fk: r.k, dh: 0, dk: 0 })]; QZ.cs = "move"; QZ.pi = 0; QZ.cc = []; QZ.cm = "";
-    PG.fam = r.fam; PG.a = r.a; PG.h = r.fam === 2 ? r.h : 0; PG.k = r.k; PG.show.eq = true; PG.eqTxt = ""; pqMsg("");
+    if (wfQd()) { if (r.err || r.fam !== 3) { pqMsg("Type a parabola like x^2 or (x − 2)^2 + 1."); eqShake(); return; } }
+    else if (r.err || r.fam === 0 || r.fam === 3 || (r.fam === 1 && !r.a)) { pqMsg("Type a line like 2x + 1 or an absolute value like |x − 2| + 1."); eqShake(); return; }
+    QZ.wfp = [wfG({ fam: r.fam, fa: r.a, fh: r.fam >= 2 ? r.h : 0, fk: r.k, dh: 0, dk: 0 })]; QZ.cs = "move"; QZ.pi = 0; QZ.cc = []; QZ.cm = "";
+    PG.fam = r.fam; PG.a = r.a; PG.h = r.fam >= 2 ? r.h : 0; PG.k = r.k; PG.show.eq = true; PG.eqTxt = ""; pqMsg("");
     drawPlay(); pqPanel(); setTimeout(function () { var m = $("wfSteps").querySelector(".wfMv"); if (m) m.focus(); }, 30);
   }
   // Combining Transformations, Solo: the answer must be fully simplified: a line is ax + b, an absolute value is a|x - h| + k (no parentheses, no like terms left)
   function wfSimp(t) {
-    if (!(wf() && (lesson === 4 || lesson === 5) && mode === "solo")) return true;
+    if (!(wf() && (wfL() === 4 || wfL() === 5) && mode === "solo")) return true;
     var r = String(t).replace(/\s/g, "").replace(/^[fg]\(x\)=/i, "").replace(/−/g, "-").replace(/\*/g, "").replace(/\u00b7/g, "");
+    if (wfQd()) { r = r.replace(/\u00b2/g, "^2"); return /^[+-]?(\d*\.?\d+|\d+\/\d+)?(x|\(x[+-]\d+\))\^2([+-]\d+)?$/.test(r); }
     return /^[+-]?(\d+)?x([+-]\d+)?$/.test(r) || /^[+-]?(\d+)?\|x([+-]\d+)?\|([+-]\d+)?$/.test(r) || /^[+-]?\d+$/.test(r);
   }
   function wfFacRow() {
@@ -7197,7 +7262,7 @@ var ESPIC = {
     if (!op) return;
     var ops = (QZ.cc || []).concat([op]), st = wfChain({ fam: base.fam, fa: base.fa, fh: base.fh, fk: base.fk }, ops), last = st[st.length - 1];
     if (!wfChainOK(st)) { pqMsg("That makes fractions or puts the graph off the page. Try another change, or another function."); return; }
-    if (last.g.a === last.fa && last.g.h === (last.fam === 2 ? last.fh : 0) && last.g.k === last.fk) { pqMsg("That change leaves the function where it is. Try another."); return; }
+    if (last.g.a === last.fa && last.g.h === (last.fam >= 2 ? last.fh : 0) && last.g.k === last.fk) { pqMsg("That change leaves the function where it is. Try another."); return; }
     QZ.cc = ops; QZ.cm = "";
     if (ops.length === 2) { wfCustom = wfBuildC({ fam: base.fam, fa: base.fa, fh: base.fh, fk: base.fk }, ops); QZ.pick = true; }
     pqMsg(""); pqPanel();
@@ -7219,16 +7284,16 @@ var ESPIC = {
   }
   function wfMoveGo(axis) {
     var inp = $("wfSteps").querySelector(".wfMv"), p = wfCur(); if (!p || (!inp && !axis)) return;
-    if (lesson === 5) { wf5Create(axis, inp); return; }
-    if (lesson === 4) { wfCombOp(axis, inp); return; }
-    if (lesson === 3) {
+    if (wfL() === 5) { wf5Create(axis, inp); return; }
+    if (wfL() === 4) { wfCombOp(axis, inp); return; }
+    if (wfL() === 3) {
       var fm = /^(\d)(?:\/(\d))?$/.exec(axis || ""); if (!fm) { pqMsg("Choose a factor."); return; }
       var qs = { fam: p.fam, fa: p.fa, fh: p.fh, fk: p.fk, dh: 0, dk: 0, rf: "x", scn: +fm[1], scd: fm[2] ? +fm[2] : 1 }; wfG(qs);
       if (!Number.isInteger(qs.g.a) || !Number.isInteger(qs.g.k)) { pqMsg("That makes fractions for this f. Try another factor, or a function whose numbers divide evenly."); return; }
       if (Math.abs(qs.g.k) > 9 || Math.abs(qs.g.a) > 9 || Math.abs(qs.g.h) > 9) { pqMsg("That puts g off the graph. Try another factor or function."); return; }
       wfCustom = qs; QZ.pick = true; pqMsg(""); pqPanel(); return;
     }
-    if (lesson === 2) {
+    if (wfL() === 2) {
       var rf = axis === "x" || axis === "y" ? axis : "";
       if (!rf) { pqMsg("Choose the x-axis or the y-axis."); return; }
       var qr = { fam: p.fam, fa: p.fa, fh: p.fh, fk: p.fk, dh: 0, dk: 0, rf: rf }; wfG(qr);
@@ -7248,11 +7313,11 @@ var ESPIC = {
   // ---- 1.3 Modeling with Linear Functions: four word-problem exercises (Equation from a Graph, Comparing Linear Equations, Line of Fit, Line of Best Fit).
   // Each problem is a story with a picture and a figure; the student works through steps.  Demo, Sequence and Calculate take every small step (Sequence by choosing
   // the answer, Calculate by typing it); Solo takes only the big steps.  There is no graph tool: the figure is part of the question.
-  function m3() { return pq() && (act === "1.3" || gl()); }
+  function m3() { return pq() && (act === "1.3" || c2On() || gl()); }
   function m3Cur() { return QZ && QZ.m3p ? QZ.m3p[QZ.pi] : null; }
   function m3Pick(a) { return a[rnd(a.length)]; }
   function m3Sh(a) { for (var i = a.length - 1; i > 0; i--) { var j = rnd(i + 1), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-  function m3F(v) { v = Math.round(v * 100) / 100; if (Object.is(v, -0)) v = 0; return (v < 0 ? "−" : "") + Math.abs(v); }
+  function m3F(v) { v = Math.round(v * 10000) / 10000; if (Object.is(v, -0)) v = 0; return (v < 0 ? "−" : "") + Math.abs(v); }
   function m3Num(t) {
     var s = String(t).replace(/[\s$,%]/g, "").replace(/[−–]/g, "-"), f = /^(-?\d+)\/(\d+)$/.exec(s);
     if (f) return +f[2] ? +f[1] / +f[2] : NaN;
@@ -7329,12 +7394,13 @@ var ESPIC = {
   }
   // ---- steps.  A step: {id, lab (Solo's short name), fine (only in Demo, Sequence and Calculate), ask, pre (before the box), post (after it), type: num | eq | pick | pts | btn,
   //   ans (a number, or a function of the problem), tol, a & b (an equation), opts (pick), wrong(v) -> message, hint:[two hints], line (for Show work), nums (extra wrong choices)}
-  var M3ACT = ["yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab", "geq", "grow"];   // the steps that are answered on the graph
-  function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.csteps && mode === "calculate" ? pb.csteps : pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine : true; }) : []; }
+  var M3ACT = ["gpt", "yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab", "geq", "grow"];   // the steps that are answered on the graph
+  function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.csteps && mode === "calculate" ? pb.csteps : pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine : !s.so; }) : []; }
   function m3Step() { if (!QZ || QZ.m3done) return null; return m3L()[QZ.m3i] || null; }
   function m3V(v) { return typeof v === "function" ? v(m3Cur(), QZ.m3x || {}) : v; }
   function m3Ok(st, raw) {
     var t = st.type || "num", ans = m3V(st.ans);
+    if (t === "fn") return c2FnOk(st, raw);
     if (t === "eq") {
       var f = eqFn(raw), a = m3V(st.a), b = m3V(st.b); if (!f) return { ok: false, msg: "Type an equation like y = 2x + 5." };
       for (var x = -3; x <= 3; x++) { var y; try { y = f(x); } catch (e) { return { ok: false, msg: "Type an equation like y = 2x + 5." }; } if (typeof y !== "number" || !isFinite(y) || Math.abs(y - (a * x + b)) > 1e-6) return { ok: false, msg: st.wrongEq ? st.wrongEq(f, a, b) : "Not quite. Try again." }; }
@@ -7351,7 +7417,7 @@ var ESPIC = {
     QZ.m3i++; if (QZ.m3i >= m3L().length) QZ.m3done = true;
     QZ.hn = 0; pqMsg(""); drawPlay(); pqPanel();
   }
-  function m3Bad(el, msg) { QZ.wrong++; if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } pqMsg(String(msg || "Not quite. Try again.").replace(/<[^>]+>/g, "")); }
+  function m3Bad(el, msg) { QZ.wrong++; if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } pqMsg(m3Plain(msg || "Not quite. Try again.")); }
   function m3Try(el, enter) {
     var st = m3Step(); if (!st || st.type === "pick" || st.type === "pts" || st.type === "btn" || M3ACT.indexOf(st.type) >= 0) return;
     if (st.type === "sent") {   // Calculate: the amount of the change is typed
@@ -7367,7 +7433,8 @@ var ESPIC = {
   function m3Opts(st) {
     var key = QZ.pi + ":" + QZ.m3i; if (QZ.m3o && QZ.m3o.key === key) return QZ.m3o.list;
     var L = [];
-    if (st.type === "eq") {
+    if (st.type === "fn") L = st.fo.map(function (t, i) { return { t: t, ok: !i }; });
+    else if (st.type === "eq") {
       var a = m3V(st.a), b = m3V(st.b), c = [m3Eq(a, b), m3Eq(b, a), m3Eq(a, -b), m3Eq(-a, b), m3Eq(a, b + 1)];
       L = [{ t: c[0], ok: true }]; c.slice(1).forEach(function (t) { if (!L.some(function (o) { return o.t === t; }) && L.length < 4) L.push({ t: t, ok: false }); });
     } else {
@@ -7416,7 +7483,7 @@ var ESPIC = {
     else if (t === "btn") h += "<div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn\" data-m3=\"go\">" + st.btn + "</button></div>";
     else if (t === "pts") h += "";
     else if (mode === "sequence") h += "<div class=\"wfRow m3Opts\">" + m3Opts(st).map(function (o, i) { return "<button type=\"button\" class=\"btn wfBtn lm\" data-m3=\"opt\" data-v=\"" + i + "\">" + o.t + "</button>"; }).join("") + "</div>";
-    else h += "<div class=\"wfRow cg\">" + (st.pre ? "<span>" + st.pre + "</span>" : "") + "<input id=\"m3In\" class=\"m3In\" data-key=\"" + key + "\" style=\"width:" + (t === "eq" ? "11" : "8") + "rem\" inputmode=\"" + (t === "eq" ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Your answer\">" + (st.post ? "<span>" + st.post + "</span>" : "") + "</div>";
+    else h += "<div class=\"wfRow cg\">" + (st.pre ? "<span>" + st.pre + "</span>" : "") + "<input id=\"m3In\" class=\"m3In\" data-key=\"" + key + "\" style=\"width:" + (t === "eq" || t === "fn" ? "13" : "8") + "rem\" inputmode=\"" + (t === "eq" || t === "fn" ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Your answer\">" + (st.post ? "<span>" + st.post + "</span>" : "") + "</div>";
     el.innerHTML = h; el.hidden = false; if (gl()) glFocus();
     var inp = el.querySelector(".m3In"); if (inp) { if (kk === key && kv) inp.value = kv; if (mode !== "demo") inp.focus(); if (QZ.arrowAt !== QZ.m3i) { QZ.arrowAt = QZ.m3i; askArrow(true, inp.parentNode); } } else askArrow(false);
   }
@@ -7468,7 +7535,7 @@ var ESPIC = {
   }
   function m3Redraw() { $("pgQt").innerHTML = m3Q(); m3Steps(); }
   function m3Plot(p) {
-    var st = m3Step(), pb = m3Cur(); if (!st || !pb) return; if (pb.kind === 2) { m3Plot2(p, st, pb); return; } if (pb.kind === 5) { glPlot(p, st, pb); return; } if (pb.kind !== 1) return; var t = st.type, x = QZ.m3x, near = function (qx, qy) { return Math.hypot(p.vx - p.X(qx), p.vy - p.Y(qy)) <= 16; };
+    var st = m3Step(), pb = m3Cur(); if (!st || !pb) return; if (pb.kind === 20) { c2Plot(p, st, pb); return; } if (pb.kind === 2) { m3Plot2(p, st, pb); return; } if (pb.kind === 5) { glPlot(p, st, pb); return; } if (pb.kind !== 1) return; var t = st.type, x = QZ.m3x, near = function (qx, qy) { return Math.hypot(p.vx - p.X(qx), p.vy - p.Y(qy)) <= 16; };
     var ph = p.g[3] / p.g[5], offLine = Math.abs(p.y - (pb.m * p.x + pb.b)) * ph;
     if (t === "yint") {
       if (near(0, pb.b)) { x.b = true; m3Accept(st, ""); }
@@ -7712,9 +7779,11 @@ var ESPIC = {
   }
   function m3Hint(n) {
     var st = m3Step(); if (!st) return "Press the button below to keep going.";
-    var h = m3V(st.hint) || ["Read the question again, one step at a time."]; return h[Math.min(n, h.length - 1)];
+    var h = m3V(st.hint) || ["Read the question again, one step at a time."]; return m3Plain(h[Math.min(n, h.length - 1)]);
   }
-  function m3Explain() { var pb = m3Cur(); return pb ? pb.ex : ""; }
+  function m3Explain() { var pb = m3Cur(); return pb ? m3Plain(pb.ex) : ""; }
+  // a message shown as plain text: fractions written n/d, tags dropped
+  function m3Plain(t) { return String(t).replace(/<span class="fr"><span>([^<]*)<\/span><span>([^<]*)<\/span><\/span>/g, "$1/$2").replace(/<[^>]+>/g, ""); }
 
   // ---- Exercise 1: Equation from a Graph.  A line is drawn for a story; write y = mx + b, say what the slope means, and solve for a target
   var M3A = [
@@ -7932,7 +8001,7 @@ var ESPIC = {
     pb.ex = "The calculator's linear regression gives " + eqs + " with <i>r</i> = " + rs + ", a strong " + sgn + " correlation. At <i>x</i> = " + X + " the best-fit estimate is about " + m3F(est) + ". The classmate's line of fit gives " + m3F(E) + ", so the estimates are about " + m3F(diff) + " apart.";
     return pb;
   }
-  function m3Make(tier) { return gl() ? m3MakeG(tier) : lesson === 1 ? m3Make1(tier) : lesson === 2 ? m3Make2(tier) : lesson === 3 ? m3Make3(tier) : m3Make4(tier); }
+  function m3Make(tier) { return c2On() ? c2Make(tier) : gl() ? m3MakeG(tier) : lesson === 1 ? m3Make1(tier) : lesson === 2 ? m3Make2(tier) : lesson === 3 ? m3Make3(tier) : m3Make4(tier); }
   function m3Set(n) {
     if (n === 1) return [m3Make(0)];
     var out = [], key = function (p) { return p.head + JSON.stringify(p.steps.map(function (s) { return s.line && typeof s.line === "string" ? s.line : s.id; })); };
@@ -7954,7 +8023,7 @@ var ESPIC = {
   }
   window.addEventListener("resize", function () { if (document.body.classList.contains("play")) eqShrink(); });
   function drawPlay() {
-    document.body.classList.toggle("wfSolo", (wf() && (mode === "solo" || lesson === 5)) || m3()); document.body.classList.toggle("wfSlOn", wfSl());   // 1.2 Solo has no graph at all, and Profit from a Combination is a word problem without one
+    document.body.classList.toggle("wfSolo", (wf() && (mode === "solo" || wfL() === 5)) || m3()); document.body.classList.toggle("wfSlOn", wfSl());   // 1.2 Solo has no graph at all, and Profit from a Combination is a word problem without one
     drawGraph();
     $("pgTable").querySelector("tbody").innerHTML = fillMode() ? TB.html() : tableHTML();
     var fe = document.activeElement, fw = fe && fe.classList && fe.classList.contains("eqIn") ? (fe.closest("#pgEq") ? "pgEq" : "mid") : null;
@@ -7973,6 +8042,697 @@ var ESPIC = {
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
     eqKeysUpd(); pqCue(); pqEval(); eqShrink();
   }
+  // ---- Chapter 2 (Quadratic Functions).  2.1 Using a Transformed Quadratic and every exercise of 2.2, 2.3 and 2.4 run on the 1.3 engine: a problem is a story or a function,
+  // a figure, and steps (Demo, Sequence and Calculate take every small step; Solo takes only the big ones).  The figure here is a whole coordinate plane that can draw
+  // parabolas (opening up, down, left or right), lines of symmetry, a directrix, points and data; a "gpt" step is answered by clicking points on it, and an "fn" step by
+  // typing a function (any equivalent form is accepted: vertex form, standard form or intercept form).  Every problem is a new variant on every visit.
+  function c2On() { return pq() && ((act === "2.1" && lesson === 4) || act === "2.2" || act === "2.3" || act === "2.4"); }
+  var c2X = "<i>x</i>", c2Y = "<i>y</i>", C2B = "#2D70B3", C2P = "#7A3FB5", C2G = "#2E9E4F", C2O = "#C9731B";
+  function c2R(v, d) { var m = Math.pow(10, d == null ? 6 : d); v = Math.round(v * m) / m; return Object.is(v, -0) ? 0 : v; }
+  function c2F(v, d) { v = c2R(v, d == null ? 4 : d); return (v < 0 ? "−" : "") + Math.abs(v); }
+  function c2T(v, d) { v = c2R(v, d == null ? 4 : d); return String(v); }   // a number as it is typed (with -)
+  // a fraction when the number is a simple one (1/8, -3/4), else a decimal.  [html, typed]
+  var c2Dec = false;   // word problems with measured data show decimals (−0.04), the others fractions (1/8)
+  function c2Q(v) {
+    v = c2R(v, 9); if (Number.isInteger(v)) return [c2F(v), c2T(v)];
+    if (c2Dec && Number.isInteger(c2R(v * 10000, 6))) return [c2F(v), c2T(v)];
+    for (var d = 2; d <= 64; d++) { var n = c2R(v * d, 7); if (Number.isInteger(n) && Math.abs(n) <= 64) return [(n < 0 ? "−" : "") + wfFr(Math.abs(n), d), n + "/" + d]; }
+    return [c2F(v), c2T(v)];
+  }
+  function c2Co(a) { if (a === 1) return ["", ""]; if (a === -1) return ["−", "-"]; return c2Q(a); }   // a coefficient in front of x
+  function c2Sg(v) { return v < 0 ? " − " + c2F(-v) : " + " + c2F(v); }
+  function c2SgT(v) { return v < 0 ? "-" + c2T(-v) : "+" + c2T(v); }
+  function c2Sq(h, V) { return h ? "(" + V + c2Sg(-h) + ")²" : V + "²"; }
+  // vertex form: lhs = a(V - h)^2 + k   [html, typed]
+  function c2Vf(a, h, k, V, lhs) {
+    var co = c2Co(a), v = V || "x", Vh = v === "y" ? c2Y : c2X;
+    return [lhs + " = " + co[0] + c2Sq(h, Vh) + (k ? c2Sg(k) : ""), lhs.replace(/<[^>]+>/g, "") + "=" + co[1] + (h ? "(" + v + c2SgT(-h) + ")^2" : v + "^2") + (k ? c2SgT(k) : "")];
+  }
+  // standard form: lhs = ax^2 + bx + c   [html, typed]
+  function c2Sf(a, b, c, lhs) {
+    var co = c2Co(a), h = co[0] + c2X + "²", t = co[1] + "x^2";
+    if (b) { var cb = c2Q(Math.abs(b)); h += (b < 0 ? " − " : " + ") + (Math.abs(b) === 1 ? "" : cb[0]) + c2X; t += (b < 0 ? "-" : "+") + (Math.abs(b) === 1 ? "" : c2T(Math.abs(b))) + "x"; }
+    if (c) { h += c2Sg(c); t += c2SgT(c); }
+    return [lhs + " = " + h, lhs.replace(/<[^>]+>/g, "") + "=" + t];
+  }
+  // intercept form: lhs = a(x - p)(x - q)
+  function c2If(a, p, q, lhs) {
+    var co = c2Co(a), fac = function (r, T) { return r ? "(" + (T ? "x" + c2SgT(-r) : c2X + c2Sg(-r)) + ")" : T ? "x" : c2X; };
+    return [lhs + " = " + co[0] + fac(p) + fac(q), lhs.replace(/<[^>]+>/g, "") + "=" + co[1] + fac(p, 1) + fac(q, 1)];
+  }
+  function c2Pt(x, y) { return "(" + c2F(x) + ", " + c2F(y) + ")"; }
+  function c2Pick(a) { return a[rnd(a.length)]; }
+  function c2Rng(lo, hi) { return lo + rnd(hi - lo + 1); }
+  function c2Nz(lo, hi) { var v = 0; while (!v) v = c2Rng(lo, hi); return v; }
+  function c2Svg(inner) { return wf5Svg(inner); }
+  // a step ask that is shorter in Solo (Solo gives the problem, not the method)
+  function c2S(full, solo) { return function () { return mode === "solo" ? solo : full; }; }
+  // wrong choices for an "fn" step in Sequence: the right one first
+  function c2Fo(right, wrongs) { var seen = {}, out = []; [right].concat(wrongs).forEach(function (t) { if (!seen[t]) { seen[t] = 1; out.push(t); } }); return out.slice(0, 4); }
+
+  // ---- the figure: a coordinate plane.  o = {xmin, xmax, ymin, ymax, gx, gy (grid steps), tx, ty (label steps), xl, yl (axis titles), curves:[{fn, col, w, dash, lo, hi, inv}],
+  //   vl:[{x, col, dash, lab}], hl:[{y, col, dash, lab}], segs:[{x1, y1, x2, y2, col, dash, w}], pts:[{x, y, col, lab, hollow, dx, dy, an}], txt:[{x, y, t, col, an}], scat:[[x, y]]}
+  var c2Clip = 0;
+  // text inside an SVG cannot hold HTML tags (an <i> or <span> would end the SVG): italics become a tspan, fractions become n/d
+  function c2St(t) { return String(t).replace(/<span class="fr"><span>([^<]*)<\/span><span>([^<]*)<\/span><\/span>/g, "$1/$2").replace(/<i>([^<]*)<\/i>/g, "<tspan font-style=\"italic\">$1</tspan>").replace(/<(?!\/?tspan)[^>]+>/g, ""); }
+  function c2Fig(o) {
+    var W = 340, H = o.H || 300, titled = !!(o.xl || o.yl), L = titled ? 58 : 30, R = 12, T = 12, B = titled ? 44 : 22, pw = W - L - R, ph = H - T - B;
+    var x0 = o.xmin, x1 = o.xmax, y0 = o.ymin, y1 = o.ymax, X = function (x) { return L + (x - x0) / (x1 - x0) * pw; }, Y = function (y) { return T + ph - (y - y0) / (y1 - y0) * ph; };
+    var halo = " stroke=\"var(--bg)\" stroke-width=\"3\" paint-order=\"stroke\"", id = "c2c" + (++c2Clip), gx = o.gx || 1, gy = o.gy || gx, tx = o.tx || 5 * gx, ty = o.ty || 5 * gy, v, k;
+    var s = "<svg class=\"m3Fig c2Fig\" viewBox=\"0 0 " + W + " " + H + "\" data-g=\"" + [L, T, pw, ph, x1, y1, x0, y0].join(",") + "\" role=\"img\" aria-label=\"" + c2St(o.alt || "Graph").replace(/<[^>]+>/g, "").replace(/"/g, "") + "\" font-family=\"system-ui,sans-serif\" font-size=\"11\" fill=\"currentColor\">";
+    s += "<defs><clipPath id=\"" + id + "\"><rect x=\"" + L + "\" y=\"" + T + "\" width=\"" + pw + "\" height=\"" + ph + "\"/></clipPath></defs>";
+    var near = function (a, b) { return Math.abs(a - b) < 1e-9; }, onStep = function (val, st) { return near(val / st, Math.round(val / st)); };
+    for (k = Math.ceil(x0 / gx - 1e-9); k * gx <= x1 + 1e-9; k++) { v = k * gx; s += "<path d=\"M" + X(v) + " " + T + "V" + (T + ph) + "\" stroke=\"currentColor\" stroke-opacity=\"" + (onStep(v, tx) ? ".24" : ".1") + "\"/>"; }
+    for (k = Math.ceil(y0 / gy - 1e-9); k * gy <= y1 + 1e-9; k++) { v = k * gy; s += "<path d=\"M" + L + " " + Y(v) + "H" + (L + pw) + "\" stroke=\"currentColor\" stroke-opacity=\"" + (onStep(v, ty) ? ".24" : ".1") + "\"/>"; }
+    var ax = x0 <= 0 && x1 >= 0 ? X(0) : L, ay = y0 <= 0 && y1 >= 0 ? Y(0) : T + ph;
+    s += "<path d=\"M" + L + " " + ay + "H" + (L + pw) + "M" + ax + " " + T + "V" + (T + ph) + "\" stroke=\"currentColor\" stroke-width=\"1.5\"/>";
+    for (k = Math.ceil(x0 / tx - 1e-9); k * tx <= x1 + 1e-9; k++) { v = c2R(k * tx); if (v === 0 && ax !== L) continue; s += "<text x=\"" + X(v) + "\" y=\"" + Math.min(ay + 13, T + ph + 14) + "\" text-anchor=\"middle\"" + halo + ">" + c2F(v) + "</text>"; }
+    for (k = Math.ceil(y0 / ty - 1e-9); k * ty <= y1 + 1e-9; k++) { v = c2R(k * ty); if (v === 0 && ay !== T + ph) continue; s += "<text x=\"" + (ax - 4) + "\" y=\"" + (Y(v) + 4) + "\" text-anchor=\"end\"" + halo + ">" + c2F(v) + "</text>"; }
+    if (o.xl) s += "<text x=\"" + (L + pw / 2) + "\" y=\"" + (H - 6) + "\" text-anchor=\"middle\" font-weight=\"600\">" + c2St(o.xl) + "</text>";
+    if (o.yl) s += "<text transform=\"translate(13 " + (T + ph / 2) + ") rotate(-90)\" text-anchor=\"middle\" font-weight=\"600\">" + c2St(o.yl) + "</text>";
+    s += "<g clip-path=\"url(#" + id + ")\">";
+    (o.vl || []).forEach(function (l) { s += "<path d=\"M" + X(l.x) + " " + T + "V" + (T + ph) + "\" stroke=\"" + l.col + "\" stroke-width=\"2\"" + (l.dash === false ? "" : " stroke-dasharray=\"6 4\"") + "/>"; });
+    (o.hl || []).forEach(function (l) { s += "<path d=\"M" + L + " " + Y(l.y) + "H" + (L + pw) + "\" stroke=\"" + l.col + "\" stroke-width=\"2\"" + (l.dash === false ? "" : " stroke-dasharray=\"6 4\"") + "/>"; });
+    (o.curves || []).forEach(function (c) {
+      var lo = c.lo == null ? (c.inv ? y0 : x0) : c.lo, hi = c.hi == null ? (c.inv ? y1 : x1) : c.hi, N = 240, d = "", pen = false, sp = (y1 - y0) * 3;
+      for (var i = 0; i <= N; i++) {
+        var t = lo + (hi - lo) * i / N, f = c.fn(t), px = c.inv ? f : t, py = c.inv ? t : f;
+        if (!isFinite(f) || Math.abs(py - (y0 + y1) / 2) > sp || Math.abs(px - (x0 + x1) / 2) > (x1 - x0) * 3) { pen = false; continue; }
+        d += (pen ? "L" : "M") + X(px).toFixed(2) + " " + Y(py).toFixed(2); pen = true;
+      }
+      s += "<path d=\"" + d + "\" fill=\"none\" stroke=\"" + c.col + "\" stroke-width=\"" + (c.w || 2.6) + "\" stroke-linecap=\"round\" stroke-linejoin=\"round\"" + (c.dash ? " stroke-dasharray=\"" + c.dash + "\"" : "") + "/>";
+    });
+    (o.segs || []).forEach(function (g) { s += "<path d=\"M" + X(g.x1) + " " + Y(g.y1) + "L" + X(g.x2) + " " + Y(g.y2) + "\" stroke=\"" + g.col + "\" stroke-width=\"" + (g.w || 2) + "\" fill=\"none\"" + (g.dash ? " stroke-dasharray=\"" + g.dash + "\"" : "") + "/>"; });
+    s += "</g>";
+    (o.vl || []).concat(o.hl || []).forEach(function (l) {
+      if (!l.lab) return; var isV = l.x != null, lx = isV ? X(l.x) + 5 : L + pw - 4, ly = isV ? T + 14 : Y(l.y) - 6;
+      if (isV && X(l.x) > L + pw - 60) { lx = X(l.x) - 5; }
+      s += "<text x=\"" + lx + "\" y=\"" + ly + "\" text-anchor=\"" + (isV ? (X(l.x) > L + pw - 60 ? "end" : "start") : "end") + "\" font-weight=\"700\" fill=\"" + l.col + "\"" + halo + ">" + c2St(l.lab) + "</text>";
+    });
+    (o.scat || []).forEach(function (p) { if (p[0] >= x0 && p[0] <= x1 && p[1] >= y0 && p[1] <= y1) s += "<circle cx=\"" + X(p[0]) + "\" cy=\"" + Y(p[1]) + "\" r=\"4.2\" fill=\"" + C2B + "\" stroke=\"var(--bg)\" stroke-width=\"1\"/>"; });
+    (o.pts || []).forEach(function (p) {
+      if (p.x < x0 - 1e-9 || p.x > x1 + 1e-9 || p.y < y0 - 1e-9 || p.y > y1 + 1e-9) return;
+      var c = p.col || C2P;
+      s += "<circle cx=\"" + X(p.x) + "\" cy=\"" + Y(p.y) + "\" r=\"" + (p.hollow ? 6 : 5) + "\" fill=\"" + (p.hollow ? "var(--bg)" : c) + "\" stroke=\"" + (p.hollow ? c + "\" stroke-width=\"2.4" : "var(--bg)\" stroke-width=\"1.4") + "\"/>";
+      if (p.lab) {
+        var right = p.an ? p.an === "start" : X(p.x) < L + pw * .62, t = c2St(p.lab === true ? c2Pt(p.x, p.y) : p.lab);
+        s += "<text x=\"" + (X(p.x) + (right ? 8 : -8)) + "\" y=\"" + (Y(p.y) + (p.dy == null ? -8 : p.dy)) + "\" text-anchor=\"" + (right ? "start" : "end") + "\" font-weight=\"700\" fill=\"" + (p.tc || "currentColor") + "\"" + halo + ">" + t + "</text>";
+      }
+    });
+    (o.txt || []).forEach(function (t) { s += "<text x=\"" + X(t.x) + "\" y=\"" + Y(t.y) + "\" text-anchor=\"" + (t.an || "middle") + "\" font-weight=\"700\" fill=\"" + (t.col || "currentColor") + "\"" + halo + ">" + c2St(t.t) + "</text>"; });
+    return s + "</svg>";
+  }
+  // a window that holds everything: a tidy step and range for one axis (lo..hi data range, about 8 to 12 grid lines)
+  function c2Axis(lo, hi, zero) {
+    if (zero !== false) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+    var span = Math.max(hi - lo, 1e-6), S = [0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000], g = S[S.length - 1];
+    for (var i = 0; i < S.length; i++) if (span / S[i] <= 12) { g = S[i]; break; }
+    var a = Math.floor(lo / g - 1e-9) * g, b = Math.ceil(hi / g + 1e-9) * g;
+    if (lo >= 0 && a < 0 && zero !== false) a = 0;
+    return { min: a, max: b, g: g, t: g * (span / g > 8 ? 2 : 1) };
+  }
+  // the points the student has plotted so far (gpt steps) go on every figure
+  function c2Base(o, x) { o.pts = (o.pts || []).concat((x && x.pl) || []); return c2Fig(o); }
+
+  // ---- answering on the figure: a "gpt" step is a list of grid points to click (any order), or any points on a curve (st.any = fn, st.n how many, st.inv: x = fn(y))
+  function c2Plot(p, st, pb) {
+    if (!st || st.type !== "gpt") return;
+    var x = QZ.m3x, done = x[st.id] = x[st.id] || [], sx = st.snap || 1, sy = st.snapy || sx;
+    var qx = c2R(Math.round(p.x / sx) * sx), qy = c2R(Math.round(p.y / sy) * sy);
+    if (Math.hypot(p.vx - p.X(qx), p.vy - p.Y(qy)) > 16) { m3Bad(null, "Click right on a grid point."); return; }
+    if (done.some(function (d) { return Math.abs(d[0] - qx) < 1e-9 && Math.abs(d[1] - qy) < 1e-9; })) return;
+    var ok = false, need = st.pts ? st.pts.length : st.n;
+    if (st.pts) ok = st.pts.some(function (q) { return Math.abs(q[0] - qx) < 1e-9 && Math.abs(q[1] - qy) < 1e-9; });
+    else if (st.any) {
+      var on = st.inv ? Math.abs(st.any(qy) - qx) < 1e-9 : Math.abs(st.any(qx) - qy) < 1e-9;
+      var bad = (st.not || []).some(function (q) { return Math.abs(q[0] - qx) < 1e-9 && Math.abs(q[1] - qy) < 1e-9; });
+      if (on && bad) { m3Bad(null, st.notMsg || "That one is already there. Choose another point on the parabola."); return; }
+      if (on && st.side != null) {
+        var left = (st.inv ? qy : qx) < st.side, nl = done.filter(function (d) { return (st.inv ? d[1] : d[0]) < st.side; }).length;
+        if ((left && nl >= need / 2) || (!left && done.length - nl >= need / 2)) { m3Bad(null, "Choose points on both sides of the axis of symmetry: " + need / 2 + " on each side."); return; }
+      }
+      ok = on;
+    }
+    if (!ok) { m3Bad(null, st.miss ? st.miss(qx, qy) : "The point " + c2Pt(qx, qy) + " is not one of them. Try again."); return; }
+    done.push([qx, qy]); (x.pl = x.pl || []).push({ x: qx, y: qy, col: st.col || C2P });
+    if (done.length >= need) m3Accept(st, ""); else { pqMsg(""); m3Redraw(); }
+  }
+  // the demo's choice for "any points on the curve": grid points that work, as close to the vertex as possible, split evenly across the axis when asked
+  function c2DemoPts(st) {
+    var done = (QZ.m3x && QZ.m3x[st.id]) || [], c = [];
+    for (var u = -9; u <= 9; u++) {
+      var w = c2R(st.any(u), 6), q = st.inv ? [w, u] : [u, w];
+      if (!Number.isInteger(w) || Math.abs(w) > 9) continue;
+      if ((st.not || []).concat(done).some(function (z) { return Math.abs(z[0] - q[0]) < 1e-9 && Math.abs(z[1] - q[1]) < 1e-9; })) continue;
+      c.push(q);
+    }
+    var ax = st.side == null ? 0 : st.side, key = function (q) { return Math.abs((st.inv ? q[1] : q[0]) - ax); };
+    c.sort(function (p, q) { return key(p) - key(q); });
+    if (st.side == null) return c.slice(0, st.n - done.length);
+    var L = c.filter(function (q) { return (st.inv ? q[1] : q[0]) < ax; }), R = c.filter(function (q) { return (st.inv ? q[1] : q[0]) > ax; }), out = [], i;
+    for (i = 0; i < st.n / 2; i++) { if (L[i]) out.push(L[i]); if (R[i]) out.push(R[i]); }
+    return out;
+  }
+  // ---- answering with a function: st.fn (x -> y, or y -> x when st.v is "y"); any equivalent equation is right
+  function c2FnOk(st, raw) {
+    var t = String(raw).replace(/[−–]/g, "-").replace(/\s+/g, "").toLowerCase(), v = st.v || "x", eg = st.eg || (v === "y" ? "x = 1/8y^2" : "y = 2(x − 1)^2 + 3");
+    if (!t) return { ok: false, msg: "Type an equation like " + eg + "." };
+    if (v === "y") {
+      if (!/^x=/.test(t)) return { ok: false, msg: "This parabola opens left or right: write it as x = … with y on the right." };
+      t = "y=" + t.slice(2).replace(/x/g, "@").replace(/y/g, "x");
+    } else {
+      if (/^x=/.test(t)) return { ok: false, msg: "Write it as y = … with x on the right." };
+      if (!/=/.test(t)) t = "y=" + t;
+    }
+    var f = eqFn(t); if (!f) return { ok: false, msg: "Type an equation like " + eg + "." };
+    var xs = st.xs || [-3, -2, -1, 0, 1, 2, 3, 0.5], rt = st.rtol || 1e-6;
+    for (var i = 0; i < xs.length; i++) {
+      var got; try { got = f(xs[i]); } catch (e) { return { ok: false, msg: "Type an equation like " + eg + "." }; }
+      var want = st.fn(xs[i]); if (typeof got !== "number" || !isFinite(got) || Math.abs(got - want) > rt * Math.max(1, Math.abs(want))) return { ok: false, msg: (st.wrongFn && st.wrongFn(f)) || "Not quite. Try again." };
+    }
+    return { ok: true, show: "" };
+  }
+  // does a typed function match g everywhere it is tested?
+  function c2Same(f, g, xs) { xs = xs || [-3, -2, -1, 0, 1, 2, 3]; for (var i = 0; i < xs.length; i++) { var a; try { a = f(xs[i]); } catch (e) { return false; } if (!(Math.abs(a - g(xs[i])) < 1e-6 * Math.max(1, Math.abs(g(xs[i]))))) return false; } return true; }
+  function c2Pk(right, wrongs) { return m3Sh([{ t: right, ok: true }].concat(wrongs.map(function (w) { return { t: w[0], ok: false, why: w[1] }; }))); }
+
+  // ---- pictures (one for every story)
+  var C2PIC = {
+    hose: '<path d="M10 82h30V58H10z" fill="#d9534f" fill-opacity=".35"/><circle cx="18" cy="86" r="5"/><circle cx="34" cy="86" r="5"/><path d="M36 58l14-14" stroke-width="4"/><path d="M50 44q30-30 62 30" stroke="#2D70B3" stroke-width="3" stroke-dasharray="4 4"/><path d="M0 92h120" stroke-width="2.5"/>',
+    fount: '<path d="M30 80h60v10H30z" fill="var(--plus)" fill-opacity=".3"/><path d="M60 80V64" stroke-width="4"/><path d="M60 64q-14-46-40 10M60 64q14-46 40 10" stroke="#2D70B3" stroke-width="3" stroke-dasharray="4 4"/><path d="M0 92h120" stroke-width="2.5"/>',
+    sprink: '<path d="M18 86V62" stroke-width="4"/><path d="M12 62h12" stroke-width="3"/><path d="M18 62q36-60 92 24" stroke="#2D70B3" stroke-width="3" stroke-dasharray="4 4"/><path d="M0 90q30-6 60 0t60 0" stroke="#3d8f4f" stroke-width="3"/>',
+    cannon: '<path d="M8 82h34V70H8z" fill="var(--plus)" fill-opacity=".3"/><path d="M28 70l16-16" stroke-width="7"/><path d="M46 52q28-34 66 34" stroke="#2D70B3" stroke-width="3" stroke-dasharray="4 4"/><path d="M0 92h120" stroke-width="2.5"/>',
+    boat: '<path d="M6 76h46l-8 12H14z" fill="#d9534f" fill-opacity=".35"/><path d="M22 76V62h16v14" stroke-width="2.5"/><path d="M38 62q30-40 76 26" stroke="#2D70B3" stroke-width="3" stroke-dasharray="4 4"/><path d="M0 92q15-4 30 0t30 0 30 0 30 0" stroke="#2D70B3" stroke-width="2.5"/>',
+    golf: '<circle cx="18" cy="84" r="5" fill="var(--bg)"/><path d="M18 84q40-80 90 2" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M104 86V60l12 5-12 5" stroke-width="2.5" fill="#d9534f" fill-opacity=".4"/><path d="M0 90h120" stroke="#3d8f4f" stroke-width="3"/>',
+    soccer: '<circle cx="20" cy="80" r="9" fill="var(--bg)"/><path d="M16 76l8 0M20 72v8" stroke-width="1.5"/><path d="M26 74q36-64 84 14" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M0 90h120" stroke="#3d8f4f" stroke-width="3"/>',
+    punt: '<ellipse cx="22" cy="78" rx="10" ry="6" fill="#b5651d" fill-opacity=".5" transform="rotate(-25 22 78)"/><path d="M30 72q36-70 82 16" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M0 90h120" stroke="#3d8f4f" stroke-width="3"/>',
+    frog: '<ellipse cx="24" cy="80" rx="14" ry="8" fill="#3d8f4f" fill-opacity=".5"/><circle cx="18" cy="72" r="4" fill="var(--bg)"/><circle cx="30" cy="72" r="4" fill="var(--bg)"/><path d="M38 76q30-56 74 12" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M0 90h120" stroke-width="2.5"/>',
+    balloon: '<path d="M12 86l10-20 10 20" stroke-width="3"/><circle cx="22" cy="60" r="7" fill="#2D70B3" fill-opacity=".45"/><path d="M30 56q36-56 82 30" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M0 90h120" stroke-width="2.5"/>',
+    dish: '<path d="M16 34q44 64 88 0" stroke-width="4" fill="var(--plus)" fill-opacity=".14"/><path d="M60 66V90M44 90h32" stroke-width="3"/><path d="M60 64L60 20" stroke-width="2"/><circle cx="60" cy="18" r="5" fill="#d98a1c" fill-opacity=".7"/>',
+    sun: '<circle cx="98" cy="18" r="10" fill="#e6c619" fill-opacity=".7"/><path d="M12 44q42 56 84 0" stroke-width="4" fill="var(--plus)" fill-opacity=".14"/><path d="M54 70V92M40 92h28" stroke-width="3"/><circle cx="54" cy="34" r="5" fill="#d9534f" fill-opacity=".6"/><path d="M90 26L58 32" stroke="#e6c619" stroke-width="2"/>',
+    lamp: '<path d="M30 20q50 30 0 60" stroke-width="4" fill="#e6c619" fill-opacity=".15"/><circle cx="42" cy="50" r="5" fill="#e6c619" fill-opacity=".8"/><path d="M50 40h56M50 50h60M50 60h56" stroke="#e6c619" stroke-width="2.5" stroke-dasharray="5 4"/>',
+    mic: '<path d="M28 18q60 32 0 64" stroke-width="4" fill="var(--plus)" fill-opacity=".14"/><rect x="40" y="44" width="16" height="12" rx="4" fill="currentColor" fill-opacity=".3"/><path d="M48 56v24M36 92h24M48 80v12" stroke-width="3"/><path d="M78 40q8 10 0 20M88 34q12 16 0 32" stroke-width="2"/>',
+    antenna: '<path d="M24 16q52 34 0 68" stroke-width="4" fill="var(--plus)" fill-opacity=".14"/><path d="M24 50h40" stroke-width="2"/><circle cx="64" cy="50" r="4" fill="#d98a1c"/><path d="M20 84l-8 8h24z" stroke-width="2.5"/>',
+    cooker: '<path d="M14 40q46 56 92 0" stroke-width="4" fill="#e6c619" fill-opacity=".2"/><path d="M14 40l-4 50M106 40l4 50" stroke-width="2.5"/><path d="M34 52h52" stroke="#b5651d" stroke-width="5"/>',
+    human: '<circle cx="18" cy="70" r="5"/><path d="M14 76l-6 10M22 76l8 6" stroke-width="2.5"/><path d="M8 82l18-14" stroke-width="7"/><path d="M28 62q34-50 70 14" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M92 74h22v6H92z" fill="#d9534f" fill-opacity=".4"/><path d="M96 80v10M110 80v10" stroke-width="2"/><path d="M0 92h120" stroke-width="2.5"/>',
+    ramp: '<path d="M4 90l30-18v18" fill="var(--plus)" fill-opacity=".3"/><circle cx="28" cy="62" r="4"/><circle cx="40" cy="62" r="4"/><path d="M28 62l6-6 6 6" stroke-width="2"/><path d="M40 58q32-42 64 10" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M96 90l20-14v14" fill="var(--plus)" fill-opacity=".3"/><path d="M0 92h120" stroke-width="2.5"/>',
+    ball: '<path d="M6 92V52h18v40" fill="var(--plus)" fill-opacity=".2"/><circle cx="28" cy="48" r="5" fill="#d98a1c" fill-opacity=".6"/><path d="M32 46q30-36 70 30" stroke-width="2.5" stroke-dasharray="4 4"/><circle cx="104" cy="80" r="4"/><path d="M104 84v8" stroke-width="2"/><path d="M0 92h120" stroke-width="2.5"/>',
+    skier: '<path d="M4 92l40-24v24" fill="#2D70B3" fill-opacity=".25"/><circle cx="40" cy="58" r="4"/><path d="M40 62v8M34 72h14" stroke-width="2.5"/><path d="M46 60q26-36 60 20" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M0 92q15-4 30 0t30 0 30 0 30 0" stroke="#2D70B3" stroke-width="2.5"/>',
+    temp: '<rect x="50" y="10" width="20" height="62" rx="10" fill="var(--plus)" fill-opacity=".14"/><circle cx="60" cy="80" r="13" fill="#2D70B3" fill-opacity=".5"/><path d="M60 72V36" stroke="#2D70B3" stroke-width="6"/><path d="M76 24h10M76 38h10M76 52h10" stroke-width="2"/>',
+    jump: '<circle cx="30" cy="40" r="6"/><path d="M30 46l8 14 10-6M38 60l-6 14M30 50l-10 6" stroke-width="3"/><path d="M10 88q40-80 90 0" stroke-width="2" stroke-dasharray="4 4"/><path d="M0 90h120" stroke-width="2.5"/>',
+    kick: '<circle cx="14" cy="84" r="6" fill="var(--bg)"/><path d="M14 84q46-90 94 0" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M0 90h120" stroke="#3d8f4f" stroke-width="3"/>',
+    arch: '<path d="M10 90q50-100 100 0" stroke-width="5"/><path d="M0 90h120" stroke-width="2.5"/><path d="M30 60h60" stroke-width="2" opacity=".5"/>',
+    rocket: '<path d="M60 12l10 22v30H50V34z" fill="var(--plus)" fill-opacity=".3"/><path d="M50 56l-8 12h8M70 56l8 12h-8" stroke-width="2.5"/><path d="M56 68l4 14 4-14" stroke="#d98a1c" stroke-width="3"/><circle cx="60" cy="38" r="4"/>',
+    ticket: '<path d="M14 30h92v14a9 9 0 0 0 0 18v14H14V62a9 9 0 0 0 0-18z" fill="var(--plus)" fill-opacity=".3"/><path d="M78 30v46" stroke-dasharray="3 5" stroke-width="2"/><path d="M28 50h32M28 60h22" stroke-width="2"/>',
+    plane: '<path d="M14 58l40-6 24-30h10l-10 30 28-4 8-8h6l-4 14 4 14h-6l-8-8-28-4 10 30H78L54 64l-40-6z" fill="var(--plus)" fill-opacity=".25" stroke-width="2.5"/>',
+    garden: '<rect x="18" y="24" width="84" height="56" fill="#3d8f4f" fill-opacity=".25"/><path d="M18 24h84v56H18z" stroke-dasharray="6 4"/><path d="M34 60q6-14 12 0M60 52q6-14 12 0M82 64q6-14 12 0" stroke="#3d8f4f" stroke-width="2.5"/>',
+    car: '<path d="M10 70V56l14-4 12-14h40l12 14 14 4v14z" fill="var(--plus)" fill-opacity=".25"/><circle cx="32" cy="74" r="8" fill="var(--bg)"/><circle cx="88" cy="74" r="8" fill="var(--bg)"/><path d="M0 92h120" stroke-width="2.5"/>',
+    ice: '<path d="M8 50h104v20H8z" fill="#2D70B3" fill-opacity=".18"/><path d="M8 70q26 8 52 0t52 0" stroke="#2D70B3" stroke-width="2"/><rect x="44" y="30" width="32" height="20" rx="3" fill="currentColor" fill-opacity=".25"/><path d="M50 50v-4M70 50v-4" stroke-width="2"/>',
+    scooter: '<circle cx="28" cy="80" r="8"/><circle cx="90" cy="80" r="8"/><path d="M28 80h56l14-52M92 28h12" stroke-width="3"/>',
+    leaf: '<path d="M60 90V50" stroke-width="3"/><path d="M60 62q-30-4-34-34q32 2 34 34zM60 54q28-6 30-34q-30 2-30 34z" fill="#3d8f4f" fill-opacity=".5" stroke-width="2.5"/><circle cx="96" cy="16" r="8" fill="#e6c619" fill-opacity=".6"/>',
+    brake: '<path d="M6 70V56l14-4 12-14h40l12 14 14 4v14z" fill="#d9534f" fill-opacity=".25"/><circle cx="28" cy="74" r="8" fill="var(--bg)"/><circle cx="84" cy="74" r="8" fill="var(--bg)"/><path d="M104 52v30M98 52h12" stroke-width="3"/><path d="M0 92h120" stroke-width="2.5"/>',
+    sprout: '<path d="M38 62h44l-6 30H44z" fill="#b5651d" fill-opacity=".45"/><path d="M34 62h52" stroke-width="4"/><path d="M60 62V32" stroke-width="3"/><path d="M60 48q-26-2-28-24q24 0 28 24zM60 40q24-2 28-22q-24-2-28 22z" fill="#3d8f4f" fill-opacity=".5" stroke-width="2.5"/>'
+  };
+  function c2Pic(k) { return c2Svg(C2PIC[k]); }
+  // ---- 2.1, fourth exercise: Using a Transformed Quadratic.  A path h(x) = ax² + bx + c lands at x = R; it must land D feet farther (or closer), so the whole path moves
+  // up (or down) by -h(R + D): g(x) = h(x) + k.  The textbook's Example 4 and its What If (closer).
+  var C2S214 = [
+    { pic: "hose", s: "A firefighter sprays water from a hose.", w: "water", land: "hits the ground", from: "the fire truck", up: "The crew raises the aerial ladder", dn: "The crew lowers the aerial ladder" },
+    { pic: "fount", s: "A fountain in a park shoots a jet of water from a nozzle.", w: "water", land: "lands", from: "the nozzle", up: "The park crew raises the nozzle", dn: "The park crew lowers the nozzle" },
+    { pic: "sprink", s: "A garden sprinkler sprays a stream of water across a lawn.", w: "water", land: "lands", from: "the sprinkler", up: "The gardener puts the sprinkler on a taller stand", dn: "The gardener puts the sprinkler on a shorter stand" },
+    { pic: "cannon", s: "A water cannon at a splash park shoots a stream of water.", w: "water", land: "lands", from: "the cannon", up: "The cannon is lifted onto a higher platform", dn: "The cannon is moved down onto a lower platform" },
+    { pic: "boat", s: "A fireboat sprays water across a river.", w: "water", land: "hits the river", from: "the fireboat", up: "The crew raises the water gun on its tower", dn: "The crew lowers the water gun on its tower" }
+  ];
+  function c2M214(tier) {
+    for (var t = 0; t < 2000; t++) {
+      var q = c2Pick(tier === 0 ? [10, 20] : tier === 1 ? [20, 25] : [20, 25, 50]), R = c2Pick([20, 25, 30, 40, 50, 60]), r1 = c2Pick([-5, -10, -15, -20, -25]);
+      var D = tier === 2 && rnd(2) ? -c2Pick([5, 10]) : c2Pick([5, 10]), N = R + D;
+      var hN = -(N - r1) * (N - R) / q; if (!Number.isInteger(hN) || !hN) continue;
+      var a = -1 / q, b = (R + r1) / q, c = -r1 * R / q;
+      if (!Number.isInteger(c * 100) || !Number.isInteger(c2R(b * 100, 6)) || c < 4 || c > 45 || b <= 0) continue;
+      var peak = c + b * b * q / 4; if (peak > 70) continue;
+      var k = -hN, sc = c2Pick(C2S214), H = function (x) { return a * x * x + b * x + c; }, G = function (x) { return H(x) + k; };
+      var hS = c2Sf(a, b, c, "<i>h</i>(" + c2X + ")"), gS = c2Sf(a, b, c + k, "<i>g</i>(" + c2X + ")"), far = D > 0, dir = k > 0 ? "up" : "down";
+      var pb = { kind: 20, sc: sc };
+      pb.head = hS[0].replace(/<[^>]+>/g, "");
+      pb.pic = c2Pic(sc.pic);
+      pb.story = sc.s + " The height (in feet) of the " + sc.w + " is modeled by <span class=\"lm cf\">" + hS[0] + "</span>, where " + c2X + " is the horizontal distance (in feet) from " + sc.from + ". " + (far ? sc.up : sc.dn) + " so that the " + sc.w + " " + sc.land + " " + Math.abs(D) + " feet " + (far ? "farther from" : "closer to") + " " + sc.from + ". Write a function <i>g</i> that models the new path.";
+      var xa = c2Axis(0, Math.max(R, N) + 5), ya = c2Axis(Math.min(0, hN, k < 0 ? 0 : 0), Math.max(peak, peak + k) + 2);
+      pb.fig = (function (xa, ya) { return function (x) {
+        x = x || {}; var o = { xmin: 0, xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Horizontal distance (feet)", yl: "Height (feet)", alt: sc.s };
+        o.curves = [{ fn: H, col: C2B, lo: 0, hi: x.gv ? Math.max(R, N) + 5 : R + (far ? Math.abs(D) + 4 : 0) }];
+        o.pts = [{ x: R, y: 0, col: C2B, lab: true, dy: 16, an: "start" }];
+        if (x.hv) { o.pts.push({ x: N, y: hN, col: C2G, lab: true, dy: hN < 0 ? 16 : -8, an: "start" }); o.segs = [{ x1: N, y1: hN, x2: N, y2: 0, col: C2G, dash: "5 4" }]; }
+        if (x.gv) { o.curves.push({ fn: G, col: C2P, lo: 0, hi: N }); o.pts.push({ x: N, y: 0, col: C2P, lab: true, dy: -8, an: far ? "start" : "end" }); }
+        return c2Fig(o);
+      }; })(xa, ya);
+      var wrongs = [c2Sf(a, b, c - k, "<i>g</i>(" + c2X + ")")[0], c2Sf(a, b + k, c, "<i>g</i>(" + c2X + ")")[0], c2Sf(a, b, c + D, "<i>g</i>(" + c2X + ")")[0]];
+      pb.steps = [
+        { id: "hN", lab: "<i>h</i>(" + N + ")", ask: c2S("Because <i>h</i>(" + R + ") = 0, the " + sc.w + " now " + sc.land + " " + R + " feet from " + sc.from + ". The new path must be at height 0 when " + c2X + " = " + N + ". Find the height of the old path there: <i>h</i>(" + N + ").", "Find <i>h</i>(" + N + "), the height of the old path at " + c2X + " = " + N + "."),
+          pre: "<i>h</i>(" + N + ") =", ans: hN, after: function (x) { x.hv = true; }, hint: ["Replace every " + c2X + " in <i>h</i>(" + c2X + ") with " + N + ".", c2F(a) + "(" + N + ")² + " + c2F(b) + "(" + N + ") + " + c2F(c) + " = " + c2F(hN) + "."], line: "<i>h</i>(" + N + ") = " + c2F(hN) },
+        { id: "k", fine: 1, lab: "shift", ask: "To bring the point (" + N + ", " + c2F(hN) + ") to height 0, how far " + dir + " must the whole path move?", pre: dir, post: "feet", ans: Math.abs(k), wrong: function (v) { return v === -Math.abs(k) ? "Type how far, as a positive number. The direction is already " + dir + "." : ""; }, hint: ["The new path must be at 0 where the old one is at " + c2F(hN) + ".", "From " + c2F(hN) + " to 0 is " + Math.abs(k) + " feet " + dir + "."], line: "a translation " + Math.abs(k) + " feet " + dir },
+        { id: "g", lab: "<i>g</i>(" + c2X + ")", type: "fn", ask: c2S("Moving " + dir + " " + Math.abs(k) + " " + (k > 0 ? "adds" : "subtracts") + " " + Math.abs(k) + " to the output: <i>g</i>(" + c2X + ") = <i>h</i>(" + c2X + ") " + (k > 0 ? "+ " : "− ") + Math.abs(k) + ". Write <i>g</i>(" + c2X + ") and simplify.", "Write <i>g</i>(" + c2X + ")."),
+          fn: G, xs: [0, 5, 10, 20, 30, 40, 2.5], rtol: 1e-6, eg: "g(x) = −0.05x^2 + 1.5x + 20", typed: gS[1], fo: c2Fo(gS[0], wrongs), after: function (x) { x.gv = true; },
+          wrongFn: function (f) { return c2Same(f, H, [0, 10, 20]) ? "That is still h(x). Add " + k + " to the output." : c2Same(f, function (x) { return H(x) - k; }, [0, 10, 20]) ? "Check the direction: the path moves " + dir + "." : ""; },
+          hint: ["Add " + c2F(k) + " to the constant term of <i>h</i>(" + c2X + ").", gS[0] + "."], line: gS[0] },
+        { id: "chk", fine: 1, lab: "check", ask: "Check: find <i>g</i>(" + N + "). The new path should be on the ground there.", pre: "<i>g</i>(" + N + ") =", ans: 0, hint: ["Put " + N + " into <i>g</i>(" + c2X + ").", "<i>h</i>(" + N + ") " + (k > 0 ? "+ " : "− ") + Math.abs(k) + " = " + c2F(hN) + (k > 0 ? " + " : " − ") + Math.abs(k) + " = 0."], line: "<i>g</i>(" + N + ") = 0 ✓" }
+      ];
+      pb.ex = "Because <i>h</i>(" + R + ") = 0, the " + sc.w + " " + sc.land + " " + R + " feet away. To land at " + N + " feet, the path must be at height 0 there, but <i>h</i>(" + N + ") = " + c2F(hN) + ". So the path moves " + dir + " " + Math.abs(k) + " feet: " + gS[0] + ", and <i>g</i>(" + N + ") = 0.";
+      return pb;
+    }
+  }
+
+  // ---- 2.2 Characteristics of Quadratic Functions
+  // the plane for graphing: x and y from -10 to 10 (labels every 5), or taller when the vertex is far down or up
+  function c2Plane(ylo, yhi) {
+    var Y = Math.max(10, Math.ceil(Math.max(Math.abs(ylo), Math.abs(yhi)) + 1));
+    if (Y > 10) { Y = Math.ceil(Y / 5) * 5; return { xmin: -10, xmax: 10, ymin: -Y, ymax: Y, gx: 1, gy: Y > 20 ? 5 : 2, tx: 5, ty: Y > 20 ? 10 : 5 }; }
+    return { xmin: -10, xmax: 10, ymin: -10, ymax: 10, gx: 1, gy: 1, tx: 5, ty: 5 };
+  }
+  function c2Pl(o, x, extra) { for (var k in extra) o[k] = extra[k]; return c2Base(o, x); }
+  // the last step of a graph in Solo: four more points on the parabola, two on each side of the axis of symmetry
+  function c2Any(F, h, k, n) { return { id: "pa", so: 1, lab: "Points", type: "gpt", ask: "Plot " + (n || 4) + " more points on the parabola, " + (n || 4) / 2 + " on each side of the axis of symmetry.", any: F, n: n || 4, side: h, not: [[h, k]], after: function (x) { x.cv = true; }, hint: ["Choose an " + c2X + " and find f(" + c2X + "). Use the axis of symmetry to get a matching point on the other side.", "Try " + c2X + " = " + (h + 1) + " and " + c2X + " = " + (h - 1) + "."], line: "Points plotted on both sides of the axis" }; }
+
+  // Example 1: Using Symmetry to Graph (vertex form)
+  function c2M221(tier) {
+    for (var t = 0; t < 2000; t++) {
+      var a = c2Pick(tier === 0 ? [1, -1] : tier === 1 ? [2, -2, 1, -1] : [2, -2, 0.5, -0.5]), h = c2Rng(-5, 5), k = c2Rng(-6, 6), s = rnd(2) ? 1 : -1, d = Math.abs(a) === 0.5 ? [2, 4] : [1, 2];
+      if (tier === 0 && rnd(3) === 0) h = 0;
+      var F = function (x) { return a * (x - h) * (x - h) + k; }, x1 = h + s * d[0], x2 = h + s * d[1], y1 = F(x1), y2 = F(x2);
+      if ([x1, x2, 2 * h - x1, 2 * h - x2].some(function (v) { return Math.abs(v) > 9; }) || [y1, y2].some(function (v) { return Math.abs(v) > 9; })) continue;
+      var fS = c2Vf(a, h, k, "x", "<i>f</i>(" + c2X + ")"), pb = { kind: 20 };
+      pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
+      pb.story = "Graph <span class=\"lm cf\">" + fS[0] + "</span>. Label the vertex and the axis of symmetry.";
+      pb.fig = function (x) { x = x || {}; var o = c2Plane(-9, 9), ex = { alt: "Coordinate plane" }; ex.vl = x.ax ? [{ x: h, col: C2G, lab: c2X + " = " + c2F(h) }] : []; ex.curves = x.cv ? [{ fn: F, col: C2P }] : []; return c2Pl(o, x, ex); };
+      pb.steps = [
+        { id: "h", fine: 1, lab: "h", ask: "Compare with <i>f</i>(" + c2X + ") = <i>a</i>(" + c2X + " − <i>h</i>)² + <i>k</i>. What is <i>h</i>?", pre: "<i>h</i> =", ans: h, wrong: function (v) { return v === -h && h ? "Careful with the sign: " + c2X + c2Sg(-h) + " is " + c2X + " − (" + c2F(h) + "), so <i>h</i> = " + c2F(h) + "." : ""; }, hint: ["<i>h</i> is the number subtracted from " + c2X + " inside the parentheses.", h ? c2X + c2Sg(-h) + " = " + c2X + " − (" + c2F(h) + "), so <i>h</i> = " + c2F(h) + "." : "There is nothing subtracted from " + c2X + ", so <i>h</i> = 0."], line: "<i>h</i> = " + c2F(h) },
+        { id: "k", fine: 1, lab: "k", ask: "What is <i>k</i>?", pre: "<i>k</i> =", ans: k, hint: ["<i>k</i> is the number added at the end.", "<i>k</i> = " + c2F(k) + "."], line: "<i>k</i> = " + c2F(k) },
+        { id: "v", lab: "Vertex", type: "gpt", ask: c2S("Plot the vertex (<i>h</i>, <i>k</i>) = " + c2Pt(h, k) + ".", "Plot the vertex."), pts: [[h, k]], miss: function (px, py) { return px === k && py === h ? "Swap them: the vertex is (h, k), so " + c2X + " = " + c2F(h) + " comes first." : px === -h && py === k ? "Check the sign of h." : "The vertex is (h, k). Try again."; }, hint: ["The vertex of <i>a</i>(" + c2X + " − <i>h</i>)² + <i>k</i> is (<i>h</i>, <i>k</i>).", "Click " + c2Pt(h, k) + "."], line: "vertex " + c2Pt(h, k) },
+        { id: "ax", lab: "Axis", ask: "The axis of symmetry is the vertical line through the vertex. Write its equation.", pre: c2X + " =", ans: h, after: function (x) { x.ax = true; }, hint: ["A vertical line through (" + c2F(h) + ", " + c2F(k) + ") has the equation " + c2X + " = a number.", c2X + " = " + c2F(h) + "."], line: "axis of symmetry " + c2X + " = " + c2F(h) },
+        { id: "y1", fine: 1, lab: "f(" + x1 + ")", ask: "Find one more point: evaluate <i>f</i>(" + c2F(x1) + ").", pre: "<i>f</i>(" + c2F(x1) + ") =", ans: y1, hint: ["Replace " + c2X + " with " + c2F(x1) + ".", c2F(a) + "(" + c2F(x1) + c2Sg(-h) + ")² " + (k < 0 ? "− " : "+ ") + c2F(Math.abs(k)) + " = " + c2F(y1) + "."], line: "<i>f</i>(" + c2F(x1) + ") = " + c2F(y1) },
+        { id: "y2", fine: 1, lab: "f(" + x2 + ")", ask: "And <i>f</i>(" + c2F(x2) + ").", pre: "<i>f</i>(" + c2F(x2) + ") =", ans: y2, hint: ["Replace " + c2X + " with " + c2F(x2) + ".", c2F(a) + "(" + c2F(x2) + c2Sg(-h) + ")² " + (k < 0 ? "− " : "+ ") + c2F(Math.abs(k)) + " = " + c2F(y2) + "."], line: "<i>f</i>(" + c2F(x2) + ") = " + c2F(y2) },
+        { id: "p", fine: 1, lab: "points", type: "gpt", ask: "Plot " + c2Pt(x1, y1) + " and " + c2Pt(x2, y2) + ".", pts: [[x1, y1], [x2, y2]], hint: ["Go across to " + c2X + ", then up or down to " + c2Y + ".", "Click " + c2Pt(x1, y1) + " and " + c2Pt(x2, y2) + "."], line: "points " + c2Pt(x1, y1) + " and " + c2Pt(x2, y2) },
+        { id: "r", fine: 1, lab: "reflections", type: "gpt", ask: "Reflect both points in the axis of symmetry " + c2X + " = " + c2F(h) + ": plot their mirror images.", pts: [[2 * h - x1, y1], [2 * h - x2, y2]], after: function (x) { x.cv = true; }, hint: ["A mirror image is the same distance from the axis, on the other side, at the same height.", "Click " + c2Pt(2 * h - x1, y1) + " and " + c2Pt(2 * h - x2, y2) + "."], line: "mirror images " + c2Pt(2 * h - x1, y1) + " and " + c2Pt(2 * h - x2, y2) },
+        c2Any(F, h, k)
+      ];
+      pb.ex = "In " + fS[0] + ", <i>h</i> = " + c2F(h) + " and <i>k</i> = " + c2F(k) + ", so the vertex is " + c2Pt(h, k) + " and the axis of symmetry is " + c2X + " = " + c2F(h) + ". <i>f</i>(" + c2F(x1) + ") = " + c2F(y1) + " and <i>f</i>(" + c2F(x2) + ") = " + c2F(y2) + "; their mirror images in the axis are " + c2Pt(2 * h - x1, y1) + " and " + c2Pt(2 * h - x2, y2) + ". The parabola goes through all five points.";
+      return pb;
+    }
+  }
+  // Example 2: Graphing a Quadratic Function in Standard Form
+  function c2M222(tier) {
+    for (var t = 0; t < 3000; t++) {
+      var a = c2Pick(tier === 0 ? [1, -1] : tier === 1 ? [1, -1, 2, -2] : [2, -2, 3, -3]), h = c2Nz(-4, 4), k = c2Rng(-7, 7), b = -2 * a * h, c = a * h * h + k;
+      var F = function (x) { return a * x * x + b * x + c; }, s = rnd(2) ? 1 : -1, x3 = h + s; if (x3 === 0 || x3 === 2 * h) x3 = h - s; if (x3 === 0 || x3 === 2 * h) continue;
+      var y3 = F(x3);
+      if (Math.abs(c) > 9 || Math.abs(2 * h) > 9 || Math.abs(y3) > 9 || Math.abs(2 * h - x3) > 9 || Math.abs(k) > 9) continue;
+      var fS = c2Sf(a, b, c, "<i>f</i>(" + c2X + ")"), pb = { kind: 20 };
+      pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
+      pb.story = "Graph <span class=\"lm cf\">" + fS[0] + "</span>. Label the vertex and the axis of symmetry.";
+      pb.fig = function (x) { x = x || {}; var ex = { alt: "Coordinate plane" }; ex.vl = x.ax ? [{ x: h, col: C2G, lab: c2X + " = " + c2F(h) }] : []; ex.curves = x.cv ? [{ fn: F, col: C2P }] : []; return c2Pl(c2Plane(-9, 9), x, ex); };
+      pb.steps = [
+        { id: "xv", fine: 1, lab: "x of vertex", ask: "The coefficients are <i>a</i> = " + c2F(a) + ", <i>b</i> = " + c2F(b) + " and <i>c</i> = " + c2F(c) + ". The vertex has " + c2X + " = −<i>b</i> ÷ (2<i>a</i>). Find it.", pre: c2X + " =", ans: h, wrong: function (v) { return v === -h ? "Remember the negative sign: " + c2X + " = −b ÷ (2a)." : v === -b / a ? "Divide by 2a, not by a." : ""; }, hint: ["Put <i>a</i> and <i>b</i> into −<i>b</i> ÷ (2<i>a</i>).", "−(" + c2F(b) + ") ÷ (2 · " + c2F(a) + ") = " + c2F(h) + "."], line: c2X + " = −<i>b</i> ÷ (2<i>a</i>) = " + c2F(h) },
+        { id: "yv", fine: 1, lab: "y of vertex", ask: "Find the " + c2Y + "-coordinate of the vertex: <i>f</i>(" + c2F(h) + ").", pre: "<i>f</i>(" + c2F(h) + ") =", ans: k, hint: ["Replace " + c2X + " with " + c2F(h) + " in <i>f</i>.", c2F(a) + "(" + c2F(h) + ")² " + (b < 0 ? "− " : "+ ") + c2F(Math.abs(b)) + "(" + c2F(h) + ") " + (c < 0 ? "− " : "+ ") + c2F(Math.abs(c)) + " = " + c2F(k) + "."], line: "<i>f</i>(" + c2F(h) + ") = " + c2F(k) },
+        { id: "v", lab: "Vertex", type: "gpt", ask: c2S("Plot the vertex " + c2Pt(h, k) + ".", "Plot the vertex."), pts: [[h, k]], hint: ["The vertex is (−b ÷ (2a), f(−b ÷ (2a))).", "Click " + c2Pt(h, k) + "."], line: "vertex " + c2Pt(h, k) },
+        { id: "ax", lab: "Axis", ask: "Write the equation of the axis of symmetry.", pre: c2X + " =", ans: h, after: function (x) { x.ax = true; }, hint: ["It is the vertical line through the vertex.", c2X + " = " + c2F(h) + "."], line: "axis of symmetry " + c2X + " = " + c2F(h) },
+        { id: "c", fine: 1, lab: "y-intercept", ask: "The " + c2Y + "-intercept of <i>ax</i>² + <i>bx</i> + <i>c</i> is <i>c</i>. What is it?", pre: c2Y + "-intercept =", ans: c, hint: ["When " + c2X + " = 0, only <i>c</i> is left.", "<i>c</i> = " + c2F(c) + "."], line: c2Y + "-intercept " + c2F(c) },
+        { id: "pc", fine: 1, lab: "points", type: "gpt", ask: "Plot the " + c2Y + "-intercept (0, " + c2F(c) + ") and its mirror image in the axis of symmetry.", pts: [[0, c], [2 * h, c]], hint: ["(0, " + c2F(c) + ") is " + Math.abs(h) + " units from the axis; its mirror image is " + Math.abs(h) + " units on the other side.", "Click (0, " + c2F(c) + ") and " + c2Pt(2 * h, c) + "."], line: "points (0, " + c2F(c) + ") and " + c2Pt(2 * h, c) },
+        { id: "y3", fine: 1, lab: "f(" + x3 + ")", ask: "Find one more point: evaluate <i>f</i>(" + c2F(x3) + ").", pre: "<i>f</i>(" + c2F(x3) + ") =", ans: y3, hint: ["Replace " + c2X + " with " + c2F(x3) + ".", "<i>f</i>(" + c2F(x3) + ") = " + c2F(y3) + "."], line: "<i>f</i>(" + c2F(x3) + ") = " + c2F(y3) },
+        { id: "p3", fine: 1, lab: "points", type: "gpt", ask: "Plot " + c2Pt(x3, y3) + " and its mirror image.", pts: [[x3, y3], [2 * h - x3, y3]], after: function (x) { x.cv = true; }, hint: ["The mirror image is the same distance from the axis, on the other side.", "Click " + c2Pt(x3, y3) + " and " + c2Pt(2 * h - x3, y3) + "."], line: "points " + c2Pt(x3, y3) + " and " + c2Pt(2 * h - x3, y3) },
+        c2Any(F, h, k)
+      ];
+      pb.ex = "For " + fS[0] + ", " + c2X + " = −<i>b</i> ÷ (2<i>a</i>) = " + c2F(h) + " and <i>f</i>(" + c2F(h) + ") = " + c2F(k) + ", so the vertex is " + c2Pt(h, k) + " and the axis of symmetry is " + c2X + " = " + c2F(h) + ". The " + c2Y + "-intercept (0, " + c2F(c) + ") reflects to " + c2Pt(2 * h, c) + ", and " + c2Pt(x3, y3) + " reflects to " + c2Pt(2 * h - x3, y3) + ".";
+      return pb;
+    }
+  }
+  // Example 3: Finding a Minimum or a Maximum Value (and the domain, range, increasing and decreasing)
+  function c2M223(tier) {
+    for (var t = 0; t < 2000; t++) {
+      var a = c2Pick(tier === 0 ? [1, -1, 2, -2] : tier === 1 ? [2, -2, 3, -3, 0.5] : [3, -3, 4, -4, 0.5, -0.5]), h = c2Rng(-5, 5), k = c2Rng(-8, 8), b = -2 * a * h, c = a * h * h + k;
+      if (!Number.isInteger(b) || !Number.isInteger(c) || !h) continue;
+      var F = function (x) { return a * x * x + b * x + c; }, up = a > 0, mm = up ? "minimum" : "maximum";
+      var fS = c2Sf(a, b, c, "<i>f</i>(" + c2X + ")"), pb = { kind: 20 };
+      pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
+      pb.story = "Find the minimum or maximum value of <span class=\"lm cf\">" + fS[0] + "</span>. Then find the domain and range, and when the function is increasing and decreasing.";
+      pb.fig = function (x) { x = x || {}; if (!x.vv) return ""; return c2Pl(c2Plane(k - 2, k + 2), x, { alt: "Graph of f", curves: [{ fn: F, col: C2P }], vl: [{ x: h, col: C2G, lab: c2X + " = " + c2F(h) }], pts: [{ x: h, y: k, col: C2P, lab: true, dy: up ? 18 : -8 }] }); };
+      var gt = "≥", lt = "≤";
+      pb.steps = [
+        { id: "mm", lab: "Min or max", type: "pick", ask: "Does <i>f</i> have a minimum value or a maximum value?", opts: c2Pk(up ? "A minimum: <i>a</i> > 0, so the parabola opens up." : "A maximum: <i>a</i> < 0, so the parabola opens down.", [[up ? "A maximum: the parabola opens down." : "A minimum: the parabola opens up.", "Look at the sign of <i>a</i> = " + c2Q(a)[0] + "."]]), hint: ["The sign of <i>a</i> tells you: positive opens up, negative opens down.", "<i>a</i> = " + c2Q(a)[0] + ", so it has a " + mm + "."], line: "<i>a</i> " + (up ? "> 0: a minimum" : "< 0: a maximum") },
+        { id: "xv", fine: 1, lab: "x of vertex", ask: "The " + mm + " is at the vertex, where " + c2X + " = −<i>b</i> ÷ (2<i>a</i>). Find " + c2X + ".", pre: c2X + " =", ans: h, wrong: function (v) { return v === -h ? "Remember the negative sign: " + c2X + " = −b ÷ (2a)." : ""; }, hint: ["<i>a</i> = " + c2Q(a)[0] + " and <i>b</i> = " + c2F(b) + ".", "−(" + c2F(b) + ") ÷ (2 · " + c2Q(a)[0] + ") = " + c2F(h) + "."], line: c2X + " = −<i>b</i> ÷ (2<i>a</i>) = " + c2F(h) },
+        { id: "val", lab: "Value", ask: c2S("Find the " + mm + " value: <i>f</i>(" + c2F(h) + ").", "Find the " + mm + " value."), pre: mm + " value =", ans: k, after: function (x) { x.vv = true; }, hint: ["The " + mm + " value is the " + c2Y + "-coordinate of the vertex.", "<i>f</i>(" + c2F(h) + ") = " + c2F(k) + "."], line: "the " + mm + " value is " + c2F(k) },
+        { id: "dom", lab: "Domain", type: "pick", ask: "What is the domain of <i>f</i>?", opts: c2Pk("All real numbers", [[c2X + " " + gt + " " + c2F(h), "Every " + c2X + " can be put into <i>f</i>; the parabola goes on forever to the left and right."], [c2Y + " " + (up ? gt : lt) + " " + c2F(k), "That describes the outputs (the range), not the inputs."]]), hint: ["The domain is every " + c2X + " you can put in.", "Any " + c2X + " works, so the domain is all real numbers."], line: "domain: all real numbers" },
+        { id: "rng", lab: "Range", type: "pick", ask: "What is the range of <i>f</i>?", opts: c2Pk(c2Y + " " + (up ? gt : lt) + " " + c2F(k), [[c2Y + " " + (up ? lt : gt) + " " + c2F(k), "The parabola opens " + (up ? "up" : "down") + ", so the outputs are " + (up ? "at least" : "at most") + " " + c2F(k) + "."], ["All real numbers", "The outputs never go " + (up ? "below" : "above") + " the " + mm + " value."], [c2Y + " " + (up ? gt : lt) + " " + c2F(h), "Use the " + c2Y + "-coordinate of the vertex, " + c2F(k) + "."]]), hint: ["The range is every output: it starts at the " + mm + " value.", "It opens " + (up ? "up" : "down") + " from " + c2F(k) + ": " + c2Y + " " + (up ? gt : lt) + " " + c2F(k) + "."], line: "range: " + c2Y + " " + (up ? gt : lt) + " " + c2F(k) },
+        { id: "dec", lab: "Decreasing", type: "pick", ask: "When is <i>f</i> decreasing (going down as you move right)?", opts: c2Pk(up ? c2X + " < " + c2F(h) : c2X + " > " + c2F(h), [[up ? c2X + " > " + c2F(h) : c2X + " < " + c2F(h), "Follow the graph from left to right: it goes " + (up ? "down to the vertex, then up" : "up to the vertex, then down") + "."], [c2X + " < " + c2F(k), "Compare " + c2X + " with the vertex's " + c2X + "-coordinate, " + c2F(h) + "."]]), hint: ["Move left to right along the graph.", up ? "It goes down until " + c2X + " = " + c2F(h) + ": " + c2X + " < " + c2F(h) + "." : "It goes down after " + c2X + " = " + c2F(h) + ": " + c2X + " > " + c2F(h) + "."], line: "decreasing when " + (up ? c2X + " < " : c2X + " > ") + c2F(h) },
+        { id: "inc", lab: "Increasing", type: "pick", ask: "When is <i>f</i> increasing?", opts: c2Pk(up ? c2X + " > " + c2F(h) : c2X + " < " + c2F(h), [[up ? c2X + " < " + c2F(h) : c2X + " > " + c2F(h), "That is where it decreases."], [c2X + " > " + c2F(k), "Compare " + c2X + " with the vertex's " + c2X + "-coordinate, " + c2F(h) + "."]]), hint: ["It increases on the other side of the vertex.", up ? c2X + " > " + c2F(h) + "." : c2X + " < " + c2F(h) + "."], line: "increasing when " + (up ? c2X + " > " : c2X + " < ") + c2F(h) }
+      ];
+      pb.ex = "<i>a</i> = " + c2Q(a)[0] + " is " + (up ? "positive, so the parabola opens up and has a minimum" : "negative, so the parabola opens down and has a maximum") + ". At " + c2X + " = −<i>b</i> ÷ (2<i>a</i>) = " + c2F(h) + ", <i>f</i>(" + c2F(h) + ") = " + c2F(k) + ", so the " + mm + " value is " + c2F(k) + ". The domain is all real numbers and the range is " + c2Y + " " + (up ? "≥ " : "≤ ") + c2F(k) + ". <i>f</i> decreases when " + c2X + (up ? " < " : " > ") + c2F(h) + " and increases when " + c2X + (up ? " > " : " < ") + c2F(h) + ".";
+      return pb;
+    }
+  }
+  // Example 4: Graphing a Quadratic Function in Intercept Form
+  function c2M224(tier) {
+    for (var t = 0; t < 2000; t++) {
+      var a = c2Pick(tier === 0 ? [1, -1] : tier === 1 ? [1, -1, 2, -2] : [2, -2, 0.5, -0.5]), p = c2Rng(-8, 6), q = p + c2Pick([2, 4, 6, 8]);
+      if (q > 8 || (tier === 0 && p * q > 0 && rnd(2))) continue;
+      var m = (p + q) / 2, vy = a * (m - p) * (m - q); if (!Number.isInteger(vy) || Math.abs(vy) > 24 || vy === 0) continue;
+      var sw = rnd(2), p1 = sw ? q : p, q1 = sw ? p : q, F = function (x) { return a * (x - p) * (x - q); };
+      var fS = c2If(a, p1, q1, "<i>f</i>(" + c2X + ")"), pb = { kind: 20 };
+      pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
+      pb.story = "Graph <span class=\"lm cf\">" + fS[0] + "</span>. Label the " + c2X + "-intercepts, the vertex and the axis of symmetry.";
+      pb.fig = function (x) { x = x || {}; var ex = { alt: "Coordinate plane" }; ex.vl = x.ax ? [{ x: m, col: C2G, lab: c2X + " = " + c2F(m) }] : []; ex.curves = x.cv ? [{ fn: F, col: C2P }] : []; return c2Pl(c2Plane(vy, 0), x, ex); };
+      var fac = function (r) { return r ? c2X + c2Sg(-r) : c2X; };
+      pb.steps = [
+        { id: "p", fine: 1, lab: "p", ask: "Compare with <i>a</i>(" + c2X + " − <i>p</i>)(" + c2X + " − <i>q</i>). The first factor is (" + fac(p1) + "). What is <i>p</i>?", pre: "<i>p</i> =", ans: p1, wrong: function (v) { return v === -p1 ? "Careful with the sign: " + fac(p1) + " = " + c2X + " − (" + c2F(p1) + ")." : ""; }, hint: ["<i>p</i> is the number subtracted from " + c2X + " in the first factor.", "(" + fac(p1) + ") = (" + c2X + " − (" + c2F(p1) + ")), so <i>p</i> = " + c2F(p1) + "."], line: "<i>p</i> = " + c2F(p1) },
+        { id: "q", fine: 1, lab: "q", ask: "The second factor is (" + fac(q1) + "). What is <i>q</i>?", pre: "<i>q</i> =", ans: q1, wrong: function (v) { return v === -q1 ? "Careful with the sign: " + fac(q1) + " = " + c2X + " − (" + c2F(q1) + ")." : ""; }, hint: ["<i>q</i> is the number subtracted from " + c2X + " in the second factor.", "<i>q</i> = " + c2F(q1) + "."], line: "<i>q</i> = " + c2F(q1) },
+        { id: "xi", lab: c2X + "-intercepts", type: "gpt", ask: c2S("<i>f</i>(<i>p</i>) = 0 and <i>f</i>(<i>q</i>) = 0. Plot the " + c2X + "-intercepts (" + c2F(p1) + ", 0) and (" + c2F(q1) + ", 0).", "Plot the " + c2X + "-intercepts."), pts: [[p, 0], [q, 0]], miss: function (px, py) { return py === 0 && (px === -p || px === -q) ? "Check the signs: the factor " + c2X + " − r is zero when " + c2X + " = r." : "The " + c2X + "-intercepts are on the " + c2X + "-axis, where a factor is zero."; }, hint: ["A factor is zero when " + c2X + " equals the number subtracted in it.", "Click (" + c2F(p) + ", 0) and (" + c2F(q) + ", 0)."], line: c2X + "-intercepts (" + c2F(p) + ", 0) and (" + c2F(q) + ", 0)" },
+        { id: "ax", lab: "Axis", ask: "The axis of symmetry is halfway between the " + c2X + "-intercepts: " + c2X + " = (<i>p</i> + <i>q</i>) ÷ 2.", pre: c2X + " =", ans: m, after: function (x) { x.ax = true; }, hint: ["Add <i>p</i> and <i>q</i>, then divide by 2.", "(" + c2F(p1) + " + " + c2F(q1) + ") ÷ 2 = " + c2F(m) + "."], line: "axis of symmetry " + c2X + " = " + c2F(m) },
+        { id: "vy", fine: 1, lab: "y of vertex", ask: "Find the " + c2Y + "-coordinate of the vertex: <i>f</i>(" + c2F(m) + ").", pre: "<i>f</i>(" + c2F(m) + ") =", ans: vy, hint: ["Replace " + c2X + " with " + c2F(m) + " in the factored form.", c2Q(a)[0] + "(" + c2F(m - p1) + ")(" + c2F(m - q1) + ") = " + c2F(vy) + "."], line: "<i>f</i>(" + c2F(m) + ") = " + c2F(vy) },
+        { id: "v", lab: "Vertex", type: "gpt", snapy: 1, ask: c2S("Plot the vertex " + c2Pt(m, vy) + ".", "Plot the vertex."), pts: [[m, vy]], after: function (x) { x.cv = true; }, hint: ["The vertex is on the axis of symmetry.", "Click " + c2Pt(m, vy) + "."], line: "vertex " + c2Pt(m, vy) }
+      ];
+      pb.ex = "In " + fS[0] + ", <i>p</i> = " + c2F(p1) + " and <i>q</i> = " + c2F(q1) + ", so the " + c2X + "-intercepts are " + c2F(p) + " and " + c2F(q) + ". Halfway between them is the axis of symmetry " + c2X + " = " + c2F(m) + ", and <i>f</i>(" + c2F(m) + ") = " + c2F(vy) + ", so the vertex is " + c2Pt(m, vy) + ".";
+      return pb;
+    }
+  }
+  // Example 5: Comparing Functions in Different Forms (two paths: one graphed, one in intercept form)
+  var C2S225 = [
+    { pic: "golf", s: "You hit two golf shots.", it: "shot", u: "yards", Ds: [80, 90, 100, 110, 120, 140, 160], Hs: [15, 40] },
+    { pic: "soccer", s: "A soccer player kicks the ball twice.", it: "kick", u: "yards", Ds: [30, 40, 50, 60], Hs: [8, 20] },
+    { pic: "punt", s: "A football player punts the ball twice.", it: "punt", u: "yards", Ds: [40, 50, 60, 70], Hs: [12, 30] },
+    { pic: "frog", s: "A frog makes two jumps.", it: "jump", u: "inches", Ds: [20, 24, 30, 36, 40], Hs: [6, 16] },
+    { pic: "balloon", s: "A water balloon launcher fires two balloons.", it: "launch", u: "feet", Ds: [60, 80, 100, 120], Hs: [15, 45] }
+  ];
+  function c2M225(tier) {
+    for (var t = 0; t < 4000; t++) {
+      var sc = c2Pick(C2S225), D1 = c2Pick(sc.Ds), D2 = c2Pick(sc.Ds), H1 = c2Rng(sc.Hs[0], sc.Hs[1]), a = c2Pick([0.01, 0.02, 0.025, 0.04, 0.05, 0.08, 0.1, 0.125, 0.2, 0.25]);
+      var H2 = a * D2 * D2 / 4; if (D1 === D2 || !Number.isInteger(H2) || H2 === H1 || H2 < sc.Hs[0] || H2 > sc.Hs[1] || D1 % 2 || D2 % 2) continue;
+      if (tier < 2 && (D1 > D2) === (H1 > H2) && rnd(3)) continue;   // usually one goes farther and the other higher
+      var F1 = function (x) { return -4 * H1 / (D1 * D1) * x * (x - D1); }, F2 = function (x) { return -a * x * (x - D2); }, u = sc.u, it = sc.it;
+      var f2 = "<i>f</i>(" + c2X + ") = −" + c2F(a) + c2X + "(" + c2X + " − " + D2 + ")", pb = { kind: 20, sc: sc };
+      pb.head = sc.s + " Second path: " + f2.replace(/<[^>]+>/g, ""); pb.pic = c2Pic(sc.pic);
+      pb.story = sc.s + " The parabola shows the path of the first " + it + ", where " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + "). The path of the second " + it + " is modeled by <span class=\"lm cf\">" + f2 + "</span>. Which " + it + " travels farther before landing? Which travels higher?";
+      var xa = c2Axis(0, Math.max(D1, D2) + 2), ya = c2Axis(0, Math.max(H1, H2) * 1.25);
+      pb.fig = function (x) {
+        x = x || {}; var o = { xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Horizontal distance (" + u + ")", yl: "Height (" + u + ")", alt: "Path of the first " + it };
+        o.curves = [{ fn: F1, col: C2B, lo: 0, hi: D1 }]; o.pts = [{ x: 0, y: 0, col: C2B }, { x: D1 / 2, y: H1, col: C2B, lab: true }, { x: D1, y: 0, col: C2B, lab: true, dy: -8 }];
+        if (x.h2) { o.curves.push({ fn: F2, col: C2P, lo: 0, hi: D2, dash: "7 5" }); o.pts.push({ x: D2 / 2, y: H2, col: C2P, lab: true, tc: C2P }); }
+        return c2Fig(o);
+      };
+      var far = D1 > D2 ? "first" : "second", hi = H1 > H2 ? "first" : "second";
+      pb.steps = [
+        { id: "d1", lab: "Distance 1", ask: "How far does the first " + it + " travel before it lands? Read the " + c2X + "-intercepts of the graph.", post: u, ans: D1, hint: ["It starts at (0, 0) and lands at the other " + c2X + "-intercept.", "The other " + c2X + "-intercept is (" + D1 + ", 0)."], line: "first " + it + ": " + D1 + " " + u },
+        { id: "h1", lab: "Height 1", ask: "What is the maximum height of the first " + it + "? It is the " + c2Y + "-coordinate of the vertex.", post: u, ans: H1, hint: ["The vertex is halfway between the " + c2X + "-intercepts.", "The vertex is (" + D1 / 2 + ", " + H1 + ")."], line: "first " + it + " height: " + H1 + " " + u },
+        { id: "q", lab: "Distance 2", ask: c2S("Write the second path as −" + c2F(a) + "(" + c2X + " − 0)(" + c2X + " − " + D2 + "). Its " + c2X + "-intercepts are 0 and <i>q</i>. How far does it travel?", "How far does the second " + it + " travel?"), post: u, ans: D2, hint: ["A factor is zero when " + c2X + " is the number subtracted in it.", c2X + " − " + D2 + " = 0 when " + c2X + " = " + D2 + "."], line: "second " + it + ": " + D2 + " " + u },
+        { id: "m", fine: 1, lab: "x of vertex", ask: "The vertex of the second path is halfway between 0 and " + D2 + ".", pre: c2X + " =", ans: D2 / 2, hint: ["(0 + " + D2 + ") ÷ 2.", c2X + " = " + D2 / 2 + "."], line: "vertex at " + c2X + " = " + D2 / 2 },
+        { id: "h2", lab: "Height 2", ask: c2S("Find <i>f</i>(" + D2 / 2 + "), the maximum height of the second " + it + ".", "What is the maximum height of the second " + it + "?"), post: u, ans: H2, after: function (x) { x.h2 = true; }, hint: ["Replace " + c2X + " with " + D2 / 2 + ".", "−" + c2F(a) + "(" + D2 / 2 + ")(" + D2 / 2 + " − " + D2 + ") = " + H2 + "."], line: "second " + it + " height: " + H2 + " " + u },
+        { id: "far", lab: "Farther", type: "pick", ask: "Which " + it + " travels farther before landing?", opts: c2Pk("The " + far + " " + it, [["The " + (far === "first" ? "second" : "first") + " " + it, "Compare " + D1 + " and " + D2 + " " + u + "."]]), hint: ["Compare the two distances.", Math.max(D1, D2) + " " + u + " is farther."], line: "the " + far + " " + it + " travels farther" },
+        { id: "hi", lab: "Higher", type: "pick", ask: "Which " + it + " travels higher?", opts: c2Pk("The " + hi + " " + it, [["The " + (hi === "first" ? "second" : "first") + " " + it, "Compare " + H1 + " and " + H2 + " " + u + "."]]), hint: ["Compare the two maximum heights.", Math.max(H1, H2) + " " + u + " is higher."], line: "the " + hi + " " + it + " travels higher" }
+      ];
+      pb.ex = "The first " + it + " lands at " + D1 + " " + u + " with its vertex at (" + D1 / 2 + ", " + H1 + "). The second path, −" + c2F(a) + "(" + c2X + " − 0)(" + c2X + " − " + D2 + "), has " + c2X + "-intercepts 0 and " + D2 + ", and its vertex is at " + c2X + " = " + D2 / 2 + " with height " + H2 + ". So the " + far + " " + it + " travels farther and the " + hi + " " + it + " travels higher.";
+      return pb;
+    }
+  }
+  // ---- 2.3 Focus of a Parabola.  y = x²/(4p) has focus (0, p) and directrix y = −p; x = y²/(4p) has focus (p, 0) and directrix x = −p; both shift with the vertex (h, k).
+  function c2Pp(p) { return c2Q(p); }
+  function c2C4(p) { return c2Q(1 / (4 * p)); }   // the coefficient 1/(4p) [html, typed]
+  // y = (1/(4p))(x - h)^2 + k or x = (1/(4p))(y - k)^2 + h   [html, typed]
+  function c2Pe(p, h, k, hor) { return hor ? c2Vf(1 / (4 * p), k, h, "y", c2X) : c2Vf(1 / (4 * p), h, k, "x", c2Y); }
+  function c2PeFn(p, h, k, hor) { return hor ? function (y) { return (y - k) * (y - k) / (4 * p) + h; } : function (x) { return (x - h) * (x - h) / (4 * p) + k; }; }
+  function c2PeWrong(p, h, k, hor) { return [c2Pe(-p, h, k, hor)[0], c2Pe(p, h, k, !hor)[0], (hor ? c2Vf(4 * p, k, h, "y", c2X) : c2Vf(4 * p, h, k, "x", c2Y))[0], c2Pe(p, -h, -k, hor)[0]]; }
+  // Example 1: Deriving an Equation (focus (0, p), directrix y = -p)
+  function c2M231(tier) {
+    var p = c2Pick(tier === 0 ? [1, 2, 3] : tier === 1 ? [-1, -2, -3] : [4, -4, 0.5, -0.5]), P = c2Pp(p), mP = c2Pp(-p), E = c2Pe(p, 0, 0, false), F = c2PeFn(p, 0, 0, false);
+    var yp = "(" + c2Y + c2Sg(-p) + ")", ym = "(" + c2Y + c2Sg(p) + ")", pb = { kind: 20 };
+    pb.head = "Focus (0, " + P[1] + "), directrix y = " + mP[1]; pb.pic = "";
+    pb.story = "Write an equation of the parabola with focus <span class=\"lm cf\"><i>F</i>(0, " + P[0] + ")</span> and directrix <span class=\"lm cf\">" + c2Y + " = " + mP[0] + "</span>.";
+    var px = 2 * Math.abs(p), py = p, ya = Math.max(4, Math.ceil(Math.abs(p) * 2 + 1));
+    pb.fig = function (x) {
+      x = x || {};
+      return c2Fig({ xmin: -10, xmax: 10, ymin: -ya, ymax: ya, gx: 1, gy: ya > 8 ? 2 : 1, tx: 5, ty: ya > 8 ? 4 : 2, alt: "Focus and directrix",
+        curves: [{ fn: F, col: x.eq ? C2P : C2B, w: x.eq ? 2.8 : 1.6, dash: x.eq ? "" : "5 4" }], hl: [{ y: -p, col: C2O, lab: c2Y + " = " + mP[0] }],
+        segs: [{ x1: 0, y1: p, x2: px, y2: py, col: C2G }, { x1: px, y1: py, x2: px, y2: -p, col: C2G }],
+        pts: [{ x: 0, y: p, col: C2G, lab: "<i>F</i>(0, " + P[0] + ")", an: "end", dy: p > 0 ? -8 : 16 }, { x: px, y: py, col: C2P, lab: "<i>P</i>(" + c2X + ", " + c2Y + ")", dy: p > 0 ? -8 : 16 }, { x: px, y: -p, col: C2O, lab: "<i>D</i>(" + c2X + ", " + mP[0] + ")", dy: p > 0 ? 16 : -8 }, { x: 0, y: 0, col: C2P }] });
+    };
+    pb.steps = [
+      { id: "vx", fine: 1, lab: "vertex", type: "pick", ask: "The vertex is halfway between the focus and the directrix. Where is it?", opts: c2Pk("(0, 0)", [["(0, " + P[0] + ")", "That is the focus. The vertex is halfway between the focus and the directrix."], ["(" + P[0] + ", 0)", "The vertex is on the " + c2Y + "-axis, below or above the focus."], ["(0, " + c2Q(2 * p)[0] + ")", "Halfway between " + P[0] + " and " + mP[0] + " is 0."]]), hint: ["Halfway between " + c2Y + " = " + P[0] + " and " + c2Y + " = " + mP[0] + ".", "(" + P[0] + " + " + mP[0] + ") ÷ 2 = 0: the vertex is (0, 0)."], line: "vertex (0, 0)" },
+      { id: "pd", fine: 1, lab: "PD", type: "pick", ask: "<i>P</i>(" + c2X + ", " + c2Y + ") is any point on the parabola, and <i>D</i>(" + c2X + ", " + mP[0] + ") is the point of the directrix straight " + (p > 0 ? "below" : "above") + " it. Which expression is the distance <i>PD</i>?", opts: c2Pk("|" + c2Y + " − (" + mP[0] + ")|", [["|" + c2Y + " − " + (p < 0 ? "(" + P[0] + ")" : P[0]) + "|", "D is on the directrix " + c2Y + " = " + mP[0] + ", not at the focus."], ["|" + c2X + " − (" + mP[0] + ")|", "P and D have the same " + c2X + ": the distance is the difference of the " + c2Y + "-values."], ["√(" + c2X + "² + " + ym + "²)", "P and D are on the same vertical line, so the distance is just |" + c2Y + " − (" + mP[0] + ")|."]]), hint: ["P and D have the same " + c2X + "-coordinate.", "<i>PD</i> = |" + c2Y + " − (" + mP[0] + ")| = |" + c2Y + c2Sg(p) + "|."], line: "<i>PD</i> = |" + c2Y + c2Sg(p) + "|" },
+      { id: "pf", fine: 1, lab: "PF", type: "pick", ask: "Which expression is the distance <i>PF</i>, from <i>P</i>(" + c2X + ", " + c2Y + ") to <i>F</i>(0, " + P[0] + ")?", opts: c2Pk("√(" + c2X + "² + " + yp + "²)", [["√(" + c2X + "² + " + ym + "²)", "F is at (0, " + P[0] + "): subtract " + P[0] + " from " + c2Y + "."], ["|" + c2Y + c2Sg(-p) + "|", "P and F are not on the same vertical line: use the distance formula."], [c2X + "² + " + yp + "²", "The distance formula takes the square root."]]), hint: ["Use the distance formula √((x₂ − x₁)² + (y₂ − y₁)²).", "<i>PF</i> = √((" + c2X + " − 0)² + " + yp + "²) = √(" + c2X + "² + " + yp + "²)."], line: "<i>PF</i> = √(" + c2X + "² + " + yp + "²)" },
+      { id: "co", fine: 1, lab: "combine", ask: "By the definition of a parabola, <i>PD</i> = <i>PF</i>. Square both sides: " + ym + "² = " + c2X + "² + " + yp + "². Expand and combine like terms. What number goes in front of " + c2Y + "?", pre: "", post: c2Y + " = " + c2X + "²", ans: 4 * p, wrong: function (v) { return v === 2 * p ? "Both sides have a " + c2Y + " term: " + c2Q(2 * p)[0] + c2Y + " on the left and " + c2Q(-2 * p)[0] + c2Y + " on the right." : v === -4 * p ? "Check the sign." : ""; }, hint: ["Expanding gives " + c2Y + "² " + (p > 0 ? "+ " : "− ") + c2Q(Math.abs(2 * p))[0] + c2Y + " + " + c2Q(p * p)[0] + " = " + c2X + "² + " + c2Y + "² " + (p > 0 ? "− " : "+ ") + c2Q(Math.abs(2 * p))[0] + c2Y + " + " + c2Q(p * p)[0] + ". The " + c2Y + "² and the " + c2Q(p * p)[0] + " cancel.", c2Q(2 * p)[0] + c2Y + " − (" + c2Q(-2 * p)[0] + c2Y + ") = " + c2Q(4 * p)[0] + c2Y + ", so " + c2Q(4 * p)[0] + c2Y + " = " + c2X + "²."], line: c2Q(4 * p)[0] + c2Y + " = " + c2X + "²" },
+      { id: "eq", lab: "Equation", type: "fn", ask: c2S("Divide both sides by " + c2Q(4 * p)[0] + " to write the equation of the parabola.", "Write an equation of the parabola."), fn: F, eg: "y = 1/8x^2", typed: E[1], fo: c2Fo(E[0], c2PeWrong(p, 0, 0, false)), after: function (x) { x.eq = true; }, wrongFn: function (f) { return c2Same(f, function (q) { return -F(q); }) ? "Check the sign: the focus is " + (p > 0 ? "above" : "below") + " the vertex, so the parabola opens " + (p > 0 ? "up" : "down") + "." : c2Same(f, function (q) { return 4 * p * q * q; }) ? "Divide by " + c2Q(4 * p)[0] + "; don't multiply." : ""; }, hint: ["The equation is " + c2Y + " = " + c2X + "² ÷ (4<i>p</i>) with <i>p</i> = " + P[0] + ".", E[0] + "."], line: E[0] }
+    ];
+    pb.ex = "The vertex (0, 0) is halfway between the focus and the directrix. For a point <i>P</i>(" + c2X + ", " + c2Y + ") on the parabola, <i>PD</i> = |" + c2Y + c2Sg(p) + "| and <i>PF</i> = √(" + c2X + "² + " + yp + "²). Setting them equal and squaring gives " + c2Q(4 * p)[0] + c2Y + " = " + c2X + "², so " + E[0] + ".";
+    return pb;
+  }
+  // Examples 2 and 3: Writing and Graphing an Equation of a Parabola, vertex at the origin (2) or at (h, k) (3), from the focus or the directrix
+  function c2M23v(tier, moved) {
+    for (var t = 0; t < 1000; t++) {
+      var hor = tier === 0 ? false : rnd(2) === 1, p = c2Pick(tier === 0 ? [1, -1, 2, -2] : tier === 1 ? [1, -1, 2, -2, 3, -3] : moved ? [2, -2, 3, -3, 4, -4] : [3, -3, 4, -4, 0.5, -0.5]);
+      var h = moved ? c2Rng(-4, 4) : 0, k = moved ? c2Rng(-4, 4) : 0; if (moved && !h && !k) continue;
+      var useF = rnd(2) === 1, fx = hor ? h + p : h, fy = hor ? k : k + p, dv = hor ? h - p : k - p, VV = hor ? c2X : c2Y;
+      if (Math.abs(fx) > 8 || Math.abs(fy) > 8 || Math.abs(dv) > 8) continue;
+      var E = c2Pe(p, h, k, hor), F = c2PeFn(p, h, k, hor), pb = { kind: 20 }, gv = "(" + c2F(h) + ", " + c2F(k) + ")";
+      var given = useF ? "focus <span class=\"lm cf\">" + c2Pt(fx, fy).replace(/(\d+\.5)/g, function (m) { return c2Q(+m)[0]; }) + "</span>" : "directrix <span class=\"lm cf\">" + VV + " = " + c2Q(dv)[0] + "</span>";
+      pb.head = "vertex " + gv + ", " + (useF ? "focus " + c2Pt(fx, fy) : "directrix " + (hor ? "x" : "y") + " = " + c2T(dv)); pb.pic = "";
+      pb.story = "Write an equation of the parabola with vertex <span class=\"lm cf\">" + gv + "</span> and " + given + ". Then graph the parabola.";
+      pb.fig = function (x) {
+        x = x || {}; var o = { xmin: -10, xmax: 10, ymin: -10, ymax: 10, gx: 1, tx: 5, alt: "Coordinate plane", pts: [{ x: h, y: k, col: C2P, lab: "vertex", dy: (hor ? -10 : (p > 0 ? 16 : -8)) }] };
+        if (useF || x.cv) o.pts.push({ x: fx, y: fy, col: C2G, lab: "focus", dy: hor ? 16 : (p > 0 ? -8 : 16) });
+        if (!useF || x.cv) o[hor ? "vl" : "hl"] = [hor ? { x: dv, col: C2O, lab: c2X + " = " + c2Q(dv)[0] } : { y: dv, col: C2O, lab: c2Y + " = " + c2Q(dv)[0] }];
+        if (x.cv) o.curves = [{ fn: F, col: C2P, inv: hor }];
+        return c2Base(o, x);
+      };
+      var dirW = hor ? (p > 0 ? "right" : "left") : (p > 0 ? "up" : "down");
+      var steps = [
+        { id: "o", fine: 1, lab: "axis", type: "pick", ask: "Is the axis of symmetry vertical (the parabola opens up or down) or horizontal (it opens left or right)?", opts: c2Pk(hor ? "Horizontal: " + c2X + " = " + (moved ? "(1/(4<i>p</i>))(" + c2Y + " − <i>k</i>)² + <i>h</i>" : c2Y + "²/(4<i>p</i>)") : "Vertical: " + c2Y + " = " + (moved ? "(1/(4<i>p</i>))(" + c2X + " − <i>h</i>)² + <i>k</i>" : c2X + "²/(4<i>p</i>)"), [[hor ? "Vertical: it opens up or down" : "Horizontal: it opens left or right", useF ? "The focus is " + (hor ? "beside" : "above or below") + " the vertex." : "The directrix is a " + (hor ? "vertical" : "horizontal") + " line, and the axis of symmetry is perpendicular to it."]]), hint: [useF ? "Compare the focus with the vertex: which coordinate is different?" : "The directrix is perpendicular to the axis of symmetry.", hor ? "The axis of symmetry is horizontal, so the parabola opens left or right." : "The axis of symmetry is vertical, so the parabola opens up or down."], line: (hor ? "horizontal" : "vertical") + " axis of symmetry" }
+      ];
+      if (moved) steps.push(
+        { id: "h", fine: 1, lab: "h", ask: "The vertex is (<i>h</i>, <i>k</i>). What is <i>h</i>?", pre: "<i>h</i> =", ans: h, hint: ["<i>h</i> is the " + c2X + "-coordinate of the vertex.", "<i>h</i> = " + c2F(h) + "."], line: "<i>h</i> = " + c2F(h) },
+        { id: "k", fine: 1, lab: "k", ask: "What is <i>k</i>?", pre: "<i>k</i> =", ans: k, hint: ["<i>k</i> is the " + c2Y + "-coordinate of the vertex.", "<i>k</i> = " + c2F(k) + "."], line: "<i>k</i> = " + c2F(k) });
+      var pHint = useF ? (hor ? "The focus is (<i>h</i> + <i>p</i>, <i>k</i>): <i>p</i> = " + c2Q(fx)[0] + " − " + c2F(h) : "The focus is (<i>h</i>, <i>k</i> + <i>p</i>): <i>p</i> = " + c2Q(fy)[0] + " − " + c2F(k)) : (hor ? "The directrix is " + c2X + " = <i>h</i> − <i>p</i>: <i>p</i> = " + c2F(h) + " − (" + c2Q(dv)[0] + ")" : "The directrix is " + c2Y + " = <i>k</i> − <i>p</i>: <i>p</i> = " + c2F(k) + " − (" + c2Q(dv)[0] + ")");
+      steps.push(
+        { id: "p", lab: "p", ask: c2S("<i>p</i> is the distance from the vertex to the focus, negative when the parabola opens " + (hor ? "left" : "down") + ". Find <i>p</i>.", "Find <i>p</i>."), pre: "<i>p</i> =", ans: p, wrong: function (v) { return v === -p ? "Check the sign: the focus is on the " + (hor ? (p > 0 ? "right" : "left") : (p > 0 ? "upper" : "lower")) + " side of the vertex, away from the directrix." : ""; }, hint: [pHint + ".", "<i>p</i> = " + c2Pp(p)[0] + ": the parabola opens " + dirW + "."], line: "<i>p</i> = " + c2Pp(p)[0] },
+        { id: "eq", lab: "Equation", type: "fn", v: hor ? "y" : "x", ask: c2S("Substitute into " + (hor ? c2X + " = (1/(4<i>p</i>))(" + c2Y + " − <i>k</i>)² + <i>h</i>" : c2Y + " = (1/(4<i>p</i>))(" + c2X + " − <i>h</i>)² + <i>k</i>") + " and simplify.", "Write an equation of the parabola."), fn: F, eg: hor ? "x = 1/8(y − 2)^2 + 1" : "y = 1/8(x − 2)^2 + 1", typed: E[1], fo: c2Fo(E[0], c2PeWrong(p, h, k, hor)), wrongFn: function (f) { return ""; }, hint: ["Use <i>p</i> = " + c2Pp(p)[0] + (moved ? ", <i>h</i> = " + c2F(h) + " and <i>k</i> = " + c2F(k) : "") + ": 1/(4<i>p</i>) = " + c2C4(p)[0] + ".", E[0] + "."], line: E[0] },
+        { id: "gr", lab: "Graph", type: "gpt", ask: "Graph it: plot two points on the parabola with whole-number coordinates (not the vertex).", any: F, inv: hor, n: 2, not: [[h, k]], after: function (x) { x.cv = true; }, hint: ["Choose " + (hor ? c2Y : c2X) + " and find " + (hor ? c2X : c2Y) + " with your equation. Try " + (hor ? c2Y + " = " + c2F(k + 2 * Math.abs(p)) : c2X + " = " + c2F(h + 2 * Math.abs(p))) + ".", "Two points that work: " + (hor ? c2Pt(F(k + 2 * Math.abs(p)), k + 2 * Math.abs(p)) + " and " + c2Pt(F(k - 2 * Math.abs(p)), k - 2 * Math.abs(p)) : c2Pt(h + 2 * Math.abs(p), F(h + 2 * Math.abs(p))) + " and " + c2Pt(h - 2 * Math.abs(p), F(h - 2 * Math.abs(p)))) + "."], line: "two points plotted, and the parabola drawn" });
+      var u1 = (hor ? k : h) + 2 * Math.abs(p), u2 = (hor ? k : h) - 2 * Math.abs(p);   // two grid points of the parabola must be on the graph
+      if (!Number.isInteger(F(u1)) || Math.abs(u1) > 9 || Math.abs(u2) > 9 || Math.abs(F(u1)) > 9) continue;
+      pb.steps = steps;
+      pb.ex = "The " + (useF ? "focus is " + (hor ? "beside" : (p > 0 ? "above" : "below")) + " the vertex" : "directrix is a " + (hor ? "vertical" : "horizontal") + " line") + ", so the axis of symmetry is " + (hor ? "horizontal" : "vertical") + " and <i>p</i> = " + c2Pp(p)[0] + ". So " + E[0] + ". It opens " + dirW + ".";
+      return pb;
+    }
+  }
+  // Example 4: Using the Equation of a Parabola (a parabolic reflector: the receiver is at the focus)
+  var C2S234 = [
+    { pic: "sun", s: "A solar power dish uses a parabolic reflector to focus sunlight onto an engine at its focus.", rcv: "engine", u: "meters", Ws: [6, 7, 8, 8.5, 9, 10], ps: [3, 3.5, 4, 4.5, 5], hor: false },
+    { pic: "dish", s: "A satellite dish reflects signals onto a receiver at its focus.", rcv: "receiver", u: "inches", Ws: [18, 20, 24, 30, 36], ps: [8, 9, 10, 12, 15], hor: false },
+    { pic: "cooker", s: "A solar cooker focuses sunlight onto a pot at its focus.", rcv: "pot", u: "inches", Ws: [24, 30, 36, 40], ps: [10, 12, 15, 16], hor: false },
+    { pic: "lamp", s: "A flashlight's mirror is a parabola with the bulb at its focus, so the light leaves in a straight beam.", rcv: "bulb", u: "centimeters", Ws: [6, 8, 10, 12], ps: [1, 1.5, 2, 2.5], hor: true },
+    { pic: "mic", s: "A parabolic microphone has its microphone at the focus of the dish.", rcv: "microphone", u: "inches", Ws: [16, 18, 20, 24], ps: [4, 5, 6, 8], hor: true },
+    { pic: "antenna", s: "A microwave antenna has its receiver at the focus of the dish.", rcv: "receiver", u: "feet", Ws: [10, 12, 14, 16], ps: [6, 8, 10, 12], hor: true }
+  ];
+  function c2M234(tier) {
+    for (var t = 0; t < 400; t++) {
+      var sc = c2Pick(C2S234), W = c2Pick(sc.Ws), p = c2Pick(sc.ps), hw = W / 2, dep = c2R(hw * hw / (4 * p), 2), hor = sc.hor && (tier > 0 || rnd(2) === 1);
+      if (dep < 0.4 || dep >= p * 1.6) continue;
+      var u = sc.u, E = c2Pe(p, 0, 0, hor), F = c2PeFn(p, 0, 0, hor), pb = { kind: 20, sc: sc }, side = hor ? "to the right of" : "above";
+      pb.head = sc.s; pb.pic = c2Pic(sc.pic);
+      pb.story = sc.s + " The dish is " + W + " " + u + " wide and the " + sc.rcv + " is " + p + " " + u + " " + side + " the vertex. Write an equation for the cross section of the dish with its vertex at (0, 0). How deep is the dish?";
+      var R = Math.max(hw, p) * 1.25, xa = c2Axis(-R, R, false), lo = Math.min(-0.5, -R * 0.1), ya = c2Axis(lo, Math.max(p, dep) * 1.3, false);
+      pb.fig = function (x) {
+        x = x || {}; var o = hor ? { xmin: ya.min, xmax: ya.max, ymin: xa.min, ymax: xa.max, gx: ya.g, gy: xa.g, tx: ya.t, ty: xa.t } : { xmin: xa.min, xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t };
+        o.alt = "Cross section of the dish"; o.curves = [{ fn: F, col: x.eq ? C2P : C2B, lo: -hw, hi: hw, inv: hor, w: 3.4 }];
+        o.pts = [{ x: hor ? p : 0, y: hor ? 0 : p, col: C2G, lab: sc.rcv, dy: hor ? -8 : -8, an: "start" }, { x: 0, y: 0, col: C2P }];
+        o.segs = hor ? [{ x1: dep, y1: -hw, x2: dep, y2: hw, col: C2O, dash: "5 4" }] : [{ x1: -hw, y1: dep, x2: hw, y2: dep, col: C2O, dash: "5 4" }];
+        o.txt = hor ? [{ x: dep, y: hw + (xa.max - hw) * .45, t: W + " " + u, col: C2O, an: "middle" }] : [{ x: 0, y: dep + (ya.max - dep) * .3, t: W + " " + u + " wide", col: C2O }];
+        if (x.dv) o.txt.push(hor ? { x: dep / 2, y: -hw - (hw - xa.min) * .0 - xa.g * .7, t: "depth ≈ " + c2F(dep), col: C2P } : { x: hw * .55, y: dep / 2, t: "depth ≈ " + c2F(dep), col: C2P, an: "start" });
+        return c2Fig(o);
+      };
+      pb.steps = [
+        { id: "p", fine: 1, lab: "p", ask: "The " + sc.rcv + " is at the focus. How far is the focus from the vertex? That is <i>p</i>.", pre: "<i>p</i> =", post: u, ans: p, hint: ["The " + sc.rcv + " is " + p + " " + u + " " + side + " the vertex.", "<i>p</i> = " + p + "."], line: "<i>p</i> = " + p },
+        { id: "eq", lab: "Equation", type: "fn", v: hor ? "y" : "x", ask: c2S("The vertex is (0, 0) and the axis of symmetry is " + (hor ? "horizontal" : "vertical") + ", so " + (hor ? c2X + " = " + c2Y + "²/(4<i>p</i>)" : c2Y + " = " + c2X + "²/(4<i>p</i>)") + ". Write the equation.", "Write an equation for the cross section."), fn: F, rtol: 2e-3, xs: [-hw, -1, 0, 1, hw, hw / 2], eg: hor ? "x = 1/20y^2" : "y = 1/18x^2", typed: E[1], fo: c2Fo(E[0], c2PeWrong(p, 0, 0, hor).slice(0, 3)), after: function (x) { x.eq = true; }, hint: ["Put <i>p</i> = " + p + " into 1/(4<i>p</i>): 1/(4 · " + p + ") = " + c2C4(p)[0] + ".", E[0] + "."], line: E[0] },
+        { id: "hw", fine: 1, lab: "half width", ask: "The edge of the dish is half its width from the axis of symmetry. How far is that?", pre: (hor ? c2Y : c2X) + " =", post: u, ans: hw, hint: ["Half of " + W + ".", W + " ÷ 2 = " + hw + "."], line: "the edge is at " + (hor ? c2Y : c2X) + " = " + hw },
+        { id: "d", lab: "Depth", ask: c2S("The depth is the " + (hor ? c2X : c2Y) + "-value at the edge. Find it, to the nearest hundredth.", "How deep is the dish? Round to the nearest hundredth."), pre: "depth ≈", post: u, ans: dep, tol: 0.011, after: function (x) { x.dv = true; }, hint: ["Put " + (hor ? c2Y : c2X) + " = " + hw + " into your equation.", c2C4(p)[0] + "(" + hw + ")² ≈ " + c2F(dep) + "."], line: "depth ≈ " + c2F(dep) + " " + u }
+      ];
+      pb.ex = "The " + sc.rcv + " is at the focus, so <i>p</i> = " + p + " and " + E[0] + ". The edge is " + hw + " " + u + " from the axis, so the depth is " + c2C4(p)[0] + "(" + hw + ")² ≈ " + c2F(dep) + " " + u + ".";
+      return pb;
+    }
+  }
+
+  // ---- 2.4 Modeling with Quadratic Functions
+  // Example 1: Writing an Equation Using the Vertex and a Point
+  var C2S241 = [
+    { pic: "human", s: "A performer is shot out of a cannon and lands in a net.", end: "net", q: "What is the height of the net?", y0: "leaves the cannon" },
+    { pic: "ramp", s: "A stunt rider jumps off one ramp and lands on a second ramp.", end: "second ramp", q: "What is the height of the second ramp where the rider lands?", y0: "leaves the first ramp" },
+    { pic: "ball", s: "A ball is thrown from a balcony to a friend.", end: "friend's glove", q: "How high is the friend's glove when the ball is caught?", y0: "leaves the thrower's hand" },
+    { pic: "skier", s: "A water skier goes off a jump and lands on a floating platform.", end: "platform", q: "How high is the platform?", y0: "leaves the jump" }
+  ];
+  function c2M241(tier) {
+    for (var t = 0; t < 4000; t++) {
+      var h = c2Pick([20, 25, 30, 40, 50]), a = -c2Pick([0.002, 0.004, 0.005, 0.008, 0.01, 0.016, 0.02, 0.025, 0.04]), d = c2R(-a * h * h, 6), k = c2Rng(20, 45), y0 = c2R(k - d, 6);
+      if (!Number.isInteger(d) || d < 4 || d > 30 || y0 < 5) continue;
+      var X = h + c2Pick([10, 15, 20, 25, 30, 40]); if (X >= 2 * h + 10) continue;
+      var F = function (x) { return a * (x - h) * (x - h) + k; }, yX = c2R(F(X), 2); if (yX <= 2) continue;
+      if (tier === 0 && !Number.isInteger(yX)) continue;
+      var sc = c2Pick(C2S241), pb = { kind: 20, sc: sc }, E = c2Vf(a, h, k, "x", c2Y);
+      pb.head = sc.s; pb.pic = c2Pic(sc.pic);
+      pb.story = sc.s + " The graph shows the path, where " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in feet). The path lands " + X + " feet away. " + sc.q;
+      var xa = c2Axis(0, X + 2), ya = c2Axis(0, k * 1.2);
+      pb.fig = function (x) {
+        x = x || {};
+        return c2Fig({ xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Horizontal distance (feet)", yl: "Height (feet)", alt: "Path", curves: [{ fn: F, col: x.eq ? C2P : C2B, lo: 0, hi: X }],
+          pts: [{ x: 0, y: y0, col: C2B, lab: true, an: "start", dy: 16 }, { x: h, y: k, col: C2B, lab: true }, { x: X, y: F(X), col: x.yv ? C2P : C2B, hollow: !x.yv, lab: x.yv ? "(" + X + ", " + c2F(yX) + ")" : "", an: "end" }] });
+      };
+      pb.steps = [
+        { id: "h", fine: 1, lab: "h", ask: "The vertex (<i>h</i>, <i>k</i>) is the highest point of the path. What is <i>h</i>?", pre: "<i>h</i> =", ans: h, hint: ["Read the vertex from the graph.", "The vertex is (" + h + ", " + k + ")."], line: "<i>h</i> = " + h },
+        { id: "k", fine: 1, lab: "k", ask: "What is <i>k</i>?", pre: "<i>k</i> =", ans: k, hint: ["<i>k</i> is the height at the vertex.", "<i>k</i> = " + k + "."], line: "<i>k</i> = " + k },
+        { id: "a", lab: "a", ask: c2S("Use vertex form " + c2Y + " = <i>a</i>(" + c2X + " − " + h + ")² + " + k + " and the point (0, " + c2F(y0) + "): " + c2F(y0) + " = <i>a</i>(0 − " + h + ")² + " + k + ". Solve for <i>a</i>.", "Find <i>a</i> in vertex form."), pre: "<i>a</i> =", ans: a, tol: 1e-7, wrong: function (v) { return v === -a ? "Check the sign: the path opens down, so a is negative." : ""; }, hint: [c2F(y0) + " = " + (h * h) + "<i>a</i> + " + k + ". Subtract " + k + ", then divide by " + (h * h) + ".", "(" + c2F(y0) + " − " + k + ") ÷ " + (h * h) + " = " + c2F(a, 6) + "."], line: "<i>a</i> = " + c2F(a, 6) },
+        { id: "eq", lab: "Equation", type: "fn", ask: c2S("Write the equation of the path in vertex form.", "Write an equation of the path."), fn: F, xs: [0, 10, 20, h, X, 5], eg: "y = −0.008(x − 50)^2 + 35", typed: E[1], fo: c2Fo(E[0], [c2Vf(-a, h, k, "x", c2Y)[0], c2Vf(a, -h, k, "x", c2Y)[0], c2Vf(a, k, h, "x", c2Y)[0]]), after: function (x) { x.eq = true; }, hint: ["Put <i>a</i>, <i>h</i> and <i>k</i> into " + c2Y + " = <i>a</i>(" + c2X + " − <i>h</i>)² + <i>k</i>.", E[0] + "."], line: E[0] },
+        { id: "y", lab: "Height", ask: c2S("Find the height when " + c2X + " = " + X + ".", sc.q), pre: c2Y + " =", post: "feet", ans: yX, tol: 0.051, after: function (x) { x.yv = true; }, hint: ["Put " + c2X + " = " + X + " into your equation.", c2F(a, 6) + "(" + X + " − " + h + ")² + " + k + " = " + c2F(yX) + "."], line: "at " + c2X + " = " + X + ", " + c2Y + " = " + c2F(yX) + " feet" }
+      ];
+      pb.ex = "The vertex is (" + h + ", " + k + ") and the path passes through (0, " + c2F(y0) + "), so " + c2F(y0) + " = <i>a</i>(0 − " + h + ")² + " + k + " and <i>a</i> = " + c2F(a, 6) + ". The path is " + E[0] + ", and at " + c2X + " = " + X + " the height is " + c2F(yX) + " feet.";
+      return pb;
+    }
+  }
+  // Example 2: Writing an Equation Using a Point and x-Intercepts
+  var C2S242 = [
+    { pic: "temp", s: "A meteorologist uses a parabola to predict tomorrow's temperature, where " + c2X + " is the number of hours after midnight and " + c2Y + " is the temperature (in degrees Celsius).", up: true, xl: "Hours after midnight", yl: "Temperature (°C)", ext: "coldest temperature", u: "°C" },
+    { pic: "jump", s: "A dancer leaps across the stage, where " + c2X + " is the horizontal distance and " + c2Y + " is the height of the leap (both in feet).", up: false, xl: "Distance (feet)", yl: "Height (feet)", ext: "maximum height", u: "feet" },
+    { pic: "kick", s: "A kicker sends a ball down the field, where " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in yards).", up: false, xl: "Distance (yards)", yl: "Height (yards)", ext: "maximum height", u: "yards" },
+    { pic: "arch", s: "The arch of a footbridge is a parabola, where " + c2X + " is the distance across and " + c2Y + " is the height (both in meters).", up: false, xl: "Distance (meters)", yl: "Height (meters)", ext: "maximum height", u: "meters" }
+  ];
+  function c2M242(tier) {
+    for (var t = 0; t < 4000; t++) {
+      var sc = c2Pick(C2S242), p, q, a, x0;
+      if (sc.up) { p = c2Pick([2, 3, 4, 5, 6]); q = c2Pick([16, 18, 20, 22, 24]); a = c2Pick([0.05, 0.1, 0.2, 0.25]); x0 = 0; }
+      else { p = 0; q = c2Pick(sc.pic === "jump" ? [4, 6, 8, 10] : sc.pic === "kick" ? [40, 50, 60] : [10, 12, 16, 20]); a = -c2Pick(sc.pic === "jump" ? [0.25, 0.5, 0.75, 1] : sc.pic === "kick" ? [0.01, 0.02, 0.025] : [0.1, 0.125, 0.25, 0.5]); x0 = c2Pick([1, 2, 3, 0.25 * q, 0.75 * q].filter(function (v) { return v > 0 && v < q && v !== q / 2 && Number.isInteger(v); })); }
+      if ((p + q) % 2) continue;
+      var F = function (x) { return a * (x - p) * (x - q); }, y0 = c2R(F(x0), 4), m = (p + q) / 2, ex = c2R(F(m), 4);
+      if (!isFinite(y0) || y0 === 0 || Math.abs(y0) > 40 || (sc.up && (y0 > 16 || ex < -16)) || (!sc.up && ex > 40)) continue;
+      if (tier === 0 && !Number.isInteger(ex)) continue;
+      var pb = { kind: 20, sc: sc }, E = c2If(a, p, q, c2Y), u = sc.u;
+      pb.head = sc.s; pb.pic = c2Pic(sc.pic);
+      pb.story = sc.s + " Write a function <i>f</i> for the parabola. What is the " + sc.ext + "?";
+      var xa = c2Axis(0, q + 2), ya = c2Axis(Math.min(0, ex, y0), Math.max(0, ex, y0) * 1.15 + (sc.up ? 2 : 0));
+      pb.fig = function (x) {
+        x = x || {}; var o = { xmin: Math.min(0, xa.min), xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: sc.xl, yl: sc.yl, alt: "Parabola",
+          curves: [{ fn: F, col: x.eq ? C2P : C2B, lo: sc.up ? 0 : p, hi: q }], pts: [{ x: p, y: 0, col: C2B, lab: true, dy: sc.up ? -8 : 16 }, { x: q, y: 0, col: C2B, lab: true, dy: sc.up ? -8 : 16 }] };
+        if (x0 !== p) o.pts.push({ x: x0, y: y0, col: C2B, lab: true, an: x0 < m ? "end" : "start" });
+        if (x.ev) o.pts.push({ x: m, y: ex, col: C2P, lab: true, tc: C2P, dy: sc.up ? 16 : -8 });
+        return c2Fig(o);
+      };
+      pb.steps = [
+        { id: "p", fine: 1, lab: "p", ask: "The " + c2X + "-intercepts are <i>p</i> and <i>q</i>. What is the smaller one, <i>p</i>?", pre: "<i>p</i> =", ans: p, hint: ["Read where the parabola meets the " + c2X + "-axis.", "<i>p</i> = " + p + "."], line: "<i>p</i> = " + p },
+        { id: "q", fine: 1, lab: "q", ask: "What is <i>q</i>?", pre: "<i>q</i> =", ans: q, hint: ["The other " + c2X + "-intercept.", "<i>q</i> = " + q + "."], line: "<i>q</i> = " + q },
+        { id: "a", lab: "a", ask: c2S("Use intercept form " + c2Y + " = <i>a</i>(" + c2X + " − " + p + ")(" + c2X + " − " + q + ") and the point " + c2Pt(x0, y0) + ": " + c2F(y0) + " = <i>a</i>(" + c2F(x0) + " − " + p + ")(" + c2F(x0) + " − " + q + "). Solve for <i>a</i>.", "Find <i>a</i> in intercept form."), pre: "<i>a</i> =", ans: a, tol: 1e-7, wrong: function (v) { return v === -a ? "Check the sign: the parabola opens " + (sc.up ? "up" : "down") + "." : ""; }, hint: ["(" + c2F(x0) + " − " + p + ")(" + c2F(x0) + " − " + q + ") = " + c2F((x0 - p) * (x0 - q)) + ".", c2F(y0) + " ÷ " + c2F((x0 - p) * (x0 - q)) + " = " + c2F(a) + "."], line: "<i>a</i> = " + c2F(a) },
+        { id: "eq", lab: "Equation", type: "fn", ask: c2S("Write the function in intercept form.", "Write a function for the parabola."), fn: F, xs: [0, 1, 2, p, q, m, 3.5], eg: "y = 0.1(x − 4)(x − 24)", typed: E[1], fo: c2Fo(E[0], [c2If(-a, p, q, c2Y)[0], c2If(a, -p, -q, c2Y)[0], c2If(a * 2, p, q, c2Y)[0]]), after: function (x) { x.eq = true; }, hint: ["Put <i>a</i>, <i>p</i> and <i>q</i> into " + c2Y + " = <i>a</i>(" + c2X + " − <i>p</i>)(" + c2X + " − <i>q</i>).", E[0] + "."], line: E[0] },
+        { id: "m", fine: 1, lab: "x of vertex", ask: "The " + sc.ext + " is at the vertex, halfway between the " + c2X + "-intercepts.", pre: c2X + " =", ans: m, hint: ["(<i>p</i> + <i>q</i>) ÷ 2.", "(" + p + " + " + q + ") ÷ 2 = " + m + "."], line: c2X + " = " + m },
+        { id: "ex", lab: sc.up ? "Coldest" : "Highest", ask: c2S("Find <i>f</i>(" + m + ").", "What is the " + sc.ext + "?"), pre: sc.ext + " =", post: u, ans: ex, tol: 0.011, after: function (x) { x.ev = true; }, hint: ["Put " + c2X + " = " + m + " into your function.", c2F(a) + "(" + m + " − " + p + ")(" + m + " − " + q + ") = " + c2F(ex) + "."], line: "the " + sc.ext + " is " + c2F(ex) + " " + u }
+      ];
+      pb.ex = "The " + c2X + "-intercepts are " + p + " and " + q + ", and the parabola passes through " + c2Pt(x0, y0) + ", so <i>a</i> = " + c2F(a) + " and " + E[0] + ". The vertex is halfway between the intercepts, at " + c2X + " = " + m + ", so the " + sc.ext + " is <i>f</i>(" + m + ") = " + c2F(ex) + " " + u + ".";
+      return pb;
+    }
+  }
+  // Example 3: Writing a Quadratic Equation Using Three Points (equally spaced inputs: constant second differences, then a system for a, b, c)
+  var C2S243 = [
+    { pic: "rocket", s: "A model rocket is launched. The table shows its height " + c2Y + " (in feet) " + c2X + " seconds after launch.", xn: "Time (s)", yn: "Height (ft)", xs: [0, 1], a: [-16], q: "the height of the rocket", u: "feet" },
+    { pic: "ticket", s: "A theater club estimates its profit " + c2Y + " (in dollars) when it charges " + c2X + " dollars per ticket.", xn: "Ticket price ($)", yn: "Profit ($)", xs: [2, 2], a: [-25, -50], q: "the profit", u: "dollars" },
+    { pic: "plane", s: "A plane flies a parabolic path for a weightless ride. The table shows its height " + c2Y + " (in feet) " + c2X + " seconds after the path starts.", xn: "Time (s)", yn: "Height (ft)", xs: [10, 5], a: [-8, -10, -12], q: "the height of the plane", u: "feet" },
+    { pic: "garden", s: "A gardener has fencing for a rectangular garden. The table shows the area " + c2Y + " (in square feet) for a width of " + c2X + " feet.", xn: "Width (ft)", yn: "Area (sq ft)", xs: [2, 2], a: [-1, -2], q: "the area", u: "square feet" }
+  ];
+  function c2M243(tier) {
+    for (var t = 0; t < 4000; t++) {
+      var sc = c2Pick(C2S243), a = c2Pick(sc.a), x0 = sc.xs[0], s = sc.xs[1], n = 6, xv = x0 + s * c2Pick([2, 2.5, 3, 3.5]);
+      var b = -2 * a * xv, c;
+      if (sc.pic === "garden") c = 0; else if (sc.pic === "rocket") c = c2Pick([0, 2, 3, 4, 5, 6]); else if (sc.pic === "plane") c = c2Pick([16000, 18000, 20000, 21000, 22000]); else c = -c2Pick([200, 300, 400, 500, 800]);
+      if (!Number.isInteger(b)) continue;
+      var F = function (x) { return a * x * x + b * x + c; }, xs = [], ys = [], i; for (i = 0; i < n; i++) { xs.push(x0 + s * i); ys.push(F(x0 + s * i)); }
+      if (ys.some(function (y) { return sc.pic === "ticket" ? false : y < 0; })) continue;
+      var d1 = ys.map(function (y, j) { return j ? y - ys[j - 1] : null; }).slice(1), d2 = d1[1] - d1[0];
+      var X = c2R(x0 + s * (n - 1) + s * c2Pick([0.5, 1, 1.5]) , 4); if (sc.pic === "rocket") X = c2R(xv + c2Pick([0.5, 1.5, 2.5]), 2);
+      var yX = c2R(F(X), 4); if ((sc.pic !== "ticket" && yX < 0) || !Number.isInteger(c2R(yX * 100, 4))) continue;
+      var P1 = [xs[0], ys[0]], P2 = [xs[2], ys[2]], P3 = [xs[4], ys[4]], E = c2Sf(a, b, c, c2Y), pb = { kind: 20, sc: sc };
+      var eq = function (P) { return c2F(P[0] * P[0]) + "<i>a</i> + " + c2F(P[0]) + "<i>b</i> + <i>c</i> = " + c2F(P[1]); };
+      pb.head = sc.s; pb.pic = c2Pic(sc.pic);
+      pb.story = sc.s + " Write a function that models the data, and use it to find " + sc.q + " when " + c2X + " = " + c2F(X) + ".";
+      pb.tbl = m3Tbl(sc.xn, sc.yn, xs.map(function (v) { return c2F(v); }), ys.map(function (v) { return c2F(v); }));
+      var xa = c2Axis(Math.min(0, x0), Math.max(X, xs[n - 1]) + s * .5), yl = Math.min.apply(null, ys.concat([yX, 0])), yh = Math.max.apply(null, ys.concat([yX])), ya = c2Axis(yl, yh * 1.1, sc.pic === "plane" ? false : true);
+      pb.fig = function (x) {
+        x = x || {}; var o = { xmin: xa.min, xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: sc.xn, yl: sc.yn, alt: "The data", scat: xs.map(function (v, j) { return [v, ys[j]]; }) };
+        if (x.eq) { o.curves = [{ fn: F, col: C2P }]; if (x.ev) o.pts = [{ x: X, y: yX, col: C2P, lab: true, tc: C2P }]; }
+        return c2Fig(o);
+      };
+      pb.steps = [
+        { id: "d1", fine: 1, lab: "first difference", ask: "The inputs are equally spaced. Find the first differences: subtract each output from the next one. What is the first one?", pre: c2F(ys[1]) + " − " + c2F(ys[0]) + " =", ans: d1[0], hint: ["Subtract the first output from the second.", c2F(ys[1]) + " − " + c2F(ys[0]) + " = " + c2F(d1[0]) + "."], line: "first differences: " + d1.map(function (v) { return c2F(v); }).join(", ") },
+        { id: "d2", lab: "Second difference", ask: c2S("The first differences are " + d1.map(function (v) { return c2F(v); }).join(", ") + ". Find the second differences: subtract each first difference from the next one.", "Find the second differences of the outputs."), pre: "second difference =", ans: d2, hint: ["Subtract consecutive first differences.", c2F(d1[1]) + " − " + c2F(d1[0]) + " = " + c2F(d2) + ", and all of them are " + c2F(d2) + "."], line: "second differences: all " + c2F(d2) },
+        { id: "mdl", lab: "Model", type: "pick", ask: "What kind of function models the data?", opts: c2Pk("Quadratic: the second differences are constant.", [["Linear: the first differences are constant.", "The first differences change: " + c2F(d1[0]) + ", " + c2F(d1[1]) + ", …"], ["Neither: the differences are not constant.", "The second differences are all " + c2F(d2) + "."]]), hint: ["Linear data have constant first differences; quadratic data have constant second differences.", "The second differences are constant, so a quadratic fits."], line: "quadratic (constant second differences)" },
+        { id: "a", fine: 1, lab: "a", ask: "Write <i>y</i> = <i>ax</i>² + <i>bx</i> + <i>c</i> for three points: " + eq(P1) + ", " + eq(P2) + ", " + eq(P3) + ". Solve the system, starting with <i>a</i>.", pre: "<i>a</i> =", ans: a, hint: ["Subtract the equations in pairs to remove <i>c</i>, then solve the two equations that are left. (With equally spaced inputs, <i>a</i> = second difference ÷ (2 × step²).)", c2F(d2) + " ÷ (2 × " + s + "²) = " + c2F(a) + "."], line: "<i>a</i> = " + c2F(a) },
+        { id: "b", fine: 1, lab: "b", ask: "Now find <i>b</i>.", pre: "<i>b</i> =", ans: b, hint: ["Put <i>a</i> = " + c2F(a) + " into the difference of two of the equations.", "<i>b</i> = " + c2F(b) + "."], line: "<i>b</i> = " + c2F(b) },
+        { id: "c", fine: 1, lab: "c", ask: "Now find <i>c</i>.", pre: "<i>c</i> =", ans: c, hint: ["Put <i>a</i> and <i>b</i> into the first equation.", "<i>c</i> = " + c2F(c) + "."], line: "<i>c</i> = " + c2F(c) },
+        { id: "eq", lab: "Equation", type: "fn", ask: c2S("Write the function.", "Write a function that models the data."), fn: F, xs: xs.concat([X]), eg: "y = −16x^2 + 96x + 5", typed: E[1], fo: c2Fo(E[0], [c2Sf(a, -b, c, c2Y)[0], c2Sf(-a, b, c, c2Y)[0], c2Sf(a, b, -c, c2Y)[0]]), after: function (x) { x.eq = true; }, hint: ["Put <i>a</i>, <i>b</i> and <i>c</i> into " + c2Y + " = <i>ax</i>² + <i>bx</i> + <i>c</i>.", E[0] + "."], line: E[0] },
+        { id: "ev", lab: "Evaluate", ask: "Use the function to find " + sc.q + " when " + c2X + " = " + c2F(X) + ".", pre: c2Y + " =", post: sc.u, ans: yX, tol: 0.011, after: function (x) { x.ev = true; }, hint: ["Put " + c2X + " = " + c2F(X) + " into your function.", c2F(a) + "(" + c2F(X) + ")² " + (b < 0 ? "− " : "+ ") + c2F(Math.abs(b)) + "(" + c2F(X) + ")" + (c ? (c < 0 ? " − " : " + ") + c2F(Math.abs(c)) : "") + " = " + c2F(yX) + "."], line: "when " + c2X + " = " + c2F(X) + ", " + c2Y + " = " + c2F(yX) }
+      ];
+      pb.ex = "The first differences are " + d1.map(function (v) { return c2F(v); }).join(", ") + " and the second differences are all " + c2F(d2) + ", so a quadratic fits. Three points give a system whose solution is <i>a</i> = " + c2F(a) + ", <i>b</i> = " + c2F(b) + ", <i>c</i> = " + c2F(c) + ": " + E[0] + ". When " + c2X + " = " + c2F(X) + ", " + c2Y + " = " + c2F(yX) + ".";
+      return pb;
+    }
+  }
+  // Example 4: Using Quadratic Regression (inputs not equally spaced)
+  var C2S244 = [
+    { pic: "car", s: "The table shows the fuel efficiency " + c2Y + " (in miles per gallon) of a car at different speeds " + c2X + " (in miles per hour).", xn: "Speed (mi/h)", yn: "Fuel efficiency (mi/gal)", xs: [20, 24, 30, 36, 40, 45, 50, 56, 60, 70], up: false, vx: [46, 52], vy: [24, 32], wide: 0.012, ask: "max", what: "best gas mileage", u: "miles per gallon" },
+    { pic: "leaf", s: "The table shows how efficiently a plant turns light into energy, " + c2Y + " (percent), at temperatures " + c2X + " (in °C).", xn: "Temperature (°C)", yn: "Efficiency (%)", xs: [2, 5, 8, 11, 15, 18, 22, 26, 30], up: false, vx: [12, 16], vy: [85, 95], wide: 0.25, ask: "max", what: "greatest efficiency", u: "percent" },
+    { pic: "ice", s: "The table shows the greatest weight " + c2Y + " (in tons) that ice " + c2X + " inches thick can hold.", xn: "Ice thickness (in.)", yn: "Weight (tons)", xs: [12, 14, 15, 18, 20, 24, 27], up: true, vx: [2, 6], vy: [-4, 0], wide: 0.09, ask: "est", X: 22, what: "weight ice 22 inches thick can hold", u: "tons" },
+    { pic: "brake", s: "The table shows the stopping distance " + c2Y + " (in feet) of a car at different speeds " + c2X + " (in miles per hour).", xn: "Speed (mi/h)", yn: "Stopping distance (ft)", xs: [20, 30, 40, 55, 65, 70], up: true, vx: [-30, -20], vy: [-10, 0], wide: 0.045, ask: "est", X: 45, what: "stopping distance at 45 miles per hour", u: "feet" },
+    { pic: "scooter", s: "The table shows the number " + c2Y + " (in thousands) of people using shared scooters " + c2X + " weeks after they arrived in a city.", xn: "Weeks", yn: "Users (thousands)", xs: [1, 4, 6, 10, 12, 15, 20, 24, 25], up: true, vx: [0, 2], vy: [1, 2], wide: 0.026, ask: "est", X: 30, what: "number of users after 30 weeks", u: "thousand" }
+  ];
+  function c2Reg(xs, ys) {   // least squares a, b, c and R²
+    var S = [0, 0, 0, 0, 0], T = [0, 0, 0], n = xs.length, my = 0;
+    xs.forEach(function (x, i) { var p = 1; for (var k = 0; k <= 4; k++) { S[k] += p; if (k <= 2) T[k] += p * ys[i]; p *= x; } my += ys[i] / n; });
+    var M = [[S[4], S[3], S[2], T[2]], [S[3], S[2], S[1], T[1]], [S[2], S[1], S[0], T[0]]];
+    for (var c = 0; c < 3; c++) { var piv = c; for (var r = c + 1; r < 3; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r; var tmp = M[c]; M[c] = M[piv]; M[piv] = tmp; for (r = 0; r < 3; r++) if (r !== c) { var f = M[r][c] / M[c][c]; for (var k2 = c; k2 < 4; k2++) M[r][k2] -= f * M[c][k2]; } }
+    var a = M[0][3] / M[0][0], b = M[1][3] / M[1][1], cc = M[2][3] / M[2][2], ss = 0, st = 0;
+    xs.forEach(function (x, i) { var e = ys[i] - (a * x * x + b * x + cc); ss += e * e; st += (ys[i] - my) * (ys[i] - my); });
+    return { a: a, b: b, c: cc, r2: 1 - ss / st };
+  }
+  function c2Sig(v, n) { if (!v) return 0; var d = Math.ceil(Math.log10(Math.abs(v))), p = n - d; return c2R(Math.round(v * Math.pow(10, p)) / Math.pow(10, p), 8); }
+  function c2M244(tier) {
+    for (var t = 0; t < 400; t++) {
+      var sc = c2Pick(C2S244), h = sc.vx[0] + rnd(sc.vx[1] - sc.vx[0] + 1), k = sc.vy[0] + rnd(sc.vy[1] - sc.vy[0] + 1), a0 = (sc.up ? 1 : -1) * sc.wide * (0.85 + rnd(31) / 100);
+      var noise = Math.abs(a0) * 6 + 0.15, xs = sc.xs.slice(), ys = xs.map(function (x) { var y = a0 * (x - h) * (x - h) + k + (rnd(21) - 10) / 10 * noise; return c2R(y, 1); });
+      if (ys.some(function (y) { return y <= 0; })) continue;
+      var R = c2Reg(xs, ys); if (R.r2 < 0.97 || R.r2 > 0.99995) continue;
+      var a = c2Sig(R.a, 3), b = c2Sig(R.b, 3), c = c2Sig(R.c, 3), r2 = c2R(R.r2, 4), F = function (x) { return a * x * x + b * x + c; };
+      var xv = c2R(-b / (2 * a), 2), val = c2R(F(-b / (2 * a)), 2), X = sc.X, yX = X != null ? c2R(F(X), 2) : null;
+      var E = c2Sf(a, b, c, c2Y), pb = { kind: 20, sc: sc };
+      pb.head = sc.s; pb.pic = c2Pic(sc.pic);
+      pb.story = sc.s + " Write a function that models the data. Then " + (sc.ask === "max" ? "approximate the " + sc.what + "." : "estimate the " + sc.what + ".");
+      pb.tbl = m3Tbl(sc.xn.replace(/ \(.*/, ""), sc.yn.replace(/ \(.*/, ""), xs, ys.map(function (v) { return c2F(v); }));
+      var xa = c2Axis(0, Math.max(xs[xs.length - 1], X || 0) + 1), ya = c2Axis(0, Math.max.apply(null, ys.concat([yX || 0, sc.ask === "max" ? val : 0])) * 1.12);
+      pb.fig = function (x) {
+        x = x || {}; var o = { xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: sc.xn, yl: sc.yn, alt: "Scatter plot", scat: xs.map(function (v, j) { return [v, ys[j]]; }) };
+        if (x.reg) o.curves = [{ fn: F, col: C2P }];
+        if (x.av) o.pts = [sc.ask === "max" ? { x: xv, y: val, col: C2P, lab: "(" + c2F(xv) + ", " + c2F(val) + ")", tc: C2P } : { x: X, y: yX, col: C2P, lab: "(" + X + ", " + c2F(yX) + ")", tc: C2P, an: "end" }];
+        return c2Fig(o);
+      };
+      var steps = [
+        { id: "reg", lab: "Regression", type: "btn", btn: "Quadratic Regression", ask: "The " + c2X + "-values are not equally spaced, so the differences cannot be used. Press Quadratic Regression: the calculator finds the parabola that fits the data best.", after: function (x) { x.reg = true; }, hint: ["The calculator does the hard work.", "Press the button."], line: "Quadratic regression: " + E[0] + ", <i>R</i>² = " + r2 },
+        { id: "r2", fine: 1, lab: "R²", type: "pick", ask: "The calculator shows <i>R</i>² = " + r2 + " (rounded: " + E[0] + "). What does <i>R</i>² tell you?", opts: c2Pk("It is close to 1, so the parabola fits the data well.", [["It is close to 1, so a line would fit better.", "R² describes how well this parabola fits: close to 1 is a good fit."], ["It is the maximum value of the function.", "R² measures the fit, not a value of the function."]]), hint: ["<i>R</i>² is between 0 and 1. Close to 1 means the model is close to the data.", "<i>R</i>² = " + r2 + " is close to 1: a good fit."], line: "<i>R</i>² = " + r2 + ": a good fit" }
+      ];
+      if (sc.ask === "max") steps.push(
+        { id: "xv", fine: 1, lab: "x of vertex", ask: "The " + sc.what + " is the maximum value, at the vertex: " + c2X + " = −<i>b</i> ÷ (2<i>a</i>). Use the rounded values. Round to the nearest hundredth.", pre: c2X + " ≈", ans: xv, tol: Math.max(0.06, Math.abs(xv) * 0.004), hint: ["<i>a</i> = " + c2F(a) + " and <i>b</i> = " + c2F(b) + ".", "−(" + c2F(b) + ") ÷ (2 × " + c2F(a) + ") ≈ " + c2F(xv) + "."], line: c2X + " ≈ " + c2F(xv) },
+        { id: "val", lab: "Maximum", ask: c2S("Find the maximum value: put " + c2X + " ≈ " + c2F(xv) + " into the model.", "Approximate the " + sc.what + "."), pre: "≈", post: sc.u, ans: val, tol: Math.max(0.15, Math.abs(val) * 0.01), after: function (x) { x.av = true; }, hint: ["Evaluate " + E[0] + " at " + c2X + " ≈ " + c2F(xv) + ".", "About " + c2F(val) + " " + sc.u + "."], line: "the " + sc.what + " is about " + c2F(val) + " " + sc.u });
+      else steps.push(
+        { id: "est", lab: "Estimate", ask: c2S("Put " + c2X + " = " + X + " into the model to estimate the " + sc.what + ".", "Estimate the " + sc.what + "."), pre: c2Y + " ≈", post: sc.u, ans: yX, tol: Math.max(0.15, Math.abs(yX) * 0.01), after: function (x) { x.av = true; }, hint: ["Evaluate " + E[0] + " at " + c2X + " = " + X + ".", "About " + c2F(yX) + " " + sc.u + "."], line: "estimate: about " + c2F(yX) + " " + sc.u });
+      pb.steps = steps;
+      pb.ex = "Quadratic regression gives " + E[0] + " with <i>R</i>² = " + r2 + ", a close fit. " + (sc.ask === "max" ? "The maximum is at " + c2X + " ≈ " + c2F(xv) + ", where " + c2Y + " ≈ " + c2F(val) + " " + sc.u + "." : "At " + c2X + " = " + X + ", " + c2Y + " ≈ " + c2F(yX) + " " + sc.u + ".");
+      return pb;
+    }
+  }
+  // which exercise makes the problem
+  function c2Make(tier) {
+    c2Dec = act === "2.1" || act === "2.4" || (act === "2.2" && lesson === 5);
+    var pb = act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225][lesson - 1](tier)
+      : act === "2.3" ? (lesson === 1 ? c2M231(tier) : lesson === 2 ? c2M23v(tier, false) : lesson === 3 ? c2M23v(tier, true) : c2M234(tier)) : [c2M241, c2M242, c2M243, c2M244][lesson - 1](tier);
+    pb.head = m3Plain(pb.head);   // (Show work's first line is plain text)
+    return pb;
+  }
+
   // ---- editing a point's coordinates: double-click a plotted point (or the dot button) and a small pop-up opens in the centre pane, just below the point ----
   var ptOpen = false, ptIdx = -1, ptTimer = 0;
   function ptNum(t) {
@@ -8835,7 +9595,7 @@ var ESPIC = {
       };
       var wdrag = function (n) {
         if (wfSl()) { wslDemo(n); return; }
-        wax = wp.fam === 2 ? wp.fh : 0; way = wfF(wp, wax);
+        wax = wp.fam >= 2 ? wp.fh : 0; way = wfF(wp, wax);
         if (wf5()) { cap(QZ.wsg ? "Then the fixed cost is taken off: g(x) is f(x) " + wfWhat(wp) + "." : "The profit is a percent of the revenue, minus a fixed cost. First, g(x) is f(x) " + wfWhat(wp) + "."); pgWait(2800, n); return; }
         if (wp.rf) {   // a reflection: the hand grabs a point of f and flips the graph through the axis
           var gx = 0, gy = 0, cands = wp.rf === "x" ? [0, 1, -1, 2, -2, 3, -3] : [2, -2, 1, -1, 3, -3];
@@ -8882,7 +9642,7 @@ var ESPIC = {
       var wsimp = function (n) {
         (function again() {
           if (pgRun !== run) return; var b = document.querySelector("#pgEq [data-wfop]"); if (!b || QZ.step >= 4) { n(); return; }
-          var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Click the parentheses to take them away." : st && st.q && st.q.abs !== undefined ? "Click inside the absolute value to take away the negative." : "Click the operation between two numbers to combine them."); tap(b, function () { pgWait(1500, again); });
+          var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Click the parentheses to take them away." : st && st.q && st.q.abs !== undefined ? "Click inside " + wfVN(st.q.fam) + " to take away the negative." : "Click the operation between two numbers to combine them."); tap(b, function () { pgWait(1500, again); });
         })();
       };
       var weval = function (n) {
@@ -8894,10 +9654,10 @@ var ESPIC = {
       steps = [wdrag, wsubx, wsub, wsimp];
       if (wfProb().comb) steps = steps.concat([function (n) { wp = wfCur(); cap("Now the second transformation: g(x) is f(x) " + wfWhat(wp) + "."); pgWait(2600, n); }, wdrag, wsubx, wsub, wsimp]);
       if (wf5()) steps.push(weval, function (n) { cap("The profit is g(x) = " + wfPlain(wfRuleG(wfProb())).replace(/-/g, "\u2212") + "."); pgWait(2800, n); });
-      else steps.push(function (n) { cap("The purple graph is f " + wfWhat(wfProb()) + "."); pgWait(2800, n); });
+      else steps.push(function (n) { var gq = wfProb().g; cap("The purple graph is f " + wfWhat(wfProb()) + (wfQd() ? ". Its vertex is (" + nf(gq.h) + ", " + nf(gq.k) + ")" : "") + "."); pgWait(2800, n); });
     }
     if (PQ && m3()) {   // 1.3: the hand answers each step of the problem in turn
-      var m3Say = function (t) { return String(m3V(t)).replace(/<[^>]+>/g, ""); };
+      var m3Say = function (t) { return m3Plain(m3V(t)); };
       var m3Svg1 = function (el, then) {   // (an SVG element has no click(): send the event)
         handGo(ctr(el), 650); pgWait(850, function () { handTap(); el.classList.add("simHover"); el.dispatchEvent(new MouseEvent("click", { bubbles: true })); pgWait(650, then); });
       };
@@ -8931,6 +9691,10 @@ var ESPIC = {
           });
           return;
         }
+        if (t === "gpt") {   // Chapter 2: click each point (for "any points on the curve", the demo picks points that work)
+          var GP = st.pts ? st.pts.slice() : c2DemoPts(st);
+          pgWait(1600, function () { (function nx(i) { if (i >= GP.length || pgRun !== run || !m3Step() || m3Step().id !== st.id) { n(); return; } m3HClick(m3Scr(GP[i][0], GP[i][1]), function () { nx(i + 1); }); })(0); }); return;
+        }
         if (t === "yint") { pgWait(1600, function () { m3HClick(m3Scr(0, P1.b), n); }); return; }
         if (t === "rr") { pgWait(1600, function () { m3HClick(m3Scr(0, P1.b), function () { m3HClick(m3Scr(P1.x2, P1.y2), n); }); }); return; }
         if (t === "frac") { pgWait(1600, function () { m3Tile("rise", "top", function () { m3Tile("run", "bot", n); }); }); return; }
@@ -8948,7 +9712,7 @@ var ESPIC = {
           if (!d1) { n(); return; } pgWait(1800, function () { m3Svg1(d1, d2n); }); return;
         }
         var inp = $("m3In");
-        if (inp) { var txt = (t === "eq" ? m3Eq(m3V(st.a), m3V(st.b)) : m3F(m3V(st.ans))).replace(/−/g, "-"); pgWait(1400, function () { typeBox("m3In", txt, function () { pgWait(600, n); }); }); return; }
+        if (inp) { var txt = (t === "fn" ? st.typed : t === "eq" ? m3Eq(m3V(st.a), m3V(st.b)) : c2T(m3V(st.ans), 6)).replace(/−/g, "-"); pgWait(1400, function () { typeBox("m3In", txt, function () { pgWait(600, n); }); }); return; }
         var list = t === "pick" ? st.opts : t === "btn" ? [] : m3Opts(st), vi = -1; list.forEach(function (o, i) { if (o.ok) vi = i; });
         var b = t === "btn" ? document.querySelector("#wfSteps [data-m3=go]") : document.querySelector("#wfSteps [data-v=\"" + vi + "\"]");
         if (!b) { n(); return; } pgWait(1800, function () { tap(b, function () { pgWait(600, n); }); });
@@ -9057,7 +9821,7 @@ var ESPIC = {
         if (nx === "r") return [steps[2]];
         if (nx === "s") return one(function (n) {
           var b = document.querySelector("#pgEq [data-wfop]"); if (!b) { n(); return; }
-          var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Click the parentheses to take them away." : st && st.q && st.q.abs !== undefined ? "Click inside the absolute value to take away the negative." : "Click the operation between two numbers to combine them.");
+          var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Click the parentheses to take them away." : st && st.q && st.q.abs !== undefined ? "Click inside " + wfVN(st.q.fam) + " to take away the negative." : "Click the operation between two numbers to combine them.");
           handGo(ctr(b), 650); pgWait(850, function () { handTap(); pgWait(300, function () { wfSimplify(); n(); }); });
         });
         return [function (n) { cap("Everything is done."); n(); }];
