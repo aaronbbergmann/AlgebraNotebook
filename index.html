@@ -5069,6 +5069,7 @@
       $("pgQcue").innerHTML = mode === "solo" && wfL() !== 5 ? pn : (pn ? pn + ": " : "") + "<span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + (wfL() === 5 ? " &nbsp; Profit" : " &nbsp; Graph") + ck(ow.graph); return; }   // one thing to answer (Solo): only the problem count is shown
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
     var L = gdW() ? [[G, ok.eq], ["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table]] : gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
+    if (mode === "solo") L = L.filter(function (a) { return a[0] !== "Table"; });   // Solo: the table is scratch work, not part of the answer
     $("pgQcue").innerHTML = (gd() && mode !== "create" && !QZ.custom && QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
   }
   // Solo: the description is typed (with help from buttons) once the graphs and the table are done
@@ -5408,7 +5409,7 @@ var ESPIC = {
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
-  function pqParts() { if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: wfL() === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: estTableOK(), graph: estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
+  function pqParts() { if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: wfL() === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: estTableOK(), graph: estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: mode === "solo" || TB.rows().every(function (r) { return r.done; }), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
   var pqBusy = false;
   function pqEval() {
     if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order || (gd() && mode === "create" && !QZ.cr) || wfCr()) return;
