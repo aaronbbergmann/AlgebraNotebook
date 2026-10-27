@@ -112,6 +112,13 @@
   #crIn{width:min(24rem,70vw)}
   .modePick{display:flex;flex-direction:column;align-items:center;gap:.8rem;margin:1rem auto 0;text-align:center}
   .modePick[hidden]{display:none}
+  .d3{margin:1.2rem auto 1rem;width:min(560px,100%);text-align:center;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:1rem}
+  .d3[hidden]{display:none}
+  .d3T{font-weight:700;font-size:1.1rem;margin-bottom:.3rem}
+  .d3Leg{display:flex;flex-wrap:wrap;gap:.4rem 1rem;justify-content:center;font-weight:600;margin-bottom:.4rem}
+  .d3 canvas{display:block;width:100%;border-radius:10px;background:color-mix(in srgb,var(--bg) 80%,#fff 20%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 15%,transparent);touch-action:none;cursor:grab}
+  .d3 canvas:active{cursor:grabbing}
+  .d3Txt{margin-top:.5rem;line-height:1.4}
   .modePick .mpT{font-weight:700;font-size:1.1rem}
   .modePick .mpRow{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center}
   .fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.15;margin:0 .08em;font-size:.9em}
@@ -620,6 +627,7 @@
         <div id="ansMsg" style="min-height:1.4em;font-weight:700"></div>
         <div id="ansSol" class="vals" style="display:none;flex-direction:column;align-items:center"></div>
       </section>
+      <section class="d3" id="d3" hidden aria-label="The system in three dimensions"><div class="d3T">The system in 3D</div><div class="d3Leg" id="d3Leg"></div><canvas id="d3Cv" tabindex="0" aria-label="Three planes in three dimensions; drag or use the arrow keys to turn"></canvas><div class="d3Txt" id="d3Txt"></div></section>
     </div>
     </div>
     </div>
@@ -3718,6 +3726,7 @@
     ["1.3", "Modeling with Linear Functions", "1.3 Modeling with Linear Functions"],
     ["1.4D", "Solve Systems of Linear Equations in 3 Variables", "1.4 Solve Systems of Linear Equations in 3 Variables"],
     ["RevT1", "Review for Chapter 1 Test", "Review for Chapter 1 Test"],
+    ["Derek", "Derek's Idea", "Derek's Idea"],
     ["2.1", "Transformations of Quadratic Functions", "2.1 Transformations of Quadratic Functions"],
     ["2.2", "Characteristics of Quadratic Functions", "2.2 Characteristics of Quadratic Functions"],
     ["2.4", "Modeling with Quadratic Functions", "2.4 Modeling with Quadratic Functions"]
@@ -3793,6 +3802,10 @@
     { q: "Q6 Elimination", full: "Question 6: check the solution algebraically, by elimination", act: "1.4D", lesson: 2 },
     { q: "Q7 Three Variables", full: "Question 7: solve the system of three linear equations", act: "1.4D", lesson: 3 },
     { q: "Q8 Word Problem", full: "Question 8: read a word problem about two plans, write the equations and find where they meet", act: "1.4D", lesson: 4 }
+  ] };
+  // Derek's Idea: the 3×3 exercise of 1.4 (it runs the original's code), with the solved system drawn in 3D at the end; its own progress
+  BUILT["Derek"] = { review: true, d3: true, key: "algebraProgress:Derek", levels: [], top: 0, items: [
+    { q: "3×3 in 3D", full: "Solve a system of three linear equations, then see the three planes and their meeting point in 3D", act: "1.4D", lesson: 3 }
   ] };
   var rev = null, revI = 0;
   var act = "1.4D";
@@ -3915,6 +3928,7 @@
   }
   function onSolved() {
     if (DNX) return;
+    if (d3On()) d3Show();   // Derek's Idea: the solved system, drawn in 3D
     tally(); nxShow(); if (mode !== "demo" && !BUILT[act].solver) $("next").focus();   // (in Play Solve Next changes the mode, so Enter on the last answer must not land on it)
   }
   // ---- Play Solve: the letter being solved for. The engines always work in x; a generated problem picks one of x y z m n p t u v w and
@@ -4034,7 +4048,7 @@
   function takeBoot() { var m = bootMode || "demo"; bootMode = null; return m; }
 
   function newProblem() {
-    hideKind();
+    hideKind(); d3Hide();
     if (quiz()) { $("next").hidden = true; $("nxHard").hidden = true; $("again").hidden = true; qzStart(); return; }   // (nothing left over from the activity we came from)
     $("qzNext").hidden = true; $("qzAgain").hidden = true;
     exHide();
@@ -4069,6 +4083,139 @@
     if (mode === "solo") note("Work this out on your own, then type your answer.");
     if (building) crPrompt();
   }
+
+  // ---- Derek's Idea: the 3×3 exercise of 1.4 (the same code), and when the system is solved, a 3D picture of it.  Each equation is a plane;
+  // the three planes meet at the solution point, which is highlighted.  Drag to turn the picture; it turns slowly by itself until it is touched.
+  function d3On() { return !!rev && !!BUILT[rev].d3 && lesson === 3 && !quiz(); }
+  var D3 = { th: -0.75, ph: 0.42, spin: true, raf: 0, drag: null, P: null };
+  function d3Hide() { var s = $("d3"); if (s) s.hidden = true; cancelAnimationFrame(D3.raf); D3.P = null; }
+  function d3Num(f) { return f ? f.n / f.d : 0; }
+  // the planes: a x + b y + c z = d (constants on the left are moved over)
+  function d3Planes() {
+    return orig.map(function (q) { var k = 0; (q.ks || []).forEach(function (t) { k += d3Num(t); }); return [d3Num(q.a), d3Num(q.b), d3Num(q.e), d3Num(q.c) - k]; });
+  }
+  function d3Solve(M, r) {   // Cramer's rule; null when the planes do not meet in one point
+    var D = det3(M); if (Math.abs(D) < 1e-9) return null;
+    return [0, 1, 2].map(function (j) { var A = M.map(function (row, i) { return row.map(function (v, c) { return c === j ? r[i] : v; }); }); return det3(A) / D; });
+  }
+  function d3Show() {
+    var s = $("d3"); if (!s || orig.length !== 3) return;
+    var P = d3Planes(), sol = d3Solve(P.map(function (p) { return p.slice(0, 3); }), P.map(function (p) { return p[3]; }));
+    var m = sol ? Math.max.apply(null, sol.map(Math.abs)) : 0, R = Math.max(5, Math.ceil(m) + 2);
+    D3.P = { planes: P, sol: sol, R: R, polys: d3Polys(P, R), lines: d3Lines(P, R) };
+    var num = function (v) { v = Math.round(v * 100) / 100; return (v < 0 ? "−" : "") + Math.abs(v); };
+    $("d3Leg").innerHTML = orig.map(function (q, i) { return "<span style=\"color:" + D3C[i] + "\">■ " + fmt(q) + "</span>"; }).join("");
+    $("d3Txt").innerHTML = sol ? "Each equation is a plane. The three planes meet at one point, the solution <b>(" + sol.map(num).join(", ") + ")</b>. Drag to turn the picture."
+      : "Each equation is a plane. These three planes do not meet at a single point, so there is no one solution. Drag to turn the picture.";
+    s.hidden = false; D3.spin = !matchMedia("(prefers-reduced-motion: reduce)").matches; d3Loop();
+    setTimeout(function () { try { s.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) { } }, 300);
+  }
+  var D3C = ["#7A3FB5", "#C9731B", "#2D70B3"];
+  // each plane is cut into small pieces across the box [-R, R]³ (so that the pieces can be drawn back to front)
+  function d3Polys(P, R) {
+    var out = [], N = 12;
+    P.forEach(function (p, pi) {
+      var w = [0, 1, 2].reduce(function (a, b) { return Math.abs(p[b]) > Math.abs(p[a]) ? b : a; }, 0), u = (w + 1) % 3, v = (w + 2) % 3;
+      if (Math.abs(p[w]) < 1e-12) return;
+      var W = function (U, V) { return (p[3] - p[u] * U - p[v] * V) / p[w]; };
+      for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) {
+        var u0 = -R + 2 * R * i / N, u1 = -R + 2 * R * (i + 1) / N, v0 = -R + 2 * R * j / N, v1 = -R + 2 * R * (j + 1) / N;
+        var poly = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]];
+        poly = d3Clip(poly, function (q) { return R - W(q[0], q[1]); });
+        poly = d3Clip(poly, function (q) { return W(q[0], q[1]) + R; });
+        if (poly.length < 3) continue;
+        out.push({ c: pi, pts: poly.map(function (q) { var X = [0, 0, 0]; X[u] = q[0]; X[v] = q[1]; X[w] = W(q[0], q[1]); return X; }) });
+      }
+    });
+    return out;
+  }
+  function d3Clip(poly, f) {   // keep the part where f >= 0 (f is linear)
+    var out = [];
+    for (var i = 0; i < poly.length; i++) {
+      var A = poly[i], B = poly[(i + 1) % poly.length], fa = f(A), fb = f(B);
+      if (fa >= 0) out.push(A);
+      if ((fa >= 0) !== (fb >= 0)) { var t = fa / (fa - fb); out.push([A[0] + t * (B[0] - A[0]), A[1] + t * (B[1] - A[1])]); }
+    }
+    return out;
+  }
+  // where two planes cross: a line, cut to the box
+  function d3Lines(P, R) {
+    var out = [];
+    [[0, 1], [0, 2], [1, 2]].forEach(function (pr) {
+      var a = P[pr[0]], b = P[pr[1]], d = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+      if (Math.hypot(d[0], d[1], d[2]) < 1e-9) return;
+      var p0 = d3Solve([a.slice(0, 3), b.slice(0, 3), d], [a[3], b[3], 0]); if (!p0) return;
+      var lo = -Infinity, hi = Infinity;
+      for (var k = 0; k < 3; k++) {
+        if (Math.abs(d[k]) < 1e-12) { if (Math.abs(p0[k]) > R) return; continue; }
+        var t1 = (-R - p0[k]) / d[k], t2 = (R - p0[k]) / d[k]; lo = Math.max(lo, Math.min(t1, t2)); hi = Math.min(hi, Math.max(t1, t2));
+      }
+      if (lo >= hi) return;
+      out.push([[0, 1, 2].map(function (k) { return p0[k] + lo * d[k]; }), [0, 1, 2].map(function (k) { return p0[k] + hi * d[k]; })]);
+    });
+    return out;
+  }
+  function d3Loop() {
+    cancelAnimationFrame(D3.raf);
+    var last = 0;
+    (function fr(ts) {
+      if (!D3.P || $("d3").hidden) return;
+      if (D3.spin && last) D3.th += Math.min(50, ts - last) * 0.00025;
+      last = ts; d3Draw(); D3.raf = requestAnimationFrame(fr);
+    })(0);
+  }
+  function d3Draw() {
+    var cv = $("d3Cv"), S = D3.P; if (!cv || !S) return;
+    var dpr = window.devicePixelRatio || 1, Wd = cv.clientWidth || 520, Ht = Math.round(Wd * 0.78);
+    if (cv.width !== Math.round(Wd * dpr) || cv.height !== Math.round(Ht * dpr)) { cv.width = Math.round(Wd * dpr); cv.height = Math.round(Ht * dpr); cv.style.height = Ht + "px"; }
+    var g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, Wd, Ht);
+    var cs = getComputedStyle($("d3")), ink = cs.color, R = S.R, ct = Math.cos(D3.th), st = Math.sin(D3.th), cp = Math.cos(D3.ph), sp = Math.sin(D3.ph);
+    var sc = Math.min(Wd, Ht) / (R * 3.1), Dd = R * 14, cx = Wd / 2, cy = Ht / 2;
+    function pr(X) {   // world (z up) to screen; d = depth (larger is farther)
+      var x1 = X[0] * ct - X[1] * st, y1 = X[0] * st + X[1] * ct, d = y1 * cp + X[2] * sp, z2 = -y1 * sp + X[2] * cp, k = Dd / (Dd + d);
+      return [cx + sc * x1 * k, cy - sc * z2 * k, d];
+    }
+    function line(A, B, col, w, dash) { var a = pr(A), b = pr(B); g.beginPath(); g.setLineDash(dash || []); g.strokeStyle = col; g.lineWidth = w; g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); g.setLineDash([]); }
+    // the box
+    g.globalAlpha = .18; var E = [-R, R];
+    E.forEach(function (a) { E.forEach(function (b) { line([-R, a, b], [R, a, b], ink, 1); line([a, -R, b], [a, R, b], ink, 1); line([a, b, -R], [a, b, R], ink, 1); }); });
+    g.globalAlpha = 1;
+    // the axes
+    [[R, 0, 0, "x"], [0, R, 0, "y"], [0, 0, R, "z"]].forEach(function (A) {
+      line([-A[0], -A[1], -A[2]], A, ink, 1.4);
+      var e = pr([A[0] * 1.12, A[1] * 1.12, A[2] * 1.12]); g.fillStyle = ink; g.font = "italic 600 15px Georgia,serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(A[3], e[0], e[1]);
+      var t = pr([A[0], A[1], A[2]]); g.font = "11px system-ui,sans-serif"; g.fillText(String(R), t[0] + 10, t[1] + 10);
+    });
+    // the planes, back to front
+    var items = S.polys.map(function (p) { var q = p.pts.map(pr), d = 0; q.forEach(function (v) { d += v[2]; }); return { c: p.c, q: q, d: d / q.length }; });
+    items.sort(function (a, b) { return b.d - a.d; });
+    items.forEach(function (it) {
+      g.beginPath(); it.q.forEach(function (v, i) { if (i) g.lineTo(v[0], v[1]); else g.moveTo(v[0], v[1]); }); g.closePath();
+      g.fillStyle = D3C[it.c]; g.globalAlpha = .34; g.fill(); g.globalAlpha = .12; g.strokeStyle = D3C[it.c]; g.lineWidth = .6; g.stroke(); g.globalAlpha = 1;
+    });
+    // where the planes cross
+    S.lines.forEach(function (L) { line(L[0], L[1], ink, 1.6); });
+    // the solution: guides down to the floor and over to the axes, then the point itself
+    if (S.sol) {
+      var x = S.sol[0], y = S.sol[1], z = S.sol[2], hl = "#2E9E4F";
+      line([x, y, 0], [x, y, z], hl, 1.6, [5, 4]); line([x, 0, 0], [x, y, 0], hl, 1.2, [5, 4]); line([0, y, 0], [x, y, 0], hl, 1.2, [5, 4]);
+      var p = pr([x, y, z]), pulse = 1 + .18 * Math.sin(Date.now() / 260);
+      g.beginPath(); g.arc(p[0], p[1], 13 * pulse, 0, 2 * Math.PI); g.fillStyle = hl; g.globalAlpha = .22; g.fill(); g.globalAlpha = 1;
+      g.beginPath(); g.arc(p[0], p[1], 6.5, 0, 2 * Math.PI); g.fillStyle = hl; g.fill(); g.lineWidth = 2; g.strokeStyle = "#fff"; g.stroke();
+      var num = function (v) { v = Math.round(v * 100) / 100; return (v < 0 ? "−" : "") + Math.abs(v); }, lab = "(" + [x, y, z].map(num).join(", ") + ")";
+      g.font = "700 14px system-ui,sans-serif"; g.textAlign = "left"; g.textBaseline = "middle";
+      var tw = g.measureText(lab).width, bx = p[0] + 12, by = p[1] - 24; if (bx + tw + 12 > Wd) bx = p[0] - 24 - tw;
+      g.beginPath(); if (g.roundRect) g.roundRect(bx, by - 11, tw + 12, 22, 6); else g.rect(bx, by - 11, tw + 12, 22); g.fillStyle = "#fff"; g.globalAlpha = .92; g.fill(); g.globalAlpha = 1; g.lineWidth = 1.5; g.strokeStyle = hl; g.stroke();
+      g.fillStyle = hl; g.fillText(lab, bx + 6, by);
+    }
+  }
+  (function () {
+    var cv = $("d3Cv"); if (!cv) return;
+    cv.addEventListener("pointerdown", function (e) { D3.spin = false; D3.drag = [e.clientX, e.clientY, D3.th, D3.ph]; try { cv.setPointerCapture(e.pointerId); } catch (_) { } e.preventDefault(); });
+    cv.addEventListener("pointermove", function (e) { var d = D3.drag; if (!d) return; D3.th = d[2] + (e.clientX - d[0]) * 0.01; D3.ph = Math.max(-1.45, Math.min(1.45, d[3] + (e.clientY - d[1]) * 0.01)); });
+    var up = function () { D3.drag = null; }; cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+    cv.addEventListener("keydown", function (e) { var k = { ArrowLeft: [-.12, 0], ArrowRight: [.12, 0], ArrowUp: [0, -.1], ArrowDown: [0, .1] }[e.key]; if (!k) return; e.preventDefault(); D3.spin = false; D3.th += k[0]; D3.ph = Math.max(-1.45, Math.min(1.45, D3.ph + k[1])); });
+  })();
 
   // ---- solo and create: no help, just the problem and an answer ----
   function dt2(a, b, c, d) { return add(mul(a, d), neg(mul(b, c))); }
@@ -4111,6 +4258,7 @@
     $("ansT").hidden = true; $("ansKind").hidden = true; $("ansFields").hidden = true; $("ansGo").hidden = true; $("undo").hidden = true; $("show").style.visibility = "hidden";
     if (!credited) { credited = true; tally(); }
     nxShow();
+    if (d3On()) d3Show();   // Derek's Idea: Solo and Create answers end with the 3D picture too
   }
   // an equation as written in a book: variables and numbers on either side, collected into a x + b y + e z = c
   var FLIP = false;   // the last equation typed had its x on the right and was written the other way round
@@ -5568,7 +5716,7 @@ var ESPIC = {
   function shortOf(id) { return id === "1.4D" ? "1.4 Algebra" : id; }
   function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
   function buildActs() {
-    $("actLbl").textContent = welcome ? "Choose an activity" : rev ? "RevT1" : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
+    $("actLbl").textContent = welcome ? "Choose an activity" : rev ? rev : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
     if (fixedAct) document.title = fullTitle(rev || act) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(rev || act));
     $("actList").innerHTML = ACTS.map(function (a) {
       var ok = !!BUILT[a[0]], sel = !welcome && a[0] === (rev || act);
@@ -5601,7 +5749,7 @@ var ESPIC = {
     }
   }
   function setActivity(id) {
-    closeActs(); $("actBtn").blur();   // once an activity is chosen the button is let go
+    closeActs(); $("actBtn").blur(); d3Hide();   // once an activity is chosen the button is let go
     if (!BUILT[id]) return;
     try { sessionStorage.removeItem("an.mode." + id); } catch (e) { }   // choosing an activity always starts it in Demo; only a refresh keeps the mode
     // on the website every activity is its own page, so switching goes to that page
