@@ -3723,8 +3723,9 @@
   ];
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   // Chapter 2 activities all keep the 1.2 / 1.3 pattern: per exercise Demo 10, Sequence 25, Calculate 40, Solo 55, then two more Solo rounds 80 and 100
-  function c2Built(id, lessons, short, modesFor) {
-    var lv = []; lessons.forEach(function (n, i) { var l = i + 1; lv.push([l, "demo", 10, "Demo Mode"], [l, "sequence", 25, "Sequence Mode"], [l, "calculate", 40, "Calculate Mode"], [l, "solo", 55, "Solo Mode"], [l, "solo", 80, "Solo Mode, 2nd round", 2], [l, "solo", 100, "Solo Mode, 3rd round", 3]); });
+  // (the first nPg exercises are on the Play Graph pane, like 1.1 Graph & Describe: Demo 10, Sequence 25, Solo 40, 70, 100)
+  function c2Built(id, lessons, short, modesFor, nPg) {
+    var lv = []; lessons.forEach(function (n, i) { var l = i + 1; if (l <= (nPg || 0)) { lv.push([l, "demo", 10, "Demo Mode"], [l, "sequence", 25, "Sequence Mode"], [l, "solo", 40, "Solo Mode"], [l, "solo", 70, "Solo Mode, 2nd round", 2], [l, "solo", 100, "Solo Mode, 3rd round", 3]); return; } lv.push([l, "demo", 10, "Demo Mode"], [l, "sequence", 25, "Sequence Mode"], [l, "calculate", 40, "Calculate Mode"], [l, "solo", 55, "Solo Mode"], [l, "solo", 80, "Solo Mode, 2nd round", 2], [l, "solo", 100, "Solo Mode, 3rd round", 3]); });
     var b = { quiz: true, top: lessons.length, key: "algebraProgress:" + id, perLesson: true, modes: ["demo", "sequence", "calculate", "solo"], lessons: lessons, short: short, levels: lv };
     if (modesFor) b.modesFor = modesFor;
     return b;
@@ -3760,7 +3761,7 @@
       [4, "demo", 10, "Demo Mode"], [4, "sequence", 25, "Sequence Mode"], [4, "calculate", 40, "Calculate Mode"], [4, "solo", 55, "Solo Mode"],
       [4, "solo", 80, "Solo Mode, 2nd round", 2], [4, "solo", 100, "Solo Mode, 3rd round", 3]
     ] },
-    "2.1": c2Built("2.1", ["Writing Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
+    "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
     "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare"]),
     "2.3": c2Built("2.3", ["Deriving an Equation", "Vertex at the Origin", "Translated Parabola", "Parabolic Reflectors"], ["Derive", "Origin", "Translated", "Reflectors"]),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression"], ["Vertex & Point", "Intercepts", "Three Points", "Regression"]),
@@ -5068,8 +5069,8 @@
       if (P0 && P0.comb && wfSteppy()) { $("pgQcue").innerHTML = (pn ? pn + " · " : "") + "Transformation " + ((QZ.wsg || 0) + 1) + " of " + P0.comb.length + (wfLast() ? ": <span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + (wfL() === 5 ? " &nbsp; Profit" : " &nbsp; Graph") + ck(ow.graph) : ""); return; }
       $("pgQcue").innerHTML = mode === "solo" && wfL() !== 5 ? pn : (pn ? pn + ": " : "") + "<span class=\"lm cg\"><i>g</i>(<i>x</i>)</span>" + ck(ow.eq) + (wfL() === 5 ? " &nbsp; Profit" : " &nbsp; Graph") + ck(ow.graph); return; }   // one thing to answer (Solo): only the problem count is shown
     var ok = pqParts(), all = QZ.step >= 4, G = "<span class=\"lm\"><i>g</i>(<i>x</i>)</span>";
-    var L = gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
-    $("pgQcue").innerHTML = (gd() && mode !== "create" && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of 4: " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
+    var L = gdW() ? [[G, ok.eq], ["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table]] : gd() ? [["Parent graph", ok.parent], ["Graph of " + G, ok.graph], ["Table", ok.table], ["Description", ok.desc]] : [["Equation", ok.eq], ["Table", ok.table], ["Graph", ok.graph]];
+    $("pgQcue").innerHTML = (gd() && mode !== "create" && !QZ.custom && QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + L.map(function (a) { return a[0] + (all || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; ");
   }
   // Solo: the description is typed (with help from buttons) once the graphs and the table are done
   function gdDescUI() {
@@ -5248,6 +5249,7 @@ var ESPIC = {
     if (gd()) {
       var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.a = tr.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false };
       if (mode === "create" && !QZ.cr) { PG.show.eq = false; PG.eqTxt = "g(x)="; }
+      if (gdW()) { PG.show.eq = false; PG.eqTxt = "g(x)="; PG.dOK = true; PG.tAns = { h: tr.h, k: tr.k, a: tr.a || 1 }; }   // 2.1 Writing: the description is the question, g(x) is the answer
     }   // Graph & Describe: g(x) is given; the parent graph, g's graph, the table and the description are the answer
     if (est()) { PG.fam = 1; PG.show = { eq: false, table: false, graph: false, desc: false, parent: false }; PG.eOK = false; PG.eqTxt = ""; $("estIn").hidden = true; }
     if (wf()) wfPG();
@@ -5255,7 +5257,44 @@ var ESPIC = {
     TB.targets = []; QZ.step = 0; QZ.hn = 0; pqMsg("");
   }
   // ---- 1.1, second exercise: Graph & Describe.  g(x) is a translation of the parent; the student graphs both, fills in the table and describes the move ----
-  function gd() { return pq() && act === "1.1" && lesson === 2; }
+  function gd() { return pq() && ((act === "1.1" && lesson === 2) || gd2()); }
+  // ---- 2.1, exercises 1 to 3: the Play Graph pane as a Progress activity, always the parabola f(x) = x².  A round is three problems that get harder.
+  // 1 Translations and 2 Reflections and Stretches give g(x) (the student graphs f and g, fills in the table and describes the transformation);
+  // 3 Writing a Transformed Quadratic gives the description instead, and the student types g(x) in the equation box (then the graphs and the table).
+  function gd2() { return pq() && act === "2.1" && lesson >= 1 && lesson <= 3; }
+  function gdW() { return gd2() && lesson === 3 && !(mode === "create" || QZ.custom); }   // the equation is the answer
+  function gdMake21(tier) {
+    function nz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
+    function pk(a) { return a[rnd(a.length)]; }
+    for (var t = 0; t < 200; t++) {
+    var h = 0, k = 0, a = 1;
+    if (lesson === 1) {
+      if (tier === 0) { if (rnd(2)) h = nz(4); else k = nz(4); }
+      else if (tier === 1) { h = nz(4); k = nz(4); }
+      else { h = nz(6); k = nz(6); }
+    } else if (lesson === 2) {
+      a = tier === 0 ? pk([2, 0.5, -1, 0.25]) : tier === 1 ? pk([-2, -0.5, 2, -0.25]) : pk([2, -2, 0.5, -0.5, -1]);
+      if (tier === 2) { if (rnd(2)) h = nz(4); else k = nz(4); }
+    } else {
+      a = tier === 0 ? pk([2, 0.5, 0.25]) : tier === 1 ? pk([-1, -2, -0.5]) : pk([-2, -0.5, 2, 0.5, -0.25]);
+      if (tier === 0) { if (rnd(2)) h = nz(4); else k = nz(4); } else { h = nz(4); k = nz(4); }
+    }
+    if (Math.abs(k + 4 * a) > 10) continue;   // the table's outer rows (two from the vertex) stay inside the window, so it never has to zoom out
+    return { h: h, k: k, a: a };
+    }
+    return { h: 1, k: -2, a: 2 };
+  }
+  // in words, in the order the changes are made: the stretch, shrink or reflection first, then the translation
+  function gdSay21(t) {
+    var w = [], ab = Math.abs(t.a), mv = [];
+    var fr = ab === 0.5 ? "1/2" : ab === 0.25 ? "1/4" : ab === 0.75 ? "3/4" : nf(ab);
+    if (ab > 1) w.push("a vertical stretch by a factor of " + fr); else if (ab < 1) w.push("a vertical shrink by a factor of " + fr);
+    if (t.a < 0) w.push("a reflection in the x-axis");
+    if (t.h) mv.push(Math.abs(t.h) + (Math.abs(t.h) === 1 ? " unit " : " units ") + (t.h > 0 ? "right" : "left"));
+    if (t.k) mv.push(Math.abs(t.k) + (Math.abs(t.k) === 1 ? " unit " : " units ") + (t.k > 0 ? "up" : "down"));
+    var first = w.join(" and "), tr = mv.length ? "a translation " + mv.join(" and ") : "";
+    return first && tr ? first + ", followed by " + tr : first || tr;
+  }
   var gdCustom = null;   // Graph & Describe: the function typed in Create, carried into the other modes
   function gdTyped() { return gd() && (soloish() || A() !== 1); }   // the description is typed (not clicked) when practising alone, or when it needs a stretch or a reflection
   function soloish() { return mode === "solo" || mode === "create"; }
@@ -5301,10 +5340,11 @@ var ESPIC = {
     var cuw = wf() && mode !== "create" && wfCustom;
     if (wf()) o = mode === "demo" || mode === "create" || cuw ? [0] : [0, 1, 2];   // Writing Translations: a round is three problems
     document.body.classList.toggle("m3", m3()); if (m3()) o = mode === "demo" ? [0] : [0, 1, 2];   // 1.3: a round is three problems
+    if (gd2()) o = mode === "demo" || mode === "create" ? [3] : [3, 3, 3];   // 2.1: always the parabola, a round of three that get harder
     var cu = gd() && mode !== "create" && gdCustom;
     if (gd() && mode === "create") { o = [0]; gdCustom = null; }   // Create: the student types the function, so there is one problem and no family yet
     else if (cu) o = [cu.fam];   // the student's own function runs in whichever mode they pick
-    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : o.map(gdMake), est: est() ? estSet(o.length) : null, cr: false, custom: !!cu }; updProg();
+    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : gd2() ? o.map(function (f, i) { return gdMake21(i); }) : o.map(gdMake), est: est() ? estSet(o.length) : null, cr: false, custom: !!cu }; updProg();
     if (wf()) { QZ.custom = !!cuw; QZ.tr = []; QZ.wfp = cuw ? [wfCustom] : mode === "create" ? [null] : wfSet(o.length); QZ.cs = "f"; QZ.wd = {}; QZ.wl = []; if (mode === "create") wfCustom = null; }
     if (m3()) { QZ.tr = []; QZ.m3p = m3Set(o.length); }
     if (mode !== "demo") explainOn = false;
@@ -5343,8 +5383,10 @@ var ESPIC = {
     else if (m3()) $("pgQt").innerHTML = m3Q();
     else if (wf()) $("pgQt").innerHTML = wfQ();
     else if (gd() && mode === "create" && !QZ.cr && QZ.pick) { $("pgQt").textContent = "Your function is in."; showPick($("pgQ"), "How would you like to work on it?"); }
-    else if (gd() && mode === "create" && !QZ.cr) { $("modePick").hidden = true; $("pgQt").innerHTML = "Type a function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2|<i>x</i> \u2212 3| + 1</span>."; }
+    else if (gd() && mode === "create" && !QZ.cr) { $("modePick").hidden = true; $("pgQt").innerHTML = gd2() ? "Type a quadratic function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2(<i>x</i> \u2212 3)\u00b2 + 1</span>." : "Type a function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2|<i>x</i> \u2212 3| + 1</span>."; }
     else if (est()) $("pgQt").innerHTML = estHTML();
+    else if (gdW()) $("pgQt").innerHTML = "Let the graph of <i>g</i> be " + gdSay21(QZ.tr[QZ.pi]) + " of the graph of <i>f</i>(<i>x</i>) = <i>x</i>\u00b2. Write a rule for <i>g</i> in the equation box. Then graph <i>f</i> and <i>g</i> and fill in the table.";
+    else if (gd2()) $("pgQt").innerHTML = "Describe the transformation of <i>f</i>(<i>x</i>) = <i>x</i>\u00b2 represented by " + eqHTML() + ". Then graph each function and fill in the table.";
     else if (gd()) $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation.";
     else $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
     pqCue();
@@ -5380,7 +5422,7 @@ var ESPIC = {
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
         QZ.step = 4; var last = QZ.pi === QZ.order.length - 1;
         if (!QZ.custom && mode !== "create" && mode !== "demo") { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
-        pqMsg(mode === "solo" ? cheer() : est() || wf() || m3() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last ? "You have finished all four!" : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
+        pqMsg(mode === "solo" ? cheer() : est() || wf() || m3() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last && QZ.order.length > 1 ? (QZ.order.length === 3 ? "You have finished all three!" : "You have finished all four!") : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
         if (QZ.custom) {   // the student's own function: no Progress, and Next offers the next mode with the same function
           pqMsg(mode === "solo" ? cheer() : "Well done!", "ok"); var cm = wf() ? ["demo", "sequence", "calculate", "solo"] : ["demo", "sequence", "solo"], cn = cm[cm.indexOf(mode) + 1];
           up = { label: "Next", go: function () { gdCustom = null; wfCustom = null; if (mode === "demo") pqAnother(); else pqRegen(); } };   // as if a problem in this mode had just been finished: another one in the same mode
@@ -5398,6 +5440,17 @@ var ESPIC = {
   function pqTyped() { var t = String(PG.eqTxt || "").trim(); return /^[fg]\(x\)=?$/i.test(t.replace(/\s/g, "")) ? "" : t; }
   ["focusin", "click"].forEach(function (ev) { document.addEventListener(ev, function (e) { var el = e.target; if (pq() && el.classList && el.classList.contains("eqIn") && /^[fg]\(x\)=$/.test(el.value)) { el.setSelectionRange(el.value.length, el.value.length); setTimeout(function () { el.setSelectionRange(el.value.length, el.value.length); }, 0); } }); });
   function pqEqWrong(t) {
+    if (gdW()) {
+      var f = eqFn(t), tr = QZ.tr[QZ.pi], msg = "Not quite. Try again.", same = function (fn) { if (!f) return false; for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e) { return false; } if (!(Math.abs(v - fn(x)) < 1e-6)) return false; } return true; };
+      QZ.wrong++;
+      if (mode !== "solo" && f) {
+        if (tr.h && same(function (x) { return tr.a * (x + tr.h) * (x + tr.h) + tr.k; })) msg = "Check the sign inside: " + (tr.h > 0 ? "right " + tr.h + " means x \u2212 " + tr.h : "left " + (-tr.h) + " means x + " + (-tr.h)) + ".";
+        else if (same(function (x) { return -tr.a * (x - tr.h) * (x - tr.h) + tr.k; })) msg = tr.a < 0 ? "A reflection in the x-axis makes the number in front negative." : "There is no reflection: the number in front stays positive.";
+        else if (same(function (x) { return (x - tr.h) * (x - tr.h) + tr.k; }) && tr.a !== 1) msg = "Multiply by " + nf(tr.a) + " in front of the parentheses.";
+        else if (same(function (x) { return tr.a * ((x - tr.h) * (x - tr.h) + tr.k); }) && tr.k) msg = "The stretch is made first, so the translation up or down is added after: a(x \u2212 h)\u00b2 + k.";
+      }
+      pqMsg(msg); eqShake(); return;
+    }
     var other = QEQ.indexOf(qNorm(t)), fam = qFam(); QZ.wrong++;
     pqMsg(mode === "solo" ? "Not quite. Try again." : other >= 0 && other !== fam ? "That is the parent of the " + QFAM[other] + " family, not the " + QFAM[fam] + " family." : "Not quite. Try again.", "");
     $("pgEq").animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
@@ -5442,6 +5495,7 @@ var ESPIC = {
     if (m3()) return m3Hint(n);
     if (wf()) return wfHint(n);
     if (est()) return estHint(n, ok);
+    if (gdW() && !ok.eq) { var tw = QZ.tr[QZ.pi]; return n === 0 ? "A vertical stretch or shrink by a, a reflection (a negative a), then a translation h right and k up give g(x) = a(x \u2212 h)\u00b2 + k." : "Here a = " + nf(tw.a) + ", h = " + nf(tw.h) + " and k = " + nf(tw.k) + ": g(x) = " + plain(rhsHTML()) + "."; }
     if (gd()) {
       var tt = QZ.tr[QZ.pi], tool = QSHAPE[fam] === "line" ? "/" : QSHAPE[fam];
       if (!ok.parent) return n === 0 ? "Start with the parent: the simplest function in the " + QFAM[fam] + " family, f(x) = " + plain(qEqHTML(fam)) + ". Graph it with the " + tool + " tool." : fam === 0 ? "The parent is flat at y = 1." : fam === 1 ? "Use the / tool through (0, 0) and (1, 1)." : "Click the " + tool + " tool, then click the vertex, (0, 0).";
@@ -5459,6 +5513,7 @@ var ESPIC = {
     if (m3()) return m3Explain();
     if (wf()) return wfExplain();
     if (est()) { var ee = estProb(); return "Enter the data in the table. The points: " + ee.fh + ", so " + (ee.fam === 2 ? "an " : "a ") + ee.fn + " fits: press Change Family to choose it and Regression to graph it. Then " + ee.ex + "."; }
+    if (gd2()) { var t2 = QZ.tr[QZ.pi]; return "In g(x) = a(x \u2212 h)\u00b2 + k, a stretches (|a| > 1) or shrinks (|a| < 1) the parabola f(x) = x\u00b2 and reflects it when a is negative; then h moves it right or left and k up or down. The vertex of g is (h, k). Here g(x) = " + plain(rhsHTML()) + " is " + gdSay21(t2) + ", and its vertex is (" + nf(t2.h) + ", " + nf(t2.k) + ")."; }
     if (gd()) return "A translation slides the parent without changing its shape. Here g(x) = " + plain(rhsHTML()) + " is the " + QFAM[fam] + " parent moved " + gdWords(QZ.tr[QZ.pi]) + ". Graph the parent (it turns dotted), then graph g(x); the table and the description tell the same story.";
     return "Every family of functions has a parent: its simplest equation. The " + QFAM[fam] + " parent is f(x) = " + plain(qEqHTML(fam)) + ". You can answer with the equation, the table or the graph, in any order: put each x into the equation to fill the table, and the points make a " + (fam < 2 ? "straight line" : fam === 2 ? "V" : "U") + " graph.";
   }
@@ -6409,14 +6464,14 @@ var ESPIC = {
   // Graph & Describe, Create: the typed function becomes the problem
   function gdCreateAdopt(t) {
     var r = eqFit(t); if (r.err) { eqMsg(r.err); eqShake(); return; }
+    if (gd2() && r.fam !== 3) { eqMsg("Type a quadratic function, like 2(x \u2212 3)^2 + 1."); eqShake(); return; }
     if (r.fam === 0 ? r.k === 0 : r.a === 1 && !r.h && !r.k) { eqMsg("That is the parent function itself. Try one with a transformation."); eqShake(); return; }
     gdCustom = { fam: r.fam, h: r.h, k: r.k, a: r.a }; QZ.pick = true; eqMsg(""); pqPanel();   // the function is in: now the student chooses the mode to work on it in
   }
   // ---- 1.2, first exercise: Writing Translations.  f (a line or an absolute value) is given, g is f moved right or left and up or down, and the student types g(x) ----
-  function wf() { return pq() && ((act === "1.2" && lesson >= 1 && lesson <= 5) || (act === "2.1" && lesson >= 1 && lesson <= 3)); }
-  // which 1.2 exercise does the work: 2.1 reuses it with the parabola f(x) = x² (1 Translations; 2 Reflections and Stretches and 3 Writing a Transformed Quadratic are both combinations)
-  function wfL() { return act === "2.1" ? [0, 1, 4, 4][lesson] || 0 : lesson; }
-  function wfQd() { return act === "2.1"; }   // lesson 1 Writing Translations, 2 Writing Reflections, 3 Writing Stretches and Shrinks, 4 Combining Transformations
+  function wf() { return pq() && act === "1.2" && lesson >= 1 && lesson <= 5; }
+  function wfL() { return lesson; }
+  function wfQd() { return false; }   // (the 1.2 engine draws parabolas too, fam 3, but no exercise uses it yet)   // lesson 1 Writing Translations, 2 Writing Reflections, 3 Writing Stretches and Shrinks, 4 Combining Transformations
   function wfCr() { return wf() && mode === "create"; }
   var wfCustom = null;   // Create: the f and the move the student typed, carried into the other modes
   // Combining Transformations: P.comb holds the two single transformations.  In Demo, Sequence and Calculate they are worked one stage at a time (the first makes h from f,
@@ -6485,7 +6540,6 @@ var ESPIC = {
     return st;
   }
   function wfChainOK(st) {
-    if (st.length && st[0].fam === 3) return st.every(wfQok);
     return st.every(function (q) { return Number.isInteger(q.g.a) && Number.isInteger(q.g.k) && Number.isInteger(q.g.h) && Math.abs(q.g.k) <= 8 && Math.abs(q.g.h) <= 7 && Math.abs(q.g.a) <= 9; });
   }
   function wfBuildC(f, ops) {
@@ -6510,44 +6564,6 @@ var ESPIC = {
       if (P.comb.some(function (q) { return q.fam === 1 && !q.rf && q.dk === 0 && q.g.k === q.fk; })) continue;   // a line moved sideways only ends up as the same line shifted: fine, but never unchanged
       if (P.comb[0].g.a === f.fa && P.comb[0].g.h === (f.fam >= 2 ? f.fh : 0) && P.comb[0].g.k === f.fk) continue;
       if (P.g.a === f.fa && P.g.h === (f.fam >= 2 ? f.fh : 0) && P.g.k === f.fk) continue;
-      return P;
-    }
-  }
-
-  // ---- 2.1 Transformations of Quadratic Functions: the 1.2 engine with the parabola (fam 3).  f is the parent f(x) = x², or later in a round a parabola in vertex form.
-  // A stretch or shrink of a parabola may leave a decimal like 0.5 (a multiple of 1/4); every vertex stays on whole numbers and on the graph.
-  function wfQok(q) { return Math.abs(q.g.a * 4 - Math.round(q.g.a * 4)) < 1e-9 && q.g.a !== 0 && Math.abs(q.g.a) <= 5 && Number.isInteger(q.g.h) && Number.isInteger(q.g.k) && Math.abs(q.g.h) <= 7 && Math.abs(q.g.k) <= 8; }
-  // Translations: tier 0 the parent moved one way; tier 1 the parent (or a parabola with a stretch) moved one way; tier 2 a parabola in vertex form moved both ways
-  function wfMakeQT(tier) {
-    for (var t = 0; t < 400; t++) {
-      var p = tier < 2 || rnd(3) === 0 ? { fam: 3, fa: tier === 1 && rnd(3) === 0 ? [2, -1, 3][rnd(3)] : 1, fh: 0, fk: 0 } : { fam: 3, fa: [1, 1, 2, -1][rnd(4)], fh: wfNz(3), fk: rnd(7) - 3 };
-      var side = rnd(2) === 1;
-      p.dh = tier === 2 ? wfNz(6) : side ? wfNz(tier === 0 ? 4 : 6) : 0; p.dk = tier === 2 ? wfNz(5) : side ? 0 : wfNz(tier === 0 ? 4 : 6); wfG(p);
-      if (!wfQok(p)) continue;
-      return p;
-    }
-  }
-  // 2.1 exercise 2, Reflections and Stretches (the textbook's Example 2a, vertical only): tier 0 one stretch or shrink; tier 1 one reflection in the x-axis (or a
-  // reflection in the y-axis of a parabola whose vertex is off the y-axis); tier 2 a stretch or shrink and a reflection in the x-axis, in either order.
-  // 2.1 exercise 3, Writing a Transformed Quadratic (Example 3): a stretch, shrink or reflection and a move, in order; the vertex is named at the end of the work.
-  function wfMakeQC(tier, ex) {
-    for (var t = 0; t < 900; t++) {
-      var f = { fam: 3, fa: 1, fh: 0, fk: 0 }, ops, P;
-      if (ex === 2 && tier < 2) {
-        if (tier === 1 && rnd(3) === 0) { f = { fam: 3, fa: [1, 2, -1][rnd(3)], fh: wfNz(3), fk: rnd(5) - 2 }; ops = [{ rf: "y" }]; }
-        else ops = [tier === 0 ? wfOpMake("S") : { rf: "x" }];
-        if (tier === 0 && rnd(3) === 0) f = { fam: 3, fa: 1, fh: 0, fk: [2, -2, 4, -4][rnd(4)] };
-        var q = { fam: 3, fa: f.fa, fh: f.fh, fk: f.fk, dh: 0, dk: 0 }; if (ops[0].rf) q.rf = ops[0].rf; if (ops[0].scn) { q.scn = ops[0].scn; q.scd = ops[0].scd; } wfG(q);
-        if (!wfQok(q) || (q.g.a === q.fa && q.g.h === q.fh && q.g.k === q.fk)) continue;
-        return q;
-      }
-      var pairs = ex === 2 ? [["S", "R"], ["R", "S"]] : tier === 0 ? [["S", "T"], ["R", "T"]] : tier === 1 ? [["S", "T"], ["R", "T"], ["T", "R"]] : [["S", "T"], ["R", "T"], ["T", "S"], ["T", "R"]];
-      var pr = pairs[rnd(pairs.length)];
-      ops = pr.map(function (k) { var o = wfOpMake(k); if (o.rf === "y" && !o.scn) o.rf = "x"; return o; });
-      if (ex === 3 && tier === 2 && rnd(3) === 0) f = { fam: 3, fa: 1, fh: wfNz(3), fk: rnd(5) - 2 };
-      P = wfBuildC(f, ops);
-      if (!P.comb.every(wfQok)) continue;
-      if (P.comb.some(function (c) { return c.g.a === c.fa && c.g.h === c.fh && c.g.k === c.fk; })) continue;
       return P;
     }
   }
@@ -6603,7 +6619,6 @@ var ESPIC = {
   // tier 0: the plain line f(x) = x + b moved one way only; tier 1: a line with a slope or an absolute value, still one way only;
   // tier 2: moved sideways and up or down (like the last problems of the textbook's practice, which grow harder)
   function wfMake(tier) {
-    if (wfQd()) return lesson === 1 ? wfMakeQT(tier) : wfMakeQC(tier, lesson);
     if (wfL() === 2) return wfMakeR(tier);
     if (wfL() === 3) return wfMakeS(tier);
     if (wfL() === 4) return wfMakeC(tier);
@@ -9529,7 +9544,8 @@ var ESPIC = {
       var watch = function (n) { return function () { gdWatch(); pgWait(1100, n); }; };
       var scroll = shifts() && H() !== 0;
       steps = [
-        function (n) { cap("g(x) is given. Start with the table: drag g(x) onto any center cell."); dragEq(0, n); },
+        function (n) { if (!gdW()) { n(); return; } cap("Write the rule: the stretch, shrink or reflection is the number in front, and the translation goes in the parentheses and at the end."); var tw = QZ.tr[QZ.pi], co = tw.a === 1 ? "" : tw.a === -1 ? "-" : String(tw.a); typeEq("g(x)=" + co + (tw.h ? "(x" + (tw.h > 0 ? "-" : "+") + Math.abs(tw.h) + ")^2" : "x^2") + (tw.k ? (tw.k > 0 ? "+" : "-") + Math.abs(tw.k) : ""), function () { eqEnter(); pgWait(1600, n); }); },
+        function (n) { cap(gdW() ? "Now the table: drag g(x) onto any center cell." : "g(x) is given. Start with the table: drag g(x) onto any center cell."); dragEq(0, n); },
         function (n) { if (!scroll) { n(); return; } cap("The x-values are centered at 0, but the vertex of g is at x = " + nf(H()) + ". Drag the arrows to scroll the table until x = " + nf(H()) + " is in the middle row."); dialDemo(-H(), n); },
         function (n) {
           if (pqFam !== 1) { cap("Type a y-value, click a calculation to simplify, and do the middle row."); typeRow(0, function () { clickRow(1, function () { typeRow(2, n); }); }); return; }   // symmetric families: the rest are copied next
@@ -9539,7 +9555,7 @@ var ESPIC = {
           if (pqFam === 1) { n(); return; }
           cap("Copy a y-value: drag it from one y cell to another cell with the same answer."); dragY(1, 3, function () { cap("Same for the first row: drag its y-value to the last."); dragY(0, 4, n); });
         },
-        function (n) { cap("Now graph the parent function: the simplest graph in the " + FAMS[pqFam] + " family."); pgWait(2000, n); },
+        function (n) { cap("Now graph the parent function: the simplest graph in the " + FAMS[pqFam] + " family."); zoomHome(); pgWait(2000, n); },
         function (n) { pqFam < 2 ? clickTool("line", [0, pf(0)], [1, pf(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, watch(n)); },
         function (n) { cap("A correct parent turns dotted. Now graph g(x) with the same tool."); pgWait(1800, n); },
         function (n) { pqFam < 2 ? clickTool("line", [0, g(0)], [1, g(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [H(), K()], null, function () { if (A() === 1) { watch(n)(); return; } cap("Drag a side point of the shape to set the stretch."); stretch(A(), watch(n), 1); }); },
@@ -9562,7 +9578,7 @@ var ESPIC = {
           }); }); });
         },
         function (n) { spDemo(function () { zoomDemo(function () { rectDemo(n); }); }); },
-        function (n) { cap("The parent, the graph of g, the table and the description all show the same translation: " + gdWords(QZ.tr[QZ.pi]) + "."); pgWait(2600, n); }
+        function (n) { cap(gd2() ? "The vertex of g is (" + nf(H()) + ", " + nf(K()) + "): " + gdSay21(QZ.tr[QZ.pi]) + " of f(x) = x\u00b2." : "The parent, the graph of g, the table and the description all show the same translation: " + gdWords(QZ.tr[QZ.pi]) + "."); pgWait(2600, n); }
       ];
     }
     if (PQ && wf()) {   // Writing Translations: the hand drags the red graph, drags f onto g, and taps Simplify
