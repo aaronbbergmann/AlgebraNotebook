@@ -3466,18 +3466,19 @@
     if (!ABS || Date.now() - ABS.t > 700) return; var e = root.querySelector(sel); if (!e) return;
     e.classList.add("absorb"); e.style.animationDelay = "-" + (Date.now() - ABS.t) + "ms"; setTimeout(function () { e.classList.remove("absorb"); e.style.animationDelay = ""; }, 750 - (Date.now() - ABS.t));
   }
-  function fly(src, dst, cb, hide) {
+  function fly(src, dst, cb, hide, fast) {   // fast: how many times quicker than the usual 1.4 s glide
+    var sp = fast || 1;
     var op = opOf(src), a = src.getBoundingClientRect(), b = dst.getBoundingClientRect(), g = src.cloneNode(true), cs = getComputedStyle(src);
     if (op) {   // the + or − in front of the term flies with it
       var oa = op.getBoundingClientRect(), w = document.createElement("span"), left = Math.min(oa.left, a.left), top = Math.min(oa.top, a.top);
       w.style.display = "inline-flex"; w.style.alignItems = "baseline"; w.appendChild(op.cloneNode(true)); w.appendChild(g); g = w;
       a = { left: left, top: top, width: Math.max(oa.right, a.right) - left, height: Math.max(oa.bottom, a.bottom) - top };
     }
-    g.style.cssText = "position:fixed;left:" + a.left + "px;top:" + a.top + "px;margin:0;z-index:40;pointer-events:none;background:var(--bg);border-radius:6px;box-shadow:0 .2em .8em rgba(0,0,0,.35);transform:scale(1.7);transition:transform 1.4s ease-in-out;font-size:" + cs.fontSize + ";font-weight:" + cs.fontWeight + ";font-family:" + cs.fontFamily + ";color:" + cs.color + (op ? ";display:inline-flex;align-items:baseline;white-space:nowrap" : "");
+    g.style.cssText = "position:fixed;left:" + a.left + "px;top:" + a.top + "px;margin:0;z-index:40;pointer-events:none;background:var(--bg);border-radius:6px;box-shadow:0 .2em .8em rgba(0,0,0,.35);transform:scale(1.7);transition:transform " + (1.4 / sp) + "s ease-in-out;font-size:" + cs.fontSize + ";font-weight:" + cs.fontWeight + ";font-family:" + cs.fontFamily + ";color:" + cs.color + (op ? ";display:inline-flex;align-items:baseline;white-space:nowrap" : "");
     document.body.appendChild(g); if (hide) { src.style.visibility = "hidden"; if (op) op.style.visibility = "hidden"; } void g.offsetWidth;
     g.style.transform = "translate(" + (b.left - a.left + (b.width - a.width) / 2) + "px," + (b.top - a.top + (b.height - a.height) / 2) + "px) scale(1.7)";
-    if (src._flyText) setTimeout(function () { g.textContent = src._flyText; }, 700);
-    setTimeout(function () { g.remove(); cb(); }, 1450);
+    if (src._flyText) setTimeout(function () { g.textContent = src._flyText; }, 700 / sp);
+    setTimeout(function () { g.remove(); cb(); }, 1450 / sp);
   }
   // a new equation slides from its original down into the workspace
   function flyIn(row, from) {
@@ -5810,7 +5811,7 @@ var ESPIC = {
     var r = TB.rows()[i], src = $("pgTable").querySelector("td.mid[data-r=\"" + i + "\"] .cv"), dst = $("pgTable").querySelector("tr[data-r=\"" + i + "\"] td.yv");
     if (!r || !src || !dst) { if (r) r.fl = false; return; }
     TB.busy = true;
-    fly(src, dst, function () { r.fl = false; r.done = true; TB.busy = false; TB.pop = i; TB.draw(); TB.see(i); TB.after(); }, true);
+    fly(src, dst, function () { r.fl = false; r.done = true; TB.busy = false; TB.pop = i; TB.draw(); TB.see(i); TB.after(); }, true, 4);   // (four times the usual speed: center column to y column)
   };
   // a row has just been completed: if its point lies outside the window, the graph zooms out (keeping its centre) until the point can be seen.
   // In Solo mode the student does the zooming.
