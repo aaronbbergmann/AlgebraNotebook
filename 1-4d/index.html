@@ -118,6 +118,7 @@
   .d3Leg{display:flex;flex-wrap:wrap;gap:.4rem 1rem;justify-content:center;font-weight:600;margin-bottom:.4rem}
   .d3 canvas{display:block;width:100%;border-radius:10px;background:color-mix(in srgb,var(--bg) 80%,#fff 20%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 15%,transparent);touch-action:none;cursor:grab}
   .d3 canvas:active{cursor:grabbing}
+  .d3.flat canvas,.d3.flat canvas:active{cursor:default}
   .d3Txt{margin-top:.5rem;line-height:1.4}
   .modePick .mpT{font-weight:700;font-size:1.1rem}
   .modePick .mpRow{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center}
@@ -3726,7 +3727,6 @@
     ["1.3", "Modeling with Linear Functions", "1.3 Modeling with Linear Functions"],
     ["1.4D", "Solve Systems of Linear Equations in 3 Variables", "1.4 Solve Systems of Linear Equations in 3 Variables"],
     ["RevT1", "Review for Chapter 1 Test", "Review for Chapter 1 Test"],
-    ["Derek", "Derek's Idea", "Derek's Idea"],
     ["2.1", "Transformations of Quadratic Functions", "2.1 Transformations of Quadratic Functions"],
     ["2.2", "Characteristics of Quadratic Functions", "2.2 Characteristics of Quadratic Functions"],
     ["2.4", "Modeling with Quadratic Functions", "2.4 Modeling with Quadratic Functions"]
@@ -3802,10 +3802,6 @@
     { q: "Q6 Elimination", full: "Question 6: check the solution algebraically, by elimination", act: "1.4D", lesson: 2 },
     { q: "Q7 Three Variables", full: "Question 7: solve the system of three linear equations", act: "1.4D", lesson: 3 },
     { q: "Q8 Word Problem", full: "Question 8: read a word problem about two plans, write the equations and find where they meet", act: "1.4D", lesson: 4 }
-  ] };
-  // Derek's Idea: the 3×3 exercise of 1.4 (it runs the original's code), with the solved system drawn in 3D at the end; its own progress
-  BUILT["Derek"] = { review: true, d3: true, key: "algebraProgress:Derek", levels: [], top: 0, items: [
-    { q: "3×3 in 3D", full: "Solve a system of three linear equations, then see the three planes and their meeting point in 3D", act: "1.4D", lesson: 3 }
   ] };
   var rev = null, revI = 0;
   var act = "1.4D";
@@ -3928,7 +3924,7 @@
   }
   function onSolved() {
     if (DNX) return;
-    if (d3On()) d3Show();   // Derek's Idea: the solved system, drawn in 3D
+    if (d3On()) d3Show();   // 2×2, Substitution and 3×3: the solved system, graphed (lines in 2D, planes in 3D)
     tally(); nxShow(); if (mode !== "demo" && !BUILT[act].solver) $("next").focus();   // (in Play Solve Next changes the mode, so Enter on the last answer must not land on it)
   }
   // ---- Play Solve: the letter being solved for. The engines always work in x; a generated problem picks one of x y z m n p t u v w and
@@ -4084,9 +4080,9 @@
     if (building) crPrompt();
   }
 
-  // ---- Derek's Idea: the 3×3 exercise of 1.4 (the same code), and when the system is solved, a 3D picture of it.  Each equation is a plane;
-  // the three planes meet at the solution point, which is highlighted.  Drag to turn the picture; it turns slowly by itself until it is touched.
-  function d3On() { return !!rev && !!BUILT[rev].d3 && lesson === 3 && !quiz(); }
+  // ---- 1.4 3×3: when the system is solved, a 3D picture of it.  Each equation is a plane; the three planes meet at the solution point, which is highlighted.
+  // Drag to turn the picture; it turns slowly by itself until it is touched.  2×2 and Substitution get the same picture in 2D: each equation is a line, and the lines meet at the solution.
+  function d3On() { return act === "1.4D" && !quiz() && (lesson === 2 || lesson === 3); }
   var D3 = { th: -0.75, ph: 0.42, spin: true, raf: 0, drag: null, P: null };
   function d3Hide() { var s = $("d3"); if (s) s.hidden = true; cancelAnimationFrame(D3.raf); D3.P = null; }
   function d3Num(f) { return f ? f.n / f.d : 0; }
@@ -4099,7 +4095,9 @@
     return [0, 1, 2].map(function (j) { var A = M.map(function (row, i) { return row.map(function (v, c) { return c === j ? r[i] : v; }); }); return det3(A) / D; });
   }
   function d3Show() {
-    var s = $("d3"); if (!s || orig.length !== 3) return;
+    var s = $("d3"); if (!s || orig.length !== lesson) return;
+    if (lesson === 2) { d2Show(s); return; }
+    s.classList.remove("flat"); s.querySelector(".d3T").textContent = "The system in 3D"; s.setAttribute("aria-label", "The system in three dimensions"); $("d3Cv").setAttribute("aria-label", "Three planes in three dimensions; drag or use the arrow keys to turn");
     var P = d3Planes(), sol = d3Solve(P.map(function (p) { return p.slice(0, 3); }), P.map(function (p) { return p[3]; }));
     var m = sol ? Math.max.apply(null, sol.map(Math.abs)) : 0, R = Math.max(5, Math.ceil(m) + 2);
     D3.P = { planes: P, sol: sol, R: R, polys: d3Polys(P, R), lines: d3Lines(P, R) };
@@ -4111,6 +4109,61 @@
     setTimeout(function () { try { s.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) { } }, 300);
   }
   var D3C = ["#7A3FB5", "#C9731B", "#2D70B3"];
+  // ---- the same picture in two dimensions (2×2 and Substitution): a x + b y = c is a line; where the two lines cross is the solution
+  function d2Show(s) {
+    var P = d3Planes().map(function (p) { return [p[0], p[1], p[3]]; }), A = P[0], B = P[1], det = A[0] * B[1] - A[1] * B[0], sol = null, kind = "one";
+    if (Math.abs(det) > 1e-9) sol = [(A[2] * B[1] - A[1] * B[2]) / det, (A[0] * B[2] - A[2] * B[0]) / det];
+    else kind = Math.abs(A[0] * B[2] - B[0] * A[2]) < 1e-9 && Math.abs(A[1] * B[2] - B[1] * A[2]) < 1e-9 ? "same" : "par";
+    var m = sol ? Math.max(Math.abs(sol[0]), Math.abs(sol[1])) : 0, R = Math.max(5, Math.ceil(m) + 2);
+    D3.P = { dim: 2, planes: P, sol: sol, R: R }; cancelAnimationFrame(D3.raf);
+    var num = function (v) { v = Math.round(v * 100) / 100; return (v < 0 ? "−" : "") + Math.abs(v); };
+    $("d3Leg").innerHTML = orig.map(function (q, i) { return "<span style=\"color:" + D3C[i] + "\">■ " + fmt(q) + "</span>"; }).join("");
+    $("d3Txt").innerHTML = sol ? "Each equation is a line. The two lines cross at one point, the solution <b>(" + sol.map(num).join(", ") + ")</b>."
+      : kind === "same" ? "Each equation is a line, and these two are the same line, so every point on it is a solution: infinitely many solutions."
+      : "Each equation is a line. These two lines are parallel, so they never meet: there is no solution.";
+    s.classList.add("flat"); s.querySelector(".d3T").textContent = "The system graphed"; s.setAttribute("aria-label", "The system graphed in two dimensions");
+    $("d3Cv").setAttribute("aria-label", "The two lines of the system" + (sol ? " and the point where they cross" : ""));
+    s.hidden = false; d2Draw();
+    setTimeout(function () { try { s.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) { } }, 300);
+  }
+  function d2Draw() {
+    var cv = $("d3Cv"), S = D3.P; if (!cv || !S || S.dim !== 2 || $("d3").hidden) return;
+    var dpr = window.devicePixelRatio || 1, Wd = cv.clientWidth || 520, Ht = Math.round(Wd * 0.78);
+    if (cv.width !== Math.round(Wd * dpr) || cv.height !== Math.round(Ht * dpr)) { cv.width = Math.round(Wd * dpr); cv.height = Math.round(Ht * dpr); cv.style.height = Ht + "px"; }
+    var g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, Wd, Ht);
+    var ink = getComputedStyle($("d3")).color, R = S.R, sc = (Math.min(Wd, Ht) - 34) / (2 * R), cx = Wd / 2, cy = Ht / 2;
+    var X = function (x) { return cx + sc * x; }, Y = function (y) { return cy - sc * y; };
+    // the grid and the axes
+    g.lineWidth = 1; g.strokeStyle = ink; g.globalAlpha = .12;
+    for (var k = -R; k <= R; k++) { g.beginPath(); g.moveTo(X(k), Y(-R)); g.lineTo(X(k), Y(R)); g.moveTo(X(-R), Y(k)); g.lineTo(X(R), Y(k)); g.stroke(); }
+    g.globalAlpha = 1; g.lineWidth = 1.6; g.beginPath(); g.moveTo(X(-R), Y(0)); g.lineTo(X(R), Y(0)); g.moveTo(X(0), Y(-R)); g.lineTo(X(0), Y(R)); g.stroke();
+    var st = R > 10 ? 5 : R > 6 ? 2 : 1; g.fillStyle = ink; g.font = "11px system-ui,sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    for (var t = -R; t <= R; t += st) if (t) { g.fillText(String(t), X(t), Y(0) + 4); }
+    g.textAlign = "right"; g.textBaseline = "middle"; for (var u = -R; u <= R; u += st) if (u) g.fillText(String(u), X(0) - 5, Y(u));
+    g.font = "italic 600 15px Georgia,serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("x", X(R) - 8, Y(0) - 11); g.fillText("y", X(0) + 11, Y(R) + 8);
+    // the lines, cut to the grid
+    g.save(); g.beginPath(); g.rect(X(-R), Y(R), 2 * R * sc, 2 * R * sc); g.clip();
+    S.planes.forEach(function (p, i) {
+      var a = p[0], b = p[1], c = p[2], far = 4 * R, p1, p2;
+      if (Math.abs(b) > 1e-9) { p1 = [-far, (c + a * far) / b]; p2 = [far, (c - a * far) / b]; } else if (Math.abs(a) > 1e-9) { p1 = [c / a, -far]; p2 = [c / a, far]; } else return;
+      g.beginPath(); g.moveTo(X(p1[0]), Y(p1[1])); g.lineTo(X(p2[0]), Y(p2[1])); g.strokeStyle = D3C[i]; g.lineWidth = 2.6; g.globalAlpha = i === 1 && !S.sol ? .75 : 1; g.stroke(); g.globalAlpha = 1;
+    });
+    g.restore();
+    // the solution: guides to the axes, then the point and its coordinates
+    if (S.sol) {
+      var x = S.sol[0], y = S.sol[1], hl = "#2E9E4F";
+      g.setLineDash([5, 4]); g.strokeStyle = hl; g.lineWidth = 1.3; g.beginPath(); g.moveTo(X(x), Y(0)); g.lineTo(X(x), Y(y)); g.lineTo(X(0), Y(y)); g.stroke(); g.setLineDash([]);
+      var px = X(x), py = Y(y);
+      g.beginPath(); g.arc(px, py, 13, 0, 2 * Math.PI); g.fillStyle = hl; g.globalAlpha = .22; g.fill(); g.globalAlpha = 1;
+      g.beginPath(); g.arc(px, py, 6.5, 0, 2 * Math.PI); g.fillStyle = hl; g.fill(); g.lineWidth = 2; g.strokeStyle = "#fff"; g.stroke();
+      var num = function (v) { v = Math.round(v * 100) / 100; return (v < 0 ? "−" : "") + Math.abs(v); }, lab = "(" + [x, y].map(num).join(", ") + ")";
+      g.font = "700 14px system-ui,sans-serif"; g.textAlign = "left"; g.textBaseline = "middle";
+      var tw = g.measureText(lab).width, bx = px + 12, by = py - 24; if (bx + tw + 12 > Wd) bx = px - 24 - tw; if (by - 11 < 2) by = py + 24;
+      g.beginPath(); if (g.roundRect) g.roundRect(bx, by - 11, tw + 12, 22, 6); else g.rect(bx, by - 11, tw + 12, 22); g.fillStyle = "#fff"; g.globalAlpha = .92; g.fill(); g.globalAlpha = 1; g.lineWidth = 1.5; g.strokeStyle = hl; g.stroke();
+      g.fillStyle = hl; g.fillText(lab, bx + 6, by);
+    }
+  }
+  window.addEventListener("resize", function () { if (D3.P && D3.P.dim === 2) d2Draw(); });
   // each plane is cut into small pieces across the box [-R, R]³ (so that the pieces can be drawn back to front)
   function d3Polys(P, R) {
     var out = [], N = 12;
@@ -4258,7 +4311,7 @@
     $("ansT").hidden = true; $("ansKind").hidden = true; $("ansFields").hidden = true; $("ansGo").hidden = true; $("undo").hidden = true; $("show").style.visibility = "hidden";
     if (!credited) { credited = true; tally(); }
     nxShow();
-    if (d3On()) d3Show();   // Derek's Idea: Solo and Create answers end with the 3D picture too
+    if (d3On()) d3Show();   // Write and Create answers end with the picture too
   }
   // an equation as written in a book: variables and numbers on either side, collected into a x + b y + e z = c
   var FLIP = false;   // the last equation typed had its x on the right and was written the other way round
