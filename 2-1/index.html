@@ -521,6 +521,7 @@
   body.wsub #pgDescGo{display:none}
   body.pq.wsub #qzGo:not([hidden]){display:inline-block!important;width:10.5em;font-size:.92rem}
   body.pq.wsub #qzGo.ready{background:#8E2465;border-color:#8E2465;color:#fff}body.pq.wsub #qzGo.ready:hover{background:#6E1A4E;border-color:#6E1A4E}
+  .descKeys .axB{display:none}.descIn.c2 .descKeys .axB{display:inline-block}   /* 2.1: the axis of a reflection */
   .descIn[hidden]{display:none}.descIn{display:flex;flex-direction:column;gap:.55rem}
   .descIn input{box-sizing:border-box;width:100%;padding:.55em .7em;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 1rem system-ui,sans-serif}
   .descKeys{display:flex;flex-wrap:wrap;gap:.4rem}.descArr{display:inline-flex;gap:.4rem}
@@ -627,7 +628,7 @@
         </div>
         <div class="pgEqMsg" id="pgEqMsg" aria-live="polite"></div>
         <div class="pgDesc" id="pgDesc" aria-live="polite"></div>
-        <div class="descIn" id="pgDescIn" hidden><input id="pgDescTx" autocomplete="off" spellcheck="false" placeholder="Describe the transformation" aria-label="Describe the transformation"><div class="descKeys" id="pgDescKeys"><button type="button" data-ins="Translation">Translation</button><button type="button" data-ins="Stretch">Stretch</button><button type="button" data-ins="Shrink">Shrink</button><button type="button" data-ins="Reflection">Reflection</button><button type="button" data-ins="Horizontal">Horizontal</button><button type="button" data-ins="Vertical">Vertical</button><span class="descArr"><button type="button" data-ins="←" aria-label="left">←</button><button type="button" data-ins="→" aria-label="right">→</button><button type="button" data-ins="↑" aria-label="up">↑</button><button type="button" data-ins="↓" aria-label="down">↓</button></span><button type="button" class="descGo" id="pgDescGo">Submit</button></div></div>
+        <div class="descIn" id="pgDescIn" hidden><input id="pgDescTx" autocomplete="off" spellcheck="false" placeholder="Describe the transformation" aria-label="Describe the transformation"><div class="descKeys" id="pgDescKeys"><button type="button" data-ins="Translation">Translation</button><button type="button" data-ins="Stretch">Stretch</button><button type="button" data-ins="Shrink">Shrink</button><button type="button" data-ins="Reflection">Reflection</button><button type="button" class="axB" data-ins="x-axis">x-axis</button><button type="button" class="axB" data-ins="y-axis">y-axis</button><button type="button" data-ins="Horizontal">Horizontal</button><button type="button" data-ins="Vertical">Vertical</button><span class="descArr"><button type="button" data-ins="←" aria-label="left">←</button><button type="button" data-ins="→" aria-label="right">→</button><button type="button" data-ins="↑" aria-label="up">↑</button><button type="button" data-ins="↓" aria-label="down">↓</button></span><button type="button" class="descGo" id="pgDescGo">Submit</button></div></div>
         <div class="estIn" id="estIn" hidden><label for="estTx" id="estLbl">Estimate</label><div class="estRow"><input id="estTx" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="Estimated height"><button type="button" id="estGo">Submit</button></div></div>
       </div>
     </section>
@@ -5312,9 +5313,9 @@
   // Solo: the description is typed (with help from buttons) once the graphs and the table are done
   function gdDescUI() {
     if (pq() && gd2() && QZ.order && (mode !== "create" || QZ.cr)) {   // 2.1: the description box and its transformation buttons are always there (the parent table reads them)
-      var dn = !!(PG.dOK && !gdW()); $("pgDescIn").hidden = false; $("pgDescTx").readOnly = dn; $("pgDescIn").classList.toggle("dDone", dn); return;
+      var dn = !!(PG.dOK && !gdW()); $("pgDescIn").hidden = false; $("pgDescIn").classList.add("c2"); $("pgDescTx").readOnly = dn; $("pgDescIn").classList.toggle("dDone", dn); return;
     }
-    $("pgDescIn").classList.remove("dDone"); $("pgDescTx").readOnly = false;
+    $("pgDescIn").classList.remove("dDone", "c2"); $("pgDescTx").readOnly = false;
     var ok = pq() && gd() && gdTyped() && (mode !== "create" || QZ.cr) && QZ.order && QZ.step < 4 && !PG.dOK, pt = ok ? pqParts() : null;
     var show = !!(ok && pt.parent && pt.graph && pt.table), box = $("pgDescIn"), was = !box.hidden;
     box.hidden = !show; if (show && !was) setTimeout(function () { $("pgDescTx").focus(); }, 0);
@@ -5323,7 +5324,7 @@
   function gdNum(x) { x = String(x).replace(/\s+/g, ""); var m = /^(\d*\.?\d+)\/(\d+)$/.exec(x); return m ? +m[1] / +m[2] : +x; }
   function gdParse(t) {
     t = String(t).toLowerCase().replace(/\u2212/g, "-");
-    var o = { h: 0, k: 0, n: 0, tr: /translat|shift|slide|move/.test(t), rf: /reflect/.test(t), st: null, sh: null, both: /stretch/.test(t) && /shrink/.test(t) };
+    var o = { h: 0, k: 0, n: 0, tr: /translat|shift|slide|move/.test(t), rf: /reflect/.test(t), st: null, sh: null, both: /stretch/.test(t) && /shrink/.test(t), ax: /x[\s-]?axis/.test(t) ? "x" : /y[\s-]?axis/.test(t) ? "y" : "" };
     var fm = /(stretch|shrink)\D*?(\d*\.?\d+(?:\s*\/\s*\d+)?)/.exec(t);
     if (fm) { o[fm[1] === "stretch" ? "st" : "sh"] = gdNum(fm[2]); t = t.replace(fm[0], " "); }
     var re = /(\u2192|\u2190|\u2191|\u2193|\bright\b|\bleft\b|\bup\b|\bdown\b)\s*(?:by\s*)?(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:units?\s*)?(\u2192|\u2190|\u2191|\u2193|\bright\b|\bleft\b|\bup\b|\bdown\b)/g, m;
@@ -5338,7 +5339,7 @@
     if (need) tr = m.tr && m.n > 0 && (PG.fam === 1 ? Math.abs((m.k - a * m.h) - tk) < 1e-6 : PG.fam === 0 ? (m.h === 0 && Math.abs(m.k - tk) < 1e-6) : (Math.abs(m.h - th) < 1e-6 && Math.abs(m.k - tk) < 1e-6));   // a line slid sideways is the same line slid up or down
     else tr = m.n === 0;
     var sc = m.both ? false : ab > 1 ? (m.st !== null && Math.abs(m.st - ab) < 1e-6) : ab < 1 ? (m.sh !== null && Math.abs(m.sh - ab) < 1e-6) : (m.st === null && m.sh === null);
-    return !!(tr && sc && (a < 0) === m.rf);
+    return !!(tr && sc && (a < 0) === m.rf && (!gd2() || !m.rf || m.ax === "x"));   // 2.1: a reflection names its axis, the x-axis
   }
   function gdDescSubmit() {
     if (wsub()) return;   // 2.1 Write: checked with the Submit button
@@ -10191,7 +10192,7 @@ var ESPIC = {
           if (th) toks.push({ b: th > 0 ? "\u2192" : "\u2190" }, { t: String(Math.abs(th)) });
           if (tk) toks.push({ b: tk > 0 ? "\u2191" : "\u2193" }, { t: String(Math.abs(tk)) });
           if (ab !== 1) toks.push({ b: "Vertical" }, { b: ab > 1 ? "Stretch" : "Shrink" }, { t: ptFr(ab) });
-          if (A() < 0) toks.push({ b: "Reflection" });
+          if (A() < 0) toks.push({ b: "Reflection" }, { b: "x-axis" });
           e0.value = ""; e0.dispatchEvent(new Event("input", { bubbles: true }));
           var caretEnd = function () { e0.focus(); e0.setSelectionRange(e0.value.length, e0.value.length); };
           each(toks, function (tk0, d) {
