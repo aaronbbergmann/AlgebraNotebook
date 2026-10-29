@@ -6038,7 +6038,7 @@ var ESPIC = {
       var a = TB.val(i - 1, c), b = TB.val(i, c);
       if (a !== null && b !== null && Math.abs(Math.abs(b - a) - 1) < 1e-9) {
         var v = Math.round((b + (b - a)) * 10000) / 10000; pre = i + 1;
-        if (c === "x") TB.setX(pre, String(v)); else { var yv = rs[pre]; yv.tv = String(v); TB.typed(pre, String(v), false); }
+        if (c === "x") TB.setX(pre, String(v)); else if (wsub()) pre = -1; else { var yv = rs[pre]; yv.tv = String(v); TB.typed(pre, String(v), false); }
       }
     }
     TB.draw(); TB.grow();
@@ -6066,6 +6066,7 @@ var ESPIC = {
   TB.sync = function () { var m = TB.mode(); document.body.classList.toggle("tbon", m === "quiz" ? QZ.step === 1 : m === "play" ? fillMode() : false); };
   // drop the equation on a center cell: that row now shows the equation with its x-value put in
   TB.sub = function (i) {
+    if (wsub()) { pqMsg("In Write mode, type each value yourself, or drag a number you have typed to copy it."); return; }   // 2.1 Write: every value is typed
     var r = TB.rows()[i]; if (!r || r.sub || r.done) return;
     if (TB.mode() === "play") PG.subd = true;
     // one drop is enough: every row shows the equation with its own x-value put in
@@ -6074,6 +6075,7 @@ var ESPIC = {
   };
   // each click simplifies one step; at the last step the y-value flies into the y column
   TB.click = function (i) {
+    if (wsub()) return;   // 2.1 Write: nothing is computed for the student
     var r = TB.rows()[i]; if (!r || r.done || r.fl || TB.busy) return;
     if (!r.sub || !TB.hasX(r)) { if (TB.mode() === "play" && fillMode()) TB.midFill(i); return; }
     if (pq() && soloish()) return;   // Solo: no simplifying by click; the y-value is the student's own calculation
@@ -6261,6 +6263,7 @@ var ESPIC = {
       var added = false, near = function (a, b) { return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9; };
       // the red target stays on the graph until a plotted point sits on it: a miss leaves it there to be corrected
       start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { if (fillRow && !fillRow.done && String(fillRow.tv || "").trim()) checkOff(i, fillRow); if (!(pq() && soloish()) && !TB.targets.some(function (t) { return near(t, p); })) { TB.targets.push(p); added = true; } drawPlay(); } }, null, function (ev) {
+        if (wsub()) { var ty2 = yAt(ev), j2 = ty2 ? +ty2.parentNode.dataset.r : -1, rj = j2 >= 0 ? TB.rows()[j2] : null; if (rj && j2 !== i && !rj.done) { rj.tv = String(p[1]); TB.draw(); return; } }   // 2.1 Write: copy a typed y-value
         var r = $("pgGraph").getBoundingClientRect();
         if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
           // the dropped point locks to the grid: whole units, or the smallest fraction of a unit that the point itself needs (1/2, 1/3, 1/4 ...)
@@ -6418,6 +6421,7 @@ var ESPIC = {
   function ptAsk(i, c, expr) { PT.ask = { i: i, c: c }; drawPlay(); pqMsg("Calculate " + expr + " and type it in the highlighted cell."); ptFocus(i, c); }
   // dropping g(x) or the parabola button on the table: the parent columns fill in (x = −2 to 2 where no x was typed, and y = x²)
   function ptFillParent() {
+    if (wsub()) { pqMsg("In Write mode, type each value yourself, or drag a number you have typed to copy it."); return; }   // 2.1 Write: every value is typed
     var R = ptRows();
     R.forEach(function (r, i) { if (r.px === undefined) { r.px = i - 2; r.xt = ""; r.d = {}; r.t = {}; } if (!wsub()) { r.d.py = true; r.t.py = ""; } });   // (2.1 Write: only the x-values; the y-values are the student's)
     PT.popAll = true; drawPlay();
@@ -6470,10 +6474,11 @@ var ESPIC = {
       if (k === "Enter" || k === "ArrowDown") {
         e.preventDefault();
         if (c === "px") {
-          ptSetX(i, t.value);
-          // two parent x-values one apart: Return fills in the next one
-          if (i > 0 && i < R.length - 1 && R[i + 1].px === undefined && R[i - 1].px !== undefined && R[i].px !== undefined && Math.abs(Math.abs(R[i].px - R[i - 1].px) - 1) < 1e-9) ptSetX(i + 1, String(ptR4(2 * R[i].px - R[i - 1].px)));
+          ptSetX(i, t.value); var pre = false;
+          // two parent x-values one apart: Return fills in the next one (and the cursor goes to it, so Return carries on)
+          if (i > 0 && i < R.length - 1 && R[i + 1].px === undefined && R[i - 1].px !== undefined && R[i].px !== undefined && Math.abs(Math.abs(R[i].px - R[i - 1].px) - 1) < 1e-9) { ptSetX(i + 1, String(ptR4(2 * R[i].px - R[i - 1].px))); pre = true; }
           drawPlay();
+          if (pre) { ptFocus(i + 1, c); return; }
         }
         if (!ptFocusNext(i, c)) ptFocus(Math.min(i + 1, R.length - 1), c);
       } else if (k === "ArrowUp") { e.preventDefault(); leave(t); if (i > 0) ptFocus(i - 1, c); }
@@ -6488,7 +6493,8 @@ var ESPIC = {
       if (e.isTrusted) pgUser();
       var i = +td.dataset.r, c = td.dataset.c, r = ptRows()[i]; if (!r) return;
       if (!ptUse(c)) return;
-      var val = c === "px" ? r.px : r.d[c] ? ptRight(r, c) : undefined, pnt = wsub() ? ptTyped2(r) : ptRowDone(r) ? ptPoint(r) : null, isIn = !!e.target.closest("input");
+      var tnum = function (t0) { var q = parse(String(t0 || "").replace(/\u2212/g, "-").trim()); return q ? q.n / q.d : undefined; };
+      var val = c === "px" ? r.px : r.d[c] ? ptRight(r, c) : wsub() ? tnum(r.t[c]) : undefined, pnt = wsub() ? ptTyped2(r) : ptRowDone(r) ? ptPoint(r) : null, isIn = !!e.target.closest("input");
       var sx = e.clientX, sy = e.clientY, g = null, hot = null, added = false, near = function (a, b) { return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9; };
       if (!isIn) e.preventDefault();
       function overGraph(ev) { var gr = $("pgGraph").getBoundingClientRect(); return ev.clientX >= gr.left && ev.clientX <= gr.right && ev.clientY >= gr.top && ev.clientY <= gr.bottom; }
