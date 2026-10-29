@@ -397,6 +397,9 @@
   .m3Top svg.estPic{width:8rem;height:6.7rem}
   .m3Body{display:flex;gap:1.4rem;align-items:flex-start;flex-wrap:wrap;margin-top:.5rem}
   .m3FigW{flex:0 1 22rem;min-width:15rem}
+  .m3FigC{flex:0 1 22rem;min-width:15rem}.m3FigC .m3FigW{min-width:0}
+  .glTools{display:flex;gap:.5rem;justify-content:center;margin-top:.3rem}.glTools .btn{min-width:5.5rem}
+  .wfSteps .m3wStep{margin-bottom:.35rem}.wfSteps .wfBtn.sel{background:var(--ink);color:var(--bg)}.wfSteps .m3wBad{color:#C0301E;font:600 .9rem system-ui,sans-serif}
   .estT{margin-top:.6rem}
   .m3Lab.on{cursor:pointer;text-decoration:underline;fill:#2D70B3}
   .m3Lab.on:hover{fill:#7A3FB5}
@@ -530,7 +533,11 @@
   .ptTable.drop{outline:3px solid #2D70B3;outline-offset:2px}
   .ptTable td.ask input.qzCell,.pgTable td.yv.ask input.qzCell{box-shadow:inset 0 0 0 2px var(--plus)}
   .descIn.dDone .descKeys button{opacity:.45;pointer-events:none}.descIn.dDone input{background:#F4F6F9}
-  body.wsub #pgDescGo{display:none}
+  body.wsub #pgDescGo,body.wsub #estGo,body.wsub #eqKeys [data-go]{display:none}
+  .pgQmsg.note{color:var(--ink)}   /* a reminder (Write: what is left before Submit), not an error */
+  body.wsub #wfSteps{flex:0 1 auto;min-height:0;overflow-y:auto}body.wsub #qz{flex-shrink:0}   /* Write: every step is listed at once; the list scrolls and Submit stays in view */
+  #eqSubRow{justify-content:center;margin:.6rem 0}#eqSubRow[hidden]{display:none}#eqSub{width:10.5em;font-size:.92rem}#eqSub.ready{background:#8E2465;border-color:#8E2465;color:#fff}#eqSub.ready:hover{background:#6E1A4E;border-color:#6E1A4E}
+  #ansFields input.okc{border-color:#1E8A4C;box-shadow:0 0 0 2px rgba(30,138,76,.25)}#ansFields input.badc{border-color:#C0301E;box-shadow:0 0 0 2px rgba(192,48,30,.2)}
   body.pq.wsub #qzGo:not([hidden]){display:inline-block!important;width:10.5em;font-size:.92rem}
   body.pq.wsub #qzGo.ready{background:#8E2465;border-color:#8E2465;color:#fff}body.pq.wsub #qzGo.ready:hover{background:#6E1A4E;border-color:#6E1A4E}
   .descKeys .axB{display:none}.descIn.c2 .descKeys .axB{display:inline-block}   /* 2.1: the axis of a reflection */
@@ -699,6 +706,7 @@
       <div class="err" id="kindErr"></div>
       <div class="row"><button class="btn" data-k="none">No Solutions</button><button class="btn" data-k="inf">Infinite Solutions</button></div>
     </div>
+    <div class="qzRow" id="eqSubRow" hidden><button class="btn" id="eqSub">Submit</button></div>
     <div class="log" id="log" role="log" aria-live="polite"></div>
     <div class="regVals" id="regVals" hidden aria-live="polite"></div>
   </aside>
@@ -3132,7 +3140,7 @@
     }
     if (lesson === 3 && sys.length < 2) {
       var n = allV().filter(function (v) { return s[CK[v]].n; }).length;
-      if (n === 0 && !s.c.n) { bad(f); bad(t); note("Every variable disappeared, so those two equations don't tell you anything new. Try a different pair."); return; }
+      if (n === 0 && !s.c.n) { EQW++; bad(f); bad(t); note("Every variable disappeared, so those two equations don't tell you anything new. Try a different pair."); return; }
       if (n === 2 && !s.ks.length) { found(s, f, t); return; }
     }
     snap(); ws[t] = s; ws.splice(f, 1);
@@ -3142,9 +3150,9 @@
   function found(s, f, t) {
     var miss = allV().filter(function (v) { return !s[CK[v]].n; })[0];
     if (sys.length === 1) {
-      if (miss !== elim) { bad(f); bad(t); note("Make " + elim + " disappear again, so both new equations have the same two variables."); return; }
+      if (miss !== elim) { EQW++; bad(f); bad(t); note("Make " + elim + " disappear again, so both new equations have the same two variables."); return; }
       var p = sys[0], u = sysV[0], w = sysV[1];
-      if (!(p[CK[u]].n * s[CK[w]].n - p[CK[w]].n * s[CK[u]].n) && classify(orig) === "one") { bad(f); bad(t); note("That is the same equation as your first one. Try a different pair of equations."); return; }
+      if (!(p[CK[u]].n * s[CK[w]].n - p[CK[w]].n * s[CK[u]].n) && classify(orig) === "one") { EQW++; bad(f); bad(t); note("That is the same equation as your first one. Try a different pair of equations."); return; }
     }
     snap();
     var a = rows[t].getBoundingClientRect(), o0 = $("origEl").getBoundingClientRect().left;
@@ -3197,7 +3205,7 @@
     if (lesson === 3) {
       var solve = sys.length === 2 && !sysDone();
       if ((set === "o" && solve) || (set === "s" && !(solve && sysV.indexOf(name) >= 0))) {
-        note(set === "s" ? "The new equations aren't ready for that value yet." : "Use the two new equations first."); return;
+        EQW++; note(set === "s" ? "The new equations aren't ready for that value yet." : "Use the two new equations first."); return;
       }
     }
     var src = set === "o" ? orig[j] : set === "s" ? sys[j] : ws[j];
@@ -3318,7 +3326,7 @@
   function kindPick(pick) {
     if (!KQ) return;
     if (pick !== KQ.kind) {
-      $("kindErr").textContent = "Not quite. " + KQ.line + " is " + (KQ.kind === "none" ? "never true, whatever the variable is." : "always true, whatever the variable is.");
+      EQW++; $("kindErr").textContent = "Not quite. " + KQ.line + " is " + (KQ.kind === "none" ? "never true, whatever the variable is." : "always true, whatever the variable is.");
       var b = document.querySelector('#kindAsk [data-k="' + pick + '"]'); if (b) { b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); } return;
     }
     var q = KQ; hideKind(); locked = false; q.ok();
@@ -3336,11 +3344,11 @@
   var askSeq = 0, autoOn = false;
   // Typing the right answer is enough: the moment the text is correct it is accepted, with no Return or button. While it is not (yet) right, nothing is said and nothing moves; Return still checks it and says what is wrong.
   function autoTry(run, open, quiet) {
-    if (autoOn) return false; var seq = askSeq, keep = quiet.map(function (e) { return [e, e.textContent, e.className]; });
+    if (autoOn) return false; var seq = askSeq, w0 = EQW, keep = quiet.map(function (e) { return [e, e.textContent, e.className]; });
     autoOn = true; var inp = document.activeElement, sel = inp && inp.select; if (inp) inp.select = function () {};
     try { run(); } finally { if (inp) { try { delete inp.select; } catch (x) { } } autoOn = false; }
     var still = open() && seq === askSeq;
-    if (still) keep.forEach(function (k) { k[0].textContent = k[1]; k[0].className = k[2]; });
+    if (still) { keep.forEach(function (k) { k[0].textContent = k[1]; k[0].className = k[2]; }); EQW = w0; }   // (nothing was said, so nothing counts)
     return !still;
   }
   function closeAsk(cancel) {
@@ -3349,7 +3357,7 @@
     rows.forEach(function (r) { r.classList.remove("asking"); });
   }
   function confirmAsk() {
-    var i = askIdx, txt = $("askIn").value, err = function (t) { $("askErr").textContent = t; };
+    var i = askIdx, txt = $("askIn").value, err = function (t) { EQW++; $("askErr").textContent = t; };   // (every error message counts: no Progress for this problem)
     if (askKind === "ex") { exAskOK(); return; }
     if (askKind === "subfn") { var cr = subCb.check(txt); if (cr !== true) { err(cr); $("askIn").select(); return; } closeAsk(false); subCb.ok(); return; }
     if (askKind === "mul" || askKind === "add" || askKind === "sub" || askKind === "div") {
@@ -3926,6 +3934,10 @@
   // while paused earns nothing (1.4: the demo is still running when the problem is solved; 1.1: the whole demo script has played out)
   function demoCredit() { return quiz() ? !!PG.demoFin : !!(DM4.run && !DM4.paused) || locked; }   // a finished demo, or the student took over a paused demo and solved it correctly alone
   function tally(quiet) {
+    if (!quiz() && BUILT[act] && BUILT[act].sub && !BUILT[act].solver && mode !== "create" && EQW > 0) {   // the equation pane: any error message along the way means no Progress for this problem
+      if (!counted) { counted = true; note(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : "No Progress for this problem: there were error messages along the way. Try another with none."); }
+      up = mode === "demo" ? null : { label: "Try another", go: function () { newProblem(); } }; return;
+    }
     var earn = mode !== "demo" || demoCredit();
     // progress counts a problem once, and only when it is truly finished (or a full demo has been watched); a newly earned level is celebrated by updProg
     if (mode !== "create" && earn && !counted) { counted = true; var k = LK() + ":" + mode; prog[k] = (prog[k] || 0) + 1; if (!quiz() && classify(orig) === "one") prog[k + ":one"] = (prog[k + ":one"] || 0) + 1; saveProg(); updProg(); }
@@ -4103,7 +4115,7 @@
   function takeBoot() { var m = bootMode || "demo"; bootMode = null; return m; }
 
   function newProblem() {
-    hideKind(); d3Hide();
+    hideKind(); d3Hide(); $("eqSubRow").hidden = true;
     if (quiz()) { $("next").hidden = true; $("nxHard").hidden = true; $("again").hidden = true; qzStart(); return; }   // (nothing left over from the activity we came from)
     $("qzNext").hidden = true; $("qzAgain").hidden = true;
     exHide();
@@ -4124,7 +4136,7 @@
     steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }]; workBegin();
     if (mode !== "demo") explainOn = false;
     if (explainOn && logEl.children.length) { var dv2 = document.createElement("div"); dv2.className = "msg"; dv2.textContent = "New problem"; dv2.style.opacity = ".6"; logEl.appendChild(dv2); } else logEl.innerHTML = "";
-    lastExp = ""; up = null; counted = false; $("again").hidden = true;
+    lastExp = ""; up = null; counted = false; EQW = 0; $("again").hidden = true;
     var nx = $("next"); nx.disabled = false; nx.hidden = true; nx.textContent = "Next"; DM4.brk = false;
     if (mode === "demo" && !DM4.run) { dmUI("idle"); dmCap(BUILT[act].solver ? "" : "Press Start Demo to watch this problem solved."); }
     $("hint").hidden = plain; $("hint").textContent = hintLbl(); $("hint").classList.toggle("on", explainOn); updUndo();
@@ -4135,8 +4147,9 @@
     render(-1); head();
     if (mode === "demo") peekNext();
     if (plain) buildAnswer();
-    if (mode === "solo") note("Work this out on your own, then type your answer.");
+    if (mode === "solo") note(eqWsAct() ? "Work this out on your own, type your answer, then press Submit." : "Work this out on your own, then type your answer.");
     if (building) crPrompt();
+    eqSubSync();
   }
 
   // ---- 1.4 3×3: when the system is solved, a 3D picture of it.  Each equation is a plane; the three planes meet at the solution point, which is highlighted.
@@ -4346,8 +4359,33 @@
     var iq1 = lesson === 1 && isIneq(orig[0]);
     $("ansFields").innerHTML = allV().map(function (v) { return iq1 ? "<label class=\"afield\"><i>" + v + "</i> <input id=\"ans_" + v + "\" autocomplete=\"off\" placeholder=\"e.g. < 4\" aria-label=\"" + v + "\"></label>" : "<label class=\"afield\"><i>" + v + "</i> = <input id=\"ans_" + v + "\" autocomplete=\"off\" aria-label=\"" + v + "\"></label>"; }).join("");
     $("ansKind").value = "one"; $("ansKind").hidden = lesson === 1; $("ansFields").hidden = false;
-    $("ansMsg").textContent = ""; $("ansMsg").className = ""; ansTouched = false; credited = false;
+    $("ansMsg").textContent = ""; $("ansMsg").className = ""; ansTouched = false; credited = false; eqSubSync();
     $("ansT").hidden = false; $("ansKind").hidden = lesson === 1; $("ansGo").hidden = false; $("ansSol").style.display = "none"; $("ansSol").innerHTML = ""; $("show").style.visibility = "";
+  }
+  // ---- Write mode on the equation pane (1.4 One Variable, Substitution, 2×2 and 3×3): the answer is checked only when Submit (in the right panel) is pressed ----
+  var EQW = 0;   // the error messages shown while working on this problem
+  function eqWsAct() { return !quiz() && !!BUILT[act] && !!BUILT[act].sub && !BUILT[act].solver && mode === "solo"; }
+  function eqSubSync() { var on = eqWsAct() && !locked && !$("answer").hidden && !$("ansFields").parentNode.hidden && !$("ansT").hidden; $("eqSubRow").hidden = !on; eqSubReady(); }
+  function eqMissing() {
+    if (lesson !== 1 && $("ansKind").value !== "one") return [];
+    return allV().filter(function (v) { var el = $("ans_" + v); return el && !el.readOnly && !String(el.value || "").trim(); });
+  }
+  function eqSubReady() { var b = $("eqSub"); if (b) b.classList.toggle("ready", eqWsAct() && !$("eqSubRow").hidden && !eqMissing().length); }
+  function eqSubmit() {
+    if (!eqWsAct() || locked || $("ansT").hidden) return;
+    var m = $("ansMsg"), miss = eqMissing();
+    if (miss.length) { m.className = ""; m.textContent = "Not yet: still to complete " + wsList(miss) + "."; return; }   // (a reminder, not an error)
+    var cl = classify(orig), kind = lesson === 1 ? "one" : $("ansKind").value, bad = [], mark = function (el, ok) { el.classList.toggle("okc", ok); el.classList.toggle("badc", !ok); if (ok) el.readOnly = true; };
+    if (kind !== cl) bad.push("the kind of answer");
+    else if (kind === "one" && lesson === 1 && isIneq(orig[0])) {
+      var s1 = solveSys(orig)[0], w1 = orig[0].a.n < 0 ? relRev(qRel(orig[0])) : qRel(orig[0]), ia = ineqAns($("ans_x").value, "x"), ok1 = !!ia && ia.rel === w1 && same(ia.v, s1);
+      mark($("ans_x"), ok1); if (!ok1) bad.push("x");
+    } else if (kind === "one") {
+      var sol = solveSys(orig);
+      allV().forEach(function (v, j) { var el = $("ans_" + v), Lv = {}; Lv[v] = mk(1); var t = numOrEq(el.value, Lv), ok = !!t && same(t, sol[j]); mark(el, ok); if (!ok) bad.push(v); });
+    }
+    if (bad.length) { EQW++; m.className = "bad"; m.textContent = "Not quite. Check " + wsList(bad) + ", then press Submit again."; return; }
+    checkAnswer();
   }
   function checkAnswer() {
     var cl = classify(orig), kind = lesson === 1 ? "one" : $("ansKind").value, ok = false, miss = false, m = $("ansMsg");
@@ -4362,12 +4400,12 @@
       allV().forEach(function (v, j) { var Lv = {}; Lv[v] = mk(1); var t = numOrEq($("ans_" + v).value, Lv); if (!t) miss = true; else if (!same(t, sol[j])) ok = false; });
     }
     if (miss) { m.className = "bad"; m.textContent = lesson === 1 && isIneq(orig[0]) ? "Type your answer like x < 3 or x ≥ 1/2." : "Enter a number for each variable, like 3, -2 or 1/2."; return; }
-    if (!ok) { m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
+    if (!ok) { EQW++; m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
     m.className = "ok"; m.textContent = mode === "solo" ? cheer() : "Correct!";
     // the answer fields and buttons give way to the correct solution
     var sl = cl === "one" ? solveSys(orig).map(function (t, j) { return "<span class=\"chip\"><i class=\"var\">" + allV()[j] + "</i> " + (lesson === 1 && isIneq(orig[0]) ? relGlyph(orig[0].a.n < 0 ? relRev(qRel(orig[0])) : qRel(orig[0])) : "=") + " " + sg(t) + "</span>"; }).join("") : "<span class=\"chip\">" + (cl === "inf" ? "Infinitely many solutions" : "No solution") + "</span>";
     $("ansSol").innerHTML = sl; $("ansSol").style.display = "flex"; $("ansSol").style.flexDirection = "row";
-    $("ansT").hidden = true; $("ansKind").hidden = true; $("ansFields").hidden = true; $("ansGo").hidden = true; $("undo").hidden = true; $("show").style.visibility = "hidden";
+    $("ansT").hidden = true; $("ansKind").hidden = true; $("ansFields").hidden = true; $("ansGo").hidden = true; $("undo").hidden = true; $("show").style.visibility = "hidden"; eqSubSync();
     if (!credited) { credited = true; tally(); }
     nxShow();
     if (d3On()) d3Show();   // Write and Create answers end with the picture too
@@ -4479,9 +4517,14 @@
   $("exSoloGo").addEventListener("click", exCheckSolo); $("exSoloIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); });
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
   $("ansGo").addEventListener("click", checkAnswer);
-  $("ansKind").addEventListener("change", function () { $("ansFields").hidden = this.value !== "one"; });
+  $("ansKind").addEventListener("change", function () { $("ansFields").hidden = this.value !== "one"; eqSubReady(); });
+  $("eqSub").addEventListener("click", eqSubmit);
   $("answer").addEventListener("input", function () { ansTouched = true; updUndo(); });
-  $("answer").addEventListener("keydown", function (e) { if (e.key === "Enter") checkAnswer(); });
+  $("answer").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    if (eqWsAct()) { var A = [].slice.call($("ansFields").querySelectorAll("input")), n = A[A.indexOf(e.target) + 1]; if (n) n.focus(); return; }   // Write: Return only moves on; Submit checks
+    checkAnswer();
+  });
   $("modeSel").addEventListener("change", function () { var me = this; setMode(this.value); me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
   $("undo").addEventListener("click", undo);
   $("show").addEventListener("click", showWork);
@@ -4522,6 +4565,8 @@
     if (!autoTry(exCheckSolo, function () { return !$("exSolo").hidden; }, [$("exMsg")])) ansTouched = at;
   });
   $("ansFields").addEventListener("input", function (e) {
+    e.target.classList.remove("badc"); eqSubReady();
+    if (eqWsAct()) return;   // Write: nothing is checked before Submit
     if ($("answer").hidden || $("ansFields").hidden || !e.target.value || !e.target.value.trim()) return; var at = ansTouched;
     if (!autoTry(checkAnswer, function () { return !$("ansGo").hidden; }, [$("ansMsg")])) ansTouched = at;
   });
@@ -5211,7 +5256,7 @@
           if (!ghost) { ghost = b.cloneNode(true); ghost.classList.add("ghost"); document.body.appendChild(ghost); }
           ghost.style.left = ev.clientX - 20 + "px"; ghost.style.top = ev.clientY - 20 + "px";
           // a dragged shape button hangs the shape from the point being held; it lands wherever it is let go
-          if ((tool === "pt" || tool === "line" || tool === "V" || tool === "U") && !(tool === "U" && wsubAct())) {
+          if ((tool === "pt" || tool === "line" || tool === "V" || tool === "U") && !(tool !== "pt" && wsTools())) {
             var G1 = G_(), r1 = S.getBoundingClientRect(), over = ev.clientX >= r1.left && ev.clientX <= r1.right && ev.clientY >= r1.top && ev.clientY <= r1.bottom;
             if (over) { var q1 = qAt(ev); G1.tool = tool; G1.clk = []; G1.hv = [snap(q1[0]), snap(q1[1], 1)]; ghost.style.display = "none"; } else { G1.tool = null; G1.hv = null; ghost.style.display = ""; }
             gDraw();
@@ -5223,7 +5268,7 @@
           if (ghost) {
             ghost.remove(); var r = S.getBoundingClientRect(); { var G2 = G_(); if (tool === "pt" || tool === "line" || tool === "V" || tool === "U") { G2.tool = null; G2.hv = null; } }
             $("ptTable").classList.remove("drop"); if (tool === "U" && ptOver(ev)) { gDraw(); ptFillParent(); return; }
-            if (tool === "U" && wsubAct() && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) { QZ.wrong++; pqMsg("Graph 5 points and click"); return; }   // 2.1 Write: no dragging a parabola
+            if (tool !== "pt" && tool !== "clear" && tool !== "undo" && tool !== "tr" && wsTools() && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) { QZ.wrong++; pqMsg(tool === "line" ? "Graph 2 points and click" : "Graph 5 points and click"); return; }   // Write: no dragging a graph onto the plane
             if (tool !== "clear" && tool !== "undo" && tool !== "tr" && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) { var p = qAt(ev); qzDrop(tool, p[0], p[1]); }
             return;
           }
@@ -5238,7 +5283,7 @@
     if (tool === "undo") { var hs = G.hist || []; if (hs.length) { var o = JSON.parse(hs.pop()); G.pts = o[0]; G.shape = o[1]; G.clk = o[2] || []; G.tool = null; } gRef(); return; }
     if (tool === "tr") { PG.tm = PG.tm ? null : { stage: 0, cur: null }; PG.tool = null; PG.clk = []; gRef(); return; }
     if (tool === "clear") { gSnap(); G.pts = []; G.sp = []; G.shape = null; if (G === PG) PG.keep = []; G.clk = []; G.tool = null; gRef(); return; }
-    if (tool === "U" && G === PG && wsubAct()) { wsParab(); return; }   // 2.1 Write: the parabola through the plotted points
+    if ((tool === "U" || tool === "V" || tool === "line") && G === PG && wsTools()) { wsShape(tool); return; }   // Write: the graph through the plotted points
     G.tool = G.tool === tool ? null : tool; G.clk = []; gRef();
   }
 
@@ -5346,8 +5391,8 @@
     }
     $("pgDescIn").classList.remove("dDone", "c2"); $("pgDescTx").readOnly = false;
     var ok = pq() && gd() && gdTyped() && (mode !== "create" || QZ.cr) && QZ.order && QZ.step < 4 && !PG.dOK, pt = ok ? pqParts() : null;
-    var show = !!(ok && pt.parent && pt.graph && pt.table), box = $("pgDescIn"), was = !box.hidden;
-    box.hidden = !show; if (show && !was) setTimeout(function () { $("pgDescTx").focus(); }, 0);
+    var show = !!(ok && (wsub() || (pt.parent && pt.graph && pt.table))), box = $("pgDescIn"), was = !box.hidden;   // (Write: the box is there from the start)
+    box.hidden = !show; if (show && !was && !wsub()) setTimeout(function () { $("pgDescTx").focus(); }, 0);
   }
   // what a typed description says: "Translation → 3 and ↑ 2", "right 3, up 2", "Vertical stretch by factor of 2", "Reflection" ...
   function gdNum(x) { x = String(x).replace(/\s+/g, ""); var m = /^(\d*\.?\d+)\/(\d+)$/.exec(x); return m ? +m[1] / +m[2] : +x; }
@@ -5374,7 +5419,7 @@
     if (wsub()) return;   // 2.1 Write: checked with the Submit button
     var m = gdParse($("pgDescTx").value), box = $("pgDescIn"), right = gdDescRight(m);
     if (right) { PG.tAns = { h: shifts() ? H() : 0, k: K(), a: A() }; PG.dOK = true; pqMsg(""); var rr = box.getBoundingClientRect(); rvMark("ok", rr.left + 24, rr.top + 14); if (!gd2()) box.hidden = true; pgDescUpd(); drawPlay(); return; }
-    if (gdW()) { pqMsg("That is not the transformation in the question. Try again."); box.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(0)" }], { duration: 300 }); return; }   // 2.1 Writing: the description is given, so this only labels the parent table
+    if (gdW()) { QZ.wrong++; pqMsg("That is not the transformation in the question. Try again."); box.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(0)" }], { duration: 300 }); return; }   // 2.1 Writing: the description is given, so this only labels the parent table
     QZ.wrong++; pqMsg("Not quite. Try again.");
     box.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
   }
@@ -5495,18 +5540,19 @@ var ESPIC = {
   // once the table and the graph are right, a box takes the estimate
   function estUI() {
     var box = $("estIn"); if (!box) return;
-    var show = !!(est() && QZ.order && QZ.step < 4 && !PG.eOK && estTableOK() && estModelOK()), was = !box.hidden;
+    var show = !!(est() && QZ.order && QZ.step < 4 && !PG.eOK && (wsub() || (estTableOK() && estModelOK()))), was = !box.hidden;   // (Write: the box is there from the start, and nothing is checked before Submit)
     box.hidden = !show;
     if (show && !was) { $("estTx").value = ""; $("estLbl").innerHTML = estProb().lbl; if (!pgRun) setTimeout(function () { if (!box.hidden) $("estTx").focus(); }, 0); }
   }
   function estSubmit() {
+    if (wsub()) return;   // Write: checked with the Submit button
     var e = estProb(), v = ptNum($("estTx").value), box = $("estIn");
     if (e && isFinite(v) && Math.abs(v - e.ans) <= e.tol) { PG.eOK = true; pqMsg(""); var rr = box.getBoundingClientRect(); rvMark("ok", rr.left + 24, rr.top + 14); box.hidden = true; drawPlay(); return; }
     QZ.wrong++; pqMsg("Not quite. Try again.");
     box.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
   }
   $("estGo").addEventListener("click", estSubmit);
-  $("estTx").addEventListener("input", function () { var e = estProb(), v = ptNum(this.value); if (e && this.value.trim() && isFinite(v) && Math.abs(v - e.ans) <= e.tol) estSubmit(); });
+  $("estTx").addEventListener("input", function () { var e = estProb(), v = ptNum(this.value); if (e && !wsub() && this.value.trim() && isFinite(v) && Math.abs(v - e.ans) <= e.tol) estSubmit(); });
   $("estTx").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); estSubmit(); } });
   function estHint(n, ok) {
     var e = estProb();
@@ -5519,7 +5565,7 @@ var ESPIC = {
   function pqSetup() {
     closePt(); var fam = qFam();
     PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = []; PG.keep = []; PG.ptb = null; PG.ptl = {}; PT.ask = null; TB.askI = -1;
-    PG.show = { eq: false, table: false, graph: false, desc: true, parent: false }; PG.pdone = false; PG.dOK = false; $("pgDescTx").value = "";
+    PG.show = { eq: false, table: false, graph: false, desc: true, parent: false }; PG.pdone = false; PG.dOK = false; PG.wsT = PG.wsG = false; $("pgDescTx").value = "";
     if (gd()) {
       var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.a = tr.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false };
       if (mode === "create" && !QZ.cr) { PG.show.eq = false; PG.eqTxt = "g(x)="; }
@@ -5537,57 +5583,119 @@ var ESPIC = {
   // 3 Writing a Transformed Quadratic gives the description instead, and the student types g(x) in the equation box (then the graphs and the table).
   function gd2() { return pq() && act === "2.1" && lesson >= 1 && lesson <= 3; }
   function gdW() { return gd2() && lesson === 3 && !(mode === "create" || QZ.custom); }
-  // 2.1 Write mode: nothing is checked or confirmed (graphs, table, description, equation) until the student presses Submit in the right panel
-  function wsubAct() { return gd2() && mode === "solo"; }
-  function wsub() { return wsubAct() && QZ && QZ.step < 4; }
+  // Write mode, in every Progress activity: nothing is checked or confirmed (graphs, table, description, equation, typed answers) until the student presses
+  // Submit in the right panel; Submit checks every part at once, marks the right ones and names the rest
+  function wsubAct() { return pq() && mode === "solo" && !!QZ && !!QZ.order && !!BUILT[act] && !BUILT[act].play && !wfCr(); }
+  function wsub() { return wsubAct() && QZ.step < 4; }
+  function ws21() { return gd2() && wsub(); }   // 2.1 Write only: every value is typed, copied from a typed number by dragging, or autofilled down the x column
+  function wsTools() { return wsub() && !wf() && !m3(); }   // the graph pane with its tools (1.1 and 2.1 exercises 1 to 3): each graph is made from plotted points
   // several graphs can be on the plane at once (the parent and g): placing a new one keeps the old one, which a press brings back to edit
   function keepShape(G) { if (G === PG && wsub() && PG.shape) { (PG.keep = PG.keep || []).push(PG.shape); if (PG.keep.length > 3) PG.keep.shift(); } }
-  // 2.1 Write: the parabola button graphs the parabola through the points plotted since the last parabola (at least 5, all on one parabola)
-  ["input", "pointerup", "keyup"].forEach(function (ev) { document.addEventListener(ev, function () { if (pq() && wsubAct()) setTimeout(wsReadyUpd, 0); }); });
-  function wsParab() {
-    // the parabola through the points plotted since the last parabola; one or two points that an earlier parabola already passes through (where the two cross)
-    // count too, so the parent and g can share them: 5 points in all, at least 3 of them new, all on one parabola
+  // Write: a shape button graphs the shape through the points plotted since the last graph (a parabola or a V: 5 points; a line: 2 points)
+  ["input", "pointerup", "keyup", "change"].forEach(function (ev) { document.addEventListener(ev, function () { if (pq() && wsubAct()) setTimeout(wsReadyUpd, 0); }); });
+  // the one shape of kind t through the points S (all of them on it), or null; a V needs two points on each side of its vertex ({side: true} when it has not)
+  function wsFit(t, S) {
+    var eq = function (u, v) { return Math.abs(u - v) < 1e-9; }, D = [];
+    if (S.some(function (q) { return S.some(function (z) { return eq(z[0], q[0]) && !eq(z[1], q[1]); }); })) return null;   // two points above each other: not a function
+    S.forEach(function (q) { if (!D.some(function (z) { return eq(z[0], q[0]); })) D.push(q); }); D.sort(function (u, v) { return u[0] - v[0]; });
+    var r4 = function (v) { v = Math.round(v * 10000) / 10000; return Object.is(v, -0) ? 0 : v; }, all = function (fn) { return S.every(function (q) { return Math.abs(fn(q[0]) - q[1]) < 1e-6; }); };
+    if (t === "line") {
+      if (D.length < 2) return null; var m = (D[1][1] - D[0][1]) / (D[1][0] - D[0][0]), b = D[0][1] - m * D[0][0];
+      return all(function (x) { return m * x + b; }) ? { sh: { t: "line", p1: [D[0][0], D[0][1]], p2: [D[D.length - 1][0], D[D.length - 1][1]] } } : null;
+    }
+    if (t === "U") {
+      if (D.length < 3) return null;
+      var x1 = D[0][0], y1 = D[0][1], x2 = D[1][0], y2 = D[1][1], x3 = D[2][0], y3 = D[2][1], dn = (x1 - x2) * (x1 - x3) * (x2 - x3);
+      var A = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / dn, B = (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) / dn, C = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / dn;
+      if (Math.abs(A) < 1e-9 || !all(function (x) { return A * x * x + B * x + C; })) return null;
+      return { sh: { t: "U", h: r4(-B / (2 * A)), k: r4(C - B * B / (4 * A)), a: r4(A) } };
+    }
+    if (D.length < 4) return null;   // a V: its left arm through the two points farthest left, its right arm through the two farthest right
+    var n = D.length, sL = (D[1][1] - D[0][1]) / (D[1][0] - D[0][0]), sR = (D[n - 1][1] - D[n - 2][1]) / (D[n - 1][0] - D[n - 2][0]);
+    if (Math.abs(sR) < 1e-9 || Math.abs(sL + sR) > 1e-9) return null;
+    var h = (D[n - 1][1] - D[0][1] + sL * D[0][0] - sR * D[n - 1][0]) / (sL - sR), k = D[0][1] + sL * (h - D[0][0]);
+    if (!all(function (x) { return sR * Math.abs(x - h) + k; })) return null;
+    if (S.filter(function (q) { return q[0] < h - 1e-9; }).length < 2 || S.filter(function (q) { return q[0] > h + 1e-9; }).length < 2) return { side: true };
+    return { sh: { t: "V", h: r4(h), k: r4(k), a: r4(sR) } };
+  }
+  function wsShape(t) {
+    // the points plotted since the last graph; up to two points that an earlier graph already passes through (where the two cross) count too, so two graphs
+    // can share them (two parabolas or two V's cross at most twice, two lines once): 5 points in all for a parabola or a V, 2 for a line
+    var need = t === "line" ? 2 : 5, maxSh = t === "line" ? 1 : 2, nm = t === "line" ? "line" : t === "V" ? "absolute value graph" : "parabola", btn = t === "line" ? "line" : t === "V" ? "V" : "parabola";
     var key = function (q) { return q[0] + "," + q[1]; }, shapes = [PG.shape].concat(PG.keep || []).filter(Boolean), used = shapes.reduce(function (a, q) { return a.concat(q.src || []); }, []);
     var all = PG.pts || [], P = all.filter(function (q) { return used.indexOf(key(q)) < 0; }), Old = all.filter(function (q) { return used.indexOf(key(q)) >= 0; });
-    if (P.length < 3) { QZ.wrong++; pqMsg("Graph 5 points and click"); return; }
-    var D = []; P.forEach(function (q) { if (!D.some(function (z) { return Math.abs(z[0] - q[0]) < 1e-9; })) D.push(q); });
-    var fit = null, on = function (f, q) { return Math.abs(f.A * q[0] * q[0] + f.B * q[0] + f.C - q[1]) < 1e-6; };
-    if (D.length >= 3) {
-      var x1 = D[0][0], y1 = D[0][1], x2 = D[1][0], y2 = D[1][1], x3 = D[2][0], y3 = D[2][1], dn = (x1 - x2) * (x1 - x3) * (x2 - x3);
-      var f = { A: (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / dn, B: (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) / dn, C: (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / dn };
-      if (Math.abs(f.A) > 1e-9 && P.every(function (q) { return on(f, q); })) fit = f;
+    var few = "Graph " + need + " points and click";
+    if (!P.length || P.length + Math.min(maxSh, Old.length) < need) { QZ.wrong++; pqMsg(few); return; }
+    var best = null, side = false, subs = function (arr, k, from, cur, out) { if (cur.length === k) { out.push(cur.slice()); return out; } for (var i = from; i < arr.length; i++) { cur.push(arr[i]); subs(arr, k, i + 1, cur, out); cur.pop(); } return out; };
+    for (var c = Math.min(maxSh, Old.length); c >= 0 && !best; c--) subs(Old, c, 0, [], []).forEach(function (sub) {
+      if (best || P.length + sub.length < need) return; var f = wsFit(t, P.concat(sub)); if (f && f.sh) best = { sh: f.sh, sub: sub }; else if (f && f.side) side = true;
+    });
+    if (!best) {
+      QZ.wrong++;
+      var fP = P.length >= need ? wsFit(t, P) : null;
+      pqMsg(side || (fP && fP.side) ? "A V needs at least two points on each side of its vertex. Plot them, then click the V button again." : P.length + Old.length < need ? few : "Those points are not all on one " + nm + ". Move or remove a point, then click the " + btn + " button again.");
+      return;
     }
-    if (!fit) { QZ.wrong++; pqMsg(P.length + Old.length < 5 ? "Graph 5 points and click" : "Those points are not all on one parabola. Move or remove a point, then click the parabola button again."); return; }
-    var shared = Old.filter(function (q) { return on(fit, q); }).slice(0, 2);   // (two different parabolas cross at most twice)
-    if (P.length + shared.length < 5) { QZ.wrong++; pqMsg("Graph 5 points and click"); return; }
-    var r4 = function (v) { v = Math.round(v * 10000) / 10000; return Object.is(v, -0) ? 0 : v; };
-    gSnap(); keepShape(PG); PG.shape = { t: "U", h: r4(-fit.B / (2 * fit.A)), k: r4(fit.C - fit.B * fit.B / (4 * fit.A)), a: r4(fit.A), src: P.concat(shared).map(key) }; PG.tool = null; PG.clk = []; pqMsg(""); drawPlay();
+    gSnap(); keepShape(PG); best.sh.src = P.concat(best.sub).map(key); PG.shape = best.sh; PG.tool = null; PG.clk = []; pqMsg(""); drawPlay();
   }
-  // 2.1 Write: the parts still to be done (not whether they are right): both parabolas, a full table, the description, and g(x) in Write g
+  function wsList(a) { return a.length > 1 ? a.slice(0, -1).join(", ") + " and " + a[a.length - 1] : a[0]; }
+  // Write: the parts still to be done (not whether they are right)
   function wsMissing() {
-    var miss = [], num = function (t) { return !!parse(String(t || "").replace(/\u2212/g, "-").trim()); };
-    var nSh = [PG.shape].concat(PG.keep || []).filter(Boolean).length, needSh = (PG.pdone ? 0 : 1) + (PG.show.graph ? 0 : 1);
-    if (needSh === 2 && nSh === 0) miss.push("the parent parabola", "the transformed parabola");
-    else if (needSh === 2 && nSh === 1) miss.push("the other parabola");
-    else if (needSh === 1 && nSh === 0) miss.push(PG.pdone ? "the transformed parabola" : "the parent parabola");
+    if (m3()) return m3wMissing();
+    var miss = [], num = function (t) { return !!parse(String(t || "").replace(/−/g, "-").trim()); };
+    if (wf()) {
+      if (!PG.show.eq && !pqTyped()) miss.push("g(x)");
+      if (wf5() && !QZ.we && !String(QZ.wev || "").trim()) miss.push("the profit");
+      return miss;
+    }
+    if (est()) {
+      var e = estProb(); if (e && estRows().length < e.x.length) miss.push("the table");
+      if (!(PG.show.eq && PG.show.graph)) miss.push("the regression");
+      if (!PG.eOK && !String($("estTx").value || "").trim()) miss.push("your estimate");
+      return miss;
+    }
+    var nSh = [PG.shape].concat(PG.keep || []).filter(Boolean).length, w = gd2() ? "parabola" : "graph";
+    if (gd()) {
+      var needSh = (PG.pdone ? 0 : 1) + (PG.show.graph ? 0 : 1);
+      if (needSh === 2 && nSh === 0) miss.push("the parent " + w, "the transformed " + w);
+      else if (needSh === 2 && nSh === 1) miss.push("the other " + w);
+      else if (needSh === 1 && nSh === 0) miss.push(PG.pdone ? "the transformed " + w : "the parent " + w);
+    } else if (!PG.show.graph && !nSh) miss.push("the parent graph");
     var gOK = TB.rows().every(function (r) { return TB.hasX(r) && (r.done || num(r.tv)); });
-    var pOK = ptRows().every(function (r) { return r.px !== undefined && ["py", "gx", "sy", "gy"].every(function (c) { return !ptUse(c) || r.d[c] || num(r.t[c]); }); });
+    var pOK = ptAvail() && ptRows().every(function (r) { return r.px !== undefined && ["py", "gx", "sy", "gy"].every(function (c) { return !ptUse(c) || r.d[c] || num(r.t[c]); }); });
     if (!gOK && !pOK) miss.push("the table");
-    if (!PG.dOK && !String($("pgDescTx").value || "").trim()) miss.push("the description");
-    if (!PG.show.eq && !pqTyped()) miss.push("g(x)");
+    if (gd() && !PG.dOK && !String($("pgDescTx").value || "").trim()) miss.push("the description");
+    if (!PG.show.eq && !pqTyped()) miss.push(gd() ? "g(x)" : "the equation");
     return miss;
   }
   function wsReadyUpd() { var b = $("qzGo"); if (b) b.classList.toggle("ready", !!(wsub() && !wsMissing().length)); }
   function wsubSubmit() {
     var miss = wsMissing();
-    if (miss.length) { pqMsg("Not yet: still to complete " + (miss.length > 1 ? miss.slice(0, -1).join(", ") + " and " + miss[miss.length - 1] : miss[0]) + "."); return; }   // (a reminder, not an error: it does not cost the Progress)
-    var sh = [PG.shape].concat(PG.keep || []).filter(Boolean), bad = [], rm = function (x) { if (PG.shape === x) PG.shape = null; PG.keep = (PG.keep || []).filter(function (q) { return q !== x; }); };
-    if (!PG.pdone) { var pp = sh.filter(function (q) { return shapeIs(q, pf); })[0]; if (pp) { rm(pp); PG.pdone = true; PG.show.parent = true; } else bad.push("the parent graph"); }
-    if (!PG.show.graph) { var gg = sh.filter(function (q) { return q !== pp && shapeOK(q); })[0]; if (gg) { rm(gg); var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); else PG.show.graph = true; } else bad.push("the graph of g(x)"); }
-    if (!PG.show.eq) { var t = pqTyped(); if (t && eqTypedOK(t) && wfSimp(t)) { var te = document.querySelector(".tog[data-part=eq]"); if (te) te.click(); else PG.show.eq = true; } else bad.push("g(x)"); }
-    if (!PG.dOK) { if (gdDescRight(gdParse($("pgDescTx").value))) { PG.tAns = { h: shifts() ? H() : 0, k: K(), a: A() }; PG.dOK = true; } else bad.push("the description"); }
+    if (miss.length) { pqMsg("Not yet: still to complete " + wsList(miss) + ".", "note"); return; }   // (a reminder, not an error: it does not cost the Progress)
+    if (m3()) { m3wSubmit(); return; }
+    var bad = [], tog = function (part) { var b = document.querySelector(".tog[data-part=" + part + "]"); if (b && !PG.show[part]) b.click(); else PG.show[part] = true; };
+    var eqRight = function () { var t = pqTyped(); return !!t && eqTypedOK(t) && wfSimp(t); };
+    if (wf()) {
+      if (!PG.show.eq) { if (eqRight()) { tog("eq"); PG.wfShift = null; wfFinal(); if (!PG.show.graph) tog("graph"); wfSteps(); } else bad.push("g(x)"); }
+      if (wf5() && !QZ.we) {
+        var P5 = wfProb(), c5 = P5.ctx, t5 = String(QZ.wev || "").replace(/[\s$,]/g, "").replace(/−/g, "-"), want5 = P5.g.a * c5.N + P5.g.k;
+        if (/^-?(\d+\.?\d*|\.\d+)$/.test(t5) && Math.abs(+t5 - want5) < 1e-9 && PG.show.eq) { QZ.we = true; wfWork("g(" + c5.N + ") = " + P5.g.a + "(" + c5.N + ") " + (P5.g.k < 0 ? "−" : "+") + " " + Math.abs(P5.g.k) + " = " + want5); }
+        else bad.push("the profit");
+      }
+    } else if (est()) {
+      PG.wsT = estTableOK(); PG.wsG = estModelOK();
+      if (!PG.wsT) bad.push("the table");
+      if (!PG.wsG) bad.push("the regression");
+      if (!PG.eOK) { var e = estProb(), v = ptNum($("estTx").value); if (e && isFinite(v) && Math.abs(v - e.ans) <= e.tol && estTableOK() && estModelOK()) { PG.eOK = true; $("estIn").hidden = true; } else bad.push("your estimate"); }
+    } else {
+      var sh = [PG.shape].concat(PG.keep || []).filter(Boolean), rm = function (x) { if (PG.shape === x) PG.shape = null; PG.keep = (PG.keep || []).filter(function (q) { return q !== x; }); }, pp = null;
+      if (gd() && !PG.pdone) { pp = sh.filter(function (q) { return shapeIs(q, pf); })[0]; if (pp) { rm(pp); PG.pdone = true; PG.show.parent = true; } else bad.push("the parent graph"); }
+      if (!PG.show.graph) { var gg = sh.filter(function (q) { return q !== pp && shapeOK(q); })[0]; if (gg) { rm(gg); tog("graph"); } else bad.push(gd() ? "the graph of g(x)" : "the parent graph"); }
+      if (!PG.show.eq) { if (eqRight()) tog("eq"); else bad.push(gd() ? "g(x)" : "the equation"); }
+      if (gd() && !PG.dOK) { if (gdDescRight(gdParse($("pgDescTx").value))) { PG.tAns = { h: shifts() ? H() : 0, k: K(), a: A() }; PG.dOK = true; } else bad.push("the description"); }
+    }
     PG.tool = null; PG.clk = []; PG.hv = null;
-    if (bad.length) { QZ.wrong++; drawPlay(); pqMsg("Not quite. Check " + (bad.length > 1 ? bad.slice(0, -1).join(", ") + " and " + bad[bad.length - 1] : bad[0]) + ", then press Submit again."); return; }
+    if (bad.length) { QZ.wrong++; drawPlay(); pqMsg("Not quite. Check " + wsList(bad) + ", then press Submit again."); return; }
     pqMsg(""); drawPlay(); pqEval();
   }   // the equation is the answer
   function gdMake21(tier) {
@@ -5660,7 +5768,7 @@ var ESPIC = {
   function gwApply(i, demo) {
     if (!gwOn() || PG.show.eq || QZ.step >= 4 || QZ.gwAsk) return;
     var P = gwParts(gwCur()), d = QZ.gwd || 0; if (d >= P.length) return;
-    if (i !== d) { pqMsg("Use the transformations in the order the question gives them: first \u201c" + P[d].txt + "\u201d."); return; }
+    if (i !== d) { QZ.wrong++; pqMsg("Use the transformations in the order the question gives them: first \u201c" + P[d].txt + "\u201d."); return; }
     pqMsg("");
     if (P[i].op === "r" && gwHas("a") && mode === "calculate" && !demo) { QZ.gwAsk = true; drawPlay(); return; }   // Calculate: the reflection of a stretch asks for the new number in front
     QZ.gwd = d + 1; drawPlay(); absorbEl($("pgEq"));
@@ -5675,7 +5783,7 @@ var ESPIC = {
   // the question's f dropped on g(x): f is replaced by its rule, and that g(x) is the answer
   function gwSub() {
     if (!gwOn() || PG.show.eq || QZ.step >= 4) return;
-    var P = gwParts(gwCur()); if ((QZ.gwd || 0) < P.length || QZ.gwAsk) { pqMsg("First drag each transformation onto g(x), in order."); return; }
+    var P = gwParts(gwCur()); if ((QZ.gwd || 0) < P.length || QZ.gwAsk) { QZ.wrong++; pqMsg("First drag each transformation onto g(x), in order."); return; }
     pqMsg(""); PG.eqTxt = gwRule(); eqEnter(); absorbEl($("pgEq"));
   }
   (function () {
@@ -5798,7 +5906,7 @@ var ESPIC = {
     else $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
     pqCue();
     var go = $("qzGo"), nx = $("qzNext");
-    go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || m3() || (wf() && (mode === "sequence" || mode === "calculate")); go.textContent = wsubAct() ? "Submit" : "Check"; document.body.classList.toggle("wsub", wsubAct());
+    go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || (m3() && !wsubAct()) || (wf() && (mode === "sequence" || mode === "calculate")); go.textContent = wsubAct() ? "Submit" : "Check"; document.body.classList.toggle("wsub", wsubAct());
     // the one Next (see nxShow): in Demo the demo button carries it; otherwise it sits here in the side panel
     nx.hidden = !done || demo; nx.disabled = false; nx.textContent = (gd() || wf()) && mode === "create" ? "Create another" : up ? up.label : "Next";
     $("qzAgain").hidden = demo || !(done && !QZ.custom && up && up.stayText); $("qzAgain").textContent = !QZ.custom && up && up.stayText || "";
@@ -5816,7 +5924,7 @@ var ESPIC = {
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
-  function pqParts() { if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: wfL() === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: estTableOK(), graph: estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: mode === "solo" || TB.rows().every(function (r) { return r.done; }) || (ptAvail() && ptAllDone()), graph: gd() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
+  function pqParts() { if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: wfL() === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: wsub() ? !!PG.wsT : estTableOK(), graph: wsub() ? !!PG.wsG : estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: mode === "solo" || TB.rows().every(function (r) { return r.done; }) || (ptAvail() && ptAllDone()), graph: gd() || wsub() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
   var pqBusy = false;
   function pqEval() {
     if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order || (gd() && mode === "create" && !QZ.cr) || wfCr()) return;
@@ -5828,7 +5936,7 @@ var ESPIC = {
       if (!est() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
         QZ.step = 4; var last = QZ.pi === QZ.order.length - 1;
-        var c2Err = act === "2.1" && QZ.wrong > 0;   // 2.1: any error message in this round means no Progress for it
+        var c2Err = QZ.wrong > 0;   // any error message in this round (in Demo, this problem) means no Progress for it
         if (!QZ.custom && mode !== "create" && mode !== "demo" && !c2Err) { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
         pqMsg(mode === "solo" ? cheer() : est() || wf() || m3() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last && QZ.order.length > 1 ? (QZ.order.length === 3 ? "You have finished all three!" : "You have finished all four!") : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
         if (QZ.custom) {   // the student's own function: no Progress, and Next offers the next mode with the same function
@@ -5842,7 +5950,7 @@ var ESPIC = {
         } else if (last && c2Err) { up = { label: "Try another", go: function () { pqRegen(); } }; }   // (2.1: a round with errors earns nothing; another round is offered)
         else if (last) { QZ.locked = true; counted = false; tally(); }   // Sequence and Solo count a round only when all four parents are done
         pqPanel();
-        if (c2Err && !QZ.custom && mode !== "create") pqMsg(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : "No Progress for this round: there were error messages along the way. Try another round with none.");
+        if (c2Err && !QZ.custom && mode !== "create") pqMsg(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : "No Progress for this round: there were error messages along the way." + (last ? " Try another round with none." : ""));
       }
     } finally { pqBusy = false; pqCue(); }
   }
@@ -5948,7 +6056,7 @@ var ESPIC = {
   function leaveQuiz() {
     if (!document.body.classList.contains("quiz")) return;
     $("modePick").hidden = true; stopDemo(); busy = false; if (pgRun) pgStop();
-    document.body.classList.remove("quiz", "play", "pq", "crPre", "dataAct", "est", "wf", "wfSolo", "m3"); $("estIn").hidden = true; $("pgDescIn").hidden = true; $("ptTog").hidden = true; $("ptWrap").hidden = true; document.body.classList.remove("ptOn"); $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
+    document.body.classList.remove("quiz", "play", "pq", "crPre", "dataAct", "est", "wf", "wfSolo", "m3", "wsub"); $("estIn").hidden = true; $("pgDescIn").hidden = true; $("ptTog").hidden = true; $("ptWrap").hidden = true; document.body.classList.remove("ptOn"); $("pgCtl").hidden = true; $("qz").hidden = true; $("qzTools").hidden = true; $("pg").hidden = true; document.querySelector(".frame").hidden = false;
     $("pgTable").style.display = ""; $("pgGraph").style.display = ""; $("pgFam").hidden = false;
   }
 
@@ -6206,7 +6314,7 @@ var ESPIC = {
   TB.sync = function () { var m = TB.mode(); document.body.classList.toggle("tbon", m === "quiz" ? QZ.step === 1 : m === "play" ? fillMode() : false); };
   // drop the equation on a center cell: that row now shows the equation with its x-value put in
   TB.sub = function (i) {
-    if (wsub()) { pqMsg("In Write mode, type each value yourself, or drag a number you have typed to copy it."); return; }   // 2.1 Write: every value is typed
+    if (ws21()) { pqMsg("In Write mode, type each value yourself, or drag a number you have typed to copy it."); return; }   // 2.1 Write: every value is typed
     var r = TB.rows()[i]; if (!r || r.sub || r.done) return;
     if (TB.mode() === "play") PG.subd = true;
     // one drop is enough: every row shows the equation with its own x-value put in
@@ -6297,14 +6405,14 @@ var ESPIC = {
     }
     function canSub() { var m = TB.mode(); return m === "quiz" ? QZ.step === 1 : m === "play" ? fillMode() : false; }
     function rowAlert(i) {
-      if (act === "2.1") QZ.wrong++;
+      QZ.wrong++;   // (an error message: no Progress for this round)
       var td = T.querySelector("tbody tr[data-r=\"" + i + "\"] td.yv"); if (!td) return; var rc = td.getBoundingClientRect();
       rvMark("bad", rc.left + 18, rc.top + rc.height / 2);
       td.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
     }
     // a y-value that has not been checked is checked the moment its row leaves the table; a wrong one is replaced by the right answer with the red "!"
     function checkOff(i, r0) {
-      if (act === "2.1") QZ.wrong++;   // (the red "!" is an error message too)
+      QZ.wrong++;   // (the red "!" is an error message too)
       var td = T.querySelector("tbody tr[data-r=\"" + i + "\"] td.yv"), txt = String(r0.tv || "").trim(), rc = td ? td.getBoundingClientRect() : null;
       r0.sub = true; r0.done = true; r0.tv = ""; drawPlay();
       var td2 = T.querySelector("tbody tr[data-r=\"" + i + "\"] td.yv"); if (!rc || !td2) return;
@@ -6403,7 +6511,7 @@ var ESPIC = {
       var added = false, near = function (a, b) { return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9; };
       // the red target stays on the graph until a plotted point sits on it: a miss leaves it there to be corrected
       start(e, "<span class=\"dotg\"></span><b>(" + nf(p[0]) + ", " + nf(p[1]) + ")</b>", function () { if (m === "play") { if (fillRow && !fillRow.done && String(fillRow.tv || "").trim()) checkOff(i, fillRow); if (!(pq() && soloish()) && !TB.targets.some(function (t) { return near(t, p); })) { TB.targets.push(p); added = true; } drawPlay(); } }, null, function (ev) {
-        if (wsub()) { var ty2 = yAt(ev), j2 = ty2 ? +ty2.parentNode.dataset.r : -1, rj = j2 >= 0 ? TB.rows()[j2] : null; if (rj && j2 !== i && !rj.done) { rj.tv = String(p[1]); TB.draw(); return; } }   // 2.1 Write: copy a typed y-value
+        if (ws21()) { var ty2 = yAt(ev), j2 = ty2 ? +ty2.parentNode.dataset.r : -1, rj = j2 >= 0 ? TB.rows()[j2] : null; if (rj && j2 !== i && !rj.done) { rj.tv = String(p[1]); TB.draw(); return; } }   // 2.1 Write: copy a typed y-value
         var r = $("pgGraph").getBoundingClientRect();
         if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
           // the dropped point locks to the grid: whole units, or the smallest fraction of a unit that the point itself needs (1/2, 1/3, 1/4 ...)
@@ -6646,7 +6754,7 @@ var ESPIC = {
     var to = ptNextTo(r, c); if (!to) return false;
     var T = ptTr(), td = ptTd(i, c);
     if (!T) { QZ.wrong++; ptShake(td); pqMsg("Type the transformation in the box first: it tells each value where to go."); return true; }
-    if (ptLabReq() && !ptLabDone(to)) { ptShake(ptLabCell(to)); pqMsg("Label that column first: drag its change from the description onto the box above the column, or type it there."); return true; }
+    if (ptLabReq() && !ptLabDone(to)) { ptShake(ptLabCell(to)); QZ.wrong++; pqMsg("Label that column first: drag its change from the description onto the box above the column, or type it there."); return true; }
     var st = ptStep(r, to, T);
     if (!st || Math.abs(st.want - ptRight(r, to)) > 1e-9) { QZ.wrong++; ptShake(td); pqMsg("That doesn't match g(x). Check the transformation in the box."); return true; }
     if (mode === "calculate" && !demo) { ptAsk(i, to, st.expr); return true; }
@@ -7428,12 +7536,13 @@ var ESPIC = {
     else t = c.story + " " + xd + " " + prof + " The function <span class=\"cg\"><i>g</i>(<i>x</i>)</span> is <span class=\"lm cf wfChip\" data-wfchip>" + wfChipHTML(p) + "</span> <span class=\"cg\">" + wfWhat(p) + "</span>.";
     return "<div class=\"estWrap\"><div class=\"estMain\"><div class=\"estP w5\">" + t + "</div></div>" + c.pic + "</div>";
   }
-  function wf5Ev() { return wf5() && !wfCr() && !!QZ && QZ.step < 4 && !!PG.show.eq && !QZ.we && !!wfProb() && !!wfProb().ctx; }
+  function wf5Ev() { return wf5() && !wfCr() && !!QZ && QZ.step < 4 && (!!PG.show.eq || wsub()) && !QZ.we && !!wfProb() && !!wfProb().ctx; }   // (Write: the profit box is there from the start)
   function wf5EvHTML() {
     var P = wfProb(), c = P.ctx;
     return "<div class=\"wfAsk\">Find the profit for " + c.N + " " + c.u + " " + c.v + ".</div><div class=\"wfRow cg\"><span><i>g</i>(" + c.N + ") =</span><input id=\"wfEv\" class=\"wfIn\" style=\"width:8.5rem\" data-k=\"e\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"The profit in dollars\"><span>dollars</span></div>";
   }
   function wf5Check(el, enter) {
+    if (wsub()) { QZ.wev = el.value; return; }   // Write: kept as typed, checked with the Submit button
     var P = wfProb(), c = P.ctx, raw = String(el.value), t = raw.replace(/[\s$,]/g, "").replace(/\u2212/g, "-");
     if (!t || !/^-?(\d+\.?\d*|\.\d+)$/.test(t)) { if (enter && t) wfBad(el, "Type a number."); return; }
     var v = +t, want = P.g.a * c.N + P.g.k;
@@ -7733,7 +7842,7 @@ var ESPIC = {
     var pr = wfCur();
     if (pr && pr.rf) {   // a reflection is grabbed at a point of f, away from the axis it is flipped through
       var q0 = qAt(e), gx = Math.round(q0[0]), gy = wfF(pr, gx);
-      if (pr.rf === "x" ? !gy : !gx) { pqMsg(pr.rf === "x" ? "Grab the graph away from the x-axis." : "Grab the graph away from the y-axis."); return; }
+      if (pr.rf === "x" ? !gy : !gx) { QZ.wrong++; pqMsg(pr.rf === "x" ? "Grab the graph away from the x-axis." : "Grab the graph away from the y-axis."); return; }
       wfDr = { rf: pr.rf, fx: gx, fy: gy, sc: wfStr(pr) ? wfSc(pr) : undefined }; wfMp = { x: q0[0], y: q0[1] }; wfSetFlip(1, gx, gy); drawPlay();
     } else
     wfDr = { q0: qAt(e), d0: { dh: QZ.wdr.dh, dk: QZ.wdr.dk } };
@@ -7789,15 +7898,15 @@ var ESPIC = {
   function wfFirst(p) { if (wfSl()) return "First use the sliders and buttons so that g is f " + wfWhat(p) + "."; return wfStr(p) ? "First " + (p.scd === 1 ? "stretch" : "shrink") + " the graph vertically." : p.rf ? "First flip the graph in the " + p.rf + "-axis." : "First drag the graph " + wfMoves(p) + "."; }
   function wfSubstX() {
     var p = wfCur(); if (!p || QZ.step >= 4 || !wfNi(p) || QZ.wd.i) return;
-    if (!QZ.wd.m) { pqMsg(wfFirst(p)); return; }
-    if (wfNc(p) && !QZ.wd.c) { pqMsg("First choose \u2212x or \u2212f(x)."); return; }
+    if (!QZ.wd.m) { QZ.wrong++; pqMsg(wfFirst(p)); return; }
+    if (wfNc(p) && !QZ.wd.c) { QZ.wrong++; pqMsg("First choose \u2212x or \u2212f(x)."); return; }
     wfSnap(); QZ.wd.i = true; var c = document.querySelector("[data-wfchip]"), line = wfChipHTML(p);
     if (c) c.innerHTML = line; QZ.wl.push(line); wfWork(line); pqMsg(""); drawPlay(); wfSteps();
   }
   function wfReplace() {
     var p = wfCur(); if (!p || QZ.step >= 4 || QZ.wd.r) return;
-    if (!QZ.wd.m) { pqMsg(wfFirst(p)); return; }
-    if (!QZ.wd.i) { pqMsg("First drag " + wfPlain(wfInnerTx(p)).replace(/-/g, "−") + " from g(x) onto f(x) in the question."); return; }
+    if (!QZ.wd.m) { QZ.wrong++; pqMsg(wfFirst(p)); return; }
+    if (!QZ.wd.i) { QZ.wrong++; pqMsg("First drag " + wfPlain(wfInnerTx(p)).replace(/-/g, "−") + " from g(x) onto f(x) in the question."); return; }
     var line = "<i>g</i>(<i>x</i>) = " + wfStg(p)[0].h;
     wfSnap(); QZ.wd.r = true; QZ.wst = 0; QZ.wl.push(line); wfWork(line); pqMsg("");
     if (wfStg(p).length === 1) { QZ.wd.s = true; wfReveal(); return; }   // nothing is left to combine
@@ -7850,9 +7959,9 @@ var ESPIC = {
       return;
     }
     if (wf5Ev()) {
-      var kp = el.querySelector("#wfEv"), kv = kp ? kp.value : ""; el.innerHTML = wf5EvHTML(); el.hidden = false; var ei = el.querySelector(".wfIn");
+      var kp = el.querySelector("#wfEv"), kv = kp ? kp.value : wsub() ? QZ.wev || "" : ""; el.innerHTML = wf5EvHTML(); el.hidden = false; var ei = el.querySelector(".wfIn");
       if (kv) ei.value = kv;
-      if (mode !== "demo") ei.focus();
+      if (mode !== "demo" && !wsub()) ei.focus();   // (Write: the cursor starts in the g(x) box)
       if (QZ.arrowAt !== -2) { QZ.arrowAt = -2; askArrow(true, ei.parentNode); }
       return;
     }
@@ -7919,7 +8028,7 @@ var ESPIC = {
   function wfFocus() {
     if (!wf() || mode === "demo") return;
     var wi = $("wfSteps").querySelector(".wfIn");
-    if (wi) { wi.focus(); return; }
+    if (wi && !(wsub() && !PG.show.eq)) { wi.focus(); return; }
     if (wfSteppy()) return;
     var f = $("pgEq").querySelector(".eqIn"); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
   }
@@ -8224,6 +8333,10 @@ var ESPIC = {
   }
   // Line of Fit: two dots on the line are clicked
   function m3Dot(i) {
+    if (m3wOn()) {   // Write: two dots are chosen (a third replaces the first); they are checked with the Submit button
+      var xs = QZ.m3x; xs.sel = xs.sel || []; var j = xs.sel.indexOf(i); if (j >= 0) xs.sel.splice(j, 1); else { xs.sel.push(i); if (xs.sel.length > 2) xs.sel.shift(); }
+      $("pgQt").innerHTML = m3Q(); return;
+    }
     var st = m3Step(); if (!st || st.type !== "pts") return; var pb = m3Cur(), x = QZ.m3x;
     x.sel = x.sel || []; if (x.sel.indexOf(i) >= 0) return; x.sel.push(i);
     if (x.sel.length < 2) { pqMsg(""); $("pgQt").innerHTML = m3Q(); return; }
@@ -8233,10 +8346,10 @@ var ESPIC = {
     var pb = m3Cur(); if (!pb) return "";
     var done = QZ.m3l.map(function (l) { return "<div><span class=\"cueOk\">✓</span> " + l + "</div>"; }).join("");
     var fig = pb.fig(QZ.m3x || {}), tb = typeof pb.tbl === "function" ? pb.tbl(QZ.m3x || {}) : pb.tbl || "";
-    return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div>" + tb + "<div class=\"m3Body\">" + (fig ? "<div class=\"m3FigW\">" + fig + "</div>" : "") + (done ? "<div class=\"m3Done\">" + done + "</div>" : "") + "</div>";
+    return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div>" + tb + "<div class=\"m3Body\">" + (fig ? "<div class=\"m3FigC\"><div class=\"m3FigW\">" + fig + "</div>" + (m3wOn() && pb.kind === 5 ? "<div class=\"glTools\"><button type=\"button\" class=\"btn\" data-glw=\"line\" title=\"Draw a line through the points you have plotted (2 points)\">Line</button><button type=\"button\" class=\"btn\" data-glw=\"clear\" title=\"Remove your lines and the points you clicked\">Clear</button></div>" : "") + "</div>" : "") + (done ? "<div class=\"m3Done\">" + done + "</div>" : "") + "</div>";
   }
   function m3PG() {
-    QZ.m3i = 0; QZ.m3l = []; QZ.m3x = {}; QZ.m3done = false; QZ.m3o = null; QZ.hn = 0; QZ.arrowAt = -1;
+    QZ.m3i = 0; QZ.m3l = []; QZ.m3x = {}; QZ.m3done = false; QZ.m3o = null; QZ.hn = 0; QZ.arrowAt = -1; QZ.m3w = { v: {}, ok: {}, bad: {} }; m3wKey = "";
     for (var wi = works.length - 1; wi >= 0; wi--) if (works[wi].wf && works[wi].steps.length < 2) works.splice(wi, 1);
     var pb = m3Cur(); QZ.ww = null;
     if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); }
@@ -8244,6 +8357,8 @@ var ESPIC = {
   }
   function m3Steps() {
     var el = $("wfSteps"); if (!el) return;
+    if (m3wOn() && m3Cur()) { m3wSteps(); return; }
+    m3wKey = "";
     var pb = m3Cur(), st = m3Step();
     if (!pb || !st || QZ.step >= 4 || (mode === "demo" && !pgRun && !QZ.m3l.length)) { el.hidden = true; el.innerHTML = ""; askArrow(false); $("undo").hidden = true; return; }
     $("undo").hidden = true;
@@ -8259,23 +8374,166 @@ var ESPIC = {
     el.innerHTML = h; el.hidden = false; if (gl()) glFocus();
     var inp = el.querySelector(".m3In"); if (inp) { if (kk === key && kv) inp.value = kv; if (mode !== "demo") inp.focus(); if (QZ.arrowAt !== QZ.m3i) { QZ.arrowAt = QZ.m3i; askArrow(true, inp.parentNode); } } else askArrow(false);
   }
-  $("wfSteps").addEventListener("input", function (e) { if (m3() && e.target.classList.contains("m3In")) m3Try(e.target, false); });
-  $("wfSteps").addEventListener("keydown", function (e) { if (e.key === "Enter" && m3() && e.target.classList.contains("m3In")) { e.preventDefault(); m3Try(e.target, true); } });
-  $("wfSteps").addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("button[data-m3]"); if (!b || !m3()) return; if (e.isTrusted) pgUser(); m3Click(b); });
+  // ---- Write mode on the step engine (1.3, 1.4 Graphing, 2.1 Using a Transformed Quadratic, 2.2, 2.4): every step is on the page at once and nothing
+  // is checked before Submit, which checks them all, keeps the right ones (each with its check mark) and names the rest ----
+  var M3W = "#4B5563", m3wKey = "";
+  function m3wOn() { return m3() && wsub() && !!QZ.m3w && !!QZ.m3x; }
+  function m3wLab(st) { var l = String(st.lab || "the answer").replace(/<[^>]+>/g, ""); return /^[A-Z][a-z]/.test(l) ? l.charAt(0).toLowerCase() + l.slice(1) : l; }
+  function m3wQ(v) { return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+  function m3wSteps() {
+    var el = $("wfSteps"), L = m3L(), W = QZ.m3w, h = "", sig = [QZ.pi];
+    $("undo").hidden = true;
+    L.forEach(function (st) {
+      if (W.ok[st.id]) return; var t = st.type || "num", bad = W.bad[st.id] ? " bad" : "";
+      sig.push(st.id + bad + (t === "pick" ? ":" + W.v[st.id] : ""));
+      h += "<div class=\"m3wStep\"><div class=\"wfAsk\">" + m3V(st.ask) + "</div>";
+      if (t === "pick") h += "<div class=\"wfRow m3Opts\">" + st.opts.map(function (o, i) { var on = W.v[st.id] === i; return "<button type=\"button\" class=\"btn wfBtn" + (on ? " sel" : "") + (on ? bad : "") + "\" data-m3w=\"pick\" data-sid=\"" + st.id + "\" data-v=\"" + i + "\" aria-pressed=\"" + on + "\">" + o.t + "</button>"; }).join("") + "</div>";
+      else if (t === "btn") h += "<div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn\" data-m3w=\"go\" data-sid=\"" + st.id + "\">" + st.btn + "</button></div>";
+      else if (t === "num" || t === "eq" || t === "fn") h += "<div class=\"wfRow cg\">" + (st.pre ? "<span>" + st.pre + "</span>" : "") + "<input class=\"m3In" + bad + "\" data-sid=\"" + st.id + "\" value=\"" + m3wQ(W.v[st.id]) + "\" style=\"width:" + (t === "eq" || t === "fn" ? "13" : "8") + "rem\" inputmode=\"" + (t === "eq" || t === "fn" ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"" + m3wQ(st.lab) + "\">" + (st.post ? "<span>" + st.post + "</span>" : "") + "</div>";
+      else if (bad) h += "<div class=\"m3wBad\">Not quite yet.</div>";
+      h += "</div>";
+    });
+    var key = sig.join("|");
+    if (key === m3wKey && !el.hidden && el.querySelector(".m3wStep")) return;   // nothing new: what is being typed stays as it is
+    m3wKey = key; el.innerHTML = h; el.hidden = !h; askArrow(false);
+  }
+  function m3wClick(b) {
+    var L = m3L(), st = L.filter(function (q) { return q.id === b.dataset.sid; })[0]; if (!st || QZ.m3w.ok[st.id]) return;
+    if (b.dataset.m3w === "pick") { var v = +b.dataset.v; QZ.m3w.v[st.id] = QZ.m3w.v[st.id] === v ? undefined : v; m3wSteps(); return; }   // chosen, not checked
+    if (b.dataset.m3w === "go") { QZ.m3x.reg = true; m3wAccept(st, ""); m3Redraw(); }   // a calculator button is a tool: it simply does its job
+  }
+  function m3wAccept(st, show) {
+    var pb = m3Cur(), line = typeof st.line === "function" ? st.line(pb, QZ.m3x || {}, show) : (st.line || ((st.pre ? st.pre.replace(/<[^>]+>/g, "") + " " : "") + show));
+    if (st.after) st.after(QZ.m3x);
+    var L = m3L(), at = L.indexOf(st), W = QZ.m3w, j = 0; W.at = W.at || [];   // (the finished steps are listed in the order of the steps)
+    while (j < W.at.length && W.at[j] < at) j++; W.at.splice(j, 0, at); QZ.m3l.splice(j, 0, line);
+    if (QZ.ww) QZ.ww.steps.push({ eqs: [line], cls: "cg" });
+    W.ok[st.id] = true;
+  }
+  // only the figure is drawn again (the tables and the boxes keep what is being typed)
+  function m3wFig() { var pb = m3Cur(), w = document.querySelector("#pgQt .m3FigW"); if (pb && w) w.innerHTML = pb.fig(QZ.m3x || {}); }
+  function m3wSame(a, b) { return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9; }
+  // a click on the figure plots a point (or takes one away): grid points on a coordinate plane; whole numbers in 1.4 Graphing
+  function m3wPlot(p) {
+    var pb = m3Cur(), x = QZ.m3x; if (!pb || !x) return;
+    if (pb.kind === 5) {
+      var qx = Math.round(p.x), qy = Math.round(p.y); if (qx < 0 || qy < 0 || qx > pb.xmax || qy > pb.ymax) return;
+      x.wpc = x.wpc || []; var j = x.wpc.findIndex(function (q) { return Math.hypot(p.X(q[0]) - p.vx, p.Y(q[1]) - p.vy) <= 8; });
+      if (j >= 0) x.wpc.splice(j, 1); else x.wpc.push([qx, qy]);
+      m3wFig(); return;
+    }
+    var gs = m3L().filter(function (q) { return q.type === "gpt" && !QZ.m3w.ok[q.id]; }); if (!gs.length) return;
+    var sx = gs[0].snap || 1, sy = gs[0].snapy || sx, gx = c2R(Math.round(p.x / sx) * sx), gy = c2R(Math.round(p.y / sy) * sy);
+    if (Math.hypot(p.vx - p.X(gx), p.vy - p.Y(gy)) > 16) return;   // (not near a grid point: nothing happens)
+    x.wp = x.wp || []; var k = x.wp.findIndex(function (q) { return m3wSame(q, [gx, gy]); });
+    if (k >= 0) x.wp.splice(k, 1); else x.wp.push([gx, gy]);
+    m3wFig();
+  }
+  // 1.4 Graphing: the points typed in the tables (as typed, unchecked) and the points clicked on the graph
+  function glwPts(x) {
+    var out = [];
+    ["a", "b"].forEach(function (L) { for (var i = 0; i < 3; i++) { var xs = (x["xv" + L] || [])[i], ys = (x["yv" + L] || [])[i]; if (xs == null || ys == null || !String(xs).trim() || !String(ys).trim()) continue; var xn = m3Num(xs), yn = m3Num(ys); if (isFinite(xn) && isFinite(yn) && !out.some(function (q) { return m3wSame(q, [xn, yn]); })) out.push([xn, yn]); } });
+    (x.wpc || []).forEach(function (q) { if (!out.some(function (z) { return m3wSame(z, q); })) out.push(q); });
+    return out;
+  }
+  function glwFilled(x, L) { for (var i = 0; i < 3; i++) { var a = (x["xv" + L] || [])[i], b = (x["yv" + L] || [])[i]; if (a == null || b == null || !String(a).trim() || !String(b).trim()) return false; } return true; }
+  // the Line button: a line through the points plotted since the last line (2 points; one of them may be on a line already drawn, where the two cross)
+  function glwLine() {
+    var x = QZ.m3x, key = function (q) { return q[0] + "," + q[1]; }, used = (x.wl || []).reduce(function (a, l) { return a.concat(l.src); }, []);
+    var all = glwPts(x), P = all.filter(function (q) { return used.indexOf(key(q)) < 0; }), Old = all.filter(function (q) { return used.indexOf(key(q)) >= 0; }), f = null;
+    if (!P.length || P.length + Math.min(1, Old.length) < 2) { QZ.wrong++; pqMsg("Graph 2 points and click"); return; }
+    if (P.length >= 2) f = wsFit("line", P);
+    for (var i = 0; i < Old.length && !(f && f.sh); i++) if (P.length === 1 || !f) { var g = wsFit("line", P.concat([Old[i]])); if (g && g.sh) { f = g; P = P.concat([Old[i]]); } }
+    if (!f || !f.sh) { QZ.wrong++; pqMsg("Those points are not all on one line. Move or remove a point, then click the Line button again."); return; }
+    var sh = f.sh, m = (sh.p2[1] - sh.p1[1]) / (sh.p2[0] - sh.p1[0]);
+    (x.wl = x.wl || []).push({ m: m, b: sh.p1[1] - m * sh.p1[0], src: P.map(key) }); if (x.wl.length > 4) x.wl.shift();
+    pqMsg(""); m3wFig();
+  }
+  function m3wMissing() {
+    var L = m3L(), W = QZ.m3w, x = QZ.m3x, miss = [], gl = [], need = 0;
+    L.forEach(function (st) {
+      if (W.ok[st.id]) return; var t = st.type || "num";
+      if (t === "num" || t === "eq" || t === "fn") { if (!String(W.v[st.id] || "").trim()) miss.push(m3wLab(st)); }
+      else if (t === "pick") { if (W.v[st.id] == null) miss.push(m3wLab(st)); }
+      else if (t === "btn") miss.push(m3wLab(st));
+      else if (t === "pts") { if ((x.sel || []).length < 2) miss.push(m3wLab(st)); }
+      else if (t === "gpt") { need += st.pts ? st.pts.length : st.n; gl.push(miss.length); miss.push(m3wLab(st)); }
+      else if (t === "geq") { if (!String(x["ev" + st.L] || "").trim()) miss.push(m3wLab(st)); }
+      else if (t === "gtab") { if (!glwFilled(x, st.L)) miss.push(m3wLab(st)); }
+      else if (t === "gdrag") { var nl = (x.wl || []).length; if (nl < 2) miss.push(nl ? "the other line" : "the two lines"); if (x.hx == null) miss.push(m3wLab(st)); }
+    });
+    if ((x.wp || []).length >= need) miss = miss.filter(function (q, i) { return gl.indexOf(i) < 0; });   // (the points: enough of them plotted)
+    return miss;
+  }
+  // which plotted points answer which "gpt" step (in order); a step without enough of its points, or extra points that belong to none, is not right yet
+  function m3wGpt(L) {
+    var x = QZ.m3x, pool = (x.wp || []).slice(), res = {}, gs = L.filter(function (st) { return st.type === "gpt" && !QZ.m3w.ok[st.id]; });
+    var take = function (pick) { pool = pool.filter(function (z) { return !pick.some(function (q) { return m3wSame(z, q); }); }); };
+    gs.forEach(function (st) {
+      var pick = null;
+      if (st.pts) { if (st.pts.every(function (q) { return pool.some(function (z) { return m3wSame(z, q); }); })) pick = st.pts.map(function (q) { return [q[0], q[1]]; }); }
+      else if (st.any) {
+        var c = pool.filter(function (q) { var on; try { on = st.inv ? Math.abs(st.any(q[1]) - q[0]) < 1e-9 : Math.abs(st.any(q[0]) - q[1]) < 1e-9; } catch (e) { on = false; } return on && !(st.not || []).some(function (z) { return m3wSame(z, q); }); });
+        if (st.side != null) { var lf = c.filter(function (q) { return (st.inv ? q[1] : q[0]) < st.side; }), rt = c.filter(function (q) { return (st.inv ? q[1] : q[0]) > st.side; }); if (lf.length >= st.n / 2 && rt.length >= st.n / 2) pick = lf.slice(0, st.n / 2).concat(rt.slice(0, st.n / 2)); }
+        else if (c.length >= st.n) pick = c.slice(0, st.n);
+      }
+      res[st.id] = pick; if (pick) take(pick);
+    });
+    if (pool.length && gs.length) res[gs[gs.length - 1].id] = null;   // (points plotted that are none of these)
+    return res;
+  }
+  function m3wSubmit() {
+    var pb = m3Cur(), L = m3L(), W = QZ.m3w, x = QZ.m3x, bad = [], G = m3wGpt(L); W.bad = {};
+    L.forEach(function (st) {
+      if (W.ok[st.id]) return; var t = st.type || "num", ok = false, show = "";
+      try {
+        if (t === "num" || t === "eq" || t === "fn") { var r = m3Ok(st, String(W.v[st.id] || "")); ok = r.ok; show = r.show; }
+        else if (t === "pick") { var o = st.opts[W.v[st.id]]; ok = !!(o && o.ok); show = o ? o.t : ""; }
+        else if (t === "btn") ok = !!x.reg;
+        else if (t === "pts") { if ((x.sel || []).length === 2) { var pp = x.sel.map(function (j) { return pb.dots[j]; }).sort(function (u, v) { return u.x - v.x; }); x.p = pp; ok = true; show = "(" + pp[0].x + ", " + pp[0].y + ") and (" + pp[1].x + ", " + pp[1].y + ")"; } }
+        else if (t === "gpt") { var cl = G[st.id]; if (cl) { ok = true; x[st.id] = cl; x.wp = (x.wp || []).filter(function (z) { return !cl.some(function (q) { return m3wSame(z, q); }); }); cl.forEach(function (q) { (x.pl = x.pl || []).push({ x: q[0], y: q[1], col: st.col || C2P }); }); } }
+        else if (t === "geq") { var P = st.L === "a" ? pb.A : pb.B; if (m3Ok({ type: "eq", a: P.m, b: P.b }, String(x["ev" + st.L] || "")).ok) { x["e" + st.L] = true; ok = true; } }
+        else if (t === "gtab") ok = glwFilled(x, st.L);   // the tables are scratch work: filled in is enough
+        else if (t === "gdrag") {
+          var has = function (P) { return (x.wl || []).some(function (l) { return Math.abs(l.m - P.m) < 1e-9 && Math.abs(l.b - P.b) < 1e-9; }); }, la = has(pb.A), lb = has(pb.B);
+          x.lnA = la; x.lnB = lb; if (!la) bad.push("the line for " + pb.A.n); if (!lb) bad.push("the line for " + pb.B.n);
+          var cr = x.hx != null && Math.abs(x.hx - pb.xs) < 1e-9 && Math.abs(x.hy - pb.ystar) < 1e-9; if (!cr) bad.push("the crossing point");
+          if (la && lb && cr) { x.hx = pb.xs; x.hy = pb.ystar; x.cr = true; ok = true; } else { W.bad[st.id] = true; return; }
+        }
+      } catch (e) { ok = false; }
+      if (ok) m3wAccept(st, show); else { W.bad[st.id] = true; bad.push(m3wLab(st)); }
+    });
+    if (L.every(function (st) { return W.ok[st.id]; })) { QZ.m3i = L.length; QZ.m3done = true; }
+    m3wKey = "";
+    if (bad.length) { QZ.wrong++; drawPlay(); m3Redraw(); pqMsg("Not quite. Check " + wsList(bad) + ", then press Submit again."); return; }
+    pqMsg(""); drawPlay(); pqEval();
+  }
+  $("wfSteps").addEventListener("input", function (e) { if (m3() && e.target.classList.contains("m3In")) { if (m3wOn()) { QZ.m3w.v[e.target.dataset.sid] = e.target.value; return; } m3Try(e.target, false); } });
+  $("wfSteps").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && m3() && e.target.classList.contains("m3In")) {
+      e.preventDefault();
+      if (m3wOn()) { var A = [].slice.call(document.querySelectorAll("#wfSteps .m3In")), n = A[A.indexOf(e.target) + 1]; if (n) n.focus(); return; }   // Write: Return only moves on; nothing is checked before Submit
+      m3Try(e.target, true);
+    }
+  });
+  $("wfSteps").addEventListener("click", function (e) {
+    var w = e.target.closest && e.target.closest("button[data-m3w]"); if (w && m3wOn()) { if (e.isTrusted) pgUser(); m3wClick(w); return; }
+    var b = e.target.closest && e.target.closest("button[data-m3]"); if (!b || !m3()) return; if (e.isTrusted) pgUser(); m3Click(b);
+  });
   $("pgQt").addEventListener("click", function (e) { var d = e.target.closest && e.target.closest("[data-m3pt]"); if (!d || !m3()) return; if (e.isTrusted) pgUser(); m3Dot(+d.dataset.m3pt); });
   // Graphing: the tables are filled in on the page (equation in the header, then x and y in each row), the way Play Graph's tables are
   $("pgQt").addEventListener("input", function (e) {
     var el = e.target; if (!m3() || !QZ.m3x || !el.classList || !el.dataset.l) return; var pb = m3Cur(), x = QZ.m3x; if (!pb || pb.kind !== 5) return;
     var L = el.dataset.l, i = +el.dataset.i, P = L === "a" ? pb.A : pb.B; el.classList.remove("badc");
-    if (el.classList.contains("glEq")) { x["ev" + L] = el.value; if (m3Ok({ type: "eq", a: P.m, b: P.b }, el.value).ok) { x["e" + L] = true; pqMsg(""); m3Redraw(); glCheck(); } return; }
+    if (el.classList.contains("glEq")) { x["ev" + L] = el.value; if (m3wOn()) return; if (m3Ok({ type: "eq", a: P.m, b: P.b }, el.value).ok) { x["e" + L] = true; pqMsg(""); m3Redraw(); glCheck(); } return; }
     if (el.classList.contains("glX")) {
       (x["xv" + L] = x["xv" + L] || [])[i] = el.value; var xn = m3Num(el.value), md = el.closest("tr").querySelector("td.mid");
-      if (md) md.textContent = x["e" + L] && String(el.value).trim() !== "" && !isNaN(xn) ? P.sub(xn).replace(/<[^>]+>/g, "") : ""; glTry(L, i, false); return;
+      if (md) md.textContent = x["e" + L] && String(el.value).trim() !== "" && !isNaN(xn) ? P.sub(xn).replace(/<[^>]+>/g, "") : ""; if (m3wOn()) { m3wFig(); return; } glTry(L, i, false); return;
     }
-    if (el.classList.contains("glY")) { (x["yv" + L] = x["yv" + L] || [])[i] = el.value; glTry(L, i, false); }
+    if (el.classList.contains("glY")) { (x["yv" + L] = x["yv" + L] || [])[i] = el.value; if (m3wOn()) { m3wFig(); return; } glTry(L, i, false); }   // (Write: a typed row is plotted as typed, unchecked)
   });
   $("pgQt").addEventListener("change", function (e) {
-    var el = e.target; if (!m3() || !el.classList || !el.dataset.l || !QZ.m3x) return; var pb = m3Cur(); if (!pb || pb.kind !== 5) return; var L = el.dataset.l, i = +el.dataset.i, P = L === "a" ? pb.A : pb.B;
+    var el = e.target; if (!m3() || m3wOn() || !el.classList || !el.dataset.l || !QZ.m3x) return; var pb = m3Cur(); if (!pb || pb.kind !== 5) return; var L = el.dataset.l, i = +el.dataset.i, P = L === "a" ? pb.A : pb.B;
     if (el.classList.contains("glEq")) { if (String(el.value).trim() && !QZ.m3x["e" + L]) { el.classList.add("badc"); QZ.wrong++; pqMsg(m3Ok({ type: "eq", a: P.m, b: P.b }, el.value).msg || "Not quite. Try again."); } return; }
     if (el.classList.contains("glX") || el.classList.contains("glY")) { if (String(el.value).trim() && !glRowOk(QZ.m3x, L, i)) glTry(L, i, true); }
   });
@@ -8285,7 +8543,7 @@ var ESPIC = {
   });
   // Graphing: drag the green point to where the two lines cross
   $("pgQt").addEventListener("pointerdown", function (e) {
-    var h = e.target.closest && e.target.closest("[data-gdrag]"); if (!h || !m3() || !QZ.m3x) return; var st = m3Step(); if (!st || st.type !== "gdrag") return;
+    var h = e.target.closest && e.target.closest("[data-gdrag]"); if (!h || !m3() || !QZ.m3x) return; var st = m3Step(); if (!m3wOn() && (!st || st.type !== "gdrag")) return;
     if (e.isTrusted) pgUser(); e.preventDefault(); QZ.m3x.drag = true; h.classList.add("drag"); try { h.setPointerCapture(e.pointerId); } catch (_) { }
   });
   $("pgQt").addEventListener("pointermove", function (e) {
@@ -8307,6 +8565,7 @@ var ESPIC = {
   }
   function m3Redraw() { $("pgQt").innerHTML = m3Q(); m3Steps(); }
   function m3Plot(p) {
+    if (m3wOn()) { m3wPlot(p); return; }
     var st = m3Step(), pb = m3Cur(); if (!st || !pb) return; if (pb.kind === 20) { c2Plot(p, st, pb); return; } if (pb.kind === 2) { m3Plot2(p, st, pb); return; } if (pb.kind === 5) { glPlot(p, st, pb); return; } if (pb.kind !== 1) return; var t = st.type, x = QZ.m3x, near = function (qx, qy) { return Math.hypot(p.vx - p.X(qx), p.vy - p.Y(qy)) <= 16; };
     var ph = p.g[3] / p.g[5], offLine = Math.abs(p.y - (pb.m * p.x + pb.b)) * ph;
     if (t === "yint") {
@@ -8364,6 +8623,7 @@ var ESPIC = {
     h.setAttribute("transform", "translate(" + g.X(vx) + " " + g.Y(vy) + ")"); var r = h.querySelector(".glRead"); if (r) r.textContent = "(" + m3F(Math.round(vx)) + ", " + m3F(Math.round(vy)) + ")";
   }
   function glDrop() {   // let go: right if it is on the crossing
+    if (m3wOn()) { var xw = QZ.m3x; if (xw && xw.hx != null) { xw.hx = Math.round(xw.hx); xw.hy = Math.round(xw.hy); m3wFig(); } return; }   // Write: it stays where it is put, checked with the Submit button
     var pb = m3Cur(), x = QZ.m3x, st = m3Step(); if (!pb || !x || !st || st.type !== "gdrag" || x.hx == null) return;
     var g = glGeo(pb), d = Math.hypot(g.X(x.hx) - g.X(pb.xs), g.Y(x.hy) - g.Y(pb.ystar));
     if (d <= 15) { x.hx = pb.xs; x.hy = pb.ystar; x.cr = true; m3Accept(st, ""); return; }
@@ -8401,7 +8661,7 @@ var ESPIC = {
     QZ.wrong++; pqMsg(c === -1 ? "Choose a whole number for x from 0 to " + pb.xmax + "." : c === -2 ? "That x is already in the table. Choose a different x." : c === -4 ? "That point would be off the graph. Choose a smaller x." : "Not quite. Put x = " + m3F(m3Num(x["xv" + L][i])) + " into the equation and calculate.");
   }
   function glFocus() {   // the cursor goes to the next box to fill in
-    if (!gl() || mode === "demo" || !QZ || !QZ.m3x || QZ.m3done) return; var st = m3Step(), x = QZ.m3x, el = null; if (!st || !st.L) return; var L = st.L;
+    if (!gl() || mode === "demo" || !QZ || !QZ.m3x || QZ.m3done || m3wOn()) return; var st = m3Step(), x = QZ.m3x, el = null; if (!st || !st.L) return; var L = st.L;
     if (st.type === "geq") el = $("glEq" + L);
     else for (var i = 0; i < 3; i++) if (!(x["o" + L] || [])[i]) { var xv = (x["xv" + L] || [])[i]; el = $((xv == null || xv === "" ? "glX" : "glY") + L + i); break; }
     if (el && document.activeElement !== el) el.focus();
@@ -8438,6 +8698,11 @@ var ESPIC = {
           for (var i = 0; i < 3; i++) if (glRowOk(x, L, i)) o.pts.push({ x: x["rx" + L][i], y: P.m * x["rx" + L][i] + P.b, col: col });
           if (glN(x, L) >= 3) o.lines.push({ m: P.m, b: P.b, col: col, lab: P.n, below: both && P.b + P.m * xmax < Q.b + Q.m * xmax });
         });
+        if (m3wOn()) {   // Write: the points as typed or clicked and the lines drawn through them, all one colour until Submit; the green point once there are two lines
+          glwPts(x).forEach(function (q) { o.pts.push({ x: q[0], y: q[1], col: M3W }); });
+          (x.wl || []).forEach(function (l) { o.lines.push({ m: l.m, b: l.b, col: M3W }); });
+          both = (x.wl || []).length >= 2;
+        } else if (x.lnA && x.lnB && !glN(x, "a")) [[A, GLA, B], [B, GLB, A]].forEach(function (q) { o.lines.push({ m: q[0].m, b: q[0].b, col: q[1], lab: q[0].n, below: q[0].b + q[0].m * xmax < q[2].b + q[2].m * xmax }); });   // (finished in Write)
         if (x.cr) o.pts.push({ x: xs, y: ystar, col: GLC, lab: true, left: true, dy: -10 });
         var s = m3Fig(o); if (both && !x.cr) s = s.replace(/<\/svg>$/, glHandle(pb, x) + "</svg>");
         return s;
@@ -8453,7 +8718,7 @@ var ESPIC = {
         line: "The lines cross at (" + m3F(xs) + ", " + m3F(ystar) + "): after " + m3F(xs) + " " + sc.xu + " both cost $" + m3F(ystar) };
       pb.isteps = [eqS("a", A), rowS("a", A, 0), rowS("a", A, 1), rowS("a", A, 2), eqS("b", B), rowS("b", B, 0), rowS("b", B, 1), rowS("b", B, 2), drag];
       pb.csteps = pb.isteps;
-      function tabS(L, P) { return { id: "t" + L, lab: "table " + L.toUpperCase(), type: "gtab", L: L, ask: "Complete the table for <b>" + P.n + "</b>: type three different <i>x</i> values from 0 to " + xmax + " and the <i>y</i> for each. When all three rows are right, the points are joined by a line.", hint: ["Pick whole numbers for <i>x</i>, like " + P.rows.map(m3F).join(", ") + ". Put each one into <span class=\"lm\">" + m3EqH(P.m, P.b) + "</span> and calculate.", "For example, <i>x</i> = " + m3F(P.rows[0]) + " gives " + term(P, P.rows[0]) + " = " + m3F(P.ys[0]) + "."], line: P.n + ": the table is done and the line is drawn" }; }
+      function tabS(L, P) { return { id: "t" + L, lab: "table " + L.toUpperCase(), type: "gtab", L: L, ask: function () { return "Complete the table for <b>" + P.n + "</b>: type three different <i>x</i> values from 0 to " + xmax + " and the <i>y</i> for each. " + (mode === "solo" ? "Each row is plotted as you type it; then click Line under the graph to draw the line through its points." : "When all three rows are right, the points are joined by a line."); }, hint: ["Pick whole numbers for <i>x</i>, like " + P.rows.map(m3F).join(", ") + ". Put each one into <span class=\"lm\">" + m3EqH(P.m, P.b) + "</span> and calculate.", "For example, <i>x</i> = " + m3F(P.rows[0]) + " gives " + term(P, P.rows[0]) + " = " + m3F(P.ys[0]) + "."], line: P.n + ": the table is done and the line is drawn" }; }
       pb.steps = [eqS("a", A), eqS("b", B), tabS("a", A), tabS("b", B), drag];
       pb.ex = A.n + " is " + m3EqH(A.m, A.b) + " and " + B.n + " is " + m3EqH(B.m, B.b) + ". Fill in each table and the points join in a line. The two cost the same where the lines cross, at (" + m3F(xs) + ", " + m3F(ystar) + "): after " + m3F(xs) + " " + sc.xu + " both cost $" + m3F(ystar) + ". Check: " + term(A, xs) + " = " + m3F(ystar) + " and " + term(B, xs) + " = " + m3F(ystar) + ".";
       return pb;
@@ -8539,14 +8804,16 @@ var ESPIC = {
     else if (s && QZ.m3x.sel) { e.preventDefault(); m3Drop(QZ.m3x.sel, s.dataset.m3slot); }
   });
   $("pgQt").addEventListener("click", function (e) {
-    if (!m3() || !QZ.m3x) return;     var lab = e.target.closest && e.target.closest("[data-m3lab]");
+    if (!m3() || !QZ.m3x) return;
+    var gw = e.target.closest && e.target.closest("[data-glw]"); if (gw) { if (e.isTrusted) pgUser(); if (!m3wOn()) return; if (gw.dataset.glw === "line") glwLine(); else { QZ.m3x.wl = []; QZ.m3x.wpc = []; pqMsg(""); m3wFig(); } return; }
+    var lab = e.target.closest && e.target.closest("[data-m3lab]");
     if (lab) { if (e.isTrusted) pgUser(); m3Lab(lab.dataset.m3lab); return; }
     var svg = e.target.closest && e.target.closest("svg.m3Fig"); if (!svg || e.target.closest("[data-m3pt]") || e.target.closest("[data-gdrag]")) return;
     if (e.isTrusted) pgUser(); m3Plot(m3Pos(svg, e.clientX, e.clientY));
   });
   function m3Cue() {
     var pb = m3Cur(), L = m3L(), pn = QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : "", all = QZ.step >= 4 || QZ.m3done;
-    if (mode === "solo") return (pn ? pn + ": " : "") + L.map(function (s, i) { return s.lab + (all || i < QZ.m3i ? " <span class=\"cueOk\">✓</span>" : "?"); }).join(" &nbsp; ");
+    if (mode === "solo") return (pn ? pn + ": " : "") + L.map(function (s, i) { return s.lab + (all || (QZ.m3w ? QZ.m3w.ok[s.id] : i < QZ.m3i) ? " <span class=\"cueOk\">✓</span>" : "?"); }).join(" &nbsp; ");
     return (pn ? pn + " · " : "") + "Step " + Math.min(QZ.m3i + 1, L.length) + " of " + L.length + (all ? " <span class=\"cueOk\">✓</span>" : "");
   }
   function m3Hint(n) {
@@ -8924,7 +9191,7 @@ var ESPIC = {
     return { min: a, max: b, g: g, t: g * (span / g > 8 ? 2 : 1) };
   }
   // the points the student has plotted so far (gpt steps) go on every figure
-  function c2Base(o, x) { o.pts = (o.pts || []).concat((x && x.pl) || []); return c2Fig(o); }
+  function c2Base(o, x) { o.pts = (o.pts || []).concat((x && x.pl) || []).concat(m3wOn() && x && x.wp ? x.wp.map(function (q) { return { x: q[0], y: q[1], col: M3W }; }) : []); return c2Fig(o); }   // (Write: the points plotted so far, not yet checked)
 
   // ---- answering on the figure: a "gpt" step is a list of grid points to click (any order), or any points on a curve (st.any = fn, st.n how many, st.inv: x = fn(y))
   function c2Plot(p, st, pb) {
