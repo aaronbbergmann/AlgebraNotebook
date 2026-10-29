@@ -520,6 +520,7 @@
   .descIn.dDone .descKeys button{opacity:.45;pointer-events:none}.descIn.dDone input{background:#F4F6F9}
   body.wsub #pgDescGo{display:none}
   body.pq.wsub #qzGo:not([hidden]){display:inline-block!important;width:10.5em;font-size:.92rem}
+  body.pq.wsub #qzGo.ready{background:#8E2465;border-color:#8E2465;color:#fff}body.pq.wsub #qzGo.ready:hover{background:#6E1A4E;border-color:#6E1A4E}
   .descIn[hidden]{display:none}.descIn{display:flex;flex-direction:column;gap:.55rem}
   .descIn input{box-sizing:border-box;width:100%;padding:.55em .7em;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 1rem system-ui,sans-serif}
   .descKeys{display:flex;flex-wrap:wrap;gap:.4rem}.descArr{display:inline-flex;gap:.4rem}
@@ -5512,6 +5513,7 @@ var ESPIC = {
   // several graphs can be on the plane at once (the parent and g): placing a new one keeps the old one, which a press brings back to edit
   function keepShape(G) { if (G === PG && wsub() && PG.shape) { (PG.keep = PG.keep || []).push(PG.shape); if (PG.keep.length > 3) PG.keep.shift(); } }
   // 2.1 Write: the parabola button graphs the parabola through the points plotted since the last parabola (at least 5, all on one parabola)
+  ["input", "pointerup", "keyup"].forEach(function (ev) { document.addEventListener(ev, function () { if (pq() && wsubAct()) setTimeout(wsReadyUpd, 0); }); });
   function wsParab() {
     var key = function (q) { return q[0] + "," + q[1]; }, used = [PG.shape].concat(PG.keep || []).filter(Boolean).reduce(function (a, q) { return a.concat(q.src || []); }, []);
     var P = (PG.pts || []).filter(function (q) { return used.indexOf(key(q)) < 0; });
@@ -5527,7 +5529,24 @@ var ESPIC = {
     var r4 = function (v) { v = Math.round(v * 10000) / 10000; return Object.is(v, -0) ? 0 : v; };
     gSnap(); keepShape(PG); PG.shape = { t: "U", h: r4(fit.h), k: r4(fit.k), a: r4(fit.a), src: P.map(key) }; PG.tool = null; PG.clk = []; pqMsg(""); drawPlay();
   }
+  // 2.1 Write: the parts still to be done (not whether they are right): both parabolas, a full table, the description, and g(x) in Write g
+  function wsMissing() {
+    var miss = [], num = function (t) { return !!parse(String(t || "").replace(/\u2212/g, "-").trim()); };
+    var nSh = [PG.shape].concat(PG.keep || []).filter(Boolean).length, needSh = (PG.pdone ? 0 : 1) + (PG.show.graph ? 0 : 1);
+    if (needSh === 2 && nSh === 0) miss.push("the parent parabola", "the transformed parabola");
+    else if (needSh === 2 && nSh === 1) miss.push("the other parabola");
+    else if (needSh === 1 && nSh === 0) miss.push(PG.pdone ? "the transformed parabola" : "the parent parabola");
+    var gOK = TB.rows().every(function (r) { return TB.hasX(r) && (r.done || num(r.tv)); });
+    var pOK = ptRows().every(function (r) { return r.px !== undefined && ["py", "gx", "sy", "gy"].every(function (c) { return !ptUse(c) || r.d[c] || num(r.t[c]); }); });
+    if (!gOK && !pOK) miss.push("the table");
+    if (!PG.dOK && !String($("pgDescTx").value || "").trim()) miss.push("the description");
+    if (!PG.show.eq && !pqTyped()) miss.push("g(x)");
+    return miss;
+  }
+  function wsReadyUpd() { var b = $("qzGo"); if (b) b.classList.toggle("ready", !!(wsub() && !wsMissing().length)); }
   function wsubSubmit() {
+    var miss = wsMissing();
+    if (miss.length) { pqMsg("Not yet: still to complete " + (miss.length > 1 ? miss.slice(0, -1).join(", ") + " and " + miss[miss.length - 1] : miss[0]) + "."); return; }   // (a reminder, not an error: it does not cost the Progress)
     var sh = [PG.shape].concat(PG.keep || []).filter(Boolean), bad = [], rm = function (x) { if (PG.shape === x) PG.shape = null; PG.keep = (PG.keep || []).filter(function (q) { return q !== x; }); };
     if (!PG.pdone) { var pp = sh.filter(function (q) { return shapeIs(q, pf); })[0]; if (pp) { rm(pp); PG.pdone = true; PG.show.parent = true; } else bad.push("the parent graph"); }
     if (!PG.show.graph) { var gg = sh.filter(function (q) { return q !== pp && shapeOK(q); })[0]; if (gg) { rm(gg); var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); else PG.show.graph = true; } else bad.push("the graph of g(x)"); }
@@ -8678,7 +8697,7 @@ var ESPIC = {
     TB.sync(); ptSync(); $("qzTools").hidden = wf() || m3(); posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
-    eqKeysUpd(); pqCue(); pqEval(); eqShrink();
+    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd();
   }
   // ---- Chapter 2 (Quadratic Functions).  2.1 Using a Transformed Quadratic and every exercise of 2.2, 2.3 and 2.4 run on the 1.3 engine: a problem is a story or a function,
   // a figure, and steps (Demo, Sequence and Calculate take every small step; Solo takes only the big ones).  The figure here is a whole coordinate plane that can draw
