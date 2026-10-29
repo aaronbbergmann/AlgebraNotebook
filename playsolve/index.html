@@ -5515,19 +5515,23 @@ var ESPIC = {
   // 2.1 Write: the parabola button graphs the parabola through the points plotted since the last parabola (at least 5, all on one parabola)
   ["input", "pointerup", "keyup"].forEach(function (ev) { document.addEventListener(ev, function () { if (pq() && wsubAct()) setTimeout(wsReadyUpd, 0); }); });
   function wsParab() {
-    var key = function (q) { return q[0] + "," + q[1]; }, used = [PG.shape].concat(PG.keep || []).filter(Boolean).reduce(function (a, q) { return a.concat(q.src || []); }, []);
-    var P = (PG.pts || []).filter(function (q) { return used.indexOf(key(q)) < 0; });
-    if (P.length < 5) { QZ.wrong++; pqMsg("Graph 5 points and click"); return; }
+    // the parabola through the points plotted since the last parabola; one or two points that an earlier parabola already passes through (where the two cross)
+    // count too, so the parent and g can share them: 5 points in all, at least 3 of them new, all on one parabola
+    var key = function (q) { return q[0] + "," + q[1]; }, shapes = [PG.shape].concat(PG.keep || []).filter(Boolean), used = shapes.reduce(function (a, q) { return a.concat(q.src || []); }, []);
+    var all = PG.pts || [], P = all.filter(function (q) { return used.indexOf(key(q)) < 0; }), Old = all.filter(function (q) { return used.indexOf(key(q)) >= 0; });
+    if (P.length < 3) { QZ.wrong++; pqMsg("Graph 5 points and click"); return; }
     var D = []; P.forEach(function (q) { if (!D.some(function (z) { return Math.abs(z[0] - q[0]) < 1e-9; })) D.push(q); });
-    var fit = null;
+    var fit = null, on = function (f, q) { return Math.abs(f.A * q[0] * q[0] + f.B * q[0] + f.C - q[1]) < 1e-6; };
     if (D.length >= 3) {
       var x1 = D[0][0], y1 = D[0][1], x2 = D[1][0], y2 = D[1][1], x3 = D[2][0], y3 = D[2][1], dn = (x1 - x2) * (x1 - x3) * (x2 - x3);
-      var a = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / dn, b = (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) / dn, c = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / dn;
-      if (Math.abs(a) > 1e-9 && P.every(function (q) { return Math.abs(a * q[0] * q[0] + b * q[0] + c - q[1]) < 1e-6; })) fit = { a: a, h: -b / (2 * a), k: c - b * b / (4 * a) };
+      var f = { A: (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / dn, B: (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) / dn, C: (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / dn };
+      if (Math.abs(f.A) > 1e-9 && P.every(function (q) { return on(f, q); })) fit = f;
     }
-    if (!fit) { QZ.wrong++; pqMsg("Those points are not all on one parabola. Move or remove a point, then click the parabola button again."); return; }
+    if (!fit) { QZ.wrong++; pqMsg(P.length + Old.length < 5 ? "Graph 5 points and click" : "Those points are not all on one parabola. Move or remove a point, then click the parabola button again."); return; }
+    var shared = Old.filter(function (q) { return on(fit, q); }).slice(0, 2);   // (two different parabolas cross at most twice)
+    if (P.length + shared.length < 5) { QZ.wrong++; pqMsg("Graph 5 points and click"); return; }
     var r4 = function (v) { v = Math.round(v * 10000) / 10000; return Object.is(v, -0) ? 0 : v; };
-    gSnap(); keepShape(PG); PG.shape = { t: "U", h: r4(fit.h), k: r4(fit.k), a: r4(fit.a), src: P.map(key) }; PG.tool = null; PG.clk = []; pqMsg(""); drawPlay();
+    gSnap(); keepShape(PG); PG.shape = { t: "U", h: r4(-fit.B / (2 * fit.A)), k: r4(fit.C - fit.B * fit.B / (4 * fit.A)), a: r4(fit.A), src: P.concat(shared).map(key) }; PG.tool = null; PG.clk = []; pqMsg(""); drawPlay();
   }
   // 2.1 Write: the parts still to be done (not whether they are right): both parabolas, a full table, the description, and g(x) in Write g
   function wsMissing() {
