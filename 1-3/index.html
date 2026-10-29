@@ -512,6 +512,8 @@
   .ptTable.drop{outline:3px solid #2D70B3;outline-offset:2px}
   .ptTable td.ask input.qzCell,.pgTable td.yv.ask input.qzCell{box-shadow:inset 0 0 0 2px var(--plus)}
   .descIn.dDone .descKeys button{opacity:.45;pointer-events:none}.descIn.dDone input{background:#F4F6F9}
+  body.wsub #pgDescGo{display:none}
+  body.pq.wsub #qzGo:not([hidden]){display:inline-block!important;width:10.5em;font-size:.92rem}
   .descIn[hidden]{display:none}.descIn{display:flex;flex-direction:column;gap:.55rem}
   .descIn input{box-sizing:border-box;width:100%;padding:.55em .7em;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 1rem system-ui,sans-serif}
   .descKeys{display:flex;flex-wrap:wrap;gap:.4rem}.descArr{display:inline-flex;gap:.4rem}
@@ -5119,10 +5121,10 @@
       if (i >= 0) G.pts.splice(i, 1); else G.pts.push([x, y]);
     } else if (tool === "line") {
       G.clk.push([x, y]); if (G.clk.length === 1) G.hv = [x, y];
-      if (G.clk.length === 2) { if (G.clk[0][0] === x && G.clk[0][1] === y) G.clk.pop(); else { G.shape = { t: "line", p1: G.clk[0], p2: G.clk[1] }; G.clk = []; G.tool = null; } }
+      if (G.clk.length === 2) { if (G.clk[0][0] === x && G.clk[0][1] === y) G.clk.pop(); else { keepShape(G); G.shape = { t: "line", p1: G.clk[0], p2: G.clk[1] }; G.clk = []; G.tool = null; } }
     } else if (tool === "V" || tool === "U") {
       // two clicks: the tool, then the vertex (the stretch starts at 1, the same as the parent; the side points adjust it)
-      G.shape = { t: tool, h: x, k: y, a: 1 }; G.clk = []; G.tool = null;
+      keepShape(G); G.shape = { t: tool, h: x, k: y, a: 1 }; G.clk = []; G.tool = null;
     }
     gRef();
   }
@@ -5131,14 +5133,16 @@
     x = snap(x); y = snap(y, 1);
     if (tool === "pt") { if (!G.pts.some(function (p) { return p[0] === x && p[1] === y; })) G.pts.push([x, y]); }
     else if (tool === "line" && !parentDraw()) { G.tool = "line"; G.clk = [[x, y]]; G.hv = [x, y]; gRef(); return; }   // the second point now follows the cursor until a click lands it
-    else if (tool === "line") G.shape = { t: "line", p1: [x, y], p2: [snap(x + snapStep()), snap(y + snapStep(1), 1)] };
-    else G.shape = { t: tool, h: x, k: y, a: 1 };
+    else if (tool === "line") { keepShape(G); G.shape = { t: "line", p1: [x, y], p2: [snap(x + snapStep()), snap(y + snapStep(1), 1)] }; }
+    else { keepShape(G); G.shape = { t: tool, h: x, k: y, a: 1 }; }
     G.tool = null; G.clk = []; gRef();
   }
   (function () {
     var S = $("pgSvg"), dragH = null;
     S.addEventListener("pointerdown", function (e) {
       var G = G_(); if (G === PG) { pgUser(); if (PG.tm) { tmMove(qAt(e)); tmClick(); e.preventDefault(); return; } } else if (!quiz() || QZ.step < 2 || QZ.step > 3 || (busy && e.isTrusted)) return;
+      var kp = G === PG && !G.tool && e.target.closest("[data-kp]");   // 2.1 Write: a kept graph pressed becomes the one being edited
+      if (kp) { var kj = +kp.dataset.kp, ko = PG.keep[kj]; if (ko) { gSnap(); PG.keep.splice(kj, 1); if (PG.shape) PG.keep.push(PG.shape); PG.shape = ko; drawPlay(); } e.preventDefault(); return; }
       var h = e.target.closest("[data-qh]");
       // with a tool chosen, a click places with that tool (even on top of a plotted point); with no tool, points and handles can be dragged
       if (h && (!G.tool || h.dataset.qh === "c0")) { gSnap(); dragH = h.dataset.qh; S.setPointerCapture(e.pointerId); e.preventDefault(); return; }
@@ -5170,7 +5174,7 @@
           if (!ghost) { ghost = b.cloneNode(true); ghost.classList.add("ghost"); document.body.appendChild(ghost); }
           ghost.style.left = ev.clientX - 20 + "px"; ghost.style.top = ev.clientY - 20 + "px";
           // a dragged shape button hangs the shape from the point being held; it lands wherever it is let go
-          if (tool === "pt" || tool === "line" || tool === "V" || tool === "U") {
+          if ((tool === "pt" || tool === "line" || tool === "V" || tool === "U") && !(tool === "U" && wsubAct())) {
             var G1 = G_(), r1 = S.getBoundingClientRect(), over = ev.clientX >= r1.left && ev.clientX <= r1.right && ev.clientY >= r1.top && ev.clientY <= r1.bottom;
             if (over) { var q1 = qAt(ev); G1.tool = tool; G1.clk = []; G1.hv = [snap(q1[0]), snap(q1[1], 1)]; ghost.style.display = "none"; } else { G1.tool = null; G1.hv = null; ghost.style.display = ""; }
             gDraw();
@@ -5182,6 +5186,7 @@
           if (ghost) {
             ghost.remove(); var r = S.getBoundingClientRect(); { var G2 = G_(); if (tool === "pt" || tool === "line" || tool === "V" || tool === "U") { G2.tool = null; G2.hv = null; } }
             $("ptTable").classList.remove("drop"); if (tool === "U" && ptOver(ev)) { gDraw(); ptFillParent(); return; }
+            if (tool === "U" && wsubAct() && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) { QZ.wrong++; pqMsg("Graph 5 points and click"); return; }   // 2.1 Write: no dragging a parabola
             if (tool !== "clear" && tool !== "undo" && tool !== "tr" && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) { var p = qAt(ev); qzDrop(tool, p[0], p[1]); }
             return;
           }
@@ -5195,7 +5200,8 @@
     var G = G_();
     if (tool === "undo") { var hs = G.hist || []; if (hs.length) { var o = JSON.parse(hs.pop()); G.pts = o[0]; G.shape = o[1]; G.clk = o[2] || []; G.tool = null; } gRef(); return; }
     if (tool === "tr") { PG.tm = PG.tm ? null : { stage: 0, cur: null }; PG.tool = null; PG.clk = []; gRef(); return; }
-    if (tool === "clear") { gSnap(); G.pts = []; G.sp = []; G.shape = null; G.clk = []; G.tool = null; gRef(); return; }
+    if (tool === "clear") { gSnap(); G.pts = []; G.sp = []; G.shape = null; if (G === PG) PG.keep = []; G.clk = []; G.tool = null; gRef(); return; }
+    if (tool === "U" && G === PG && wsubAct()) { wsParab(); return; }   // 2.1 Write: the parabola through the plotted points
     G.tool = G.tool === tool ? null : tool; G.clk = []; gRef();
   }
 
@@ -5328,6 +5334,7 @@
     return !!(tr && sc && (a < 0) === m.rf);
   }
   function gdDescSubmit() {
+    if (wsub()) return;   // 2.1 Write: checked with the Submit button
     var m = gdParse($("pgDescTx").value), box = $("pgDescIn"), right = gdDescRight(m);
     if (right) { PG.tAns = { h: shifts() ? H() : 0, k: K(), a: A() }; PG.dOK = true; pqMsg(""); var rr = box.getBoundingClientRect(); rvMark("ok", rr.left + 24, rr.top + 14); if (!gd2()) box.hidden = true; pgDescUpd(); drawPlay(); return; }
     if (gdW()) { pqMsg("That is not the transformation in the question. Try again."); box.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(0)" }], { duration: 300 }); return; }   // 2.1 Writing: the description is given, so this only labels the parent table
@@ -5343,7 +5350,7 @@
     el.setRangeText((before && !/\s$/.test(before) ? " " : "") + b.dataset.ins + " ", i, j, "end"); el.focus(); el.dispatchEvent(new Event("input", { bubbles: true }));
   });
   $("pgDescTx").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); gdDescSubmit(); } });
-  $("pgDescTx").addEventListener("input", function () { if (ptOn()) ptDraw(); if (this.value.trim() && !PG.dOK && gdDescRight(gdParse(this.value))) gdDescSubmit(); });
+  $("pgDescTx").addEventListener("input", function () { if (ptOn()) ptDraw(); if (this.value.trim() && !PG.dOK && !wsub() && gdDescRight(gdParse(this.value))) gdDescSubmit(); });
   function pqMsg(t, cls) { if (cls === "ok" && t && act === "2.1") { partyShow(wf() ? wfNm(t) : t); t = ""; cls = ""; } var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = (wf() ? wfNm(t) : t) || ""; }
   // ---- 1.1, third exercise: Estimating a Value from a Graph.  The data come from a table in the question; the student enters them in the Data table, graphs the model
   // (a U for a quadratic) through the points, then estimates a height from the graph.  The centre pane is the Play Data pane. ----
@@ -5474,7 +5481,7 @@ var ESPIC = {
   }
   function pqSetup() {
     closePt(); var fam = qFam();
-    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = []; PG.ptb = null; PT.ask = null; TB.askI = -1;
+    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = []; PG.keep = []; PG.ptb = null; PT.ask = null; TB.askI = -1;
     PG.show = { eq: false, table: false, graph: false, desc: true, parent: false }; PG.pdone = false; PG.dOK = false; $("pgDescTx").value = "";
     if (gd()) {
       var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.a = tr.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false };
@@ -5492,7 +5499,38 @@ var ESPIC = {
   // 1 Translations and 2 Reflections and Stretches give g(x) (the student graphs f and g, fills in the table and describes the transformation);
   // 3 Writing a Transformed Quadratic gives the description instead, and the student types g(x) in the equation box (then the graphs and the table).
   function gd2() { return pq() && act === "2.1" && lesson >= 1 && lesson <= 3; }
-  function gdW() { return gd2() && lesson === 3 && !(mode === "create" || QZ.custom); }   // the equation is the answer
+  function gdW() { return gd2() && lesson === 3 && !(mode === "create" || QZ.custom); }
+  // 2.1 Write mode: nothing is checked or confirmed (graphs, table, description, equation) until the student presses Submit in the right panel
+  function wsubAct() { return gd2() && mode === "solo"; }
+  function wsub() { return wsubAct() && QZ && QZ.step < 4; }
+  // several graphs can be on the plane at once (the parent and g): placing a new one keeps the old one, which a press brings back to edit
+  function keepShape(G) { if (G === PG && wsub() && PG.shape) { (PG.keep = PG.keep || []).push(PG.shape); if (PG.keep.length > 3) PG.keep.shift(); } }
+  // 2.1 Write: the parabola button graphs the parabola through the points plotted since the last parabola (at least 5, all on one parabola)
+  function wsParab() {
+    var key = function (q) { return q[0] + "," + q[1]; }, used = [PG.shape].concat(PG.keep || []).filter(Boolean).reduce(function (a, q) { return a.concat(q.src || []); }, []);
+    var P = (PG.pts || []).filter(function (q) { return used.indexOf(key(q)) < 0; });
+    if (P.length < 5) { QZ.wrong++; pqMsg("Graph 5 points and click"); return; }
+    var D = []; P.forEach(function (q) { if (!D.some(function (z) { return Math.abs(z[0] - q[0]) < 1e-9; })) D.push(q); });
+    var fit = null;
+    if (D.length >= 3) {
+      var x1 = D[0][0], y1 = D[0][1], x2 = D[1][0], y2 = D[1][1], x3 = D[2][0], y3 = D[2][1], dn = (x1 - x2) * (x1 - x3) * (x2 - x3);
+      var a = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / dn, b = (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) / dn, c = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / dn;
+      if (Math.abs(a) > 1e-9 && P.every(function (q) { return Math.abs(a * q[0] * q[0] + b * q[0] + c - q[1]) < 1e-6; })) fit = { a: a, h: -b / (2 * a), k: c - b * b / (4 * a) };
+    }
+    if (!fit) { QZ.wrong++; pqMsg("Those points are not all on one parabola. Move or remove a point, then click the parabola button again."); return; }
+    var r4 = function (v) { v = Math.round(v * 10000) / 10000; return Object.is(v, -0) ? 0 : v; };
+    gSnap(); keepShape(PG); PG.shape = { t: "U", h: r4(fit.h), k: r4(fit.k), a: r4(fit.a), src: P.map(key) }; PG.tool = null; PG.clk = []; pqMsg(""); drawPlay();
+  }
+  function wsubSubmit() {
+    var sh = [PG.shape].concat(PG.keep || []).filter(Boolean), bad = [], rm = function (x) { if (PG.shape === x) PG.shape = null; PG.keep = (PG.keep || []).filter(function (q) { return q !== x; }); };
+    if (!PG.pdone) { var pp = sh.filter(function (q) { return shapeIs(q, pf); })[0]; if (pp) { rm(pp); PG.pdone = true; PG.show.parent = true; } else bad.push("the parent graph"); }
+    if (!PG.show.graph) { var gg = sh.filter(function (q) { return q !== pp && shapeOK(q); })[0]; if (gg) { rm(gg); var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); else PG.show.graph = true; } else bad.push("the graph of g(x)"); }
+    if (!PG.show.eq) { var t = pqTyped(); if (t && eqTypedOK(t) && wfSimp(t)) { var te = document.querySelector(".tog[data-part=eq]"); if (te) te.click(); else PG.show.eq = true; } else bad.push("g(x)"); }
+    if (!PG.dOK) { if (gdDescRight(gdParse($("pgDescTx").value))) { PG.tAns = { h: shifts() ? H() : 0, k: K(), a: A() }; PG.dOK = true; } else bad.push("the description"); }
+    PG.tool = null; PG.clk = []; PG.hv = null;
+    if (bad.length) { QZ.wrong++; drawPlay(); pqMsg("Not quite. Check " + (bad.length > 1 ? bad.slice(0, -1).join(", ") + " and " + bad[bad.length - 1] : bad[0]) + ", then press Submit again."); return; }
+    pqMsg(""); drawPlay(); pqEval();
+  }   // the equation is the answer
   function gdMake21(tier) {
     function nz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
     function pk(a) { return a[rnd(a.length)]; }
@@ -5541,6 +5579,7 @@ var ESPIC = {
   // a right shape for the parent turns dotted; a right shape for g turns red; a right description earns a check
   function gdWatch() {
     if (!gd() || !QZ.order) return;
+    if (wsub()) { pqCue(); return; }   // 2.1 Write: everything waits for Submit
     var sh = PG.shape;
     if (sh && !PG.pdone && shapeIs(sh, pf)) {
       var at = sh.t === "line" ? sh.p1 : [sh.h, sh.k]; PG.pdone = true; PG.show.parent = true; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; pqMsg("");
@@ -5621,7 +5660,7 @@ var ESPIC = {
     else $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
     pqCue();
     var go = $("qzGo"), nx = $("qzNext");
-    go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || m3() || (wf() && (mode === "sequence" || mode === "calculate")); go.textContent = "Check";
+    go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || m3() || (wf() && (mode === "sequence" || mode === "calculate")); go.textContent = wsubAct() ? "Submit" : "Check"; document.body.classList.toggle("wsub", wsubAct());
     // the one Next (see nxShow): in Demo the demo button carries it; otherwise it sits here in the side panel
     nx.hidden = !done || demo; nx.disabled = false; nx.textContent = (gd() || wf()) && mode === "create" ? "Create another" : up ? up.label : "Next";
     $("qzAgain").hidden = demo || !(done && !QZ.custom && up && up.stayText); $("qzAgain").textContent = !QZ.custom && up && up.stayText || "";
@@ -5651,7 +5690,8 @@ var ESPIC = {
       if (!est() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
         QZ.step = 4; var last = QZ.pi === QZ.order.length - 1;
-        if (!QZ.custom && mode !== "create" && mode !== "demo") { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
+        var c2Err = act === "2.1" && QZ.wrong > 0;   // 2.1: any error message in this round means no Progress for it
+        if (!QZ.custom && mode !== "create" && mode !== "demo" && !c2Err) { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
         pqMsg(mode === "solo" ? cheer() : est() || wf() || m3() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last && QZ.order.length > 1 ? (QZ.order.length === 3 ? "You have finished all three!" : "You have finished all four!") : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
         if (QZ.custom) {   // the student's own function: no Progress, and Next offers the next mode with the same function
           pqMsg(mode === "solo" ? cheer() : "Well done!", "ok"); var cm = wf() || gd2() ? ["demo", "sequence", "calculate", "solo"] : ["demo", "sequence", "solo"], cn = cm[cm.indexOf(mode) + 1];
@@ -5659,10 +5699,12 @@ var ESPIC = {
         }
         else if (mode === "create") { pqMsg("Well done!", "ok"); up = null; }   // Create never counts toward Progress
         else if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
-          tally(); var ml = BUILT[act].modes || (BUILT[act].modesFor ? BUILT[act].modesFor(lesson) : ["demo", "sequence", "calculate", "solo"]), nm = ml[ml.indexOf(mode) + 1];
+          if (!c2Err) tally(); var ml = BUILT[act].modes || (BUILT[act].modesFor ? BUILT[act].modesFor(lesson) : ["demo", "sequence", "calculate", "solo"]), nm = ml[ml.indexOf(mode) + 1];
           up = nm && nm !== "create" ? { label: MODES[nm] + " mode", stayText: "Try another in " + MODES[mode] + " mode", go: function () { setMode(nm); } } : null;
-        } else if (last) { QZ.locked = true; counted = false; tally(); }   // Sequence and Solo count a round only when all four parents are done
+        } else if (last && c2Err) { up = { label: "Try another", go: function () { pqRegen(); } }; }   // (2.1: a round with errors earns nothing; another round is offered)
+        else if (last) { QZ.locked = true; counted = false; tally(); }   // Sequence and Solo count a round only when all four parents are done
         pqPanel();
+        if (c2Err && !QZ.custom && mode !== "create") pqMsg(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : "No Progress for this round: there were error messages along the way. Try another round with none.");
       }
     } finally { pqBusy = false; pqCue(); }
   }
@@ -5688,6 +5730,7 @@ var ESPIC = {
   // Return in the equation box checks it: a right equation is revealed with a check mark; a wrong one is only flagged
   function eqEnter() {
     var t = pqTyped(); if ((PG.show.eq && !PG.editEq) || !t) return;
+    if (pq() && wsub()) return;   // 2.1 Write: checked with the Submit button
     if (!pq()) { eqAdopt(t); return; }   // 1.1 Play: the typed function becomes the function
     if (gd() && mode === "create" && !QZ.cr) { gdCreateAdopt(t); return; }
     if (wfCr()) { wfCreateIn(t); return; }
@@ -5697,6 +5740,7 @@ var ESPIC = {
     if (wf()) { PG.wfShift = null; wfFinal(); var tg2 = document.querySelector(".tog[data-part=graph]"); if (tg2 && !PG.show.graph) tg2.click(); wfSteps(); }
   }
   function pqCheck() {
+    if (wsubAct() && QZ.step < 4) { wsubSubmit(); return; }   // 2.1 Write: Submit checks everything at once
     if (QZ.step >= 4) return; pqEval(); if (QZ.step >= 4) return;
     var ok = pqParts(), need = [], fam = qFam(), t = pqTyped();
     if (wf()) { if (wf5Ev()) { var ei5 = $("wfSteps").querySelector("[data-k=e]"); if (ei5) { wf5Check(ei5, true); return; } } if (t) { eqEnter(); return; } QZ.wrong++; pqMsg(mode === "solo" ? "Not quite. Try again." : "Type g(x) in the box."); return; }
@@ -5945,6 +5989,7 @@ var ESPIC = {
   // the student can type the y-value instead of simplifying: a right answer completes the row
   TB.typed = function (i, v, col) {
     var r = TB.rows()[i]; if (!r || r.done || r.fl) return;
+    if (wsub()) { r.tv = v; return; }   // 2.1 Write: a typed y-value is not checked
     if (isDataAct()) { r.tv = v; return; }   // Data: a y-value is accepted when the cell is left (Return, an arrow or a click elsewhere), whatever it is
     var had = $("pgTable").contains(document.activeElement);
     r.tv = v; var n = parse(String(v).replace(/\u2212/g, "-")); if (!n || Math.abs(n.n / n.d - TB.y(r)) > 1e-6) return;
@@ -6110,12 +6155,14 @@ var ESPIC = {
     }
     function canSub() { var m = TB.mode(); return m === "quiz" ? QZ.step === 1 : m === "play" ? fillMode() : false; }
     function rowAlert(i) {
+      if (act === "2.1") QZ.wrong++;
       var td = T.querySelector("tbody tr[data-r=\"" + i + "\"] td.yv"); if (!td) return; var rc = td.getBoundingClientRect();
       rvMark("bad", rc.left + 18, rc.top + rc.height / 2);
       td.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }], { duration: 350 });
     }
     // a y-value that has not been checked is checked the moment its row leaves the table; a wrong one is replaced by the right answer with the red "!"
     function checkOff(i, r0) {
+      if (act === "2.1") QZ.wrong++;   // (the red "!" is an error message too)
       var td = T.querySelector("tbody tr[data-r=\"" + i + "\"] td.yv"), txt = String(r0.tv || "").trim(), rc = td ? td.getBoundingClientRect() : null;
       r0.sub = true; r0.done = true; r0.tv = ""; drawPlay();
       var td2 = T.querySelector("tbody tr[data-r=\"" + i + "\"] td.yv"); if (!rc || !td2) return;
@@ -6206,7 +6253,8 @@ var ESPIC = {
       else if (fillMode()) {
         // a row can be dragged to the graph before its y-value is worked out (it is then checked by where it lands), but a wrong y-value already typed in stops the drag and raises the alert
         var r0 = TB.rows()[i]; if (!r0 || !TB.hasX(r0)) return;
-        ok = true; p = TB.pt(i); fillRow = r0;
+        if (wsub()) { var ty = parse(String(r0.tv || "").replace(/\u2212/g, "-").trim()); if (!ty) return; ok = true; p = [TB.x(r0), ty.n / ty.d]; }   // 2.1 Write: the row is plotted as typed, unchecked
+        else { ok = true; p = TB.pt(i); fillRow = r0; }
       }
       else if (PG.show.table) { var x = i - 2 + (PG.off || 0); if (isDataAct()) { var rd = TB.rows()[i]; if (!rd || rd.xv === undefined) return; x = rd.xv; } ok = true; p = [x, g(x)]; }
       if (!ok) return;
@@ -6259,6 +6307,12 @@ var ESPIC = {
   }
   function ptRowDone(r) { return !!(r && r.px !== undefined && (!ptUse("gx") || r.d.gx) && r.d[ptYKey()]); }
   function ptPoint(r) { return [ptUse("gx") ? ptRight(r, "gx") : r.px, ptRight(r, ptYKey())]; }   // the point of g that the row gives
+  // 2.1 Write: the point a row gives from what was typed (null until its x and y are there)
+  function ptTyped2(r) {
+    var num = function (t) { var q = parse(String(t || "").replace(/\u2212/g, "-").trim()); return q ? q.n / q.d : null; };
+    if (r.px === undefined) return null; var x = ptUse("gx") ? num(r.t.gx) : r.px, yk = ptYKey(), y = num(r.t[yk]);
+    return x === null || y === null ? null : [x, y];
+  }
   function ptAllDone() { return ptRows().every(ptRowDone); }
   function ptCount() { return ptRows().filter(ptRowDone).length; }
   function ptTd(i, c) { return $("ptTable").querySelector("td[data-r=\"" + i + "\"][data-c=\"" + c + "\"]"); }
@@ -6342,7 +6396,8 @@ var ESPIC = {
   // a value typed (or copied) into a cell: the right value completes it, anything else stays in the cell to be corrected
   function ptEnter(i, c, v) {
     var r = ptRows()[i]; if (!r || c === "px" || !ptUse(c) || r.d[c]) return false;
-    r.t[c] = v; var n = parse(String(v).replace(/−/g, "-").trim()), want = ptRight(r, c);
+    r.t[c] = v; if (wsub()) return false;   // 2.1 Write: kept as typed, not checked
+    var n = parse(String(v).replace(/−/g, "-").trim()), want = ptRight(r, c);
     if (!n || want === null || Math.abs(n.n / n.d - want) > 1e-6) return false;
     r.d[c] = true; r.t[c] = ""; PT.pop = [i, c];
     var asked = PT.ask && PT.ask.i === i && PT.ask.c === c; if (asked) { PT.ask = null; pqMsg(""); }
@@ -6364,7 +6419,7 @@ var ESPIC = {
   // dropping g(x) or the parabola button on the table: the parent columns fill in (x = −2 to 2 where no x was typed, and y = x²)
   function ptFillParent() {
     var R = ptRows();
-    R.forEach(function (r, i) { if (r.px === undefined) { r.px = i - 2; r.xt = ""; r.d = {}; r.t = {}; } r.d.py = true; r.t.py = ""; });
+    R.forEach(function (r, i) { if (r.px === undefined) { r.px = i - 2; r.xt = ""; r.d = {}; r.t = {}; } if (!wsub()) { r.d.py = true; r.t.py = ""; } });   // (2.1 Write: only the x-values; the y-values are the student's)
     PT.popAll = true; drawPlay();
   }
   // a click on a parent cell carries its value across: x slides left to x + h; y slides right through each change to y, one column per change
@@ -6372,7 +6427,7 @@ var ESPIC = {
     var r = ptRows()[i]; if (!r || PT.busy || soloish()) return false;
     var to = ptNextTo(r, c); if (!to) return false;
     var T = ptTr(), td = ptTd(i, c);
-    if (!T) { ptShake(td); pqMsg("Type the transformation in the box first: it tells each value where to go."); return true; }
+    if (!T) { QZ.wrong++; ptShake(td); pqMsg("Type the transformation in the box first: it tells each value where to go."); return true; }
     var st = ptStep(r, to, T);
     if (!st || Math.abs(st.want - ptRight(r, to)) > 1e-9) { QZ.wrong++; ptShake(td); pqMsg("That doesn't match g(x). Check the transformation in the box."); return true; }
     if (mode === "calculate" && !demo) { ptAsk(i, to, st.expr); return true; }
@@ -6433,7 +6488,7 @@ var ESPIC = {
       if (e.isTrusted) pgUser();
       var i = +td.dataset.r, c = td.dataset.c, r = ptRows()[i]; if (!r) return;
       if (!ptUse(c)) return;
-      var val = c === "px" ? r.px : r.d[c] ? ptRight(r, c) : undefined, pnt = ptRowDone(r) ? ptPoint(r) : null, isIn = !!e.target.closest("input");
+      var val = c === "px" ? r.px : r.d[c] ? ptRight(r, c) : undefined, pnt = wsub() ? ptTyped2(r) : ptRowDone(r) ? ptPoint(r) : null, isIn = !!e.target.closest("input");
       var sx = e.clientX, sy = e.clientY, g = null, hot = null, added = false, near = function (a, b) { return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9; };
       if (!isIn) e.preventDefault();
       function overGraph(ev) { var gr = $("pgGraph").getBoundingClientRect(); return ev.clientX >= gr.left && ev.clientX <= gr.right && ev.clientY >= gr.top && ev.clientY <= gr.bottom; }
@@ -6816,6 +6871,7 @@ var ESPIC = {
       if (ptOpen && ptIdx === j) sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .8, fill: "none", stroke: "#2D70B3", "stroke-width": ".12" }));
       sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .5, fill: "#111", "fill-opacity": ".1" })); sg2.appendChild(svgEl("circle", { cx: p[0], cy: -p[1], r: .24, fill: "#111" })); S.appendChild(sg2);
     });
+    (PG.keep || []).forEach(function (q, j) { var pts = shapePts(q); S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#2D70B3", "stroke-width": ".12", "stroke-linejoin": "round", "pointer-events": "none" })); S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "transparent", "stroke-width": ".7", "data-kp": j, style: "cursor:pointer" })); });   // 2.1 Write: the other graphs on the plane
     if (PG.shape && (!PG.show.graph || gd())) {
       S.appendChild(svgEl("polyline", { points: shapePts(PG.shape), fill: "none", stroke: "#2D70B3", "stroke-width": ".12", "stroke-linejoin": "round" })); spHit(S, shapePts(PG.shape), "s");
       handles(PG.shape).forEach(function (h) {
