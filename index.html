@@ -3721,8 +3721,12 @@
   function stopParty() { clearTimeout(partyTimer); if (party) { party.remove(); party = null; } }
   function celebrate() {
     if (mode !== "solo") return;   // only a problem finished in Solo mode is celebrated, with one phrase
+    partyShow(cheer());
+  }
+  // the phrase over the whole screen for 3 seconds (2.1 shows every finishing message this way, in place of the green line under the question)
+  function partyShow(t) {
+    if (party && party.textContent === t) return;   // (the same phrase is already up)
     stopParty();
-    var t = cheer();
     var P = document.createElement("div"), e = document.createElement("div"), reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     P.id = "party"; P.setAttribute("aria-hidden", "true"); e.className = "slay"; e.textContent = t; P.appendChild(e); document.body.appendChild(P); party = P;
     P.animate([{ background: "rgba(20,10,40,0)" }, { background: "rgba(20,10,40,.78)", offset: .12 }, { background: "rgba(20,10,40,.78)", offset: .8 }, { background: "rgba(20,10,40,0)" }], { duration: 3000, fill: "both", easing: "linear" });
@@ -5339,7 +5343,7 @@
   });
   $("pgDescTx").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); gdDescSubmit(); } });
   $("pgDescTx").addEventListener("input", function () { if (ptOn()) ptDraw(); if (this.value.trim() && !PG.dOK && gdDescRight(gdParse(this.value))) gdDescSubmit(); });
-  function pqMsg(t, cls) { var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = (wf() ? wfNm(t) : t) || ""; }
+  function pqMsg(t, cls) { if (cls === "ok" && t && act === "2.1") { partyShow(wf() ? wfNm(t) : t); t = ""; cls = ""; } var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = (wf() ? wfNm(t) : t) || ""; }
   // ---- 1.1, third exercise: Estimating a Value from a Graph.  The data come from a table in the question; the student enters them in the Data table, graphs the model
   // (a U for a quadratic) through the points, then estimates a height from the graph.  The centre pane is the Play Data pane. ----
   function est() { return pq() && act === "1.1" && lesson === 3; }
