@@ -499,8 +499,7 @@
   body.crPre .pgGraphWrap,body.crPre .pgTable,body.crPre .qzTools{visibility:hidden}
   .pgDesc i{font-family:"LM",Georgia,serif;font-style:italic}
   /* 2.1: the parent table (x | x | y | y | y) and the button that swaps it with the graphing table */
-  .ptTog{align-self:flex-end;height:2rem;padding:0 .85rem;margin-bottom:-.35rem;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:600 .9rem system-ui,sans-serif;cursor:pointer}
-  .ptTog:hover{background:#EEF1F6}.ptTog:active,.ptTog.simPress{background:#DCE8F7}.ptTog.simHover{background:#EEF1F6}.ptTog[hidden]{display:none}
+  #ptTog[hidden]{display:none}.ptTable td.off{background:#F7F8FA}
   body.ptOn #pgTable,body.ptOn #pgDial{display:none!important}
   .ptWrap{display:flex;flex-direction:column;gap:.2rem}.ptWrap[hidden]{display:none}
   .ptOps{display:grid;grid-template-columns:repeat(5,1fr);min-height:1.55em;align-items:end;text-align:center;font:400 1.1rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;color:var(--plus);white-space:nowrap}
@@ -607,7 +606,6 @@
       <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope. Or drag it onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
       <div class="pgGraphWrap" id="pgGraphWrap"><div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div><div class="zmRow" id="zmRow" role="group" aria-label="Zoom the graph"><button type="button" id="zmData" title="Data: zoom to fit all the data" aria-label="Zoom to fit all the data"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 3.5v17h17"/><circle cx="8" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="11.5" cy="11" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/></svg></button><button type="button" id="zmIn" title="Zoom in" aria-label="Zoom in">+</button><button type="button" id="zmOut" title="Zoom out" aria-label="Zoom out">−</button><button type="button" id="zmHome" title="Home: back to the default view" aria-label="Home view"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"/><path d="M6 10v9.5h4.5v-5.5h3v5.5H18V10"/></svg></button></div></div>
       <div class="pgSide">
-        <button type="button" class="ptTog" id="ptTog" hidden>Parent Table</button>
         <div class="dial" id="pgDial" role="slider" aria-label="Scroll the table" title="Drag up or down to scroll the table"><svg viewBox="0 0 18 44" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M9 1.8 16.3 12.6H1.7Z"/><circle cx="9" cy="22" r="5.4"/><path d="M1.7 31.4H16.3L9 42.2Z"/></svg></div>
         <table class="pgTable" id="pgTable" aria-label="Table"><colgroup><col style="width:18%"><col><col style="width:18%"></colgroup><thead><tr><th>x</th><th class="pgMid"></th><th>y</th></tr></thead><tbody></tbody></table>
         <div class="ptWrap" id="ptWrap" hidden><div class="ptOps" id="ptOps" aria-live="polite"><span></span><span></span><span></span><span></span><span></span></div><table class="pgTable ptTable" id="ptTable" aria-label="Parent table"><colgroup><col><col><col><col><col></colgroup><thead><tr><th>x</th><th>x</th><th>y</th><th>y</th><th>y</th></tr></thead><tbody></tbody></table></div>
@@ -657,6 +655,7 @@
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
       <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Write</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo hard" id="dmHard" hidden>Level Up</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="reg" aria-pressed="false">Regression</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="btn" id="nxHard" hidden>Level Up</button><button class="link" id="again" hidden>Try another</button></div>
     <div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+      <button class="btn" id="ptTog" hidden>Parent Table</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
@@ -6228,23 +6227,34 @@ var ESPIC = {
     }
   })();
 
-  // ---- Chapter 2 (2.1, exercises 1 to 3): the parent table.  Five columns, x | x | y | y | y: g's x, the parent's x and y (the two parent columns),
-  // the parent's y times a, and g's y.  The Parent Table / Graphing Table button swaps it with the graphing table, and each table keeps what was put in it.
-  // The transformation typed in the description box shows above the column it changes (+h over g's x, ×a over the fourth column, +k over g's y).
-  // The parent columns fill by typing, by dropping g(x) or the parabola button on the table, and copied cells can be dragged; in Demo, Sequence and Calculate
-  // a click on a parent cell carries its value across (x slides left to x + h; y slides right, times a, then plus k).  A finished row drags onto the graph.
+  // ---- Chapter 2 (2.1, exercises 1 to 3): the parent table.  Five columns, x | x | y | y | y: the parent's x and y sit in the middle (the parent columns);
+  // each transformation that changes something gets one new column of its own, and nothing else is filled in: a move left or right uses the first column
+  // (x + h), and the changes to y use the fourth column and then the fifth, in order (× a for a stretch, shrink or reflection, + k for a move up or down).
+  // So g(x) = x² − 4 needs only the fourth column (+ (−4)).  Unused columns stay empty.  The Parent Table / Graphing Table button swaps it with the graphing
+  // table, and each table keeps what was put in it.  The transformation typed in the description box shows above the column it changes.  The parent columns
+  // fill by typing, by dropping g(x) or the parabola button on the table, and copied cells can be dragged; in Demo, Sequence and Calculate a click on a parent
+  // cell carries its value across (x slides left to x + h; y slides right through its changes).  A finished row drags onto the graph.
   var PT = { busy: false, pop: null, popAll: false, ask: null };
   var PTC = ["gx", "px", "py", "sy", "gy"];
   function ptAvail() { return gd2(); }
   function ptOn() { return ptAvail() && pq() && !!PG.ptOn; }
   function ptR4(v) { v = Math.round(v * 10000) / 10000; return Object.is(v, -0) ? 0 : v; }
   function ptRows() { return PG.ptb || (PG.ptb = [0, 1, 2, 3, 4].map(function () { return { px: undefined, xt: "", d: {}, t: {} }; })); }
+  // the changes to y, in order: a stretch, shrink or reflection (× a), then a move up or down (+ k); the ones that change nothing are left out
+  function ptYOps(a, k) { var o = []; if (a !== 1) o.push({ t: "a", v: a }); if (k) o.push({ t: "k", v: k }); return o; }
+  function ptApply(v, op) { return op.t === "a" ? op.v * v : v + op.v; }
+  // is this column part of this problem's table?
+  function ptUse(c) { var n = ptYOps(A(), K()).length; return c === "px" || c === "py" ? true : c === "gx" ? H() !== 0 : c === "sy" ? n >= 1 : n >= 2; }
+  function ptYKey() { var n = ptYOps(A(), K()).length; return n === 0 ? "py" : n === 1 ? "sy" : "gy"; }   // the column that holds g's y
   // the right value of a cell (null while the row has no parent x)
   function ptRight(r, c) {
-    if (!r || r.px === undefined) return null; var p = pf(r.px);
-    return ptR4(c === "px" ? r.px : c === "py" ? p : c === "gx" ? r.px + H() : c === "sy" ? A() * p : A() * p + K());
+    if (!r || r.px === undefined) return null; var p = pf(r.px), o = ptYOps(A(), K());
+    if (c === "px") return ptR4(r.px); if (c === "py") return ptR4(p); if (c === "gx") return ptR4(r.px + H());
+    if (c === "sy") return o[0] ? ptR4(ptApply(p, o[0])) : null;
+    return o[1] ? ptR4(ptApply(ptApply(p, o[0]), o[1])) : null;
   }
-  function ptRowDone(r) { return !!(r && r.d.gx && r.d.gy); }
+  function ptRowDone(r) { return !!(r && r.px !== undefined && (!ptUse("gx") || r.d.gx) && r.d[ptYKey()]); }
+  function ptPoint(r) { return [ptUse("gx") ? ptRight(r, "gx") : r.px, ptRight(r, ptYKey())]; }   // the point of g that the row gives
   function ptAllDone() { return ptRows().every(ptRowDone); }
   function ptCount() { return ptRows().filter(ptRowDone).length; }
   function ptTd(i, c) { return $("ptTable").querySelector("td[data-r=\"" + i + "\"][data-c=\"" + c + "\"]"); }
@@ -6258,25 +6268,30 @@ var ESPIC = {
     return { h: m.h, k: m.k, a: a };
   }
   function ptFr(v) { var s = v < 0 ? "−" : "", w = Math.abs(v); if (Number.isInteger(ptR4(w))) return s + ptR4(w); for (var d = 2; d <= 12; d++) { var n = ptR4(w * d); if (Number.isInteger(n)) return s + n + "/" + d; } return s + ptR4(w); }
+  function ptOpLab(op) { return !op ? "" : op.t === "a" ? "× " + (op.v < 0 ? "(" + ptFr(op.v) + ")" : ptFr(op.v)) : (op.v > 0 ? "+ " : "− ") + ptFr(Math.abs(op.v)); }
   function ptOps(T) {
-    if (!T) return ["", "", "", "", ""];
-    var pm = function (v) { return v ? (v > 0 ? "+ " : "− ") + ptFr(Math.abs(v)) : ""; };
-    return [pm(T.h), "", "", T.a !== 1 ? "× " + (T.a < 0 ? "(" + ptFr(T.a) + ")" : ptFr(T.a)) : "", pm(T.k)];
+    if (!T) return ["", "", "", "", ""]; var o = ptYOps(T.a, T.k);
+    return [T.h ? (T.h > 0 ? "+ " : "− ") + ptFr(Math.abs(T.h)) : "", "", "", ptOpLab(o[0]), ptOpLab(o[1])];
   }
   // the labels above the columns; a label that appears or changes swells into place
   function ptOpsDraw() {
     var box = $("ptOps"); if (!box) return; var o = ptOps(ptTr()), sp = box.children;
     for (var j = 0; j < 5; j++) if (sp[j].textContent !== o[j]) { sp[j].textContent = o[j]; if (o[j] && ptOn()) absorbEl(sp[j]); }
   }
-  // a parent cell that a click can carry across
-  function ptLive(r, c, T) {
-    if (!T || soloish() || r.px === undefined) return false;
-    return c === "px" ? !r.d.gx : c === "py" ? !!r.d.py && !r.d.gy : c === "sy" ? !!r.d.sy && !r.d.gy : false;
+  // the column a click on a parent cell carries its value to (null: nothing left to carry)
+  function ptNextTo(r, c) {
+    if (r.px === undefined) return null;
+    if (c === "px") return ptUse("gx") && !r.d.gx ? "gx" : null;
+    if (c === "py") return !r.d.py ? null : ptUse("sy") && !r.d.sy ? "sy" : ptUse("gy") && r.d.sy && !r.d.gy ? "gy" : null;
+    if (c === "sy") return ptUse("gy") && r.d.sy && !r.d.gy ? "gy" : null;
+    return null;
   }
+  function ptLive(r, c, T) { return !!(T && !soloish() && ptNextTo(r, c)); }
   function ptClean(s) { return String(s || "").replace(/[^0-9.\/\-−]/g, ""); }
   function ptCellHTML(r, i, c, T) {
+    if (!ptUse(c)) return "<td class=\"pc off\" data-r=\"" + i + "\" data-c=\"" + c + "\"></td>";   // a column this problem does not need
     var cls = "pc" + (c === "px" || c === "py" ? " par" : "") + (ptLive(r, c, T) ? " live" : "") + ((PT.pop && PT.pop[0] === i && PT.pop[1] === c) || (PT.popAll && (c === "px" || c === "py")) ? " pop" : "") + (PT.ask && PT.ask.i === i && PT.ask.c === c ? " ask" : "");
-    var lab = { gx: "x of g", px: "parent x", py: "parent y", sy: "parent y times a", gy: "y of g" }[c], inner;
+    var lab = { gx: "x of g", px: "parent x", py: "parent y", sy: "y after the first change", gy: "y after the second change" }[c], inner;
     if (c === "px") inner = "<input class=\"qzCell ptIn" + (r.px !== undefined ? " full" : "") + "\" data-r=\"" + i + "\" data-c=\"px\" autocomplete=\"off\" inputmode=\"decimal\" aria-label=\"" + lab + "\" value=\"" + (r.px !== undefined ? nf(r.px) : ptClean(r.xt)) + "\">";
     else if (r.d[c]) inner = "<span class=\"cv\">" + nf(ptRight(r, c)) + "</span>";
     else inner = "<input class=\"qzCell ptIn\" data-r=\"" + i + "\" data-c=\"" + c + "\" autocomplete=\"off\" inputmode=\"decimal\" aria-label=\"" + lab + "\" value=\"" + ptClean(r.t[c]) + "\">";
@@ -6295,6 +6310,7 @@ var ESPIC = {
   }
   // the next empty cell down the same column (wrapping to the top)
   function ptFocusNext(i, c) {
+    if (!ptUse(c)) return false;
     var R = ptRows(), n = R.length, empty = function (q) { var r = R[q]; return c === "px" ? r.px === undefined : !r.d[c]; };
     for (var s = 1; s <= n; s++) { var q = (i + s) % n; if (empty(q) && ptFocus(q, c)) return true; }
     return false;
@@ -6312,21 +6328,28 @@ var ESPIC = {
     if (v === r.px) return false;
     r.px = v; r.d = {}; r.t = {}; if (PT.ask && PT.ask.i === i) PT.ask = null; return true;
   }
+  // the move from one column to the next, using the transformation typed in the box: { want, expr } or null when the box does not give that change
+  function ptStep(r, to, T) {
+    var s = to === "gx" ? "px" : to === "sy" ? "py" : "sy", v = ptRight(r, s);
+    if (to === "gx") return T.h ? { s: s, want: ptR4(v + T.h), expr: nf(v) + (T.h < 0 ? " − " : " + ") + ptFr(Math.abs(T.h)) } : null;
+    var op = ptYOps(T.a, T.k)[to === "sy" ? 0 : 1]; if (!op) return null;
+    return { s: s, want: ptR4(ptApply(v, op)), expr: op.t === "a" ? ptFr(op.v) + " × " + (v < 0 ? "(" + nf(v) + ")" : nf(v)) : nf(v) + (op.v < 0 ? " − " : " + ") + ptFr(Math.abs(op.v)) };
+  }
   // a value typed (or copied) into a cell: the right value completes it, anything else stays in the cell to be corrected
   function ptEnter(i, c, v) {
-    var r = ptRows()[i]; if (!r || c === "px" || r.d[c]) return false;
+    var r = ptRows()[i]; if (!r || c === "px" || !ptUse(c) || r.d[c]) return false;
     r.t[c] = v; var n = parse(String(v).replace(/−/g, "-").trim()), want = ptRight(r, c);
     if (!n || want === null || Math.abs(n.n / n.d - want) > 1e-6) return false;
     r.d[c] = true; r.t[c] = ""; PT.pop = [i, c];
     var asked = PT.ask && PT.ask.i === i && PT.ask.c === c; if (asked) { PT.ask = null; pqMsg(""); }
     ptAfter(i);
-    if (asked && c === "sy" && !r.d.gy) { var T = ptTr(); if (T && T.k) ptAsk(i, "gy", nf(ptRight(r, "sy")) + (T.k < 0 ? " − " : " + ") + ptFr(Math.abs(T.k))); else if (T) setTimeout(function () { ptClick(i, "sy"); }, 250); }
+    if (asked && c === "sy" && ptNextTo(r, "sy")) { var T = ptTr(), st = T && ptStep(r, "gy", T); if (st && Math.abs(st.want - ptRight(r, "gy")) < 1e-9) ptAsk(i, "gy", st.expr); }   // Calculate: on to the next change
     return true;
   }
   function ptAfter(i) { drawPlay(); if (ptRowDone(ptRows()[i])) ptSee(i); }
   // a finished row whose point is off the screen zooms the graph out to it (not in Write mode)
   function ptSee(i) {
-    if (mode === "solo") return; var r = ptRows()[i], x = ptRight(r, "gx"), y = ptRight(r, "gy"); if (x === null || y === null) return;
+    if (mode === "solo") return; var p = ptPoint(ptRows()[i]), x = p[0], y = p[1]; if (x === null || y === null) return;
     var nX = Math.abs(x - ZM.tox) / .92, nY = Math.abs(y - ZM.toy) / .92; if (nX <= ZM.to && nY <= ZM.toY) return;
     function up(v) { for (var j = 0; j < ZLIST.length; j++) if (ZLIST[j] >= v) return ZLIST[j]; return ZLIST[ZLIST.length - 1]; }
     zoomTo(nX > ZM.to ? up(nX) : ZM.to, nY > ZM.toY ? up(nY) : ZM.toY);
@@ -6340,26 +6363,23 @@ var ESPIC = {
     R.forEach(function (r, i) { if (r.px === undefined) { r.px = i - 2; r.xt = ""; r.d = {}; r.t = {}; } r.d.py = true; r.t.py = ""; });
     PT.popAll = true; drawPlay();
   }
-  // a click on a parent cell carries its value across: x slides left to x + h; y slides right times a, then on to plus k
+  // a click on a parent cell carries its value across: x slides left to x + h; y slides right through each change to y, one column per change
   function ptClick(i, c, demo) {
-    var r = ptRows()[i]; if (!r || PT.busy || r.px === undefined || soloish()) return false;
-    var to = c === "px" ? "gx" : c === "py" ? (r.d.sy ? "gy" : "sy") : c === "sy" ? "gy" : null;
-    if (!to || r.d[to] || (c !== "px" && !r.d[c])) return false;
-    var s = to === "gy" ? "sy" : c, T = ptTr(), td = ptTd(i, c);
+    var r = ptRows()[i]; if (!r || PT.busy || soloish()) return false;
+    var to = ptNextTo(r, c); if (!to) return false;
+    var T = ptTr(), td = ptTd(i, c);
     if (!T) { ptShake(td); pqMsg("Type the transformation in the box first: it tells each value where to go."); return true; }
-    var v = ptRight(r, s), want = ptR4(to === "gx" ? v + T.h : to === "sy" ? T.a * v : v + T.k);
-    var expr = to === "gx" ? nf(v) + (T.h < 0 ? " − " : " + ") + ptFr(Math.abs(T.h)) : to === "sy" ? ptFr(T.a) + " × " + (v < 0 ? "(" + nf(v) + ")" : nf(v)) : nf(v) + (T.k < 0 ? " − " : " + ") + ptFr(Math.abs(T.k));
-    if (Math.abs(want - ptRight(r, to)) > 1e-9) { QZ.wrong++; ptShake(td); pqMsg("That doesn't match g(x). Check the transformation in the box."); return true; }
-    var triv = (to === "gx" && !T.h) || (to === "sy" && T.a === 1) || (to === "gy" && !T.k);   // nothing to work out (+ 0, × 1): it simply slides across
-    if (mode === "calculate" && !demo && !triv) { ptAsk(i, to, expr); return true; }
-    var sTd = ptTd(i, s), dst = ptTd(i, to); if (!sTd || !dst) return false;
+    var st = ptStep(r, to, T);
+    if (!st || Math.abs(st.want - ptRight(r, to)) > 1e-9) { QZ.wrong++; ptShake(td); pqMsg("That doesn't match g(x). Check the transformation in the box."); return true; }
+    if (mode === "calculate" && !demo) { ptAsk(i, to, st.expr); return true; }
+    var sTd = ptTd(i, st.s), dst = ptTd(i, to); if (!sTd || !dst) return false;
     var src = sTd.querySelector(".cv");
-    if (!src) { src = document.createElement("span"); src.className = "cv"; src.textContent = nf(v); src.style.cssText = "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:0"; sTd.appendChild(src); }
+    if (!src) { src = document.createElement("span"); src.className = "cv"; src.textContent = nf(ptRight(r, st.s)); src.style.cssText = "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:0"; sTd.appendChild(src); }
     src._flyText = nf(ptRight(r, to)); PT.busy = true; pqMsg("");
     fly(src, dst, function () {
       PT.busy = false; if (src.style.opacity === "0") src.remove();
       if (PG.ptb && PG.ptb[i] === r) { r.d[to] = true; r.t[to] = ""; PT.pop = [i, to]; ptAfter(i); }
-      if (to === "sy" && !r.d.gy) setTimeout(function () { if (!PT.busy && PG.ptb && PG.ptb[i] === r && r.d.sy && !r.d.gy) ptClick(i, "sy", demo); }, 250);   // the y carries on into g's column
+      if (to === "sy" && ptNextTo(r, "sy")) setTimeout(function () { if (!PT.busy && PG.ptb && PG.ptb[i] === r && ptNextTo(r, "sy")) ptClick(i, "sy", demo); }, 250);   // the y carries on to its second change
     }, false, 4);
     return true;
   }
@@ -6408,13 +6428,14 @@ var ESPIC = {
       var td = e.target.closest("tbody td[data-c]"); if (!td || e.button > 0 || PT.busy) return;
       if (e.isTrusted) pgUser();
       var i = +td.dataset.r, c = td.dataset.c, r = ptRows()[i]; if (!r) return;
-      var val = c === "px" ? r.px : r.d[c] ? ptRight(r, c) : undefined, pnt = ptRowDone(r) ? [ptRight(r, "gx"), ptRight(r, "gy")] : null, isIn = !!e.target.closest("input");
+      if (!ptUse(c)) return;
+      var val = c === "px" ? r.px : r.d[c] ? ptRight(r, c) : undefined, pnt = ptRowDone(r) ? ptPoint(r) : null, isIn = !!e.target.closest("input");
       var sx = e.clientX, sy = e.clientY, g = null, hot = null, added = false, near = function (a, b) { return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9; };
       if (!isIn) e.preventDefault();
       function overGraph(ev) { var gr = $("pgGraph").getBoundingClientRect(); return ev.clientX >= gr.left && ev.clientX <= gr.right && ev.clientY >= gr.top && ev.clientY <= gr.bottom; }
       function target(ev) {
         var l = document.elementsFromPoint(ev.clientX, ev.clientY);
-        for (var q = 0; q < l.length; q++) { var t = l[q].closest && l[q].closest("#ptTable tbody td[data-c]"); if (t) { var r2 = ptRows()[+t.dataset.r], c2 = t.dataset.c; if (t === td) return null; return (c2 === "px" ? r2.px === undefined : !r2.d[c2]) ? t : null; } }
+        for (var q = 0; q < l.length; q++) { var t = l[q].closest && l[q].closest("#ptTable tbody td[data-c]"); if (t) { var r2 = ptRows()[+t.dataset.r], c2 = t.dataset.c; if (t === td || !ptUse(c2)) return null; return (c2 === "px" ? r2.px === undefined : !r2.d[c2]) ? t : null; } }
         return null;
       }
       function mv(ev) {
@@ -6434,7 +6455,7 @@ var ESPIC = {
         if (hot) hot.classList.remove("drop");
         if (!g) {
           if (ev.type === "pointercancel") return;
-          if (ptLive(r, c, ptTr()) || (c === "px" && r.px !== undefined && !r.d.gx && !soloish())) { if (ptClick(i, c)) return; }
+          if (ptNextTo(r, c) && !soloish()) { if (ptClick(i, c)) return; }
           if (!isIn) { var inp = td.querySelector("input"); if (inp) inp.focus(); }
           return;
         }
@@ -9940,7 +9961,7 @@ var ESPIC = {
         handGo(cellSpot(td), 600);
         pgWait(750, function () {
           if (pgRun !== run) return; handTap(); ptClick(i, c, true);
-          (function w() { if (pgRun !== run) return; var r = ptRows()[i]; if (PT.busy || (c === "py" && r.d.sy && !r.d.gy)) { pgWait(200, w); return; } pgWait(450, then); })();
+          (function w() { if (pgRun !== run) return; var r = ptRows()[i]; if (PT.busy || (c === "py" && r.d.sy && ptNextTo(r, "sy"))) { pgWait(200, w); return; } pgWait(450, then); })();
         });
       };
       // the hand types a value into a cell of the parent table
@@ -9966,7 +9987,7 @@ var ESPIC = {
       // the hand drags a finished row onto the graph, where it becomes a point
       var ptRowD = function (i, then) {
         var tr = $("ptTable").querySelector("tbody tr[data-r=\"" + i + "\"]"), r = ptRows()[i]; if (!tr || !ptRowDone(r)) { then(); return; }
-        var p = [ptRight(r, "gx"), ptRight(r, "gy")], a = ctr(PTD(i, "gy")), b = svgPt(p[0], p[1]);
+        var p = ptPoint(r), a = ctr(PTD(i, ptYKey())), b = svgPt(p[0], p[1]);
         handGo(a, 650);
         pgWait(800, function () {
           handTap(); TB.targets = TB.targets.filter(function (t) { return !(t[0] === p[0] && t[1] === p[1]); }).concat([p]); drawPlay();
@@ -9993,20 +10014,33 @@ var ESPIC = {
       var PTS = {
         rule: GDS[0],
         desc: function (n) {
-          cap(gdW() ? "Type the transformation from the question in the box. Each part appears above the column of the table it changes." : "Describe the transformation in the box. Each part appears above the column of the table it changes.");
-          typeBox("pgDescTx", ptDescTxt(), function () { if (PG.dOK && !gdW()) { pgWait(700, n); return; } tap($("pgDescGo"), function () { pgWait(600, n); }); });
+          cap(gdW() ? "Enter the transformation from the question with the buttons under the box, typing only the numbers. Each part appears above the column of the table it changes." : "Describe the transformation with the buttons under the box, typing only the numbers. Each part appears above the column of the table it changes.");
+          var e0 = $("pgDescTx"), th = H(), tk = K(), ab = Math.abs(A()), toks = [];
+          if (th || tk) toks.push({ b: "Translation" });
+          if (th) toks.push({ b: th > 0 ? "\u2192" : "\u2190" }, { t: String(Math.abs(th)) });
+          if (tk) toks.push({ b: tk > 0 ? "\u2191" : "\u2193" }, { t: String(Math.abs(tk)) });
+          if (ab !== 1) toks.push({ b: "Vertical" }, { b: ab > 1 ? "Stretch" : "Shrink" }, { t: ptFr(ab) });
+          if (A() < 0) toks.push({ b: "Reflection" });
+          e0.value = ""; e0.dispatchEvent(new Event("input", { bubbles: true }));
+          var caretEnd = function () { e0.focus(); e0.setSelectionRange(e0.value.length, e0.value.length); };
+          each(toks, function (tk0, d) {
+            if (tk0.b) { var btn = $("pgDescKeys").querySelector("button[data-ins=\"" + tk0.b + "\"]"); caretEnd(); tap(btn, function () { pgWait(150, d); }); return; }
+            var bb = e0.getBoundingClientRect(); handGo({ x: bb.left + bb.width * .88, y: bb.top + bb.height * .55 }, 500);
+            pgWait(600, function () { handTap(); caretEnd(); var c0 = 0; (function nx() { if (pgRun !== run) return; c0++; caretEnd(); e0.setRangeText(tk0.t.charAt(c0 - 1), e0.value.length, e0.value.length, "end"); e0.dispatchEvent(new Event("input", { bubbles: true })); if (c0 < tk0.t.length) pgWait(260, nx); else pgWait(500, d); })(); });
+          }, function () { if (PG.dOK && !gdW()) { pgWait(700, n); return; } tap($("pgDescGo"), function () { pgWait(600, n); }); });
         },
         tog: function (n) { cap("Press Parent Table to switch from the graphing table to the parent table."); tap($("ptTog"), function () { pgWait(900, n); }); },
         fill: function (n) { cap("Drag the parabola button onto the table: the parent columns fill in with x and y = x²."); ptDropUD(n); },
         xs: function (n) {
+          if (!ptUse("gx")) { n(); return; }   // no move left or right: the x column of g is not needed
           cap(H() ? "Click a parent x-value: it slides left to x " + (H() > 0 ? "+ " : "− ") + Math.abs(H()) + "." : "Click a parent x-value: there is no move left or right, so it slides left unchanged.");
           each([0, 1], function (i, d) { ptClickD(i, "px", d); }, function () {
             cap("Or type the x-value of g yourself.");
             ptTypeD(2, "gx", String(ptRight(ptRows()[2], "gx")).replace("−", "-"), function () { cap("Click the rest."); each([3, 4], function (i, d) { ptClickD(i, "px", d); }, n); });
           });
         },
-        ys: function (n) { cap("Click a parent y-value: " + ys0() + "."); each([0, 1, 2], function (i, d) { ptClickD(i, "py", d); }, n); },
-        copy: function (n) { cap("A parabola is symmetric: drag a finished y-value to the row with the same answer."); ptCopyD(1, "gy", 3, "gy", function () { cap("Same for the first row and the last."); ptCopyD(0, "gy", 4, "gy", n); }); },
+        ys: function (n) { if (ptYKey() === "py") { cap("There is no change to y, so the parent y-values are already the y-values of g."); pgWait(2400, n); return; } cap("Click a parent y-value: " + ys0() + "."); each([0, 1, 2], function (i, d) { ptClickD(i, "py", d); }, n); },
+        copy: function (n) { var yk = ptYKey(); if (yk === "py") { n(); return; } cap("A parabola is symmetric: drag a finished y-value to the row with the same answer."); ptCopyD(1, yk, 3, yk, function () { cap("Same for the first row and the last."); ptCopyD(0, yk, 4, yk, n); }); },
         plot: function (n) { cap("Drag each finished row onto the graph to plot its point."); each([0, 1, 2, 3, 4], ptRowD, n); },
         par: function (n) { cap("Now graph the parent function f(x) = x². A correct parent turns dotted."); pgWait(1200, function () { clickTool("U", [0, 0], null, watch(n)); }); },
         g: function (n) { cap("Graph g(x) with the same button: click its vertex, (" + nf(H()) + ", " + nf(K()) + ")."); clickTool("U", [H(), K()], null, function () { if (A() === 1) { watch(n)(); return; } cap("Drag the side point to set the stretch of " + ptFr(A()) + "."); stretch(A(), watch(n), 1); }); },
@@ -10293,8 +10327,8 @@ var ESPIC = {
           var PR = ptRows();
           if (!PR.some(function (q) { return q.d.py; })) return [PTS.fill];
           for (i = 0; i < PR.length; i++) if (PR[i].px === undefined) { var ix = i; return one(function (n) { cap("Type a parent x-value."); ptTypeD(ix, "px", String(ix - 2), n); }); }
-          for (i = 0; i < PR.length; i++) if (!PR[i].d.gx) { var ig = i; return one(function (n) { cap("Click a parent x-value: it slides left to the x-value of g."); ptClickD(ig, "px", n); }); }
-          for (i = 0; i < PR.length; i++) if (!PR[i].d.gy) { var iy = i; return one(function (n) { if (!PR[iy].d.py) { cap("Type the parent y-value: x²."); ptTypeD(iy, "py", String(ptRight(PR[iy], "py")), n); return; } cap("Click a parent y-value: " + ys0() + "."); ptClickD(iy, PR[iy].d.sy ? "sy" : "py", n); }); }
+          for (i = 0; i < PR.length; i++) if (ptUse("gx") && !PR[i].d.gx) { var ig = i; return one(function (n) { cap("Click a parent x-value: it slides left to the x-value of g."); ptClickD(ig, "px", n); }); }
+          var yk = ptYKey(); for (i = 0; i < PR.length; i++) if (!PR[i].d[yk]) { var iy = i; return one(function (n) { if (!PR[iy].d.py) { cap("Type the parent y-value: x²."); ptTypeD(iy, "py", String(ptRight(PR[iy], "py")), n); return; } cap("Click a parent y-value: " + ys0() + "."); ptClickD(iy, ptNextTo(PR[iy], "sy") ? "sy" : "py", n); }); }
         }
         if (!PG.pdone) return [PTS.par];
         if (!PG.show.graph) return [PTS.g];
