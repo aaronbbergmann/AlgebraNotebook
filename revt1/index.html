@@ -40,6 +40,8 @@
   .vals:empty{display:none}
   #party{position:fixed;inset:0;z-index:100;pointer-events:none;overflow:hidden}
   .pe{position:absolute;line-height:1;will-change:transform}
+  .slay.slayLv{flex-direction:column;gap:.25em}
+  .slaySub{font-size:.36em;letter-spacing:.02em;text-shadow:0 .08em 0 #ff2d95,0 .16em 0 #6a2fb8,0 0 .5em rgba(255,255,255,.6)}
   .slay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:1rem;color:#fff;
     font:900 clamp(2.5rem,11vw,7rem)/1.05 Impact,"Arial Black",system-ui,sans-serif;text-shadow:0 .06em 0 #ff2d95,0 .12em 0 #6a2fb8,0 0 .5em rgba(255,255,255,.6)}
   .frame{display:grid;grid-template-columns:minmax(0,1fr);column-gap:1rem;align-items:start;flex:1 0 auto;min-height:100%}
@@ -320,6 +322,16 @@
   .wfOp{cursor:pointer;border-radius:6px;padding:0 .22em}
   .wfOp:hover{background:color-mix(in srgb,#7A3FB5 18%,transparent)}
   .wfChip.wfDropC{background:color-mix(in srgb,#7A3FB5 20%,transparent)}
+  .gwBox{display:flex;flex-wrap:wrap;align-items:center;gap:.45rem .5rem;margin:.35rem 0 .6rem;font:500 .98rem system-ui,sans-serif}
+  .gwBox .gwLab{width:100%;font-weight:600}
+  .gwChip{display:inline-block;padding:.2em .55em;border:1.5px dashed var(--plus);border-radius:8px;cursor:grab;touch-action:none;user-select:none;background:var(--bg)}
+  .gwChip:hover{background:color-mix(in srgb,var(--plus) 14%,transparent)}
+  .gwChip.used{border-style:solid;opacity:.5;cursor:default}.gwChip.used::before{content:"\2713  "}
+  .gwChip.used:hover{background:var(--bg)}
+  body:not(.gwLive) [data-gwrhs]{background:none;box-shadow:none;cursor:auto;padding:0}
+  .gwAsk{display:flex;align-items:center;gap:.4em;width:100%;font:400 1.2rem "LM","Latin Modern Roman",Georgia,serif}
+  .gwAsk input{width:6rem;font:inherit;padding:.1em .3em;border:1.5px solid var(--plus);border-radius:6px}
+  .gwAsk input.bad{border-color:#C0301E;animation:none}
   #pgEq.wfDrop{background:color-mix(in srgb,#7A3FB5 14%,transparent);border-radius:8px}
   .wfSteps .wfLn.cf,.wfSteps .wfLn.cg{background:color-mix(in srgb,currentColor 8%,var(--bg))}
   .pgQt .lm{font:400 1.1em "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
@@ -620,6 +632,7 @@
         <table class="pgTable" id="pgTable" aria-label="Table"><colgroup><col style="width:18%"><col><col style="width:18%"></colgroup><thead><tr><th>x</th><th class="pgMid"></th><th>y</th></tr></thead><tbody></tbody></table>
         <div class="ptWrap" id="ptWrap" hidden><div class="ptOps" id="ptOps" aria-live="polite"><span></span><span></span><span></span><span></span><span></span></div><table class="pgTable ptTable" id="ptTable" aria-label="Parent table"><colgroup><col><col><col><col><col></colgroup><thead><tr class="ptLr"></tr><tr><th>x</th><th>x</th><th>y</th><th>y</th><th>y</th></tr></thead><tbody></tbody></table></div>
         <div class="pgEq" id="pgEq" aria-live="polite"></div>
+        <div class="gwBox" id="gwBox" hidden aria-label="The transformations in the question"></div>
         <div class="wfSlBox" id="wfSl" hidden role="group" aria-label="Change g(x)">
           <label class="wfSlR"><span class="wfSlN">Outside</span><input type="range" id="wfSlK" min="-8" max="8" step="1" value="0" aria-label="Outside: add to the output"><output id="wfSlKv">0</output></label>
           <label class="wfSlR"><span class="wfSlN">Inside</span><input type="range" id="wfSlH" min="-8" max="8" step="1" value="0" aria-label="Inside: change the input"><output id="wfSlHv">0</output></label>
@@ -3731,15 +3744,21 @@
   }
   function stopParty() { clearTimeout(partyTimer); if (party) { party.remove(); party = null; } }
   function celebrate() {
-    if (mode !== "solo") return;   // only a problem finished in Solo mode is celebrated, with one phrase
+    if (mode !== "solo") return;   // a problem finished in Solo mode is celebrated with one phrase; a newly earned level in any mode is celebrated by updProg (lvCheer)
     partyShow(cheer());
   }
   // the phrase over the whole screen for 3 seconds (2.1 shows every finishing message this way, in place of the green line under the question)
-  function partyShow(t) {
-    if (party && party.textContent === t) return;   // (the same phrase is already up)
-    stopParty();
+  // sub: the level just reached, in smaller text under the phrase. A level takeover is never replaced by another phrase (one takeover at a time)
+  var partyLv = 0;
+  function partyShow(t, sub) {
+    if (party && partyLv && !sub && Date.now() - partyLv < 3000) return;   // (a newly earned level is already up)
+    if (party && !sub && party.textContent === t) return;   // (the same phrase is already up)
+    stopParty(); partyLv = sub ? Date.now() : 0;
     var P = document.createElement("div"), e = document.createElement("div"), reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    P.id = "party"; P.setAttribute("aria-hidden", "true"); e.className = "slay"; e.textContent = t; P.appendChild(e); document.body.appendChild(P); party = P;
+    P.id = "party"; P.setAttribute("aria-hidden", "true"); e.className = "slay";
+    if (sub) { var w = document.createElement("div"), b = document.createElement("div"); w.textContent = t; b.className = "slaySub"; b.textContent = sub; e.appendChild(w); e.appendChild(b); e.classList.add("slayLv"); P.setAttribute("aria-hidden", "false"); P.setAttribute("role", "status"); }
+    else e.textContent = t;
+    P.appendChild(e); document.body.appendChild(P); party = P;
     P.animate([{ background: "rgba(20,10,40,0)" }, { background: "rgba(20,10,40,.78)", offset: .12 }, { background: "rgba(20,10,40,.78)", offset: .8 }, { background: "rgba(20,10,40,0)" }], { duration: 3000, fill: "both", easing: "linear" });
     e.animate(reduce ? [{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 1, offset: .8 }, { opacity: 0 }]
       : [{ opacity: 0, transform: "scale(.5) rotate(-5deg)" }, { opacity: 1, transform: "scale(1.06) rotate(2deg)", offset: .15 }, { transform: "scale(1) rotate(-1deg)", offset: .3 },
@@ -3862,7 +3881,11 @@
   }
   function levelsNow() { return rev ? revLevels() : BUILT[act].levels; }
   function progKey() { return rev ? BUILT[rev].key : BUILT[act].key; }
-  function loadProg() { try { prog = JSON.parse(localStorage.getItem(progKey()) || "{}") || {}; } catch (e) { prog = {}; } }
+  // every Progress level already earned is remembered, so only a newly earned level is celebrated (once, with a full-screen takeover)
+  var lvSeen = {};
+  function lvId(l) { return progKey() + "|" + [l[0], l[1], l[2], l[4] || 1].join(","); }
+  function lvMark() { var nw = []; LEVELS.forEach(function (l) { var id = lvId(l); if (!lvSeen[id] && lvDone(l)) { lvSeen[id] = 1; nw.push(l); } }); return nw; }
+  function loadProg() { try { prog = JSON.parse(localStorage.getItem(progKey()) || "{}") || {}; } catch (e) { prog = {}; } lvMark(); }   // (what is already earned is never celebrated)
   loadProg();
   function saveProg() { try { localStorage.setItem(progKey(), JSON.stringify(prog)); } catch (e) {} }
   function lvDone(l) {
@@ -3871,7 +3894,13 @@
     var tot = 0; for (var m = MORD.indexOf(l[1]); m < 4; m++) tot += prog[l[0] + ":" + MORD[m]] || 0; return tot >= (l[4] || 1); }
   function lvSkip(l) { if (rev) return l[0] !== revI; var B = BUILT[act]; if (B.sep) return B.sep.indexOf(l[0]) >= 0 ? l[0] !== LK() : B.sep.indexOf(LK()) >= 0; return !!B.perLesson && l[0] !== lesson; }   // 1.4: Graphing keeps a percentage of its own
   function pct() { var p = 0; LEVELS.forEach(function (l) { if (lvSkip(l)) return; if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }   // an activity with perLesson keeps a separate percentage for each exercise
-  function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; var pl = $("progLnk"); if (pl) pl.textContent = pct() + "%"; }
+  function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; var pl = $("progLnk"); if (pl) pl.textContent = pct() + "%"; lvCheer(); }
+  // a newly earned level: one phrase with the level beneath it, over the whole screen (Playgrounds have no levels, so never)
+  function lvCheer() {
+    var nw = lvMark().filter(function (l) { return !lvSkip(l); }); if (!nw.length || DNX) return;
+    var top = nw.reduce(function (a, l) { return l[2] > a[2] ? l : a; });
+    partyShow(cheer(), top[3] + " · " + top[2] + "%");
+  }
   function openProg() {
     var p = pct(), h = "<h2 id=\"progT\">" + (rev || shortOf(act)) + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = rev ? -1 : 0;
     LEVELS.forEach(function (l, i) {
@@ -3898,9 +3927,9 @@
   function demoCredit() { return quiz() ? !!PG.demoFin : !!(DM4.run && !DM4.paused) || locked; }   // a finished demo, or the student took over a paused demo and solved it correctly alone
   function tally(quiet) {
     var earn = mode !== "demo" || demoCredit();
-    if (!quiet && earn) celebrate();
-    // progress counts a problem once, and only when it is truly finished (or a full demo has been watched)
+    // progress counts a problem once, and only when it is truly finished (or a full demo has been watched); a newly earned level is celebrated by updProg
     if (mode !== "create" && earn && !counted) { counted = true; var k = LK() + ":" + mode; prog[k] = (prog[k] || 0) + 1; if (!quiz() && classify(orig) === "one") prog[k + ":one"] = (prog[k + ":one"] || 0) + 1; saveProg(); updProg(); }
+    if (!quiet && earn) celebrate();   // (after the level: a level takeover already up is not replaced)
     levelUp();
   }
   // ---- ONE "Next" for every Progress activity ----
@@ -5494,7 +5523,7 @@ var ESPIC = {
     if (gd()) {
       var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.a = tr.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false };
       if (mode === "create" && !QZ.cr) { PG.show.eq = false; PG.eqTxt = "g(x)="; }
-      if (gdW()) { PG.show.eq = false; PG.eqTxt = "g(x)="; PG.dOK = true; PG.tAns = { h: tr.h, k: tr.k, a: tr.a || 1 }; }   // 2.1 Writing: the description is the question, g(x) is the answer
+      if (gdW()) { PG.show.eq = false; PG.eqTxt = "g(x)="; PG.dOK = true; PG.tAns = { h: tr.h, k: tr.k, a: tr.a || 1 }; QZ.gwd = 0; QZ.gwAsk = false; }   // 2.1 Writing: the description is the question, g(x) is the answer
     }   // Graph & Describe: g(x) is given; the parent graph, g's graph, the table and the description are the answer
     if (est()) { PG.fam = 1; PG.show = { eq: false, table: false, graph: false, desc: false, parent: false }; PG.eOK = false; PG.eqTxt = ""; $("estIn").hidden = true; }
     if (wf()) wfPG();
@@ -5593,6 +5622,85 @@ var ESPIC = {
     var first = w.join(" and "), tr = mv.length ? "a translation " + mv.join(" and ") : "";
     return first && tr ? first + ", followed by " + tr : first || tr;
   }
+  // ---- 2.1 Write g in Demo, Sequence and Calculate: g(x) = f(x) to start; each part of the transformation is a chip dragged onto it, in the order the
+  // question gives them (a stretch or shrink multiplies f(x), a reflection in the x-axis makes it negative, right/left h changes x to x ∓ h, up/down k adds k).
+  // Then the question's f(x) = x² is dragged onto g(x), and g(x) = a(x − h)² + k is the answer. Write mode stays typed.
+  function gwOn() { return gdW() && (mode === "demo" || mode === "sequence" || mode === "calculate") && !!QZ && !!QZ.tr && !!QZ.tr[QZ.pi]; }
+  function gwParts(t) {
+    var P = [], ab = Math.abs(t.a || 1);
+    if (ab > 1) P.push({ op: "a", txt: "Vertical stretch by factor of " + nf(ab) }); else if (ab < 1) P.push({ op: "a", txt: "Vertical shrink by factor of " + nf(ab) });
+    if (t.a < 0) P.push({ op: "r", txt: "Reflection in the x-axis" });
+    if (t.h) P.push({ op: "h", txt: "Translation " + Math.abs(t.h) + (Math.abs(t.h) === 1 ? " unit " : " units ") + (t.h > 0 ? "right" : "left") });
+    if (t.k) P.push({ op: "k", txt: "Translation " + Math.abs(t.k) + (Math.abs(t.k) === 1 ? " unit " : " units ") + (t.k > 0 ? "up" : "down") });
+    return P;
+  }
+  function gwCur() { return QZ.tr[QZ.pi]; }
+  function gwHas(op) { var P = gwParts(gwCur()); for (var i = 0; i < (QZ.gwd || 0) && i < P.length; i++) if (P[i].op === op) return true; return false; }
+  // g(x) so far: the number in front, f with what is inside, and what is added
+  function gwLive() {
+    var t = gwCur(), co = (gwHas("a") ? Math.abs(t.a) : 1) * (gwHas("r") ? -1 : 1), ct = co === 1 ? "" : co === -1 ? "\u2212" : (co < 0 ? "\u2212" : "") + nf(Math.abs(co));
+    var inner = "<i>x</i>" + (gwHas("h") ? (t.h > 0 ? " \u2212 " : " + ") + Math.abs(t.h) : "");
+    return "<span class=\"cg\"><i>g</i>(<i>x</i>)</span> = " + ct + "<span class=\"cf\"><i>f</i>(" + inner + ")</span>" + (gwHas("k") ? (t.k > 0 ? " + " : " \u2212 ") + Math.abs(t.k) : "");
+  }
+  function gwRule() { var t = gwCur(), a = t.a || 1, co = a === 1 ? "" : a === -1 ? "-" : String(a); return "g(x)=" + co + (t.h ? "(x" + (t.h > 0 ? "-" : "+") + Math.abs(t.h) + ")^2" : "x^2") + (t.k ? (t.k > 0 ? "+" : "-") + Math.abs(t.k) : ""); }
+  var gwSig = "";
+  function gwSync() {
+    var el = $("gwBox"); if (!el) return;
+    var on = gwOn() && !PG.show.eq && QZ.step < 4; document.body.classList.toggle("gwLive", on);   // (the question's x² is draggable only while g(x) is being built)
+    if (!on) { if (!el.hidden) { el.hidden = true; el.innerHTML = ""; } gwSig = ""; return; }
+    var P = gwParts(gwCur()), d = QZ.gwd || 0, sig = QZ.pi + "|" + d + "|" + !!QZ.gwAsk + "|" + P.map(function (q) { return q.txt; }).join(";");
+    if (sig === gwSig && !el.hidden) return; gwSig = sig;
+    var h = "<div class=\"gwLab\">" + (d < P.length ? "Drag each transformation onto <span class=\"cg lm\"><i>g</i>(<i>x</i>)</span>, in order:" : "Now drag <span class=\"cf lm\"><i>x</i>\u00b2</span> from <span class=\"cf lm\"><i>f</i>(<i>x</i>) = <i>x</i>\u00b2</span> in the question onto <span class=\"cg lm\"><i>g</i>(<i>x</i>)</span>.") + "</div>";
+    P.forEach(function (q, i) { h += "<span class=\"gwChip" + (i < d ? " used" : "") + "\" data-gw=\"" + i + "\"" + (i < d ? "" : " title=\"Drag me onto g(x)\"") + ">" + q.txt.replace("x-axis", "<i>x</i>-axis") + "</span>"; });
+    if (QZ.gwAsk) h += "<div class=\"gwLab\">A reflection in the <i>x</i>-axis multiplies the number in front by \u22121:</div><div class=\"gwAsk\"><span>\u22121 \u00b7 " + nf(Math.abs(gwCur().a)) + " =</span><input id=\"gwIn\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"The new number in front of f(x)\"></div>";
+    el.innerHTML = h; el.hidden = false;
+    var gi = $("gwIn"); if (gi && mode !== "demo") gi.focus();
+  }
+  // a chip dropped on g(x): only the next one in the question's order is taken
+  function gwApply(i, demo) {
+    if (!gwOn() || PG.show.eq || QZ.step >= 4 || QZ.gwAsk) return;
+    var P = gwParts(gwCur()), d = QZ.gwd || 0; if (d >= P.length) return;
+    if (i !== d) { pqMsg("Use the transformations in the order the question gives them: first \u201c" + P[d].txt + "\u201d."); return; }
+    pqMsg("");
+    if (P[i].op === "r" && gwHas("a") && mode === "calculate" && !demo) { QZ.gwAsk = true; drawPlay(); return; }   // Calculate: the reflection of a stretch asks for the new number in front
+    QZ.gwd = d + 1; drawPlay(); absorbEl($("pgEq"));
+  }
+  function gwAnswer(enter) {
+    var el = $("gwIn"); if (!el || !QZ.gwAsk) return;
+    var raw = String(el.value).replace(/\s/g, "").replace(/\u2212/g, "-"), v = NaN, m = raw.match(/^(-?)(\d+)\/(\d+)$/);
+    if (m) v = (m[1] ? -1 : 1) * (+m[2]) / (+m[3]); else if (/^-?(\d+\.?\d*|\.\d+)$/.test(raw)) v = +raw;
+    if (Math.abs(v - (-Math.abs(gwCur().a))) < 1e-9) { QZ.gwAsk = false; QZ.gwd = (QZ.gwd || 0) + 1; pqMsg(""); drawPlay(); absorbEl($("pgEq")); return; }
+    if (enter) { QZ.wrong++; el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); pqMsg("Not quite. Multiply \u22121 by " + nf(Math.abs(gwCur().a)) + "."); }
+  }
+  // the question's f dropped on g(x): f is replaced by its rule, and that g(x) is the answer
+  function gwSub() {
+    if (!gwOn() || PG.show.eq || QZ.step >= 4) return;
+    var P = gwParts(gwCur()); if ((QZ.gwd || 0) < P.length || QZ.gwAsk) { pqMsg("First drag each transformation onto g(x), in order."); return; }
+    pqMsg(""); PG.eqTxt = gwRule(); eqEnter(); absorbEl($("pgEq"));
+  }
+  (function () {
+    function grab(e, src, html, dropFn) {
+      if (e.isTrusted) pgUser();
+      e.preventDefault(); var sx = e.clientX, sy = e.clientY, gh = null, dst = $("pgEq");
+      function over(ev) { var r = dst.getBoundingClientRect(); return ev.clientX > r.left - 30 && ev.clientX < r.right + 30 && ev.clientY > r.top - 30 && ev.clientY < r.bottom + 30; }
+      function mv(ev) {
+        if (!gh) { if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return; gh = document.createElement("div"); gh.className = "tbg"; gh.innerHTML = html; document.body.appendChild(gh); }
+        gh.style.left = ev.clientX + "px"; gh.style.top = ev.clientY + "px"; dst.classList.toggle("wfDrop", over(ev));
+      }
+      function up(ev) {
+        document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); document.removeEventListener("pointercancel", up);
+        dst.classList.remove("wfDrop"); if (gh) { gh.remove(); if (over(ev)) dropFn(); }
+      }
+      document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); document.addEventListener("pointercancel", up);
+    }
+    document.addEventListener("pointerdown", function (e) {
+      if (e.button > 0 || !gwOn() || PG.show.eq || QZ.step >= 4 || !e.target.closest) return;
+      var c = e.target.closest(".gwChip:not(.used)"); if (c) { var i = +c.dataset.gw; grab(e, c, "<b>" + c.innerHTML + "</b>", function () { gwApply(i); }); return; }
+      var f = e.target.closest("[data-gwrhs]"); if (f) grab(e, f, "<span class=\"cf\">" + f.innerHTML + "</span>", gwSub);
+    });
+    $("gwBox").addEventListener("input", function (e) { if (e.target.id === "gwIn") gwAnswer(false); });
+    $("gwBox").addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.id === "gwIn") { e.preventDefault(); gwAnswer(true); } });
+  })();
   var gdCustom = null;   // Graph & Describe: the function typed in Create, carried into the other modes
   function gdTyped() { return gd() && (soloish() || A() !== 1 || gd2()); }   // the description is typed (not clicked) when practising alone, or when it needs a stretch or a reflection
   function soloish() { return mode === "solo" || mode === "create"; }
@@ -5684,7 +5792,7 @@ var ESPIC = {
     else if (gd() && mode === "create" && !QZ.cr && QZ.pick) { $("pgQt").textContent = "Your function is in."; showPick($("pgQ"), "How would you like to work on it?"); }
     else if (gd() && mode === "create" && !QZ.cr) { $("modePick").hidden = true; $("pgQt").innerHTML = gd2() ? "Type a quadratic function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2(<i>x</i> \u2212 3)\u00b2 + 1</span>." : "Type a function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2|<i>x</i> \u2212 3| + 1</span>."; }
     else if (est()) $("pgQt").innerHTML = estHTML();
-    else if (gdW()) $("pgQt").innerHTML = "Let the graph of <i>g</i> be " + gdSay21(QZ.tr[QZ.pi]) + " of the graph of <i>f</i>(<i>x</i>) = <i>x</i>\u00b2. Write a rule for <i>g</i> in the equation box. Then graph <i>f</i> and <i>g</i> and fill in the table.";
+    else if (gdW()) $("pgQt").innerHTML = "Let the graph of <i>g</i> be " + gdSay21(QZ.tr[QZ.pi]) + " of the graph of " + (gwOn() ? "<span class=\"cf\"><i>f</i>(<i>x</i>) = <span class=\"wfRhs\" data-gwrhs title=\"Drag me onto g(x)\"><i>x</i>\u00b2</span></span>" : "<i>f</i>(<i>x</i>) = <i>x</i>\u00b2") + ". Write a rule for <i>g</i> in the equation box. Then graph <i>f</i> and <i>g</i> and fill in the table.";
     else if (gd2()) $("pgQt").innerHTML = "Describe the transformation of <i>f</i>(<i>x</i>) = <i>x</i>\u00b2 represented by " + eqHTML() + ". Then graph each function and fill in the table.";
     else if (gd()) $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation.";
     else $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
@@ -5781,6 +5889,7 @@ var ESPIC = {
       QZ.wrong++; pqMsg(soloish() ? "Not quite. Try again." : "Still to do: " + need.join(", ") + "."); return;
     }
     if (gd()) {
+      if (gdW() && !ok.eq) need.push(gwOn() ? "g(x) (drag each transformation onto it, then x\u00b2 from the question)" : "g(x)");
       if (!ok.parent) need.push("the parent graph (it turns dotted when it is right)");
       if (!ok.graph) need.push("the graph of g(x)");
       if (!ok.table) need.push("the table (" + Math.max(TB.rows().filter(function (r) { return r.done; }).length, ptAvail() ? ptCount() : 0) + " of 5 y-values)");
@@ -5799,6 +5908,7 @@ var ESPIC = {
     if (m3()) return m3Hint(n);
     if (wf()) return wfHint(n);
     if (est()) return estHint(n, ok);
+    if (gwOn() && !ok.eq) { var gp = gwParts(QZ.tr[QZ.pi]), gd0 = QZ.gwd || 0; return gd0 < gp.length ? (n === 0 ? "Start from g(x) = f(x). Drag the transformations under the equation box onto g(x), one at a time, in the order the question gives them." : "Next, drag \u201c" + gp[gd0].txt + "\u201d onto g(x).") : "Every transformation is in. Drag x\u00b2 from f(x) = x\u00b2 in the question onto g(x) to replace f with its rule."; }
     if (gdW() && !ok.eq) { var tw = QZ.tr[QZ.pi]; return n === 0 ? "A vertical stretch or shrink by a, a reflection (a negative a), then a translation h right and k up give g(x) = a(x \u2212 h)\u00b2 + k." : "Here a = " + nf(tw.a) + ", h = " + nf(tw.h) + " and k = " + nf(tw.k) + ": g(x) = " + plain(rhsHTML()) + "."; }
     if (gd()) {
       var tt = QZ.tr[QZ.pi], tool = QSHAPE[fam] === "line" ? "/" : QSHAPE[fam];
@@ -6730,7 +6840,7 @@ var ESPIC = {
     L.push(["R\u00b2", F.r2]);   // every regression reports its R squared along with its constants
     el.innerHTML = L.map(function (q) { return "<div>" + q[0] + " = " + dnum(+q[1].toFixed(10)) + "</div>"; }).join(""); el.hidden = false;
   }
-  function eqHTML() { if (wf() && QZ && QZ.wfp) { if (wfSteppy() && !PG.show.eq) return wfLive(); return "<span class=\"" + (fname() === "f" ? "cf" : "cg") + "\"><i>" + fname() + "</i>(<i>x</i>) = " + rhsHTML() + "</span>"; }
+  function eqHTML() { if (gwOn() && !PG.show.eq) return gwLive(); if (wf() && QZ && QZ.wfp) { if (wfSteppy() && !PG.show.eq) return wfLive(); return "<span class=\"" + (fname() === "f" ? "cf" : "cg") + "\"><i>" + fname() + "</i>(<i>x</i>) = " + rhsHTML() + "</span>"; }
     if (est() && !PG.show.eq) return ""; if (isDataAct()) return dataEqHTML(); return "<i>" + fname() + "</i>(<i>x</i>) = " + rhsHTML(); }
   var TMG = "#2E9E4F", TMP = "#6042A6";
   function tmO() { return [0, pf(0)]; }   // where the parent crosses the y-axis: the origin, or (0, 1) for the constant function
@@ -8689,7 +8799,7 @@ var ESPIC = {
     drawGraph();
     $("pgTable").querySelector("tbody").innerHTML = fillMode() ? TB.html() : tableHTML();
     var fe = document.activeElement, fw = fe && fe.classList && fe.classList.contains("eqIn") ? (fe.closest("#pgEq") ? "pgEq" : "mid") : null;
-    var typing = !est() && !m3() && !(wf() && wfSteppy() && wfCur()) && (!PG.show.eq || (PG.editEq && !pq()));   // the equation box is open for typing (or being edited in place)
+    var typing = !est() && !m3() && !(wf() && wfSteppy() && wfCur()) && !(gwOn() && !PG.show.eq) && (!PG.show.eq || (PG.editEq && !pq()));   // the equation box is open for typing (or being edited in place)
     $("pgTable").querySelector(".pgMid").innerHTML = typing ? EQIN : eqHTML();
     $("pgEq").innerHTML = typing ? EQIN : eqHTML();
     $("pgEq").title = !pq() && !typing ? "Click the equation to type your own function" : "";
@@ -8697,7 +8807,7 @@ var ESPIC = {
       [].forEach.call(document.querySelectorAll(".eqIn"), function (el) { el.value = PG.eqTxt || ""; if (pq()) el.placeholder = gd() || (wf() && !(wfCr() && QZ.cs === "f")) ? "g(x)=..." : "f(x)=..."; });
       if (fw) { var re = fw === "pgEq" ? $("pgEq").querySelector(".eqIn") : $("pgTable").querySelector(".pgMid .eqIn"); if (re) { re.focus(); re.setSelectionRange(re.value.length, re.value.length); } }
     }
-    pgDescUpd(); regUpd();
+    pgDescUpd(); regUpd(); gwSync();
     [].forEach.call(document.querySelectorAll(".tog"), function (b) { b.setAttribute("aria-pressed", PG.show[b.dataset.part === "reg" ? "eq" : b.dataset.part] ? "true" : "false"); });
     TB.sync(); ptSync(); $("qzTools").hidden = wf() || m3(); posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
@@ -9660,7 +9770,7 @@ var ESPIC = {
     if (PQ && wf() && !ONE) wfPG();
     if (PQ && m3() && !ONE) m3PG();
     if (GD && !ONE) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; $("pgDescTx").value = ""; }
-    if (!ONE) { Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 0; PG.eOK = false; PG.eqTxt = ""; } else if (wf()) { PG.eqTxt = "g(x)="; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; } drawPlay(); }
+    if (!ONE) { Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 0; PG.eOK = false; PG.eqTxt = ""; } else if (wf()) { PG.eqTxt = "g(x)="; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; if (GD && gwOn()) { PG.show.eq = false; PG.eqTxt = "g(x)="; QZ.gwd = 0; QZ.gwAsk = false; } } drawPlay(); }   // (2.1 Write g: the hand builds g(x) from g(x) = f(x))
     function cap(t) { t = wf() ? wfNm(t) : t; if (ONE) note(t); else dmCap(t); }
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
@@ -10080,7 +10190,7 @@ var ESPIC = {
       var watch = function (n) { return function () { gdWatch(); pgWait(1100, n); }; };
       var scroll = shifts() && H() !== 0;
       steps = [
-        function (n) { if (!gdW()) { n(); return; } cap("Write the rule: the stretch, shrink or reflection is the number in front, and the translation goes in the parentheses and at the end."); var tw = QZ.tr[QZ.pi], co = tw.a === 1 ? "" : tw.a === -1 ? "-" : String(tw.a); typeEq("g(x)=" + co + (tw.h ? "(x" + (tw.h > 0 ? "-" : "+") + Math.abs(tw.h) + ")^2" : "x^2") + (tw.k ? (tw.k > 0 ? "+" : "-") + Math.abs(tw.k) : ""), function () { eqEnter(); pgWait(1600, n); }); },
+        function (n) { if (!gdW()) { n(); return; } if (gwOn()) { gwDemo(n, false); return; } cap("Write the rule: the stretch, shrink or reflection is the number in front, and the translation goes in the parentheses and at the end."); var tw = QZ.tr[QZ.pi], co = tw.a === 1 ? "" : tw.a === -1 ? "-" : String(tw.a); typeEq("g(x)=" + co + (tw.h ? "(x" + (tw.h > 0 ? "-" : "+") + Math.abs(tw.h) + ")^2" : "x^2") + (tw.k ? (tw.k > 0 ? "+" : "-") + Math.abs(tw.k) : ""), function () { eqEnter(); pgWait(1600, n); }); },
         function (n) { cap(gdW() ? "Now the table: drag g(x) onto any center cell." : "g(x) is given. Start with the table: drag g(x) onto any center cell."); dragEq(0, n); },
         function (n) { if (!scroll) { n(); return; } cap("The x-values are centered at 0, but the vertex of g is at x = " + nf(H()) + ". Drag the arrows to scroll the table until x = " + nf(H()) + " is in the middle row."); dialDemo(-H(), n); },
         function (n) {
@@ -10183,6 +10293,24 @@ var ESPIC = {
       };
       var ys0 = function () { var w = []; if (A() !== 1) w.push("times " + ptFr(A())); if (K()) w.push((K() > 0 ? "plus " : "minus ") + Math.abs(K())); return w.length ? "it slides right, " + w.join(", then ") : "there is no stretch, shrink or move up or down, so it slides right unchanged"; };
       var GDS = steps;
+      // 2.1 Write g: the hand drags each transformation onto g(x) = f(x), then the question's x² onto g(x) (one: only the next of those steps)
+      var gwDemo = function (n, one) {
+        if (pgRun !== run) return;
+        if (!gwOn() || PG.show.eq) { n(); return; }
+        var P = gwParts(gwCur()), d = QZ.gwd || 0;
+        if (d < P.length) {
+          var c = document.querySelector("#gwBox .gwChip[data-gw=\"" + d + "\"]"); if (!c) { n(); return; }
+          var q = P[d], what = q.op === "a" ? "multiplies f(x) by " + nf(Math.abs(gwCur().a)) : q.op === "r" ? "makes f(x) negative" : q.op === "h" ? "changes x to x " + (gwCur().h > 0 ? "\u2212 " : "+ ") + Math.abs(gwCur().h) : (gwCur().k > 0 ? "adds " : "subtracts ") + Math.abs(gwCur().k);
+          cap((d === 0 ? "g(x) starts as f(x). " : "") + "Drag \u201c" + q.txt + "\u201d onto g(x): it " + what + ".");
+          handGo(ctr(c), 650);
+          pgWait(850, function () { if (pgRun !== run) return; handTap(); pgWait(250, function () { c = document.querySelector("#gwBox .gwChip[data-gw=\"" + d + "\"]") || c; handGo(ctr($("pgEq")), 1400); fly(c, $("pgEq"), function () { if (pgRun !== run) return; gwApply(d, true); pgWait(1500, function () { if (one) n(); else gwDemo(n, false); }); }, false); }); });
+          return;
+        }
+        var f = document.querySelector("#pgQt [data-gwrhs]"); if (!f) { n(); return; }
+        cap("Now replace f with its rule: drag x\u00b2 from f(x) = x\u00b2 in the question onto g(x).");
+        handGo(ctr(f), 650);
+        pgWait(850, function () { if (pgRun !== run) return; handTap(); pgWait(250, function () { f = document.querySelector("#pgQt [data-gwrhs]") || f; handGo(ctr($("pgEq")), 1400); fly(f, $("pgEq"), function () { if (pgRun !== run) return; gwSub(); pgWait(1800, n); }, false); }); });
+      };
       var PTS = {
         rule: GDS[0],
         desc: function (n) {
@@ -10506,7 +10634,7 @@ var ESPIC = {
       };
       var plotted = function (j) { var p = TB.pt(j); return PG.pts.some(function (z) { return z[0] === p[0] && z[1] === p[1]; }); };
       if (GD && gd2() && PTS) {   // 2.1: the next step, with the parent table (or the graphing table, when that is the one the student has started)
-        if (gdW() && !PG.show.eq) return [PTS.rule];
+        if (gdW() && !PG.show.eq) return gwOn() ? one(function (n) { gwDemo(n, true); }) : [PTS.rule];
         if (!PG.dOK) return [PTS.desc];
         if (!pqParts().table) {
           if (!PG.ptOn && (PG.subd || R.some(function (q) { return q.done; }))) { if (!PG.subd) return one(function (n) { cap("Drag g(x) onto any center cell."); dragEq(0, n); }); if (row >= 0) return one(tableStep); }
