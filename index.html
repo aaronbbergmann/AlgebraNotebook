@@ -3959,7 +3959,7 @@
     ag.textContent = stay; ag.hidden = !stay;
   }
   // ---- "Demo next step" (Progress activities, in place of Hint): the demo performs only the student's next step, then puts the work back ----
-  var DNX = false, pgOne = null, DN = null;
+  var DNX = false, pgOne = null, DN = null, DNH = 0;   // DNH: how many steps there were before "Demo next step" played one
   function dnOn() { return mode !== "demo" && mode !== "solo" && mode !== "create" && !!BUILT[act] && (!!BUILT[act].sub || (quiz() && !est())); }
   function hintLbl() { return mode === "demo" ? "Explain" : dnOn() ? "Demo next step" : "Hint"; }
   function dnCl(o) { return JSON.parse(JSON.stringify(o)); }
@@ -3979,11 +3979,13 @@
     if (BUILT[act].sub && !quiz()) {   // the equation pane: play the next step, wait, then undo it
       if (busy || calc || locked || DNX) return;
       peekNext(); if (!pend) return;
-      var h0 = hist.length, m0 = mode; DNX = true; $("hint").disabled = true; if (mode === "calculate") mode = "sequence";   // (Calculate would ask the student to type the step)
+      var h0 = hist.length, m0 = mode, g0 = MS.gen; DNX = true; DNH = h0; $("hint").disabled = true; if (mode === "calculate") mode = "sequence";   // (Calculate would ask the student to type the step)
       demoStep();
       (function wait() {
+        if (g0 !== MS.gen) return;
         if (busy) { setTimeout(wait, 120); return; }
         setTimeout(function () {
+          if (g0 !== MS.gen) return;   // the student switched modes meanwhile: the step was already taken back (msSave)
           handHide(); mode = m0; while (hist.length > h0) undo(); DNX = false; $("hint").disabled = false; peekNext(); hideKind(); closeAsk(false); clearLog();
           if (mode === "demo") peekNext();
         }, 1300);
@@ -4091,21 +4093,133 @@
     dmTitle(own && BUILT[act] && BUILT[act].title || ""); dmHead();
   }
   function setMode(m) {
+    msSave();   // the work in the mode being left is kept, to come back to (see "Switching modes keeps the work")
     syncPane();
     if (!BUILT[act].solver) $("nxHard").hidden = true;   // Level Up belongs to Play Solve alone; nothing is left over from the activity we came from
     if (quiz()) { $("next").hidden = true; $("again").hidden = true; $("show").style.visibility = ""; }
     else { $("qzNext").hidden = true; $("qzAgain").hidden = true; }
-    if (quiz()) { mode = m; theme(); saveMode(); $("modeSel").value = m; $("modeSel").style.color = ""; qzStart(); return; }
-    var sel = $("modeSel");
-    // equations typed in Create carry over to the mode the student picks
-    if (mode === "create" && m !== "create" && m !== "solo" && SUB() && orig.length === allV().length && !orig.some(function (q) { return q.sol; })) { sel.value = "create"; note("For substitution, one equation has to be solved for a variable, like y = 2x - 6. Press Undo and type it that way."); return; }
-    if (mode === "create" && m !== "create" && orig.length === allV().length) {
-      if (m === "demo" && !demoOK(orig)) { sel.value = "create"; note("The demo can't walk through this one: a coefficient is zero or not a whole number. Try Calculate or Sequence."); return; }
-      useCustom = JSON.parse(JSON.stringify(orig));
+    if (quiz()) { mode = m; theme(); saveMode(); $("modeSel").value = m; $("modeSel").style.color = ""; if (!msLoad()) qzStart(); msMark(); return; }
+    var sel = $("modeSel"), crMsg = "";
+    // equations typed in Create carry over to the mode the student picks.  A student can always switch modes: when the typed equations
+    // cannot be used in that mode, the mode opens with its own problem (the typed equations stay in Create) and a note says why
+    if (mode === "create" && m !== "create" && m !== "solo" && SUB() && orig.length === allV().length && !orig.some(function (q) { return q.sol; })) crMsg = "For substitution, one equation has to be solved for a variable, like y = 2x - 6. Your equations are still in Create mode: go back to Create, press Undo and type it that way.";
+    else if (mode === "create" && m !== "create" && orig.length === allV().length) {
+      if (m === "demo" && !demoOK(orig)) crMsg = "The demo can't walk through your equations: a coefficient is zero or not a whole number, so here is another one. Yours are still in Create mode; try them in Calculate or Sequence.";
+      else useCustom = JSON.parse(JSON.stringify(orig));
     }
     dm4Reset(); mode = m; theme(); saveMode();
     sel.value = m; sel.style.color = "";
+    if (!msLoad()) newProblem();
+    msMark();
+    if (crMsg) note(crMsg);
+  }
+  // ---- Switching modes keeps the work -------------------------------------------------------------------------------
+  // A student may switch modes whenever they like and lose nothing.  Every mode of every exercise (Sequence, Calculate, Write, Create)
+  // remembers its own problem and everything entered so far: typed boxes, table cells, plotted points and graphs, the steps of a solution,
+  // the messages, Show work.  Leaving a mode files its work away (msSave); coming back puts it back exactly as it was (msLoad).
+  // Progress is never touched by a switch (it is stored as it is earned), and a remembered problem keeps its own record of error messages
+  // and whether it has already been counted, so a switch can neither earn nor lose Progress.  Demo always starts a fresh demo.
+  // A problem that is already finished is not kept (the mode deals a new one), and a problem the student typed in Create, carried into a mode,
+  // takes the place of what was there.  Each start of a problem records which exercise and mode it belongs to (msMark).
+  var MS = { cur: null, box: {}, gen: 0 };
+  function msKey() { return [rev || "", rev ? revI : "", act, lesson, subx ? "s" : "", mode].join("|"); }
+  function msOn() { return !welcome && !!BUILT[act] && !BUILT[act].play; }
+  function msMark() { MS.gen++; MS.cur = msOn() ? { k: msKey(), q: quiz(), pq: quiz() && pq(), m: mode } : null; }
+  function msCl(v) { try { return v === undefined ? v : JSON.parse(JSON.stringify(v)); } catch (e) { return v; } }
+  function msSkipEl(el) { return !!el.closest("#modeSel,#lesson,#actList,#prog,#modePick") || el.type === "button" || el.type === "submit" || el.type === "file"; }
+  // every box on the page that holds something typed, chosen or slid, named so it can be found again once the mode is drawn again
+  function msSig(el) {
+    if (el.id) return "#" + el.id;
+    var a = el.parentElement; while (a && !a.id) a = a.parentElement;
+    return (a ? a.id : "") + "|" + el.tagName + "|" + (el.type || "") + "|" + (el.getAttribute("aria-label") || "") + "|" + [].filter.call(el.attributes, function (x) { return /^data-/.test(x.name); }).map(function (x) { return x.name + "=" + x.value; }).join(",");
+  }
+  function msEach(fn) { var n = {}; [].forEach.call(document.querySelectorAll("input,textarea,select"), function (el) { if (msSkipEl(el)) return; var k = msSig(el); n[k] = (n[k] || 0) + 1; fn(k + "~" + n[k], el); }); }
+  function msDomTake() { var o = {}; msEach(function (k, el) { o[k] = { v: el.type === "checkbox" || el.type === "radio" ? el.checked : el.value, ro: !!el.readOnly, c: el.getAttribute("class") || "" }; }); return o; }
+  function msDomPut(o) {
+    msEach(function (k, el) {
+      var s = o[k]; if (!s) return;
+      if (el.type === "checkbox" || el.type === "radio") el.checked = !!s.v; else if (el.value !== s.v) el.value = s.v;
+      if (el.readOnly !== s.ro) el.readOnly = s.ro;
+      if ((el.getAttribute("class") || "") !== s.c) { if (s.c) el.setAttribute("class", s.c); else el.removeAttribute("class"); }
+    });
+  }
+  var MSMSG = ["pgQmsg", "qzErr", "ansMsg", "exMsg", "crErr", "askErr", "kindErr"];
+  function msMsgTake() { var o = {}; MSMSG.forEach(function (id) { var e = $(id); if (e) o[id] = [e.textContent, e.className]; }); return o; }
+  function msMsgPut(o) { MSMSG.forEach(function (id) { var e = $(id), s = o[id]; if (e && s) { e.textContent = s[0]; e.className = s[1]; } }); }
+  // is the problem on the page already finished (counted, or answered)?  Then there is nothing to keep
+  function msDone(c) {
+    if (c.q) return !!(QZ && (QZ.locked || (QZ.step >= 4 && QZ.order && QZ.pi >= QZ.order.length - 1)));
+    return !!((locked && !KQ) || credited || counted || result);
+  }
+  function msSave() {
+    var c = MS.cur; MS.cur = null; if (!c) return;
+    if (c.m === "demo") return;   // a demo is watched, and always starts afresh
+    if (c.q && pgRun) pgStop();   // a "Demo next step" still playing puts the work back first
+    if (!c.q && DNX) { if (busy) { DNX = false; $("hint").disabled = false; delete MS.box[c.k]; return; } handHide(); while (hist.length > DNH) undo(); DNX = false; $("hint").disabled = false; }
+    if (msDone(c)) { delete MS.box[c.k]; return; }
+    var s = { q: c.q, pq: c.pq, dom: msDomTake(), msg: msMsgTake(), log: logEl.innerHTML, counted: counted, up: up };
+    if (c.q) {
+      s.QZ = QZ; s.PG = msCl(PG); s.ZM = { cur: ZM.cur, curY: ZM.curY, ox: ZM.ox, oy: ZM.oy }; s.cust = gdCustom || wfCustom || null;
+    } else {
+      s.e = { orig: orig, ws: ws, sys: sys, sysV: sysV, elim: elim, elimInfo: elimInfo, vals: vals, hist: hist, steps: steps, ops: ops, result: result, credited: credited, ansTouched: ansTouched, EQW: EQW, mulNote: mulNote, lastExp: lastExp, SV: SV, hinted: hinted };
+      s.EXP = msCl(EXP); s.origJ = JSON.stringify(orig);
+      if (!$("ask").hidden) s.ask = { idx: askIdx, kind: askKind, k: askK, c: askC, calc: calc, sub: subCb, t: $("askT").textContent, ph: $("askIn").placeholder, ok: $("askOk").hidden };
+      if (KQ) s.KQ = { q: KQ, t: $("kindT").textContent };
+      if (mode === "create") s.creator = { hidden: $("creator").hidden, pick: !$("modePick").hidden, crT: $("crT").textContent };
+    }
+    MS.box[c.k] = s;
+  }
+  function msLoad() {
+    if (!msOn() || mode === "demo") return false;
+    var k = msKey(), s = MS.box[k]; if (!s) return false;
+    if (s.q !== quiz()) { delete MS.box[k]; return false; }
+    if (s.q) {
+      if ((gdCustom || wfCustom || null) !== s.cust) { delete MS.box[k]; return false; }   // the student's own Create problem comes in instead
+      delete MS.box[k];
+      if (!s.pq) {   // 1.1 Memorizing Parents
+        qzStart(); QZ = s.QZ; counted = s.counted; up = s.up; qzRender();
+      } else {
+        pqStart();
+        QZ = s.QZ; Object.keys(PG).forEach(function (p) { delete PG[p]; }); Object.assign(PG, msCl(s.PG)); counted = s.counted; up = s.up;
+        cancelAnimationFrame(ZM.raf); ZM.cur = ZM.to = ZM.from = s.ZM.cur; ZM.curY = ZM.toY = ZM.fromY = s.ZM.curY; ZM.ox = ZM.tox = ZM.fox = s.ZM.ox; ZM.oy = ZM.toy = ZM.foy = s.ZM.oy; ZM.t = 1;
+        TB.targets = []; TB.busy = false; closePt();
+        drawPlay(); try { TB.draw(); } catch (e) { } pqPanel(); if (wf()) { wfSteps(); wfUndoVis(); }
+      }
+      logEl.innerHTML = s.log; msMsgPut(s.msg); msDomPut(s.dom);
+      return true;
+    }
+    // the equation pane (1.4 One Variable, Substitution, 2×2, 3×3) and Play Solve
+    if (useCustom) { if (JSON.stringify(useCustom) !== s.origJ) { delete MS.box[k]; return false; } useCustom = null; }   // the same equations typed in Create: keep the work on them
+    if (BUILT[act].solver && EXP && mode !== "create" && !(s.EXP && JSON.stringify(s.EXP.orig) === JSON.stringify(EXP.orig) && !!s.EXP.eq === !!EXP.eq)) { delete MS.box[k]; return false; }   // Play Solve carries its problem from mode to mode: a different one starts afresh
+    delete MS.box[k];
+    var w0 = works.length;
+    if (BUILT[act].solver && mode !== "create") EXP = msCl(s.EXP);
     newProblem();
+    if (works.length > w0) works.length = w0;   // (the problem's own Show work entry is still there)
+    var e = s.e; orig = e.orig; ws = e.ws; sys = e.sys; sysV = e.sysV; elim = e.elim; elimInfo = e.elimInfo; vals = e.vals; hist = e.hist; steps = e.steps; ops = e.ops; result = e.result; credited = e.credited; ansTouched = e.ansTouched; EQW = e.EQW; mulNote = e.mulNote; lastExp = e.lastExp; hinted = e.hinted;
+    counted = s.counted; up = s.up; colMin = []; locked = false;
+    if (BUILT[act].solver) { SV = e.SV; if (mode !== "create") $("stT").textContent = svTitle(); }
+    if (EXP && BUILT[act].solver && mode !== "create") { EXP = msCl(s.EXP); exRender(); }
+    else {
+      render(-1);
+      if (mode === "create" && s.creator) {
+        var building = orig.length < allV().length; $("creator").hidden = !building; $("answer").hidden = true;
+        if (building) crPrompt(); else if (s.creator.pick) { showPick($("creator").parentNode); }
+      }
+    }
+    updUndo();
+    if (s.KQ) { KQ = s.KQ.q; locked = true; $("kindT").textContent = s.KQ.t; $("kindErr").textContent = ""; $("kindAsk").hidden = false; }
+    if (s.ask) {
+      var a = s.ask; askIdx = a.idx; askKind = a.kind; askK = a.k; askC = a.c; calc = a.calc; subCb = a.sub;
+      $("askT").textContent = a.t; $("askIn").placeholder = a.ph; $("askOk").hidden = a.ok; $("ask").hidden = false; placeAsk();
+      rows.forEach(function (r) { r.classList.remove("asking"); });
+      (calc ? calc.marks : [askIdx]).forEach(function (r) { if (rows[r]) rows[r].classList.add("asking"); });
+      askArrow(true); askSeq++;
+    }
+    logEl.innerHTML = s.log; msMsgPut(s.msg); msDomPut(s.dom);
+    if (s.ask) setTimeout(function () { if (!$("ask").hidden) $("askIn").focus(); }, 0);
+    eqSubSync(); $("show").hidden = !workAny();
+    return true;
   }
   // a refresh keeps the mode (Demo, Sequence, Calculate, Solo, Create) of this activity for as long as the tab is open
   function saveMode() { try { sessionStorage.setItem("an.mode." + act, mode); } catch (e) {} }
@@ -4512,7 +4626,7 @@
     return "Substitute " + s[1];
   }
 
-  $("lesson").addEventListener("change", function () { if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; wfCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
+  $("lesson").addEventListener("change", function () { msSave(); if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; wfCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
   $("crAdd").addEventListener("click", crAdd);
   $("exSoloGo").addEventListener("click", exCheckSolo); $("exSoloIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); });
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
@@ -6110,6 +6224,7 @@ var ESPIC = {
   function closeActs(back) { if ($("actList").hidden) return; $("actList").hidden = true; $("actBtn").setAttribute("aria-expanded", "false"); if (back) $("actBtn").focus(); }
   // a review item: switch to the original exercise it stands for
   function revGo(i, fresh) {
+    msSave();   // the work in the item being left is kept (see "Switching modes keeps the work")
     var it = BUILT[rev].items[i]; revI = i; try { sessionStorage.removeItem("an.mode." + it.act); } catch (e) { }
     if (fresh || it.act !== act) {
       var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = it.act; gdCustom = null; wfCustom = null; lesson = it.lesson; subx = !!it.subx;
@@ -6125,6 +6240,7 @@ var ESPIC = {
   function setActivity(id) {
     closeActs(); $("actBtn").blur(); d3Hide();   // once an activity is chosen the button is let go
     if (!BUILT[id]) return;
+    msSave();
     try { sessionStorage.removeItem("an.mode." + id); } catch (e) { }   // choosing an activity always starts it in Demo; only a refresh keeps the mode
     // on the website every activity is its own page, so switching goes to that page
     if (hub && id !== (rev || act)) { location.href = (fixedAct ? "../" : "") + slugOf(id) + "/"; return; }
@@ -6136,7 +6252,7 @@ var ESPIC = {
       welcome = false; theme(); document.body.classList.remove("wel"); $("welcome").hidden = true;
       if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
-    if (id === act && !wasRev) return;
+    if (id === act && !wasRev) { msMark(); return; }
     var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = id; gdCustom = null; wfCustom = null; if (BUILT[act].quiz || BUILT[act].solver || BUILT[act].sub) { lesson = BUILT[act].sub ? 4 : 1; subx = false; } if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
     LEVELS = levelsNow(); loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
