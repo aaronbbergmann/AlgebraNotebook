@@ -502,7 +502,13 @@
   body.ptOn #pgTable,body.ptOn #pgDial{display:none!important}
   .ptWrap{display:flex;flex-direction:column;gap:.2rem}.ptWrap[hidden]{display:none}
   .ptOps{display:grid;grid-template-columns:repeat(5,1fr);min-height:1.55em;align-items:end;text-align:center;font:400 1.1rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;color:var(--plus);white-space:nowrap}
-  .ptOps span{justify-self:center;display:inline-block}
+  .ptOps span{justify-self:center;display:inline-block}.ptOps{display:none!important}
+  .ptTable tr.ptLr th{background:#fff;padding:0;height:2.1em;font-style:normal;color:var(--plus);border-bottom:1px solid #B8BCC2}
+  .ptTable tr.ptLr th.off{background:#F7F8FA}.ptTable tr.ptLr th.drop{background:#DCE8F7;outline:2px solid #2D70B3;outline-offset:-2px}
+  .ptTable .ptLin{box-sizing:border-box;width:100%;height:2.1em;border:0;background:transparent;text-align:center;font:inherit;color:var(--plus);padding:0}
+  .ptTable .ptLin::placeholder{color:#A9AFBA;font:italic .8rem system-ui,sans-serif}.ptTable .ptLin:focus{outline:2px solid #2D70B3;outline-offset:-2px}
+  .ptLv{display:inline-block}
+  .dChip{display:inline-block;padding:0 .35em;border:1.5px dashed var(--plus);border-radius:6px;cursor:grab;touch-action:none}.dChip:hover{background:color-mix(in srgb,var(--plus) 14%,transparent)}
   .ptTable td{position:relative}.ptTable td.par{background:#DDE1E8}
   .ptTable td input.qzCell.full{background:#DDE1E8}
   body.play .ptTable tbody td:first-child{cursor:auto;touch-action:auto}
@@ -609,7 +615,7 @@
       <div class="pgSide">
         <div class="dial" id="pgDial" role="slider" aria-label="Scroll the table" title="Drag up or down to scroll the table"><svg viewBox="0 0 18 44" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M9 1.8 16.3 12.6H1.7Z"/><circle cx="9" cy="22" r="5.4"/><path d="M1.7 31.4H16.3L9 42.2Z"/></svg></div>
         <table class="pgTable" id="pgTable" aria-label="Table"><colgroup><col style="width:18%"><col><col style="width:18%"></colgroup><thead><tr><th>x</th><th class="pgMid"></th><th>y</th></tr></thead><tbody></tbody></table>
-        <div class="ptWrap" id="ptWrap" hidden><div class="ptOps" id="ptOps" aria-live="polite"><span></span><span></span><span></span><span></span><span></span></div><table class="pgTable ptTable" id="ptTable" aria-label="Parent table"><colgroup><col><col><col><col><col></colgroup><thead><tr><th>x</th><th>x</th><th>y</th><th>y</th><th>y</th></tr></thead><tbody></tbody></table></div>
+        <div class="ptWrap" id="ptWrap" hidden><div class="ptOps" id="ptOps" aria-live="polite"><span></span><span></span><span></span><span></span><span></span></div><table class="pgTable ptTable" id="ptTable" aria-label="Parent table"><colgroup><col><col><col><col><col></colgroup><thead><tr class="ptLr"></tr><tr><th>x</th><th>x</th><th>y</th><th>y</th><th>y</th></tr></thead><tbody></tbody></table></div>
         <div class="pgEq" id="pgEq" aria-live="polite"></div>
         <div class="wfSlBox" id="wfSl" hidden role="group" aria-label="Change g(x)">
           <label class="wfSlR"><span class="wfSlN">Outside</span><input type="range" id="wfSlK" min="-8" max="8" step="1" value="0" aria-label="Outside: add to the output"><output id="wfSlKv">0</output></label>
@@ -5480,7 +5486,7 @@ var ESPIC = {
   }
   function pqSetup() {
     closePt(); var fam = qFam();
-    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = []; PG.keep = []; PG.ptb = null; PT.ask = null; TB.askI = -1;
+    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = []; PG.keep = []; PG.ptb = null; PG.ptl = {}; PT.ask = null; TB.askI = -1;
     PG.show = { eq: false, table: false, graph: false, desc: true, parent: false }; PG.pdone = false; PG.dOK = false; $("pgDescTx").value = "";
     if (gd()) {
       var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.a = tr.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false };
@@ -6315,7 +6321,7 @@ var ESPIC = {
     if (r.px === undefined) return null; var x = ptUse("gx") ? num(r.t.gx) : r.px, yk = ptYKey(), y = num(r.t[yk]);
     return x === null || y === null ? null : [x, y];
   }
-  function ptAllDone() { return ptRows().every(ptRowDone); }
+  function ptAllDone() { return ptRows().every(ptRowDone) && (!ptLabReq() || ptLabelsDone()); }
   function ptCount() { return ptRows().filter(ptRowDone).length; }
   function ptTd(i, c) { return $("ptTable").querySelector("td[data-r=\"" + i + "\"][data-c=\"" + c + "\"]"); }
   function ptOver(ev) { var T = $("ptTable"); if (!ptOn() || !T.offsetWidth) return false; var r = T.getBoundingClientRect(); return ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom; }
@@ -6334,10 +6340,84 @@ var ESPIC = {
     return [T.h ? (T.h > 0 ? "+ " : "− ") + ptFr(Math.abs(T.h)) : "", "", "", ptOpLab(o[0]), ptOpLab(o[1])];
   }
   // the labels above the columns; a label that appears or changes swells into place
-  function ptOpsDraw() {
-    var box = $("ptOps"); if (!box) return; var o = ptOps(ptTr()), sp = box.children;
-    for (var j = 0; j < 5; j++) if (sp[j].textContent !== o[j]) { sp[j].textContent = o[j]; if (o[j] && ptOn()) absorbEl(sp[j]); }
+  function ptOpsDraw() { ptLabDraw(); }   // (the columns are now labeled by the student, in the labels row)
+  // the labels row above the x and y headings: the student labels each column this problem needs with its change (+ h, × a, + k).
+  // Demo and Sequence: a part of the finished description is dragged onto the label (or the label is typed); it is required, and checked.
+  // Calculate and Write: the label is typed, and it is neither checked nor required.
+  function ptLabReq() { return mode === "sequence" || mode === "demo"; }
+  function ptLabChk() { return mode === "sequence" || mode === "demo"; }
+  function ptLabNeed(c) { if (!ptUse(c) || c === "px" || c === "py") return null; if (c === "gx") return { t: "k", v: H(), x: 1 }; var o = ptYOps(A(), K()); return o[c === "sy" ? 0 : 1] || null; }
+  function ptLab(c) { var L = PG.ptl || (PG.ptl = {}); return L[c] || (L[c] = { ok: false, txt: "", st: false, rf: false }); }
+  function ptLabDone(c) { return !ptLabNeed(c) || ptLab(c).ok; }
+  function ptLabelsDone() { return ["gx", "sy", "gy"].every(ptLabDone); }
+  function ptLabText(c) { var n = ptLabNeed(c); return n ? ptOpLab({ t: n.t, v: n.v }) : ""; }
+  // what a typed label says: + 3, −4, x + 3, × 2, ×(−1/2), *2 ... (null when it is not a label)
+  function ptLabParse(t, mul) {
+    t = String(t || "").replace(/\s+/g, "").replace(/−/g, "-").replace(/^[xy]/i, "");
+    var num = function (u) { var q = parse(u); return q ? q.n / q.d : null; };
+    if (mul) { var m = /^[×x*·]?\(?(-?\d*\.?\d+(?:\/\d+)?)\)?$/i.exec(t); return m ? num(m[1]) : null; }
+    var a = /^([+-])?(\d*\.?\d+(?:\/\d+)?)$/.exec(t); if (!a) return null; var v = num(a[2]); return v === null ? null : (a[1] === "-" ? -v : v);
   }
+  function ptLabDraw() {
+    var row = $("ptTable").querySelector("tr.ptLr"); if (!row) return;
+    var fa = document.activeElement, fc = fa && fa.classList && fa.classList.contains("ptLin") ? fa.dataset.lc : null;
+    row.innerHTML = PTC.map(function (c) {
+      var n = ptLabNeed(c); if (!n) return "<th class=\"ptLc off\" data-lc=\"" + c + "\"></th>";
+      var L = ptLab(c);
+      if (L.ok) return "<th class=\"ptLc ok\" data-lc=\"" + c + "\"><span class=\"ptLv" + (PT.lpop === c ? " absorb" : "") + "\">" + ptLabText(c) + "</span></th>";
+      return "<th class=\"ptLc\" data-lc=\"" + c + "\"><input class=\"ptLin\" data-lc=\"" + c + "\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"label\" aria-label=\"Label the column with its change\" value=\"" + String(L.txt || "").replace(/"/g, "") + "\"></th>";
+    }).join("");
+    PT.lpop = null;
+    if (fc) { var el = row.querySelector("input[data-lc=\"" + fc + "\"]"); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
+  }
+  function ptLabSet(c) { var L = ptLab(c); L.ok = true; L.txt = ""; PT.lpop = c; pqMsg(""); drawPlay(); }
+  // a typed label: checked in Demo and Sequence (a right one locks in and swells), only kept in Calculate and Write
+  function ptLabTyped(c, v, enter) {
+    var L = ptLab(c), n = ptLabNeed(c); if (!n || L.ok) return; L.txt = v;
+    if (!ptLabChk() || wsub()) return;
+    var val = ptLabParse(v, n.t === "a");
+    if (val !== null && Math.abs(val - n.v) < 1e-9) { if (n.t === "a") { L.st = true; L.rf = true; } ptLabSet(c); return; }
+    if (enter) { QZ.wrong++; ptShake(ptLabCell(c)); pqMsg("That label does not match the change for this column. Check the description."); }
+  }
+  function ptLabCell(c) { return $("ptTable").querySelector("th[data-lc=\"" + c + "\"]"); }
+  // a part of the description dropped on a label: h (a move left or right), k (up or down), a (a stretch or shrink), r (a reflection)
+  function ptChipDrop(c, op) {
+    var n = ptLabNeed(c), L = ptLab(c), ok = false;
+    if (n && !L.ok) {
+      if (op === "h") ok = c === "gx";
+      else if (op === "k") ok = c !== "gx" && n.t === "k";
+      else if ((op === "a" && Math.abs(A()) !== 1) || (op === "r" && A() < 0)) ok = n.t === "a";
+    }
+    if (!ok) { QZ.wrong++; ptShake(ptLabCell(c)); pqMsg(n && L.ok ? "That column is already labeled." : "That change does not go in this column."); return; }
+    if (op === "a") L.st = true; if (op === "r") L.rf = true;
+    if (n.t === "a" && !((Math.abs(A()) === 1 || L.st) && (A() > 0 || L.rf))) { L.txt = ptOpLab({ t: "a", v: (L.st ? Math.abs(A()) : 1) * (L.rf ? -1 : 1) }); drawPlay(); return; }   // (the other half of a stretch with a reflection is still to come)
+    ptLabSet(c);
+  }
+  function ptChips() { return gd2() && ptOn() && ptLabChk() && !wsub(); }
+  (function () {
+    // dragging a part of the finished description onto a label
+    $("pgDesc").addEventListener("pointerdown", function (e) {
+      var ch = e.target.closest(".dChip"); if (!ch || !ptChips() || e.button > 0) return;
+      if (e.isTrusted) pgUser();
+      e.preventDefault(); var sx = e.clientX, sy = e.clientY, g = null, hot = null;
+      function at(ev) { var l = document.elementsFromPoint(ev.clientX, ev.clientY); for (var q = 0; q < l.length; q++) { var t = l[q].closest && l[q].closest("#ptTable th.ptLc[data-lc]"); if (t) return t.classList.contains("off") || t.classList.contains("ok") ? null : t; } return null; }
+      function mv(ev) {
+        if (!g) { if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return; g = document.createElement("div"); g.className = "tbg"; g.innerHTML = "<b>" + ch.innerHTML + "</b>"; document.body.appendChild(g); }
+        g.style.left = ev.clientX + "px"; g.style.top = ev.clientY + "px";
+        var t = at(ev); if (hot !== t) { if (hot) hot.classList.remove("drop"); hot = t; if (t) t.classList.add("drop"); }
+      }
+      function up(ev) {
+        document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); document.removeEventListener("pointercancel", up);
+        if (hot) hot.classList.remove("drop"); if (!g) return; g.remove();
+        var t = at(ev); if (t) ptChipDrop(t.dataset.lc, ch.dataset.op);
+      }
+      document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); document.addEventListener("pointercancel", up);
+    });
+    var T = $("ptTable");
+    T.addEventListener("input", function (e) { if (e.target.classList && e.target.classList.contains("ptLin")) ptLabTyped(e.target.dataset.lc, e.target.value, false); });
+    T.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("ptLin")) { e.preventDefault(); ptLabTyped(e.target.dataset.lc, e.target.value, true); } });
+  })();
+
   // the column a click on a parent cell carries its value to (null: nothing left to carry)
   function ptNextTo(r, c) {
     if (r.px === undefined) return null;
@@ -6431,6 +6511,7 @@ var ESPIC = {
     var to = ptNextTo(r, c); if (!to) return false;
     var T = ptTr(), td = ptTd(i, c);
     if (!T) { QZ.wrong++; ptShake(td); pqMsg("Type the transformation in the box first: it tells each value where to go."); return true; }
+    if (ptLabReq() && !ptLabDone(to)) { ptShake(ptLabCell(to)); pqMsg("Label that column first: drag its change from the description onto the box above the column, or type it there."); return true; }
     var st = ptStep(r, to, T);
     if (!st || Math.abs(st.want - ptRight(r, to)) > 1e-9) { QZ.wrong++; ptShake(td); pqMsg("That doesn't match g(x). Check the transformation in the box."); return true; }
     if (mode === "calculate" && !demo) { ptAsk(i, to, st.expr); return true; }
@@ -6652,9 +6733,10 @@ var ESPIC = {
   }
   function descHTML(h2, k2, a2) {
     var L = ["Family: " + FAMS[PG.fam]], a = a2 === undefined ? A() : a2, h = h2 === undefined ? H() : h2, k = k2 === undefined ? K() : k2, m = Math.abs(a);
-    if (h || k) { var t = []; if (h) t.push((h > 0 ? "→ " : "← ") + nf(Math.abs(h))); if (k) t.push((k > 0 ? "↑ " : "↓ ") + nf(Math.abs(k))); L.push("Translation " + t.join(" and ")); }
-    if (m !== 1 && m !== 0) L.push((m > 1 ? "Vertical stretch" : "Vertical shrink") + " by factor of " + nf(m));
-    if (a < 0) L.push("Reflection over the <i>x</i>-axis");
+    var chip = function (op, t) { return typeof ptChips === "function" && ptChips() ? "<span class=\"dChip\" data-op=\"" + op + "\">" + t + "</span>" : t; };   // 2.1 Sequence and Demo: the parts drag onto the parent table's labels
+    if (h || k) { var t = []; if (h) t.push(chip("h", (h > 0 ? "→ " : "← ") + nf(Math.abs(h)))); if (k) t.push(chip("k", (k > 0 ? "↑ " : "↓ ") + nf(Math.abs(k)))); L.push("Translation " + t.join(" and ")); }
+    if (m !== 1 && m !== 0) L.push(chip("a", (m > 1 ? "Vertical stretch" : "Vertical shrink") + " by factor of " + nf(m)));
+    if (a < 0) L.push(chip("r", "Reflection over the <i>x</i>-axis"));
     return L.join("<br>");
   }
   // table: x | the equation with that x substituted | y
@@ -9548,7 +9630,7 @@ var ESPIC = {
     var ONE = pgOne; pgOne = null;
     closePt(); var run = ++pgRun; PG.demoFin = false; if (!ONE) zoomHome(true); theme(); pgShift = 0; if (!ONE) dmUI("playing");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
-    if (!ONE) { PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = []; PG.ptb = null; PG.ptOn = false; PT.ask = null; PT.busy = false; }
+    if (!ONE) { PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = []; PG.ptb = null; PG.ptl = {}; PG.ptOn = false; PT.ask = null; PT.busy = false; }
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
     if (PQ && wf() && !ONE) wfPG();
     if (PQ && m3() && !ONE) m3PG();
@@ -10095,6 +10177,21 @@ var ESPIC = {
           }, function () { if (PG.dOK && !gdW()) { pgWait(700, n); return; } tap($("pgDescGo"), function () { pgWait(600, n); }); });
         },
         tog: function (n) { cap("Press Parent Table to switch from the graphing table to the parent table."); tap($("ptTog"), function () { pgWait(900, n); }); },
+        labels: function (n) {
+          var list = [], o = ptYOps(A(), K());
+          if (H()) list.push(["h", "gx"]);
+          o.forEach(function (q, ix) { var col = ix ? "gy" : "sy"; if (q.t === "a") { if (Math.abs(A()) !== 1) list.push(["a", col]); if (A() < 0) list.push(["r", col]); } else list.push(["k", col]); });
+          cap("Label each column the table needs: drag each change from the description onto the box above its column.");
+          each(list, function (it, d) {
+            var ch = document.querySelector("#pgDesc .dChip[data-op=\"" + it[0] + "\"]"), dst = ptLabCell(it[1]); if (!ch || !dst) { d(); return; }
+            var a = ctr(ch), b = ctr(dst); handGo(a, 650);
+            pgWait(800, function () {
+              if (pgRun !== run) return; handTap(); var g = document.createElement("div"); g.className = "tbg"; g.innerHTML = "<b>" + ch.innerHTML + "</b>"; g.style.left = a.x + "px"; g.style.top = a.y + "px"; document.body.appendChild(g);
+              g.animate([{ transform: "translate(0,0)" }, { transform: "translate(" + (b.x - a.x) + "px," + (b.y - a.y) + "px)" }], { duration: 1200, easing: "ease-in-out", fill: "forwards" }); handGo(b, 1200);
+              pgWait(1300, function () { g.remove(); if (pgRun !== run) return; ptChipDrop(it[1], it[0]); pgWait(700, d); });
+            });
+          }, n);
+        },
         fill: function (n) { cap("Drag the parabola button onto the table: the parent columns fill in with x and y = x²."); ptDropUD(n); },
         xs: function (n) {
           if (!ptUse("gx")) { n(); return; }   // no move left or right: the x column of g is not needed
@@ -10111,7 +10208,7 @@ var ESPIC = {
         g: function (n) { cap("Graph g(x) with the same button: click its vertex, (" + nf(H()) + ", " + nf(K()) + ")."); clickTool("U", [H(), K()], null, function () { if (A() === 1) { watch(n)(); return; } cap("Drag the side point to set the stretch of " + ptFr(A()) + "."); stretch(A(), watch(n), 1); }); },
         red: function (n) { cap("A correct graph of g(x) turns red, through every point from the table."); pgWait(2000, n); }
       };
-      steps = [PTS.rule, PTS.desc, PTS.tog, PTS.fill, PTS.xs, PTS.ys, PTS.copy, PTS.plot, PTS.par, PTS.g, PTS.red, function (n) { spDemo(n); }, GDS[GDS.length - 1]];   // (no zoom in the 2.1 demos)
+      steps = [PTS.rule, PTS.desc, PTS.tog, PTS.labels, PTS.fill, PTS.xs, PTS.ys, PTS.copy, PTS.plot, PTS.par, PTS.g, PTS.red, function (n) { spDemo(n); }, GDS[GDS.length - 1]];   // (no zoom in the 2.1 demos)
     }
     if (PQ && wf()) {   // Writing Translations: the hand drags the red graph, drags f onto g, and taps Simplify
       var wp = wfCur(), wax = 0, way = 0;
@@ -10389,6 +10486,7 @@ var ESPIC = {
         if (!pqParts().table) {
           if (!PG.ptOn && (PG.subd || R.some(function (q) { return q.done; }))) { if (!PG.subd) return one(function (n) { cap("Drag g(x) onto any center cell."); dragEq(0, n); }); if (row >= 0) return one(tableStep); }
           if (!PG.ptOn) return [PTS.tog];
+          if (!ptLabelsDone()) return [PTS.labels];
           var PR = ptRows();
           if (!PR.some(function (q) { return q.d.py; })) return [PTS.fill];
           for (i = 0; i < PR.length; i++) if (PR[i].px === undefined) { var ix = i; return one(function (n) { cap("Type a parent x-value."); ptTypeD(ix, "px", String(ix - 2), n); }); }
