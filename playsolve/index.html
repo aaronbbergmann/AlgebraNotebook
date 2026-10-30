@@ -266,7 +266,7 @@
   .log .msg{align-self:stretch;max-width:none;background:none;padding:0;border-radius:0;font-size:1rem;line-height:1.45}
   .log .msg+.msg{padding-top:.6rem;border-top:1px solid color-mix(in srgb,var(--ink) 15%,transparent)}
   /* ---- 1.1 quiz ---- */
-  body.quiz:not(.pq) .pgCtl,body.quiz:not(.wf) #undo,body.quiz:not(.wf):not(.m3) #show{display:none!important}
+  body.quiz:not(.pq) .pgCtl,body.quiz:not(.wf):not(.gwN) #undo,body.quiz:not(.wf):not(.m3) #show{display:none!important}
   .pgQ{display:none}
   body.pq .pgQ{display:block;flex:0 0 100%;margin:0 0 .3rem .2rem}
   .pgQt{font:600 1.25rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
@@ -313,6 +313,28 @@
   .wfSteps .wfIn.bad{border-color:#C0301E;animation:shake .3s}
   .wfSteps .wfBtn{margin:.2rem .3rem .2rem 0}
   .wfSteps .wfBtn.bad{border-color:#C0301E;color:#C0301E;animation:shake .3s}
+  /* 2.1 Write g (Demo, Sequence, Calculate, Write): its own graph, the a, h, k sliders and the equation text (Write: typed a, h, k, vertex and equation, no graph) */
+  .gwnG,.gwnS{display:none}
+  body.gwN #pgGraphWrap,body.gwN .pgSide,body.gwN #qzTools,body.gwN #ptTog,body.gwN #show{display:none!important}
+  body.gwN .gwnG{display:block;flex:1 1 18rem;max-width:30rem;width:100%}
+  body.gwN .gwnS{display:flex;flex-direction:column;gap:.9rem;box-sizing:border-box;padding-left:1.5rem;flex:1 1 16rem;max-width:26rem}
+  body.gwN.gwnWr .gwnG,body.gwN.gwnWr .gwnSl,body.gwN.gwnWr .gwnOut{display:none}
+  body.gwN:not(.gwnWr) .gwnW{display:none}
+  body.gwN.gwnWr .gwnS{max-width:40rem;flex-basis:30rem;padding-left:.2rem}
+  .gwnW .gwnR{flex-wrap:nowrap}
+  #gwnSvg{display:block;width:100%;aspect-ratio:1;border:1px solid #9AA0A8;background:#fff;box-sizing:border-box;touch-action:none;font-family:system-ui,sans-serif}
+  .gwnSl{padding:.6rem .8rem;border:2px solid color-mix(in srgb,#7A3FB5 55%,var(--bg));border-radius:12px;background:color-mix(in srgb,#7A3FB5 6%,var(--bg))}
+  .gwnSl .wfSlR{grid-template-columns:1.6rem 1fr 2.8rem}
+  .gwnSl .wfSlN{font:italic 500 1.3rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
+  .gwnOut{font:400 1.45rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;line-height:1.5}
+  .gwnOut .gwnV{font-size:1.2rem}
+  .gwnW{display:flex;flex-direction:column;gap:.7rem;font:400 1.3rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
+  .gwnW .gwnR{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+  .gwnW label{display:flex;align-items:center;gap:.35rem}
+  .gwnW input{font:500 1.1rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:10px;padding:.3em .5em;width:4.2rem}
+  .gwnW input.wide{width:12rem}
+  .gwnW input.ok{border-color:#2E9E4F;background:color-mix(in srgb,#2E9E4F 10%,var(--bg))}
+  body.gwN.gwnCalc .gwnSl input{cursor:pointer}
   .cf{color:#2D70B3}.cg{color:#7A3FB5}
   .wfChip{user-select:none;-webkit-user-select:none;padding:.05em .35em;border-radius:8px}
   .wfRhs{cursor:grab;touch-action:none;padding:0 .25em;border-radius:6px;background:color-mix(in srgb,#2D70B3 14%,transparent);box-shadow:0 0 0 1.5px #2D70B3}
@@ -650,6 +672,20 @@
         <div class="pgDesc" id="pgDesc" aria-live="polite"></div>
         <div class="descIn" id="pgDescIn" hidden><input id="pgDescTx" autocomplete="off" spellcheck="false" placeholder="Describe the transformation" aria-label="Describe the transformation"><div class="descKeys" id="pgDescKeys"><button type="button" data-ins="Translation">Translation</button><button type="button" data-ins="Stretch">Stretch</button><button type="button" data-ins="Shrink">Shrink</button><button type="button" data-ins="Reflection">Reflection</button><button type="button" class="axB" data-ins="x-axis">x-axis</button><button type="button" class="axB" data-ins="y-axis">y-axis</button><button type="button" data-ins="Horizontal">Horizontal</button><button type="button" data-ins="Vertical">Vertical</button><span class="descArr"><button type="button" data-ins="←" aria-label="left">←</button><button type="button" data-ins="→" aria-label="right">→</button><button type="button" data-ins="↑" aria-label="up">↑</button><button type="button" data-ins="↓" aria-label="down">↓</button></span><button type="button" class="descGo" id="pgDescGo">Submit</button></div></div>
         <div class="estIn" id="estIn" hidden><label for="estTx" id="estLbl">Estimate</label><div class="estRow"><input id="estTx" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="Estimated height"><button type="button" id="estGo">Submit</button></div></div>
+      </div>
+      <div class="gwnG" id="gwnG"><svg id="gwnSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph of f and g"></svg></div>
+      <div class="gwnS" id="gwnS">
+        <div class="gwnSl" id="gwnSl" role="group" aria-label="a, h and k">
+          <label class="wfSlR"><span class="wfSlN">a</span><input type="range" id="gwnSlA" min="-3" max="3" step="0.1" value="1" aria-label="a"><output id="gwnSlAv">1</output></label>
+          <label class="wfSlR"><span class="wfSlN">h</span><input type="range" id="gwnSlH" min="-10" max="10" step="1" value="0" aria-label="h"><output id="gwnSlHv">0</output></label>
+          <label class="wfSlR"><span class="wfSlN">k</span><input type="range" id="gwnSlK" min="-10" max="10" step="1" value="0" aria-label="k"><output id="gwnSlKv">0</output></label>
+        </div>
+        <div class="gwnW" id="gwnW" role="group" aria-label="Write a, h, k, the vertex and g(x)">
+          <div class="gwnR"><label><i>a</i> =<input id="gwnWa" data-f="a" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="a"></label><label><i>h</i> =<input id="gwnWh" data-f="h" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="h"></label><label><i>k</i> =<input id="gwnWk" data-f="k" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="k"></label></div>
+          <div class="gwnR"><label>Vertex<input id="gwnWv" class="wide" data-f="v" autocomplete="off" spellcheck="false" placeholder="(h, k)" aria-label="Vertex"></label></div>
+          <div class="gwnR"><label><input id="gwnWe" class="wide" data-f="e" autocomplete="off" spellcheck="false" placeholder="g(x)=..." aria-label="g(x)" style="width:16rem"></label></div>
+        </div>
+        <div class="gwnOut" id="gwnOut" aria-live="polite"></div>
       </div>
     </section>
     <div class="frame">
@@ -3248,6 +3284,7 @@
     done(i);
   }
   function undo() {
+    if (pq() && gwN()) { gwnUndo(); return; }
     if (wf()) { wfUndo(); return; }
     hideKind();
     if (EXP && BUILT[act].solver && mode !== "create") { exUndo(); return; }
@@ -5488,6 +5525,7 @@
     if (!pq() || !QZ.order) return;
     if (est()) { var oe = pqParts(), alle = QZ.step >= 4; $("pgQcue").innerHTML = (QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + [["Table", oe.table], ["Regression", oe.graph], ["Estimate", oe.desc]].map(function (a) { return a[0] + (alle || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; "); return; }
     if (m3()) { $("pgQcue").innerHTML = m3Cue(); return; }
+    if (gwN()) { $("pgQcue").innerHTML = QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : ""; return; }   // (one thing to answer, g: only the problem count)
     if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = ""; return; }   // (one thing to answer: nothing to list)
     if (wfCr()) { $("pgQcue").innerHTML = ""; return; }
     if (wf()) { var ow = pqParts(), aw = QZ.step >= 4, ck = function (b) { return aw || b ? " <span class=\"cueOk\">\u2713</span>" : "?"; }; var pn = QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : "", P0 = wfProb();
@@ -5755,6 +5793,7 @@ var ESPIC = {
   function wsList(a) { return a.length > 1 ? a.slice(0, -1).join(", ") + " and " + a[a.length - 1] : a[0]; }
   // Write: the parts still to be done (not whether they are right)
   function wsMissing() {
+    if (gwN()) return gwnMissing();
     if (m3()) return m3wMissing();
     var miss = [], num = function (t) { return !!parse(String(t || "").replace(/−/g, "-").trim()); };
     if (wf()) {
@@ -5784,6 +5823,7 @@ var ESPIC = {
   }
   function wsReadyUpd() { var b = $("qzGo"); if (b) b.classList.toggle("ready", !!(wsub() && !wsMissing().length)); }
   function wsubSubmit() {
+    if (gwN()) { gwnSubmit(); return; }
     var miss = wsMissing();
     if (miss.length) { pqMsg("Not yet: still to complete " + wsList(miss) + ".", "note"); return; }   // (a reminder, not an error: it does not cost the Progress)
     if (m3()) { m3wSubmit(); return; }
@@ -5825,7 +5865,7 @@ var ESPIC = {
       a = tier === 0 ? pk([2, 0.5, -1, 0.25]) : tier === 1 ? pk([-2, -0.5, 2, -0.25]) : pk([2, -2, 0.5, -0.5, -1]);
       if (tier === 2) { if (rnd(2)) h = nz(4); else k = nz(4); }
     } else {
-      a = tier === 0 ? pk([2, 0.5, 0.25]) : tier === 1 ? pk([-1, -2, -0.5]) : pk([-2, -0.5, 2, 0.5, -0.25]);
+      a = tier === 0 ? pk([2, 0.5, 3]) : tier === 1 ? pk([-1, -2, -0.5]) : pk([-2, -0.5, 2, 0.5, -1.5]);   // (the a slider moves in tenths, so no factor of 1/4)
       if (tier === 0) { if (rnd(2)) h = nz(4); else k = nz(4); } else { h = nz(4); k = nz(4); }
     }
     if (Math.abs(k + 4 * a) > 10) continue;   // the table's outer rows (two from the vertex) stay inside the window, so it never has to zoom out
@@ -5847,7 +5887,7 @@ var ESPIC = {
   // ---- 2.1 Write g in Demo, Sequence and Calculate: g(x) = f(x) to start; each part of the transformation is a chip dragged onto it, in the order the
   // question gives them (a stretch or shrink multiplies f(x), a reflection in the x-axis makes it negative, right/left h changes x to x ∓ h, up/down k adds k).
   // Then the question's f(x) = x² is dragged onto g(x), and g(x) = a(x − h)² + k is the answer. Write mode stays typed.
-  function gwOn() { return gdW() && (mode === "demo" || mode === "sequence" || mode === "calculate") && !!QZ && !!QZ.tr && !!QZ.tr[QZ.pi]; }
+  function gwOn() { return !gwN() && gdW() && (mode === "demo" || mode === "sequence" || mode === "calculate") && !!QZ && !!QZ.tr && !!QZ.tr[QZ.pi]; }
   function gwParts(t) {
     var P = [], ab = Math.abs(t.a || 1);
     if (ab > 1) P.push({ op: "a", txt: "Vertical stretch by factor of " + nf(ab) }); else if (ab < 1) P.push({ op: "a", txt: "Vertical shrink by factor of " + nf(ab) });
@@ -5923,6 +5963,202 @@ var ESPIC = {
     $("gwBox").addEventListener("input", function (e) { if (e.target.id === "gwIn") gwAnswer(false); });
     $("gwBox").addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.id === "gwIn") { e.preventDefault(); gwAnswer(true); } });
   })();
+  // ---- 2.1 Write g (Demo, Sequence, Calculate, Write): three things on screen. A graph with the parent f(x) = x² (dotted blue) and g (purple), the a, h and k
+  // sliders, and g's equation and vertex as text. Demo and Sequence: the student drags g's vertex (green) and its stretch point (purple, one unit right of the
+  // vertex, a above it); the sliders and the text follow. Calculate: the sliders move g (the points only show). Write: no graph; a, h, k, the vertex and the
+  // equation are typed and checked with Submit. A problem is right when g is the transformation in the question.
+  function gwN() { return gdW() && !!QZ && !!QZ.tr && !!QZ.tr[QZ.pi] && (mode === "demo" || mode === "sequence" || mode === "calculate" || mode === "solo"); }
+  function gwnT() { var t = QZ.tr[QZ.pi]; return { a: t.a || 1, h: t.h, k: t.k }; }
+  function gwnSt() { if (!QZ.gn || QZ.gn.pi !== QZ.pi) QZ.gn = { pi: QZ.pi, a: 1, h: 0, k: 0, ok: false, hist: [], drag: null, w: { a: "", h: "", k: "", v: "", e: "g(x)=" }, wok: {} }; return QZ.gn; }
+  function gwnR1(v) { v = Math.round(v * 10) / 10; return Object.is(v, -0) ? 0 : v; }
+  function gwnCl(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function gwnMatch(s) { var t = gwnT(); return Math.abs(s.a - t.a) < 1e-9 && s.h === t.h && s.k === t.k; }
+  function gwnDragOK() { return gwN() && (mode === "demo" || mode === "sequence") && QZ.step < 4; }
+  function gwnEq(a, h, k) {
+    var X = "<i>x</i>", G = "<span class=\"cg\"><i>g</i>(" + X + ")</span> = ";
+    if (Math.abs(a) < 1e-9) return G + nf(k);
+    var co = a === 1 ? "" : a === -1 ? "−" : nf(a), sq = h ? "(" + X + (h > 0 ? " − " : " + ") + Math.abs(h) + ")²" : X + "²";
+    return G + co + sq + (k ? (k > 0 ? " + " : " − ") + Math.abs(k) : "");
+  }
+  function gwnQ() {
+    var t = QZ.tr[QZ.pi], q = "Let the graph of <i>g</i> be " + gdSay21(t) + " of the graph of <span class=\"cf\"><i>f</i>(<i>x</i>) = <i>x</i>²</span>. ";
+    return q + (mode === "solo" ? "Find <i>a</i>, <i>h</i>, <i>k</i>, the vertex and a rule for <i>g</i>." : mode === "calculate" ? "Use the sliders to transform <i>g</i>." : "Drag the points on <i>g</i> to transform it.");
+  }
+  function gwnScr(x, y) { var S = $("gwnSvg"), m = S.getScreenCTM(), p = S.createSVGPoint(); p.x = x; p.y = -y; p = p.matrixTransform(m); return { x: p.x, y: p.y }; }
+  function gwnDraw() {
+    var S = $("gwnSvg"), s = gwnSt(); S.innerHTML = "";
+    for (var i = -10; i <= 10; i++) {
+      var o = i % 5 === 0 ? ".32" : ".12";
+      S.appendChild(svgEl("line", { x1: i, y1: -10, x2: i, y2: 10, stroke: "#1B2433", "stroke-opacity": o, "stroke-width": ".04" }));
+      S.appendChild(svgEl("line", { x1: -10, y1: i, x2: 10, y2: i, stroke: "#1B2433", "stroke-opacity": o, "stroke-width": ".04" }));
+      if (Math.abs(i) === 5) {
+        var tx = svgEl("text", { x: i, y: .95, "font-size": ".75", "text-anchor": "middle", fill: "#3B4556" }); tx.textContent = nf(i); S.appendChild(tx);
+        var ty = svgEl("text", { x: -.35, y: -i + .27, "font-size": ".75", "text-anchor": "end", fill: "#3B4556" }); ty.textContent = nf(i); S.appendChild(ty);
+      }
+    }
+    S.appendChild(svgEl("line", { x1: -10, y1: 0, x2: 10, y2: 0, stroke: "#1B2433", "stroke-width": ".07" }));
+    S.appendChild(svgEl("line", { x1: 0, y1: -10, x2: 0, y2: 10, stroke: "#1B2433", "stroke-width": ".07" }));
+    var curve = function (fn) { var p = []; for (var x = -10.5; x <= 10.5001; x += .05) { var y = fn(x); p.push(x.toFixed(3) + "," + (-gwnCl(y, -40, 40)).toFixed(3)); } return p.join(" "); };
+    S.appendChild(svgEl("polyline", { points: curve(function (x) { return x * x; }), fill: "none", stroke: "#2D70B3", "stroke-width": ".1", "stroke-dasharray": ".3 .25", "pointer-events": "none" }));
+    S.appendChild(svgEl("polyline", { points: curve(function (x) { return s.a * (x - s.h) * (x - s.h) + s.k; }), fill: "none", stroke: "#7A3FB5", "stroke-width": ".14", "stroke-linejoin": "round", "pointer-events": "none" }));
+    var live = gwnDragOK();
+    [["v", s.h, s.k, "#2E9E4F"], ["a", s.h + 1, s.k + s.a, "#6042A6"]].forEach(function (d) {
+      var g = svgEl("g", live ? { "data-gh": d[0], style: "cursor:grab" } : { "pointer-events": "none" });
+      if (live) g.appendChild(svgEl("circle", { cx: d[1], cy: -d[2], r: .62, fill: d[3], "fill-opacity": ".3" }));
+      g.appendChild(svgEl("circle", { cx: d[1], cy: -d[2], r: live ? .2 : .17, fill: d[3] }));
+      S.appendChild(g);
+      if (s.drag === d[0]) {
+        var lb = svgEl("text", { x: d[1] + .55, y: -d[2] - .55, "font-size": ".8", "font-weight": "700", fill: d[3], stroke: "#fff", "stroke-width": ".22", "paint-order": "stroke", "pointer-events": "none" });
+        lb.textContent = "(" + nf(d[1]) + ", " + nf(gwnR1(d[2])) + ")"; S.appendChild(lb);
+      }
+    });
+  }
+  function gwnSync() {
+    var on = gwN(); document.body.classList.toggle("gwN", on);
+    document.body.classList.toggle("gwnWr", on && mode === "solo"); document.body.classList.toggle("gwnCalc", on && mode === "calculate");
+    if (!on) return;
+    var s = gwnSt(), done = QZ.step >= 4;
+    if (mode !== "solo") gwnDraw();
+    ["a", "h", "k"].forEach(function (c) {
+      var inp = $("gwnSl" + c.toUpperCase()); if (Math.abs(+inp.value - s[c]) > 1e-9) inp.value = s[c];
+      inp.disabled = mode !== "calculate" || done || (pgRun && !pgPaused && !DN);
+      $("gwnSl" + c.toUpperCase() + "v").textContent = c === "a" ? nf(s.a) : nf(s[c]);
+    });
+    $("gwnOut").innerHTML = "<div class=\"gwnEq\">" + gwnEq(s.a, s.h, s.k) + "</div><div class=\"gwnV\">Vertex <span class=\"cg\">(" + nf(s.h) + ", " + nf(s.k) + ")</span></div>";
+    if (mode === "solo") ["a", "h", "k", "v", "e"].forEach(function (f) {
+      var el = $("gwnW" + f); if (document.activeElement !== el && el.value !== s.w[f]) el.value = s.w[f];
+      el.readOnly = done || !!s.wok[f]; el.classList.toggle("ok", !!s.wok[f]);
+    });
+    $("undo").hidden = !(mode === "sequence" || mode === "calculate") || done;
+    $("show").hidden = true;
+  }
+  function gwnPush() { var s = gwnSt(); s.hist.push([s.a, s.h, s.k]); if (s.hist.length > 60) s.hist.shift(); }
+  function gwnUndo() { var s = gwnSt(); if (QZ.step >= 4 || !s.hist.length) return; var p = s.hist.pop(); s.a = p[0]; s.h = p[1]; s.k = p[2]; pqMsg(""); gwnSync(); }
+  // right: the problem is finished (Progress, Next) through the usual check
+  function gwnCheck() {
+    if (!gwN() || mode === "solo" || QZ.step >= 4) return;
+    var s = gwnSt(); if (!gwnMatch(s)) return;
+    s.ok = true; pqMsg("");
+    if (pgRun && pgPaused && !DN) { PG.demoFin = true; pgStop(); return; }   // finished during a paused demo: the demo is over
+    drawPlay();
+  }
+  function gwnNum(t) {
+    t = String(t || "").replace(/\s/g, "").replace(/[−–]/g, "-"); var m = /^([-+]?)(\d+)\/(\d+)$/.exec(t);
+    if (m) return +m[3] ? (m[1] === "-" ? -1 : 1) * +m[2] / +m[3] : NaN;
+    return /^[-+]?(\d+\.?\d*|\.\d+)$/.test(t) ? +t : NaN;
+  }
+  function gwnRight(f, v) {
+    var t = gwnT(), n;
+    if (f === "a" || f === "h" || f === "k") { n = gwnNum(v); return isFinite(n) && Math.abs(n - t[f]) < 1e-9; }
+    if (f === "v") { var m = /^\(?([^,()]+),([^,()]+)\)?$/.exec(String(v || "").replace(/\s/g, "")); return !!m && Math.abs(gwnNum(m[1]) - t.h) < 1e-9 && Math.abs(gwnNum(m[2]) - t.k) < 1e-9; }
+    var fn = eqFn(v); if (!fn) return false;
+    for (var x = -3; x <= 3; x++) { var y; try { y = fn(x); } catch (e) { return false; } if (typeof y !== "number" || !(Math.abs(y - (t.a * (x - t.h) * (x - t.h) + t.k)) < 1e-6)) return false; }
+    return true;
+  }
+  var GWNF = { a: "a", h: "h", k: "k", v: "the vertex", e: "g(x)" };
+  function gwnMissing() { var s = gwnSt(); return ["a", "h", "k", "v", "e"].filter(function (f) { var v = String(s.w[f] || "").trim(); return f === "e" ? !v.replace(/\s/g, "").replace(/^g\(x\)=?/i, "") : !v; }).map(function (f) { return GWNF[f]; }); }
+  function gwnSubmit() {
+    var miss = gwnMissing();
+    if (miss.length) { pqMsg("Not yet: still to complete " + wsList(miss) + ".", "note"); return; }   // (a reminder, not an error)
+    var s = gwnSt(), bad = [];
+    ["a", "h", "k", "v", "e"].forEach(function (f) { if (s.wok[f]) return; if (gwnRight(f, s.w[f])) s.wok[f] = true; else bad.push(GWNF[f]); });
+    if (bad.length) { QZ.wrong++; gwnSync(); pqMsg("Not quite. Check " + wsList(bad) + ", then press Submit again."); return; }
+    s.ok = true; s.a = gwnT().a; s.h = gwnT().h; s.k = gwnT().k; pqMsg(""); drawPlay();
+  }
+  (function () {
+    var S = $("gwnSvg");
+    S.addEventListener("pointerdown", function (e) {
+      var el = e.target.closest && e.target.closest("[data-gh]"); if (!el || e.button > 0 || !gwnDragOK()) return;
+      if (e.isTrusted) pgUser();
+      e.preventDefault(); var s = gwnSt(), which = el.dataset.gh, before = [s.a, s.h, s.k]; gwnPush(); s.drag = which;
+      try { S.setPointerCapture(e.pointerId); } catch (er) {}
+      function mv(ev) {
+        var m = S.getScreenCTM(); if (!m) return; var p = S.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; p = p.matrixTransform(m.inverse());
+        var x = p.x, y = -p.y;
+        if (which === "v") { s.h = gwnCl(Math.round(x), -10, 10); s.k = gwnCl(Math.round(y), -10, 10); }
+        else s.a = gwnCl(gwnR1(y - s.k), -3, 3);
+        gwnSync();
+      }
+      function up() {
+        S.removeEventListener("pointermove", mv); S.removeEventListener("pointerup", up); S.removeEventListener("pointercancel", up);
+        s.drag = null; if (s.a === before[0] && s.h === before[1] && s.k === before[2]) s.hist.pop();
+        gwnSync(); gwnCheck();
+      }
+      S.addEventListener("pointermove", mv); S.addEventListener("pointerup", up); S.addEventListener("pointercancel", up);
+    });
+    var dirty = false;
+    $("gwnSl").addEventListener("input", function (e) {
+      var t = e.target; if (t.type !== "range" || !gwN() || mode !== "calculate" || QZ.step >= 4) return;
+      if (e.isTrusted) pgUser();
+      var s = gwnSt(); if (!dirty) { gwnPush(); dirty = true; }
+      var c = t.id.slice(-1).toLowerCase(); s[c] = c === "a" ? gwnR1(+t.value) : Math.round(+t.value); gwnSync();
+    });
+    $("gwnSl").addEventListener("change", function (e) { if (e.target.type !== "range") return; dirty = false; gwnCheck(); });
+    $("gwnW").addEventListener("input", function (e) { var f = e.target.dataset && e.target.dataset.f; if (!f || !gwN()) return; gwnSt().w[f] = e.target.value; });
+    $("gwnW").addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return; var L = ["a", "h", "k", "v", "e"], i = L.indexOf(e.target.dataset && e.target.dataset.f); if (i < 0) return;
+      e.preventDefault(); if (i < L.length - 1) { var n = $("gwnW" + L[i + 1]); n.focus(); n.select(); } else if (!gwnMissing().length) gwnSubmit();
+    });
+  })();
+  // the demo (and "Demo next step"): the hand drags the purple point to a, then the vertex to (h, k); in Calculate it slides the sliders
+  function gwnDemo(run, ONE, cap) {
+    if (!ONE) QZ.gn = null;
+    var s = gwnSt(), t = gwnT(), calc = mode === "calculate"; s.ok = false; gwnSync();
+    function drag(which, to, then) {
+      var fr = which === "v" ? [s.h, s.k] : [s.a], ms = 1500, t0 = null;
+      handGo(which === "v" ? gwnScr(s.h, s.k) : gwnScr(s.h + 1, s.k + s.a), 650);
+      pgWait(800, function () {
+        if (pgRun !== run) return; handTap(); s.drag = which;
+        function step(ts) {
+          if (pgRun !== run) return;
+          if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, x, y;
+          if (which === "v") { x = fr[0] + (to[0] - fr[0]) * e; y = fr[1] + (to[1] - fr[1]) * e; s.h = Math.round(x); s.k = Math.round(y); gwnSync(); handAt(gwnScr(x, y)); }
+          else { y = fr[0] + (to - fr[0]) * e; s.a = gwnR1(y); gwnSync(); handAt(gwnScr(s.h + 1, s.k + y)); }
+          if (u < 1) pgRaf(step); else { s.drag = null; gwnSync(); pgWait(600, then); }
+        }
+        pgRaf(step);
+      });
+    }
+    function slide(c, to, then) {
+      var inp = $("gwnSl" + c.toUpperCase()), fr = s[c], ms = 1300, t0 = null;
+      var th = function (v) { var r = inp.getBoundingClientRect(), mn = +inp.min, mx = +inp.max; return { x: r.left + 9 + (r.width - 18) * (v - mn) / (mx - mn), y: r.top + r.height / 2 }; };
+      handGo(th(fr), 650);
+      pgWait(800, function () {
+        if (pgRun !== run) return; handTap();
+        function step(ts) {
+          if (pgRun !== run) return;
+          if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, v = fr + (to - fr) * e;
+          s[c] = c === "a" ? gwnR1(v) : Math.round(v); gwnSync(); handAt(th(v));
+          if (u < 1) pgRaf(step); else pgWait(600, then);
+        }
+        pgRaf(step);
+      });
+    }
+    var ab = Math.abs(t.a), fr = ab === 0.5 ? "1/2" : nf(ab), aw = (ab > 1 ? "A vertical stretch by a factor of " + fr : ab < 1 ? "A vertical shrink by a factor of " + fr : "") + (t.a < 0 ? (ab !== 1 ? " and a reflection in the x-axis" : "A reflection in the x-axis") : "");
+    var mv = []; if (t.h) mv.push(Math.abs(t.h) + (Math.abs(t.h) === 1 ? " unit " : " units ") + (t.h > 0 ? "right" : "left")); if (t.k) mv.push(Math.abs(t.k) + (Math.abs(t.k) === 1 ? " unit " : " units ") + (t.k > 0 ? "up" : "down"));
+    var aStep = function (n) {
+      if (Math.abs(s.a - t.a) < 1e-9) { n(); return; }
+      cap((aw || "No stretch, shrink or reflection") + (calc ? ": slide a to " + nf(t.a) + "." : ": drag the purple point until a = " + nf(t.a) + "."));
+      if (calc) slide("a", t.a, n); else drag("a", t.a, n);
+    };
+    var vStep = function (n) {
+      if (s.h === t.h && s.k === t.k) { n(); return; }
+      var w = mv.length ? "A translation " + mv.join(" and ") : "No translation";
+      if (calc) { cap(w + ": slide h to " + nf(t.h) + " and k to " + nf(t.k) + "."); var kk = function () { if (s.k === t.k) n(); else slide("k", t.k, n); }; if (s.h === t.h) kk(); else slide("h", t.h, kk); return; }
+      cap(w + ": drag the green vertex to (" + nf(t.h) + ", " + nf(t.k) + ")."); drag("v", [t.h, t.k], n);
+    };
+    if (ONE) {
+      var one = Math.abs(s.a - t.a) > 1e-9 ? aStep : vStep;
+      one(function () { pgWait(900, function () { if (pgRun === run) pgStop(); }); });
+      return;
+    }
+    var L = [
+      function (n) { cap("g(x) starts as f(x) = x². " + (calc ? "Use the sliders to transform it." : "Drag its points to transform it.")); pgWait(2200, n); },
+      aStep, vStep,
+      function (n) { cap("g(x) = " + gwnEq(t.a, t.h, t.k).replace(/<[^>]+>/g, "").replace(/^g\(x\) = /, "") + ", with vertex (" + nf(t.h) + ", " + nf(t.k) + ")."); pgWait(2600, n); }
+    ], i = 0;
+    (function next() { if (pgRun !== run) return; if (i < L.length) { L[i++](next); return; } s.ok = gwnMatch(s); PG.demoFin = true; pgStop(); })();
+  }
   var gdCustom = null;   // Graph & Describe: the function typed in Create, carried into the other modes
   function gdTyped() { return gd() && (soloish() || A() !== 1 || gd2()); }   // the description is typed (not clicked) when practising alone, or when it needs a stretch or a reflection
   function soloish() { return mode === "solo" || mode === "create"; }
@@ -6014,6 +6250,7 @@ var ESPIC = {
     else if (gd() && mode === "create" && !QZ.cr && QZ.pick) { $("pgQt").textContent = "Your function is in."; showPick($("pgQ"), "How would you like to work on it?"); }
     else if (gd() && mode === "create" && !QZ.cr) { $("modePick").hidden = true; $("pgQt").innerHTML = gd2() ? "Type a quadratic function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2(<i>x</i> \u2212 3)\u00b2 + 1</span>." : "Type a function to graph, like <span class=\"lm\"><i>g</i>(<i>x</i>) = 2|<i>x</i> \u2212 3| + 1</span>."; }
     else if (est()) $("pgQt").innerHTML = estHTML();
+    else if (gwN()) $("pgQt").innerHTML = gwnQ();
     else if (gdW()) $("pgQt").innerHTML = "Let the graph of <i>g</i> be " + gdSay21(QZ.tr[QZ.pi]) + " of the graph of " + (gwOn() ? "<span class=\"cf\"><i>f</i>(<i>x</i>) = <span class=\"wfRhs\" data-gwrhs title=\"Drag me onto g(x)\"><i>x</i>\u00b2</span></span>" : "<i>f</i>(<i>x</i>) = <i>x</i>\u00b2") + ". Write a rule for <i>g</i> in the equation box. Then graph <i>f</i> and <i>g</i> and fill in the table.";
     else if (gd2()) $("pgQt").innerHTML = "Describe the transformation of <i>f</i>(<i>x</i>) = <i>x</i>\u00b2 represented by " + eqHTML() + ". Then graph each function and fill in the table.";
     else if (gd()) $("pgQt").innerHTML = "Graph " + eqHTML() + " and its parent function. Describe the transformation.";
@@ -6034,11 +6271,11 @@ var ESPIC = {
     $("hint").hidden = done || soloish();   // a right answer needs no hint
     if (wf()) { $("show").hidden = false; wfUndoVis(); }
     else if (m3()) { $("show").hidden = false; $("undo").hidden = true; }
-    wfSteps();
+    wfSteps(); gwnSync();
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
-  function pqParts() { if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: wfL() === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: wsub() ? !!PG.wsT : estTableOK(), graph: wsub() ? !!PG.wsG : estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: mode === "solo" || TB.rows().every(function (r) { return r.done; }) || (ptAvail() && ptAllDone()), graph: gd() || wsub() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
+  function pqParts() { if (gwN()) { var gk = !!(QZ.gn && QZ.gn.pi === QZ.pi && QZ.gn.ok); return { eq: gk, table: true, graph: gk, parent: true, desc: true }; } if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: wfL() === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: wsub() ? !!PG.wsT : estTableOK(), graph: wsub() ? !!PG.wsG : estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: mode === "solo" || TB.rows().every(function (r) { return r.done; }) || (ptAvail() && ptAllDone()), graph: gd() || wsub() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
   var pqBusy = false;
   function pqEval() {
     if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order || (gd() && mode === "create" && !QZ.cr) || wfCr()) return;
@@ -6046,8 +6283,8 @@ var ESPIC = {
     try {
       gdWatch();
       var ok = pqParts();
-      if (!est() && ok.graph && !PG.show.graph) { pqMsg(""); }
-      if (!est() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
+      if (!est() && !gwN() && ok.graph && !PG.show.graph) { pqMsg(""); }
+      if (!est() && !gwN() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
         QZ.step = 4; var last = QZ.pi === QZ.order.length - 1;
         var c2Err = QZ.wrong > 0;   // any error message in this round (in Demo, this problem) means no Progress for it
@@ -9195,7 +9432,7 @@ var ESPIC = {
     TB.sync(); ptSync(); $("qzTools").hidden = wf() || m3(); posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
-    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd();
+    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd(); gwnSync();
   }
   // ---- Chapter 2 (Quadratic Functions).  2.1 Using a Transformed Quadratic and every exercise of 2.2, 2.3 and 2.4 run on the 1.3 engine: a problem is a story or a function,
   // a figure, and steps (Demo, Sequence and Calculate take every small step; Solo takes only the big ones).  The figure here is a whole coordinate plane that can draw
@@ -10155,6 +10392,7 @@ var ESPIC = {
     if (GD && !ONE) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; $("pgDescTx").value = ""; }
     if (!ONE) { Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 0; PG.eOK = false; PG.eqTxt = ""; } else if (wf()) { PG.eqTxt = "g(x)="; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; if (GD && gwOn()) { PG.show.eq = false; PG.eqTxt = "g(x)="; QZ.gwd = 0; QZ.gwAsk = false; } } drawPlay(); }   // (2.1 Write g: the hand builds g(x) from g(x) = f(x))
     function cap(t) { t = wf() ? wfNm(t) : t; if (ONE) note(t); else dmCap(t); }
+    if (PQ && gwN()) { gwnDemo(run, ONE, cap); return; }   // 2.1 Write g: the hand drags g's points (Calculate: slides the sliders)
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
     // the demo's hand makes a button look hovered when it arrives and pressed when it taps, just as for a real pointer
