@@ -330,6 +330,9 @@
   body.gwN .gwnG{display:block;flex:1 1 18rem;max-width:30rem;width:100%}
   body.gwN .gwnS{display:flex;flex-direction:column;gap:.9rem;box-sizing:border-box;padding-left:1.5rem;flex:1 1 16rem;max-width:26rem}
   body.gwN.gwnWr .gwnG,body.gwN.gwnWr .gwnSl,body.gwN.gwnWr .gwnOut,body.gwN.gwnWr .gwnF{display:none}
+  .gwnKeys{display:flex;gap:.4rem}
+  .gwnKeys button{min-width:2.6rem;height:2.2rem;padding:0 .6rem;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 1.15rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;cursor:pointer}
+  .gwnKeys button:hover{background:#EEF1F6}.gwnKeys button:active{background:#DCE8F7}
   .gwnF{font:400 1.45rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;margin-bottom:-.4rem}
   body.gwN:not(.gwnWr) .gwnW{display:none}
   body.gwN.gwnWr .gwnS{max-width:40rem;flex-basis:30rem;padding-left:.2rem}
@@ -705,7 +708,7 @@
         <div class="gwnW" id="gwnW" role="group" aria-label="Write a, h, k, the vertex and g(x)">
           <div class="gwnR"><label><i>a</i> =<input id="gwnWa" data-f="a" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="a"></label><label><i>h</i> =<input id="gwnWh" data-f="h" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="h"></label><label><i>k</i> =<input id="gwnWk" data-f="k" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="k"></label></div>
           <div class="gwnR"><label>Vertex<input id="gwnWv" class="wide" data-f="v" autocomplete="off" spellcheck="false" placeholder="Ex (3,-2)" aria-label="Vertex"></label></div>
-          <div class="gwnR"><label><span class="lm"><i>g</i>(<i>x</i>) =</span><input id="gwnWe" class="wide" data-f="e" autocomplete="off" spellcheck="false" aria-label="g(x)" style="width:14rem"></label></div>
+          <div class="gwnR"><label><span class="lm"><i>g</i>(<i>x</i>) =</span><input id="gwnWe" class="wide" data-f="e" autocomplete="off" spellcheck="false" aria-label="g(x)" style="width:14rem"></label><span class="gwnKeys" id="gwnKeys"><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^2" aria-label="Insert ^2 (squared)">^2</button></span></div>
         </div>
         <div class="gwnOut" id="gwnOut" aria-live="polite"></div>
       </div>
@@ -6132,6 +6135,12 @@ var ESPIC = {
     });
     $("gwnSl").addEventListener("change", function (e) { if (e.target.type !== "range") return; dirty = false; gwnCheck(); });
     $("gwnW").addEventListener("input", function (e) { var f = e.target.dataset && e.target.dataset.f; if (!f || !gwN()) return; gwnSt().w[f] = e.target.value; });
+    $("gwnKeys").addEventListener("mousedown", function (e) { if (e.target.closest("button")) e.preventDefault(); });   // the cursor stays in the box
+    $("gwnKeys").addEventListener("click", function (e) {
+      var b = e.target.closest("button"), el = $("gwnWe"); if (!b || el.readOnly) return;
+      var i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd;
+      el.focus(); el.setRangeText(b.dataset.ins, i, j, "end"); el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
     $("gwnW").addEventListener("keydown", function (e) {
       if (e.key !== "Enter") return; var L = ["a", "h", "k", "v", "e"], i = L.indexOf(e.target.dataset && e.target.dataset.f); if (i < 0) return;
       e.preventDefault(); if (i < L.length - 1) { var n = $("gwnW" + L[i + 1]); n.focus(); n.select(); } else if (!gwnMissing().length) gwnSubmit();
