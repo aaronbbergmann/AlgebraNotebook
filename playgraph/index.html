@@ -676,7 +676,7 @@
       <div class="gwnG" id="gwnG"><svg id="gwnSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph of f and g"></svg></div>
       <div class="gwnS" id="gwnS">
         <div class="gwnSl" id="gwnSl" role="group" aria-label="a, h and k">
-          <label class="wfSlR"><span class="wfSlN">a</span><input type="range" id="gwnSlA" min="-3" max="3" step="0.1" value="1" aria-label="a"><output id="gwnSlAv">1</output></label>
+          <label class="wfSlR"><span class="wfSlN">a</span><input type="range" id="gwnSlA" min="0" max="13" step="1" value="10" aria-label="a"><output id="gwnSlAv">1</output></label>
           <label class="wfSlR"><span class="wfSlN">h</span><input type="range" id="gwnSlH" min="-10" max="10" step="1" value="0" aria-label="h"><output id="gwnSlHv">0</output></label>
           <label class="wfSlR"><span class="wfSlN">k</span><input type="range" id="gwnSlK" min="-10" max="10" step="1" value="0" aria-label="k"><output id="gwnSlKv">0</output></label>
         </div>
@@ -5865,7 +5865,7 @@ var ESPIC = {
       a = tier === 0 ? pk([2, 0.5, -1, 0.25]) : tier === 1 ? pk([-2, -0.5, 2, -0.25]) : pk([2, -2, 0.5, -0.5, -1]);
       if (tier === 2) { if (rnd(2)) h = nz(4); else k = nz(4); }
     } else {
-      a = tier === 0 ? pk([2, 0.5, 3]) : tier === 1 ? pk([-1, -2, -0.5]) : pk([-2, -0.5, 2, 0.5, -1.5]);   // (the a slider moves in tenths, so no factor of 1/4)
+      a = tier === 0 ? pk([2, 0.5, 0.25]) : tier === 1 ? pk([-1, -2, -0.5]) : pk([-2, -0.5, 2, 0.5, -0.25]);
       if (tier === 0) { if (rnd(2)) h = nz(4); else k = nz(4); } else { h = nz(4); k = nz(4); }
     }
     if (Math.abs(k + 4 * a) > 10) continue;   // the table's outer rows (two from the vertex) stay inside the window, so it never has to zoom out
@@ -5971,13 +5971,20 @@ var ESPIC = {
   function gwnT() { var t = QZ.tr[QZ.pi]; return { a: t.a || 1, h: t.h, k: t.k }; }
   function gwnSt() { if (!QZ.gn || QZ.gn.pi !== QZ.pi) QZ.gn = { pi: QZ.pi, a: 1, h: 0, k: 0, ok: false, hist: [], drag: null, w: { a: "", h: "", k: "", v: "", e: "g(x)=" }, wok: {} }; return QZ.gn; }
   function gwnR1(v) { v = Math.round(v * 10) / 10; return Object.is(v, -0) ? 0 : v; }
+  // the a slider's values, in order; the purple point snaps to the nearest one
+  var GWNA = [-4, -3, -2, -1, -1 / 2, -1 / 3, -1 / 4, 1 / 4, 1 / 3, 1 / 2, 1, 2, 3, 4];
+  function gwnIx(v) { var b = 0; GWNA.forEach(function (q, i) { if (Math.abs(q - v) < Math.abs(GWNA[b] - v)) b = i; }); return b; }
+  function gwnSnapA(v) { return GWNA[gwnIx(v)]; }
+  function gwnDen(a) { return [2, 3, 4].filter(function (n) { return Math.abs(Math.abs(a) * n - 1) < 1e-9; })[0]; }
+  function gwnAT(a) { var d = gwnDen(a); return d ? (a < 0 ? "−" : "") + "1/" + d : nf(a); }
+  function gwnAH(a) { var d = gwnDen(a); return d ? (a < 0 ? "−" : "") + "<span class=\"fr\"><span>1</span><span>" + d + "</span></span>" : nf(a); }
   function gwnCl(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
   function gwnMatch(s) { var t = gwnT(); return Math.abs(s.a - t.a) < 1e-9 && s.h === t.h && s.k === t.k; }
   function gwnDragOK() { return gwN() && (mode === "demo" || mode === "sequence") && QZ.step < 4; }
   function gwnEq(a, h, k) {
     var X = "<i>x</i>", G = "<span class=\"cg\"><i>g</i>(" + X + ")</span> = ";
     if (Math.abs(a) < 1e-9) return G + nf(k);
-    var co = a === 1 ? "" : a === -1 ? "−" : nf(a), sq = h ? "(" + X + (h > 0 ? " − " : " + ") + Math.abs(h) + ")²" : X + "²";
+    var co = a === 1 ? "" : a === -1 ? "−" : gwnAH(a), sq = h ? "(" + X + (h > 0 ? " − " : " + ") + Math.abs(h) + ")²" : X + "²";
     return G + co + sq + (k ? (k > 0 ? " + " : " − ") + Math.abs(k) : "");
   }
   function gwnQ() {
@@ -6009,7 +6016,7 @@ var ESPIC = {
       S.appendChild(g);
       if (s.drag === d[0]) {
         var lb = svgEl("text", { x: d[1] + .55, y: -d[2] - .55, "font-size": ".8", "font-weight": "700", fill: d[3], stroke: "#fff", "stroke-width": ".22", "paint-order": "stroke", "pointer-events": "none" });
-        lb.textContent = "(" + nf(d[1]) + ", " + nf(gwnR1(d[2])) + ")"; S.appendChild(lb);
+        lb.textContent = d[0] === "a" ? "a = " + gwnAT(s.a) : "(" + nf(d[1]) + ", " + nf(d[2]) + ")"; S.appendChild(lb);
       }
     });
   }
@@ -6020,9 +6027,9 @@ var ESPIC = {
     var s = gwnSt(), done = QZ.step >= 4;
     if (mode !== "solo") gwnDraw();
     ["a", "h", "k"].forEach(function (c) {
-      var inp = $("gwnSl" + c.toUpperCase()); if (Math.abs(+inp.value - s[c]) > 1e-9) inp.value = s[c];
+      var inp = $("gwnSl" + c.toUpperCase()), sv = c === "a" ? gwnIx(s.a) : s[c]; if (+inp.value !== sv) inp.value = sv;
       inp.disabled = mode !== "calculate" || done || (pgRun && !pgPaused && !DN);
-      $("gwnSl" + c.toUpperCase() + "v").textContent = c === "a" ? nf(s.a) : nf(s[c]);
+      $("gwnSl" + c.toUpperCase() + "v").textContent = c === "a" ? gwnAT(s.a) : nf(s[c]);
     });
     $("gwnOut").innerHTML = "<div class=\"gwnEq\">" + gwnEq(s.a, s.h, s.k) + "</div><div class=\"gwnV\">Vertex <span class=\"cg\">(" + nf(s.h) + ", " + nf(s.k) + ")</span></div>";
     if (mode === "solo") ["a", "h", "k", "v", "e"].forEach(function (f) {
@@ -6076,7 +6083,7 @@ var ESPIC = {
         var m = S.getScreenCTM(); if (!m) return; var p = S.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; p = p.matrixTransform(m.inverse());
         var x = p.x, y = -p.y;
         if (which === "v") { s.h = gwnCl(Math.round(x), -10, 10); s.k = gwnCl(Math.round(y), -10, 10); }
-        else s.a = gwnCl(gwnR1(y - s.k), -3, 3);
+        else s.a = gwnSnapA(y - s.k);
         gwnSync();
       }
       function up() {
@@ -6091,7 +6098,7 @@ var ESPIC = {
       var t = e.target; if (t.type !== "range" || !gwN() || mode !== "calculate" || QZ.step >= 4) return;
       if (e.isTrusted) pgUser();
       var s = gwnSt(); if (!dirty) { gwnPush(); dirty = true; }
-      var c = t.id.slice(-1).toLowerCase(); s[c] = c === "a" ? gwnR1(+t.value) : Math.round(+t.value); gwnSync();
+      var c = t.id.slice(-1).toLowerCase(); s[c] = c === "a" ? GWNA[+t.value] : Math.round(+t.value); gwnSync();
     });
     $("gwnSl").addEventListener("change", function (e) { if (e.target.type !== "range") return; dirty = false; gwnCheck(); });
     $("gwnW").addEventListener("input", function (e) { var f = e.target.dataset && e.target.dataset.f; if (!f || !gwN()) return; gwnSt().w[f] = e.target.value; });
@@ -6113,14 +6120,15 @@ var ESPIC = {
           if (pgRun !== run) return;
           if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, x, y;
           if (which === "v") { x = fr[0] + (to[0] - fr[0]) * e; y = fr[1] + (to[1] - fr[1]) * e; s.h = Math.round(x); s.k = Math.round(y); gwnSync(); handAt(gwnScr(x, y)); }
-          else { y = fr[0] + (to - fr[0]) * e; s.a = gwnR1(y); gwnSync(); handAt(gwnScr(s.h + 1, s.k + y)); }
+          else { y = fr[0] + (to - fr[0]) * e; s.a = gwnSnapA(y); gwnSync(); handAt(gwnScr(s.h + 1, s.k + y)); }
           if (u < 1) pgRaf(step); else { s.drag = null; gwnSync(); pgWait(600, then); }
         }
         pgRaf(step);
       });
     }
     function slide(c, to, then) {
-      var inp = $("gwnSl" + c.toUpperCase()), fr = s[c], ms = 1300, t0 = null;
+      var inp = $("gwnSl" + c.toUpperCase()), fr = c === "a" ? gwnIx(s.a) : s[c], ms = 1300, t0 = null;
+      if (c === "a") to = gwnIx(to);
       var th = function (v) { var r = inp.getBoundingClientRect(), mn = +inp.min, mx = +inp.max; return { x: r.left + 9 + (r.width - 18) * (v - mn) / (mx - mn), y: r.top + r.height / 2 }; };
       handGo(th(fr), 650);
       pgWait(800, function () {
@@ -6128,17 +6136,17 @@ var ESPIC = {
         function step(ts) {
           if (pgRun !== run) return;
           if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, v = fr + (to - fr) * e;
-          s[c] = c === "a" ? gwnR1(v) : Math.round(v); gwnSync(); handAt(th(v));
+          s[c] = c === "a" ? GWNA[Math.round(v)] : Math.round(v); gwnSync(); handAt(th(v));
           if (u < 1) pgRaf(step); else pgWait(600, then);
         }
         pgRaf(step);
       });
     }
-    var ab = Math.abs(t.a), fr = ab === 0.5 ? "1/2" : nf(ab), aw = (ab > 1 ? "A vertical stretch by a factor of " + fr : ab < 1 ? "A vertical shrink by a factor of " + fr : "") + (t.a < 0 ? (ab !== 1 ? " and a reflection in the x-axis" : "A reflection in the x-axis") : "");
+    var ab = Math.abs(t.a), fr = gwnAT(ab), aw = (ab > 1 ? "A vertical stretch by a factor of " + fr : ab < 1 ? "A vertical shrink by a factor of " + fr : "") + (t.a < 0 ? (ab !== 1 ? " and a reflection in the x-axis" : "A reflection in the x-axis") : "");
     var mv = []; if (t.h) mv.push(Math.abs(t.h) + (Math.abs(t.h) === 1 ? " unit " : " units ") + (t.h > 0 ? "right" : "left")); if (t.k) mv.push(Math.abs(t.k) + (Math.abs(t.k) === 1 ? " unit " : " units ") + (t.k > 0 ? "up" : "down"));
     var aStep = function (n) {
       if (Math.abs(s.a - t.a) < 1e-9) { n(); return; }
-      cap((aw || "No stretch, shrink or reflection") + (calc ? ": slide a to " + nf(t.a) + "." : ": drag the purple point until a = " + nf(t.a) + "."));
+      cap((aw || "No stretch, shrink or reflection") + (calc ? ": slide a to " + gwnAT(t.a) + "." : ": drag the purple point until a = " + gwnAT(t.a) + "."));
       if (calc) slide("a", t.a, n); else drag("a", t.a, n);
     };
     var vStep = function (n) {
@@ -6155,7 +6163,7 @@ var ESPIC = {
     var L = [
       function (n) { cap("g(x) starts as f(x) = x². " + (calc ? "Use the sliders to transform it." : "Drag its points to transform it.")); pgWait(2200, n); },
       aStep, vStep,
-      function (n) { cap("g(x) = " + gwnEq(t.a, t.h, t.k).replace(/<[^>]+>/g, "").replace(/^g\(x\) = /, "") + ", with vertex (" + nf(t.h) + ", " + nf(t.k) + ")."); pgWait(2600, n); }
+      function (n) { cap("g(x) = " + gwnEq(t.a, t.h, t.k).replace(/<span class="fr"><span>1<\/span><span>(\d)<\/span><\/span>/g, "(1/$1)").replace(/<[^>]+>/g, "").replace(/^g\(x\) = /, "") + ", with vertex (" + nf(t.h) + ", " + nf(t.k) + ")."); pgWait(2600, n); }
     ], i = 0;
     (function next() { if (pgRun !== run) return; if (i < L.length) { L[i++](next); return; } s.ok = gwnMatch(s); PG.demoFin = true; pgStop(); })();
   }
