@@ -129,6 +129,20 @@
   .fr>span:last-child{padding:.04em .12em 0}
   .exBox{display:flex;flex-direction:column;align-items:center;gap:1rem;margin:1rem auto;width:fit-content;max-width:100%;padding:.4em .8em;border-radius:.4em;background:color-mix(in srgb,var(--ink) 7%,var(--bg))}
   .exBox[hidden]{display:none}
+  .avBar{cursor:pointer;padding:0 .1em;border-radius:.2em;transition:background .2s,color .2s}
+  .avBar:hover{background:color-mix(in srgb,var(--plus) 18%,transparent);color:var(--plus)}
+  .nlBox{margin:.2rem auto 1rem;width:600px;max-width:100%;text-align:center;animation:nlIn .5s ease-out}
+  .nlBox svg{width:100%;height:auto;display:block;overflow:visible}
+  .nlBox .nlCap{font-size:1.05rem;margin-top:.15rem}
+  .nlBox .nlAx{stroke:var(--ink);stroke-width:2;fill:none}
+  .nlBox .nlTk{stroke:var(--ink);stroke-width:1.5}
+  .nlBox .nlLb{fill:var(--ink);font-size:15px;text-anchor:middle}
+  .nlBox .nlLb.b{font-weight:700}
+  .nlBox .nlSh{stroke:var(--plus);stroke-width:7;stroke-linecap:round;fill:none}
+  .nlBox .nlAr{fill:var(--plus)}
+  .nlBox .nlDot{stroke:var(--plus);stroke-width:3}
+  .nlBox .nlBv{fill:var(--plus);font-size:14px;font-weight:700;text-anchor:middle}
+  @keyframes nlIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   #grpBox{position:fixed;z-index:4;font-family:"LM","Latin Modern Roman","CMU Serif","STIX Two Text",Georgia,"Times New Roman",serif;font-size:clamp(1.3rem,3.2vw,2.1rem);padding:.6rem 1rem .5rem;background:var(--bg);border:2px solid color-mix(in srgb,var(--ink) 22%,transparent);border-radius:16px;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.2);opacity:0;transform:translate(-50%,18px);transition:opacity .3s,transform .3s;touch-action:none}
   #grpBox.on{opacity:1;transform:translate(-50%,0)}
   #grpBox .ggrid{display:grid;grid-template-columns:auto auto auto;align-items:stretch}
@@ -722,6 +736,7 @@
       <main class="eqs work" id="wsEl"></main>
       <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="zpWrap" id="zpA" hidden></div><div class="exRow" id="exRow"></div><div class="zpWrap" id="zpB" hidden></div>
         <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
+      <section class="nlBox" id="nlBox" hidden aria-label="The solutions on a number line"></section>
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
         <div class="row" style="flex-wrap:nowrap"><input id="crIn" autocomplete="off" aria-label="Equation"><button class="btn" id="crAdd">Add</button></div>
@@ -1185,11 +1200,12 @@
   // ---- Playground: Equation Solver also takes an expression (no "="). It is finished when it is fully simplified:
   //      no parentheses left, and no two terms alike. Terms are { k: "x"|"c", n: coefficient } and groups { k: "g", m: multiplier, items } ----
   var EXP = null;   // { src, orig, items, ask }
+  var exAbsOK = false;   // true while a typed equation with an absolute value is read: |2x - 3| is one term (a group with abs)
   var exKeepU = false;   // true while a typed equation is read: a fraction like 6/4 stays as typed (it is simplified by clicking it)
   function exParse(s) {
     s = String(s).toLowerCase().replace(/−/g, "-").replace(/[\s*·⋅]/g, "");
     var i = 0, rawN = null, bad = "I couldn't read that. Use numbers, letters (x^2 for a power), + and −, and one set of parentheses at most, like 3(x+2)-4x+5.";
-    if (!s || /[^0-9a-z+\-().\/^]/.test(s)) return bad;
+    if (!s || (exAbsOK ? /[^0-9a-z+\-().\/^|]/ : /[^0-9a-z+\-().\/^]/).test(s)) return bad;
     function number() { rawN = null; var m = s.slice(i).match(/^\d+(\.\d+)?(\/\d+)?/); if (!m) return null; i += m[0].length; var fm = /^(\d+)\/(\d+)$/.exec(m[0]); if (exKeepU && fm && +fm[2] > 1 && +fm[1] % +fm[2] && gcd(+fm[1], +fm[2]) > 1) rawN = { n: +fm[1], d: +fm[2] }; return parse(m[0]); }
     function variable() {   // x, y, x^2, xy ...: the letters in order, with their powers
       var f = {}, any = false, m;
@@ -1198,7 +1214,7 @@
     }
     function sum(inner) {
       var out = [];
-      while (i < s.length && s[i] !== ")") {
+      while (i < s.length && s[i] !== ")" && !(inner === "abs" && s[i] === "|")) {
         var sg1 = 1, signed = false, t;
         while (s[i] === "+" || s[i] === "-") { if (s[i] === "-") sg1 = -sg1; i++; signed = true; }
         if (out.length && !signed) return null;
@@ -1214,6 +1230,9 @@
           t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: g };
           if (s[i] === "(") { i++; var g2 = sum(true); if (!g2 || !g2.length || s[i] !== ")") return null; i++; t.b = g2; }   // two sets of parentheses: (3x - 4)(x - 6)
           if (t.b && s[i] === "(") { i++; var g3 = sum(true); if (!g3 || !g3.length || s[i] !== ")") return null; i++; t.c = g3; }   // three sets: (x + 1)(x + 2)(x + 3)
+        } else if (s[i] === "|" && exAbsOK && !inner) {   // |2x - 3|: an absolute value (the number in front of it multiplies it)
+          i++; var ga = sum("abs"); if (!ga || !ga.length || s[i] !== "|") return null; i++;
+          t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: ga, abs: true };
         } else if (n) { t = { k: "c", n: mul(n, mk(sg1)) }; if (rawN && s[i] !== "(" && !inner) t.u = { n: sg1 * rawN.n, d: rawN.d }; } else return null;
         out.push(t);
       }
@@ -1487,6 +1506,8 @@
   }
   function exTerm(t, inner) {   // the term without its sign
     if (t.u && t.k === "c") return Math.abs(t.u.n) + "/" + t.u.d;   // a fraction that has not been simplified yet: 6/4
+    if (t.k === "g" && t.abs) { var am = mk(Math.abs(t.m.n), t.m.d); return (am.n === 1 && am.d === 1 ? "" : "<span class=\"exM\">" + exFr(am) + "</span>") + "<span class=\"exG exAbs\"><span class=\"avBar\" title=\"Tap a bar to open the absolute value\">|</span>" + exHtml(t.items) + "<span class=\"avBar\" title=\"Tap a bar to open the absolute value\">|</span></span>"; }   // |2x − 3|
+    if (t.k === "g" && t.pm) return "<span class=\"exPm\" title=\"Click \u00b1 to split it into two equations\">\u00b1</span><span class=\"exG\">(" + exHtml(t.items) + ")</span>";   // ±(2x − 3), after a bar was tapped
     if (t.k === "r" || t.pm) return exPmRad(t);
     if (t.k === "q") return "<span class=\"fr\"><span>" + exHtml(t.num) + "</span><span>" + exHtml(t.den) + "</span></span>";
     if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">" + exPar(t, t.items) + "</span>" + (t.b ? "<span class=\"exH\">" + exPar(t, t.b) + "</span>" : "") + (t.c ? "<span class=\"exH exJ\">" + exPar(t, t.c) + "</span>" : ""); }
@@ -2125,14 +2146,17 @@
     if (locked || busy || EXP.ask || EXP.zp) return;
     var S = ["L", "R"].filter(function (q) { return EXP[q].some(function (t) { return t.pm; }); })[0]; if (!S) return;
     var cp = function (o) { return JSON.parse(JSON.stringify(o)); };
-    var mkRow = function (sg) { var N = { L: cp(EXP.L), R: cp(EXP.R) }; N[S] = N[S].map(function (t) { if (!t.pm) return t; var u = cp(t); delete u.pm; u.n = mk(sg * u.n.n, u.n.d); return u; }); return N; };
+    var mkRow = function (sg) { var N = { L: cp(EXP.L), R: cp(EXP.R) }; N[S] = N[S].reduce(function (o, t) {
+      if (!t.pm) return o.concat([t]); var u = cp(t); delete u.pm;
+      if (u.k === "g") return sg > 0 ? o.concat(exDist(u)) : o.concat([{ k: "g", m: mk(-1), items: u.items }]);   // +(2x − 3) is 2x − 3; −(2x − 3) keeps its parentheses, to be distributed
+      u.n = mk(sg * u.n.n, u.n.d); return o.concat([u]); }, []); return N; };
     var rows = [mkRow(1), mkRow(-1)], sl = [];
     zpHist(); var L0 = EXP.L, R0 = EXP.R;
     rows.forEach(function (r) { EXP.L = r.L; EXP.R = r.R; sl.push(!!eqKind()); }); EXP.L = L0; EXP.R = R0;
     var all = sl[0] && sl[1], z = { eqs: rows, done: [all ? true : sl[0], false], act: all ? 1 : sl[0] ? 1 : 0 };
     EXP.zp = z; EXP.zpq = true; EXP.zpNew = true; EXP.L = cp(rows[z.act].L); EXP.R = cp(rows[z.act].R); EXP.rel = "=";
     closeAsk(false); eqRender();
-    note("\u00b1 means two answers: " + rows.map(function (r) { return exSay(r.L) + " = " + exSay(r.R); }).join(" or ") + "." + (all ? "" : " Solve each one."));
+    note((EXP.av ? "\u00b1 means two equations: what is inside the absolute value is the number or its opposite. " : "\u00b1 means two answers: ") + rows.map(function (r) { return exSay(r.L) + " = " + exSay(r.R); }).join(" or ") + "." + (all ? "" : " Solve each one."));
     if (all) eqEnd("one");
   }
   function eqSq(n) {   // a variant: 1 x^2 = 49; 2 a number in front, 3x^2 = 75; 3 numbers to move first, x^2 - 16 = 0, 2x^2 + 5 = 37
@@ -2141,6 +2165,69 @@
     else if (n === 2) { var a = 2 + rnd(4); L = [X2(a)]; R = [C(a * r * r)]; }
     else { var a3 = rnd(3) ? 1 : 2 + rnd(3), b = nz(12); L = [X2(a3), C(b)]; R = [C(a3 * r * r + b)]; if (rnd(2)) L.reverse(); if (rnd(4) === 0) { var t3 = L; L = R; R = t3; } }
     return { L: L, R: R };
+  }
+  // ---- absolute value equations: |2x - 3| = 7. Get the absolute value by itself (move the numbers, divide by the number in front), tap either bar and it becomes ±(2x - 3) = 7,
+  // click the ± to split it into two equations, 2x - 3 = 7 and -(2x - 3) = 7, then solve each one. A negative number on the other side means no solution; 0 means one equation.
+  function avFind() { for (var q = 0; q < 2; q++) { var S = q ? "R" : "L", A = EXP[S]; for (var i = 0; i < A.length; i++) if (A[i].k === "g" && (A[i].abs || A[i].pm)) return { S: S, i: i, t: A[i] }; } return null; }
+  function avOf(L, R) {   // the absolute value of a typed equation, with what it equals: { S, g, rest (the other terms on its side), O (the other side) }
+    var sd = [["L", L, R], ["R", R, L]];
+    for (var q = 0; q < 2; q++) { var A = sd[q][1], gi = A.findIndex(function (t) { return t.k === "g" && t.abs; }); if (gi >= 0) return { S: sd[q][0], g: A[gi], rest: A.filter(function (t, j) { return j !== gi; }), O: sd[q][2] }; }
+    return null;
+  }
+  function avRoots(L, R) {   // the answers: [] when there is no solution, one answer when the absolute value equals 0, otherwise two
+    var a = avOf(L, R); if (!a) return null;
+    var tr = exTot(a.rest), to = exTot(a.O), v = mul(add(to[""] || mk(0), neg(tr[""] || mk(0))), inv(a.g.m));
+    var ti = exTot(a.g.items), vk = Object.keys(ti).filter(function (k) { return k; })[0] || "x", co = ti[vk], b = ti[""] || mk(0);
+    if (!co || !co.n || v.n < 0) return [];
+    var r1 = mul(add(v, neg(b)), inv(co)); if (!v.n) return [r1];
+    return [r1, mul(add(neg(v), neg(b)), inv(co))];
+  }
+  function avAlone() {   // the absolute value is by itself, with nothing in front: { S, i, O, c }
+    var f = avFind(); if (!f || !f.t.abs) return null; var O = eqOther(f.S);
+    if (EXP[f.S].length !== 1 || !same(f.t.m, mk(1)) || EXP[O].length !== 1 || EXP[O][0].k !== "c") return null;
+    return { S: f.S, i: f.i, O: O, c: EXP[O][0].n };
+  }
+  function eqAvOpen(S, i) {   // a bar was tapped
+    if (locked || busy || EXP.ask) return;
+    var a = avAlone(); if (!a || a.S !== S || a.i !== i) { note("Get the absolute value by itself first: move the numbers to the other side, and divide by the number in front of it."); return; }
+    var c = a.c, g = EXP[S][i], ins = exSay(g.items);
+    if (c.n < 0) { note("An absolute value is a distance from 0, so it is never negative. |" + ins + "| = " + exSay(EXP[a.O]) + " has no solution."); eqEnd("none"); return; }
+    var N = eqClone(), u = N[S][i]; delete u.abs;
+    if (!c.n) { N[S] = exDist({ k: "g", m: mk(1), items: u.items }); eqSet(N, "Only 0 is 0 away from 0, so " + ins + " = 0: just one equation."); return; }
+    u.pm = true; eqSet(N, "The absolute value is " + exSay([{ k: "c", n: c }]) + ", so what is inside is " + exSay([{ k: "c", n: c }]) + " or its opposite: |" + ins + "| becomes ±(" + ins + ").");
+  }
+  function eqAv(n) {   // a variant: 1 |x + 3| = 5; 2 |2x - 3| = 7; 3 move and divide first: 2|x - 1| + 3 = 11, |3x + 2| - 4 = 6; 4 no solution or one answer: |x - 4| + 7 = 3, 3|2x + 6| = 0
+    var X = function (k) { return { k: "x", v: "x", n: mk(k) }; }, C = function (k) { return { k: "c", n: mk(k) }; };
+    for (;;) {
+      var a = n === 1 ? 1 : n === 2 ? 2 + rnd(3) : rnd(2) ? 1 : 2 + rnd(2), x1 = nz(7), x2 = nz(7); if (x1 === x2 || (a * (x1 - x2)) % 2) continue;
+      var c = Math.abs(a * (x1 - x2)) / 2, b = c - a * Math.max(x1, x2); if (!b) continue;   // a x + b = ±c at the two answers
+      var it = [X(a), C(b)]; if (rnd(4) === 0) it.reverse();
+      if (n === 4) {
+        var m4 = rnd(2) ? 1 : 2 + rnd(2), k4 = nz(8);
+        if (rnd(3)) { var neg4 = 1 + rnd(6); return { L: [{ k: "g", m: mk(m4), items: it, abs: true }, C(k4)], R: [C(k4 - m4 * neg4)] }; }   // the absolute value would equal a negative number
+        return { L: [{ k: "g", m: mk(m4), items: it, abs: true }, C(k4)], R: [C(k4)] };   // ... equals 0
+      }
+      var m = n === 3 && rnd(2) ? 2 + rnd(3) : 1, k = n === 3 ? nz(9) : 0, L = [{ k: "g", m: mk(m), items: it, abs: true }], R = [C(m * c + k)];
+      if (n === 3 && !k) continue; if (k) { L.push(C(k)); if (rnd(3) === 0) L.reverse(); }
+      if (n === 3 && m === 1 && rnd(2)) { L.push(C(nz(5))); R[0].n = add(R[0].n, L[L.length - 1].n); }   // two numbers to move
+      if (!R[0].n.n && n !== 4) continue;
+      if (rnd(4) === 0) return { L: R, R: L };
+      return { L: L, R: R };
+    }
+  }
+  function eqCreateAbs(s, rel, err) {   // a typed absolute value equation, like |2x-3|=7 or 2|x+1|-4=6
+    if (rel !== "=") { err.textContent = "Absolute value inequalities aren't ready yet. Use an equals sign, like |2x-3|=7."; return; }
+    if (/[a-wyz]/.test(s.replace(/\s+/g, ""))) { err.textContent = "Use x as the variable in an absolute value equation, like |2x-3|=7."; return; }
+    var sr = splitRel(s), L, R; exAbsOK = true; try { L = exParse(sr.l); R = exParse(sr.r); } finally { exAbsOK = false; }
+    if (typeof L === "string" || typeof R === "string") { err.textContent = "I couldn't read that. Put the absolute value between two bars, like |2x-3|=7 or 2|x+1|-4=6."; return; }
+    var all = L.concat(R), ab = all.filter(function (t) { return t.k === "g" && t.abs; }), a = avOf(L, R);
+    if (ab.length !== 1 || !a) { err.textContent = "Use one absolute value, like |2x-3|=7."; return; }
+    if (a.rest.concat(a.O).some(function (t) { return t.k !== "c"; })) { err.textContent = "Keep x inside the absolute value, with only numbers outside it, like |2x-3|+4=11."; return; }
+    var ti = exTot(a.g.items); if (Object.keys(ti).some(function (k) { return k && k !== "x"; }) || !ti.x || !ti.x.n || a.g.items.some(function (t) { return t.k === "g"; })) { err.textContent = "Inside the bars, use x to the first power, like |2x-3|."; return; }
+    if (!a.g.m.n) { err.textContent = "That absolute value is multiplied by 0."; return; }
+    EXP = { eq: true, av: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x", zpq: false, zp: null };
+    SOL.lvl = ladderEq(L, R, "="); SOL.fresh = false;
+    $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
   }
   function eqSolution(L, R, rel) {   // { kind, x, rel, c } from the equation as first typed (x rel c once the variable has a side to itself)
     if (litAny(L.concat(R))) { var ls = litSolution(L, R); return ls; }
@@ -2174,7 +2261,7 @@
       var ng = (t.k === "g" ? t.m.n : t.n.n) < 0;
       var op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + S + i + "\">" + (ng ? "−" : "+") + "</span>" : ng && !(dv && dv.S === S) ? "<span class=\"exOp\">−</span>" : "";   // the minus sign of the term being divided by belongs to its handle, so the whole −1 lights up and moves
       var body = dv && dv.S === S && !t.u ? (function () { var a = mk(Math.abs(t.n.n), t.n.d); return "<span class=\"exCo\" title=\"Drag me to the other side to divide\">" + (ng && !i ? "−" : "") + (hasS(t) ? litHtml(t, true) : exFr(a)) + "</span>" + exVarHtml(t.v || "x"); })() : exTerm(t);
-      return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && live && !EXP.zpq ? " pend" : "") + (hot && hot.indexOf(S + i) >= 0 ? " hot" : "") + "\" data-s=\"" + S + "\" data-i=\"" + i + "\" data-drop=\"et:" + S + ":" + i + "\">" + body + "</span>";
+      return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && !t.abs && live && !EXP.zpq ? " pend" : "") + (hot && hot.indexOf(S + i) >= 0 ? " hot" : "") + "\" data-s=\"" + S + "\" data-i=\"" + i + "\" data-drop=\"et:" + S + ":" + i + "\">" + body + "</span>";
     }).join("");
   }
   function eqRender(hot) {
@@ -2216,6 +2303,10 @@
         if (re) { re.classList.add("grab"); re.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqSimp(S, i); }); }
         return;
       }
+      [].forEach.call(el.querySelectorAll(":scope > .exAbs > .avBar"), function (bar) {   // tap either bar of |...|: it becomes ±( ... )
+        bar.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+        bar.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqAvOpen(S, i); });
+      });
       if (mEl && gEl) {
         gEl.dataset.drop = "exg:" + S + ":" + i; exNegMark(mEl, S + ":" + i);
         if (!EXP.lit && !t.m.s) {   // dragging the number in front across the = divides every term on both sides by it: a ÷ appears in front of it as it crosses
@@ -2269,7 +2360,7 @@
     var a = g.m; if (!a.n || same(a, mk(1))) return;
     var N = eqClone(), ia = inv(a), dv = function (its) { return its.map(function (u) { if (u.k === "g") u.m = mul(u.m, ia); else u.n = mul(u.n, ia); return u; }); }, flip = a.n < 0 && N.rel !== "=";
     N.L = dv(N.L); N.R = dv(N.R);
-    var at = N[S][i], gone = same(at.m, mk(1)) && !at.b; if (gone) N[S].splice.apply(N[S], [i, 1].concat(at.items));
+    var at = N[S][i], gone = same(at.m, mk(1)) && !at.b && !at.abs; if (gone) N[S].splice.apply(N[S], [i, 1].concat(at.items));
     N.L = eqNorm(N.L); N.R = eqNorm(N.R); if (flip) N.rel = relRev(N.rel);
     var msg = "Divide both sides by " + sg(a) + ": every term on both sides is divided by " + sg(a) + "." + (flip ? " Dividing by a negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "." : "") + (gone ? " Nothing is left in front of the parentheses, so they can go." : "");
     if (mode === "calculate") { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, "Divide both sides by " + sg(a) + ". Type the new equation:"); $("askIn").placeholder = "e.g. 2 + x + 3 = 9"; return; }
@@ -2292,6 +2383,7 @@
   function eqFactor(S, i, S2, j) {
     if (locked || busy || EXP.ask) return;
     if (S !== S2 || i === j) { if (S !== S2) note("To factor, drop the number on a term on the same side."); return; }
+    if ((EXP[S][i] && EXP[S][i].abs) || (EXP[S][j] && EXP[S][j].abs)) { note("Nothing can be factored into or out of an absolute value. Get it by itself, then tap one of its bars."); return; }
     var N = eqClone(), f = facBuild(N[S][i], N[S][j], i < j); if (f.err) { note(f.err); return; }
     N[S][j] = f.group; N[S].splice(i, 1); N.L = eqNorm(N.L); N.R = eqNorm(N.R);
     if (mode === "calculate") { eqAsk({ kind: "fac", b: { N: N, msg: f.msg }, f: f }, "Factor out " + f.g + ": " + exSay(i < j ? [EXP[S][i], EXP[S][j]] : [EXP[S][j], EXP[S][i]]) + " ="); $("askIn").placeholder = "e.g. 3(x + 2)"; return; }
@@ -2299,6 +2391,7 @@
   }
   function eqDistribute(S, i) {
     if (locked || busy || EXP.ask) return;
+    if (EXP[S][i] && EXP[S][i].abs) { note("A number can't be distributed into an absolute value. Get the absolute value by itself (move the numbers, divide by the number in front), then tap one of its bars."); return; }
     var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R);
     var msg = distMsg(g, d);
     if (mode === "calculate") { eqAsk({ kind: "dist", b: { N: N, msg: msg, g: g }, d: d }, exSay([g]) + " ="); return; }
@@ -2442,19 +2535,27 @@
       var zz = EXP.zp, sol = exSay(EXP.L) + " = " + exSay(EXP.R); zz.eqs[zz.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; zz.done[zz.act] = true;
       var left = zz.done.filter(function (d) { return !d; }).length;
       if (left) { closeAsk(false); eqRender(); note("One answer: " + sol + ". " + (left > 1 ? "Solve the other equations, in any order." : "Now solve the other equation.")); return; } EXP.zp.eqs[EXP.zp.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; EXP.zp.done[EXP.zp.act] = true; }
-    locked = true; eqRender(); closeAsk(false);
-    var iq = eqIneq(), txt = kind === "one" ? "Solved: " + (EXP.zp ? zpSay() : exSay(EXP.L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(EXP.R) : exSay(EXP.R))) + "." : kind === "none" ? (iq ? "No solution: the inequality is never true." : "No solution: the two sides can never be equal.") : (iq ? "Every number is a solution: the inequality is always true." : "Infinitely many solutions: the two sides are always equal.");
+    locked = true; eqRender(); closeAsk(false); nlEq(kind);
+    var iq = eqIneq(), txt = kind === "one" ? "Solved: " + (EXP.zp ? zpSay() : exSay(EXP.L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(EXP.R) : exSay(EXP.R))) + "." : kind === "none" ? (iq ? "No solution: the inequality is never true." : EXP.av ? "No solution: an absolute value is a distance from 0, so it can never be negative." : "No solution: the two sides can never be equal.") : (iq ? "Every number is a solution: the inequality is always true." : "Infinitely many solutions: the two sides are always equal.");
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note(txt);
     if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(kind === "one" ? "Solved!" : kind === "none" ? "No solution" : iq ? "Every number" : "Infinitely many"); solverFinish(); }
     else { tally(); nxShow(); }
   }
   function eqUndo() {
+    nlHide();
     distHide();
-    hideKind(); var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; if (EXP.grq) EXP.zpq = !!(EXP.zp || zpOf(EXP.L, EXP.R)); else if (EXP.sq) EXP.zpq = !!EXP.zp; locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
+    hideKind(); var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; if (EXP.grq) EXP.zpq = !!(EXP.zp || zpOf(EXP.L, EXP.R)); else if (EXP.sq || EXP.av) EXP.zpq = !!EXP.zp; locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
   }
   function eqCheckSolo() {
-    if (EXP.zpq || EXP.grq || EXP.sq) {   // the answers are a set: "3, -2", "x = 3 or x = -2"
-      var mz = $("exMsg"), g0 = EXP.grq || EXP.sq ? null : zpOf(EXP.orig.L, EXP.orig.R), vz = EXP.vk || "x", want = EXP.grq ? grRoots(grOf(EXP.orig.L)) : EXP.sq ? (function () { var sv = sqVal(EXP.orig.L, EXP.orig.R); return [mk(sv.root), mk(-sv.root)]; })() : zpRoots(g0, vz), tz = $("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, ""), parts = tz.split(/,|;|or|and/).filter(function (u) { return u; }), got = []; ansTouched = true;
+    if (EXP.av) {   // an absolute value: two answers, one, or no solution
+      var aw = avRoots(EXP.orig.L, EXP.orig.R), atx = $("exSoloIn").value.toLowerCase().replace(/\s+/g, "");
+      if (aw && !aw.length) {
+        var mn = $("exMsg"); if (/^(no|none|nosolution)/.test(atx)) { EXP.L = [{ k: "c", n: mk(0) }]; EXP.R = [{ k: "c", n: mk(1) }]; eqEnd("none"); $("exSolo").hidden = true; return; }
+        mn.className = "bad"; mn.textContent = "Not quite. Check your work and try again."; return;
+      }
+    }
+    if (EXP.zpq || EXP.grq || EXP.sq || EXP.av) {   // the answers are a set: "3, -2", "x = 3 or x = -2"
+      var mz = $("exMsg"), g0 = EXP.grq || EXP.sq || EXP.av ? null : zpOf(EXP.orig.L, EXP.orig.R), vz = EXP.vk || "x", want = EXP.av ? avRoots(EXP.orig.L, EXP.orig.R) : EXP.grq ? grRoots(grOf(EXP.orig.L)) : EXP.sq ? (function () { var sv = sqVal(EXP.orig.L, EXP.orig.R); return [mk(sv.root), mk(-sv.root)]; })() : zpRoots(g0, vz), tz = $("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, ""), parts = tz.split(/,|;|or|and/).filter(function (u) { return u; }), got = []; ansTouched = true;
       tz = tz.replace(new RegExp("^" + vz + "="), ""); var pmM = /^(?:\u00b1|\+-|\+\/-)(.+)$/.exec(tz); if (pmM) tz = pmM[1] + ",-" + pmM[1]; parts = tz.split(/,|;|or|and/).filter(function (u) { return u; });
       for (var pi = 0; pi < parts.length; pi++) { var pv = parse(parts[pi].replace(new RegExp("^" + vz + "="), "")); if (!pv) { mz.className = "bad"; mz.textContent = "Type your answers like 3, \u22122 (separated by commas)."; return; } got.push(pv); }
       var has = function (arr, v) { return arr.some(function (u) { return same(u, v); }); };
@@ -2499,6 +2600,16 @@
   function eqNextStep() {
     var sides = ["L", "R"], q, i, j, S;
     if (EXP.zp && EXP.zp.done[EXP.zp.act]) { var nx = EXP.zp.done.indexOf(false); if (nx >= 0) zpFocus(nx); }
+    var avs = EXP.av ? avFind() : null;
+    if (avs) {   // isolate the absolute value, tap a bar, click the ±
+      var aS = avs.S, aO = eqOther(aS), aT = function (S, i) { return '.exT[data-s="' + S + '"][data-i="' + i + '"]'; };
+      if (avs.t.pm) return { tap: ".exPm", cap: "\u00b1 means two equations. Click it to split them.", run: function () { eqPm(); } };
+      var aci = EXP[aS].findIndex(function (t) { return t.k === "c"; });
+      if (aci >= 0) { var atj = EXP[aO].findIndex(function (t) { return t.k === "c"; }); return { mv: [aT(aS, aci), atj >= 0 ? aT(aO, atj) : ".exEq"], cap: "Drag the number to the other side.", run: function () { var b = eqBuild(aS, aci, aO, atj); eqSet(b.N, b.msg); } }; }
+      for (var ai = 0; ai < EXP[aO].length; ai++) for (var aj = ai + 1; aj < EXP[aO].length; aj++) if (exLike(EXP[aO][ai], EXP[aO][aj])) return (function (i2, j2) { return { mv: [aT(aO, i2), aT(aO, j2)], cap: "Drag a number onto the other number.", run: function () { var b = eqBuild(aO, i2, aO, j2); eqSet(b.N, b.msg); } }; })(ai, aj);
+      if (!same(avs.t.m, mk(1))) return { mv: [same(avs.t.m, mk(-1)) ? '.exOp.exNeg[data-for="' + aS + ":" + avs.i + '"]' : aT(aS, avs.i) + " > .exM", ".exEq"], cap: "Drag the " + exFr(avs.t.m) + " to the other side: it divides both sides by " + exFr(avs.t.m) + ".", run: function () { eqDivGroup(aS, avs.i); } };
+      return { tap: aT(aS, avs.i) + " .avBar", cap: "Tap a bar of the absolute value.", run: function () { eqAvOpen(aS, avs.i); } };
+    }
     var dvk = EXP.dvq && !EXP.zpq && EXP.rel === "=" ? dvOK(EXP.L, EXP.R) : null;
     if (dvk) { var dg = EXP[dvk.S][dvk.i]; return { mv: ['.exT[data-s="' + dvk.S + '"][data-i="' + dvk.i + '"] > .exM', ".exEq"], cap: "Drag the " + dg.m.n + " to the other side: it divides every term by " + dg.m.n + ".", run: function () { eqDivGroup(dvk.S, dvk.i); } }; }
     for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].u) return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"]', cap: "Click the fraction to simplify.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(S, i) }; }
@@ -2573,6 +2684,7 @@
   function eqCreate() {
     var s = $("crIn").value.toLowerCase().replace(/−/g, "-"), sr = splitRel(s), p = sr ? [sr.l, sr.r] : [], rel = sr ? sr.rel : "=", err = $("crErr");
     if (p.length !== 2 || !p[0].trim() || !p[1].trim()) { err.textContent = "Type an equation with one = sign (or < > ≥ ≤), like 3x=x+2 or 2x+1<x+6."; return; }
+    if (/\|/.test(s)) { eqCreateAbs(s, rel, err); return; }
     if (/[a-wyz]/.test(s)) { eqCreateLit(p, rel, err); return; }
     exKeepU = true; var L, R; try { L = exParse(p[0]); R = exParse(p[1]); } finally { exKeepU = false; }
     if (typeof L === "string" || typeof R === "string") { err.textContent = typeof L === "string" ? L : R; return; }
@@ -2628,6 +2740,7 @@
   }
   function eqWanted(s) {   // is this typed equation one for this module? (the variable on both sides, or a variable inside parentheses)
     s = s.toLowerCase(); var sr = splitRel(s); if (!sr) return false; var p = [sr.l, sr.r];
+    if (/\|/.test(s)) return true;   // |2x - 3| = 7: an absolute value
     if (/[a-wyz]/.test(s)) return true;   // letters other than x are coefficients
     if (/\^/.test(s)) return true;   // x^2 + 5x + 3x + 15 = 0 (factoring by grouping)
     if (rawFr(s)) return true;   // 6/4 typed as it is: the fraction is left unsimplified until it is clicked
@@ -2684,8 +2797,8 @@
       return { L: L, R: R };
     }
   }
-  function eqGenIneq(n) {   // 1: the variable on both sides; 2: a negative number in front of the parentheses (the sign turns around)
-    if (n === 1) { EXP.rel = "="; return eqGen(1 + rnd(2)); }
+  function eqGenIneq(st) {   // the inequality that matches an equation rung: the same kind of problem (eqGen), or a negative number in front of the parentheses (the sign turns around)
+    EXP.rel = "="; if (!st.neg) return eqGen(st.lv);
     var X = function (k) { return { k: "x", v: "x", n: mk(k) }; }, C = function (k) { return { k: "c", n: mk(k) }; };
     for (;;) {
       var m = rnd(3) === 0 ? -1 : -(2 + rnd(4)), x0 = nz(6), d = nz(6), e = m * (x0 + d);
@@ -2696,27 +2809,31 @@
       return { L: L, R: R };
     }
   }
-  function paneIneq(n, demo) {   // 1: positive coefficient (3x + 2 < 14); 2: negative coefficient (the sign turns); 3: two numbers around a negative coefficient, maybe the variable on the right
-    var q = solverEq(n === 1 ? rnd(2) : n === 2 ? 2 : 4, demo); q[0].rel = eqPickRel(); return q;
+  function paneIneq(lv, demo) {   // the inequality of the equation level lv: 3x + 2 < 14, a negative coefficient (the sign turns), two numbers, the variable on the right ...
+    var q = solverEq(lv, demo); q[0].rel = eqPickRel(); return q;
   }
   // THE LEVEL LADDER of Play Solve: Level Up climbs it one step at a time, and every kind of example the solver can do has a rung here.
   // Rule: whenever Play Solve learns something new (a new kind of term, step or equation), add a rung for it (and a generator branch in solverGo) so Level Up shows it.
-  var LADDER = [
-    { e: "pane", lv: 0 }, { e: "pane", lv: 1 }, { e: "pane", lv: 2 }, { e: "pane", lv: 3 }, { e: "pane", lv: 4 }, { e: "pane", lv: 5 }, { e: "pane", lv: 6 },   // one variable, one side (fractions last)
-    { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 },                                         // the variable on both sides, parentheses, fractions
-    { e: "eq", lv: 5 }, { e: "eq", lv: 6 }, { e: "eq", dv: 1 },                                                                                                                        // parentheses on both sides, one with a minus sign: 4(x - 3) + 2 = 2x - (x + 1)
-    { e: "eq", special: true },                                                                                                                // no solution / infinitely many
-    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 }, { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 }, { e: "eq", grp: 1 }, { e: "eq", grp: 2 }, { e: "eq", sq: 1 }, { e: "eq", sq: 2 }, { e: "eq", sq: 3 },                                                       // letters as coefficients: ax = b, ax + b = c, 2ax + 3b = 5c, like terms with letters
-    { e: "pane", ineq: 1 }, { e: "pane", ineq: 2 }, { e: "pane", ineq: 3 },                                                                   // inequalities (the sign turns around for a negative)
-    { e: "eq", ineq: 1 }, { e: "eq", ineq: 2 }, { e: "eq", ineq: 3, special: true }                                                           // two-sided inequalities, negative multipliers (incl. -1), never / always true
+  var LADDER = [   // every inequality rung sits directly above the equation rung it matches (the same problem with < > ≤ ≥ in place of =)
+    { e: "pane", lv: 0 }, { e: "pane", lv: 0, ineq: 1 }, { e: "pane", lv: 1 }, { e: "pane", lv: 1, ineq: 1 }, { e: "pane", lv: 2 }, { e: "pane", lv: 2, ineq: 1 },
+    { e: "pane", lv: 3 }, { e: "pane", lv: 3, ineq: 1 }, { e: "pane", lv: 4 }, { e: "pane", lv: 4, ineq: 1 }, { e: "pane", lv: 5 }, { e: "pane", lv: 6 },   // one variable, one side (a negative coefficient turns the sign; fractions last)
+    { e: "eq", lv: 0 }, { e: "eq", lv: 0, ineq: 1 }, { e: "eq", lv: 1 }, { e: "eq", lv: 1, ineq: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 2, ineq: 1 },
+    { e: "eq", lv: 3 }, { e: "eq", lv: 3, ineq: 1 }, { e: "eq", lv: 4 }, { e: "eq", lv: 4, ineq: 1 },                                          // the variable on both sides, parentheses, fractions
+    { e: "eq", lv: 5 }, { e: "eq", lv: 5, ineq: 1, neg: 1 }, { e: "eq", lv: 6 }, { e: "eq", dv: 1 },                                          // parentheses with a minus sign (the inequality has a negative number in front: the sign turns)
+    { e: "eq", special: true }, { e: "eq", special: true, ineq: 1 },                                                                          // no solution / infinitely many, then never / always true
+    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 },   // letters as coefficients (no inequalities: a letter could be negative)
+    { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 }, { e: "eq", grp: 1 }, { e: "eq", grp: 2 }, { e: "eq", sq: 1 }, { e: "eq", sq: 2 }, { e: "eq", sq: 3 },
+    { e: "eq", av: 1 }, { e: "eq", av: 2 }, { e: "eq", av: 3 }, { e: "eq", av: 4 }                                                           // absolute values: |x + 3| = 5, |2x - 3| = 7, move and divide first, no solution / one answer
   ];
   function rung(e, f) { for (var i = 0; i < LADDER.length; i++) if (LADDER[i].e === e && f(LADDER[i])) return i; return 0; }
   function paneUnred(q) {   // the last step divides a whole number by a whole number that shares a factor with it, and the answer is not a whole number
     var sm = q.ks.reduce(function (t, k) { return add(t, k.k); }, mk(0)), c = add(q.c, neg(sm));
     return !q.flip && q.a.d === 1 && c.d === 1 && Math.abs(q.a.n) > 1 && gcd(c.n, q.a.n) > 1 && c.n % q.a.n !== 0;
   }
-  function ladderPane(q) { if (!isIneq(q) && paneUnred(q)) return rung("pane", function (r) { return r.lv === 6; }); if (isIneq(q)) { var n = eqLevel(q) >= 4 ? 3 : q.a.n < 0 ? 2 : 1; return rung("pane", function (r) { return r.ineq === n; }); } return rung("pane", function (r) { return r.lv === eqLevel(q); }); }
+  function ladderPane(q) { if (!isIneq(q) && paneUnred(q)) return rung("pane", function (r) { return r.lv === 6; }); if (isIneq(q)) { var n = Math.min(4, eqLevel(q)); if (q.a.n < 0 && n < 2) n = 2; return rung("pane", function (r) { return r.ineq && r.lv === n; }); } return rung("pane", function (r) { return !r.ineq && r.lv === eqLevel(q); }); }
   function ladderEq(L, R, rel) {
+    var ao = avOf(L, R);
+    if (ao) { var ar = avRoots(L, R), alv = ar.length < 2 ? 4 : ao.rest.length || !same(ao.g.m, mk(1)) ? 3 : same(exTot(ao.g.items).x || mk(1), mk(1)) ? 1 : 2; return rung("eq", function (r) { return r.av === alv; }); }
     var gg4 = R.length === 1 && R[0].k === "c" && !R[0].n.n ? grOf(L) : null;
     if (gg4) return rung("eq", function (r) { return r.grp === (gg4.a === 1 ? 1 : 2); });
     var gz = zpOf(L, R);
@@ -2730,12 +2847,12 @@
       if (gg || fa) return rung("eq", function (r) { return r.lit === (gg && fa ? 7 : fa ? 6 : 5); });
       var ln = all.length > 3 || all.some(function (t, i) { return all.some(function (u, j) { return i < j && exLike(t, u) && ((L.indexOf(t) >= 0) === (L.indexOf(u) >= 0) || t.k === "x"); }); }) ? 4 : all.some(function (t) { return t.n.d > 1 || Math.abs(t.n.n) > 1 || (t.s && Object.keys(t.s).some(function (l) { return t.s[l] < 0; })); }) ? 3 : all.length > 2 ? 2 : 1; return rung("eq", function (r) { return r.lit === ln; });
     }
-    if (rel && rel !== "=") { var n = sol.kind !== "one" ? 3 : hasNeg ? 2 : 1; return rung("eq", function (r) { return r.ineq === n; }); }
+    if (rel && rel !== "=") { if (sol.kind !== "one") return rung("eq", function (r) { return r.ineq && r.special; }); if (hasNeg) return rung("eq", function (r) { return r.ineq && r.neg; }); var il = eqLevelOf(L, R); return rung("eq", function (r) { return r.ineq && !r.neg && !r.special && r.lv === il; }); }
     if (sol.kind !== "one") return rung("eq", function (r) { return r.special && !r.ineq; });
     var ul = exTot(L), ur = exTot(R), ua = add(ul.x || mk(0), neg(ur.x || mk(0))), uc = add(ur[""] || mk(0), neg(ul[""] || mk(0)));   // the last division leaves a fraction that can be simplified
     if (!all.some(function (t) { return t.k === "g"; }) && ua.d === 1 && uc.d === 1 && Math.abs(ua.n) > 1 && gcd(uc.n, ua.n) > 1 && uc.n % ua.n !== 0) return rung("eq", function (r) { return r.lv === 6 && !r.ineq; });
-    if (hasMinus1) return rung("eq", function (r) { return r.lv === 5; });
-    return rung("eq", function (r) { return r.lv === eqLevelOf(L, R); });
+    if (hasMinus1) return rung("eq", function (r) { return r.lv === 5 && !r.ineq; });
+    return rung("eq", function (r) { return !r.ineq && r.lv === eqLevelOf(L, R); });
   }
   function solverEq(lv, demo) {   // a variant of the given difficulty; whole-number coefficients when the Demo has to walk through it
     if (demo && lv > 4 && lv !== 6) lv = 4;
@@ -2842,9 +2959,9 @@
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
       if (st.e === "eq") {
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
-        EXP.lit = !!st.lit; EXP.quad = false; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.grp ? { L: grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st.ineq) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
+        EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.av ? eqAv(st.av) : st.grp ? { L: grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
         EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)), rel: EXP.rel }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; EXP.vk = "x";
-      } else { EXP = null; useCustom = st.ineq ? paneIneq(st.ineq, m === "demo") : solverEq(st.lv, m === "demo"); }
+      } else { EXP = null; useCustom = st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); }
     }
     $("modePick").hidden = true;
     if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); }
@@ -3311,6 +3428,7 @@
     done(i);
   }
   function undo() {
+    nlHide();
     if (pq() && grN()) { grnUndo(); return; }
     if (pq() && gwN()) { gwnUndo(); return; }
     if (wf()) { wfUndo(); return; }
@@ -4066,8 +4184,41 @@
     if (pgRun || QZ.locked || QZ.step >= 4) return;
     dnTake(); pgOne = {}; pgDemo();
   }
+  // ---- Play Solve: a solved inequality is graphed on a number line: an open dot for < or > (the boundary is not a solution), a closed dot for \u2264 or \u2265 (it is), and the solutions shaded ----
+  function nlHide() { var b = $("nlBox"); if (b && !b.hidden) { b.hidden = true; b.innerHTML = ""; } }
+  function nlShow(kind, bv, rel) {   // kind "one": x rel bv (bv a fraction); "inf": every number; "none": no number
+    var box = $("nlBox"); if (!box) return;
+    var W = 560, pad = 26, y = 34, v = kind === "one" ? bv.n / bv.d : 0, c = Math.round(v), lo = c - 6, hi = c + 6, X = function (t) { return pad + (t - lo) / (hi - lo) * (W - 2 * pad); };
+    var g = "<line class=\"nlAx\" x1=\"" + (pad - 12) + "\" y1=\"" + y + "\" x2=\"" + (W - pad + 12) + "\" y2=\"" + y + "\"/>";
+    g += "<path class=\"nlAx\" d=\"M" + (pad - 4) + " " + (y - 6) + " L" + (pad - 13) + " " + y + " L" + (pad - 4) + " " + (y + 6) + " M" + (W - pad + 4) + " " + (y - 6) + " L" + (W - pad + 13) + " " + y + " L" + (W - pad + 4) + " " + (y + 6) + "\"/>";
+    for (var t = lo; t <= hi; t++) g += "<line class=\"nlTk\" x1=\"" + X(t) + "\" y1=\"" + (y - 6) + "\" x2=\"" + X(t) + "\" y2=\"" + (y + 6) + "\"/><text class=\"nlLb" + (kind === "one" && bv.d === 1 && t === c ? " b" : "") + "\" x=\"" + X(t) + "\" y=\"" + (y + 22) + "\">" + (t < 0 ? "\u2212" + -t : t) + "</text>";
+    var arrow = function (x, dir) { return "<path class=\"nlAr\" d=\"M" + (x + dir * 14) + " " + y + " L" + x + " " + (y - 9) + " L" + x + " " + (y + 9) + " Z\"/>"; };
+    var cap, vs = kind === "one" ? (bv.n < 0 ? "\u2212" : "") + exFr(mk(Math.abs(bv.n), bv.d)) : "";
+    if (kind === "one") {
+      var left = rel === "<" || rel === "\u2264", strict = rel === "<" || rel === ">", bx = X(v), ex = left ? pad - 2 : W - pad + 2;
+      g += "<line class=\"nlSh\" x1=\"" + bx + "\" y1=\"" + y + "\" x2=\"" + ex + "\" y2=\"" + y + "\"/>" + arrow(left ? pad - 12 : W - pad + 12, left ? -1 : 1);
+      g += "<circle class=\"nlDot\" cx=\"" + bx + "\" cy=\"" + y + "\" r=\"7.5\" fill=\"" + (strict ? "var(--bg)" : "var(--plus)") + "\"/>";
+      if (bv.d > 1) g += "<text class=\"nlBv\" x=\"" + bx + "\" y=\"" + (y - 15) + "\">" + vs + "</text>";
+      cap = "x " + rel + " " + vs + ": " + (strict ? "an open dot at " + vs + " (" + vs + " is not a solution)" : "a closed dot at " + vs + " (" + vs + " is a solution)") + ", shaded to the " + (left ? "left" : "right") + ".";
+    } else if (kind === "inf") { g += "<line class=\"nlSh\" x1=\"" + (pad - 2) + "\" y1=\"" + y + "\" x2=\"" + (W - pad + 2) + "\" y2=\"" + y + "\"/>" + arrow(pad - 12, -1) + arrow(W - pad + 12, 1); cap = "Every number is a solution, so the whole number line is shaded."; }
+    else cap = "No number is a solution, so nothing on the number line is shaded.";
+    box.innerHTML = "<svg viewBox=\"0 0 " + W + " 64\" role=\"img\" aria-label=\"" + cap + "\">" + g + "</svg><div class=\"nlCap\">" + cap + "</div>";
+    box.hidden = false;
+  }
+  function nlPane() {   // the one-variable pane: its solved value, when it came from an inequality
+    if (!BUILT[act] || !BUILT[act].solver || lesson !== 1 || EXP) return;
+    var n = allV()[0], q = vals[n]; if (!q || valRel(n) === "=") return;
+    nlShow("one", mk(q.n, q.d), valRel(n));
+  }
+  function nlEq(kind) {   // the both-sides engine, once an inequality is finished
+    if (!BUILT[act] || !BUILT[act].solver || !eqIneq() || EXP.zp || EXP.lit) return;
+    if (kind !== "one") { nlShow(kind); return; }
+    var L = EXP.L, R = EXP.R, rel = EXP.rel || "=", isV = function (a) { return a.length === 1 && a[0].k === "x"; }, isC = function (a) { return a.length === 1 && a[0].k === "c"; };
+    if (isV(L) && isC(R)) nlShow("one", R[0].n, rel); else if (isV(R) && isC(L)) nlShow("one", L[0].n, relRev(rel));
+  }
   function onSolved() {
     if (DNX) return;
+    nlPane();
     if (d3On()) { d3Show(); if (mode === "demo" && lesson === 2) d2Demo(); }   // 2×2, Substitution and 3×3: the solved system, graphed (lines in 2D, planes in 3D)
     tally(); nxShow(); if (mode !== "demo" && !BUILT[act].solver) $("next").focus();   // (in Play Solve Next changes the mode, so Enter on the last answer must not land on it)
   }
@@ -4300,7 +4451,7 @@
   function takeBoot() { var m = bootMode || "demo"; bootMode = null; return m; }
 
   function newProblem() {
-    hideKind(); d3Hide(); $("eqSubRow").hidden = true;
+    nlHide(); hideKind(); d3Hide(); $("eqSubRow").hidden = true;
     if (quiz()) { $("next").hidden = true; $("nxHard").hidden = true; $("again").hidden = true; qzStart(); return; }   // (nothing left over from the activity we came from)
     $("qzNext").hidden = true; $("qzAgain").hidden = true;
     exHide();
