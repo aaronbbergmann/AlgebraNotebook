@@ -230,6 +230,8 @@
   .composer[hidden],.sheet[hidden]{display:none}
   #askArrow{position:fixed;width:84px;height:50px;z-index:70;pointer-events:none;color:var(--no)}
   #askArrow[hidden]{display:none}
+  #dmArrow{position:fixed;width:150px;height:90px;z-index:70;pointer-events:none;color:var(--no)}#dmArrow[hidden]{display:none}#dmArrow svg{display:block;width:100%;height:100%;fill:currentColor;filter:drop-shadow(0 3px 4px rgba(0,0,0,.4))}#dmArrow[data-dir=d] svg{transform:rotate(90deg)}#dmArrow.grow{animation:askGrow .7s cubic-bezier(.2,1.4,.4,1) both}
+  #lockTip{position:fixed;z-index:90;background:#1B2433;color:#fff;padding:.4rem .7rem;border-radius:8px;font-size:.9rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none}#lockTip[hidden]{display:none}
   #askArrow svg{display:block;width:100%;height:100%;fill:currentColor;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
   #askArrow[data-dir=d] svg{transform:rotate(90deg)}
   #askArrow.grow{animation:askGrow .7s cubic-bezier(.2,1.4,.4,1) both}
@@ -3937,6 +3939,7 @@
     if (fixedAct) act = fixedAct;
     if (BUILT[act].sub) lesson = 4;   // 1.4 opens on its first exercise, Graphing
     if (fixedAct && BUILT[fixedAct].review) { rev = fixedAct; var it0 = BUILT[rev].items[0]; act = it0.act; lesson = it0.lesson; subx = !!it0.subx; }   // a review page starts on its first item
+    exBoot();   // ?ex=write-g opens that exercise
   })();
   // with no activity in the address, show the welcome page until one is chosen
   var welcome = !fixedAct, hub = /github\.io$/i.test(location.hostname);
@@ -3967,7 +3970,7 @@
     var tot = 0; for (var m = MORD.indexOf(l[1]); m < 4; m++) tot += prog[l[0] + ":" + MORD[m]] || 0; return tot >= (l[4] || 1); }
   function lvSkip(l) { if (rev) return l[0] !== revI; var B = BUILT[act]; if (B.sep) return B.sep.indexOf(l[0]) >= 0 ? l[0] !== LK() : B.sep.indexOf(LK()) >= 0; return !!B.perLesson && l[0] !== lesson; }   // 1.4: Graphing keeps a percentage of its own
   function pct() { var p = 0; LEVELS.forEach(function (l) { if (lvSkip(l)) return; if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }   // an activity with perLesson keeps a separate percentage for each exercise
-  function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; var pl = $("progLnk"); if (pl) pl.textContent = pct() + "%"; lvCheer(); }
+  function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; var pl = $("progLnk"); if (pl) pl.textContent = pct() + "%"; lvCheer(); modeLocksUI(); }
   // a newly earned level: one phrase with the level beneath it, over the whole screen (Playgrounds have no levels, so never)
   function lvCheer() {
     var nw = lvMark().filter(function (l) { return !lvSkip(l); }); if (!nw.length || DNX) return;
@@ -4065,7 +4068,7 @@
   }
   function onSolved() {
     if (DNX) return;
-    if (d3On()) d3Show();   // 2×2, Substitution and 3×3: the solved system, graphed (lines in 2D, planes in 3D)
+    if (d3On()) { d3Show(); if (mode === "demo" && lesson === 2) d2Demo(); }   // 2×2, Substitution and 3×3: the solved system, graphed (lines in 2D, planes in 3D)
     tally(); nxShow(); if (mode !== "demo" && !BUILT[act].solver) $("next").focus();   // (in Play Solve Next changes the mode, so Enter on the last answer must not land on it)
   }
   // ---- Play Solve: the letter being solved for. The engines always work in x; a generated problem picks one of x y z m n p t u v w and
@@ -4134,10 +4137,10 @@
       b.classList.remove("next"); $(p[2]).hidden = true;
       b.textContent = st === "playing" ? "Pause demo" : st === "paused" ? "Resume demo" : "Start Demo";
       b.classList.toggle("on", st === "playing"); b.classList.toggle("paused", st === "paused"); b.classList.toggle("ready", st === "idle"); b.setAttribute("aria-pressed", st === "playing");
-      e.hidden = st !== "paused";
+      e.hidden = st !== "paused" || progAct();   // Progress activities have no End demo button
     });
     if (BUILT[act] && BUILT[act].solver) { $("dmHard").hidden = false; $("dmHard").textContent = hardLabel(); $("dmLink").textContent = "Try another"; $("dmLink").hidden = false; }   // Level Up and Try another are always there
-    if (st === "idle") dmCap("");
+    if (st === "idle") { dmCap(""); if (typeof DG !== "undefined" && DG) DG.go = false; }   // a new demo waits for its button again
   }
   function dmCap(t) { var c = $("stCap"); if (c) c.textContent = t || ""; dmHead(); }
   function dmTitle(t) { var c = $("stT"); if (t === "Solve" && BUILT[act] && BUILT[act].solver) t = svTitle(); if (c) c.textContent = t || ""; dmHead(); }
@@ -4160,7 +4163,7 @@
     $("dmCtl").hidden = !(own && mode === "demo");
     dmTitle(own && BUILT[act] && BUILT[act].title || ""); dmHead();
   }
-  function setMode(m) {
+  function setMode0(m) {
     msSave();   // the work in the mode being left is kept, to come back to (see "Switching modes keeps the work")
     syncPane();
     if (!BUILT[act].solver) $("nxHard").hidden = true;   // Level Up belongs to Play Solve alone; nothing is left over from the activity we came from
@@ -4416,6 +4419,7 @@
       g.beginPath(); if (g.roundRect) g.roundRect(bx, by - 11, tw + 12, 22, 6); else g.rect(bx, by - 11, tw + 12, 22); g.fillStyle = "#fff"; g.globalAlpha = .92; g.fill(); g.globalAlpha = 1; g.lineWidth = 1.5; g.strokeStyle = hl; g.stroke();
       g.fillStyle = hl; g.fillText(lab, bx + 6, by);
     }
+    d2GpDraw(g, X, Y);
   }
   window.addEventListener("resize", function () { if (D3.P && D3.P.dim === 2) d2Draw(); });
   // each plane is cut into small pieces across the box [-R, R]³ (so that the pieces can be drawn back to front)
@@ -4707,7 +4711,7 @@
     if (eqWsAct()) { var A = [].slice.call($("ansFields").querySelectorAll("input")), n = A[A.indexOf(e.target) + 1]; if (n) n.focus(); return; }   // Write: Return only moves on; Submit checks
     checkAnswer();
   });
-  $("modeSel").addEventListener("change", function () { var me = this; setMode(this.value); me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
+  $("modeSel").addEventListener("change", function () { var me = this, lk = modeLock(this.value); if (lk) { this.value = mode; lockTip(lk); me.blur(); return; } setMode(this.value); me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
   $("undo").addEventListener("click", undo);
   $("show").addEventListener("click", showWork);
   $("hint").addEventListener("click", function () {
@@ -5116,10 +5120,11 @@
   }
   function qzDraw() { qzDraw0(); zoomApply($("pgSvg")); }
   function qzDraw0() {
-    var S = $("pgSvg"); S.innerHTML = ""; if (QZ.step < 2) return;
+    var S = $("pgSvg"); S.innerHTML = ""; PGC = []; if (QZ.step < 2) return;
     gridLayer(S);
     var fam = qFam();
     if (QZ.step >= 4) {   // solved: the true parent graph in red
+      PGC.push({ f: function (x) { return qf(fam, x); }, col: "#C74440" });
       sampleCurve(function (x) { return qf(fam, x); }, ZM.ox - 1.05 * ZM.cur, ZM.ox + 1.0501 * ZM.cur, ZM.cur, ZM.curY, 1.2, ZM.oy).forEach(function (sg) { if (sg.length > 1) S.appendChild(svgEl("polyline", { points: sg.join(" "), fill: "none", stroke: "#C74440", "stroke-width": ".13" })); });
       for (var u = -2; u <= 2; u++) S.appendChild(svgEl("circle", { cx: u, cy: -qf(fam, u), r: .22, fill: "#C74440" }));
       return;
@@ -6205,7 +6210,7 @@ var ESPIC = {
       aStep, vStep,
       function (n) { cap("g(x) = " + gwnEq(t.a, t.h, t.k).replace(/<span class="fr"><span>1<\/span><span>(\d)<\/span><\/span>/g, "(1/$1)").replace(/<[^>]+>/g, "").replace(/^g\(x\) = /, "") + ", with vertex (" + nf(t.h) + ", " + nf(t.k) + ")."); pgWait(2600, n); }
     ], i = 0;
-    (function next() { if (pgRun !== run) return; if (i < L.length) { L[i++](next); return; } s.ok = gwnMatch(s); PG.demoFin = true; pgStop(); })();
+    (function next() { if (pgRun !== run) return; if (i < L.length) { L[i++](next); return; } s.ok = gwnMatch(s); gpShow(cap, function () { if (pgRun !== run) return; PG.demoFin = true; pgStop(); }); })();
   }
   // ---- 2.1 Real Life (Demo, Sequence, Calculate, Write): the question's path h(x) is dotted; the new path g(x) = h(x) + k is blue. Demo and Sequence: the student
   // drags g's y-intercept up or down, and the k slider and g's equation follow. Calculate: the k slider moves g. Write: only the axes, and two boxes, h(x) = and
@@ -6709,7 +6714,7 @@ var ESPIC = {
   function buildModes() {
     var B = BUILT[act], ms = B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"];
     $("modeSel").innerHTML = ms.map(function (m) { return "<option value=\"" + m + "\">" + MODES[m] + "</option>"; }).join("");
-    if (ms.indexOf(mode) < 0) mode = ms[0]; $("modeSel").value = mode;
+    if (ms.indexOf(mode) < 0) mode = ms[0]; $("modeSel").value = mode; modeLocksUI(); urlSync();
   }
   // the full title shown in the list (an activity can give its own, otherwise code + name)
   function shortOf(id) { return id === "1.4D" ? "1.4 Algebra" : id; }
@@ -7789,12 +7794,13 @@ var ESPIC = {
   })();
   function drawGraph() { drawGraph0(); zoomApply($("pgSvg")); }
   function drawGraph0() {
-    var S = $("pgSvg"); S.innerHTML = ""; document.body.classList.toggle("tmOn", !!PG.tm); if (isDataAct()) dataFit();
+    var S = $("pgSvg"); S.innerHTML = ""; PGC = []; document.body.classList.toggle("tmOn", !!PG.tm); if (isDataAct()) dataFit();
     TB.targets = TB.targets.filter(function (t) { return !PG.pts.some(function (z) { return Math.abs(z[0] - t[0]) < 1e-9 && Math.abs(z[1] - t[1]) < 1e-9; }); });
     { // the grid and both axes are always there; Graph only reveals the curve
       gridLayer(S);
       if (wf() && QZ.wfp && wfCur()) wfDraw(S);
       if (PG.show.parent) {
+        PGC.push({ f: pf, col: "#222" });
         curvePts(pf).forEach(function (pts) { S.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: "#222", "stroke-width": ".07", "stroke-dasharray": ".3 .25" })); });
         for (var u = -2; u <= 2; u++) S.appendChild(svgEl("circle", { cx: u, cy: -pf(u), r: .13, fill: "#222", "pointer-events": "none" }));
       }
@@ -8245,12 +8251,13 @@ var ESPIC = {
     var curve = function (fn, vx) { var lo = ZM.ox - 1.05 * ZM.cur, hi = ZM.ox + 1.05 * ZM.cur, xs = p.fam === 3 ? wfSamp(lo, hi) : p.fam >= 2 && vx > lo && vx < hi ? [lo, vx, hi] : [lo, hi]; return xs.map(function (x) { return x + "," + (-fn(x)); }).join(" "); };
     if (sh && !PG.show.graph) S.appendChild(svgEl("polyline", { points: curve(function (x) { return F(x - sh.dh) + sh.dk; }, p.fh + sh.dh), fill: "none", stroke: "#9AA3B2", "stroke-width": ".09", "stroke-linejoin": "round" }));   // half-way: thin grey
     var rf = p.rf, rs = d.s === undefined ? 1 : d.s;
+    PGC.push({ f: F, col: CF });
     var Gd = rf === "x" ? function (x) { return rs * F(x); } : rf === "y" ? function (x) { return rs === 0 ? F(0) : F(x / rs); } : function (x) { return F(x - d.dh) + d.dk; };
     // a reflection is drawn point by point: x-axis (x, s F(x)), y-axis (s x, F(x)), with s from 1 down to -1 as the graph is flipped
     var rcurve = function () { var xs = [], lo = ZM.ox - 1.05 * ZM.cur, hi = ZM.ox + 1.05 * ZM.cur, stp = (hi - lo) / 60; for (var xx = lo; xx <= hi + 1e-9; xx += stp) xs.push(xx); if (p.fam >= 2) xs.push(p.fh); xs.sort(function (u, v) { return u - v; });
       return xs.map(function (x) { return (rf === "y" ? rs * x : x) + "," + (-(rf === "x" ? rs * F(x) : F(x))); }).join(" "); };
     if (sl && !PG.show.graph) {   // 1.2 with sliders: g follows the controls (it only shows; nothing here is dragged)
-      SG = wfSlFn(p, sl); var svx = p.fam >= 2 ? (sl.nx ? -(p.fh + sl.h) : p.fh + sl.h) : 0;
+      SG = wfSlFn(p, sl); PGC.push({ f: SG, col: CG }); var svx = p.fam >= 2 ? (sl.nx ? -(p.fh + sl.h) : p.fh + sl.h) : 0;
       S.appendChild(svgEl("polyline", { points: curve(SG, svx), fill: "none", stroke: CG, "stroke-width": ".13", "stroke-linejoin": "round", "pointer-events": "none" }));
       for (var sv = -2; sv <= 2; sv++) { var sx = svx + sv, sy = SG(sx); if (Math.abs(sy) <= 10) S.appendChild(svgEl("circle", { cx: sx, cy: -sy, r: .2, fill: CG, "pointer-events": "none" })); }
       if (!sl.nx && !sl.nf && sl.a === 3 && (sl.h || sl.k)) {   // a pure move: the translation arrows of Play Graph
@@ -8259,7 +8266,7 @@ var ESPIC = {
         if (sl.k) tmArrow(S, tax + sl.h, tay, tax + sl.h, tay + sl.k, TMG);
       }
     } else if (st && !PG.show.graph) {   // the student's g: red, on top of f until it is dragged
-      var gp = rf ? rcurve() : curve(Gd, p.fh + d.dh);
+      var gp = rf ? rcurve() : curve(Gd, p.fh + d.dh); if (!rf) PGC.push({ f: Gd, col: CG });
       S.appendChild(svgEl("polyline", { points: gp, fill: "none", stroke: CG, "stroke-width": ".13", "stroke-linejoin": "round", "pointer-events": "none" }));
       if (rf) { for (var vr = -2; vr <= 2; vr++) { var rx = vr + (p.fam >= 2 ? p.fh : 0), rgx = rf === "y" ? rs * rx : rx, rgy = rf === "x" ? rs * F(rx) : F(rx); if (Math.abs(rgy) <= 10) S.appendChild(svgEl("circle", { cx: rgx, cy: -rgy, r: .2, fill: CG, "pointer-events": "none" })); } }
       else for (var v = -2; v <= 2; v++) { var gy = Gd(v + d.dh + (p.fam >= 2 ? p.fh : 0)); if (Math.abs(gy) <= 10) S.appendChild(svgEl("circle", { cx: v + d.dh + (p.fam >= 2 ? p.fh : 0), cy: -gy, r: .2, fill: CG, "pointer-events": "none" })); }
@@ -8863,7 +8870,7 @@ var ESPIC = {
     var X = function (x) { return L + x / o.xmax * pw; }, Y = function (y) { return T + ph - y / o.ymax * ph; };
     var halo = " stroke=\"var(--bg)\" stroke-width=\"3\" paint-order=\"stroke\"";
     var tsp = function (parts, fb) { return parts ? parts.map(function (p, i) { return (i ? " " : "") + "<tspan class=\"m3Lab" + (o.labOn ? " on" : "") + "\" data-m3lab=\"" + p[1] + "\">" + p[0] + "</tspan>"; }).join("") : fb; };
-    var s = "<svg class=\"m3Fig\" viewBox=\"0 0 " + W + " " + H + "\" data-g=\"" + [L, T, pw, ph, o.xmax, o.ymax].join(",") + "\" role=\"img\" aria-label=\"" + (o.alt || "Graph") + "\" font-family=\"system-ui,sans-serif\" font-size=\"11\" fill=\"currentColor\">", v;
+    var s = "<svg class=\"m3Fig\" data-gpk=\"" + gpFig(o, "m3") + "\" viewBox=\"0 0 " + W + " " + H + "\" data-g=\"" + [L, T, pw, ph, o.xmax, o.ymax].join(",") + "\" role=\"img\" aria-label=\"" + (o.alt || "Graph") + "\" font-family=\"system-ui,sans-serif\" font-size=\"11\" fill=\"currentColor\">", v;
     for (v = 0; v <= o.xmax + 1e-9; v += o.xs) s += "<path d=\"M" + X(v) + " " + T + "V" + (T + ph) + "\" stroke=\"currentColor\" stroke-opacity=\".14\"/><text x=\"" + X(v) + "\" y=\"" + (T + ph + 15) + "\" text-anchor=\"middle\">" + v + "</text>";
     for (v = 0; v <= o.ymax + 1e-9; v += o.ys) s += "<path d=\"M" + L + " " + Y(v) + "H" + (L + pw) + "\" stroke=\"currentColor\" stroke-opacity=\".14\"/><text x=\"" + (L - 6) + "\" y=\"" + (Y(v) + 4) + "\" text-anchor=\"end\">" + v + "</text>";
     s += "<path d=\"M" + L + " " + T + "V" + (T + ph) + "H" + (L + pw) + "\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"/>";
@@ -9766,7 +9773,7 @@ var ESPIC = {
     var W = 340, H = o.H || 300, titled = !!(o.xl || o.yl), L = titled ? 58 : 30, R = 12, T = 12, B = titled ? 44 : 22, pw = W - L - R, ph = H - T - B;
     var x0 = o.xmin, x1 = o.xmax, y0 = o.ymin, y1 = o.ymax, X = function (x) { return L + (x - x0) / (x1 - x0) * pw; }, Y = function (y) { return T + ph - (y - y0) / (y1 - y0) * ph; };
     var halo = " stroke=\"var(--bg)\" stroke-width=\"3\" paint-order=\"stroke\"", id = "c2c" + (++c2Clip), gx = o.gx || 1, gy = o.gy || gx, tx = o.tx || 5 * gx, ty = o.ty || 5 * gy, v, k;
-    var s = "<svg class=\"m3Fig c2Fig\" viewBox=\"0 0 " + W + " " + H + "\" data-g=\"" + [L, T, pw, ph, x1, y1, x0, y0].join(",") + "\" role=\"img\" aria-label=\"" + c2St(o.alt || "Graph").replace(/<[^>]+>/g, "").replace(/"/g, "") + "\" font-family=\"system-ui,sans-serif\" font-size=\"11\" fill=\"currentColor\">";
+    var s = "<svg class=\"m3Fig c2Fig\" data-gpk=\"" + gpFig(o, "c2") + "\" viewBox=\"0 0 " + W + " " + H + "\" data-g=\"" + [L, T, pw, ph, x1, y1, x0, y0].join(",") + "\" role=\"img\" aria-label=\"" + c2St(o.alt || "Graph").replace(/<[^>]+>/g, "").replace(/"/g, "") + "\" font-family=\"system-ui,sans-serif\" font-size=\"11\" fill=\"currentColor\">";
     s += "<defs><clipPath id=\"" + id + "\"><rect x=\"" + L + "\" y=\"" + T + "\" width=\"" + pw + "\" height=\"" + ph + "\"/></clipPath></defs>";
     var near = function (a, b) { return Math.abs(a - b) < 1e-9; }, onStep = function (val, st) { return near(val / st, Math.round(val / st)); };
     for (k = Math.ceil(x0 / gx - 1e-9); k * gx <= x1 + 1e-9; k++) { v = k * gx; s += "<path d=\"M" + X(v) + " " + T + "V" + (T + ph) + "\" stroke=\"currentColor\" stroke-opacity=\"" + (onStep(v, tx) ? ".24" : ".1") + "\"/>"; }
@@ -10438,10 +10445,10 @@ var ESPIC = {
   function spDraw(S, G) {
     var L = G.sp || []; if (!L.length) return;
     L.forEach(function (p, j) {
-      var q = spPos(G, p); if (!q || !isFinite(q[0]) || !isFinite(q[1])) return; var col = p.k === "c" ? "#C74440" : "#2D70B3";
+      var q = spPos(G, p); if (!q || !isFinite(q[0]) || !isFinite(q[1])) return; var col = p.k === "c" ? (wf() ? CG : "#C74440") : "#2D70B3";
       var g2 = svgEl("g", { "data-sop": j, style: "cursor:grab" });
       g2.appendChild(svgEl("circle", { cx: q[0], cy: -q[1], r: .55, fill: col, "fill-opacity": ".22" })); g2.appendChild(svgEl("circle", { cx: q[0], cy: -q[1], r: .24, fill: col, stroke: "#fff", "stroke-width": ".07" })); S.appendChild(g2);
-      if (SPD && SPD.G === G && SPD.i === j) {   // while it is being dragged, its coordinates ride beside it
+      {   // its coordinates ride beside it (while it is dragged too)
         var rt = (q[0] - ZM.ox) * 10 / ZM.cur <= 5, t = svgEl("text", { x: q[0], y: -q[1], dx: rt ? .8 : -.8, dy: -.6, "text-anchor": rt ? "start" : "end", "font-family": "system-ui,-apple-system,'Segoe UI',sans-serif", "font-size": ".66", "font-weight": "600", fill: "#1B2433", "paint-order": "stroke", stroke: "#fff", "stroke-width": ".22", "stroke-linejoin": "round", "pointer-events": "none" });
         function r2(v) { return fmtN(Math.round(v * 100) / 100); }
         t.textContent = "(" + r2(q[0]) + ", " + r2(q[1]) + ")"; S.appendChild(t);
@@ -10659,7 +10666,7 @@ var ESPIC = {
   function pgDemo() {
     if (pgRun) { pgStop(); return; }
     var ONE = pgOne; pgOne = null;
-    closePt(); var run = ++pgRun; PG.demoFin = false; if (!ONE) zoomHome(true); theme(); pgShift = 0; if (!ONE) dmUI("playing");
+    closePt(); var run = ++pgRun; PG.demoFin = false; Object.keys(GPS).forEach(function (k) { if (k.split("|").indexOf("demo") >= 0) delete GPS[k]; }); if (!ONE) zoomHome(true); theme(); pgShift = 0; if (!ONE) dmUI("playing");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
     if (!ONE) { PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = []; PG.ptb = null; PG.ptl = {}; PG.ptOn = false; PT.ask = null; PT.busy = false; }
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
@@ -11564,7 +11571,7 @@ var ESPIC = {
       return [function (n) { cap("Everything is done."); n(); }];
     }
     if (ONE) steps = dnPick();
-    (function next() { if (pgRun !== run) return; if (k >= steps.length) { if (ONE) { pgWait(900, function () { pgStop(); }); return; } PG.demoFin = true; pgStop(); return; } steps[k++](next); })();
+    (function next() { if (pgRun !== run) return; if (k >= steps.length) { if (ONE) { pgWait(900, function () { pgStop(); }); return; } gpShow(cap, function () { if (pgRun !== run) return; PG.demoFin = true; pgStop(); }); return; } steps[k++](next); })();
   }
   // one button starts, pauses and resumes the demo; End demo appears while it is paused
   $("pgDemo").addEventListener("click", function () { if (dmClickFinish()) return; if (!pgRun) pgDemo(); else if (!pgPaused) pgPause(); else pgResume(); });
@@ -11607,6 +11614,334 @@ var ESPIC = {
     }
     fit(); setInterval(fit, 250); updProg();
   })();
+  // ==== The exercise in the address: …/2-1/?ex=write-g.  The abbreviation of the exercise (or a review item's name) is kept in the URL and follows every change ====
+  function exSlug(s) { return String(s || "").replace(/×|&times;/g, "x").toLowerCase().replace(/&amp;|&/g, " ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
+  function exList() {
+    if (rev) return BUILT[rev].items.map(function (o, i) { return [String(i), exSlug(o.q)]; });
+    var B = BUILT[act]; if (!B || B.play || B.solver) return [];
+    if (B.sub) return [["4", "graphing"], ["1", "one-variable"], ["s", "substitution"], ["2", "2x2-systems"], ["3", "3x3-systems"]];
+    var out = []; for (var l = 1; l <= (B.top || 0); l++) out.push([String(l), exSlug((B.short && B.short[l - 1]) || (B.lessons && B.lessons[l - 1]) || "")]); return out;
+  }
+  function exBoot() {   // (runs while the page starts: ?ex= opens that exercise)
+    var m = /[?&]ex=([^&#]*)/.exec(location.search); if (!m) return; var want; try { want = exSlug(decodeURIComponent(m[1].replace(/\+/g, " "))); } catch (e) { return; }
+    var hit = exList().filter(function (e) { return e[1] === want; })[0]; if (!hit) return;
+    if (rev) { revI = +hit[0]; var it = BUILT[rev].items[revI]; act = it.act; lesson = it.lesson; subx = !!it.subx; return; }
+    if (hit[0] === "s") { subx = true; lesson = 2; } else { subx = false; lesson = +hit[0]; }
+  }
+  function urlSync() {
+    try {
+      if (welcome || !fixedAct) return;
+      var L = exList(), cur = rev ? String(revI) : subx ? "s" : String(lesson), e = L.filter(function (x) { return x[0] === cur; })[0];
+      var sp = location.search.replace(/^\?/, "").split("&").filter(function (p) { return p && !/^ex=/.test(p); }); if (e) sp.push("ex=" + e[1]);
+      var u = location.pathname + (sp.length ? "?" + sp.join("&") : "") + location.hash;
+      if (u !== location.pathname + location.search + location.hash) history.replaceState(history.state, "", u);
+    } catch (er) { }
+  }
+
+  // ==== The mode ladder: Demo > Sequence > Calculate > Write.  A mode opens once the mode below it is finished in this exercise (a whole demo watched, then one
+  // problem finished in Sequence, then one in Calculate), read from the saved Progress, so it survives a reload.  Going down is always allowed; Create is not on the ladder ====
+  function ladOn() { var B = BUILT[act]; return !welcome && !!B && !B.play && !B.solver && !!LEVELS.length; }
+  function ladder() { var B = BUILT[act], ms = B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"]; return ms.filter(function (m) { return MORD.indexOf(m) >= 0; }); }
+  function modeFin(m) { return lvDone([LK(), m, 0, "", 1]); }
+  function modeLock(m) { if (!ladOn()) return null; var L = ladder(), i = L.indexOf(m); for (var k = 0; k < i; k++) if (!modeFin(L[k])) return L[k]; return null; }
+  function lockFix(m) { var lk = modeLock(m); if (!lk) return m; lockTip(lk); return lk; }
+  function lockTip(lk) {
+    var T = $("lockTip"); if (!T) { T = document.createElement("div"); T.id = "lockTip"; T.setAttribute("role", "status"); document.body.appendChild(T); }
+    T.textContent = "Finish " + MODES[lk] + " first."; T.hidden = false;
+    var r = $("modeSel").getBoundingClientRect(), w = T.offsetWidth;
+    if (r.width) { T.style.left = Math.max(6, Math.min(innerWidth - w - 6, r.left + r.width / 2 - w / 2)) + "px"; T.style.top = (r.bottom + 8) + "px"; } else { T.style.left = Math.max(6, innerWidth / 2 - w / 2) + "px"; T.style.top = "64px"; }
+    clearTimeout(lockTip.t); lockTip.t = setTimeout(function () { T.hidden = true; }, 2800);
+  }
+  function modeLocksUI() { var S = $("modeSel"); if (!S) return; [].forEach.call(S.options, function (o) { var lk = modeLock(o.value); o.style.color = lk ? "#A3A8B0" : ""; o.classList.toggle("locked", !!lk); o.title = lk ? "Finish " + MODES[lk] + " first" : ""; }); }
+  function setMode(m) { m = lockFix(m); DG.go = false; dgArrow(false); setMode0(m); modeLocksUI(); urlSync(); }
+
+  // ==== Demo mode: the first click must be the demo button.  Until it is pressed, a click anywhere else does nothing and a big red arrow grows in, pointing at it
+  // (the small activity / exercise / mode links at the top of the right panel still work) ====
+  var DG = { go: false };
+  function progAct() { var B = BUILT[act]; return !!B && !B.play && !B.solver; }
+  function dgBtn() { return [$("pgDemo"), $("dmBtn")].filter(function (b) { return b && b.offsetParent && !b.hidden; })[0] || null; }
+  function dgOn() { return !welcome && progAct() && mode === "demo" && !DG.go && !pgRun && !(typeof DM4 !== "undefined" && DM4.run) && !DMX; }
+  function dgArrow(on) {
+    var A = $("dmArrow"); if (!A) { A = document.createElement("div"); A.id = "dmArrow"; A.innerHTML = "<svg viewBox=\"0 0 100 60\" aria-hidden=\"true\"><path d=\"M2 22h58V4l38 26-38 26V38H2z\"/></svg>"; document.body.appendChild(A); }
+    A.hidden = true; A.classList.remove("grow"); clearTimeout(dgArrow.t); if (!on) return;
+    var b = dgBtn(); if (!b) return; var r = b.getBoundingClientRect(), side = r.left > innerWidth * 0.3, w = 150, h = 90;
+    A.style.left = (side ? Math.max(4, r.left - w - 8) : Math.max(4, r.left + r.width / 2 - w / 2)) + "px";
+    A.style.top = (side ? r.top + r.height / 2 - h / 2 : Math.max(4, r.top - h - 8)) + "px";
+    A.style.transformOrigin = side ? "100% 50%" : "50% 100%"; A.dataset.dir = side ? "r" : "d"; A.hidden = false; void A.offsetWidth; A.classList.add("grow");
+    dgArrow.t = setTimeout(function () { A.hidden = true; }, 4000);
+  }
+  ["pointerdown", "mousedown", "touchstart", "click", "dblclick", "pointerup", "mouseup"].forEach(function (ty) {
+    window.addEventListener(ty, function (e) {
+      if (!e.isTrusted || !dgOn()) return; var t = e.target; if (!t || !t.closest) return;
+      if (t.closest("#pgDemo,#dmBtn")) { if (ty === "click") { DG.go = true; dgArrow(false); } return; }
+      if (t.closest(".ctl-sel,#actList,#prog,#party,#lockTip") || !dgBtn()) return;
+      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+      if (ty === "pointerdown" || (ty === "click" && e.detail === 0)) dgArrow(true);
+    }, { capture: true, passive: false });
+  });
+
+  // ==== Clickable points on every graph (the 2.1 Real Life graph is the model).  Click a graphed curve or line: a point lands on it (x on the grid) with its
+  // coordinates; drag it along the curve; click it again to take it off.  Click a point already marked on a graph to show its coordinates.  Every mode, where a
+  // click is not already part of the work (plotting, dragging a handle, choosing a point): there, the graph does what it always did ====
+  var GPS = {}, GPF = {}, GPFn = 0, GPEAT = 0, GPDBL = 0, PGC = [], GPQ = typeof WeakMap === "function" ? new WeakMap() : null, GPQn = 0;
+  var GPINT = "[data-sp],[data-sop],[data-sh],[data-pt],[data-qh],[data-kp],[data-wfg],[data-gh],[data-grh],[data-grp],[data-grc],[data-m3pt],[data-gdrag],[data-m3lab],[data-glw],.glHandle,[role=button],a,button,input,select,textarea";
+  function gpFig(o, kind) { var id = ++GPFn; GPF[id] = { o: o, kind: kind }; delete GPF[id - 120]; return id; }
+  function gpN(v) { v = Math.round(v * 100) / 100; if (Object.is(v, -0) || Math.abs(v) < 1e-9) v = 0; return (v < 0 ? "−" : "") + Math.abs(v); }
+  function gpCtx() {
+    var q = ""; if (QZ && typeof QZ === "object") { var id = GPQ ? GPQ.get(QZ) : 0; if (!id && GPQ) { id = ++GPQn; GPQ.set(QZ, id); } q = id + "." + (QZ.pi || 0); }
+    return [act, lesson, subx ? "s" : "", mode, rev ? revI : "", q].join("|");
+  }
+  function gpMeta(S, light) {
+    if (!S || !S.getAttribute) return null;
+    var k = S.getAttribute("data-gpk"); if (k) return gpFigMeta(S, GPF[k], light);
+    if (S.id === "pgSvg") return document.body.classList.contains("play") || quiz() ? gpPgMeta(S, light) : null;
+    if (S.id === "gwnSvg") return gpGwnMeta(S, light);
+    return null;
+  }
+  // a figure of the step engine (1.3, 1.4 Graphing, 2.1 Real Life, 2.2, 2.4: m3Fig and c2Fig)
+  function gpFigOK() {
+    if (!m3() || !QZ) return true;
+    if (QZ.step >= 4 || QZ.m3done) return true;
+    var st = m3Step(); if (st && M3ACT.indexOf(st.type) >= 0) return false;   // the step is answered on the graph itself
+    if (m3wOn()) { var pb = m3Cur(); if (pb && pb.kind === 5) return false; if (m3L().some(function (q) { return q.type === "gpt" && !QZ.m3w.ok[q.id]; })) return false; }   // Write: points still to plot
+    return true;
+  }
+  function gpFigMeta(S, F, light) {
+    if (!F || !S.isConnected) return null;
+    var figs = [].slice.call(document.querySelectorAll("svg.m3Fig")), key = "f|" + gpCtx() + "|" + figs.indexOf(S); if (light) return { key: key };
+    var o = F.o, g = S.getAttribute("data-g").split(",").map(Number), L = g[0], T = g[1], pw = g[2], ph = g[3], x1 = g[4], y1 = g[5], x0 = g[6] || 0, y0 = g[7] || 0;
+    var C = [], M = [];
+    if (F.kind === "m3") {
+      var lns = (o.lines || []).slice(); if (o.line) lns.unshift({ m: o.line.m, b: o.line.b, col: "#7A3FB5" });
+      lns.forEach(function (l) { C.push({ f: function (x) { return l.m * x + l.b; }, lo: 0, hi: x1, col: l.col || "#7A3FB5" }); });
+      (o.pts || []).forEach(function (p) { if (!p.lab) M.push({ x: p.x, y: p.y, col: p.col || "#7A3FB5" }); });
+      (o.scat || []).forEach(function (p) { M.push({ x: p[0], y: p[1], col: "#2D70B3" }); });
+    } else {
+      (o.curves || []).forEach(function (c) { C.push({ f: c.fn, inv: !!c.inv, lo: c.lo == null ? (c.inv ? y0 : x0) : c.lo, hi: c.hi == null ? (c.inv ? y1 : x1) : c.hi, col: c.col }); });
+      (o.vl || []).forEach(function (l) { C.push({ f: function () { return l.x; }, inv: true, lo: y0, hi: y1, col: l.col }); });
+      (o.hl || []).forEach(function (l) { C.push({ f: function () { return l.y; }, lo: x0, hi: x1, col: l.col }); });
+      (o.segs || []).forEach(function (s) {
+        if (Math.abs(s.x2 - s.x1) < 1e-12) C.push({ f: function () { return s.x1; }, inv: true, lo: Math.min(s.y1, s.y2), hi: Math.max(s.y1, s.y2), col: s.col });
+        else C.push({ f: function (x) { return s.y1 + (s.y2 - s.y1) * (x - s.x1) / (s.x2 - s.x1); }, lo: Math.min(s.x1, s.x2), hi: Math.max(s.x1, s.x2), col: s.col });
+      });
+      (o.pts || []).forEach(function (p) { if (!p.lab || (p.lab !== true && String(p.lab).indexOf("(") < 0)) M.push({ x: p.x, y: p.y, col: p.col || C2P }); });
+      (o.scat || []).forEach(function (p) { M.push({ x: p[0], y: p[1], col: C2B }); });
+    }
+    return { S: S, key: key, ok: gpFigOK(), curves: C, marks: M, sx: F.kind === "m3" ? (o.xs || 1) : (o.gx || 1), sy: F.kind === "m3" ? (o.ys || 1) : (o.gy || o.gx || 1), box: { x0: x0, x1: x1, y0: y0, y1: y1 },
+      toS: function (x, y) { return [L + (x - x0) / (x1 - x0) * pw, T + ph - (y - y0) / (y1 - y0) * ph]; },
+      toM: function (sx, sy) { return [x0 + (sx - L) / pw * (x1 - x0), y0 + (T + ph - sy) / ph * (y1 - y0)]; } };
+  }
+  // the Play Graph pane (Play Graph, Play Data, 1.1, 1.2, 2.1 exercises 1 to 3): the graphed function and the drawn shapes already take points (spHit / spDraw);
+  // here: the other curves (the parent, the f and g of 1.2) and every marked point
+  function gpPgMeta(S, light) {
+    var G = G_(), key = "pg|" + (document.body.classList.contains("play") && !pq() ? "play|" + act + "|" + PG.fam : gpCtx()); if (light) return { key: key };
+    var ok = G === QZ ? !!QZ && QZ.step >= 4 : !PG.tool && !PG.tm && !(TB.targets && TB.targets.length) && !SPD && !PG.editEq;
+    var kx = 10 / ZM.cur, ky = 10 / ZM.curY, toM = function (sx, sy) { return [ZM.ox + sx / kx, ZM.oy - sy / ky]; };
+    return { S: S, key: key, ok: ok, curves: PGC.map(function (c) { return { f: c.f, lo: ZM.ox - ZM.cur, hi: ZM.ox + ZM.cur, col: c.col }; }), marks: gpScan(S, toM), sx: snapStep(), sy: snapStep(1),
+      box: { x0: ZM.ox - ZM.cur, x1: ZM.ox + ZM.cur, y0: ZM.oy - ZM.curY, y1: ZM.oy + ZM.curY }, toS: function (x, y) { return [(x - ZM.ox) * kx, -(y - ZM.oy) * ky]; }, toM: toM };
+  }
+  // 2.1 Write g: f(x) = x² and g
+  function gpGwnMeta(S, light) {
+    if (!gwN()) return null; var key = "gw|" + gpCtx(); if (light) return { key: key };
+    var s = gwnSt(), toM = function (sx, sy) { return [sx, -sy]; };
+    return { S: S, key: key, ok: true, curves: [{ f: function (x) { return x * x; }, lo: -10, hi: 10, col: "#2D70B3" }, { f: function (x) { return s.a * (x - s.h) * (x - s.h) + s.k; }, lo: -10, hi: 10, col: "#7A3FB5" }],
+      marks: gpScan(S, toM), sx: 1, sy: 1, box: { x0: -10, x1: 10, y0: -10, y1: 10 }, toS: function (x, y) { return [x, -y]; }, toM: toM };
+  }
+  // the dots already drawn on a graph that are not handles or buttons
+  function gpScan(S, toM) {
+    var out = [], seen = {};
+    [].forEach.call(S.querySelectorAll("circle"), function (c) {
+      if (c.closest(".gpL")) return;
+      for (var a = c; a && a !== S; a = a.parentNode) { if (a.attributes) for (var i = 0; i < a.attributes.length; i++) { var n = a.attributes[i].name; if (n.indexOf("data-") === 0 && n !== "data-g") return; } if (a.style && a.style.cursor) return; }
+      var f = (c.getAttribute("fill") || "").toLowerCase(), fo = c.getAttribute("fill-opacity"), st = c.getAttribute("stroke");
+      if (!f || f === "none" || f === "transparent" || f === "#ffd400" || (fo !== null && +fo < .5)) return;
+      var hollow = f.indexOf("var(") === 0 || f === "#fff" || f === "white"; if (hollow && (!st || st.indexOf("var(") === 0)) return;
+      var q = toM(+c.getAttribute("cx"), +c.getAttribute("cy")); if (!isFinite(q[0]) || !isFinite(q[1])) return;
+      var kq = q[0].toFixed(3) + "," + q[1].toFixed(3); if (seen[kq]) return; seen[kq] = 1;
+      out.push({ x: q[0], y: q[1], col: hollow ? st : c.getAttribute("fill") });
+    });
+    return out;
+  }
+  function gpInBox(B, x, y) { var mx = (B.x1 - B.x0) * 1e-6, my = (B.y1 - B.y0) * 1e-6; return x >= B.x0 - mx && x <= B.x1 + mx && y >= B.y0 - my && y <= B.y1 + my; }
+  function gpPos(meta, q) {
+    if (q.m) return meta.marks.some(function (k) { return Math.abs(k.x - q.mx) < 2e-3 && Math.abs(k.y - q.my) < 2e-3; }) ? [q.mx, q.my, q.col] : null;
+    var c = meta.curves[q.c]; if (!c) return null; var v; try { v = c.f(q.t); } catch (e) { return null; } if (typeof v !== "number" || !isFinite(v)) return null;
+    var x = c.inv ? v : q.t, y = c.inv ? q.t : v; return gpInBox(meta.box, x, y) ? [x, y, c.col] : null;
+  }
+  function gpSnapT(meta, c, t) {
+    var st = c.inv ? meta.sy : meta.sx, tries = [st, st / 2, st / 10];
+    for (var i = 0; i < tries.length; i++) {
+      var ts = +(Math.round(t / tries[i]) * tries[i]).toFixed(8); if (ts < c.lo - 1e-9 || ts > c.hi + 1e-9) continue;
+      var v; try { v = c.f(ts); } catch (e) { continue; } if (!isFinite(v)) continue; if (gpInBox(meta.box, c.inv ? v : ts, c.inv ? ts : v)) return ts;
+    }
+    return Math.round(t * 100) / 100;
+  }
+  // the curve nearest a point of the svg (within lim screen pixels): {c, t}
+  function gpNear(meta, u, sc, lim) {
+    var best = null, bd = Infinity, B = meta.box;
+    meta.curves.forEach(function (c, ci) {
+      var lo = Math.max(c.lo, c.inv ? B.y0 : B.x0), hi = Math.min(c.hi, c.inv ? B.y1 : B.x1); if (!(hi >= lo)) return;
+      var d = function (t) { var v; try { v = c.f(t); } catch (e) { return Infinity; } if (!isFinite(v)) return Infinity; var x = c.inv ? v : t, y = c.inv ? t : v; if (!gpInBox(B, x, y)) return Infinity; var s = meta.toS(x, y); return Math.hypot(s[0] - u.x, s[1] - u.y) * sc; };
+      var N = 320, stp = (hi - lo) / N || 1, bt = lo, b0 = Infinity;
+      for (var i = 0; i <= N; i++) { var t = lo + i * stp, dd = d(t); if (dd < b0) { b0 = dd; bt = t; } }
+      if (!isFinite(b0)) return;
+      var a = Math.max(lo, bt - stp), b = Math.min(hi, bt + stp); for (var j = 0; j < 30; j++) { var m1 = a + (b - a) / 3, m2 = b - (b - a) / 3; if (d(m1) < d(m2)) b = m2; else a = m1; }
+      var tb = (a + b) / 2, db = Math.min(d(tb), b0); if (db < bd) { bd = db; best = { c: ci, t: d(tb) <= b0 ? tb : bt }; }
+    });
+    if (!best || bd > lim) return null;
+    best.t = gpSnapT(meta, meta.curves[best.c], best.t); return best;
+  }
+  function gpPaint(S, meta) {
+    if (!S) return; var old = S.querySelector(":scope > g.gpL"); if (old) old.remove();
+    var lk = gpMeta(S, true); if (!lk) return; var L = GPS[lk.key]; if (!L || !L.length) return;
+    meta = meta && meta.key === lk.key && meta.curves ? meta : gpMeta(S); if (!meta) return;
+    var m = S.getScreenCTM(); if (!m || !(m.a || m.b)) return; var k = 1 / Math.hypot(m.a, m.b), F = function (v) { return +v.toFixed(4); };
+    var g = svgEl("g", { "class": "gpL" }), mid = (meta.box.x0 + meta.box.x1) / 2;
+    L.forEach(function (q, i) {
+      var P = gpPos(meta, q); if (!P) return; var s = meta.toS(P[0], P[1]), col = P[2] || "#1B2433", left = P[0] > mid;
+      var pg = svgEl("g", { "data-gpq": i, style: "cursor:pointer" });
+      pg.appendChild(svgEl("circle", { cx: F(s[0]), cy: F(s[1]), r: F(13 * k), fill: "transparent" }));
+      pg.appendChild(svgEl("circle", { cx: F(s[0]), cy: F(s[1]), r: F(5.5 * k), fill: col, stroke: "#fff", "stroke-width": F(1.5 * k) }));
+      g.appendChild(pg);
+      var t = svgEl("text", { x: F(s[0] + (left ? -10 : 10) * k), y: F(s[1] - 10 * k), "text-anchor": left ? "end" : "start", "font-family": "system-ui,-apple-system,'Segoe UI',sans-serif", "font-size": F(13 * k), "font-weight": "700", fill: col, stroke: "#fff", "stroke-width": F(3 * k), "paint-order": "stroke", "stroke-linejoin": "round", "pointer-events": "none" });
+      t.textContent = "(" + gpN(P[0]) + ", " + gpN(P[1]) + ")"; g.appendChild(t);
+    });
+    S.appendChild(g);
+  }
+  function gpSvgPt(S, cx, cy) { var m = S.getScreenCTM(); if (!m) return null; var p = S.createSVGPoint(); p.x = cx; p.y = cy; return p.matrixTransform(m.inverse()); }
+  document.addEventListener("pointerdown", function (e) {
+    if (!e.isTrusted || e.button > 0 || !e.target || !e.target.closest) return;
+    var S = e.target.closest("svg"); if (!S || !(S.getAttribute("data-gpk") || S.id === "pgSvg" || S.id === "gwnSvg")) return;
+    var meta = gpMeta(S); if (!meta) return;
+    var own = e.target.closest("[data-gpq]"); if (!own && (!meta.ok || e.target.closest(GPINT))) return;
+    var m = S.getScreenCTM(), u = gpSvgPt(S, e.clientX, e.clientY); if (!m || !u) return; var sc = Math.hypot(m.a, m.b);
+    var L = GPS[meta.key] = GPS[meta.key] || [], i = own ? +own.getAttribute("data-gpq") : -1, isNew = false;
+    if (i < 0) L.forEach(function (q, j) { var P = gpPos(meta, q); if (!P) return; var s = meta.toS(P[0], P[1]); if (Math.hypot(s[0] - u.x, s[1] - u.y) * sc <= 12) i = j; });
+    if (i < 0 || !L[i]) {
+      var best = null, bd = 11; meta.marks.forEach(function (k) { var s = meta.toS(k.x, k.y), d = Math.hypot(s[0] - u.x, s[1] - u.y) * sc; if (d < bd) { bd = d; best = k; } });
+      if (best) L.push({ m: 1, mx: best.x, my: best.y, col: best.col });
+      else { var h = gpNear(meta, u, sc, 9); if (!h) return; L.push({ c: h.c, t: h.t }); }
+      i = L.length - 1; isNew = true;
+    }
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); GPEAT = Date.now();
+    try { pgUser(); } catch (er) { }
+    var q = L[i], sx = e.clientX, sy = e.clientY, moved = false; gpPaint(S, meta);
+    function mv(ev) {
+      if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 4) return; moved = true; if (q.m) return;
+      var mt = gpMeta(S) || meta, c = mt.curves[q.c], p = gpSvgPt(S, ev.clientX, ev.clientY); if (!c || !p) return;
+      var mm = mt.toM(p.x, p.y), t = Math.max(c.lo, Math.min(c.hi, c.inv ? mm[1] : mm[0])); t = gpSnapT(mt, c, t); if (t !== q.t) { q.t = t; gpPaint(S, mt); }
+    }
+    function up() {
+      document.removeEventListener("pointermove", mv, true); document.removeEventListener("pointerup", up, true); document.removeEventListener("pointercancel", up, true);
+      if (!isNew && !moved) { var j = L.indexOf(q); if (j >= 0) L.splice(j, 1); }
+      gpPaint(S); GPDBL = Date.now(); setTimeout(function () { GPEAT = 0; }, 0);
+    }
+    document.addEventListener("pointermove", mv, true); document.addEventListener("pointerup", up, true); document.addEventListener("pointercancel", up, true);
+  }, true);
+  ["click", "mousedown", "mouseup"].forEach(function (ty) { document.addEventListener(ty, function (e) { if (GPEAT && Date.now() - GPEAT < 1500) { if (ty === "click") GPEAT = 0; e.stopPropagation(); e.stopImmediatePropagation(); e.preventDefault(); } }, true); });
+  document.addEventListener("dblclick", function (e) { if (GPDBL && Date.now() - GPDBL < 700) { e.stopPropagation(); e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+  // every time a graph is drawn again, its points are put back on it
+  (function () {
+    var busyP = false;
+    new MutationObserver(function (recs) {
+      if (busyP) return; var set = [];
+      recs.forEach(function (r) {
+        var t = r.target, S = t && t.closest ? (t.tagName && t.tagName.toLowerCase() === "svg" ? t : t.closest("svg")) : null; if (S && set.indexOf(S) < 0) set.push(S);
+        [].forEach.call(r.addedNodes || [], function (n) { if (!n.querySelectorAll) return; if (n.matches && n.matches("svg[data-gpk]") && set.indexOf(n) < 0) set.push(n); [].forEach.call(n.querySelectorAll("svg[data-gpk]"), function (x) { if (set.indexOf(x) < 0) set.push(x); }); });
+      });
+      busyP = true;
+      try { set.forEach(function (S) { if (!S.isConnected || !(S.getAttribute("data-gpk") || S.id === "pgSvg" || S.id === "gwnSvg") || S.querySelector(":scope > g.gpL")) return; gpPaint(S); }); } catch (er) { }
+      busyP = false;
+    }).observe(document.body, { childList: true, subtree: true });
+  })();
+  // the demo shows it once: the hand clicks a curve (or a marked point) and the caption reads its coordinates
+  function gpShowPick() {
+    var vis = function (S) { var r = S.getBoundingClientRect(); return r.width > 40 && r.height > 40 && r.bottom > 0 && r.top < innerHeight; };
+    var list = [].slice.call(document.querySelectorAll("#pgQt svg.m3Fig")).concat([].slice.call(document.querySelectorAll("svg.m3Fig")), [$("gwnSvg"), $("pgSvg")]);
+    for (var n = 0; n < list.length; n++) {
+      var S = list[n]; if (!S || !vis(S)) continue; var meta = gpMeta(S); if (!meta) continue;
+      if (S.id === "pgSvg" && PG.show.graph && dataOK() && document.body.classList.contains("play") && !PG.tm) {   // the graphed function: a point of the existing kind
+        var B = meta.box, cands = [];
+        for (var x = Math.ceil(B.x0) + 1; x <= Math.floor(B.x1) - 1; x++) { var y; try { y = g(x); } catch (er) { continue; } if (isFinite(y) && y > B.y0 + (B.y1 - B.y0) * .1 && y < B.y1 - (B.y1 - B.y0) * .1) cands.push(x); }
+        if (cands.length) { var hx = isDataAct() ? cands[Math.floor(cands.length * .65)] : (cands.indexOf(H() + 1) >= 0 ? H() + 1 : cands[Math.floor(cands.length * .65)]); return { S: S, sp: true, x: hx, y: g(hx) }; }
+      }
+      var Bx = meta.box;
+      for (var ci = 0; ci < meta.curves.length; ci++) {
+        var c = meta.curves[ci], st = c.inv ? meta.sy : meta.sx, lo = Math.max(c.lo, c.inv ? Bx.y0 : Bx.x0), hi = Math.min(c.hi, c.inv ? Bx.y1 : Bx.x1), good = [];
+        for (var t = Math.ceil(lo / st) * st; t <= hi + 1e-9; t += st) {
+          var tt = +t.toFixed(8), v; try { v = c.f(tt); } catch (er) { continue; } if (!isFinite(v)) continue;
+          var px = c.inv ? v : tt, py = c.inv ? tt : v;
+          if (px > Bx.x0 + (Bx.x1 - Bx.x0) * .08 && px < Bx.x1 - (Bx.x1 - Bx.x0) * .08 && py > Bx.y0 + (Bx.y1 - Bx.y0) * .08 && py < Bx.y1 - (Bx.y1 - Bx.y0) * .08) good.push(tt);
+        }
+        var dots = [].map.call(S.querySelectorAll("circle"), function (e) { return [+e.getAttribute("cx"), +e.getAttribute("cy")]; }), sk = 1 / (Math.hypot(S.getScreenCTM().a, S.getScreenCTM().b) || 1);
+        var free = good.filter(function (tt) { var v2 = c.f(tt), s2 = meta.toS(c.inv ? v2 : tt, c.inv ? tt : v2); return !dots.some(function (d) { return Math.hypot(d[0] - s2[0], d[1] - s2[1]) < 22 * sk; }); });
+        if (free.length) good = free;
+        if (good.length) { var tp = good[Math.floor(good.length * .6)], vv = c.f(tp); return { S: S, meta: meta, q: { c: ci, t: tp }, x: c.inv ? vv : tp, y: c.inv ? tp : vv }; }
+      }
+      if (meta.marks.length) { var mk = meta.marks[0]; return { S: S, meta: meta, q: { m: 1, mx: mk.x, my: mk.y, col: mk.col }, x: mk.x, y: mk.y }; }
+    }
+    return null;
+  }
+  function gpShow(cap, then) {
+    var P = gpShowPick(); if (!P) { then(); return; }
+    var S = P.S, scr = function () { var mt = gpMeta(S), s = mt.toS(P.x, P.y), m = S.getScreenCTM(), p = S.createSVGPoint(); p.x = s[0]; p.y = s[1]; p = p.matrixTransform(m); return { x: p.x, y: p.y }; };
+    handGo(scr(), 650);
+    pgWait(850, function () {
+      handTap();
+      if (P.sp) { var sp = { k: "c", fam: PG.fam, sh: null, free: est() }; spSet(PG, sp, P.x, P.y); (PG.sp = PG.sp || []).push(sp); drawPlay(); }
+      else { var key = gpMeta(S, true).key; (GPS[key] = GPS[key] || []).push(P.q); gpPaint(S); }
+      cap("Click a graph to see a point’s coordinates: (" + gpN(P.x) + ", " + gpN(P.y) + ").");
+      pgWait(2600, function () { handHide(); then(); });
+    });
+  }
+  // 1.4 2×2 and Substitution: the picture of the solved system is a canvas; a click on a line puts a point there with its coordinates (drag along it, click to remove)
+  function d2Pt(S, q) { var p = S.planes[q.c]; if (!p) return null; var a = p[0], b = p[1], c = p[2]; if (q.inv) { if (Math.abs(a) < 1e-12) return null; return [(c - b * q.t) / a, q.t]; } if (Math.abs(b) < 1e-12) return null; return [q.t, (c - a * q.t) / b]; }
+  function d2Map() { var cv = $("d3Cv"), S = D3.P, Wd = cv.clientWidth || 520, Ht = Math.round(Wd * 0.78), sc = (Math.min(Wd, Ht) - 34) / (2 * S.R); return { sc: sc, cx: Wd / 2, cy: Ht / 2 }; }
+  function d2GpDraw(g, X, Y) {
+    var S = D3.P; (S.gp || []).forEach(function (q) {
+      var P = d2Pt(S, q); if (!P || Math.abs(P[0]) > S.R + 1e-9 || Math.abs(P[1]) > S.R + 1e-9) return; var px = X(P[0]), py = Y(P[1]), col = D3C[q.c];
+      g.beginPath(); g.arc(px, py, 5.5, 0, 2 * Math.PI); g.fillStyle = col; g.fill(); g.lineWidth = 1.5; g.strokeStyle = "#fff"; g.stroke();
+      var lab = "(" + gpN(P[0]) + ", " + gpN(P[1]) + ")"; g.font = "700 13px system-ui,sans-serif"; g.textBaseline = "middle"; var right = P[0] <= 0;
+      g.textAlign = right ? "left" : "right"; g.lineWidth = 3; g.strokeStyle = "#fff"; g.strokeText(lab, px + (right ? 10 : -10), py - 11); g.fillStyle = col; g.fillText(lab, px + (right ? 10 : -10), py - 11);
+    });
+  }
+  function d2Hit(cxp, cyp) {   // the line near a point of the canvas: {c, inv, t}
+    var S = D3.P, M = d2Map(), x = (cxp - M.cx) / M.sc, y = (M.cy - cyp) / M.sc, best = null, bd = 9;
+    S.planes.forEach(function (p, i) {
+      var a = p[0], b = p[1], c = p[2], n = Math.hypot(a, b); if (n < 1e-12) return; var d = Math.abs(a * x + b * y - c) / n * M.sc; if (d >= bd) return;
+      var inv = Math.abs(a) > Math.abs(b), t = Math.round(inv ? y : x), q = { c: i, inv: inv, t: t }, P = d2Pt(S, q);
+      if (!P || Math.abs(P[0]) > S.R || Math.abs(P[1]) > S.R) { q.t = Math.round((inv ? y : x) * 100) / 100; }
+      bd = d; best = q;
+    });
+    return best;
+  }
+  function d2Show2(q) { var S = D3.P; if (!S || S.dim !== 2) return; (S.gp = S.gp || []).push(q); d2Draw(); }
+  (function () {
+    var cv = $("d3Cv"); if (!cv) return;
+    cv.addEventListener("pointerdown", function (e) {
+      var S = D3.P; if (!e.isTrusted || !S || S.dim !== 2 || e.button > 0) return;
+      var r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, M = d2Map(), L = S.gp = S.gp || [], i = -1, isNew = false;
+      L.forEach(function (q, j) { var P = d2Pt(S, q); if (P && Math.hypot(M.cx + M.sc * P[0] - px, M.cy - M.sc * P[1] - py) <= 12) i = j; });
+      if (i < 0) { var h = d2Hit(px, py); if (!h) return; L.push(h); i = L.length - 1; isNew = true; }
+      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); d2Draw();
+      var q = L[i], sx = e.clientX, sy = e.clientY, moved = false;
+      function mv(ev) { if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 4) return; moved = true; var rr = cv.getBoundingClientRect(), M2 = d2Map(), x = (ev.clientX - rr.left - M2.cx) / M2.sc, y = (M2.cy - (ev.clientY - rr.top)) / M2.sc, t = Math.round(q.inv ? y : x); if (t !== q.t) { var o = q.t; q.t = t; var P = d2Pt(S, q); if (!P || Math.abs(P[0]) > S.R || Math.abs(P[1]) > S.R) q.t = o; d2Draw(); } }
+      function up() { document.removeEventListener("pointermove", mv, true); document.removeEventListener("pointerup", up, true); document.removeEventListener("pointercancel", up, true); if (!isNew && !moved) { var j = L.indexOf(q); if (j >= 0) L.splice(j, 1); } d2Draw(); }
+      document.addEventListener("pointermove", mv, true); document.addEventListener("pointerup", up, true); document.addEventListener("pointercancel", up, true);
+    }, true);
+  })();
+  // the demo of 2×2 and Substitution ends with the hand clicking one of the lines
+  function d2Demo() {
+    var g0 = MS.gen;
+    setTimeout(function () {
+      var S = D3.P; if (g0 !== MS.gen || mode !== "demo" || !S || S.dim !== 2 || $("d3").hidden) return;
+      var p = S.planes[0], inv = Math.abs(p[0]) > Math.abs(p[1]), base = S.sol ? Math.round(S.sol[inv ? 1 : 0]) + 2 : 1, q = null;
+      for (var d = 0; d < 6 && !q; d++) [base + d, base - d].forEach(function (t) { var c = { c: 0, inv: inv, t: t }, P = d2Pt(S, c); if (!q && P && Math.abs(P[0]) <= S.R - 1 && Math.abs(P[1]) <= S.R - 1 && !(S.sol && Math.abs(P[0] - S.sol[0]) < .5 && Math.abs(P[1] - S.sol[1]) < .5)) q = c; });
+      if (!q) return; var P = d2Pt(S, q), cv = $("d3Cv"), r = cv.getBoundingClientRect(), M = d2Map(), pt = { x: r.left + M.cx + M.sc * P[0], y: r.top + M.cy - M.sc * P[1] };
+      handGo(pt, 650);
+      setTimeout(function () { if (g0 !== MS.gen || mode !== "demo" || D3.P !== S) { handHide(); return; } handTap(); d2Show2(q); dmCap("Click a line to see a point’s coordinates: (" + gpN(P[0]) + ", " + gpN(P[1]) + ")."); setTimeout(handHide, 1600); }, 850);
+    }, 1400);
+  }
   buildActs(); buildLessons(); updProg();
   if (BUILT[act].play) { var bm = takeBoot(); setMode(bm); bootMode = bm; enterPlay(); bootMode = null; } else if (BUILT[act].quiz) enterQuiz(); else setMode(takeBoot());
   if (welcome) { document.body.classList.add("wel"); theme(); $("welcome").hidden = false; }
