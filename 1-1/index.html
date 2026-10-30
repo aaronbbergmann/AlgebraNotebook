@@ -6211,7 +6211,10 @@ var ESPIC = {
   // g(x) =, whose graphs are drawn as they are typed; Submit checks g. Right when g lands where the question says (g = h + k).
   function grN() { return pq() && act === "2.1" && lesson === 4 && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().gr && (mode === "demo" || mode === "sequence" || mode === "calculate" || mode === "solo"); }
   function grnP() { return m3Cur().gr; }
-  function grnSt() { if (!QZ.gr || QZ.gr.pi !== QZ.pi) QZ.gr = { pi: QZ.pi, k: 0, ok: false, hist: [], drag: false, w: { f: "h(x)=", g: "g(x)=" }, wok: false }; return QZ.gr; }
+  function grnSt() { if (!QZ.gr || QZ.gr.pi !== QZ.pi) QZ.gr = { pi: QZ.pi, k: 0, ok: false, hist: [], drag: false, w: { f: "h(x)=", g: "g(x)=" }, wok: false, pts: [] }; if (!QZ.gr.pts) QZ.gr.pts = []; return QZ.gr; }
+  // the function drawn for each path: the question's h (dotted) and g (blue); in Write, whatever is typed in each box
+  function grnCF(c) { var s = grnSt(), p = grnP(), H = function (x) { return p.a * x * x + p.b * x + p.c; }; if (mode === "solo") return grnFn(c === "h" ? s.w.f : s.w.g); return c === "h" ? H : function (x) { return H(x) + s.k; }; }
+  function grnSnapX(x) { var B = grnBox(), st = B.xa.g >= 1 ? 1 : 0.5; return Math.max(B.xa.min, Math.min(B.xa.max, Math.round(x / st) * st)); }
   function grnRange() { var p = grnP(); return Math.ceil(Math.abs(p.k) / 10) * 10 + 10; }
   function grnBox() {
     var p = grnP(), xa = c2Axis(0, p.xmax), ya = c2Axis(Math.min(0, p.hN, p.c + p.k), Math.max(p.peak, p.peak + p.k) + 4);
@@ -6238,6 +6241,8 @@ var ESPIC = {
       return pts.length > 1 ? "<polyline clip-path=\"url(#grnClip)\" points=\"" + pts.join(" ") + "\" fill=\"none\" stroke=\"" + col + "\" stroke-width=\"" + wd + "\"" + (dash ? " stroke-dasharray=\"" + dash + "\"" : "") + " stroke-linejoin=\"round\" pointer-events=\"none\"/>" : "";
     };
     var Hf = function (x) { return p.a * x * x + p.b * x + p.c; };
+    var hit = function (c) { var fn = grnCF(c); if (!fn) return ""; var q = curve(fn, "transparent", "", 16); return q.replace("pointer-events=\"none\"", "data-grc=\"" + c + "\" style=\"cursor:pointer\""); };
+    h += hit("h") + hit("g");
     if (wr) {
       var tf = grnFn(s.w.f), tg = grnFn(s.w.g);
       if (tf) h += curve(tf, "#4B5563", "6 5", 2.4);
@@ -6253,6 +6258,12 @@ var ESPIC = {
         if (s.drag) h += "<text x=\"" + F(yx + 14) + "\" y=\"" + F(yy - 10) + "\" font-weight=\"700\" fill=\"#2D70B3\" stroke=\"#fff\" stroke-width=\"3\" paint-order=\"stroke\" pointer-events=\"none\">(0, " + nf(c) + ")</text>";
       }
     }
+    s.pts.forEach(function (q, i) {
+      var fn = grnCF(q.c), y; if (!fn) return; try { y = fn(q.x); } catch (e) { return; } if (!isFinite(y) || y < B.ya.min || y > B.ya.max) return;
+      var col = q.c === "h" ? "#4B5563" : "#2D70B3", px = F(grnX(B, q.x)), py = F(grnY(B, y)), lx = q.x > (B.xa.min + B.xa.max) / 2 ? -10 : 10;
+      h += "<g data-grp=\"" + i + "\" style=\"cursor:pointer\"><circle cx=\"" + px + "\" cy=\"" + py + "\" r=\"13\" fill=\"transparent\"/><circle cx=\"" + px + "\" cy=\"" + py + "\" r=\"5.5\" fill=\"" + col + "\" stroke=\"#fff\" stroke-width=\"1.5\"/></g>";
+      h += "<text x=\"" + (px + lx) + "\" y=\"" + (py - 10) + "\" text-anchor=\"" + (lx < 0 ? "end" : "start") + "\" font-weight=\"700\" fill=\"" + col + "\" stroke=\"#fff\" stroke-width=\"3\" paint-order=\"stroke\" pointer-events=\"none\">(" + nf(q.x) + ", " + nf(Math.round(y * 100) / 100) + ")</text>";
+    });
     S.innerHTML = h;
   }
   function grnDragOK() { return grN() && (mode === "demo" || mode === "sequence") && QZ.step < 4; }
@@ -6295,7 +6306,20 @@ var ESPIC = {
   (function () {
     var S = $("grnSvg");
     S.addEventListener("pointerdown", function (e) {
-      if (!e.target.closest || !e.target.closest("[data-grh]") || e.button > 0 || !grnDragOK()) return;
+      if (!e.target.closest || e.button > 0 || !grN()) return;
+      var pe = e.target.closest("[data-grp]"), ce = e.target.closest("[data-grc]");
+      if ((pe || ce) && !e.target.closest("[data-grh]")) {
+        if (e.isTrusted) pgUser();
+        e.preventDefault(); var st = grnSt(), B0 = grnBox(), toX = function (cx) { var m = S.getScreenCTM(), q = S.createSVGPoint(); q.x = cx; q.y = 0; q = q.matrixTransform(m.inverse()); return grnSnapX(B0.xa.min + (q.x - B0.L) / (B0.W - B0.L - B0.R) * (B0.xa.max - B0.xa.min)); };
+        var i = pe ? +pe.dataset.grp : st.pts.push({ c: ce.dataset.grc, x: toX(e.clientX) }) - 1, x0 = st.pts[i].x, moved = false, sx = e.clientX;
+        if (!pe) grnDraw();
+        try { S.setPointerCapture(e.pointerId); } catch (er) {}
+        var mvP = function (ev) { if (Math.abs(ev.clientX - sx) > 4) moved = true; if (!moved) return; st.pts[i].x = toX(ev.clientX); grnDraw(); };
+        var upP = function () { S.removeEventListener("pointermove", mvP); S.removeEventListener("pointerup", upP); S.removeEventListener("pointercancel", upP); if (pe && !moved && st.pts[i].x === x0) st.pts.splice(i, 1); grnDraw(); };
+        S.addEventListener("pointermove", mvP); S.addEventListener("pointerup", upP); S.addEventListener("pointercancel", upP);
+        return;
+      }
+      if (!e.target.closest("[data-grh]") || !grnDragOK()) return;
       if (e.isTrusted) pgUser();
       e.preventDefault(); var s = grnSt(), p = grnP(), k0 = s.k, r = grnRange(); grnPush(); s.drag = true;
       try { S.setPointerCapture(e.pointerId); } catch (er) {}
@@ -6336,10 +6360,16 @@ var ESPIC = {
       cap("h(" + p.N + ") = " + nf(p.hN) + ", so the path moves " + dir + " " + Math.abs(p.k) + " feet: " + (calc ? "slide c to " + nf(p.c + p.k) + "." : "drag the y-intercept " + dir + " " + Math.abs(p.k) + "."));
       move(n);
     };
+    var look = function (n) {
+      if (s.pts.some(function (q) { return q.c === "h" && q.x === p.N; })) { n(); return; }
+      cap("Click the dotted path at x = " + p.N + " to see its height there.");
+      handGo(grnScr(p.N, p.hN), 800);
+      pgWait(950, function () { if (pgRun !== run) return; handTap(); s.pts.push({ c: "h", x: p.N }); grnSync(); cap("h(" + p.N + ") = " + nf(p.hN) + ": the new path must be 0 there."); pgWait(2600, n); });
+    };
     if (ONE) { mv(function () { pgWait(900, function () { if (pgRun === run) pgStop(); }); }); return; }
     var L = [
       function (n) { cap("The dotted path is h(x). It lands at x = " + p.R + "; the new path must land at x = " + p.N + "."); pgWait(3000, n); },
-      mv,
+      look, mv,
       function (n) { cap("The blue path lands at (" + p.N + ", 0): " + c2Sf(p.a, p.b, p.c + p.k, "g(x)")[0].replace(/<[^>]+>/g, "") + "."); pgWait(3000, n); }
     ], i = 0;
     (function next() { if (pgRun !== run) return; if (i < L.length) { L[i++](next); return; } s.ok = s.k === p.k; PG.demoFin = true; pgStop(); })();
