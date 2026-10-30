@@ -266,7 +266,7 @@
   .log .msg{align-self:stretch;max-width:none;background:none;padding:0;border-radius:0;font-size:1rem;line-height:1.45}
   .log .msg+.msg{padding-top:.6rem;border-top:1px solid color-mix(in srgb,var(--ink) 15%,transparent)}
   /* ---- 1.1 quiz ---- */
-  body.quiz:not(.pq) .pgCtl,body.quiz:not(.wf):not(.gwN):not(.grN) #undo,body.quiz:not(.wf):not(.m3) #show{display:none!important}
+  body.quiz:not(.pq) .pgCtl,body.quiz:not(.wf):not(.gwN):not(.grN) #undo,body.quiz:not(.wf):not(.m3):not(.c21) #show{display:none!important}
   .pgQ{display:none}
   body.pq .pgQ{display:block;flex:0 0 100%;margin:0 0 .3rem .2rem}
   .pgQt{font:600 1.25rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
@@ -316,7 +316,7 @@
   /* 2.1 Write g (Demo, Sequence, Calculate, Write): its own graph, the a, h, k sliders and the equation text (Write: typed a, h, k, vertex and equation, no graph) */
   /* 2.1 Real Life: its own graph (h dotted, g blue), the k slider and g's equation (Write: the axes, h(x) = and g(x) = boxes) */
   .grnG,.grnS{display:none}
-  body.grN #pgGraphWrap,body.grN .pgSide,body.grN #qzTools,body.grN #ptTog,body.grN #show,body.grN #wfSteps{display:none!important}
+  body.grN #pgGraphWrap,body.grN .pgSide,body.grN #qzTools,body.grN #ptTog,body.grN #wfSteps{display:none!important}
   body.grN .grnG{display:block;flex:1 1 22rem;max-width:34rem;width:100%}
   body.grN .grnS{display:flex;flex-direction:column;gap:.9rem;box-sizing:border-box;padding-left:1.5rem;flex:1 1 16rem;max-width:26rem}
   body.grN.grnWr .grnSl,body.grN.grnWr .grnOut{display:none}
@@ -326,7 +326,7 @@
   .grnSl{border-color:color-mix(in srgb,#2D70B3 55%,var(--bg));background:color-mix(in srgb,#2D70B3 6%,var(--bg))}.grnSl output{color:#2D70B3}.grnSl input[type=range]{accent-color:#2D70B3}
   body.quiz.grN #undo{display:block}
   .gwnG,.gwnS{display:none}
-  body.gwN #pgGraphWrap,body.gwN .pgSide,body.gwN #qzTools,body.gwN #ptTog,body.gwN #show{display:none!important}
+  body.gwN #pgGraphWrap,body.gwN .pgSide,body.gwN #qzTools,body.gwN #ptTog{display:none!important}
   body.gwN .gwnG{display:block;flex:1 1 18rem;max-width:30rem;width:100%}
   body.gwN .gwnS{display:flex;flex-direction:column;gap:.9rem;box-sizing:border-box;padding-left:1.5rem;flex:1 1 16rem;max-width:26rem}
   body.gwN.gwnWr .gwnG,body.gwN.gwnWr .gwnSl,body.gwN.gwnWr .gwnOut,body.gwN.gwnWr .gwnF{display:none}
@@ -3768,6 +3768,7 @@
   // ---- show work: "Make One Change And Recopy" (just the equations) ----
   function workHTML(st) {
     return st.map(function (w) {
+      if (w.txt) return "<section>" + w.eqs.map(function (e) { return "<div class=\"r" + (w.cls ? " " + w.cls : "") + "\" style=\"font:1rem system-ui,sans-serif\"><span>" + String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</span></div>"; }).join("") + "</section>";
       return "<section>" + w.eqs.map(function (e, j) { return "<div class=\"r" + (w.cls ? " " + w.cls : "") + "\"><span class=\"m\">" + ((w.ms && w.ms[j]) || "") + "</span><span>" + e.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&(?:amp|lt|gt);|[a-z]/g, function (m) { return m.length > 1 ? m : "<i>" + m + "</i>"; }) + "</span></div>"; }).join("") + "</section>";
     }).join("");
   }
@@ -3788,7 +3789,8 @@
     go(0);
   }
   function showWork() {
-    var list = wf() || m3() ? works.filter(function (w) { return w.wf; }) : works.filter(function (w) { return w.steps.length >= 2; }), cur = works[works.length - 1];
+    var c21 = c21On() && (!c2On() || grN());   // 2.1: its own record of the work (every exercise and mode)
+    var list = c21 ? c21Show() : wf() || m3() ? works.filter(function (w) { return w.wf; }) : works.filter(function (w) { return w.steps.length >= 2; }), cur = c21 ? list[list.length - 1] : works[works.length - 1];
     if (!list.length) list = [{ steps: steps, label: "" }];
     var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
@@ -6070,7 +6072,6 @@ var ESPIC = {
       el.readOnly = done || !!s.wok[f]; el.classList.toggle("ok", !!s.wok[f]);
     });
     $("undo").hidden = !(mode === "sequence" || mode === "calculate") || done;
-    $("show").hidden = true;
   }
   function gwnPush() { var s = gwnSt(); s.hist.push([s.a, s.h, s.k]); if (s.hist.length > 60) s.hist.shift(); }
   function gwnUndo() { var s = gwnSt(); if (QZ.step >= 4 || !s.hist.length) return; var p = s.hist.pop(); s.a = p[0]; s.h = p[1]; s.k = p[2]; pqMsg(""); gwnSync(); }
@@ -6280,7 +6281,6 @@ var ESPIC = {
     $("grnOut").innerHTML = "<div class=\"gwnEq\" style=\"color:#2D70B3\">" + c2Sf(p.a, p.b, p.c + s.k, "<i>g</i>(" + c2X + ")")[0] + "</div>";
     if (mode === "solo") ["f", "g"].forEach(function (f) { var el = $("grnW" + f); if (document.activeElement !== el && el.value !== s.w[f]) el.value = s.w[f]; el.readOnly = done || (f === "g" && s.wok); el.classList.toggle("ok", f === "g" && !!s.wok); });
     $("undo").hidden = !(mode === "sequence" || mode === "calculate") || done;
-    $("show").hidden = true;
   }
   function grnQ() {
     var pb = m3Cur(), add = mode === "solo" ? "Type <i>h</i>(" + c2X + ") and <i>g</i>(" + c2X + ") in the boxes." : mode === "calculate" ? "Use the <i>c</i> slider to move the blue path." : "Drag the blue path’s <i>y</i>-intercept up or down to move it.";
@@ -6374,6 +6374,63 @@ var ESPIC = {
     ], i = 0;
     (function next() { if (pgRun !== run) return; if (i < L.length) { L[i++](next); return; } s.ok = s.k === p.k; PG.demoFin = true; pgStop(); })();
   }
+  // ---- 2.1 Show work: the work on each problem, written out (every exercise and mode). Finished problems are kept for the session; the one in hand is shown as it stands.
+  var C21W = [];
+  function c21On() { return pq() && act === "2.1" && !!QZ && !!QZ.order; }
+  function c21Plain(h) { return String(h || "").replace(/<span class="fr"><span>([^<]*)<\/span><span>([^<]*)<\/span><\/span>/g, "($1/$2)").replace(/<sup>2<\/sup>/g, "²").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
+  function c21Steps() {
+    var st = [], txt = function (t) { st.push({ txt: true, eqs: [t] }); }, eq = function (e, cls) { st.push({ eqs: [e], cls: cls || "" }); };
+    if (grN()) {
+      var p = grnP(), r = grnSt(), H = function (x) { return p.a * x * x + p.b * x + p.c; };
+      eq(c21Plain(m3Cur().head));
+      txt("The new path must land " + Math.abs(p.D) + " feet " + (p.D > 0 ? "farther" : "closer") + ", at x = " + p.N + ".");
+      if (mode === "solo") {
+        if (String(r.w.f || "").replace(/^h\(x\)=?/i, "").trim()) eq(String(r.w.f).replace(/-/g, "−").replace(/\^2/g, "²"));
+        r.pts.forEach(function (q) { var fn = grnCF(q.c), y; try { y = fn && fn(q.x); } catch (e) { y = NaN; } if (isFinite(y)) eq(q.c + "(" + nf(q.x) + ") = " + nf(Math.round(y * 100) / 100)); });
+        if (String(r.w.g || "").replace(/^g\(x\)=?/i, "").trim()) eq(String(r.w.g).replace(/-/g, "−").replace(/\^2/g, "²") + (r.wok ? "  ✓" : ""), "cf");
+        return st;
+      }
+      r.pts.forEach(function (q) { var y = q.c === "h" ? H(q.x) : H(q.x) + r.k; eq(q.c + "(" + nf(q.x) + ") = " + nf(Math.round(y * 100) / 100)); });
+      if (r.k) txt("Moved " + (r.k > 0 ? "up " : "down ") + Math.abs(r.k) + " feet: c = " + nf(p.c) + (r.k > 0 ? " + " : " − ") + Math.abs(r.k) + " = " + nf(p.c + r.k) + ".");
+      eq(c21Plain(c2Sf(p.a, p.b, p.c + r.k, "g(x)")[0]) + (r.ok ? "  ✓" : ""), "cf");
+      return st;
+    }
+    if (gwN()) {
+      var t = gwnT(), g = gwnSt();
+      eq("f(x) = x²", "cf"); txt("g is " + gdSay21(QZ.tr[QZ.pi]) + " of f.");
+      if (mode === "solo") {
+        var W = g.w, any = false;
+        [["a", W.a], ["h", W.h], ["k", W.k]].forEach(function (q) { if (String(q[1]).trim()) { eq(q[0] + " = " + String(q[1]).replace(/-/g, "−") + (g.wok[q[0]] ? "  ✓" : "")); any = true; } });
+        if (String(W.v).trim()) eq("vertex " + String(W.v).replace(/-/g, "−") + (g.wok.v ? "  ✓" : ""));
+        if (String(W.e).trim()) eq("g(x) = " + String(W.e).replace(/^g\(x\)=?/i, "").replace(/-/g, "−").replace(/\^2/g, "²") + (g.wok.e ? "  ✓" : ""), "cg");
+        return st;
+      }
+      eq("a = " + gwnAT(g.a) + ",  h = " + nf(g.h) + ",  k = " + nf(g.k));
+      eq(c21Plain(gwnEq(g.a, g.h, g.k)) + (g.ok ? "  ✓" : ""), "cg");
+      eq("vertex (" + nf(g.h) + ", " + nf(g.k) + ")");
+      return st;
+    }
+    if (gd2() && QZ.tr && QZ.tr[QZ.pi]) {   // Translations, Reflections and Stretches (and Create): g, the table's points, the description, the graphs
+      var gh = c21Plain(eqHTML()); if (gh) eq(gh.indexOf("=") >= 0 ? gh : "g(x) = " + gh, "cg");
+      var pts = [];
+      if (ptAvail && ptAvail()) ptRows().forEach(function (q) { if (ptRowDone(q)) { var pp = ptPoint(q); pts.push("(" + nf(pp[0]) + ", " + nf(pp[1]) + ")"); } });
+      if (!pts.length) TB.rows().forEach(function (q) { if (q.done && isFinite(q.xv) && isFinite(q.yv)) pts.push("(" + nf(q.xv) + ", " + nf(q.yv) + ")"); });
+      if (pts.length) txt("Points of g from the table: " + pts.join(", "));
+      var d = $("pgDescTx").value.trim(); if (d) txt("Description: " + d + (PG.dOK ? "  ✓" : ""));
+      if (PG.pdone) txt("Parent graph f(x) = x² drawn  ✓");
+      if (PG.show.graph) txt("Graph of g drawn  ✓");
+      return st;
+    }
+    return st;
+  }
+  function c21Label() { return MODES[mode] + " mode, " + lessonName(lesson) + (QZ.order.length > 1 ? ", problem " + (QZ.pi + 1) : ""); }
+  function c21Save() { if (!c21On() || c2On() && !grN()) return; var st = c21Steps(); if (st.length) { C21W.push({ steps: st, label: c21Label() }); if (C21W.length > 100) C21W.shift(); } }
+  function c21Show() {
+    var list = C21W.slice(); if (QZ.step < 4) { var cur = c21Steps(); if (cur.length) list.push({ steps: cur, label: c21Label() + " (in progress)" }); }
+    if (!list.length) list = [{ steps: [{ txt: true, eqs: ["No work yet."] }], label: "" }];
+    return list;
+  }
+  function c21Sync() { var on = c21On() && (!c2On() || grN()); document.body.classList.toggle("c21", on); if (on) $("show").hidden = false; }
   var gdCustom = null;   // Graph & Describe: the function typed in Create, carried into the other modes
   function gdTyped() { return gd() && (soloish() || A() !== 1 || gd2()); }   // the description is typed (not clicked) when practising alone, or when it needs a stretch or a reflection
   function soloish() { return mode === "solo" || mode === "create"; }
@@ -6487,7 +6544,7 @@ var ESPIC = {
     $("hint").hidden = done || soloish();   // a right answer needs no hint
     if (wf()) { $("show").hidden = false; wfUndoVis(); }
     else if (m3()) { $("show").hidden = false; $("undo").hidden = true; }
-    wfSteps(); gwnSync(); grnSync();
+    wfSteps(); gwnSync(); grnSync(); c21Sync();
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
@@ -6502,7 +6559,7 @@ var ESPIC = {
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { pqMsg(""); }
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
-        QZ.step = 4; var last = QZ.pi === QZ.order.length - 1;
+        QZ.step = 4; var last = QZ.pi === QZ.order.length - 1; if (act === "2.1") c21Save();
         var c2Err = QZ.wrong > 0;   // any error message in this round (in Demo, this problem) means no Progress for it
         if (!QZ.custom && mode !== "create" && mode !== "demo" && !c2Err) { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
         pqMsg(mode === "solo" ? cheer() : est() || wf() || m3() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last && QZ.order.length > 1 ? (QZ.order.length === 3 ? "You have finished all three!" : "You have finished all four!") : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
@@ -9650,7 +9707,7 @@ var ESPIC = {
     TB.sync(); ptSync(); $("qzTools").hidden = wf() || m3(); posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
-    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd(); gwnSync(); grnSync();
+    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd(); gwnSync(); grnSync(); c21Sync();
   }
   // ---- Chapter 2 (Quadratic Functions).  2.1 Using a Transformed Quadratic and every exercise of 2.2, 2.3 and 2.4 run on the 1.3 engine: a problem is a story or a function,
   // a figure, and steps (Demo, Sequence and Calculate take every small step; Solo takes only the big ones).  The figure here is a whole coordinate plane that can draw
