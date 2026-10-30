@@ -3977,12 +3977,15 @@
     });
     $("progBody").innerHTML = h + "</ul>"; $("prog").hidden = false; $("progX").focus();
   }
-  // after two finished problems in a mode, the main button offers the next mode (or the next topic after Solo)
+  // Demo, Sequence and Calculate: once the mode's Progress level is earned, the main button offers the next mode (Demo > Sequence > Calculate > Write) with a small
+  // "Try another in [Mode] mode" link beneath. Write: after two finished problems it offers the next exercise. Create never does.
+  function modeEarned() { return LEVELS.some(function (l) { return !lvSkip(l) && l[1] === mode && lvDone(l); }); }
   function levelUp() {
     up = null; var c = prog[LK() + ":" + mode] || 0;
-    if (mode === "create" || c < 2) return;
-    var ml = BUILT[act].modes || ["demo", "sequence", "calculate", "solo"], nx = ml[ml.indexOf(mode) + 1], stayT = "Try another in " + MODES[mode] + " mode";
-    if (nx && nx !== "create") up = { label: MODES[nx] + " mode", stayText: stayT, go: function () { setMode(nx); } };   // the next mode is never Create
+    if (mode === "create") return;
+    if (mode === "solo" ? c < 2 : !modeEarned()) return;
+    var B0 = BUILT[act], ml = (B0.modes || (B0.modesFor ? B0.modesFor(lesson) : ["demo", "sequence", "calculate", "solo"])).filter(function (m) { return m !== "create"; }), nx = ml[ml.indexOf(mode) + 1], stayT = "Try another in " + MODES[mode] + " mode";
+    if (nx) up = { label: MODES[nx] + " Mode", stayText: stayT, go: function () { setMode(nx); } };   // the next mode is never Create
     else if (rev && mode === "solo") { var ri = BUILT[rev].items; if (pct() >= 100 && revI < ri.length - 1) up = { label: "Next: " + ri[revI + 1].q, stay: true, stayText: "Stay in this exercise", go: function () { revGo(revI + 1); } }; }   // a review: the Next button moves on to its next item
     else if (mode === "solo" && !subx && lesson < topLesson() && BUILT[act].perLesson) { if (pct() >= 100) up = { label: "Next exercise: " + (BUILT[act].short[lesson] || lessonName(lesson + 1)), stay: true, stayText: "Stay in this exercise", go: function () { lesson++; $("lesson").value = String(lesson); setMode("demo"); } }; }   // at 100% the Next button moves on to the next exercise; a small link stays here
     else if (mode === "solo" && !subx && act === "1.4D" && lesson === 4) { if (pct() >= 100) up = { label: "Next exercise: " + LNAME[1], stay: true, stayText: "Stay in this exercise", go: function () { lesson = 1; $("lesson").value = "1"; setMode("demo"); } }; }   // 1.4: Graphing is first in the menu; at 100% the Next button moves on to One Variable
@@ -5526,10 +5529,11 @@
     if (busy) return;
     if (QZ.locked) { if (up) { var u = up; up = null; u.go(); } else qzStart(); return; }
     if (pq() && mode === "demo" && QZ.step >= 4 && up) { var u2 = up; up = null; u2.go(); return; }
+    if (pq() && QZ.step >= 4 && up && !QZ.custom && mode !== "create") { var u3 = up; up = null; u3.go(); return; }
     if (pq()) { pqNext(); return; }
     if (mode === "demo") qzDemoStep(); else qzNextParent();
   });
-  $("qzAgain").addEventListener("click", function () { if (pq() && !QZ.custom && QZ.step >= 4) { if (mode === "demo") pqAnother(); else pqRegen(); } else qzStart(); });
+  $("qzAgain").addEventListener("click", function () { if (pq() && !QZ.custom && QZ.step >= 4) { up = null; if (mode === "demo") pqAnother(); else if (!QZ.locked && QZ.pi < QZ.order.length - 1) pqNext(); else pqRegen(); } else qzStart(); });
   $("qzIn").addEventListener("keydown", function (e) { if (e.key === "Enter" && !busy) qzCheck(); });
   $("pgTable").addEventListener("keydown", function (e) {
     if (busy || TB.mode() === "play" || !e.target.classList.contains("qzCell")) return;
@@ -6055,7 +6059,7 @@ var ESPIC = {
       inp.disabled = mode !== "calculate" || done || (pgRun && !pgPaused && !DN);
       $("gwnSl" + c.toUpperCase() + "v").textContent = c === "a" ? gwnAT(s.a) : nf(s[c]);
     });
-    $("gwnOut").innerHTML = "<div class=\"gwnEq\">" + gwnEq(s.a, s.h, s.k) + "</div><div class=\"gwnV\">Vertex <span class=\"cg\">(" + nf(s.h) + ", " + nf(s.k) + ")</span></div>";
+    $("gwnOut").innerHTML = "<div class=\"gwnEq cg\">" + gwnEq(s.a, s.h, s.k) + "</div><div class=\"gwnV\">Vertex <span class=\"cg\">(" + nf(s.h) + ", " + nf(s.k) + ")</span></div>";
     if (mode === "solo") ["a", "h", "k", "v", "e"].forEach(function (f) {
       var el = $("gwnW" + f); if (document.activeElement !== el && el.value !== s.w[f]) el.value = s.w[f];
       el.readOnly = done || !!s.wok[f]; el.classList.toggle("ok", !!s.wok[f]);
@@ -6468,9 +6472,10 @@ var ESPIC = {
         else if (mode === "create") { pqMsg("Well done!", "ok"); up = null; }   // Create never counts toward Progress
         else if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
           if (!c2Err) tally(); var ml = BUILT[act].modes || (BUILT[act].modesFor ? BUILT[act].modesFor(lesson) : ["demo", "sequence", "calculate", "solo"]), nm = ml[ml.indexOf(mode) + 1];
-          up = nm && nm !== "create" ? { label: MODES[nm] + " mode", stayText: "Try another in " + MODES[mode] + " mode", go: function () { setMode(nm); } } : null;
+          up = nm && nm !== "create" ? { label: MODES[nm] + " Mode", stayText: "Try another in " + MODES[mode] + " mode", go: function () { setMode(nm); } } : null;
         } else if (last && c2Err) { up = { label: "Try another", go: function () { pqRegen(); } }; }   // (2.1: a round with errors earns nothing; another round is offered)
-        else if (last) { QZ.locked = true; counted = false; tally(); }   // Sequence and Solo count a round only when all four parents are done
+        else if (last) { QZ.locked = true; counted = false; tally(); }
+        else if (mode !== "solo" && !c2Err) levelUp();   // the mode's level earned partway through a round: Next offers the next mode, the small link the next problem here   // Sequence and Solo count a round only when all four parents are done
         pqPanel();
         if (c2Err && !QZ.custom && mode !== "create") pqMsg(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : "No Progress for this round: there were error messages along the way." + (last ? " Try another round with none." : ""));
       }
