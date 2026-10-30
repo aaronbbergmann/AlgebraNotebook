@@ -329,7 +329,8 @@
   body.gwN #pgGraphWrap,body.gwN .pgSide,body.gwN #qzTools,body.gwN #ptTog,body.gwN #show{display:none!important}
   body.gwN .gwnG{display:block;flex:1 1 18rem;max-width:30rem;width:100%}
   body.gwN .gwnS{display:flex;flex-direction:column;gap:.9rem;box-sizing:border-box;padding-left:1.5rem;flex:1 1 16rem;max-width:26rem}
-  body.gwN.gwnWr .gwnG,body.gwN.gwnWr .gwnSl,body.gwN.gwnWr .gwnOut{display:none}
+  body.gwN.gwnWr .gwnG,body.gwN.gwnWr .gwnSl,body.gwN.gwnWr .gwnOut,body.gwN.gwnWr .gwnF{display:none}
+  .gwnF{font:400 1.45rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;margin-bottom:-.4rem}
   body.gwN:not(.gwnWr) .gwnW{display:none}
   body.gwN.gwnWr .gwnS{max-width:40rem;flex-basis:30rem;padding-left:.2rem}
   .gwnW .gwnR{flex-wrap:nowrap}
@@ -695,6 +696,7 @@
       </div>
       <div class="gwnG" id="gwnG"><svg id="gwnSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph of f and g"></svg></div>
       <div class="gwnS" id="gwnS">
+        <div class="gwnF" id="gwnF" aria-label="g(x) = a(x − h)² + k"><span class="cg"><i>g</i>(<i>x</i>)</span> = <i>a</i>(<i>x</i> − <i>h</i>)² + <i>k</i></div>
         <div class="gwnSl" id="gwnSl" role="group" aria-label="a, h and k">
           <label class="wfSlR"><span class="wfSlN">a</span><input type="range" id="gwnSlA" min="0" max="13" step="1" value="10" aria-label="a"><output id="gwnSlAv">1</output></label>
           <label class="wfSlR"><span class="wfSlN">h</span><input type="range" id="gwnSlH" min="-10" max="10" step="1" value="0" aria-label="h"><output id="gwnSlHv">0</output></label>
