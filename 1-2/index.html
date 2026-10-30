@@ -690,7 +690,7 @@
       </div>
       <div class="grnG" id="grnG"><svg id="grnSvg" viewBox="0 0 440 340" role="img" aria-label="Graph of the old path h and the new path g"></svg></div>
       <div class="grnS" id="grnS">
-        <div class="gwnSl grnSl" id="grnSl" role="group" aria-label="k"><label class="wfSlR"><span class="wfSlN">k</span><input type="range" id="grnSlK" min="-30" max="30" step="1" value="0" aria-label="k"><output id="grnSlKv">0</output></label></div>
+        <div class="gwnSl grnSl" id="grnSl" role="group" aria-label="c"><label class="wfSlR"><span class="wfSlN">c</span><input type="range" id="grnSlK" min="-30" max="30" step="1" value="0" aria-label="c, the constant term"><output id="grnSlKv">0</output></label></div>
         <div class="gwnW grnW" id="grnW" role="group" aria-label="Type h(x) and g(x)">
           <div class="gwnR"><label><input id="grnWf" data-f="f" autocomplete="off" spellcheck="false" placeholder="h(x)=..." aria-label="h(x)" style="width:18rem"></label></div>
           <div class="gwnR"><label><input id="grnWg" data-f="g" autocomplete="off" spellcheck="false" placeholder="g(x)=..." aria-label="g(x)" style="width:18rem"></label></div>
@@ -6262,17 +6262,17 @@ var ESPIC = {
     var s = grnSt(), p = grnP(), done = QZ.step >= 4, r = grnRange(), inp = $("grnSlK");
     $("wfSteps").hidden = true; askArrow(false);
     grnDraw();
-    if (+inp.min !== -r) { inp.min = -r; inp.max = r; }
-    if (+inp.value !== s.k) inp.value = s.k;
+    if (Math.abs(+inp.min - (p.c - r)) > 1e-9) { inp.min = p.c - r; inp.max = p.c + r; }   // the slider is the constant term c: it starts at h's constant term
+    if (Math.abs(+inp.value - (p.c + s.k)) > 1e-9) inp.value = p.c + s.k;
     inp.disabled = mode !== "calculate" || done || (pgRun && !pgPaused && !DN);
-    $("grnSlKv").textContent = nf(s.k);
+    $("grnSlKv").textContent = nf(p.c + s.k);
     $("grnOut").innerHTML = "<div class=\"gwnEq\" style=\"color:#2D70B3\">" + c2Sf(p.a, p.b, p.c + s.k, "<i>g</i>(" + c2X + ")")[0] + "</div>";
     if (mode === "solo") ["f", "g"].forEach(function (f) { var el = $("grnW" + f); if (document.activeElement !== el && el.value !== s.w[f]) el.value = s.w[f]; el.readOnly = done || (f === "g" && s.wok); el.classList.toggle("ok", f === "g" && !!s.wok); });
     $("undo").hidden = !(mode === "sequence" || mode === "calculate") || done;
     $("show").hidden = true;
   }
   function grnQ() {
-    var pb = m3Cur(), add = mode === "solo" ? "Type <i>h</i>(" + c2X + ") and <i>g</i>(" + c2X + ") in the boxes." : mode === "calculate" ? "Use the <i>k</i> slider to move the blue path." : "Drag the blue path’s <i>y</i>-intercept up or down to move it.";
+    var pb = m3Cur(), add = mode === "solo" ? "Type <i>h</i>(" + c2X + ") and <i>g</i>(" + c2X + ") in the boxes." : mode === "calculate" ? "Use the <i>c</i> slider to move the blue path." : "Drag the blue path’s <i>y</i>-intercept up or down to move it.";
     return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story.replace(/lm cf/g, "lm") + " " + add + "</div>" + pb.pic + "</div>";
   }
   function grnPush() { var s = grnSt(); s.hist.push(s.k); if (s.hist.length > 60) s.hist.shift(); }
@@ -6308,7 +6308,7 @@ var ESPIC = {
       S.addEventListener("pointermove", mv); S.addEventListener("pointerup", up); S.addEventListener("pointercancel", up);
     });
     var dirty = false;
-    $("grnSlK").addEventListener("input", function (e) { if (!grN() || mode !== "calculate" || QZ.step >= 4) return; if (e.isTrusted) pgUser(); var s = grnSt(); if (!dirty) { grnPush(); dirty = true; } s.k = Math.round(+this.value); grnSync(); });
+    $("grnSlK").addEventListener("input", function (e) { if (!grN() || mode !== "calculate" || QZ.step >= 4) return; if (e.isTrusted) pgUser(); var s = grnSt(); if (!dirty) { grnPush(); dirty = true; } s.k = Math.round(+this.value - grnP().c); grnSync(); });
     $("grnSlK").addEventListener("change", function () { dirty = false; grnCheck(); });
     $("grnW").addEventListener("input", function (e) { var f = e.target.dataset && e.target.dataset.f; if (!f || !grN()) return; grnSt().w[f] = e.target.value; grnDraw(); });
     $("grnW").addEventListener("keydown", function (e) { if (e.key !== "Enter") return; var f = e.target.dataset && e.target.dataset.f; if (!f) return; e.preventDefault(); if (f === "f") { $("grnWg").focus(); } else if (!grnMissing().length) grnSubmit(); });
@@ -6319,13 +6319,13 @@ var ESPIC = {
     function move(then) {
       var fr = s.k, to = p.k, ms = 1600, t0 = null, inp = $("grnSlK");
       var th = function (v) { var r = inp.getBoundingClientRect(), mn = +inp.min, mx = +inp.max; return { x: r.left + 9 + (r.width - 18) * (v - mn) / (mx - mn), y: r.top + r.height / 2 }; };
-      handGo(calc ? th(fr) : grnScr(0, p.c + fr), 650);
+      handGo(calc ? th(p.c + fr) : grnScr(0, p.c + fr), 650);
       pgWait(800, function () {
         if (pgRun !== run) return; handTap(); if (!calc) s.drag = true;
         function step(ts) {
           if (pgRun !== run) return;
           if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, v = fr + (to - fr) * e;
-          s.k = Math.round(v); grnSync(); handAt(calc ? th(v) : grnScr(0, p.c + v));
+          s.k = Math.round(v); grnSync(); handAt(calc ? th(p.c + v) : grnScr(0, p.c + v));
           if (u < 1) pgRaf(step); else { s.drag = false; grnSync(); pgWait(700, then); }
         }
         pgRaf(step);
@@ -6333,7 +6333,7 @@ var ESPIC = {
     }
     var mv = function (n) {
       if (s.k === p.k) { n(); return; }
-      cap("h(" + p.N + ") = " + nf(p.hN) + ", so the path moves " + dir + " " + Math.abs(p.k) + " feet: " + (calc ? "slide k to " + nf(p.k) + "." : "drag the y-intercept " + dir + " " + Math.abs(p.k) + "."));
+      cap("h(" + p.N + ") = " + nf(p.hN) + ", so the path moves " + dir + " " + Math.abs(p.k) + " feet: " + (calc ? "slide c to " + nf(p.c + p.k) + "." : "drag the y-intercept " + dir + " " + Math.abs(p.k) + "."));
       move(n);
     };
     if (ONE) { mv(function () { pgWait(900, function () { if (pgRun === run) pgStop(); }); }); return; }
