@@ -266,7 +266,7 @@
   .log .msg{align-self:stretch;max-width:none;background:none;padding:0;border-radius:0;font-size:1rem;line-height:1.45}
   .log .msg+.msg{padding-top:.6rem;border-top:1px solid color-mix(in srgb,var(--ink) 15%,transparent)}
   /* ---- 1.1 quiz ---- */
-  body.quiz:not(.pq) .pgCtl,body.quiz:not(.wf):not(.gwN) #undo,body.quiz:not(.wf):not(.m3) #show{display:none!important}
+  body.quiz:not(.pq) .pgCtl,body.quiz:not(.wf):not(.gwN):not(.grN) #undo,body.quiz:not(.wf):not(.m3) #show{display:none!important}
   .pgQ{display:none}
   body.pq .pgQ{display:block;flex:0 0 100%;margin:0 0 .3rem .2rem}
   .pgQt{font:600 1.25rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
@@ -314,6 +314,17 @@
   .wfSteps .wfBtn{margin:.2rem .3rem .2rem 0}
   .wfSteps .wfBtn.bad{border-color:#C0301E;color:#C0301E;animation:shake .3s}
   /* 2.1 Write g (Demo, Sequence, Calculate, Write): its own graph, the a, h, k sliders and the equation text (Write: typed a, h, k, vertex and equation, no graph) */
+  /* 2.1 Real Life: its own graph (h dotted, g blue), the k slider and g's equation (Write: the axes, h(x) = and g(x) = boxes) */
+  .grnG,.grnS{display:none}
+  body.grN #pgGraphWrap,body.grN .pgSide,body.grN #qzTools,body.grN #ptTog,body.grN #show,body.grN #wfSteps{display:none!important}
+  body.grN .grnG{display:block;flex:1 1 22rem;max-width:34rem;width:100%}
+  body.grN .grnS{display:flex;flex-direction:column;gap:.9rem;box-sizing:border-box;padding-left:1.5rem;flex:1 1 16rem;max-width:26rem}
+  body.grN.grnWr .grnSl,body.grN.grnWr .grnOut{display:none}
+  body.grN:not(.grnWr) .grnW{display:none}
+  #grnSvg{display:block;width:100%;height:auto;background:#fff;border:1px solid #9AA0A8;box-sizing:border-box;touch-action:none;font:11px system-ui,sans-serif}
+  .grnS .gwnEq{font-size:1.3rem}
+  .grnSl{border-color:color-mix(in srgb,#2D70B3 55%,var(--bg));background:color-mix(in srgb,#2D70B3 6%,var(--bg))}.grnSl output{color:#2D70B3}.grnSl input[type=range]{accent-color:#2D70B3}
+  body.quiz.grN #undo{display:block}
   .gwnG,.gwnS{display:none}
   body.gwN #pgGraphWrap,body.gwN .pgSide,body.gwN #qzTools,body.gwN #ptTog,body.gwN #show{display:none!important}
   body.gwN .gwnG{display:block;flex:1 1 18rem;max-width:30rem;width:100%}
@@ -672,6 +683,15 @@
         <div class="pgDesc" id="pgDesc" aria-live="polite"></div>
         <div class="descIn" id="pgDescIn" hidden><input id="pgDescTx" autocomplete="off" spellcheck="false" placeholder="Describe the transformation" aria-label="Describe the transformation"><div class="descKeys" id="pgDescKeys"><button type="button" data-ins="Translation">Translation</button><button type="button" data-ins="Stretch">Stretch</button><button type="button" data-ins="Shrink">Shrink</button><button type="button" data-ins="Reflection">Reflection</button><button type="button" class="axB" data-ins="x-axis">x-axis</button><button type="button" class="axB" data-ins="y-axis">y-axis</button><button type="button" data-ins="Horizontal">Horizontal</button><button type="button" data-ins="Vertical">Vertical</button><span class="descArr"><button type="button" data-ins="←" aria-label="left">←</button><button type="button" data-ins="→" aria-label="right">→</button><button type="button" data-ins="↑" aria-label="up">↑</button><button type="button" data-ins="↓" aria-label="down">↓</button></span><button type="button" class="descGo" id="pgDescGo">Submit</button></div></div>
         <div class="estIn" id="estIn" hidden><label for="estTx" id="estLbl">Estimate</label><div class="estRow"><input id="estTx" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="Estimated height"><button type="button" id="estGo">Submit</button></div></div>
+      </div>
+      <div class="grnG" id="grnG"><svg id="grnSvg" viewBox="0 0 440 340" role="img" aria-label="Graph of the old path h and the new path g"></svg></div>
+      <div class="grnS" id="grnS">
+        <div class="gwnSl grnSl" id="grnSl" role="group" aria-label="k"><label class="wfSlR"><span class="wfSlN">k</span><input type="range" id="grnSlK" min="-30" max="30" step="1" value="0" aria-label="k"><output id="grnSlKv">0</output></label></div>
+        <div class="gwnW grnW" id="grnW" role="group" aria-label="Type h(x) and g(x)">
+          <div class="gwnR"><label><input id="grnWf" data-f="f" autocomplete="off" spellcheck="false" placeholder="h(x)=..." aria-label="h(x)" style="width:18rem"></label></div>
+          <div class="gwnR"><label><input id="grnWg" data-f="g" autocomplete="off" spellcheck="false" placeholder="g(x)=..." aria-label="g(x)" style="width:18rem"></label></div>
+        </div>
+        <div class="gwnOut grnOut" id="grnOut" aria-live="polite"></div>
       </div>
       <div class="gwnG" id="gwnG"><svg id="gwnSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph of f and g"></svg></div>
       <div class="gwnS" id="gwnS">
@@ -3284,6 +3304,7 @@
     done(i);
   }
   function undo() {
+    if (pq() && grN()) { grnUndo(); return; }
     if (pq() && gwN()) { gwnUndo(); return; }
     if (wf()) { wfUndo(); return; }
     hideKind();
@@ -5524,6 +5545,7 @@
     gdDescUI(); estUI();
     if (!pq() || !QZ.order) return;
     if (est()) { var oe = pqParts(), alle = QZ.step >= 4; $("pgQcue").innerHTML = (QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + [["Table", oe.table], ["Regression", oe.graph], ["Estimate", oe.desc]].map(function (a) { return a[0] + (alle || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; "); return; }
+    if (grN()) { $("pgQcue").innerHTML = QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : ""; return; }
     if (m3()) { $("pgQcue").innerHTML = m3Cue(); return; }
     if (gwN()) { $("pgQcue").innerHTML = QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : ""; return; }   // (one thing to answer, g: only the problem count)
     if (gd() && mode === "create" && !QZ.cr) { $("pgQcue").innerHTML = ""; return; }   // (one thing to answer: nothing to list)
@@ -5793,6 +5815,7 @@ var ESPIC = {
   function wsList(a) { return a.length > 1 ? a.slice(0, -1).join(", ") + " and " + a[a.length - 1] : a[0]; }
   // Write: the parts still to be done (not whether they are right)
   function wsMissing() {
+    if (grN()) return grnMissing();
     if (gwN()) return gwnMissing();
     if (m3()) return m3wMissing();
     var miss = [], num = function (t) { return !!parse(String(t || "").replace(/−/g, "-").trim()); };
@@ -5823,6 +5846,7 @@ var ESPIC = {
   }
   function wsReadyUpd() { var b = $("qzGo"); if (b) b.classList.toggle("ready", !!(wsub() && !wsMissing().length)); }
   function wsubSubmit() {
+    if (grN()) { grnSubmit(); return; }
     if (gwN()) { gwnSubmit(); return; }
     var miss = wsMissing();
     if (miss.length) { pqMsg("Not yet: still to complete " + wsList(miss) + ".", "note"); return; }   // (a reminder, not an error: it does not cost the Progress)
@@ -6167,6 +6191,144 @@ var ESPIC = {
     ], i = 0;
     (function next() { if (pgRun !== run) return; if (i < L.length) { L[i++](next); return; } s.ok = gwnMatch(s); PG.demoFin = true; pgStop(); })();
   }
+  // ---- 2.1 Real Life (Demo, Sequence, Calculate, Write): the question's path h(x) is dotted; the new path g(x) = h(x) + k is blue. Demo and Sequence: the student
+  // drags g's y-intercept up or down, and the k slider and g's equation follow. Calculate: the k slider moves g. Write: only the axes, and two boxes, h(x) = and
+  // g(x) =, whose graphs are drawn as they are typed; Submit checks g. Right when g lands where the question says (g = h + k).
+  function grN() { return pq() && act === "2.1" && lesson === 4 && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().gr && (mode === "demo" || mode === "sequence" || mode === "calculate" || mode === "solo"); }
+  function grnP() { return m3Cur().gr; }
+  function grnSt() { if (!QZ.gr || QZ.gr.pi !== QZ.pi) QZ.gr = { pi: QZ.pi, k: 0, ok: false, hist: [], drag: false, w: { f: "h(x)=", g: "g(x)=" }, wok: false }; return QZ.gr; }
+  function grnRange() { var p = grnP(); return Math.ceil(Math.abs(p.k) / 10) * 10 + 10; }
+  function grnBox() {
+    var p = grnP(), xa = c2Axis(0, p.xmax), ya = c2Axis(Math.min(0, p.hN, p.c + p.k), Math.max(p.peak, p.peak + p.k) + 4);
+    return { W: 440, H: 340, L: 60, R: 16, T: 18, B: 50, xa: xa, ya: ya };
+  }
+  function grnX(B, x) { return B.L + (x - B.xa.min) / (B.xa.max - B.xa.min) * (B.W - B.L - B.R); }
+  function grnY(B, y) { return B.H - B.B - (y - B.ya.min) / (B.ya.max - B.ya.min) * (B.H - B.T - B.B); }
+  function grnScr(x, y) { var S = $("grnSvg"), B = grnBox(), m = S.getScreenCTM(), q = S.createSVGPoint(); q.x = grnX(B, x); q.y = grnY(B, y); q = q.matrixTransform(m); return { x: q.x, y: q.y }; }
+  function grnFn(t) { var s = String(t || "").replace(/\s/g, ""); if (!s.replace(/^[a-z]\(x\)=?/i, "")) return null; var f = eqFn(s); if (!f) return null; try { if (!isFinite(f(1))) return null; } catch (e) { return null; } return f; }
+  function grnDraw() {
+    var S = $("grnSvg"), s = grnSt(), p = grnP(), B = grnBox(), wr = mode === "solo", h = "";
+    S.setAttribute("viewBox", "0 0 " + B.W + " " + B.H);
+    var x0 = grnX(B, B.xa.min), x1 = grnX(B, B.xa.max), y0 = grnY(B, B.ya.min), y1 = grnY(B, B.ya.max), F = function (v) { return Math.round(v * 100) / 100; };
+    h += "<defs><clipPath id=\"grnClip\"><rect x=\"" + x0 + "\" y=\"" + y1 + "\" width=\"" + (x1 - x0) + "\" height=\"" + (y0 - y1) + "\"/></clipPath></defs>";
+    for (var gx = B.xa.min; gx <= B.xa.max + 1e-9; gx += B.xa.g) h += "<line x1=\"" + F(grnX(B, gx)) + "\" y1=\"" + y0 + "\" x2=\"" + F(grnX(B, gx)) + "\" y2=\"" + y1 + "\" stroke=\"#1B2433\" stroke-opacity=\"" + (Math.abs(gx / B.xa.t - Math.round(gx / B.xa.t)) < 1e-9 ? ".22" : ".09") + "\"/>";
+    for (var gy = B.ya.min; gy <= B.ya.max + 1e-9; gy += B.ya.g) h += "<line x1=\"" + x0 + "\" y1=\"" + F(grnY(B, gy)) + "\" x2=\"" + x1 + "\" y2=\"" + F(grnY(B, gy)) + "\" stroke=\"#1B2433\" stroke-opacity=\"" + (Math.abs(gy / B.ya.t - Math.round(gy / B.ya.t)) < 1e-9 ? ".22" : ".09") + "\"/>";
+    for (var tx = B.xa.min; tx <= B.xa.max + 1e-9; tx += B.xa.t) h += "<text x=\"" + F(grnX(B, tx)) + "\" y=\"" + (y0 + 15) + "\" text-anchor=\"middle\" fill=\"#3B4556\">" + nf(tx) + "</text>";
+    for (var ty = B.ya.min; ty <= B.ya.max + 1e-9; ty += B.ya.t) h += "<text x=\"" + (x0 - 7) + "\" y=\"" + F(grnY(B, ty) + 4) + "\" text-anchor=\"end\" fill=\"#3B4556\">" + nf(ty) + "</text>";
+    var ax = grnY(B, 0); h += "<line x1=\"" + x0 + "\" y1=\"" + F(ax) + "\" x2=\"" + x1 + "\" y2=\"" + F(ax) + "\" stroke=\"#1B2433\" stroke-width=\"1.6\"/><line x1=\"" + F(grnX(B, 0)) + "\" y1=\"" + y0 + "\" x2=\"" + F(grnX(B, 0)) + "\" y2=\"" + y1 + "\" stroke=\"#1B2433\" stroke-width=\"1.6\"/>";
+    h += "<text x=\"" + ((x0 + x1) / 2) + "\" y=\"" + (B.H - 10) + "\" text-anchor=\"middle\" font-weight=\"600\" fill=\"#3B4556\">Horizontal distance (feet)</text>";
+    h += "<text transform=\"translate(16 " + ((y0 + y1) / 2) + ") rotate(-90)\" text-anchor=\"middle\" font-weight=\"600\" fill=\"#3B4556\">Height (feet)</text>";
+    var curve = function (fn, col, dash, wd) {
+      var pts = [], n = 240; for (var i = 0; i <= n; i++) { var x = B.xa.min + (B.xa.max - B.xa.min) * i / n, y; try { y = fn(x); } catch (e) { y = NaN; } if (!isFinite(y)) continue; y = Math.max(B.ya.min - (B.ya.max - B.ya.min), Math.min(B.ya.max + (B.ya.max - B.ya.min), y)); pts.push(F(grnX(B, x)) + "," + F(grnY(B, y))); }
+      return pts.length > 1 ? "<polyline clip-path=\"url(#grnClip)\" points=\"" + pts.join(" ") + "\" fill=\"none\" stroke=\"" + col + "\" stroke-width=\"" + wd + "\"" + (dash ? " stroke-dasharray=\"" + dash + "\"" : "") + " stroke-linejoin=\"round\" pointer-events=\"none\"/>" : "";
+    };
+    var Hf = function (x) { return p.a * x * x + p.b * x + p.c; };
+    if (wr) {
+      var tf = grnFn(s.w.f), tg = grnFn(s.w.g);
+      if (tf) h += curve(tf, "#4B5563", "6 5", 2.4);
+      if (tg) h += curve(tg, "#2D70B3", "", 3);
+    } else {
+      h += curve(Hf, "#4B5563", "6 5", 2.4);
+      h += curve(function (x) { return Hf(x) + s.k; }, "#2D70B3", "", 3);
+      var c = p.c + s.k, disc = p.b * p.b - 4 * p.a * c;   // where the blue path lands: its x-intercept to the right
+      if (disc >= 0) { var rt = Math.max((-p.b + Math.sqrt(disc)) / (2 * p.a), (-p.b - Math.sqrt(disc)) / (2 * p.a)); if (rt > 0 && rt <= B.xa.max) { var rx = grnX(B, rt); h += "<circle cx=\"" + F(rx) + "\" cy=\"" + F(ax) + "\" r=\"5\" fill=\"#2D70B3\"/><text x=\"" + F(rx) + "\" y=\"" + F(ax - 10) + "\" text-anchor=\"middle\" font-weight=\"700\" fill=\"#2D70B3\" stroke=\"#fff\" stroke-width=\"3\" paint-order=\"stroke\">(" + nf(Math.round(rt * 10) / 10) + ", 0)</text>"; } }
+      var live = grnDragOK(), yx = grnX(B, 0), yy = grnY(B, c);
+      if (c >= B.ya.min && c <= B.ya.max) {
+        h += "<g" + (live ? " data-grh=\"1\" style=\"cursor:grab\"" : " pointer-events=\"none\"") + ">" + (live ? "<circle cx=\"" + F(yx) + "\" cy=\"" + F(yy) + "\" r=\"15\" fill=\"#2D70B3\" fill-opacity=\".25\"/>" : "") + "<circle cx=\"" + F(yx) + "\" cy=\"" + F(yy) + "\" r=\"" + (live ? 6 : 5) + "\" fill=\"#2D70B3\"/></g>";
+        if (s.drag) h += "<text x=\"" + F(yx + 14) + "\" y=\"" + F(yy - 10) + "\" font-weight=\"700\" fill=\"#2D70B3\" stroke=\"#fff\" stroke-width=\"3\" paint-order=\"stroke\" pointer-events=\"none\">(0, " + nf(c) + ")</text>";
+      }
+    }
+    S.innerHTML = h;
+  }
+  function grnDragOK() { return grN() && (mode === "demo" || mode === "sequence") && QZ.step < 4; }
+  function grnSync() {
+    var on = grN(); document.body.classList.toggle("grN", on); document.body.classList.toggle("grnWr", on && mode === "solo");
+    if (!on) return;
+    var s = grnSt(), p = grnP(), done = QZ.step >= 4, r = grnRange(), inp = $("grnSlK");
+    $("wfSteps").hidden = true; askArrow(false);
+    grnDraw();
+    if (+inp.min !== -r) { inp.min = -r; inp.max = r; }
+    if (+inp.value !== s.k) inp.value = s.k;
+    inp.disabled = mode !== "calculate" || done || (pgRun && !pgPaused && !DN);
+    $("grnSlKv").textContent = nf(s.k);
+    $("grnOut").innerHTML = "<div class=\"gwnEq\" style=\"color:#2D70B3\">" + c2Sf(p.a, p.b, p.c + s.k, "<i>g</i>(" + c2X + ")")[0] + "</div>";
+    if (mode === "solo") ["f", "g"].forEach(function (f) { var el = $("grnW" + f); if (document.activeElement !== el && el.value !== s.w[f]) el.value = s.w[f]; el.readOnly = done || (f === "g" && s.wok); el.classList.toggle("ok", f === "g" && !!s.wok); });
+    $("undo").hidden = !(mode === "sequence" || mode === "calculate") || done;
+    $("show").hidden = true;
+  }
+  function grnQ() {
+    var pb = m3Cur(), add = mode === "solo" ? "Type <i>h</i>(" + c2X + ") and <i>g</i>(" + c2X + ") in the boxes." : mode === "calculate" ? "Use the <i>k</i> slider to move the blue path." : "Drag the blue path’s <i>y</i>-intercept up or down to move it.";
+    return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story.replace(/lm cf/g, "lm") + " " + add + "</div>" + pb.pic + "</div>";
+  }
+  function grnPush() { var s = grnSt(); s.hist.push(s.k); if (s.hist.length > 60) s.hist.shift(); }
+  function grnUndo() { var s = grnSt(); if (QZ.step >= 4 || !s.hist.length) return; s.k = s.hist.pop(); pqMsg(""); grnSync(); }
+  function grnCheck() {
+    if (!grN() || mode === "solo" || QZ.step >= 4) return;
+    var s = grnSt(); if (s.k !== grnP().k) return;
+    s.ok = true; pqMsg("");
+    if (pgRun && pgPaused && !DN) { PG.demoFin = true; pgStop(); return; }
+    drawPlay();
+  }
+  function grnMissing() { var s = grnSt(); return String(s.w.g || "").replace(/\s/g, "").replace(/^g\(x\)=?/i, "") ? [] : ["g(x)"]; }
+  function grnSubmit() {
+    if (grnMissing().length) { pqMsg("Not yet: still to complete g(x).", "note"); return; }
+    var s = grnSt(), p = grnP(), f = grnFn(s.w.g), ok = !!f && /^g\(x\)=|^[^=]*$/i.test(String(s.w.g).replace(/\s/g, ""));
+    if (ok) for (var x = 0; x <= p.xmax; x += 5) { var y; try { y = f(x); } catch (e) { ok = false; break; } if (!(Math.abs(y - (p.a * x * x + p.b * x + p.c + p.k)) < 1e-6)) { ok = false; break; } }
+    if (!ok) { QZ.wrong++; pqMsg("Not quite. Check g(x), then press Submit again."); return; }
+    s.wok = true; s.ok = true; s.k = p.k; pqMsg(""); drawPlay();
+  }
+  (function () {
+    var S = $("grnSvg");
+    S.addEventListener("pointerdown", function (e) {
+      if (!e.target.closest || !e.target.closest("[data-grh]") || e.button > 0 || !grnDragOK()) return;
+      if (e.isTrusted) pgUser();
+      e.preventDefault(); var s = grnSt(), p = grnP(), k0 = s.k, r = grnRange(); grnPush(); s.drag = true;
+      try { S.setPointerCapture(e.pointerId); } catch (er) {}
+      function mv(ev) {
+        var m = S.getScreenCTM(); if (!m) return; var q = S.createSVGPoint(); q.x = ev.clientX; q.y = ev.clientY; q = q.matrixTransform(m.inverse());
+        var B = grnBox(), y = B.ya.min + (B.H - B.B - q.y) / (B.H - B.T - B.B) * (B.ya.max - B.ya.min);
+        s.k = Math.max(-r, Math.min(r, Math.round(y - p.c))); grnSync();
+      }
+      function up() { S.removeEventListener("pointermove", mv); S.removeEventListener("pointerup", up); S.removeEventListener("pointercancel", up); s.drag = false; if (s.k === k0) s.hist.pop(); grnSync(); grnCheck(); }
+      S.addEventListener("pointermove", mv); S.addEventListener("pointerup", up); S.addEventListener("pointercancel", up);
+    });
+    var dirty = false;
+    $("grnSlK").addEventListener("input", function (e) { if (!grN() || mode !== "calculate" || QZ.step >= 4) return; if (e.isTrusted) pgUser(); var s = grnSt(); if (!dirty) { grnPush(); dirty = true; } s.k = Math.round(+this.value); grnSync(); });
+    $("grnSlK").addEventListener("change", function () { dirty = false; grnCheck(); });
+    $("grnW").addEventListener("input", function (e) { var f = e.target.dataset && e.target.dataset.f; if (!f || !grN()) return; grnSt().w[f] = e.target.value; grnDraw(); });
+    $("grnW").addEventListener("keydown", function (e) { if (e.key !== "Enter") return; var f = e.target.dataset && e.target.dataset.f; if (!f) return; e.preventDefault(); if (f === "f") { $("grnWg").focus(); } else if (!grnMissing().length) grnSubmit(); });
+  })();
+  function grnDemo(run, ONE, cap) {
+    if (!ONE) QZ.gr = null;
+    var s = grnSt(), p = grnP(), calc = mode === "calculate", far = p.D > 0, dir = p.k > 0 ? "up" : "down"; s.ok = false; grnSync();
+    function move(then) {
+      var fr = s.k, to = p.k, ms = 1600, t0 = null, inp = $("grnSlK");
+      var th = function (v) { var r = inp.getBoundingClientRect(), mn = +inp.min, mx = +inp.max; return { x: r.left + 9 + (r.width - 18) * (v - mn) / (mx - mn), y: r.top + r.height / 2 }; };
+      handGo(calc ? th(fr) : grnScr(0, p.c + fr), 650);
+      pgWait(800, function () {
+        if (pgRun !== run) return; handTap(); if (!calc) s.drag = true;
+        function step(ts) {
+          if (pgRun !== run) return;
+          if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, v = fr + (to - fr) * e;
+          s.k = Math.round(v); grnSync(); handAt(calc ? th(v) : grnScr(0, p.c + v));
+          if (u < 1) pgRaf(step); else { s.drag = false; grnSync(); pgWait(700, then); }
+        }
+        pgRaf(step);
+      });
+    }
+    var mv = function (n) {
+      if (s.k === p.k) { n(); return; }
+      cap("h(" + p.N + ") = " + nf(p.hN) + ", so the path moves " + dir + " " + Math.abs(p.k) + " feet: " + (calc ? "slide k to " + nf(p.k) + "." : "drag the y-intercept " + dir + " " + Math.abs(p.k) + "."));
+      move(n);
+    };
+    if (ONE) { mv(function () { pgWait(900, function () { if (pgRun === run) pgStop(); }); }); return; }
+    var L = [
+      function (n) { cap("The dotted path is h(x). It lands at x = " + p.R + "; the new path must land at x = " + p.N + "."); pgWait(3000, n); },
+      mv,
+      function (n) { cap("The blue path lands at (" + p.N + ", 0): " + c2Sf(p.a, p.b, p.c + p.k, "g(x)")[0].replace(/<[^>]+>/g, "") + "."); pgWait(3000, n); }
+    ], i = 0;
+    (function next() { if (pgRun !== run) return; if (i < L.length) { L[i++](next); return; } s.ok = s.k === p.k; PG.demoFin = true; pgStop(); })();
+  }
   var gdCustom = null;   // Graph & Describe: the function typed in Create, carried into the other modes
   function gdTyped() { return gd() && (soloish() || A() !== 1 || gd2()); }   // the description is typed (not clicked) when practising alone, or when it needs a stretch or a reflection
   function soloish() { return mode === "solo" || mode === "create"; }
@@ -6253,6 +6415,7 @@ var ESPIC = {
       else if (QZ.cs === "move") { $("modePick").hidden = true; $("pgQt").innerHTML = wfL() === 5 ? (QZ.cm === "c" ? "Type the fixed cost in dollars, like 12." : "Choose the percent of the revenue that is the profit before the fixed cost.") : wfL() === 4 ? (QZ.cm === "m" ? "Type how far, like right 3 and down 2." : QZ.cm === "s" ? "Choose a vertical stretch or shrink factor." : QZ.cc && QZ.cc.length ? "Choose the second transformation." : "Choose the first transformation.") : wfL() === 3 ? "Choose a vertical stretch or shrink factor." : wfL() === 2 ? "Choose an axis of reflection." : "Now move it. Type how far, like right 3 and down 2."; }
       else { $("modePick").hidden = true; $("pgQt").innerHTML = wfL() === 5 ? "Type the revenue for selling <i>x</i> items at one price, like <span class=\"lm\"><i>f</i>(<i>x</i>) = 25<i>x</i></span>." : (wfQd() ? "Type a parabola, like <span class=\"lm\"><i>f</i>(<i>x</i>) = <i>x</i>²</span> or <span class=\"lm\"><i>f</i>(<i>x</i>) = (<i>x</i> − 1)² + 2</span>." : "Type a line or an absolute value, like <span class=\"lm\"><i>f</i>(<i>x</i>) = 2<i>x</i> + 1</span>."); }
     }
+    else if (grN()) $("pgQt").innerHTML = grnQ();
     else if (m3()) $("pgQt").innerHTML = m3Q();
     else if (wf()) $("pgQt").innerHTML = wfQ();
     else if (gd() && mode === "create" && !QZ.cr && QZ.pick) { $("pgQt").textContent = "Your function is in."; showPick($("pgQ"), "How would you like to work on it?"); }
@@ -6279,11 +6442,11 @@ var ESPIC = {
     $("hint").hidden = done || soloish();   // a right answer needs no hint
     if (wf()) { $("show").hidden = false; wfUndoVis(); }
     else if (m3()) { $("show").hidden = false; $("undo").hidden = true; }
-    wfSteps(); gwnSync();
+    wfSteps(); gwnSync(); grnSync();
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
-  function pqParts() { if (gwN()) { var gk = !!(QZ.gn && QZ.gn.pi === QZ.pi && QZ.gn.ok); return { eq: gk, table: true, graph: gk, parent: true, desc: true }; } if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: wfL() === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: wsub() ? !!PG.wsT : estTableOK(), graph: wsub() ? !!PG.wsG : estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: mode === "solo" || TB.rows().every(function (r) { return r.done; }) || (ptAvail() && ptAllDone()), graph: gd() || wsub() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
+  function pqParts() { if (grN()) { var rk = !!(QZ.gr && QZ.gr.pi === QZ.pi && QZ.gr.ok); return { eq: rk, table: true, graph: rk, parent: true, desc: true }; } if (gwN()) { var gk = !!(QZ.gn && QZ.gn.pi === QZ.pi && QZ.gn.ok); return { eq: gk, table: true, graph: gk, parent: true, desc: true }; } if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: wfL() === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: wsub() ? !!PG.wsT : estTableOK(), graph: wsub() ? !!PG.wsG : estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: mode === "solo" || TB.rows().every(function (r) { return r.done; }) || (ptAvail() && ptAllDone()), graph: gd() || wsub() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
   var pqBusy = false;
   function pqEval() {
     if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order || (gd() && mode === "create" && !QZ.cr) || wfCr()) return;
@@ -8718,6 +8881,7 @@ var ESPIC = {
   }
   function m3Steps() {
     var el = $("wfSteps"); if (!el) return;
+    if (grN()) { el.hidden = true; el.innerHTML = ""; return; }
     if (m3wOn() && m3Cur()) { m3wSteps(); return; }
     m3wKey = "";
     var pb = m3Cur(), st = m3Step();
@@ -8924,7 +9088,7 @@ var ESPIC = {
     var svg = document.querySelector("svg.m3Fig"), g = svg.dataset.g.split(",").map(Number), pt = svg.createSVGPoint();
     var xo = g[6] || 0, yo = g[7] || 0; pt.x = g[0] + (x - xo) / (g[4] - xo) * g[2]; pt.y = g[1] + g[3] - (y - yo) / (g[5] - yo) * g[3]; var q = pt.matrixTransform(svg.getScreenCTM()); return { x: q.x, y: q.y };
   }
-  function m3Redraw() { $("pgQt").innerHTML = m3Q(); m3Steps(); }
+  function m3Redraw() { if (grN()) { grnSync(); return; } $("pgQt").innerHTML = m3Q(); m3Steps(); }
   function m3Plot(p) {
     if (m3wOn()) { m3wPlot(p); return; }
     var st = m3Step(), pb = m3Cur(); if (!st || !pb) return; if (pb.kind === 20) { c2Plot(p, st, pb); return; } if (pb.kind === 2) { m3Plot2(p, st, pb); return; } if (pb.kind === 5) { glPlot(p, st, pb); return; } if (pb.kind !== 1) return; var t = st.type, x = QZ.m3x, near = function (qx, qy) { return Math.hypot(p.vx - p.X(qx), p.vy - p.Y(qy)) <= 16; };
@@ -9440,7 +9604,7 @@ var ESPIC = {
     TB.sync(); ptSync(); $("qzTools").hidden = wf() || m3(); posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
-    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd(); gwnSync();
+    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd(); gwnSync(); grnSync();
   }
   // ---- Chapter 2 (Quadratic Functions).  2.1 Using a Transformed Quadratic and every exercise of 2.2, 2.3 and 2.4 run on the 1.3 engine: a problem is a story or a function,
   // a figure, and steps (Demo, Sequence and Calculate take every small step; Solo takes only the big ones).  The figure here is a whole coordinate plane that can draw
@@ -9668,6 +9832,7 @@ var ESPIC = {
       var k = -hN, sc = c2Pick(C2S214), H = function (x) { return a * x * x + b * x + c; }, G = function (x) { return H(x) + k; };
       var hS = c2Sf(a, b, c, "<i>h</i>(" + c2X + ")"), gS = c2Sf(a, b, c + k, "<i>g</i>(" + c2X + ")"), far = D > 0, dir = k > 0 ? "up" : "down";
       var pb = { kind: 20, sc: sc };
+      pb.gr = { a: a, b: b, c: c, R: R, N: N, D: D, k: k, hN: hN, peak: peak, xmax: Math.max(R, N) + 5 };
       pb.head = hS[0].replace(/<[^>]+>/g, "");
       pb.pic = c2Pic(sc.pic);
       pb.story = sc.s + " The height (in feet) of the " + sc.w + " is modeled by <span class=\"lm cf\">" + hS[0] + "</span>, where " + c2X + " is the horizontal distance (in feet) from " + sc.from + ". " + (far ? sc.up : sc.dn) + " so that the " + sc.w + " " + sc.land + " " + Math.abs(D) + " feet " + (far ? "farther from" : "closer to") + " " + sc.from + ". Write a function <i>g</i> that models the new path.";
@@ -10400,6 +10565,7 @@ var ESPIC = {
     if (GD && !ONE) { var tr0 = QZ.tr[QZ.pi]; PG.h = tr0.h; PG.k = tr0.k; PG.a = tr0.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.pdone = false; PG.dOK = false; PG.eqTxt = ""; $("pgDescTx").value = ""; }
     if (!ONE) { Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 0; PG.eOK = false; PG.eqTxt = ""; } else if (wf()) { PG.eqTxt = "g(x)="; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; if (GD && gwOn()) { PG.show.eq = false; PG.eqTxt = "g(x)="; QZ.gwd = 0; QZ.gwAsk = false; } } drawPlay(); }   // (2.1 Write g: the hand builds g(x) from g(x) = f(x))
     function cap(t) { t = wf() ? wfNm(t) : t; if (ONE) note(t); else dmCap(t); }
+    if (PQ && grN()) { grnDemo(run, ONE, cap); return; }   // 2.1 Real Life: the hand drags the y-intercept (Calculate: slides k)
     if (PQ && gwN()) { gwnDemo(run, ONE, cap); return; }   // 2.1 Write g: the hand drags g's points (Calculate: slides the sliders)
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
     // tap a button: the hand travels to it, taps, then the button acts
