@@ -166,6 +166,7 @@
   #grpBox .gcell,#grpBox .gsp{display:flex;align-items:center;justify-content:center;min-width:2.6em;min-height:1.9em;padding:.1em .45em}
   #grpBox .gcell{border:1.5px solid color-mix(in srgb,var(--ink) 55%,transparent);background:color-mix(in srgb,var(--ink) 6%,var(--bg));margin:-1.5px 0 0 -1.5px;transition:background .2s}
   #grpBox .gcell.filled{cursor:pointer}
+  #grpBox .gcell.gprev{color:color-mix(in srgb,var(--ink) 45%,transparent)}
   #grpBox .gcell.drop{background:none}
   #grpBox .gsp{border:2px dashed transparent;border-radius:.45em}
   #grpBox .gsp.ready{cursor:pointer}#grpBox .gsp.ready::after{content:"?";opacity:.45}   /* no blue target boxes: a space waiting for its factor shows a question mark */
@@ -2155,6 +2156,18 @@
     }
     var L = S.querySelector(".gsList"); L.innerHTML = P.map(function (q, k) { return "<div class=\"gsRow" + (k === GRP.si ? " cur" : "") + "\"><span>" + sgn(q[0]) + "</span><span>\u00b7</span><span>" + sgn(q[1]) + "</span></div>"; }).join("");
     var rh2 = L.firstChild ? L.firstChild.getBoundingClientRect().height || 1.1 * parseFloat(getComputedStyle(L).fontSize) : 20; L.style.transform = "translateY(" + (2 * rh2 - GRP.si * rh2) + "px)";
+    grSelPreview(P[GRP.si]);
+  }
+  function grSelPreview(q) {   // as the wheel turns, the middle term shows the pair under the line at once: 5x reads 1x + 6x, 2x + 3x ...; the pair that adds to b is taken on its own
+    var el = $("grpBox"), gp = GRP.gp; if (!el || !q) return;
+    var at = function (ix) { return GRP.cells.findIndex(function (c) { return c && c.i === ix; }); }, kb = at(gp.ib), ke = GRP.cells.indexOf(null), ok = q[0] + q[1] === gp.b;
+    var cb = el.querySelector("[data-k=\"" + kb + "\"]"), ce = el.querySelector("[data-k=\"" + ke + "\"]"), xt = function (n) { return { k: "x", v: gp.l, n: mk(n) }; };
+    if (cb) { cb.innerHTML = grTermHtml(xt(q[0])); cb.classList.toggle("gprev", !ok); }
+    if (ce) { ce.innerHTML = grTermHtml(xt(q[1])); ce.classList.toggle("gprev", !ok); }
+    var m = el.querySelector(".gmsg"), sg2 = function (v) { return v < 0 ? "(\u2212" + -v + ")" : String(v); };
+    if (m && !GRP.msg) { m.className = "gmsg"; m.textContent = ok ? sg2(q[0]) + " + " + sg2(q[1]) + " = " + sg(mk(gp.b)) + "!" : sg2(q[0]) + " \u00d7 " + sg2(q[1]) + " = " + sg(mk(gp.a * gp.c)) + ", but " + sg2(q[0]) + " + " + sg2(q[1]) + " = " + sg(mk(q[0] + q[1])) + ", not " + sg(mk(gp.b)) + "."; }
+    clearTimeout(GRP.autoT);
+    if (ok) { var si0 = GRP.si; GRP.autoT = setTimeout(function () { if (GRP && grSelOn() && GRP.si === si0) grSplit(q[0], q[1]); }, 700); }
   }
   function grSelMove(d) { if (!grSelOn()) return; GRP.si += d; GRP.msg = ""; GRP.bad = false; grFill(); }
   function grSelPick() {
@@ -2170,7 +2183,7 @@
     var tb = { k: "x", v: l, n: mk(vb) }, te = { k: "x", v: l, n: mk(ve) }, el = $("grpBox"), from = el.querySelector("[data-k=\"" + kb + "\"]"), to = el.querySelector("[data-k=\"" + ke + "\"]");
     GRP.split = true; GRP.msg = sgn2(p) + " and " + sgn2(q) + " multiply to " + sg(mk(gp.a * gp.c)) + " and add to " + sg(mk(gp.b)) + ": " + exSay([grItems()[gp.ib]]) + " = " + exSay([tb, te]) + "."; GRP.bad = false;
     function sgn2(v) { return v < 0 ? "\u2212" + -v : String(v); }
-    el.classList.remove("withSel"); from.innerHTML = grTermHtml(tb);
+    el.classList.remove("withSel"); clearTimeout(GRP.autoT); [from, to].forEach(function (c) { c.classList.remove("gprev"); }); to.innerHTML = ""; from.innerHTML = grTermHtml(tb);
     var fr = from.getBoundingClientRect(), tr = to.getBoundingClientRect(), fly = document.createElement("div"); fly.className = "gsFly"; fly.innerHTML = grTermHtml(te); fly.style.font = getComputedStyle(el).font;
     document.body.appendChild(fly); fly.style.left = fr.left + "px"; fly.style.top = fr.top + "px"; fly.style.width = fr.width + "px"; fly.style.height = fr.height + "px"; fly.style.display = "flex"; fly.style.alignItems = "center"; fly.style.justifyContent = "center";
     requestAnimationFrame(function () { requestAnimationFrame(function () { fly.style.left = tr.left + "px"; fly.style.top = tr.top + "px"; }); });
@@ -2262,10 +2275,12 @@
           (function (c, i) { dmCap("Drag " + exSay([its[i]]) + " into a box."); exMoveDemo((EXP.eq ? ".exT[data-s=\"L\"]" : ".exT") + "[data-i=\"" + i + "\"]", "#grpBox .gcell[data-k=\"" + c + "\"]", function () { grPlace(c, i); if (EXP.eq) eqRender(); else exRender(); }, more); })(c3, plan[c3]);
           return;
         }
+        if (GRP.split) { grDemoStep(600); return; }   // the middle term is splitting: wait for it
         if (!grSelOn()) return;
         var P3 = grPairs(gp.a * gp.c), want3 = P3.findIndex(function (q) { return q[0] === gp.p && q[1] === gp.q; }), dirn = want3 > GRP.si ? 1 : -1;
-        dmCap(want3 === GRP.si ? "This pair multiplies to " + sg(mk(gp.a * gp.c)) + " and adds to " + sg(mk(gp.b)) + ". Click the circle." : "Find two numbers that multiply to " + sg(mk(gp.a * gp.c)) + " and add to " + sg(mk(gp.b)) + ".");
-        exTapDemo("#grpBox .gsDial [data-g=\"" + (want3 === GRP.si ? "go" : dirn > 0 ? "dn" : "up") + "\"]", function () { if (want3 === GRP.si) grSelPick(); else grSelMove(dirn); }, function () { grDemoStep(want3 === GRP.si ? 1400 : 700); });
+        if (want3 === GRP.si) { dmCap("This pair multiplies to " + sg(mk(gp.a * gp.c)) + " and adds to " + sg(mk(gp.b)) + "."); grDemoStep(900); return; }   // it is taken on its own
+        dmCap("Turn the wheel: find two numbers that multiply to " + sg(mk(gp.a * gp.c)) + " and add to " + sg(mk(gp.b)) + ".");
+        exTapDemo("#grpBox .gsDial [data-g=\"" + (dirn > 0 ? "dn" : "up") + "\"]", function () { grSelMove(dirn); }, function () { grDemoStep(700); });
         return;
       }
       for (var c = 0; c < 4; c++) if (!GRP.cells[c] || GRP.cells[c].i !== gp.cells[c]) {
