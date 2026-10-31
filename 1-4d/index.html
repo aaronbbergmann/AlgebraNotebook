@@ -1627,12 +1627,13 @@
   function exLines() {
     if (!EXP) return [];
     if (!EXP.eq) return [exSay(EXP.items)];
+    if (EXP.c3) return [exSay(EXP.c3.A) + " " + EXP.c3.r1 + " " + exSay(EXP.c3.M) + " " + EXP.c3.r2 + " " + exSay(EXP.c3.B)];
     var z = EXP.zp, one = function (L, R, rel) { return exSay(L) + " " + (rel || "=") + " " + (EXP.lit ? litSay(R) : exSay(R)); };   // each row of a split keeps its own sign
     return z ? z.eqs.map(function (e, k) { return k === z.act ? one(EXP.L, EXP.R, EXP.rel) : one(e.L, e.R, e.rel); }) : [one(EXP.L, EXP.R, EXP.rel)];
   }
   function exWork() {
     if (!EXP || !$("exBox") || $("exBox").hidden) return;
-    var L = exLines(), sp = !!(EXP.eq && EXP.zp), ai = sp && locked ? avIneqEnd() : null, key = L.join("\n") + (ai ? "\n" + ai.say : "");
+    var L = exLines(), sp = !!(EXP.eq && EXP.zp), ai = sp && locked ? avIneqEnd() || cmpEnd() : null, key = L.join("\n") + (ai ? "\n" + ai.say : "");
     var mkS = function () { var o = { eqs: L, ms: L.map(function () { return ""; }) }; if (sp) o.split = true; if (ai) o.fin = ai.say; return o; };
     if (!steps.length) { steps.push(mkS()); works.push({ steps: steps, label: MODES[mode] + " mode, Play Solve" }); if (works.length > 300) works.shift(); }
     else {
@@ -1839,11 +1840,11 @@
     if (BUILT[act].solver) $("stT").textContent = svTitle();
     orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
     if (EXP.eq) { EXP.L = JSON.parse(JSON.stringify(EXP.orig.L)); EXP.R = JSON.parse(JSON.stringify(EXP.orig.R)); EXP.rel = EXP.orig.rel || "="; } else EXP.items = JSON.parse(JSON.stringify(EXP.orig));
-    EXP.ask = null; EXP.zp = null; if (EXP.grq) EXP.zpq = false; logEl.innerHTML = ""; DM4.brk = false;
+    EXP.ask = null; EXP.zp = null; if (EXP.grq) EXP.zpq = false; if (EXP.eq) { EXP.cmp = null; EXP.c3 = null; if (EXP.orig.cmp) cmpInit(); } logEl.innerHTML = ""; DM4.brk = false;
     $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
     $("top").style.display = "none"; $("vals").style.display = "none"; $("creator").hidden = true; $("answer").hidden = true; $("wsEl").style.display = "none";
     $("exBox").hidden = false; $("exSolo").hidden = mode !== "solo"; $("exMsg").textContent = ""; $("exSoloIn").value = "";
-    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : EXP.grp ? "Answer:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.av && eqIneq() ? "e.g. -2 < x < 4 or x < -2 or x > 4" : EXP.zpq || EXP.grq ? "e.g. 3, -2" : EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
+    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : EXP.grp ? "Answer:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.cmp ? (EXP.cmp.join === "or" ? "e.g. x < -1 or x > 4" : "e.g. -2 < x <= 3") : EXP.av && eqIneq() ? "e.g. -2 < x < 4 or x < -2 or x > 4" : EXP.zpq || EXP.grq ? "e.g. 3, -2" : EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
     exRender(); updUndo();
     if (EXP.eq) {
       if (mode === "demo") { dmUI("idle"); dmCap(BUILT[act].solver ? "" : "Press Start Demo to watch this equation solved."); }
@@ -2290,8 +2291,9 @@
       }
     }, ms);
   }
-  function zpSay() { var ai = avIneqEnd(); if (ai) return ai.say; var o = []; EXP.zp.eqs.forEach(function (e) { var t = exSay(e.L) + " " + (e.rel || "=") + " " + exSay(e.R); if (o.indexOf(t) < 0) o.push(t); }); return o.join(" or "); }
+  function zpSay() { var ai = avIneqEnd() || cmpEnd(); if (ai) return ai.say; var o = []; EXP.zp.eqs.forEach(function (e) { var t = exSay(e.L) + " " + (e.rel || "=") + " " + exSay(e.R); if (o.indexOf(t) < 0) o.push(t); }); return o.join(" or "); }
   function eqKind() {   // "one" (x = 4 or 4 = x), "none", "inf", or "" while there is more to do
+    if (EXP.c3) return "";
     if (EXP.lit) return litAlone(EXP.L, EXP.R) || litAlone(EXP.R, EXP.L) ? "one" : "";
     if (EXP.L.length !== 1 || EXP.R.length !== 1) return "";
     var a = EXP.L[0], b = EXP.R[0]; if (a.k === "g" || b.k === "g" || a.k === "r" || b.k === "r" || a.pm || b.pm || a.u || b.u || a.lc || b.lc || a.w || b.w) return "";
@@ -2374,6 +2376,118 @@
     if (!co || !co.n || v.n < 0) return [];
     var r1 = mul(add(v, neg(b)), inv(co)); if (!v.n) return [r1];
     return [r1, mul(add(neg(v), neg(b)), inv(co))];
+  }
+  // ---- compound inequalities (Big Ideas Math Algebra 1, 2.5): -3 < 2x + 1 ≤ 7 ("and"), and 2x - 1 < 3 or x + 4 > 9 ("or").
+  // A three-part inequality is split by tapping either of its signs: -3 < 2x + 1 and 2x + 1 ≤ 7. Each inequality is solved in its own row (the rows of a split),
+  // and the answers are joined: "and" keeps the numbers in both (between the boundaries), "or" keeps the numbers in either (outside them, or everything).
+  function cmpHalf(rel, v) { return { up: rel === "<" || rel === "≤", closed: rel === "≤" || rel === "≥", v: v }; }
+  function cmpJoin(H, join, V) {   // the halves { up, closed, v } joined by "and" / "or": { kind, say, B, shade }
+    V = V || "x"; var gl = function (h, lt) { return lt ? (h.closed ? "≤" : "<") : (h.closed ? "≥" : ">"); };
+    var one = function (h) { return { kind: "one", say: V + " " + gl(h, h.up) + " " + sg(h.v), B: [{ v: h.v, closed: h.closed }], shade: h.up ? "left" : "right" }; };
+    if (H.length === 1) return one(H[0]);
+    var ups = H.filter(function (h) { return h.up; }), dns = H.filter(function (h) { return !h.up; });
+    var pick = function (A, tight) {   // two halves pointing the same way: the tighter (and) or the looser (or) one
+      var a = A[0], b = A[1], c = cmpF(a.v, b.v); if (!c) return { up: a.up, v: a.v, closed: join === "and" ? a.closed && b.closed : a.closed || b.closed };
+      var smaller = c < 0 ? a : b, bigger = c < 0 ? b : a; return (a.up === tight) ? smaller : bigger;
+    };
+    if (ups.length === 2) return one(pick(ups, join === "and"));
+    if (dns.length === 2) return one(pick(dns, join !== "and"));
+    var hi = ups[0], lo = dns[0], c = cmpF(lo.v, hi.v);
+    if (join === "and") {
+      if (c < 0) return { kind: "one", say: sg(lo.v) + " " + gl(lo, true) + " " + V + " " + gl(hi, true) + " " + sg(hi.v), B: [{ v: lo.v, closed: lo.closed }, { v: hi.v, closed: hi.closed }], shade: "between" };
+      if (c === 0 && lo.closed && hi.closed) return { kind: "one", say: V + " = " + sg(lo.v), B: [{ v: lo.v, closed: true }], shade: "none" };
+      return { kind: "none", say: "no solution", B: [], shade: "none" };
+    }
+    if (c > 0) return { kind: "one", say: V + " " + gl(hi, true) + " " + sg(hi.v) + " or " + V + " " + gl(lo, false) + " " + sg(lo.v), B: [{ v: hi.v, closed: hi.closed }, { v: lo.v, closed: lo.closed }], shade: "outside" };
+    if (c === 0 && !lo.closed && !hi.closed) return { kind: "one", say: V + " ≠ " + sg(lo.v), B: [{ v: lo.v, closed: false }], shade: "all" };
+    return { kind: "inf", say: "all real numbers", B: [], shade: "all" };
+  }
+  function cmpEnd() {   // both inequalities of a compound are solved: their answers joined
+    if (!EXP || !EXP.cmp || !EXP.zp || EXP.zp.done.some(function (d) { return !d; })) return null;
+    var H = EXP.zp.eqs.map(function (e) { var xl = e.L.length === 1 && e.L[0].k === "x", c = (xl ? e.R : e.L)[0]; return cmpHalf(xl ? e.rel : relRev(e.rel), c && c.n ? c.n : mk(0)); });
+    return cmpJoin(H, EXP.cmp.join, EXP.vk);
+  }
+  function cmpWant() {   // the answer, worked out from the parts as typed
+    var H = EXP.cmp.parts.map(function (q) { var so = eqSolution(q.L, q.R, q.rel); return so.kind === "one" ? cmpHalf(so.rel, so.x) : null; }).filter(Boolean);
+    return H.length ? cmpJoin(H, EXP.cmp.join, EXP.vk) : null;
+  }
+  function cmpRead(txt, V) {   // a typed answer: -2 < x ≤ 3, x < -1 or x > 4, x ≥ 2, no solution, all real numbers: the same shape as cmpJoin, or null
+    var t = normRel(String(txt).toLowerCase().replace(/−/g, "-").replace(/\s+/g, ""));
+    if (/^(no|none|nosolution)/.test(t)) return { kind: "none" }; if (/^(all|every|inf)/.test(t)) return { kind: "inf" };
+    var m3 = /^(-?[\d\/]+)([<>≤≥])([a-z])([<>≤≥])(-?[\d\/]+)$/.exec(t);
+    if (m3) { var a = parse(m3[1]), b = parse(m3[5]); if (!a || !b) return null; return cmpJoin([cmpHalf(relRev(m3[2]), a), cmpHalf(m3[4], b)], "and", V); }
+    var parts = t.split(/or/); if (parts.length > 2) return null;
+    var H = parts.map(function (u) { var q = ineqAns(u, V); return q ? cmpHalf(q.rel, q.v) : null; }); if (H.some(function (h) { return !h; })) return null;
+    return cmpJoin(H, parts.length === 2 ? "or" : "and", V);
+  }
+  function cmpSame(a, b) { if (!a || !b || a.kind !== b.kind) return false; if (a.kind !== "one") return true; return a.shade === b.shade && a.B.length === b.B.length && a.B.every(function (x, i) { return same(x.v, b.B[i].v) && x.closed === b.B[i].closed; }); }
+  function cmpInit() {   // a compound inequality, as first given: three parts (to split by tapping a sign) or two inequalities joined by "or" (already in two rows)
+    var c = EXP.orig.cmp, cp = function (o) { return JSON.parse(JSON.stringify(o)); }; EXP.cmp = c; EXP.zp = null; EXP.c3 = null;
+    if (c.c3) { EXP.c3 = cp(c.c3); EXP.zpq = false; EXP.L = cp(c.c3.M); EXP.R = cp(c.c3.B); EXP.rel = c.c3.r2; return; }
+    var rows = c.parts.map(function (q) { return { L: cp(q.L), R: cp(q.R), rel: q.rel }; });
+    EXP.zpq = true; EXP.zp = { eqs: rows, done: [false, false], act: 0 }; EXP.L = cp(rows[0].L); EXP.R = cp(rows[0].R); EXP.rel = rows[0].rel;
+  }
+  function cmpSetup(spec) {   // spec: { join, c3: { A, r1, M, r2, B } } or { join: "or", parts: [{ L, R, rel }, { L, R, rel }] }
+    if (spec.c3) spec.parts = [{ L: spec.c3.A, R: spec.c3.M, rel: spec.c3.r1 }, { L: spec.c3.M, R: spec.c3.B, rel: spec.c3.r2 }];
+    var first = spec.parts[0]; EXP.orig = { L: JSON.parse(JSON.stringify(first.L)), R: JSON.parse(JSON.stringify(first.R)), rel: first.rel, cmp: JSON.parse(JSON.stringify(spec)) };
+    EXP.lit = EXP.av = EXP.sq = EXP.dvq = EXP.grq = EXP.quad = false; cmpInit();
+  }
+  function cmpSplit() {   // a sign of the three-part inequality was tapped
+    if (!EXP.c3 || locked || busy || EXP.ask) return; var c = EXP.c3, cp = function (o) { return JSON.parse(JSON.stringify(o)); };
+    hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: EXP.rel, z: null, c3: c })); updUndo();
+    var rows = [{ L: cp(c.A), R: cp(c.M), rel: c.r1 }, { L: cp(c.M), R: cp(c.B), rel: c.r2 }];
+    EXP.c3 = null; EXP.zpq = true; EXP.zpNew = true; EXP.zp = { eqs: rows, done: [false, false], act: 0 }; EXP.L = cp(rows[0].L); EXP.R = cp(rows[0].R); EXP.rel = rows[0].rel;
+    closeAsk(false); eqRender(); note("A three-part inequality is two inequalities joined by “and”: " + exSay(rows[0].L) + " " + rows[0].rel + " " + exSay(rows[0].R) + " and " + exSay(rows[1].L) + " " + rows[1].rel + " " + exSay(rows[1].R) + ". Solve each one.");
+  }
+  function cmpRender(R) {   // the three-part inequality, its two signs clickable
+    var c = EXP.c3, live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked;
+    R.innerHTML = "<span class=\"exT\">" + exHtml(c.A) + "</span><span class=\"exEq c3Rel" + (live ? " grab" : "") + "\" title=\"Tap to split into two inequalities\">" + relGlyph(c.r1) + "</span><span class=\"exT\">" + exHtml(c.M) + "</span><span class=\"exEq c3Rel" + (live ? " grab" : "") + "\" title=\"Tap to split into two inequalities\">" + relGlyph(c.r2) + "</span><span class=\"exT\">" + exHtml(c.B) + "</span>";
+    if (live) [].forEach.call(R.querySelectorAll(".c3Rel"), function (e) { e.addEventListener("click", function () { if (!EXP.ask) cmpSplit(); }); });
+  }
+  function cmpParse(raw) {   // a typed compound inequality: the spec for cmpSetup, an error message, or null when it is not one
+    var s = normRel(String(raw).toLowerCase().replace(/−/g, "-").replace(/\s+/g, "")), n = (s.match(/[<>≤≥]/g) || []).length, P = function (u) { var r; exDenOK = false; try { r = exParse(u); } finally { exDenOK = true; } return r; };
+    var hasOr = /[0-9a-z)]or[0-9a-z(\-]/.test(s) && /or/.test(s), hasAnd = /and/.test(s);
+    if (!(hasOr || hasAnd) && n !== 2) return null;
+    var part = function (u) { var sr = splitRel(u); if (!sr || sr.rel === "=") return "Each part needs one of < > ≤ ≥, like 2x-1<3."; var L = P(sr.l), R = P(sr.r); if (typeof L === "string" || typeof R === "string") return "I couldn't read " + u + "."; return { L: L, R: R, rel: sr.rel }; };
+    var spec;
+    if (hasOr || hasAnd) {
+      var bits = s.split(hasOr ? "or" : "and"); if (bits.length !== 2) return "Type two inequalities joined by or, like 2x-1<3 or x+4>9.";
+      var a = part(bits[0]), b = part(bits[1]); if (typeof a === "string") return a; if (typeof b === "string") return b;
+      spec = { join: hasOr ? "or" : "and", parts: [a, b] };
+    } else {
+      var i1 = s.search(/[<>≤≥]/), r1 = s[i1], rest = s.slice(i1 + 1), i2 = rest.search(/[<>≤≥]/), r2 = rest[i2];
+      var A = P(s.slice(0, i1)), M = P(rest.slice(0, i2)), B = P(rest.slice(i2 + 1));
+      if (typeof A === "string" || typeof M === "string" || typeof B === "string") return "Type it like -3<2x+1<=7, with the variable in the middle.";
+      if (((r1 === "<" || r1 === "≤") ? 1 : -1) !== ((r2 === "<" || r2 === "≤") ? 1 : -1)) return "Both signs of a three-part inequality point the same way, like -3<2x+1<=7.";
+      if (A.concat(B).some(function (t) { return t.k !== "c"; })) return "Put the variable only in the middle part, like -3<2x+1<=7.";
+      spec = { join: "and", c3: { A: A, r1: r1, M: M, r2: r2, B: B } };
+    }
+    var all = spec.c3 ? spec.c3.M : spec.parts[0].L.concat(spec.parts[0].R, spec.parts[1].L, spec.parts[1].R), vs = Object.keys(eqVars(all, {}));
+    if (vs.length !== 1 || /\^/.test(vs[0])) return "Use one variable, to the first power, like -3<2x+1<=7 or 2x-1<3 or x+4>9.";
+    if (all.some(function (t) { return t.k === "g" && (t.b || t.abs); })) return "That kind of compound inequality isn't ready yet. Try one like -3<2x+1<=7.";
+    spec.vk = vs[0]; return spec;
+  }
+  function cmpCreate(err) {
+    var sp = cmpParse($("crIn").value); if (!sp) return false; if (typeof sp === "string") { err.textContent = sp; return true; }
+    EXP = { eq: true, src: $("crIn").value, ask: null, vk: sp.vk, L: [], R: [], rel: "<", zp: null }; cmpSetup(sp);
+    SOL.lvl = rung("eq", function (r) { return r.cmp === (sp.join === "or" ? 3 : sp.c3 && sp.c3.M.some(function (t) { return t.k === "x" && t.n.n < 0; }) ? 2 : 1); }); SOL.fresh = false;
+    $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your compound inequality is in. Choose how you want to work on it.");
+    return true;
+  }
+  function eqCmp(n) {   // a variant: 1 -3 < x + 2 ≤ 5, 4 ≤ 3x - 2 < 13; 2 a negative number in front of x: -5 < 3 - 2x ≤ 7; 3 "or": 2x - 1 < 3 or x + 4 > 9
+    var X = function (k) { return { k: "x", v: "x", n: mk(k) }; }, C = function (k) { return { k: "c", n: mk(k) }; }, lt = function () { return rnd(2) ? "<" : "≤"; }, gt = function () { return rnd(2) ? ">" : "≥"; };
+    for (;;) {
+      var x1 = nz(6), x2 = nz(8); if (x2 <= x1 + 1) continue;
+      if (n < 3) {
+        var a = n === 1 ? (rnd(2) ? 1 : 2 + rnd(3)) : -(1 + rnd(4)), b = nz(7), M = [X(a), C(b)]; if (rnd(2)) M.reverse();
+        var lo = a > 0 ? a * x1 + b : a * x2 + b, hi = a > 0 ? a * x2 + b : a * x1 + b;
+        return { join: "and", c3: { A: [C(lo)], r1: lt(), M: M, r2: lt(), B: [C(hi)] } };
+      }
+      var a1 = rnd(2) ? 1 : 2 + rnd(3), b1 = nz(6), a2 = (rnd(3) ? 1 : -1) * (1 + rnd(3)), b2 = nz(6);
+      var p1 = { L: [X(a1), C(b1)], R: [C(a1 * x1 + b1)], rel: lt() }, p2 = { L: [X(a2), C(b2)], R: [C(a2 * x2 + b2)], rel: a2 > 0 ? gt() : lt() };
+      if (!p1.R[0].n.n || !p2.R[0].n.n) continue;
+      return { join: "or", parts: rnd(2) ? [p1, p2] : [p2, p1] };
+    }
   }
   function avIneqEnd() {   // an absolute value inequality whose two inequalities are both solved: { kind, say, B, shade } (between the answers for < and ≤, outside them for > and ≥)
     if (!EXP || !EXP.av || !EXP.zp || !eqIneq() || EXP.zp.done.some(function (d) { return !d; })) return null;
@@ -2494,6 +2608,7 @@
   }
   function eqRender0(hot) {
     zpPaint();
+    if (EXP.c3) { cmpRender($("exRow")); return; }
     var z = EXP.zp; eqRenderRow($("exRow"), hot, z ? z.act : -1, !!(z && z.done[z.act]));
   }
   function eqRenderRow(R, hot, idx, fin) {   // one equation in a row; idx is its place in a split (the zero product property), -1 when not split
@@ -2759,7 +2874,7 @@
       var zz = EXP.zp, sol = exSay(EXP.L) + " " + (EXP.rel || "=") + " " + exSay(EXP.R); zz.eqs[zz.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)), rel: EXP.rel || "=" }; zz.done[zz.act] = true;
       var left = zz.done.filter(function (d) { return !d; }).length;
       if (left) { closeAsk(false); eqRender(); note((EXP.rel !== "=" ? "One inequality solved: " : "One answer: ") + sol + ". " + (left > 1 ? "Solve the other equations, in any order." : EXP.rel !== "=" ? "Now solve the other inequality." : "Now solve the other equation.")); return; } EXP.zp.eqs[EXP.zp.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)), rel: EXP.rel || "=" }; EXP.zp.done[EXP.zp.act] = true;
-      var aiE = avIneqEnd(); if (aiE && aiE.kind !== "one") kind = aiE.kind; }
+      var aiE = avIneqEnd() || cmpEnd(); if (aiE && aiE.kind !== "one") kind = aiE.kind; }
     locked = true; eqRender(); closeAsk(false); nlEq(kind);
     var iq = eqIneq(), txt = kind === "one" ? "Solved: " + (EXP.zp ? zpSay() : exSay(EXP.L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(EXP.R) : exSay(EXP.R))) + "." : kind === "none" ? (iq ? "No solution: the inequality is never true." : EXP.av ? "No solution: an absolute value is a distance from 0, so it can never be negative." : "No solution: the two sides can never be equal.") : (iq ? "Every number is a solution: the inequality is always true." : "Infinitely many solutions: the two sides are always equal.");
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note(txt);
@@ -2769,9 +2884,16 @@
   function eqUndo() {
     nlHide();
     distHide();
-    hideKind(); var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; if (EXP.grq) EXP.zpq = !!(EXP.zp || zpOf(EXP.L, EXP.R)); else if (EXP.sq || EXP.av) EXP.zpq = !!EXP.zp; locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
+    hideKind(); var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; EXP.c3 = h.c3 || null; if (EXP.cmp) EXP.zpq = !!EXP.zp; if (EXP.grq) EXP.zpq = !!(EXP.zp || zpOf(EXP.L, EXP.R)); else if (EXP.sq || EXP.av) EXP.zpq = !!EXP.zp; locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
   }
   function eqCheckSolo() {
+    if (EXP.cmp) {   // a compound inequality: -2 < x ≤ 3, x < -1 or x > 4, no solution, all real numbers
+      var mc = $("exMsg"), wc = cmpWant(), gc = cmpRead($("exSoloIn").value, EXP.vk || "x");
+      if (!gc) { mc.className = "bad"; mc.textContent = EXP.cmp.join === "or" ? "Type your answer like x < −1 or x > 4." : "Type your answer like −2 < x ≤ 3."; return; }
+      if (!cmpSame(gc, wc)) { mc.className = "bad"; mc.textContent = "Not quite. Check your work and try again."; return; }
+      EXP.c3 = null; var H0 = EXP.cmp.parts.map(function (q) { var so = eqSolution(q.L, q.R, q.rel); return { L: [{ k: "x", v: EXP.vk || "x", n: mk(1) }], R: [{ k: "c", n: so.x || mk(0) }], rel: so.rel || "<" }; });
+      EXP.zp = { eqs: H0, done: [true, false], act: 1 }; EXP.zpq = true; EXP.L = H0[1].L; EXP.R = H0[1].R; EXP.rel = H0[1].rel; eqEnd(wc.kind === "one" ? "one" : wc.kind); $("exSolo").hidden = true; return;
+    }
     if (EXP.av && eqIneq()) {   // an absolute value inequality: -2 < x < 4, x < -2 or x > 4, no solution, all real numbers
       var mi = $("exMsg"), wi = avIneqWant(EXP.orig.L, EXP.orig.R, EXP.orig.rel), ti2 = normRel($("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, "")), vi = EXP.vk || "x", okI = false;
       var hl = function (t) { var q = ineqAns(t, vi); return q ? { up: q.rel === "<" || q.rel === "\u2264", closed: q.rel === "\u2264" || q.rel === "\u2265", v: q.v } : null; };
@@ -2842,6 +2964,7 @@
   }
   function eqNextStep() {
     var sides = ["L", "R"], q, i, j, S;
+    if (EXP.c3) return { tap: "#exRow .c3Rel", cap: "A three-part inequality is two inequalities. Tap a sign to split it.", run: function () { cmpSplit(); } };
     if (EXP.zp && EXP.zp.done[EXP.zp.act]) { var nx = EXP.zp.done.indexOf(false); if (nx >= 0) zpFocus(nx); }
     var avs = EXP.av ? avFind() : null;
     if (avs) {   // isolate the absolute value, tap a bar, click the ±
@@ -2927,6 +3050,7 @@
   }
   function eqCreate() {
     var s = $("crIn").value.toLowerCase().replace(/−/g, "-"), sr = splitRel(s), p = sr ? [sr.l, sr.r] : [], rel = sr ? sr.rel : "=", err = $("crErr");
+    if (cmpCreate(err)) return;   // -3 < 2x + 1 <= 7, or 2x - 1 < 3 or x + 4 > 9
     if (p.length !== 2 || !p[0].trim() || !p[1].trim()) { err.textContent = "Type an equation with one = sign (or < > ≥ ≤), like 3x=x+2 or 2x+1<x+6."; return; }
     if (/\|/.test(s)) { eqCreateAbs(s, rel, err); return; }
     if (/[a-wyz]/.test(s)) { eqCreateLit(p, rel, err); return; }
@@ -2983,6 +3107,7 @@
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
   }
   function eqWanted(s) {   // is this typed equation one for this module? (the variable on both sides, or a variable inside parentheses)
+    if (cmpParse(s)) return true;   // a compound inequality
     s = s.toLowerCase(); var sr = splitRel(s); if (!sr) return false; var p = [sr.l, sr.r];
     if (/\|/.test(s)) return true;   // |2x - 3| = 7: an absolute value
     if (/[a-wyz]/.test(s)) return true;   // letters other than x are coefficients
@@ -3099,6 +3224,7 @@
     { e: "pane", lv: 0, ineq: 1 }, { e: "pane", lv: 1, ineq: 1 }, { e: "pane", lv: 2, ineq: 1 }, { e: "pane", lv: 3, ineq: 1 }, { e: "pane", lv: 4, ineq: 1 }, { e: "eq", fd: 3, ineq: 1 },
     { e: "eq", lv: 0, ineq: 1 }, { e: "eq", lv: 1, ineq: 1 }, { e: "eq", lv: 2, ineq: 1 }, { e: "eq", lv: 3, ineq: 1 }, { e: "eq", lv: 4, ineq: 1 }, { e: "eq", lv: 5, ineq: 1, neg: 1 },
     { e: "eq", special: true, ineq: 1 },                                                                                                        // 2.4 multi-step inequalities, never / always true
+    { e: "eq", cmp: 1 }, { e: "eq", cmp: 2 }, { e: "eq", cmp: 3 },                                                                             // 2.5 compound inequalities: -3 < x + 2 <= 5, a negative in front of x, "or"
     { e: "eq", av: 1, ineq: 1 }, { e: "eq", av: 2, ineq: 1 }, { e: "eq", av: 3, ineq: 1 }, { e: "eq", av: 4, ineq: 1 },                         // 2.6 absolute value inequalities
     { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 },                                         // 7.4 polynomial equations in factored form
     { e: "eq", grp: 3 }, { e: "eq", grp: 4 },                                                                                                   // 7.5 factoring x^2 + bx + c, 7.6 factoring ax^2 + bx + c
@@ -3268,8 +3394,9 @@
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
       if (st.e === "eq") {
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
-        EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: st.grp > 2 ? grTriGen(st.grp) : grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
+        EXP.cmp = null; EXP.c3 = null; EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: st.grp > 2 ? grTriGen(st.grp) : grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
         EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)), rel: EXP.rel }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; EXP.vk = "x";
+        if (st.cmp) cmpSetup(eqCmp(st.cmp));
       } else { EXP = null; useCustom = st.one ? solverOne() : st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); if (st.one && st.ineq) useCustom[0].rel = eqPickRel(); }
     }
     $("modePick").hidden = true;
@@ -4537,7 +4664,7 @@
   }
   function nlEq(kind) {   // the both-sides engine, once an inequality is finished
     if (!BUILT[act] || !BUILT[act].solver || !eqIneq() || EXP.lit) return;
-    if (EXP.zp) { var ai = avIneqEnd(); if (ai) nlDraw(ai.B, ai.shade, ai.say); else if (kind !== "one") nlShow(kind); return; }
+    if (EXP.zp) { var ai = avIneqEnd() || cmpEnd(); if (ai) nlDraw(ai.B, ai.shade, ai.say); else if (kind !== "one") nlShow(kind); return; }
     if (kind !== "one") { nlShow(kind); return; }
     var L = EXP.L, R = EXP.R, rel = EXP.rel || "=", isV = function (a) { return a.length === 1 && a[0].k === "x"; }, isC = function (a) { return a.length === 1 && a[0].k === "c"; };
     if (isV(L) && isC(R)) nlShow("one", R[0].n, rel); else if (isV(R) && isC(L)) nlShow("one", L[0].n, relRev(rel));
