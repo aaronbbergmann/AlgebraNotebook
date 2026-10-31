@@ -1588,7 +1588,7 @@
   }
   function exSay(its) {   // plain text, for the log and the prompts
     if (its.length === 1 && its[0].k !== "g" && its[0].n.n === 0) return "0";
-    var d = document.createElement("div"); d.innerHTML = exHtml(its).replace(/<sup>(\d+)<\/sup>/g, "^$1").replace(/<span class="fr"><span>([\s\S]*?)<\/span><span>([\s\S]*?)<\/span><\/span>/g, function (_, a, b) { var A = a.replace(/<[^>]*>/g, ""), B = b.replace(/<[^>]*>/g, ""); return (A.length > 1 && /[+\u2212]/.test(A) ? "(" + A + ")" : A) + "/" + (B.length > 1 ? "(" + B + ")" : B); }); return d.textContent.replace(/([+−])/g, " $1 ").replace(/^ − /, "−").replace(/\( − /g, "(−").trim();
+    var d = document.createElement("div"); d.innerHTML = exHtml(its).replace(/<sup>(\d+)<\/sup>/g, "^$1").replace(/<span class="fr"><span>([\s\S]*?)<\/span><span>([\s\S]*?)<\/span><\/span>/g, function (_, a, b) { var A = a.replace(/<[^>]*>/g, ""), B = b.replace(/<[^>]*>/g, ""); return (A.length > 1 && /[+\u2212]/.test(A) ? "(" + A + ")" : A) + "/" + (B.length > 1 ? "(" + B + ")" : B); }); return d.textContent.replace(/([+−])/g, " $1 ").replace(/^ − /, "−").replace(/\( − /g, "(−").replace(/\| − /g, "|−").replace(/^\|\s+/, "|").trim();
   }
   function exPair(i, j) { var its = EXP.items; return i < j ? [its[i], its[j]] : [its[j], its[i]]; }
   // a minus sign in front of parentheses is the drag handle that distributes it (it means -1): -(x + 1) becomes -x - 1
@@ -1600,16 +1600,17 @@
   function exLines() {
     if (!EXP) return [];
     if (!EXP.eq) return [exSay(EXP.items)];
-    var z = EXP.zp, one = function (L, R) { return exSay(L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(R) : exSay(R)); };
-    return z ? z.eqs.map(function (e, k) { return k === z.act ? one(EXP.L, EXP.R) : one(e.L, e.R); }) : [one(EXP.L, EXP.R)];
+    var z = EXP.zp, one = function (L, R, rel) { return exSay(L) + " " + (rel || "=") + " " + (EXP.lit ? litSay(R) : exSay(R)); };   // each row of a split keeps its own sign
+    return z ? z.eqs.map(function (e, k) { return k === z.act ? one(EXP.L, EXP.R, EXP.rel) : one(e.L, e.R, e.rel); }) : [one(EXP.L, EXP.R, EXP.rel)];
   }
   function exWork() {
     if (!EXP || !$("exBox") || $("exBox").hidden) return;
-    var L = exLines(), key = L.join("\n");
-    if (!steps.length) { steps.push({ eqs: L, ms: L.map(function () { return ""; }) }); works.push({ steps: steps, label: MODES[mode] + " mode, Play Solve" }); if (works.length > 300) works.shift(); }
+    var L = exLines(), sp = !!(EXP.eq && EXP.zp), ai = sp && locked ? avIneqEnd() : null, key = L.join("\n") + (ai ? "\n" + ai.say : "");
+    var mkS = function () { var o = { eqs: L, ms: L.map(function () { return ""; }) }; if (sp) o.split = true; if (ai) o.fin = ai.say; return o; };
+    if (!steps.length) { steps.push(mkS()); works.push({ steps: steps, label: MODES[mode] + " mode, Play Solve" }); if (works.length > 300) works.shift(); }
     else {
-      var k = -1; for (var i = steps.length - 1; i >= 0; i--) if (steps[i].eqs.join("\n") === key) { k = i; break; }
-      if (k >= 0) steps.length = k + 1; else steps.push({ eqs: L, ms: L.map(function () { return ""; }) });
+      var k = -1; for (var i = steps.length - 1; i >= 0; i--) if (steps[i].eqs.join("\n") + (steps[i].fin ? "\n" + steps[i].fin : "") === key) { k = i; break; }
+      if (k >= 0) steps.length = k + 1; else steps.push(mkS());
     }
     $("show").hidden = !workAny();
   }
@@ -4033,7 +4034,18 @@
   }
 
   // ---- show work: "Make One Change And Recopy" (just the equations) ----
-  function workHTML(st) {
+  function workHTML(st) {   // once an equation splits, its rows become side-by-side columns, each solved down its own column
+    var out = [], q = 0, esc = function (e) { return String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&(?:amp|lt|gt);|[a-z]/g, function (m) { return m.length > 1 ? m : "<i>" + m + "</i>"; }); };
+    while (q < st.length) {
+      if (!st[q].split) { out.push(workHTML0([st[q]])); q++; continue; }
+      var n = st[q].eqs.length, blk = []; while (q < st.length && st[q].split && st[q].eqs.length === n) blk.push(st[q++]);
+      var cols = []; for (var c = 0; c < n; c++) { var col = []; blk.forEach(function (w) { if (col[col.length - 1] !== w.eqs[c]) col.push(w.eqs[c]); }); cols.push(col); }
+      out.push("<section><div class=\"wcols\" style=\"display:grid;grid-template-columns:repeat(" + n + ",auto);justify-content:start;column-gap:2.5em;margin-left:4.2em\">" + cols.map(function (col) { return "<div class=\"wcol\" style=\"border-left:" + "1px solid #ccd;padding-left:.8em\">" + col.map(function (e) { return "<div class=\"r\" style=\"padding:.35rem 0\"><span>" + esc(e) + "</span></div>"; }).join("") + "</div>"; }).join("").replace("border-left:1px solid #ccd;padding-left:.8em", "padding-left:0") + "</div></section>");
+      var last = blk[blk.length - 1]; if (last.fin) out.push("<section><div class=\"r\"><span class=\"m\"></span><span>" + esc(last.fin) + "</span></div></section>");
+    }
+    return out.join("");
+  }
+  function workHTML0(st) {
     return st.map(function (w) {
       if (w.txt) return "<section>" + w.eqs.map(function (e) { return "<div class=\"r" + (w.cls ? " " + w.cls : "") + "\" style=\"font:1rem system-ui,sans-serif\"><span>" + String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</span></div>"; }).join("") + "</section>";
       return "<section>" + w.eqs.map(function (e, j) { return "<div class=\"r" + (w.cls ? " " + w.cls : "") + "\"><span class=\"m\">" + ((w.ms && w.ms[j]) || "") + "</span><span>" + e.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&(?:amp|lt|gt);|[a-z]/g, function (m) { return m.length > 1 ? m : "<i>" + m + "</i>"; }) + "</span></div>"; }).join("") + "</section>";
