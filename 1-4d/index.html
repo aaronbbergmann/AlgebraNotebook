@@ -2459,7 +2459,7 @@
   }
   function eqDivGroup(S, i) {   // the number in front of the parentheses dragged to the other side: every term on both sides is divided by it
     if (locked || busy || EXP.ask) return;
-    var g = EXP[S][i]; if (!g || g.k !== "g" || EXP.zpq) return;
+    var g = EXP[S][i]; if (!g || g.k !== "g" || g.abs || g.pm || zpOf(EXP.L, EXP.R)) return;   // (a row of a split, like −(2u − 2) ≥ 6, can be divided by −1)
     if (EXP.lit || litAny(EXP.L.concat(EXP.R))) { note("Dividing both sides by a number in front of parentheses works without letters for now."); return; }
     var a = g.m; if (!a.n || same(a, mk(1))) return;
     var N = eqClone(), ia = inv(a), dv = function (its) { return its.map(function (u) { if (u.k === "g") u.m = mul(u.m, ia); else u.n = mul(u.n, ia); return u; }); }, flip = a.n < 0 && N.rel !== "=";
@@ -2467,7 +2467,7 @@
     var at = N[S][i], gone = same(at.m, mk(1)) && !at.b && !at.abs; if (gone) N[S].splice.apply(N[S], [i, 1].concat(at.items));
     N.L = eqNorm(N.L); N.R = eqNorm(N.R); if (flip) N.rel = relRev(N.rel);
     var msg = "Divide both sides by " + sg(a) + ": every term on both sides is divided by " + sg(a) + "." + (flip ? " Dividing by a negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "." : "") + (gone ? " Nothing is left in front of the parentheses, so they can go." : "");
-    if (mode === "calculate") { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, "Divide both sides by " + sg(a) + ". Type the new equation:"); $("askIn").placeholder = "e.g. 2 + x + 3 = 9"; return; }
+    if (mode === "calculate") { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, "Divide both sides by " + sg(a) + ". Type the new " + ((EXP.rel || "=") !== "=" ? "inequality:" : "equation:")); $("askIn").placeholder = "e.g. 2 + x + 3 = 9"; return; }
     eqSet(N, msg);
   }
   function dvOK(L, R) {   // one set of parentheses with a whole number in front, and every other term divides evenly by it: 8 + 4(x + 3) = 36 -> { S, i }
@@ -4342,7 +4342,7 @@
     // one boundary sits in the middle with two ticks on either side; two boundaries split the line into thirds, with two ticks outside each
     var box = $("nlBox"); if (!box) return;
     var W = 600, y = 22, e0 = 14, e1 = W - 14, px = B.length === 2 ? [W / 3, 2 * W / 3] : B.length === 1 ? [W / 2] : [], s = B.length === 2 ? W / 9 : W / 7, tk = [];
-    if (B.length === 2) tk = [px[0] - 2 * s, px[0] - s, px[1] + s, px[1] + 2 * s]; else { var m0 = px.length ? px[0] : W / 2; tk = [m0 - 2 * s, m0 - s, m0 + s, m0 + 2 * s]; if (!px.length) tk.push(m0); }
+    if (B.length === 2) tk = [px[0] - 2 * s, px[0] - s, px[0] + s, px[0] + 2 * s, px[1] + s, px[1] + 2 * s];   // evenly spaced, two between the boundaries too else { var m0 = px.length ? px[0] : W / 2; tk = [m0 - 2 * s, m0 - s, m0 + s, m0 + 2 * s]; if (!px.length) tk.push(m0); }
     var ln = function (x1, x2, c) { return "<line class=\"" + c + "\" x1=\"" + x1 + "\" y1=\"" + y + "\" x2=\"" + x2 + "\" y2=\"" + y + "\"/>"; };
     var arrow = function (x, dir) { return "<path class=\"nlAr\" d=\"M" + (x + dir * 14) + " " + y + " L" + x + " " + (y - 9) + " L" + x + " " + (y + 9) + " Z\"/>"; };
     var shL = shade === "all" || shade === "left" || shade === "outside", shR = shade === "all" || shade === "right" || shade === "outside";   // a shaded end gets the solid arrow instead of the axis's own arrowhead
