@@ -292,6 +292,11 @@
   .eqKeys button:hover{background:#EEF1F6}.eqKeys button:active{background:#DCE8F7}
   .eqKeys button.eqGo{font:600 .92rem system-ui,sans-serif;background:var(--plus);border-color:var(--plus);color:#fff}.eqKeys button.eqGo:hover{background:var(--plus-hover)}
   .eqKeys i{font-style:italic}.eqKeys sup{font-size:.7em}
+  .crKeys{display:flex;gap:.4rem;justify-content:center;margin-top:.5rem}
+  .crKeys button{min-width:2.6rem;height:2.2rem;padding:0 .6rem;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 1.15rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;cursor:pointer}
+  .crKeys button:hover{background:#EEF1F6}.crKeys button:active{background:#DCE8F7}
+  .crKeys button.eqGo{font:600 .92rem system-ui,sans-serif;background:var(--plus);border-color:var(--plus);color:#fff}.crKeys button.eqGo:hover{background:var(--plus-hover)}
+  .crKeys i{font-style:italic}
   .pgQcue{font:400 .9rem system-ui,sans-serif;color:#5B6577;margin-top:.15rem}
   .pgQcue .cueOk{color:#1E9E4A;font-weight:700}
   .pgQcue .lm{font:400 1.05em "LM","Latin Modern Roman","CMU Serif",Georgia,serif}
@@ -739,7 +744,8 @@
       <section class="nlBox" id="nlBox" hidden aria-label="The solutions on a number line"></section>
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
-        <div class="row" style="flex-wrap:nowrap"><input id="crIn" autocomplete="off" aria-label="Equation"><button class="btn" id="crAdd">Add</button></div>
+        <div class="row" style="flex-wrap:nowrap"><input id="crIn" autocomplete="off" aria-label="Equation"></div>
+        <div class="crKeys" id="crKeys" role="group" aria-label="Equation keys"><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^2" aria-label="Insert ^2 (squared)">^2</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" class="eqGo" id="crAdd">Submit</button></div>
         <div class="err" id="crErr"></div>
       </section>
       <section class="panel modePick" id="modePick" hidden aria-label="Choose a mode"></section>
@@ -2821,9 +2827,9 @@
     { e: "eq", lv: 3 }, { e: "eq", lv: 3, ineq: 1 }, { e: "eq", lv: 4 }, { e: "eq", lv: 4, ineq: 1 },                                          // the variable on both sides, parentheses, fractions
     { e: "eq", lv: 5 }, { e: "eq", lv: 5, ineq: 1, neg: 1 }, { e: "eq", lv: 6 }, { e: "eq", dv: 1 },                                          // parentheses with a minus sign (the inequality has a negative number in front: the sign turns)
     { e: "eq", special: true }, { e: "eq", special: true, ineq: 1 },                                                                          // no solution / infinitely many, then never / always true
+    { e: "eq", av: 1 }, { e: "eq", av: 2 }, { e: "eq", av: 3 }, { e: "eq", av: 4 },                                                           // absolute values: |x + 3| = 5, |2x - 3| = 7, move and divide first, no solution / one answer
     { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 },   // letters as coefficients (no inequalities: a letter could be negative)
-    { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 }, { e: "eq", grp: 1 }, { e: "eq", grp: 2 }, { e: "eq", sq: 1 }, { e: "eq", sq: 2 }, { e: "eq", sq: 3 },
-    { e: "eq", av: 1 }, { e: "eq", av: 2 }, { e: "eq", av: 3 }, { e: "eq", av: 4 }                                                           // absolute values: |x + 3| = 5, |2x - 3| = 7, move and divide first, no solution / one answer
+    { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 }, { e: "eq", grp: 1 }, { e: "eq", grp: 2 }, { e: "eq", sq: 1 }, { e: "eq", sq: 2 }, { e: "eq", sq: 3 }
   ];
   function rung(e, f) { for (var i = 0; i < LADDER.length; i++) if (LADDER[i].e === e && f(LADDER[i])) return i; return 0; }
   function paneUnred(q) {   // the last step divides a whole number by a whole number that shares a factor with it, and the answer is not a whole number
@@ -4229,7 +4235,7 @@
   function svOn() { return SV !== "x" && !!BUILT[act] && !!BUILT[act].solver; }
   function svTitle() { return !(EXP && !EXP.eq) ? "Solve for " + SV : "Solve"; }
   (function () {
-    var RX = /(?<![A-Za-z])x(?![A-Za-z])/g, skipSel = ".ctl-sel,#actList,.eqKeys,script,style,textarea";
+    var RX = /(?<![A-Za-z])x(?![A-Za-z])/g, skipSel = ".ctl-sel,#actList,.eqKeys,.crKeys,script,style,textarea";
     function fixText(n) {
       if (!svOn()) return; var t = n.nodeValue; if (!t || t.indexOf("x") < 0) return; var e = n.parentElement; if (e && e.closest(skipSel)) return;
       var u = t.replace(RX, SV); if (u !== t) n.nodeValue = u;
@@ -4851,6 +4857,12 @@
 
   $("lesson").addEventListener("change", function () { msSave(); if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; wfCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
   $("crAdd").addEventListener("click", crAdd);
+  $("crKeys").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the box
+  $("crKeys").addEventListener("click", function (e) {   // x, ^2 and | type into the Create box, where the cursor is
+    var b = e.target.closest("button[data-ins]"), el = $("crIn"); if (!b) return;
+    var i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd;
+    el.focus(); el.setRangeText(b.dataset.ins, i, j, "end"); el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
   $("exSoloGo").addEventListener("click", exCheckSolo); $("exSoloIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); });
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
   $("ansGo").addEventListener("click", checkAnswer);
