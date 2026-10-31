@@ -998,7 +998,7 @@
   function degOK() { return !lastDeg && (prog[LK() + ":" + mode + ":one"] || 0) >= 1; }
   function makeProblem() {
     if (SUB()) return generateSub(mode === "demo" ? 1 : 0);
-    if (lesson === 1 && BUILT[act].solver) { SOL.fresh = false; return solverEq(SOL.lvl, mode === "demo"); }
+    if (lesson === 1 && BUILT[act].solver) { SOL.fresh = false; var st0 = LADDER[SOL.lvl] || {}; if (st0.one) return solverOne(); return st0.e === "pane" && st0.lv != null ? (st0.ineq ? paneIneq(st0.lv, mode === "demo") : solverEq(st0.lv, mode === "demo")) : solverEq(0, mode === "demo"); }
     if (lesson === 1) return generate1();
     var dm = mode === "demo" ? curDm : 0;
     if (!dm && mode !== "create" && degOK() && Math.random() < 0.2) { lastDeg = true; return generateDeg(Math.random() < 0.5 ? "inf" : "none"); }
@@ -3087,25 +3087,31 @@
   }
   // THE LEVEL LADDER of Play Solve: Level Up climbs it one step at a time, and every kind of example the solver can do has a rung here.
   // Rule: whenever Play Solve learns something new (a new kind of term, step or equation), add a rung for it (and a generator branch in solverGo) so Level Up shows it.
-  var LADDER = [   // every inequality rung sits directly above the equation rung it matches (the same problem with < > ≤ ≥ in place of =)
-    { e: "pane", lv: 0 }, { e: "pane", lv: 0, ineq: 1 }, { e: "pane", lv: 1 }, { e: "pane", lv: 1, ineq: 1 }, { e: "pane", lv: 2 }, { e: "pane", lv: 2, ineq: 1 },
-    { e: "pane", lv: 3 }, { e: "pane", lv: 3, ineq: 1 }, { e: "pane", lv: 4 }, { e: "pane", lv: 4, ineq: 1 }, { e: "pane", lv: 5 }, { e: "pane", lv: 6 },   // one variable, one side (a negative coefficient turns the sign; fractions last)
-    { e: "eq", lv: 0 }, { e: "eq", lv: 0, ineq: 1 }, { e: "eq", lv: 1 }, { e: "eq", lv: 1, ineq: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 2, ineq: 1 },
-    { e: "eq", lv: 3 }, { e: "eq", lv: 3, ineq: 1 }, { e: "eq", lv: 4 }, { e: "eq", lv: 4, ineq: 1 },                                          // the variable on both sides, parentheses, fractions
-    { e: "eq", lv: 5 }, { e: "eq", lv: 5, ineq: 1, neg: 1 }, { e: "eq", lv: 6 },
-    { e: "eq", fd: 1 }, { e: "eq", fd: 1, ineq: 1 }, { e: "eq", fd: 2 }, { e: "eq", fd: 2, ineq: 1 }, { e: "eq", fd: 3 }, { e: "eq", fd: 3, ineq: 1 },   // 3: x/2 + x/3 = 5                                          // adding fractions with different denominators: x = 1/2 + 1/3, then x + 1/2 = 1/3 (move it, then add)
-    { e: "eq", dv: 1 },                                          // parentheses with a minus sign (the inequality has a negative number in front: the sign turns)
-    { e: "eq", special: true }, { e: "eq", special: true, ineq: 1 },                                                                          // no solution / infinitely many, then never / always true
-    { e: "eq", av: 1 }, { e: "eq", av: 1, ineq: 1 }, { e: "eq", av: 2 }, { e: "eq", av: 2, ineq: 1 }, { e: "eq", av: 3 }, { e: "eq", av: 3, ineq: 1 }, { e: "eq", av: 4 }, { e: "eq", av: 4, ineq: 1 },   // each absolute value inequality right above its equation                                                           // absolute values: |x + 3| = 5, |2x - 3| = 7, move and divide first, no solution / one answer
-    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 },   // letters as coefficients (no inequalities: a letter could be negative)
-    { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 }, { e: "eq", grp: 1 }, { e: "eq", grp: 2 }, { e: "eq", grp: 3 }, { e: "eq", grp: 4 }, /* 3, 4: trinomials split with the AC method */ { e: "eq", sq: 1 }, { e: "eq", sq: 2 }, { e: "eq", sq: 3 }
+  var LADDER = [   // in the order of Larson & Boswell, Big Ideas Math Algebra 1 (chapter and section of each group below)
+    { e: "pane", one: 1 }, { e: "eq", fd: 1 }, { e: "eq", fd: 2 },                                                                             // 1.1 simple (one-step) equations, with fractions
+    { e: "pane", lv: 0 }, { e: "pane", lv: 1 }, { e: "pane", lv: 2 }, { e: "pane", lv: 3 }, { e: "pane", lv: 4 }, { e: "pane", lv: 5 }, { e: "pane", lv: 6 },
+    { e: "eq", dv: 1 }, { e: "eq", fd: 3 },                                                                                                     // 1.2 multi-step equations (two steps, parentheses, fractions)
+    { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 }, { e: "eq", lv: 5 }, { e: "eq", lv: 6 },
+    { e: "eq", special: true },                                                                                                                 // 1.5 variables on both sides, no solution / infinitely many
+    { e: "eq", av: 1 }, { e: "eq", av: 2 }, { e: "eq", av: 3 }, { e: "eq", av: 4 },                                                             // 1.6 absolute value equations
+    { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 },   // 1.7 rewriting equations and formulas
+    { e: "pane", one: 1, ineq: 1 }, { e: "eq", fd: 1, ineq: 1 }, { e: "eq", fd: 2, ineq: 1 },                                                 // 2.2, 2.3 one-step inequalities (a negative number turns the sign)
+    { e: "pane", lv: 0, ineq: 1 }, { e: "pane", lv: 1, ineq: 1 }, { e: "pane", lv: 2, ineq: 1 }, { e: "pane", lv: 3, ineq: 1 }, { e: "pane", lv: 4, ineq: 1 }, { e: "eq", fd: 3, ineq: 1 },
+    { e: "eq", lv: 0, ineq: 1 }, { e: "eq", lv: 1, ineq: 1 }, { e: "eq", lv: 2, ineq: 1 }, { e: "eq", lv: 3, ineq: 1 }, { e: "eq", lv: 4, ineq: 1 }, { e: "eq", lv: 5, ineq: 1, neg: 1 },
+    { e: "eq", special: true, ineq: 1 },                                                                                                        // 2.4 multi-step inequalities, never / always true
+    { e: "eq", av: 1, ineq: 1 }, { e: "eq", av: 2, ineq: 1 }, { e: "eq", av: 3, ineq: 1 }, { e: "eq", av: 4, ineq: 1 },                         // 2.6 absolute value inequalities
+    { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 },                                         // 7.4 polynomial equations in factored form
+    { e: "eq", grp: 3 }, { e: "eq", grp: 4 },                                                                                                   // 7.5 factoring x^2 + bx + c, 7.6 factoring ax^2 + bx + c
+    { e: "eq", grp: 1 }, { e: "eq", grp: 2 },                                                                                                   // 7.8 factoring by grouping
+    { e: "eq", sq: 1 }, { e: "eq", sq: 2 }, { e: "eq", sq: 3 }                                                                                  // 9.3 solving quadratic equations using square roots
   ];
+  var EXLAD = [0, 1, 2, 3, 4, 11, 12, 7, 8, 9, 5, 6, 13, 14, 10];   // expressions, in the same book's order: like terms and the distributive property, fractions, multiplying polynomials (7.2), factoring out the GCF (7.4), trinomials (7.5, 7.6), grouping (7.8)
   function rung(e, f) { for (var i = 0; i < LADDER.length; i++) if (LADDER[i].e === e && f(LADDER[i])) return i; return 0; }
   function paneUnred(q) {   // the last step divides a whole number by a whole number that shares a factor with it, and the answer is not a whole number
     var sm = q.ks.reduce(function (t, k) { return add(t, k.k); }, mk(0)), c = add(q.c, neg(sm));
     return !q.flip && q.a.d === 1 && c.d === 1 && Math.abs(q.a.n) > 1 && gcd(c.n, q.a.n) > 1 && c.n % q.a.n !== 0;
   }
-  function ladderPane(q) { if (!isIneq(q) && paneUnred(q)) return rung("pane", function (r) { return r.lv === 6; }); if (isIneq(q)) { var n = Math.min(4, eqLevel(q)); if (q.a.n < 0 && n < 2) n = 2; return rung("pane", function (r) { return r.ineq && r.lv === n; }); } return rung("pane", function (r) { return !r.ineq && r.lv === eqLevel(q); }); }
+  function ladderPane(q) { if (!q.ks.length || (q.a.n === 1 && q.a.d === 1 && q.ks.length === 1)) return rung("pane", function (r) { return r.one && !r.ineq === !isIneq(q); }); if (!isIneq(q) && paneUnred(q)) return rung("pane", function (r) { return r.lv === 6; }); if (isIneq(q)) { var n = Math.min(4, eqLevel(q)); if (q.a.n < 0 && n < 2) n = 2; return rung("pane", function (r) { return r.ineq && !r.one && r.lv === n; }); } return rung("pane", function (r) { return !r.ineq && !r.one && r.lv === eqLevel(q); }); }
   function ladderEq(L, R, rel) {
     var fdl = fdLevel(L, R); if (fdl) return rung("eq", function (r) { return r.fd === fdl && !r.ineq === (!rel || rel === "="); });
     var ao = avOf(L, R);
@@ -3129,6 +3135,16 @@
     if (!all.some(function (t) { return t.k === "g"; }) && ua.d === 1 && uc.d === 1 && Math.abs(ua.n) > 1 && gcd(uc.n, ua.n) > 1 && uc.n % ua.n !== 0) return rung("eq", function (r) { return r.lv === 6 && !r.ineq; });
     if (hasMinus1) return rung("eq", function (r) { return r.lv === 5 && !r.ineq; });
     return rung("eq", function (r) { return !r.ineq && r.lv === eqLevelOf(L, R); });
+  }
+  function solverOne() {   // one-step: x + 5 = 9, x - 3 = 4, 3x = 12, -2x = 8, x/4 = 3
+    for (;;) {
+      var w = rnd(4), x = nz(9), q;
+      if (w < 2) { var k = nz(9); q = mkEq(1, 0, 0, 0); q.ks = [{ v: rnd(2) ? "p" : "s", k: mk(k) }]; q.c = mk(x + k); }
+      else if (w === 2) { var a = nz(6); if (Math.abs(a) < 2) continue; q = mkEq(a, 0, 0, a * x); }
+      else { var d = 2 + rnd(4); q = mkEq(1, 0, 0, 0); q.a = mk(1, d); x = d * nz(4); q.c = mk(x / d); }
+      if (!q.c.n) continue; if (rnd(5) === 0) q.flip = true;
+      return [q];
+    }
   }
   function solverEq(lv, demo) {   // a variant of the given difficulty; whole-number coefficients when the Demo has to walk through it
     if (demo && lv > 4 && lv !== 6) lv = 4;
@@ -3246,7 +3262,7 @@
   }
   function solverGo(dl, m) {
     SOL.fresh = false; SOL.keep = true;
-    if (EXP && !EXP.eq) { SV = "x"; SOL.lvl = Math.max(0, Math.min(14, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10 || SOL.lvl >= 13; }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
+    if (EXP && !EXP.eq) { SV = "x"; var ep = EXLAD.indexOf(SOL.lvl); if (ep < 0) ep = 0; SOL.lvl = EXLAD[Math.max(0, Math.min(EXLAD.length - 1, ep + dl))]; var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10 || SOL.lvl >= 13; }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
     else {
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
@@ -3254,7 +3270,7 @@
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
         EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: st.grp > 2 ? grTriGen(st.grp) : grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
         EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)), rel: EXP.rel }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; EXP.vk = "x";
-      } else { EXP = null; useCustom = st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); }
+      } else { EXP = null; useCustom = st.one ? solverOne() : st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); if (st.one && st.ineq) useCustom[0].rel = eqPickRel(); }
     }
     $("modePick").hidden = true;
     if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); }
