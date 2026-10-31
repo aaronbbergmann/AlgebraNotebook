@@ -1241,6 +1241,9 @@
           i++; var ga = sum("abs"); if (!ga || !ga.length || s[i] !== "|") return null; i++;
           t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: ga, abs: true };
         } else if (n) { t = { k: "c", n: mul(n, mk(sg1)) }; if (rawN && s[i] !== "(" && !inner) t.u = { n: sg1 * rawN.n, d: rawN.d }; } else return null;
+        if (t.k === "x" && s[i] === "/" && /\d/.test(s[i + 1] || "")) {   // x/2, 3x/4: a number underneath (kept written as x over 2)
+          i++; var dn = s.slice(i).match(/^\d+/); if (!dn || !+dn[0]) return null; i += dn[0].length; t.n = mul(t.n, mk(1, +dn[0])); t.ov = true; delete t.u;
+        }
         if (exDenOK && t.k !== "g" && s[i] === "/" && /[a-z]/.test(s[i + 1] || "")) {   // 3/a, 2x/ab, 5/a^2: the letters underneath are kept as negative powers
           i++; var dv = variable(); if (!dv) return null; t.s = t.s || {}; dv.replace(/([a-z])(?:\^(\d+))?/g, function (_, l, e) { t.s[l] = (t.s[l] || 0) - (e ? +e : 1); });
           if (t.k === "x") { var keep = {}; (t.v || "").replace(/([a-z])(?:\^(\d+))?/g, function (_, l, e) { var p0 = (e ? +e : 1) + (t.s[l] || 0); delete t.s[l]; if (p0 > 0) keep[l] = p0; else if (p0 < 0) t.s[l] = p0; }); var vs = Object.keys(keep).sort().map(function (l) { return l + (keep[l] > 1 ? "^" + keep[l] : ""); }).join(""); if (vs) t.v = vs; else { t.k = "c"; delete t.v; } }
@@ -1466,14 +1469,14 @@
   function fdMul(S, i) {   // the ⋅ was clicked
     if (locked || busy || EXP.ask) return;
     var A = fdArr(S), t = A[i]; if (!t || !t.lc) return;
-    var w = { n: Math.abs(fdNum(t)) * t.lc, d: fdD(t) * t.lc }, vh = t.k === "x" ? exVarHtml(t.v || "x").replace(/<[^>]*>/g, "") : "", say = Math.abs(fdNum(t)) + "/" + fdD(t) + " ⋅ " + t.lc + "/" + t.lc + " = " + w.n + "/" + w.d + ". Multiply the numerators and multiply the denominators.";
-    if (mode === "calculate") { fdAsk({ kind: "fd", step: "m", S: S, i: i, w: w, msg: say }, Math.abs(fdNum(t)) + "/" + fdD(t) + (vh ? vh : "") + " ⋅ " + t.lc + "/" + t.lc + " ="); $("askIn").placeholder = "e.g. 3/6" + vh; return; }
+    var w = { n: Math.abs(fdNum(t)) * t.lc, d: fdD(t) * t.lc }, vh = t.k === "x" ? exVarHtml(t.v || "x").replace(/<[^>]*>/g, "") : "", ovs = function (nn, dd) { return t.ov && vh ? (nn === 1 ? "" : nn) + vh + "/" + dd : nn + "/" + dd + vh; }, say = ovs(Math.abs(fdNum(t)), fdD(t)) + " ⋅ " + t.lc + "/" + t.lc + " = " + ovs(w.n, w.d) + ". Multiply the numerators and multiply the denominators.";
+    if (mode === "calculate") { fdAsk({ kind: "fd", step: "m", S: S, i: i, w: w, msg: say }, ovs(Math.abs(fdNum(t)), fdD(t)) + " ⋅ " + t.lc + "/" + t.lc + " ="); $("askIn").placeholder = "e.g. " + ovs(3, 6); return; }
     fdApplyM(S, i, w, say);
   }
   function fdApplyM(S, i, w, msg) { var A = JSON.parse(JSON.stringify(fdArr(S))); delete A[i].lc; A[i].w = w; fdCommit(S, A, msg); }
   function fdAsk(info, label) { if (!$("ask").hidden) closeAsk(true); askKind = "ex"; $("askT").textContent = label; showInput(); EXP.ask = info; }
   function fdAskOK(k) {
-    var m = $("askErr"), v = String($("askIn").value).replace(/\s+/g, "").replace(/−/g, "-").toLowerCase(), fr = []; v.replace(/(-?\d+)\/(\d+)/g, function (_, a, b) { fr.push([+a, +b]); });
+    var m = $("askErr"), v = String($("askIn").value).replace(/\s+/g, "").replace(/−/g, "-").toLowerCase().replace(/[a-z](\^\d)?/g, function (q, e, o, all) { return /\d/.test(all[o - 1] || "") ? "" : "1"; }), fr = []; /* 3x/6 and x/6 are read as 3/6 and 1/6 */ v.replace(/(-?\d+)\/(\d+)/g, function (_, a, b) { fr.push([+a, +b]); });
     if (k.step === "k") {
       var A = fdArr(k.S), a = A[k.i], b = A[k.j], need = (k.P.ka > 1 ? 1 : 0) + (k.P.kb > 1 ? 1 : 0), ka, kb;
       if (!fr.length || fr.some(function (f) { return f[0] !== f[1] || f[0] < 1; })) { m.textContent = "Each one has to equal 1: the same number on top and bottom, like 3/3."; $("askIn").select(); return; }
@@ -1504,7 +1507,7 @@
       if (!P.length) c0.n = mk(0); else if (P.length === 1) { c0.n = P[0].n; if (sSig(P[0].s)) c0.s = P[0].s; } else { c0.n = mk(1); c0.co = pOrder(P); }
       return c0;
     }
-    var c = { k: a.k, n: add(a.n, b.n) }; if (a.v) c.v = a.v; if (hasS(a)) c.s = a.s; return fdSum(a, b, c);
+    var c = { k: a.k, n: add(a.n, b.n) }; if (a.v) c.v = a.v; if (hasS(a)) c.s = a.s; if (a.ov || b.ov) c.ov = true; return fdSum(a, b, c);
   }
   // factoring: the number in front of x is dragged onto another term and the biggest number that goes into both is taken out: 3x + 9 becomes 3(x + 3)
   function facMono(t) {   // a term (or group multiplier) as { n: whole number > 0, s: letters with positive powers }, or null
@@ -1582,6 +1585,10 @@
     if (t.k === "g" && t.abs) { var am = mk(Math.abs(t.m.n), t.m.d); return (am.n === 1 && am.d === 1 ? "" : "<span class=\"exM\">" + exFr(am) + "</span>") + "<span class=\"exG exAbs\"><span class=\"avBar\" title=\"Tap a bar to open the absolute value\">|</span>" + exHtml(t.items) + "<span class=\"avBar\" title=\"Tap a bar to open the absolute value\">|</span></span>"; }   // |2x − 3|
     if (t.k === "g" && t.pm) return "<span class=\"exPm\" title=\"Click \u00b1 to split it into two equations\">\u00b1</span><span class=\"exG\">" + (t.items.length === 1 ? exHtml(t.items) : "(" + exHtml(t.items) + ")") + "</span>";   // ±(2x − 3), after a bar was tapped
     if (t.k === "r" || t.pm) return exPmRad(t);
+    if (t.ov && t.k === "x" && !hasS(t) && !t.u && fdD(t) > 1) {   // x/2 written with x on top: 3x/4, and 3x/6 once multiplied by 3/3
+      var on = t.w ? Math.abs(t.w.n) : Math.abs(t.n.n), od = fdD(t);
+      return "<span class=\"fr\"><span>" + (on === 1 ? "" : on) + exVarHtml(t.v || "x") + "</span><span>" + od + "</span></span>" + (t.lc ? "<span class=\"exLc\" title=\"Click to multiply\">\u22c5</span>" + t.lc + "/" + t.lc : "");
+    }
     if ((t.lc || t.w) && fdOK(t)) { var fv = t.k === "x" ? exVarHtml(t.v || "x") : ""; return (t.w ? Math.abs(t.w.n) + "/" + t.w.d : exFr(mk(Math.abs(t.n.n), t.n.d))) + fv + (t.lc ? "<span class=\"exLc\" title=\"Click to multiply\">\u22c5</span>" + t.lc + "/" + t.lc : ""); }   // 1/2 ⋅ 3/3, then 3/6
     if (t.k === "q") return "<span class=\"fr\"><span>" + exHtml(t.num) + "</span><span>" + exHtml(t.den) + "</span></span>";
     if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">" + exPar(t, t.items) + "</span>" + (t.b ? "<span class=\"exH\">" + exPar(t, t.b) + "</span>" : "") + (t.c ? "<span class=\"exH exJ\">" + exPar(t, t.c) + "</span>" : ""); }
@@ -2875,6 +2882,7 @@
     if (/[a-wyz]/.test(s)) return true;   // letters other than x are coefficients
     if (/\^/.test(s)) return true;   // x^2 + 5x + 3x + 15 = 0 (factoring by grouping)
     if (rawFr(s)) return true;   // 6/4 typed as it is
+    if (/[a-z]\/\d/.test(String(s).replace(/\s+/g, ""))) return true;   // x/2: the variable over a number
     var dens = {}; String(s).replace(/\d+\/(\d+)(?![\d.\/(])/g, function (_, d) { dens[d] = 1; }); if (Object.keys(dens).length > 1) return true;   // fractions with different denominators (1/2 + 1/3): tap the + to find a common denominator
     return (/[a-z]/.test(p[0]) && /[a-z]/.test(p[1])) || /\([^)]*[a-z][^)]*\)/.test(s);
   }
@@ -2929,15 +2937,23 @@
       return { L: L, R: R };
     }
   }
-  function fdLevel(L, R) {   // 1: fractions with different denominators on the side without x (x = 1/2 + 1/3); 2: one on each side (x + 1/2 = 1/3); 0: neither
-    var all = L.concat(R); if (litAny(all) || all.some(function (t) { return t.k !== "c" && t.k !== "x"; }) || all.filter(function (t) { return t.k === "x"; }).length !== 1) return 0;
+  function fdLevel(L, R) {   // 1: fractions with different denominators on the side without x (x = 1/2 + 1/3); 2: one on each side (x + 1/2 = 1/3); 3: x terms over different numbers (x/2 + x/3 = 5); 0: neither
+    var all = L.concat(R); if (litAny(all) || all.some(function (t) { return t.k !== "c" && t.k !== "x"; })) return 0;
+    var xs0 = all.filter(function (t) { return t.k === "x"; }); if (xs0.length >= 2 && xs0.some(function (t) { return t.n.d > 1; }) && xs0.some(function (t, i) { return xs0.some(function (u, j) { return i < j && t.n.d !== u.n.d; }); })) return 3;
+    if (xs0.length !== 1) return 0;
     var cs = function (A) { return A.filter(function (t) { return t.k === "c" && !t.u; }); }, ds = {}; all.forEach(function (t) { if (t.k === "c") ds[t.n.d] = 1; });
     if (Object.keys(ds).length < 2 || !all.some(function (t) { return t.k === "c" && t.n.d > 1; })) return 0;
     var xs = L.some(function (t) { return t.k === "x"; }) ? L : R, os = xs === L ? R : L;
     return cs(xs).length ? 2 : cs(os).length >= 2 ? 1 : 0;
   }
-  function eqFd(n) {   // x = 1/2 + 1/3, x = 3/4 - 1/6, x = 2 - 1/3 ...; 2: x + 1/2 = 1/3, 2/3 = x - 1/4
+  function eqFd(n) {   // x = 1/2 + 1/3, x = 3/4 - 1/6, x = 2 - 1/3 ...; 2: x + 1/2 = 1/3, 2/3 = x - 1/4; 3: x/2 + x/3 = 5, x/4 - x/6 = 2
     var D = [2, 3, 4, 5, 6, 8, 10, 12], X = function () { return { k: "x", v: "x", n: mk(1) }; };
+    if (n === 3) for (;;) {
+      var e1 = D[rnd(5)], e2 = D[rnd(5)], m1 = rnd(3) ? 1 : 2, m2 = (rnd(3) ? 1 : 2) * (rnd(4) ? 1 : -1); if (e1 === e2 || gcd(m1, e1) > 1 || gcd(Math.abs(m2), e2) > 1) continue;
+      var Lc = fdLcm(e1, e2), x3 = Lc * nz(3), c3 = add(mul(mk(m1, e1), mk(x3)), mul(mk(m2, e2), mk(x3))); if (!c3.n || c3.d !== 1) continue;
+      var L3 = [{ k: "x", v: "x", n: mk(m1, e1), ov: true }, { k: "x", v: "x", n: mk(m2, e2), ov: true }], R3 = [{ k: "c", n: c3 }];
+      return rnd(4) ? { L: L3, R: R3 } : { L: R3, R: L3 };
+    }
     for (;;) {
       var d1 = D[rnd(D.length)], d2 = D[rnd(D.length)]; if (d1 === d2 || fdLcm(d1, d2) > 24) continue;
       var n1 = 1 + rnd(d1 - 1), n2 = (1 + rnd(d2 - 1)) * (rnd(3) ? 1 : -1); if (gcd(n1, d1) > 1 || gcd(Math.abs(n2), d2) > 1) continue;
@@ -2971,7 +2987,7 @@
     { e: "eq", lv: 0 }, { e: "eq", lv: 0, ineq: 1 }, { e: "eq", lv: 1 }, { e: "eq", lv: 1, ineq: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 2, ineq: 1 },
     { e: "eq", lv: 3 }, { e: "eq", lv: 3, ineq: 1 }, { e: "eq", lv: 4 }, { e: "eq", lv: 4, ineq: 1 },                                          // the variable on both sides, parentheses, fractions
     { e: "eq", lv: 5 }, { e: "eq", lv: 5, ineq: 1, neg: 1 }, { e: "eq", lv: 6 },
-    { e: "eq", fd: 1 }, { e: "eq", fd: 1, ineq: 1 }, { e: "eq", fd: 2 }, { e: "eq", fd: 2, ineq: 1 },                                          // adding fractions with different denominators: x = 1/2 + 1/3, then x + 1/2 = 1/3 (move it, then add)
+    { e: "eq", fd: 1 }, { e: "eq", fd: 1, ineq: 1 }, { e: "eq", fd: 2 }, { e: "eq", fd: 2, ineq: 1 }, { e: "eq", fd: 3 }, { e: "eq", fd: 3, ineq: 1 },   // 3: x/2 + x/3 = 5                                          // adding fractions with different denominators: x = 1/2 + 1/3, then x + 1/2 = 1/3 (move it, then add)
     { e: "eq", dv: 1 },                                          // parentheses with a minus sign (the inequality has a negative number in front: the sign turns)
     { e: "eq", special: true }, { e: "eq", special: true, ineq: 1 },                                                                          // no solution / infinitely many, then never / always true
     { e: "eq", av: 1 }, { e: "eq", av: 1, ineq: 1 }, { e: "eq", av: 2 }, { e: "eq", av: 2, ineq: 1 }, { e: "eq", av: 3 }, { e: "eq", av: 3, ineq: 1 }, { e: "eq", av: 4 }, { e: "eq", av: 4, ineq: 1 },   // each absolute value inequality right above its equation                                                           // absolute values: |x + 3| = 5, |2x - 3| = 7, move and divide first, no solution / one answer
@@ -3045,7 +3061,20 @@
   function exGen(lv) {
     var KS = ["x", "y", "x^2", "y^2"], kv = lv >= 1 ? KS[rnd(4)] : "x", other = { x: "x^2", y: "y^2", "x^2": "x", "y^2": "y" }[kv];
     var X = function (n) { return { k: "x", v: kv, n: mk(n[0], n[1] || 1) }; }, U = function (n) { return { k: "x", v: other, n: mk(n) }; }, C = function (n) { return { k: "c", n: mk(n) }; };
-    if (lv >= 10) return grGen(1 + rnd(2));   // factoring by grouping: x^2 + 5x + 3x + 15
+    if (lv === 11) {   // fractions with different numbers underneath: 1/2 + 1/3, x/4 + x/6, 3/4 - 1/6 + x
+      var DD = [2, 3, 4, 5, 6, 8], d1 = DD[rnd(6)], d2 = DD[rnd(6)]; if (d1 === d2) return exGen(11);
+      var w11 = rnd(2), n1 = rnd(3) ? 1 : 3, n2 = (rnd(3) ? 1 : 3) * (rnd(4) ? 1 : -1); if (gcd(n1, d1) > 1 || gcd(Math.abs(n2), d2) > 1) return exGen(11);
+      var p11 = w11 ? [{ k: "x", v: "x", n: mk(n1, d1), ov: true }, { k: "x", v: "x", n: mk(n2, d2), ov: true }] : [{ k: "c", n: mk(n1, d1) }, { k: "c", n: mk(n2, d2) }];
+      if (rnd(3) === 0) p11.push(w11 ? { k: "c", n: mk(nz(5)) } : { k: "x", v: "x", n: mk(nz(4)) });
+      return p11;
+    }
+    if (lv === 12) {   // letters underneath: 3/a + 5/a, 2x/b - x/b + 4
+      var LL = ["a", "b", "c", "m", "n", "k"], l12 = LL[rnd(6)], sx = {}, x12 = rnd(2); sx[l12] = -1;
+      var mkT = function (k) { var t = x12 ? { k: "x", v: "x", n: mk(k) } : { k: "c", n: mk(k) }; t.s = JSON.parse(JSON.stringify(sx)); return t; }, a12 = 1 + rnd(6), b12 = nz(6); if (a12 + b12 === 0) return exGen(12);
+      var p12 = [mkT(a12), mkT(b12)]; if (rnd(2)) p12.push(x12 ? { k: "c", n: mk(nz(5)) } : { k: "x", v: "x", n: mk(nz(4)) });
+      return p12;
+    }
+    if (lv === 10) return grGen(1 + rnd(2));   // factoring by grouping: x^2 + 5x + 3x + 15
     if (lv === 9) {   // three sets of parentheses: (x + 1)(x + 2)(x + 3), x(x - 2)(x + 4), (2x + 1)(x - 3)(x + 2)
       var big2 = rnd(3) === 0 ? rnd(3) : -1, fl = [rnd(5) === 0, false, false], fx = [];
       for (var q9 = 0; q9 < 3; q9++) { var a9 = q9 === big2 && !fl[q9] ? 2 : 1; fx.push(fl[q9] ? [{ k: "x", v: "x", n: mk(1) }] : [{ k: "x", v: "x", n: mk(a9) }, { k: "c", n: mk(nz(5)) }]); }
@@ -3097,6 +3126,8 @@
     return exFin(parts) ? exGen(lv) : parts;
   }
   function exLevel(its) {
+    if (its.some(function (t) { return t.k !== "g" && t.s && Object.keys(t.s).some(function (l) { return t.s[l] < 0; }); })) return 12;   // letters underneath
+    if (its.some(function (t, i) { return t.k !== "g" && !hasS(t) && its.some(function (u, j) { return i < j && u.k !== "g" && !hasS(u) && exLike(t, u) && t.n.d !== u.n.d; }); })) return 11;   // like fractions over different numbers
     var g = its.filter(function (t) { return t.k === "g"; }).length, ng = its.filter(function (t) { return (t.k === "g" ? t.m.n : t.n.n) < 0; }).length, fr = JSON.stringify(its).indexOf('"d":') >= 0 && its.some(function (t) { return t.k === "x" && t.n.d > 1; });
     var gb = its.filter(function (t) { return t.k === "g" && t.b; })[0];
     if (gb) return gb.c ? 9 : gb.items.length <= 2 && gb.b.length <= 2 ? 7 : 8;
@@ -3107,7 +3138,7 @@
   }
   function solverGo(dl, m) {
     SOL.fresh = false; SOL.keep = true;
-    if (EXP && !EXP.eq) { SV = "x"; SOL.lvl = Math.max(0, Math.min(10, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10; }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
+    if (EXP && !EXP.eq) { SV = "x"; SOL.lvl = Math.max(0, Math.min(12, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10; }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
     else {
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
