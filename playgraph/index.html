@@ -132,13 +132,13 @@
   .exLc{display:inline-block;padding:0 .18em;margin:0 .05em;border-radius:6px;cursor:pointer;color:var(--plus);font-weight:800;transition:transform .2s}.exLc:hover{transform:scale(1.4);background:color-mix(in srgb,var(--plus) 20%,transparent)}
   .avBar{cursor:pointer;padding:0 .1em;border-radius:.2em;transition:background .2s,color .2s}
   .avBar:hover{background:color-mix(in srgb,var(--plus) 18%,transparent);color:var(--plus)}
-  .nlBox{margin:.4rem auto 0;width:600px;max-width:100%;animation:nlIn .5s ease-out}
+  .nlBox{color:#000;margin:.4rem auto 0;width:600px;max-width:100%;animation:nlIn .5s ease-out}
   .nlBox svg{width:100%;height:auto;display:block;overflow:visible}
-  .nlBox .nlAx{stroke:var(--ink);stroke-width:2;fill:none}
-  .nlBox .nlTk{stroke:var(--ink);stroke-width:1.5}
-  .nlBox .nlSh{stroke:var(--ink);stroke-width:7;stroke-linecap:butt;fill:none}
-  .nlBox .nlAr{fill:var(--ink)}
-  .nlBox .nlDot{stroke:var(--ink);stroke-width:3}
+  .nlBox .nlAx{stroke:#000;stroke-width:2;fill:none}
+  .nlBox .nlTk{stroke:#000;stroke-width:1.5}
+  .nlBox .nlSh{stroke:#000;stroke-width:7;stroke-linecap:butt;fill:none}
+  .nlBox .nlAr{fill:#000}
+  .nlBox .nlDot{stroke:#000;stroke-width:3}
   #wsEl.nlGone{display:none!important}
   .nlBox .nlLbs{position:relative;height:2.6em}
   .nlBox .nlLb{position:absolute;top:.15em;transform:translateX(-50%);font:400 1.35rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;white-space:nowrap}
@@ -149,7 +149,7 @@
   #grpBox .gcell,#grpBox .gsp{display:flex;align-items:center;justify-content:center;min-width:2.6em;min-height:1.9em;padding:.1em .45em}
   #grpBox .gcell{border:1.5px solid color-mix(in srgb,var(--ink) 55%,transparent);background:color-mix(in srgb,var(--ink) 6%,var(--bg));margin:-1.5px 0 0 -1.5px;transition:background .2s}
   #grpBox .gcell.filled{cursor:pointer}
-  #grpBox .gcell.drop{background:color-mix(in srgb,var(--plus) 30%,var(--bg))}
+  #grpBox .gcell.drop{background:none}
   #grpBox .gsp{border:2px dashed transparent;border-radius:.45em}
   #grpBox .gsp.ready{border-color:var(--plus);cursor:pointer;animation:gpulse 1.4s ease-in-out infinite}
   #grpBox .gsp.set{cursor:pointer}
@@ -173,7 +173,7 @@
   .zpRow.zpDim{opacity:.55}.zpRow.zpIn{animation:zpIn .6s ease-out}
   @keyframes zpIn{from{opacity:0;transform:translateY(-.6em)}to{opacity:1;transform:none}}
   .exBox.zp .exG:hover,.exBox.zp .exH:hover{background:color-mix(in srgb,var(--plus) 16%,transparent);border-radius:.3em}
-  .zpRow.drop{outline:3px solid var(--plus);outline-offset:2px}
+  .zpRow.drop{outline:none}
   .exBox.zp .exG,.exBox.zp .exH{cursor:grab;touch-action:none}
   .exRow{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;line-height:1.3}
   .exOpc{cursor:pointer;color:var(--plus);font-weight:800;border-radius:6px;transition:transform .2s}.exOpc:hover{transform:scale(1.4);background:color-mix(in srgb,var(--plus) 20%,transparent)}
@@ -212,10 +212,10 @@
   .pend{cursor:pointer;border-bottom:2px dashed var(--plus)}
   .drag{z-index:5;position:relative;transition:none;background:var(--bg);box-shadow:0 .3em 1em rgba(0,0,0,.3)}
   .slide{transition:transform 1.1s ease-in-out;z-index:5}
-  .drop{outline:3px solid var(--plus)}
-  .eqn .drop,.exT.drop,.exEq .drop{box-shadow:0 0 0 7px color-mix(in srgb,var(--plus) 16%,transparent);border-radius:6px}
+  .drop{outline:none}   /* no target boxes: a drop target just grows a little */
+  .eqn .drop,.exT.drop,.exEq .drop,.exEq.drop,.exOp.drop{display:inline-block;transform:scale(1.12);transition:transform .15s}
   .dragOp{z-index:5;position:relative;transition:none;background:var(--bg);border-radius:6px}
-  .asking{outline:3px dashed var(--plus)}
+  .asking{outline:none}
   .var.tgt{background:color-mix(in srgb,var(--plus) 35%,transparent);border-radius:6px;transform:scale(1.5)}
   .eq{font:inherit;font-size:1.5em;font-weight:400;line-height:1;color:var(--plus);background:none;border:0;padding:0 .1em;cursor:grab;touch-action:none;transition:transform .25s,color .25s}
   .eq:hover,.eq.target{color:var(--plus-hover);transform:scale(1.5)}
@@ -541,9 +541,8 @@
   .fakeCaret{position:fixed;z-index:44;width:2px;background:#1B2433;pointer-events:none;animation:caretBlink 1s steps(1) infinite}
   @keyframes caretBlink{50%{opacity:0}}
   .pgTable td.mid.live{cursor:pointer;background:#DCE8F7}
-  .pgTable td.yv.drop{background:#DCE8F7}
-  .pgTable td.yv.drop input.qzCell{background:#DCE8F7}
-  .pgTable td.mid.drop{outline:3px solid #2D70B3;outline-offset:-3px;background:#fff}
+  .pgTable td.yv.drop,.pgTable td.yv.drop input.qzCell{background:none}
+  .pgTable td.mid.drop{background:#fff}
   .pgTable tr.rdone{cursor:grab}.pgTable tr.rdone td{touch-action:none}
   body.tbon .pgTable th.pgMid,body.tbon .pgEq{cursor:grab;touch-action:none}
   body.tbon .pgTable th.pgMid:empty,body.tbon .pgEq:empty{outline:none;cursor:default}
@@ -578,7 +577,7 @@
   .ptOps{display:grid;grid-template-columns:repeat(5,1fr);min-height:1.55em;align-items:end;text-align:center;font:400 1.1rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;color:var(--plus);white-space:nowrap}
   .ptOps span{justify-self:center;display:inline-block}.ptOps{display:none!important}
   .ptTable tr.ptLr th{background:#fff;padding:0;height:2.1em;font-style:normal;color:var(--plus);border-bottom:1px solid #B8BCC2}
-  .ptTable tr.ptLr th.off{background:#F7F8FA}.ptTable tr.ptLr th.drop{background:#DCE8F7;outline:2px solid #2D70B3;outline-offset:-2px}
+  .ptTable tr.ptLr th.off{background:#F7F8FA}.ptTable tr.ptLr th.drop{background:none}
   .ptTable .ptLin{box-sizing:border-box;width:100%;height:2.1em;border:0;background:transparent;text-align:center;font:inherit;color:var(--plus);padding:0}
   .ptTable .ptLin::placeholder{color:#A9AFBA;font:italic .8rem system-ui,sans-serif}.ptTable .ptLin:focus{outline:2px solid #2D70B3;outline-offset:-2px}
   .ptLv{display:inline-block}
@@ -587,8 +586,8 @@
   .ptTable td input.qzCell.full{background:#DDE1E8}
   body.play .ptTable tbody td:first-child{cursor:auto;touch-action:auto}
   .ptTable td.live,.ptTable td.live input.qzCell.full{cursor:pointer;background:#DCE8F7}
-  .ptTable td.drop,.ptTable td.drop input.qzCell{background:#DCE8F7}
-  .ptTable.drop{outline:3px solid #2D70B3;outline-offset:2px}
+  .ptTable td.drop,.ptTable td.drop input.qzCell{background:none}
+  .ptTable.drop{outline:none}
   .ptTable td.ask input.qzCell,.pgTable td.yv.ask input.qzCell{box-shadow:inset 0 0 0 2px var(--plus)}
   .descIn.dDone .descKeys button{opacity:.45;pointer-events:none}.descIn.dDone input{background:#F4F6F9}
   body.wsub #pgDescGo,body.wsub #estGo,body.wsub #eqKeys [data-go]{display:none}
@@ -1815,7 +1814,7 @@
     $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
     $("top").style.display = "none"; $("vals").style.display = "none"; $("creator").hidden = true; $("answer").hidden = true; $("wsEl").style.display = "none";
     $("exBox").hidden = false; $("exSolo").hidden = mode !== "solo"; $("exMsg").textContent = ""; $("exSoloIn").value = "";
-    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : EXP.grp ? "Answer:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.zpq || EXP.grq ? "e.g. 3, -2" : EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
+    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : EXP.grp ? "Answer:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.av && eqIneq() ? "e.g. -2 < x < 4 or x < -2 or x > 4" : EXP.zpq || EXP.grq ? "e.g. 3, -2" : EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
     exRender(); updUndo();
     if (EXP.eq) {
       if (mode === "demo") { dmUI("idle"); dmCap(BUILT[act].solver ? "" : "Press Start Demo to watch this equation solved."); }
@@ -1926,7 +1925,7 @@
     var holders = [A, B]; holders.forEach(function (T) { T.className = "zpWrap"; T.innerHTML = ""; T.hidden = true; });
     z.eqs.forEach(function (e, idx) {
       if (idx === z.act) return; var T = holders[idx < z.act ? 0 : 1], row = document.createElement("div"); row.className = "zpRow"; T.hidden = false; T.appendChild(row);
-      var sL = EXP.L, sR = EXP.R, sRel = EXP.rel; EXP.L = e.L; EXP.R = e.R; EXP.rel = "=";
+      var sL = EXP.L, sR = EXP.R, sRel = EXP.rel; EXP.L = e.L; EXP.R = e.R; EXP.rel = e.rel || "=";
       try { eqRenderRow(row, null, idx, z.done[idx]); } finally { EXP.L = sL; EXP.R = sR; EXP.rel = sRel; }
     });
     if (EXP.zpNew) holders.forEach(function (T) { T.classList.add("zpIn"); });
@@ -1941,7 +1940,7 @@
     if (EXP.zp && idx != null && idx >= 0 && idx !== EXP.zp.act) { if (EXP.zp.done[idx]) return null; zpFocus(idx); }
     return zpOf(EXP.L, EXP.R);
   }
-  function zpHist() { hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: "=", z: EXP.zp || null })); updUndo(); }
+  function zpHist() { hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: EXP.rel || "=", z: EXP.zp || null })); updUndo(); }
   function zpDropM(idx) {   // the number in front was dragged away: it can never be 0, so it simply disappears
     var g = zpPick(idx); if (!g || (g.m.n === 1 && g.m.d === 1 && !(g.m.s && sSig(g.m.s)))) return;
     var w = g.m.d === 1 && g.m.n === -1 ? "minus sign" : "number";
@@ -1977,7 +1976,7 @@
   }
   function zpFocus(k) {   // the user began working on equation k: it becomes the active one (the equation the solver acts on); the others keep their place
     var z = EXP.zp; if (!z || k === z.act || z.done[k]) return;
-    z.eqs[z.act] = { L: EXP.L, R: EXP.R }; z.act = k; EXP.L = z.eqs[k].L; EXP.R = z.eqs[k].R; EXP.rel = "=";
+    z.eqs[z.act] = { L: EXP.L, R: EXP.R, rel: EXP.rel || "=" }; z.act = k; EXP.L = z.eqs[k].L; EXP.R = z.eqs[k].R; EXP.rel = z.eqs[k].rel || "=";
   }
   function zdr(idx, e, el, onClick, onDrop, prefix, onStart, onEnd) {   // drag() for a row of a split: working on a row makes it the active one, and a drop only counts inside the same row
     if (idx >= 0 && EXP.zp) zpFocus(idx);
@@ -2170,7 +2169,7 @@
       }
     }, ms);
   }
-  function zpSay() { var o = []; EXP.zp.eqs.forEach(function (e) { var t = exSay(e.L) + " = " + exSay(e.R); if (o.indexOf(t) < 0) o.push(t); }); return o.join(" or "); }
+  function zpSay() { var ai = avIneqEnd(); if (ai) return ai.say; var o = []; EXP.zp.eqs.forEach(function (e) { var t = exSay(e.L) + " " + (e.rel || "=") + " " + exSay(e.R); if (o.indexOf(t) < 0) o.push(t); }); return o.join(" or "); }
   function eqKind() {   // "one" (x = 4 or 4 = x), "none", "inf", or "" while there is more to do
     if (EXP.lit) return litAlone(EXP.L, EXP.R) || litAlone(EXP.R, EXP.L) ? "one" : "";
     if (EXP.L.length !== 1 || EXP.R.length !== 1) return "";
@@ -2219,7 +2218,7 @@
     if (locked || busy || EXP.ask || EXP.zp) return;
     var S = ["L", "R"].filter(function (q) { return EXP[q].some(function (t) { return t.pm; }); })[0]; if (!S) return;
     var cp = function (o) { return JSON.parse(JSON.stringify(o)); };
-    var mkRow = function (sg) { var N = { L: cp(EXP.L), R: cp(EXP.R) }; N[S] = N[S].reduce(function (o, t) {
+    var mkRow = function (sg) { var N = { L: cp(EXP.L), R: cp(EXP.R), rel: EXP.rel || "=" }; N[S] = N[S].reduce(function (o, t) {
       if (!t.pm) return o.concat([t]); var u = cp(t); delete u.pm;
       if (u.k === "g") return sg > 0 || u.items.length === 1 ? o.concat(exDist({ k: "g", m: mk(sg), items: u.items })) : o.concat([{ k: "g", m: mk(-1), items: u.items }]);   // one term inside: −x right away, no parentheses to undo   // +(2x − 3) is 2x − 3; −(2x − 3) keeps its parentheses, to be distributed
       u.n = mk(sg * u.n.n, u.n.d); return o.concat([u]); }, []); return N; };
@@ -2227,9 +2226,9 @@
     zpHist(); var L0 = EXP.L, R0 = EXP.R;
     rows.forEach(function (r) { EXP.L = r.L; EXP.R = r.R; sl.push(!!eqKind()); }); EXP.L = L0; EXP.R = R0;
     var all = sl[0] && sl[1], z = { eqs: rows, done: [all ? true : sl[0], false], act: all ? 1 : sl[0] ? 1 : 0 };
-    EXP.zp = z; EXP.zpq = true; EXP.zpNew = true; EXP.L = cp(rows[z.act].L); EXP.R = cp(rows[z.act].R); EXP.rel = "=";
+    EXP.zp = z; EXP.zpq = true; EXP.zpNew = true; EXP.L = cp(rows[z.act].L); EXP.R = cp(rows[z.act].R); EXP.rel = rows[z.act].rel;
     closeAsk(false); eqRender();
-    note((EXP.av ? "\u00b1 means two equations: what is inside the absolute value is the number or its opposite. " : "\u00b1 means two answers: ") + rows.map(function (r) { return exSay(r.L) + " = " + exSay(r.R); }).join(" or ") + "." + (all ? "" : " Solve each one."));
+    note((EXP.av ? "\u00b1 means two " + (EXP.rel !== "=" ? "inequalities" : "equations") + ": what is inside the absolute value is the number or its opposite. " : "\u00b1 means two answers: ") + rows.map(function (r) { return exSay(r.L) + " " + r.rel + " " + exSay(r.R); }).join(EXP.rel !== "=" ? " and " : " or ") + "." + (all ? "" : " Solve each one."));
     if (all) eqEnd("one");
   }
   function eqSq(n) {   // a variant: 1 x^2 = 49; 2 a number in front, 3x^2 = 75; 3 numbers to move first, x^2 - 16 = 0, 2x^2 + 5 = 37
@@ -2255,6 +2254,30 @@
     var r1 = mul(add(v, neg(b)), inv(co)); if (!v.n) return [r1];
     return [r1, mul(add(neg(v), neg(b)), inv(co))];
   }
+  function avIneqEnd() {   // an absolute value inequality whose two inequalities are both solved: { kind, say, B, shade } (between the answers for < and ≤, outside them for > and ≥)
+    if (!EXP || !EXP.av || !EXP.zp || !eqIneq() || EXP.zp.done.some(function (d) { return !d; })) return null;
+    var ao = avOf(EXP.orig.L, EXP.orig.R); if (!ao) return null; var ar = ao.S === "L" ? EXP.orig.rel : relRev(EXP.orig.rel), inside = ar === "<" || ar === "\u2264";
+    var hs = EXP.zp.eqs.map(function (e) { var xl = e.L.length === 1 && e.L[0].k === "x", r = xl ? e.rel : relRev(e.rel), c = (xl ? e.R : e.L)[0]; return { rel: r, v: c && c.n ? c.n : mk(0), up: r === "<" || r === "\u2264", closed: r === "\u2264" || r === "\u2265" }; });
+    var lo = hs.filter(function (h) { return !h.up; })[0], hi = hs.filter(function (h) { return h.up; })[0], V = EXP.vk || "x"; if (!lo || !hi) return null;
+    var c = cmpF(lo.v, hi.v), gl = function (h, lt) { return (lt ? (h.closed ? "\u2264" : "<") : (h.closed ? "\u2265" : ">")); };
+    if (inside) {
+      if (c < 0) return { kind: "one", say: sg(lo.v) + " " + gl(lo, true) + " " + V + " " + gl(hi, true) + " " + sg(hi.v), B: [{ v: lo.v, closed: lo.closed }, { v: hi.v, closed: hi.closed }], shade: "between" };
+      if (c === 0 && lo.closed && hi.closed) return { kind: "one", say: V + " = " + sg(lo.v), B: [{ v: lo.v, closed: true }], shade: "none" };
+      return { kind: "none", say: "no solution", B: [], shade: "none" };
+    }
+    if (c > 0) return { kind: "one", say: V + " " + gl(hi, true) + " " + sg(hi.v) + " or " + V + " " + gl(lo, false) + " " + sg(lo.v), B: [{ v: hi.v, closed: hi.closed }, { v: lo.v, closed: lo.closed }], shade: "outside" };
+    if (c === 0 && !(lo.closed || hi.closed)) return { kind: "one", say: V + " \u2260 " + sg(lo.v), B: [{ v: lo.v, closed: false }], shade: "all" };
+    return { kind: "inf", say: "all real numbers", B: [], shade: "all" };
+  }
+  function avIneqWant(L, R, rel) {   // the answer to a typed absolute value inequality, without working it: the same shape as avIneqEnd
+    var ao = avOf(L, R); if (!ao) return null; var ar = ao.S === "L" ? rel : relRev(rel), inside = ar === "<" || ar === "\u2264", cl = ar === "\u2264" || ar === "\u2265";
+    var tr = exTot(ao.rest), to = exTot(ao.O), v = mul(add(to[""] || mk(0), neg(tr[""] || mk(0))), inv(ao.g.m)), ti = exTot(ao.g.items), co = ti.x, b = ti[""] || mk(0);
+    if (ao.g.m.n < 0) inside = !inside;   // −2|x| < 4 is |x| > −2
+    if (v.n < 0 || (!v.n && !cl && inside) || (!v.n && cl && !inside)) return { kind: inside ? "none" : "inf" };
+    var r1 = mul(add(v, neg(b)), inv(co)), r2 = mul(add(neg(v), neg(b)), inv(co)), a = cmpF(r1, r2) < 0 ? r1 : r2, z = cmpF(r1, r2) < 0 ? r2 : r1;
+    if (!v.n) return inside ? { kind: "one", pt: a } : { kind: "one", ne: a };
+    return { kind: "one", lo: a, hi: z, inside: inside, closed: cl };
+  }
   function avAlone() {   // the absolute value is by itself, with nothing in front: { S, i, O, c }
     var f = avFind(); if (!f || !f.t.abs) return null; var O = eqOther(f.S);
     if (EXP[f.S].length !== 1 || !same(f.t.m, mk(1)) || EXP[O].length !== 1 || EXP[O][0].k !== "c") return null;
@@ -2264,12 +2287,16 @@
     if (locked || busy || EXP.ask) return;
     var a = avAlone(); if (!a || a.S !== S || a.i !== i) { note("Get the absolute value by itself first: move the numbers to the other side, and divide by the number in front of it."); return; }
     var c = a.c, g = EXP[S][i], ins = exSay(g.items);
-    if (c.n < 0) { note("An absolute value is a distance from 0, so it is never negative. |" + ins + "| = " + exSay(EXP[a.O]) + " has no solution."); eqEnd("none"); return; }
+    var ar = S === "L" ? EXP.rel || "=" : relRev(EXP.rel || "=");   // the sign as read from the absolute value: |x - 1| < 3
+    if (c.n < 0) {
+      if (ar === "=") { note("An absolute value is a distance from 0, so it is never negative. |" + ins + "| = " + exSay(EXP[a.O]) + " has no solution."); eqEnd("none"); return; }
+      var big = ar === ">" || ar === "\u2265"; note("An absolute value is a distance from 0, so it is never negative" + (big ? ": it is always more than " : ": it is never less than ") + exSay(EXP[a.O]) + ". " + (big ? "Every number is a solution." : "No number is a solution.")); eqEnd(big ? "inf" : "none"); return;
+    }
     var N = eqClone(), u = N[S][i]; delete u.abs;
-    if (!c.n) { N[S] = exDist({ k: "g", m: mk(1), items: u.items }); eqSet(N, "Only 0 is 0 away from 0, so " + ins + " = 0: just one equation."); return; }
+    if (!c.n && ar === "=") { N[S] = exDist({ k: "g", m: mk(1), items: u.items }); eqSet(N, "Only 0 is 0 away from 0, so " + ins + " = 0: just one equation."); return; }
     u.pm = true; eqSet(N, "The absolute value is " + exSay([{ k: "c", n: c }]) + ", so what is inside is " + exSay([{ k: "c", n: c }]) + " or its opposite: |" + ins + "| becomes ±" + (g.items.length === 1 ? ins : "(" + ins + ")") + ".");
   }
-  function eqAv(n) {   // a variant: 1 |x + 3| = 5; 2 |2x - 3| = 7; 3 move and divide first: 2|x - 1| + 3 = 11, |3x + 2| - 4 = 6; 4 no solution or one answer: |x - 4| + 7 = 3, 3|2x + 6| = 0
+  function eqAv(n, iq) {   // a variant: 1 |x + 3| = 5; 2 |2x - 3| = 7; 3 move and divide first: 2|x - 1| + 3 = 11, |3x + 2| - 4 = 6; 4 no solution or one answer: |x - 4| + 7 = 3, 3|2x + 6| = 0
     var X = function (k) { return { k: "x", v: "x", n: mk(k) }; }, C = function (k) { return { k: "c", n: mk(k) }; };
     for (;;) {
       var a = n === 1 ? 1 : n === 2 ? 2 + rnd(3) : rnd(2) ? 1 : 2 + rnd(2), x1 = nz(7), x2 = nz(7); if (x1 === x2 || (a * (x1 - x2)) % 2) continue;
@@ -2277,7 +2304,7 @@
       var it = [X(a), C(b)]; if (rnd(4) === 0) it.reverse();
       if (n === 4) {
         var m4 = rnd(2) ? 1 : 2 + rnd(2), k4 = nz(8);
-        if (rnd(3)) { var neg4 = 1 + rnd(6); return { L: [{ k: "g", m: mk(m4), items: it, abs: true }, C(k4)], R: [C(k4 - m4 * neg4)] }; }   // the absolute value would equal a negative number
+        if (iq || rnd(3)) { var neg4 = 1 + rnd(6); return { L: [{ k: "g", m: mk(m4), items: it, abs: true }, C(k4)], R: [C(k4 - m4 * neg4)] }; }   // the absolute value would equal a negative number
         return { L: [{ k: "g", m: mk(m4), items: it, abs: true }, C(k4)], R: [C(k4)] };   // ... equals 0
       }
       var m = n === 3 && rnd(2) ? 2 + rnd(3) : 1, k = n === 3 ? nz(9) : 0, L = [{ k: "g", m: mk(m), items: it, abs: true }], R = [C(m * c + k)];
@@ -2289,7 +2316,6 @@
     }
   }
   function eqCreateAbs(s, rel, err) {   // a typed absolute value equation, like |2x-3|=7 or 2|x+1|-4=6
-    if (rel !== "=") { err.textContent = "Absolute value inequalities aren't ready yet. Use an equals sign, like |2x-3|=7."; return; }
     if (/[a-wyz]/.test(s.replace(/\s+/g, ""))) { err.textContent = "Use x as the variable in an absolute value equation, like |2x-3|=7."; return; }
     var sr = splitRel(s), L, R; exAbsOK = true; try { L = exParse(sr.l); R = exParse(sr.r); } finally { exAbsOK = false; }
     if (typeof L === "string" || typeof R === "string") { err.textContent = "I couldn't read that. Put the absolute value between two bars, like |2x-3|=7 or 2|x+1|-4=6."; return; }
@@ -2298,8 +2324,8 @@
     if (a.rest.concat(a.O).some(function (t) { return t.k !== "c"; })) { err.textContent = "Keep x inside the absolute value, with only numbers outside it, like |2x-3|+4=11."; return; }
     var ti = exTot(a.g.items); if (Object.keys(ti).some(function (k) { return k && k !== "x"; }) || !ti.x || !ti.x.n || a.g.items.some(function (t) { return t.k === "g"; })) { err.textContent = "Inside the bars, use x to the first power, like |2x-3|."; return; }
     if (!a.g.m.n) { err.textContent = "That absolute value is multiplied by 0."; return; }
-    EXP = { eq: true, av: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x", zpq: false, zp: null };
-    SOL.lvl = ladderEq(L, R, "="); SOL.fresh = false;
+    EXP = { eq: true, av: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: rel }, L: L, R: R, rel: rel, ask: null, vk: "x", zpq: false, zp: null };
+    SOL.lvl = ladderEq(L, R, rel); SOL.fresh = false;
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
   }
   function eqSolution(L, R, rel) {   // { kind, x, rel, c } from the equation as first typed (x rel c once the variable has a side to itself)
@@ -2609,9 +2635,10 @@
   function eqEnd(kind, asked) {
     if ((kind === "none" || kind === "inf") && !asked && mode !== "solo") { kindAsk(kind, exLines()[0], function () { eqEnd(kind, true); }); eqRender(); return; }
     if (EXP.zp) {
-      var zz = EXP.zp, sol = exSay(EXP.L) + " = " + exSay(EXP.R); zz.eqs[zz.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; zz.done[zz.act] = true;
+      var zz = EXP.zp, sol = exSay(EXP.L) + " " + (EXP.rel || "=") + " " + exSay(EXP.R); zz.eqs[zz.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)), rel: EXP.rel || "=" }; zz.done[zz.act] = true;
       var left = zz.done.filter(function (d) { return !d; }).length;
-      if (left) { closeAsk(false); eqRender(); note("One answer: " + sol + ". " + (left > 1 ? "Solve the other equations, in any order." : "Now solve the other equation.")); return; } EXP.zp.eqs[EXP.zp.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)) }; EXP.zp.done[EXP.zp.act] = true; }
+      if (left) { closeAsk(false); eqRender(); note((EXP.rel !== "=" ? "One inequality solved: " : "One answer: ") + sol + ". " + (left > 1 ? "Solve the other equations, in any order." : EXP.rel !== "=" ? "Now solve the other inequality." : "Now solve the other equation.")); return; } EXP.zp.eqs[EXP.zp.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)), rel: EXP.rel || "=" }; EXP.zp.done[EXP.zp.act] = true;
+      var aiE = avIneqEnd(); if (aiE && aiE.kind !== "one") kind = aiE.kind; }
     locked = true; eqRender(); closeAsk(false); nlEq(kind);
     var iq = eqIneq(), txt = kind === "one" ? "Solved: " + (EXP.zp ? zpSay() : exSay(EXP.L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(EXP.R) : exSay(EXP.R))) + "." : kind === "none" ? (iq ? "No solution: the inequality is never true." : EXP.av ? "No solution: an absolute value is a distance from 0, so it can never be negative." : "No solution: the two sides can never be equal.") : (iq ? "Every number is a solution: the inequality is always true." : "Infinitely many solutions: the two sides are always equal.");
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note(txt);
@@ -2624,6 +2651,24 @@
     hideKind(); var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; if (EXP.grq) EXP.zpq = !!(EXP.zp || zpOf(EXP.L, EXP.R)); else if (EXP.sq || EXP.av) EXP.zpq = !!EXP.zp; locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
   }
   function eqCheckSolo() {
+    if (EXP.av && eqIneq()) {   // an absolute value inequality: -2 < x < 4, x < -2 or x > 4, no solution, all real numbers
+      var mi = $("exMsg"), wi = avIneqWant(EXP.orig.L, EXP.orig.R, EXP.orig.rel), ti2 = normRel($("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, "")), vi = EXP.vk || "x", okI = false;
+      var hl = function (t) { var q = ineqAns(t, vi); return q ? { up: q.rel === "<" || q.rel === "\u2264", closed: q.rel === "\u2264" || q.rel === "\u2265", v: q.v } : null; };
+      if (/^(no|none|nosolution)/.test(ti2)) okI = wi.kind === "none";
+      else if (/^(all|every|inf|allreal)/.test(ti2)) okI = wi.kind === "inf";
+      else if (wi.kind === "one") {
+        var mm = /^(-?[\d\/]+)([<\u2264])([a-z])([<\u2264])(-?[\d\/]+)$/.exec(ti2), parts2 = ti2.split(/or|,|;/).filter(function (u) { return u; });
+        if (wi.pt) okI = (function () { var v0 = parse(ti2.replace(new RegExp("^" + vi + "="), "")); return !!v0 && same(v0, wi.pt); })();
+        else if (wi.ne) okI = /\u2260|!=/.test(ti2) && (function () { var v0 = parse(ti2.replace(/^[a-z](\u2260|!=)/, "")); return !!v0 && same(v0, wi.ne); })();
+        else if (wi.inside && mm) { var a0 = parse(mm[1]), b0 = parse(mm[5]); okI = !!a0 && !!b0 && same(a0, wi.lo) && same(b0, wi.hi) && (mm[2] === "\u2264") === wi.closed && (mm[4] === "\u2264") === wi.closed; }
+        else if (!wi.inside && parts2.length === 2) { var h1 = hl(parts2[0]), h2 = hl(parts2[1]); if (h1 && h2) { var dn = h1.up ? h1 : h2, upp = h1.up ? h2 : h1; okI = dn.up && !upp.up && same(dn.v, wi.lo) && same(upp.v, wi.hi) && dn.closed === wi.closed && upp.closed === wi.closed; } }
+      }
+      if (!okI) { mi.className = "bad"; mi.textContent = wi.kind === "one" ? (wi.inside ? "Not quite. Type your answer like −2 < x < 4." : "Not quite. Type your answer like x < −2 or x > 4.") : "Not quite. Check your work and try again."; return; }
+      if (wi.kind !== "one") { EXP.L = [{ k: "c", n: mk(0) }]; EXP.R = [{ k: "c", n: mk(1) }]; EXP.rel = wi.kind === "inf" ? "<" : ">"; EXP.zp = null; eqEnd(wi.kind); $("exSolo").hidden = true; return; }
+      var row = function (h, rl) { return { L: [{ k: "x", v: vi, n: mk(1) }], R: [{ k: "c", n: h }], rel: rl }; }, lt = wi.closed ? "\u2264" : "<", gt = wi.closed ? "\u2265" : ">";
+      var rs = wi.pt ? [row(wi.pt, "\u2264"), row(wi.pt, "\u2265")] : wi.ne ? [row(wi.ne, "<"), row(wi.ne, ">")] : wi.inside ? [row(wi.lo, gt), row(wi.hi, lt)] : [row(wi.lo, lt), row(wi.hi, gt)];
+      EXP.zp = { eqs: rs, done: [true, false], act: 1 }; EXP.zpq = true; EXP.L = rs[1].L; EXP.R = rs[1].R; EXP.rel = rs[1].rel; eqEnd("one"); $("exSolo").hidden = true; return;
+    }
     if (EXP.av) {   // an absolute value: two answers, one, or no solution
       var aw = avRoots(EXP.orig.L, EXP.orig.R), atx = $("exSoloIn").value.toLowerCase().replace(/\s+/g, "");
       if (aw && !aw.length) {
@@ -2921,7 +2966,7 @@
     { e: "eq", fd: 1 }, { e: "eq", fd: 1, ineq: 1 }, { e: "eq", fd: 2 }, { e: "eq", fd: 2, ineq: 1 },                                          // adding fractions with different denominators: x = 1/2 + 1/3, then x + 1/2 = 1/3 (move it, then add)
     { e: "eq", dv: 1 },                                          // parentheses with a minus sign (the inequality has a negative number in front: the sign turns)
     { e: "eq", special: true }, { e: "eq", special: true, ineq: 1 },                                                                          // no solution / infinitely many, then never / always true
-    { e: "eq", av: 1 }, { e: "eq", av: 2 }, { e: "eq", av: 3 }, { e: "eq", av: 4 },                                                           // absolute values: |x + 3| = 5, |2x - 3| = 7, move and divide first, no solution / one answer
+    { e: "eq", av: 1 }, { e: "eq", av: 1, ineq: 1 }, { e: "eq", av: 2 }, { e: "eq", av: 2, ineq: 1 }, { e: "eq", av: 3 }, { e: "eq", av: 3, ineq: 1 }, { e: "eq", av: 4 }, { e: "eq", av: 4, ineq: 1 },   // each absolute value inequality right above its equation                                                           // absolute values: |x + 3| = 5, |2x - 3| = 7, move and divide first, no solution / one answer
     { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 },   // letters as coefficients (no inequalities: a letter could be negative)
     { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 }, { e: "eq", grp: 1 }, { e: "eq", grp: 2 }, { e: "eq", sq: 1 }, { e: "eq", sq: 2 }, { e: "eq", sq: 3 }
   ];
@@ -2934,7 +2979,7 @@
   function ladderEq(L, R, rel) {
     var fdl = fdLevel(L, R); if (fdl) return rung("eq", function (r) { return r.fd === fdl && !r.ineq === (!rel || rel === "="); });
     var ao = avOf(L, R);
-    if (ao) { var ar = avRoots(L, R), alv = ar.length < 2 ? 4 : ao.rest.length || !same(ao.g.m, mk(1)) ? 3 : same(exTot(ao.g.items).x || mk(1), mk(1)) ? 1 : 2; return rung("eq", function (r) { return r.av === alv; }); }
+    if (ao) { var ar = avRoots(L, R), alv = ar.length < 2 ? 4 : ao.rest.length || !same(ao.g.m, mk(1)) ? 3 : same(exTot(ao.g.items).x || mk(1), mk(1)) ? 1 : 2; return rung("eq", function (r) { return r.av === alv && !r.ineq === (!rel || rel === "="); }); }
     var gg4 = R.length === 1 && R[0].k === "c" && !R[0].n.n ? grOf(L) : null;
     if (gg4) return rung("eq", function (r) { return r.grp === (gg4.a === 1 ? 1 : 2); });
     var gz = zpOf(L, R);
@@ -3060,7 +3105,7 @@
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
       if (st.e === "eq") {
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
-        EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av) : st.grp ? { L: grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
+        EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
         EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)), rel: EXP.rel }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; EXP.vk = "x";
       } else { EXP = null; useCustom = st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); }
     }
@@ -4306,7 +4351,7 @@
     else if (shade === "left" || (shade === "outside" && px.length)) g += ln(px[0], e0 - 1, "nlSh") + arrow(e0 - 2, -1);
     if (shade === "right" || (shade === "outside" && px.length)) g += ln(px[px.length - 1], e1 + 1, "nlSh") + arrow(e1 + 2, 1);
     if (shade === "between" && px.length === 2) g += ln(px[0], px[1], "nlSh");
-    B.forEach(function (b, i) { g += "<circle class=\"nlDot\" cx=\"" + px[i] + "\" cy=\"" + y + "\" r=\"7.5\" fill=\"" + (b.closed ? "var(--ink)" : "var(--bg)") + "\"/>"; });
+    B.forEach(function (b, i) { g += "<circle class=\"nlDot\" cx=\"" + px[i] + "\" cy=\"" + y + "\" r=\"7.5\" fill=\"" + (b.closed ? "#000" : "#fff") + "\"/>"; });
     var lab = B.map(function (b, i) { return "<span class=\"nlLb\" style=\"left:" + (px[i] / W * 100) + "%\">" + sg(b.v) + "</span>"; }).join("");
     box.innerHTML = "<svg viewBox=\"0 0 " + W + " 44\" role=\"img\" aria-label=\"" + say + " on a number line\">" + g + "</svg><div class=\"nlLbs\">" + lab + "</div>";
     box.hidden = false;
@@ -4317,7 +4362,8 @@
     nlShow("one", mk(q.n, q.d), valRel(n)); if (!ws.length) $("wsEl").classList.add("nlGone");   // the answer went up to the values bar: the number line takes the middle of the screen
   }
   function nlEq(kind) {   // the both-sides engine, once an inequality is finished
-    if (!BUILT[act] || !BUILT[act].solver || !eqIneq() || EXP.zp || EXP.lit) return;
+    if (!BUILT[act] || !BUILT[act].solver || !eqIneq() || EXP.lit) return;
+    if (EXP.zp) { var ai = avIneqEnd(); if (ai) nlDraw(ai.B, ai.shade, ai.say); else if (kind !== "one") nlShow(kind); return; }
     if (kind !== "one") { nlShow(kind); return; }
     var L = EXP.L, R = EXP.R, rel = EXP.rel || "=", isV = function (a) { return a.length === 1 && a[0].k === "x"; }, isC = function (a) { return a.length === 1 && a[0].k === "c"; };
     if (isV(L) && isC(R)) nlShow("one", R[0].n, rel); else if (isV(R) && isC(L)) nlShow("one", L[0].n, relRev(rel));
