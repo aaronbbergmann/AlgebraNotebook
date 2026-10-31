@@ -146,13 +146,27 @@
   @keyframes nlIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   #grpBox{position:fixed;z-index:4;font-family:"LM","Latin Modern Roman","CMU Serif","STIX Two Text",Georgia,"Times New Roman",serif;font-size:clamp(1.3rem,3.2vw,2.1rem);padding:.6rem 1rem .5rem;background:var(--bg);border:2px solid color-mix(in srgb,var(--ink) 22%,transparent);border-radius:16px;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.2);opacity:0;transform:translate(-50%,18px);transition:opacity .3s,transform .3s;touch-action:none}
   #grpBox.on{opacity:1;transform:translate(-50%,0)}
+  #grpBox .grow{display:flex;align-items:center;justify-content:center;gap:0;transition:gap .35s}
+  #grpBox.withSel .grow{gap:1.1em}
+  #grpBox .gsel{display:flex;align-items:center;gap:.35em;font-size:.8em;overflow:hidden;max-width:0;opacity:0;transition:max-width .4s,opacity .4s}
+  #grpBox.withSel .gsel{max-width:12em;opacity:1}
+  #grpBox .gsH{font:600 .5em system-ui,sans-serif;text-align:center;margin-bottom:.2em;white-space:nowrap}
+  #grpBox .gsWin{position:relative;height:5.5em;width:5.4em;overflow:hidden;border-top:1.5px solid color-mix(in srgb,var(--ink) 30%,transparent);border-bottom:1.5px solid color-mix(in srgb,var(--ink) 30%,transparent);cursor:ns-resize;touch-action:none;-webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
+  #grpBox .gsList{position:absolute;left:0;right:0;transition:transform .25s ease-out}
+  #grpBox .gsRow{height:1.1em;line-height:1.1em;display:flex;justify-content:center;gap:.45em;white-space:nowrap}
+  #grpBox .gsRow.cur{font-weight:700}
+  #grpBox .gsMid{position:absolute;left:0;right:0;top:2.2em;height:1.1em;border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);pointer-events:none}
+  #grpBox .gsDial{width:18px;height:44px;color:#1B2433;cursor:ns-resize;touch-action:none;flex:none;position:relative}
+  #grpBox .gsDial svg{display:block;width:100%;height:100%;overflow:visible}
+  #grpBox .gsDial [data-g]{cursor:pointer;pointer-events:all}
+  #grpBox .gsFly{position:fixed;z-index:6;pointer-events:none;transition:left .7s ease-in-out,top .7s ease-in-out}
   #grpBox .ggrid{display:grid;grid-template-columns:auto auto auto;align-items:stretch}
   #grpBox .gcell,#grpBox .gsp{display:flex;align-items:center;justify-content:center;min-width:2.6em;min-height:1.9em;padding:.1em .45em}
   #grpBox .gcell{border:1.5px solid color-mix(in srgb,var(--ink) 55%,transparent);background:color-mix(in srgb,var(--ink) 6%,var(--bg));margin:-1.5px 0 0 -1.5px;transition:background .2s}
   #grpBox .gcell.filled{cursor:pointer}
   #grpBox .gcell.drop{background:none}
   #grpBox .gsp{border:2px dashed transparent;border-radius:.45em}
-  #grpBox .gsp.ready{border-color:var(--plus);cursor:pointer;animation:gpulse 1.4s ease-in-out infinite}
+  #grpBox .gsp.ready{cursor:pointer}#grpBox .gsp.ready::after{content:"?";opacity:.45}   /* no blue target boxes: a space waiting for its factor shows a question mark */
   #grpBox .gsp.set{cursor:pointer}
   #grpBox .gtop.set{background:color-mix(in srgb,#2e9e5b 24%,var(--bg))}
   #grpBox .gleft.set{background:color-mix(in srgb,#f2b705 34%,var(--bg))}
@@ -1864,7 +1878,7 @@
     }, 400);
   }
   function exTapDemo(sel, run, after) {   // the demo hand clicks something
-    var src = $("exRow").querySelector(sel), alive = function () { return EXP && DM4.run && !DM4.paused; };
+    var src = $("exRow").querySelector(sel) || document.querySelector(sel), alive = function () { return EXP && DM4.run && !DM4.paused; };
     if (!src) { DM4.t = setTimeout(function () { if (!alive()) return; run(); after(); }, 1300); return; }
     DM4.t = setTimeout(function () { if (!alive()) return; handGo(ctr(src), 700); DM4.t = setTimeout(function () { if (!alive()) return; handTap(); DM4.t = setTimeout(function () { if (!alive()) return; run(); after(); }, 450); }, 900); }, 400);
   }
@@ -1911,8 +1925,8 @@
     if (typeof r === "string") { err.textContent = r; return; }
     var fac = false, lit = false, lr = exFin(r) ? litFacTerms($("crIn").value) : null;   // a sum with letters (ax + ab) is read with the letters as coefficients
     if (lr) { r = lr; fac = true; lit = true; } else fac = exFin(r) && facAll(r) >= 2;
-    if (exFin(r) && !fac) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5, or a sum with a common factor to take out, like 3x+9 or ax+ab."; return; }
-    var gpx = !fac && !lit && !!grOf(r);   // four terms that factor by grouping: x^2 + 5x + 3x + 15
+    if (exFin(r) && !fac && !grTri(r)) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5, or a sum with a common factor to take out, like 3x+9 or ax+ab."; return; }
+    var gpx = !fac && !lit && !!grAny(r);   // four terms that factor by grouping (x^2 + 5x + 3x + 15), or a trinomial to split first (x^2 + 8x + 15)
     EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, fac: fac, lit: lit, grp: gpx }; SOL.lvl = lit ? 6 : exLevel(r); SOL.fresh = false;
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your expression is in. Choose how you want to work on it.");
   }
@@ -2034,6 +2048,21 @@
     var sol = grSolve(a, p, q, d); if (!sol) return null;
     return { a: a, p: p, q: q, d: d, l: ms[ia].l, sol: sol, cells: sol.arr[0] === p ? [ia, ix[0], ix[1], ic] : [ia, ix[1], ix[0], ic] };
   }
+  function grTri(its) {   // three terms ax^2 + bx + c whose middle term can be split (the AC method): { a, b, c, l, ia, ib, ic, p, q, tri }
+    if (!its || its.length !== 3) return null; var ms = its.map(grMono); if (ms.some(function (m) { return !m || !m.n; })) return null;
+    var ia = -1, ib = -1, ic = -1; ms.forEach(function (m, i) { if (m.p === 2) ia = i; else if (m.p === 1) ib = i; else if (m.p === 0) ic = i; });
+    if (ia < 0 || ib < 0 || ic < 0 || ms[ib].l !== ms[ia].l) return null;
+    var a = ms[ia].n, b = ms[ib].n, c = ms[ic].n, P = grPairs(a * c);
+    for (var k = 0; k < P.length; k++) if (P[k][0] + P[k][1] === b && grSolve(a, P[k][0], P[k][1], c)) return { a: a, b: b, c: c, d: c, l: ms[ia].l, ia: ia, ib: ib, ic: ic, p: P[k][0], q: P[k][1], tri: true };
+    return null;
+  }
+  function grPairs(ac) {   // the factor pairs of ac, with their signs: 15 gives 1·15, 3·5, −1·−15, −3·−5; −12 gives 1·−12, −1·12, 2·−6, −2·6, 3·−4, −3·4
+    var o = [], m = Math.abs(ac); if (!m) return o;
+    for (var f = 1; f * f <= m; f++) if (m % f === 0) { var g = m / f; if (ac > 0) o.push([f, g]); else { o.push([f, -g]); o.push([-f, g]); } }
+    if (ac > 0) o = o.concat(o.map(function (q) { return [-q[0], -q[1]]; }));
+    return o;
+  }
+  function grAny(its) { return grOf(its) || grTri(its); }
   function grRoots(gp) { return [mk(-gp.p, gp.a), mk(-gp.q, gp.a)]; }
   function grGen(lv) {   // a variant: (ax + b)(cx + d) multiplied out into four terms; 1 numbers only, 2 numbers in front of x (the terms may come in any order)
     var X = function (n) { return { k: "x", v: "x", n: mk(n) }; };
@@ -2045,6 +2074,14 @@
       if (grOf(ts)) return ts;
     }
   }
+  function grTriGen(lv) {   // a trinomial to split: 3 x^2 + 8x + 15 (a = 1), 4 a number in front of x^2: 6x^2 + 7x - 3
+    for (;;) {
+      var a = lv >= 4 ? 1 + rnd(3) : 1, c = lv >= 4 ? 1 + rnd(3) : 1, b = nz(7), d = nz(7); if ((lv >= 4 && a * c === 1) || mGcd(a, b) !== 1 || mGcd(c, d) !== 1 || a * d + b * c === 0) continue;
+      var ts = [{ k: "x", v: "x^2", n: mk(a * c) }, { k: "x", v: "x", n: mk(a * d + b * c) }, { k: "c", n: mk(b * d) }];
+      if (rnd(4) === 0) ts.reverse();
+      if (grTri(ts)) return ts;
+    }
+  }
   function grItems() { return EXP.eq ? EXP.L : EXP.items; }
   function grAvail() { return !!(EXP && !locked && !EXP.ask && (EXP.eq ? EXP.grq && !EXP.zpq : EXP.grp)); }
   function grTermHtml(t) { return "<span>" + (t.n.n < 0 ? "−" : "") + exTerm(t) + "</span>"; }
@@ -2054,10 +2091,10 @@
     [].forEach.call(R.querySelectorAll(".exT"), function (el) { el.classList.toggle("grpUsed", !!(GRP && (el.dataset.s || "L") === "L" && GRP.cells.some(function (c) { return c && c.i === +el.dataset.i; }))); });
   }
   function grShow() {
-    if (GRP || !grAvail() || !grOf(grItems())) return;
-    GRP = { cells: [null, null, null, null], rf: [null, null], cf: [null, null], gp: grOf(grItems()), t: [], msg: "" };
+    if (GRP || !grAvail() || !grAny(grItems())) return;
+    GRP = { cells: [null, null, null, null], rf: [null, null], cf: [null, null], gp: grAny(grItems()), t: [], msg: "" };
     var el = document.createElement("div"); el.id = "grpBox"; el.setAttribute("aria-label", "Factoring by grouping");
-    el.innerHTML = "<div class=\"ggrid\"><span></span><span class=\"gsp gtop\" data-sp=\"c0\"></span><span class=\"gsp gtop\" data-sp=\"c1\"></span><span class=\"gsp gleft\" data-sp=\"r0\"></span><span class=\"gcell\" data-k=\"0\" data-drop=\"gb:0\"></span><span class=\"gcell\" data-k=\"1\" data-drop=\"gb:1\"></span><span class=\"gsp gleft\" data-sp=\"r1\"></span><span class=\"gcell\" data-k=\"2\" data-drop=\"gb:2\"></span><span class=\"gcell\" data-k=\"3\" data-drop=\"gb:3\"></span></div><div class=\"gmsg\"></div><button class=\"gclear\" hidden>Clear the square</button>";
+    el.innerHTML = "<div class=\"grow\"><div class=\"ggrid\"><span></span><span class=\"gsp gtop\" data-sp=\"c0\"></span><span class=\"gsp gtop\" data-sp=\"c1\"></span><span class=\"gsp gleft\" data-sp=\"r0\"></span><span class=\"gcell\" data-k=\"0\" data-drop=\"gb:0\"></span><span class=\"gcell\" data-k=\"1\" data-drop=\"gb:1\"></span><span class=\"gsp gleft\" data-sp=\"r1\"></span><span class=\"gcell\" data-k=\"2\" data-drop=\"gb:2\"></span><span class=\"gcell\" data-k=\"3\" data-drop=\"gb:3\"></span></div><div class=\"gsel\" aria-label=\"Factor pairs\"></div></div><div class=\"gmsg\"></div><button class=\"gclear\" hidden>Clear the square</button>";
     (document.querySelector(".app") || document.body).appendChild(el);
     el.addEventListener("click", function (e) {
       if (e.target.closest(".gclear")) { GRP.cells = [null, null, null, null]; GRP.rf = [null, null]; GRP.cf = [null, null]; GRP.msg = ""; grFill(); grMark(); return; }
@@ -2074,17 +2111,74 @@
     GRP.cells.forEach(function (c, k) { var e = el.querySelector("[data-k=\"" + k + "\"]"); e.innerHTML = c ? grTermHtml(c.t) : ""; e.classList.toggle("filled", !!c); e.title = c ? "Click to take it out" : ""; });
     var two = function (sp) { var i = +sp[1]; return sp[0] === "r" ? GRP.cells[2 * i] && GRP.cells[2 * i + 1] : GRP.cells[i] && GRP.cells[2 + i]; };
     [["r0", GRP.rf[0]], ["r1", GRP.rf[1]], ["c0", GRP.cf[0]], ["c1", GRP.cf[1]]].forEach(function (a) {
-      var e = el.querySelector("[data-sp=\"" + a[0] + "\"]"), rd = !!two(a[0]); e.innerHTML = a[1] ? grTermHtml(a[1]) : ""; e.classList.toggle("set", !!a[1]); e.classList.toggle("ready", !a[1] && rd && !GRP.done); e.title = rd ? "Click to type the greatest common factor" : "";
+      var e = el.querySelector("[data-sp=\"" + a[0] + "\"]"), rd = !!two(a[0]); e.innerHTML = a[1] ? grTermHtml(a[1]) : ""; e.classList.toggle("set", !!a[1]); e.classList.toggle("ready", !a[1] && rd && !GRP.done && !(GRP.gp.tri && !GRP.split)); e.title = rd ? "Click to type the greatest common factor" : "";
     });
     var n = GRP.cells.filter(Boolean).length, m = el.querySelector(".gmsg"); m.className = "gmsg" + (GRP.bad ? " bad" : "");
-    m.textContent = GRP.msg || (GRP.done ? "Factored!" : n < 4 ? "Drag each term into a box." : "Now click the spaces on the left and above, and type each greatest common factor.");
+    m.textContent = GRP.msg || (GRP.done ? "Factored!" : GRP.gp.tri ? (n < 3 ? "Drag each of the three terms into a box." : "Find the pair that multiplies to " + sg(mk(GRP.gp.a * GRP.gp.c)) + " and adds to " + sg(mk(GRP.gp.b)) + ".") : n < 4 ? "Drag each term into a box." : "Now click the spaces on the left and above, and type each greatest common factor.");
+    grSelUpd();
     el.querySelector(".gclear").hidden = !n || !!GRP.done;
   }
   function grDirty(k) { GRP.rf[k >> 1] = null; GRP.cf[k & 1] = null; }
   function grPlace(k, i) {
     if (!GRP || GRP.done) return; var t = grItems()[i]; if (!t || !grMono(t)) return;
     GRP.cells.forEach(function (c, j) { if (c && c.i === i) { GRP.cells[j] = null; grDirty(j); } });
-    GRP.cells[k] = { i: i, t: JSON.parse(JSON.stringify(t)) }; grDirty(k); GRP.msg = ""; GRP.bad = false; grFill(); grMark();
+    GRP.cells[k] = { i: i, t: JSON.parse(JSON.stringify(t)) }; grDirty(k); GRP.msg = ""; GRP.bad = false;
+    if (GRP.gp.tri && GRP.cells.filter(Boolean).length === 3) {   // all three terms are in: x^2 and the number must sit on a diagonal, then the factor pairs of ac appear
+      var at = function (ix) { return GRP.cells.findIndex(function (c) { return c && c.i === ix; }); }, pa = at(GRP.gp.ia), pc = at(GRP.gp.ic);
+      if (pa + pc !== 3) { GRP.msg = "Put " + exSay([grItems()[GRP.gp.ia]]) + " and " + exSay([grItems()[GRP.gp.ic]]) + " on a diagonal (opposite corners)."; GRP.bad = true; }
+    }
+    grFill(); grMark();
+  }
+  // ---- the AC method: with the three terms of a trinomial in the square, a wheel of the factor pairs of ac appears beside it. Scroll it (drag the dial or the list, or click
+  // the triangles) and click the circle to choose the middle pair; the pair that adds to b splits the middle term in two, and the new term slides into the empty box.
+  function grSelOn() { if (!GRP || !GRP.gp.tri || GRP.done || GRP.split) return false; var n = GRP.cells.filter(Boolean).length, at = function (ix) { return GRP.cells.findIndex(function (c) { return c && c.i === ix; }); }; return n === 3 && at(GRP.gp.ia) + at(GRP.gp.ic) === 3; }
+  function grSelUpd() {
+    var el = $("grpBox"); if (!el || !GRP) return; var on = grSelOn(), S = el.querySelector(".gsel"); el.classList.toggle("withSel", on); if (!S) return;
+    if (!on) { if (!GRP.split) S.innerHTML = ""; return; }
+    var gp = GRP.gp, P = grPairs(gp.a * gp.c); if (GRP.si == null) GRP.si = 0; GRP.si = Math.max(0, Math.min(P.length - 1, GRP.si));
+    var sgn = function (v) { return v < 0 ? "\u2212" + -v : String(v); };
+    if (!S.firstChild) {
+      S.innerHTML = "<div><div class=\"gsH\">\u00d7 " + sgn(gp.a * gp.c) + " &nbsp; + " + sgn(gp.b) + "</div><div class=\"gsWin\"><div class=\"gsList\"></div><div class=\"gsMid\"></div></div></div>" +
+        "<div class=\"gsDial\" title=\"Drag up or down, or click the triangles; click the circle to choose\"><svg viewBox=\"0 0 18 44\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linejoin=\"round\"><path data-g=\"up\" d=\"M9 1.8 16.3 12.6H1.7Z\"/><circle data-g=\"go\" cx=\"9\" cy=\"22\" r=\"5.4\"/><path data-g=\"dn\" d=\"M1.7 31.4H16.3L9 42.2Z\"/></svg></div>";
+      var win = S.querySelector(".gsWin"), dial = S.querySelector(".gsDial");
+      dial.addEventListener("click", function (e) { var g = e.target.closest("[data-g]"); if (!g || GRP.dragged) return; var w = g.getAttribute("data-g"); if (w === "go") grSelPick(); else grSelMove(w === "up" ? -1 : 1); });
+      [win, dial].forEach(function (h) { h.addEventListener("pointerdown", function (e) {   // drag the list or the dial up or down: one row per row height, like the Play Graph table
+        if (e.button > 0) return; var y0 = e.clientY, i0 = GRP.si, rh = S.querySelector(".gsRow") ? S.querySelector(".gsRow").getBoundingClientRect().height : 20; GRP.dragged = false;
+        function mv(ev) { var dy = ev.clientY - y0; if (Math.abs(dy) > 5) GRP.dragged = true; var ni = Math.max(0, Math.min(P.length - 1, i0 - Math.round(dy / rh))); if (h === dial) dial.style.transform = "translateY(" + Math.max(-30, Math.min(30, dy)) + "px)"; if (ni !== GRP.si) { GRP.si = ni; grSelUpd(); } }
+        function up() { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); dial.style.transform = ""; setTimeout(function () { if (GRP) GRP.dragged = false; }, 0); }
+        document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
+      }); });
+      win.addEventListener("click", function () { if (!GRP.dragged) grSelPick(); });
+    }
+    var L = S.querySelector(".gsList"); L.innerHTML = P.map(function (q, k) { return "<div class=\"gsRow" + (k === GRP.si ? " cur" : "") + "\"><span>" + sgn(q[0]) + "</span><span>\u00b7</span><span>" + sgn(q[1]) + "</span></div>"; }).join("");
+    var rh2 = L.firstChild ? L.firstChild.getBoundingClientRect().height || 1.1 * parseFloat(getComputedStyle(L).fontSize) : 20; L.style.transform = "translateY(" + (2 * rh2 - GRP.si * rh2) + "px)";
+  }
+  function grSelMove(d) { if (!grSelOn()) return; GRP.si += d; GRP.msg = ""; GRP.bad = false; grFill(); }
+  function grSelPick() {
+    if (!grSelOn()) return; var gp = GRP.gp, q = grPairs(gp.a * gp.c)[GRP.si], sgn = function (v) { return v < 0 ? "(\u2212" + -v + ")" : String(v); };
+    if (q[0] + q[1] !== gp.b) { GRP.msg = sgn(q[0]) + " \u00d7 " + sgn(q[1]) + " = " + sg(mk(gp.a * gp.c)) + ", but " + sgn(q[0]) + " + " + sgn(q[1]) + " = " + sg(mk(q[0] + q[1])) + ", not " + sg(mk(gp.b)) + ". Keep looking."; GRP.bad = true; grFill(); return; }
+    grSplit(q[0], q[1]);
+  }
+  function grSplit(p, q) {   // the middle term bx becomes px + qx: one stays in its box, the other slides into the empty one
+    var gp = GRP.gp, sol = grSolve(gp.a, p, q, gp.c); if (!sol) return;
+    var at = function (ix) { return GRP.cells.findIndex(function (c) { return c && c.i === ix; }); }, ka = at(gp.ia), kb = at(gp.ib), ke = GRP.cells.indexOf(null);
+    var c1 = ka === 0 ? 1 : ka === 3 ? 2 : ka === 1 ? 0 : 3;   // the box that holds sol.arr[0] (the square read with x^2 at the top left)
+    var vb = kb === c1 ? sol.arr[0] : sol.arr[1], ve = kb === c1 ? sol.arr[1] : sol.arr[0], l = gp.l;
+    var tb = { k: "x", v: l, n: mk(vb) }, te = { k: "x", v: l, n: mk(ve) }, el = $("grpBox"), from = el.querySelector("[data-k=\"" + kb + "\"]"), to = el.querySelector("[data-k=\"" + ke + "\"]");
+    GRP.split = true; GRP.msg = sgn2(p) + " and " + sgn2(q) + " multiply to " + sg(mk(gp.a * gp.c)) + " and add to " + sg(mk(gp.b)) + ": " + exSay([grItems()[gp.ib]]) + " = " + exSay([tb, te]) + "."; GRP.bad = false;
+    function sgn2(v) { return v < 0 ? "\u2212" + -v : String(v); }
+    el.classList.remove("withSel"); from.innerHTML = grTermHtml(tb);
+    var fr = from.getBoundingClientRect(), tr = to.getBoundingClientRect(), fly = document.createElement("div"); fly.className = "gsFly"; fly.innerHTML = grTermHtml(te); fly.style.font = getComputedStyle(el).font;
+    document.body.appendChild(fly); fly.style.left = fr.left + "px"; fly.style.top = fr.top + "px"; fly.style.width = fr.width + "px"; fly.style.height = fr.height + "px"; fly.style.display = "flex"; fly.style.alignItems = "center"; fly.style.justifyContent = "center";
+    requestAnimationFrame(function () { requestAnimationFrame(function () { fly.style.left = tr.left + "px"; fly.style.top = tr.top + "px"; }); });
+    GRP.t.push(setTimeout(function () {
+      fly.remove(); if (!GRP) return;
+      var its = grItems().slice(), ib = gp.ib; its.splice(ib, 1, tb, te);
+      if (EXP.eq) { hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: EXP.rel || "=", z: null })); updUndo(); EXP.L = its; } else { hist.push(JSON.stringify(EXP.items)); updUndo(); EXP.items = its; }
+      var sh = function (i) { return i > ib ? i + 1 : i; };
+      GRP.cells = GRP.cells.map(function (c) { return c ? { i: sh(c.i), t: c.t } : null; }); GRP.cells[kb] = { i: ib, t: tb }; GRP.cells[ke] = { i: ib + 1, t: te };
+      GRP.gp = grOf(its) || GRP.gp; var keepG = GRP; if (EXP.eq) eqRender(); else exRender(0); GRP = keepG; grFill(); grMark();
+    }, 800));
   }
   function grClear(k) { if (!GRP || GRP.done) return; GRP.cells[k] = null; grDirty(k); GRP.msg = ""; GRP.bad = false; grFill(); grMark(); }
   function grEnd(t) { if ((!t || t.dataset.drop.indexOf("gb:") !== 0) && GRP && !GRP.done && !GRP.cells.some(Boolean)) grHide(); }
@@ -2155,10 +2249,22 @@
     clearTimeout(DM4.t);
     DM4.t = setTimeout(function () {
       if (!EXP || !DM4.run || DM4.paused || locked) return;
-      var its = grItems(), gp = grOf(its); if (!gp) return;
+      var its = grItems(), gp = grAny(its); if (!gp) return;
       var alive = function () { return EXP && DM4.run && !DM4.paused && !locked; }, more = function () { grDemoStep(600); };
       if (!GRP) { exRender(); grShow(); dmCap("Drag each term down into a box."); grDemoStep(1200); return; }
       if (GRP.done) return;
+      if (gp.tri) {   // the AC method: x^2 top left, the middle term top right, the number bottom right; then turn the wheel to the pair that adds to b and click the circle
+        var plan = [gp.ia, gp.ib, null, gp.ic];
+        for (var c3 = 0; c3 < 4; c3++) if (plan[c3] != null && (!GRP.cells[c3] || GRP.cells[c3].i !== plan[c3])) {
+          (function (c, i) { dmCap("Drag " + exSay([its[i]]) + " into a box."); exMoveDemo((EXP.eq ? ".exT[data-s=\"L\"]" : ".exT") + "[data-i=\"" + i + "\"]", "#grpBox .gcell[data-k=\"" + c + "\"]", function () { grPlace(c, i); if (EXP.eq) eqRender(); else exRender(); }, more); })(c3, plan[c3]);
+          return;
+        }
+        if (!grSelOn()) return;
+        var P3 = grPairs(gp.a * gp.c), want3 = P3.findIndex(function (q) { return q[0] === gp.p && q[1] === gp.q; }), dirn = want3 > GRP.si ? 1 : -1;
+        dmCap(want3 === GRP.si ? "This pair multiplies to " + sg(mk(gp.a * gp.c)) + " and adds to " + sg(mk(gp.b)) + ". Click the circle." : "Find two numbers that multiply to " + sg(mk(gp.a * gp.c)) + " and add to " + sg(mk(gp.b)) + ".");
+        exTapDemo("#grpBox .gsDial [data-g=\"" + (want3 === GRP.si ? "go" : dirn > 0 ? "dn" : "up") + "\"]", function () { if (want3 === GRP.si) grSelPick(); else grSelMove(dirn); }, function () { grDemoStep(want3 === GRP.si ? 1400 : 700); });
+        return;
+      }
       for (var c = 0; c < 4; c++) if (!GRP.cells[c] || GRP.cells[c].i !== gp.cells[c]) {
         (function (c) {
           var i = gp.cells[c]; dmCap("Drag " + exSay([its[i]]) + " into a box.");
@@ -2692,7 +2798,7 @@
       }
     }
     if (EXP.zpq || EXP.grq || EXP.sq || EXP.av) {   // the answers are a set: "3, -2", "x = 3 or x = -2"
-      var mz = $("exMsg"), g0 = EXP.grq || EXP.sq || EXP.av ? null : zpOf(EXP.orig.L, EXP.orig.R), vz = EXP.vk || "x", want = EXP.av ? avRoots(EXP.orig.L, EXP.orig.R) : EXP.grq ? grRoots(grOf(EXP.orig.L)) : EXP.sq ? (function () { var sv = sqVal(EXP.orig.L, EXP.orig.R); return [mk(sv.root), mk(-sv.root)]; })() : zpRoots(g0, vz), tz = $("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, ""), parts = tz.split(/,|;|or|and/).filter(function (u) { return u; }), got = []; ansTouched = true;
+      var mz = $("exMsg"), g0 = EXP.grq || EXP.sq || EXP.av ? null : zpOf(EXP.orig.L, EXP.orig.R), vz = EXP.vk || "x", want = EXP.av ? avRoots(EXP.orig.L, EXP.orig.R) : EXP.grq ? grRoots(grAny(EXP.orig.L)) : EXP.sq ? (function () { var sv = sqVal(EXP.orig.L, EXP.orig.R); return [mk(sv.root), mk(-sv.root)]; })() : zpRoots(g0, vz), tz = $("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, ""), parts = tz.split(/,|;|or|and/).filter(function (u) { return u; }), got = []; ansTouched = true;
       tz = tz.replace(new RegExp("^" + vz + "="), ""); var pmM = /^(?:\u00b1|\+-|\+\/-)(.+)$/.exec(tz); if (pmM) tz = pmM[1] + ",-" + pmM[1]; parts = tz.split(/,|;|or|and/).filter(function (u) { return u; });
       for (var pi = 0; pi < parts.length; pi++) { var pv = parse(parts[pi].replace(new RegExp("^" + vz + "="), "")); if (!pv) { mz.className = "bad"; mz.textContent = "Type your answers like 3, \u22122 (separated by commas)."; return; } got.push(pv); }
       var has = function (arr, v) { return arr.some(function (u) { return same(u, v); }); };
@@ -2828,11 +2934,11 @@
     if (typeof L === "string" || typeof R === "string") { err.textContent = typeof L === "string" ? L : R; return; }
     var gq = false;   // x^2 + 5x + 3x + 15 = 0: factor by grouping, then the zero product property
     if (rel === "=") {
-      if (R.length === 1 && R[0].k === "c" && !R[0].n.n && grOf(L)) gq = true;
-      else if (L.length === 1 && L[0].k === "c" && !L[0].n.n && grOf(R)) { var sw3 = L; L = R; R = sw3; gq = true; }
+      if (R.length === 1 && R[0].k === "c" && !R[0].n.n && grAny(L)) gq = true;
+      else if (L.length === 1 && L[0].k === "c" && !L[0].n.n && grAny(R)) { var sw3 = L; L = R; R = sw3; gq = true; }
     }
     if (gq) {
-      EXP = { eq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: grOf(L).l, grq: true, zpq: false, zp: null };
+      EXP = { eq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: grAny(L).l, grq: true, zpq: false, zp: null };
       SOL.lvl = ladderEq(L, R, "="); SOL.fresh = false;
       $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
       return;
@@ -2992,7 +3098,7 @@
     { e: "eq", special: true }, { e: "eq", special: true, ineq: 1 },                                                                          // no solution / infinitely many, then never / always true
     { e: "eq", av: 1 }, { e: "eq", av: 1, ineq: 1 }, { e: "eq", av: 2 }, { e: "eq", av: 2, ineq: 1 }, { e: "eq", av: 3 }, { e: "eq", av: 3, ineq: 1 }, { e: "eq", av: 4 }, { e: "eq", av: 4, ineq: 1 },   // each absolute value inequality right above its equation                                                           // absolute values: |x + 3| = 5, |2x - 3| = 7, move and divide first, no solution / one answer
     { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 },   // letters as coefficients (no inequalities: a letter could be negative)
-    { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 }, { e: "eq", grp: 1 }, { e: "eq", grp: 2 }, { e: "eq", sq: 1 }, { e: "eq", sq: 2 }, { e: "eq", sq: 3 }
+    { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 }, { e: "eq", grp: 1 }, { e: "eq", grp: 2 }, { e: "eq", grp: 3 }, { e: "eq", grp: 4 }, /* 3, 4: trinomials split with the AC method */ { e: "eq", sq: 1 }, { e: "eq", sq: 2 }, { e: "eq", sq: 3 }
   ];
   function rung(e, f) { for (var i = 0; i < LADDER.length; i++) if (LADDER[i].e === e && f(LADDER[i])) return i; return 0; }
   function paneUnred(q) {   // the last step divides a whole number by a whole number that shares a factor with it, and the answer is not a whole number
@@ -3004,8 +3110,8 @@
     var fdl = fdLevel(L, R); if (fdl) return rung("eq", function (r) { return r.fd === fdl && !r.ineq === (!rel || rel === "="); });
     var ao = avOf(L, R);
     if (ao) { var ar = avRoots(L, R), alv = ar.length < 2 ? 4 : ao.rest.length || !same(ao.g.m, mk(1)) ? 3 : same(exTot(ao.g.items).x || mk(1), mk(1)) ? 1 : 2; return rung("eq", function (r) { return r.av === alv && !r.ineq === (!rel || rel === "="); }); }
-    var gg4 = R.length === 1 && R[0].k === "c" && !R[0].n.n ? grOf(L) : null;
-    if (gg4) return rung("eq", function (r) { return r.grp === (gg4.a === 1 ? 1 : 2); });
+    var gg4 = R.length === 1 && R[0].k === "c" && !R[0].n.n ? grAny(L) : null;
+    if (gg4) return rung("eq", function (r) { return r.grp === (gg4.tri ? 2 : 0) + (gg4.a === 1 ? 1 : 2); });
     var gz = zpOf(L, R);
     if (gz) { var zl = gz.c ? 5 : gz.m.n !== 1 || gz.m.d !== 1 ? 4 : gz.items.concat(gz.b).some(function (t) { return t.k === "x" && (t.n.n !== 1 || t.n.d !== 1); }) ? 3 : gz.items.length === 1 || gz.b.length === 1 ? 2 : 1; return rung("eq", function (r) { return r.zp === zl; }); }
     if (rel === "=" && dvOK(L, R)) return rung("eq", function (r) { return r.dv === 1; });
@@ -3074,7 +3180,8 @@
       var p12 = [mkT(a12), mkT(b12)]; if (rnd(2)) p12.push(x12 ? { k: "c", n: mk(nz(5)) } : { k: "x", v: "x", n: mk(nz(4)) });
       return p12;
     }
-    if (lv === 10) return grGen(1 + rnd(2));   // factoring by grouping: x^2 + 5x + 3x + 15
+    if (lv === 10) return grGen(1 + rnd(2));
+    if (lv >= 13) return grTriGen(lv === 13 ? 3 : 4);   // trinomials: x^2 + 8x + 15, then 6x^2 + 7x - 3   // factoring by grouping: x^2 + 5x + 3x + 15
     if (lv === 9) {   // three sets of parentheses: (x + 1)(x + 2)(x + 3), x(x - 2)(x + 4), (2x + 1)(x - 3)(x + 2)
       var big2 = rnd(3) === 0 ? rnd(3) : -1, fl = [rnd(5) === 0, false, false], fx = [];
       for (var q9 = 0; q9 < 3; q9++) { var a9 = q9 === big2 && !fl[q9] ? 2 : 1; fx.push(fl[q9] ? [{ k: "x", v: "x", n: mk(1) }] : [{ k: "x", v: "x", n: mk(a9) }, { k: "c", n: mk(nz(5)) }]); }
@@ -3133,18 +3240,19 @@
     if (gb) return gb.c ? 9 : gb.items.length <= 2 && gb.b.length <= 2 ? 7 : 8;
     if (its.some(function (t) { return t.k === "g" && t.items.length >= 3; })) return 8;
     if (grOf(its)) return 10;
+    var gt0 = grTri(its); if (gt0) return gt0.a === 1 ? 13 : 14;
     if (!g && exFin(its) && facAll(its) >= 2) return 5;
     return Math.max(0, Math.min(4, g ? (fr ? 4 : ng ? 3 : 2) : ng ? 1 : 0));
   }
   function solverGo(dl, m) {
     SOL.fresh = false; SOL.keep = true;
-    if (EXP && !EXP.eq) { SV = "x"; SOL.lvl = Math.max(0, Math.min(12, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10; }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
+    if (EXP && !EXP.eq) { SV = "x"; SOL.lvl = Math.max(0, Math.min(14, SOL.lvl + dl)); var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10 || SOL.lvl >= 13; }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
     else {
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
       if (st.e === "eq") {
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
-        EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
+        EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: st.grp > 2 ? grTriGen(st.grp) : grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
         EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)), rel: EXP.rel }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; EXP.vk = "x";
       } else { EXP = null; useCustom = st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); }
     }
