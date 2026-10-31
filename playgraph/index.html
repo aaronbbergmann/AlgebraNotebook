@@ -147,7 +147,9 @@
   #grpBox{position:fixed;z-index:4;font-family:"LM","Latin Modern Roman","CMU Serif","STIX Two Text",Georgia,"Times New Roman",serif;font-size:clamp(1.3rem,3.2vw,2.1rem);padding:.6rem 1rem .5rem;background:var(--bg);border:2px solid color-mix(in srgb,var(--ink) 22%,transparent);border-radius:16px;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.2);opacity:0;transform:translate(-50%,18px);transition:opacity .3s,transform .3s;touch-action:none}
   #grpBox.on{opacity:1;transform:translate(-50%,0)}
   #grpBox .grow{display:flex;align-items:center;justify-content:center;gap:0;transition:gap .35s}
-  #grpBox.withSel .grow{gap:1.1em}
+  #grpBox.withSel .grow{gap:2.2em}
+  #grpBox .gsel,#grpBox .gsel *{-webkit-user-select:none;user-select:none}
+  #grpBox.withSel .gsel{border-left:1.5px solid color-mix(in srgb,var(--ink) 25%,transparent);padding-left:1em}
   #grpBox .gsel{display:flex;align-items:center;gap:.35em;font-size:.8em;overflow:hidden;max-width:0;opacity:0;transition:max-width .4s,opacity .4s}
   #grpBox.withSel .gsel{max-width:12em;opacity:1}
   #grpBox .gsH{font:600 .5em system-ui,sans-serif;text-align:center;margin-bottom:.2em;white-space:nowrap}
@@ -156,7 +158,7 @@
   #grpBox .gsRow{height:1.1em;line-height:1.1em;display:flex;justify-content:center;gap:.45em;white-space:nowrap}
   #grpBox .gsRow.cur{font-weight:700}
   #grpBox .gsMid{position:absolute;left:0;right:0;top:2.2em;height:1.1em;border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);pointer-events:none}
-  #grpBox .gsDial{width:18px;height:44px;color:#1B2433;cursor:ns-resize;touch-action:none;flex:none;position:relative}
+  #grpBox .gsDial{width:24px;height:58px;color:#1B2433;cursor:ns-resize;touch-action:none;flex:none;position:relative}
   #grpBox .gsDial svg{display:block;width:100%;height:100%;overflow:visible}
   #grpBox .gsDial [data-g]{cursor:pointer;pointer-events:all}
   #grpBox .gsFly{position:fixed;z-index:6;pointer-events:none;transition:left .7s ease-in-out,top .7s ease-in-out}
@@ -189,7 +191,7 @@
   @keyframes zpIn{from{opacity:0;transform:translateY(-.6em)}to{opacity:1;transform:none}}
   .exBox.zp .exG:hover,.exBox.zp .exH:hover{background:color-mix(in srgb,var(--plus) 16%,transparent);border-radius:.3em}
   .zpRow.drop{outline:none}
-  .exBox.zp .exG,.exBox.zp .exH{cursor:grab;touch-action:none}
+  .exBox.zp .exG,.exBox.zp .exH,.exBox.zp .exJ{cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
   .exRow{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;line-height:1.3}
   .exOpc{cursor:pointer;color:var(--plus);font-weight:800;border-radius:6px;transition:transform .2s}.exOpc:hover{transform:scale(1.4);background:color-mix(in srgb,var(--plus) 20%,transparent)}
   @keyframes relFlip{from{transform:perspective(320px) rotateY(180deg)}50%{transform:perspective(320px) rotateY(90deg) scale(1.25)}to{transform:perspective(320px) rotateY(0)}}
@@ -2139,12 +2141,12 @@
     var gp = GRP.gp, P = grPairs(gp.a * gp.c); if (GRP.si == null) GRP.si = 0; GRP.si = Math.max(0, Math.min(P.length - 1, GRP.si));
     var sgn = function (v) { return v < 0 ? "\u2212" + -v : String(v); };
     if (!S.firstChild) {
-      S.innerHTML = "<div><div class=\"gsH\">\u00d7 " + sgn(gp.a * gp.c) + " &nbsp; + " + sgn(gp.b) + "</div><div class=\"gsWin\"><div class=\"gsList\"></div><div class=\"gsMid\"></div></div></div>" +
+      S.innerHTML = "<div><div class=\"gsWin\"><div class=\"gsList\"></div><div class=\"gsMid\"></div></div></div>" +
         "<div class=\"gsDial\" title=\"Drag up or down, or click the triangles; click the circle to choose\"><svg viewBox=\"0 0 18 44\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linejoin=\"round\"><path data-g=\"up\" d=\"M9 1.8 16.3 12.6H1.7Z\"/><circle data-g=\"go\" cx=\"9\" cy=\"22\" r=\"5.4\"/><path data-g=\"dn\" d=\"M1.7 31.4H16.3L9 42.2Z\"/></svg></div>";
       var win = S.querySelector(".gsWin"), dial = S.querySelector(".gsDial");
       dial.addEventListener("click", function (e) { var g = e.target.closest("[data-g]"); if (!g || GRP.dragged) return; var w = g.getAttribute("data-g"); if (w === "go") grSelPick(); else grSelMove(w === "up" ? -1 : 1); });
       [win, dial].forEach(function (h) { h.addEventListener("pointerdown", function (e) {   // drag the list or the dial up or down: one row per row height, like the Play Graph table
-        if (e.button > 0) return; var y0 = e.clientY, i0 = GRP.si, rh = S.querySelector(".gsRow") ? S.querySelector(".gsRow").getBoundingClientRect().height : 20; GRP.dragged = false;
+        if (e.button > 0) return; e.preventDefault(); var y0 = e.clientY, i0 = GRP.si, rh = S.querySelector(".gsRow") ? S.querySelector(".gsRow").getBoundingClientRect().height : 20; GRP.dragged = false;
         function mv(ev) { var dy = ev.clientY - y0; if (Math.abs(dy) > 5) GRP.dragged = true; var ni = Math.max(0, Math.min(P.length - 1, i0 - Math.round(dy / rh))); if (h === dial) dial.style.transform = "translateY(" + Math.max(-30, Math.min(30, dy)) + "px)"; if (ni !== GRP.si) { GRP.si = ni; grSelUpd(); } }
         function up() { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); dial.style.transform = ""; setTimeout(function () { if (GRP) GRP.dragged = false; }, 0); }
         document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
@@ -3580,6 +3582,13 @@
       if (myOp) myOp.textContent = on ? (opTxt === "+" ? "\u2212" : "+") : opTxt;
       else if (tn) { var neg = tnData.trim().charAt(0) === "\u2212"; tn.data = !on ? tnData : neg ? tnData.replace("\u2212", "") : "\u2212" + tnData; }
     }
+    function farTarget(ev) {   // anywhere on the other half of the screen (left or right of the =) counts as dropping across the =
+      if (!eqE || !eqX || (ev.clientX < eqX ? -1 : 1) === side0) return null;
+      var pre = [].concat(prefix), ok = function (n) { var d = n && n.dataset && n.dataset.drop; return !!d && pre.some(function (p0) { return d.indexOf(p0) === 0; }); };
+      if (ok(eqE)) return eqE; var row = eqE.closest(".eqn, #exRow, .zpRow"); if (!row) return null; if (ok(row)) return row;
+      var best = null, bd = 1e9; [].forEach.call(row.querySelectorAll("[data-drop]"), function (n) { if (!ok(n) || n === el || el.contains(n)) return; var r = n.getBoundingClientRect(), cx = r.left + r.width / 2; if ((cx < eqX ? -1 : 1) === side0) return; var d = Math.abs(cx - ev.clientX); if (d < bd) { bd = d; best = n; } });
+      return best;
+    }
     cap.setPointerCapture(e.pointerId); e.preventDefault();
     function mv(ev) {
       var dx = ev.clientX - sx, dy = ev.clientY - sy;
@@ -3588,12 +3597,12 @@
       moved = true; el.classList.add("drag"); el.style.transform = "translate(" + dx + "px," + dy + "px)";
       if (myOp) { myOp.classList.add("dragOp"); myOp.style.transform = el.style.transform; }
       if (eqE) showSign((ev.clientX < eqX ? -1 : 1) !== side0);
-      var t = under(ev, el, prefix);
+      var t = under(ev, el, prefix) || farTarget(ev);
       if (hot !== t) { if (hot) { hot.classList.remove("drop"); if (hotOp) hotOp.classList.remove("drop"); hotOp = null; if (el._hotAll) el._hotAll(false); } hot = t; if (t) { t.classList.add("drop"); hotOp = opOf(t); if (hotOp && hotOp !== myOp) hotOp.classList.add("drop"); else hotOp = null; if (el._hotAll) el._hotAll(true, t); } }   // _hotAll: the drop lights up more than the one target (dividing lights up the whole equation)
     }
     function up(ev) {
       cap.removeEventListener("pointermove", mv); cap.removeEventListener("pointerup", up); cap.removeEventListener("pointercancel", up);
-      var t = moved ? under(ev, el, prefix) : null;
+      var t = moved ? under(ev, el, prefix) || farTarget(ev) : null;
       showSign(false); el.classList.remove("drag"); el.style.transform = ""; if (myOp) { myOp.classList.remove("dragOp"); myOp.style.transform = ""; } if (hot) { hot.classList.remove("drop"); if (hotOp) hotOp.classList.remove("drop"); if (el._hotAll) el._hotAll(false); }
       if (!moved) { if (onClick) onClick(); } else if (t) onDrop(t, ev);
       if (moved && onEnd) onEnd(t, ev);
