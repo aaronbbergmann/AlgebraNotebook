@@ -124,11 +124,12 @@
   .d3Txt{margin-top:.5rem;line-height:1.4}
   .modePick .mpT{font-weight:700;font-size:1.1rem}
   .modePick .mpRow{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center}
-  .fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.15;margin:0 .08em;font-size:.9em}
+  .fr{display:inline-flex;flex-direction:column;align-items:stretch;text-align:center;vertical-align:middle;line-height:1.15;margin:0 .08em;font-size:.9em}
   .fr>span:first-child{border-bottom:.07em solid currentColor;padding:0 .12em .04em}
   .fr>span:last-child{padding:.04em .12em 0}
   .exBox{display:flex;flex-direction:column;align-items:center;gap:1rem;margin:1rem auto;width:fit-content;max-width:100%;padding:.4em .8em;border-radius:.4em;background:color-mix(in srgb,var(--ink) 7%,var(--bg))}
   .exBox[hidden]{display:none}
+  body.solver .exBox,body.solver .eqn{background:none!important;box-shadow:none!important}   /* Play Solve: no grey rectangle around the equation */
   .exLc{display:inline-block;padding:0 .18em;margin:0 .05em;border-radius:6px;cursor:pointer;color:var(--plus);font-weight:800;transition:transform .2s}.exLc:hover{transform:scale(1.4);background:color-mix(in srgb,var(--plus) 20%,transparent)}
   .avBar{cursor:pointer;padding:0 .1em;border-radius:.2em;transition:background .2s,color .2s}
   .avBar:hover{background:color-mix(in srgb,var(--plus) 18%,transparent);color:var(--plus)}
