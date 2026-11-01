@@ -2147,9 +2147,9 @@
       var win = S.querySelector(".gsWin"), dial = S.querySelector(".gsDial");
       dial.addEventListener("click", function (e) { var g = e.target.closest("[data-g]"); if (!g || GRP.dragged) return; var w = g.getAttribute("data-g"); if (w === "go") grSelPick(); else grSelMove(w === "up" ? -1 : 1); });
       [win, dial].forEach(function (h) { h.addEventListener("pointerdown", function (e) {   // drag the list or the dial up or down: one row per row height, like the Play Graph table
-        if (e.button > 0) return; e.preventDefault(); var y0 = e.clientY, i0 = GRP.si, rh = S.querySelector(".gsRow") ? S.querySelector(".gsRow").getBoundingClientRect().height : 20; GRP.dragged = false;
+        if (e.button > 0) return; e.preventDefault(); GRP.holding = true; clearTimeout(GRP.autoT); var y0 = e.clientY, i0 = GRP.si, rh = S.querySelector(".gsRow") ? S.querySelector(".gsRow").getBoundingClientRect().height : 20; GRP.dragged = false;
         function mv(ev) { var dy = ev.clientY - y0; if (Math.abs(dy) > 5) GRP.dragged = true; var ni = Math.max(0, Math.min(P.length - 1, i0 - Math.round(dy / rh))); if (h === dial) dial.style.transform = "translateY(" + Math.max(-30, Math.min(30, dy)) + "px)"; if (ni !== GRP.si) { GRP.si = ni; grSelUpd(); } }
-        function up() { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); dial.style.transform = ""; setTimeout(function () { if (GRP) GRP.dragged = false; }, 0); }
+        function up() { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); dial.style.transform = ""; if (GRP) { GRP.holding = false; GRP.touched = true; grSelUpd(); } setTimeout(function () { if (GRP) GRP.dragged = false; }, 0); }   // the pair is judged only once the wheel is let go
         document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
       }); });
       win.addEventListener("click", function () { if (!GRP.dragged) grSelPick(); });
@@ -2161,18 +2161,19 @@
   function grSelPreview(q) {   // as the wheel turns, the middle term shows the pair under the line at once: 5x reads 1x + 6x, 2x + 3x ...; the pair that adds to b is taken on its own
     var el = $("grpBox"), gp = GRP.gp; if (!el || !q) return;
     var at = function (ix) { return GRP.cells.findIndex(function (c) { return c && c.i === ix; }); }, kb = at(gp.ib), ke = GRP.cells.indexOf(null), ok = q[0] + q[1] === gp.b;
-    var cb = el.querySelector("[data-k=\"" + kb + "\"]"), ce = el.querySelector("[data-k=\"" + ke + "\"]"), xt = function (n) { return { k: "x", v: gp.l, n: mk(n) }; };
-    if (cb) { cb.innerHTML = grTermHtml(xt(q[0])); cb.classList.toggle("gprev", !ok); }
-    if (ce) { ce.innerHTML = grTermHtml(xt(q[1])); ce.classList.toggle("gprev", !ok); }
+    var cb = el.querySelector("[data-k=\"" + kb + "\"]"), ce = el.querySelector("[data-k=\"" + ke + "\"]"), xt = function (n) { return { k: "x", v: gp.l, n: mk(n) }; }, hold = !!GRP.holding || !GRP.touched;
+    if (cb) { cb.innerHTML = grTermHtml(xt(q[0])); cb.classList.toggle("gprev", !ok && !hold); }
+    if (ce) { ce.innerHTML = grTermHtml(xt(q[1])); ce.classList.toggle("gprev", !ok && !hold); }
+    if (hold) { clearTimeout(GRP.autoT); var mh = el.querySelector(".gmsg"); if (mh && !GRP.msg) { mh.className = "gmsg"; mh.textContent = GRP.touched ? "Let go to check the pair." : "Turn the wheel to the pair that multiplies to " + sg(mk(gp.a * gp.c)) + " and adds to " + sg(mk(gp.b)) + "."; } return; }   // still turning: nothing is judged yet
     var m = el.querySelector(".gmsg"), sg2 = function (v) { return v < 0 ? "(\u2212" + -v + ")" : String(v); };
-    if (m && !GRP.msg) { m.className = "gmsg"; m.textContent = ok ? sg2(q[0]) + " + " + sg2(q[1]) + " = " + sg(mk(gp.b)) + "!" : sg2(q[0]) + " \u00d7 " + sg2(q[1]) + " = " + sg(mk(gp.a * gp.c)) + ", but " + sg2(q[0]) + " + " + sg2(q[1]) + " = " + sg(mk(q[0] + q[1])) + ", not " + sg(mk(gp.b)) + "."; }
+    if (m && !GRP.msg) { m.className = "gmsg"; m.textContent = ok ? sg2(q[0]) + " + " + sg2(q[1]) + " = " + sg(mk(gp.b)) + "!" : sg2(q[0]) + " + " + sg2(q[1]) + " \u2260 " + sg(mk(gp.b)) + "."; }
     clearTimeout(GRP.autoT);
     if (ok) { var si0 = GRP.si; GRP.autoT = setTimeout(function () { if (GRP && grSelOn() && GRP.si === si0) grSplit(q[0], q[1]); }, 700); }
   }
-  function grSelMove(d) { if (!grSelOn()) return; GRP.si += d; GRP.msg = ""; GRP.bad = false; grFill(); }
+  function grSelMove(d) { if (!grSelOn()) return; GRP.touched = true; GRP.si += d; GRP.msg = ""; GRP.bad = false; grFill(); }
   function grSelPick() {
-    if (!grSelOn()) return; var gp = GRP.gp, q = grPairs(gp.a * gp.c)[GRP.si], sgn = function (v) { return v < 0 ? "(\u2212" + -v + ")" : String(v); };
-    if (q[0] + q[1] !== gp.b) { GRP.msg = sgn(q[0]) + " \u00d7 " + sgn(q[1]) + " = " + sg(mk(gp.a * gp.c)) + ", but " + sgn(q[0]) + " + " + sgn(q[1]) + " = " + sg(mk(q[0] + q[1])) + ", not " + sg(mk(gp.b)) + ". Keep looking."; GRP.bad = true; grFill(); return; }
+    if (!grSelOn()) return; GRP.touched = true; var gp = GRP.gp, q = grPairs(gp.a * gp.c)[GRP.si], sgn = function (v) { return v < 0 ? "(\u2212" + -v + ")" : String(v); };
+    if (q[0] + q[1] !== gp.b) { GRP.msg = sgn(q[0]) + " + " + sgn(q[1]) + " \u2260 " + sg(mk(gp.b)) + "."; GRP.bad = true; grFill(); return; }
     grSplit(q[0], q[1]);
   }
   function grSplit(p, q) {   // the middle term bx becomes px + qx: one stays in its box, the other slides into the empty one
@@ -2278,6 +2279,7 @@
         if (GRP.split) { grDemoStep(600); return; }   // the middle term is splitting: wait for it
         if (!grSelOn()) return;
         var P3 = grPairs(gp.a * gp.c), want3 = P3.findIndex(function (q) { return q[0] === gp.p && q[1] === gp.q; }), dirn = want3 > GRP.si ? 1 : -1;
+        if (want3 === GRP.si && !GRP.touched) { dmCap("The first pair already works. Click the circle to check it."); exTapDemo("#grpBox .gsDial [data-g=\"go\"]", function () { grSelPick(); }, function () { grDemoStep(900); }); return; }
         if (want3 === GRP.si) { dmCap("This pair multiplies to " + sg(mk(gp.a * gp.c)) + " and adds to " + sg(mk(gp.b)) + "."); grDemoStep(900); return; }   // it is taken on its own
         dmCap("Turn the wheel: find two numbers that multiply to " + sg(mk(gp.a * gp.c)) + " and add to " + sg(mk(gp.b)) + ".");
         exTapDemo("#grpBox .gsDial [data-g=\"" + (dirn > 0 ? "dn" : "up") + "\"]", function () { grSelMove(dirn); }, function () { grDemoStep(700); });
