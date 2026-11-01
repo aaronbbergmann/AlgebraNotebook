@@ -1630,7 +1630,7 @@
     }
     if ((t.lc || t.w) && fdOK(t)) { var fv = t.k === "x" ? exVarHtml(t.v || "x") : ""; return (t.w ? Math.abs(t.w.n) + "/" + t.w.d : exFr(mk(Math.abs(t.n.n), t.n.d))) + fv + (t.lc ? "<span class=\"exLc\" title=\"Click to multiply\">\u22c5</span>" + t.lc + "/" + t.lc : ""); }   // 1/2 ⋅ 3/3, then 3/6
     if (t.k === "q") return "<span class=\"fr\"><span>" + exHtml(t.num) + "</span><span>" + exHtml(t.den) + "</span></span>";
-    if (t.k === "g" && t.b && !t.c && !(EXP && EXP.eq) && JSON.stringify(t.items) === JSON.stringify(t.b) && same(t.m, mk(1)) && !(t.m.s && sSig(t.m.s))) return "<span class=\"exG\">(" + exHtml(t.items) + ")<sup>2</sup></span>";   // (2x + 3)(2x + 3) in an expression reads (2x + 3)²
+    if (t.k === "g" && zpSquare(t) && same(t.m, mk(1)) && !(t.m.s && sSig(t.m.s))) return "<span class=\"exG\">(" + exHtml(t.items) + ")<sup>2</sup></span>";   // (2x + 3)(2x + 3) in an expression reads (2x + 3)²
     if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">" + exPar(t, t.items) + "</span>" + (t.b ? "<span class=\"exH\">" + exPar(t, t.b) + "</span>" : "") + (t.c ? "<span class=\"exH exJ\">" + exPar(t, t.c) + "</span>" : ""); }
     if (hasS(t)) return litHtml(t, false);
     var a = mk(Math.abs(t.n.n), t.n.d); if (t.u && t.k === "x") return Math.abs(t.u.n) + "/" + t.u.d + exVarHtml(t.v || "x");   // 6/4x
@@ -2014,8 +2014,14 @@
       });
     });
   }
+  function zpSquare(g) { return !!(g && g.k === "g" && g.b && !g.c && JSON.stringify(g.items) === JSON.stringify(g.b) && same(g.m, mk(1)) && !(g.m.s && sSig(g.m.s))); }   // (x + 5)(x + 5), written (x + 5)²
   function zpSplit(fi, up, idx) {   // fi: which set of parentheses (0, 1 or 2). The dragged factor becomes its own equation, above its product when it went up, below when it went down; the factors left behind stay together as a product (the number in front stays with them)
     var g = zpPick(idx); if (!g) return;
+    if (zpSquare(g)) {   // (x + 5)² = 0: a square is 0 only when what is squared is 0, so there is just one equation
+      zpHist(); var one = JSON.parse(JSON.stringify(g.items)); EXP.L = one; EXP.R = [{ k: "c", n: mk(0) }]; EXP.rel = "="; EXP.zp = null; EXP.zpNew = true;
+      closeAsk(false); eqRender(); note("A square is 0 only when what is squared is 0: " + exSay([g]) + " = 0 means " + exSay(one) + " = 0, just one equation.");
+      var k1 = eqKind(); if (k1) eqEnd(k1); return;
+    }
     var F = zpFacs(g), noM = !(g.m.n === 1 && g.m.d === 1 && !(g.m.s && sSig(g.m.s))), zero = function () { return [{ k: "c", n: mk(0) }]; }, cp = function (o) { return JSON.parse(JSON.stringify(o)); };
     var rest = F.map(function (f, q) { return q; }).filter(function (q) { return q !== fi; }), D = { L: cp(F[fi]), R: zero() }, Rm;
     if (rest.length === 1) {   // one factor is left: a single equation, with the number in front kept
