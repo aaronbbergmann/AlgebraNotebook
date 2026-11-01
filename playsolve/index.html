@@ -130,7 +130,7 @@
   .exBox{display:flex;flex-direction:column;align-items:center;gap:1rem;margin:1rem auto;width:fit-content;max-width:100%;padding:.4em .8em;border-radius:.4em;background:color-mix(in srgb,var(--ink) 7%,var(--bg))}
   .exBox[hidden]{display:none}
   body.solver .exBox,body.solver .eqn{background:none!important;box-shadow:none!important}   /* Play Solve: no grey rectangle around the equation */
-  .exLc{display:inline-block;padding:0 .18em;margin:0 .05em;border-radius:6px;cursor:pointer;color:var(--plus);font-weight:800;transition:transform .2s}.exLc:hover{transform:scale(1.4);background:color-mix(in srgb,var(--plus) 20%,transparent)}
+  .exLc{display:inline-block;padding:0 .18em;margin:0 .05em;border-radius:6px;cursor:pointer;transition:transform .2s}.exLc:hover{transform:scale(1.4)}   /* the ⋅ looks like any other sign; it only grows under the pointer */
   .avBar{cursor:pointer;padding:0 .1em;border-radius:.2em;transition:background .2s,color .2s}
   .avBar:hover{background:color-mix(in srgb,var(--plus) 18%,transparent);color:var(--plus)}
   .nlBox{color:#000;margin:.4rem auto 0;width:600px;max-width:100%;animation:nlIn .5s ease-out}
