@@ -651,6 +651,8 @@
   .pgDemo.ready,.pgDemo.paused,.btn.next,body.pq #qzNext,.pgDemo.next{background:#8E2465;border-color:#8E2465;color:#fff}
   .pgDemo.ready:hover,.pgDemo.paused:hover,.btn.next:hover,body.pq #qzNext:hover:not(:disabled){background:#6E1A4E;border-color:#6E1A4E}
   .dmLink{font-size:.85rem;margin-top:-.2rem;margin-bottom:.8rem;max-width:11rem;text-align:center}
+  #dmLink:has(+ .dmEasy:not([hidden])){margin-bottom:.15rem}.nxEasy{font-size:.85rem}#nxEasy[hidden],#dmEasy[hidden]{display:none!important}
+  html:not([data-mode=demo]):not([data-mode=create]) body.solver #nxEasy:not([hidden]){display:block!important}
   .nxRow{padding:0;gap:.5rem}
   body.solver #dmCtl{min-height:13rem;justify-content:flex-start}   /* Level Up, Try another and End demo share this space, so Hint, Undo and Show work never move */
   #nxHard[hidden],#dmHard[hidden]{display:none!important}
@@ -804,7 +806,7 @@
   <aside class="chat" aria-label="Controls and tutor chat">
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Exercise</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
-      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Write</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo hard" id="dmHard" hidden>Level Up</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="reg" aria-pressed="false">Regression</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="btn" id="nxHard" hidden>Level Up</button><button class="link" id="again" hidden>Try another</button></div>
+      <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Write</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo hard" id="dmHard" hidden>Level Up</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button><button type="button" class="link dmLink dmEasy" id="dmEasy" hidden>Easier Equation</button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="reg" aria-pressed="false">Regression</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="btn" id="nxHard" hidden>Level Up</button><button class="link" id="again" hidden>Try another</button><button class="link nxEasy" id="nxEasy" hidden>Easier Equation</button></div>
     <div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="ptTog" hidden>Parent Table</button>
       <button class="btn" id="fmTogBtn" hidden>Difference of Squares</button>
@@ -3756,7 +3758,8 @@
   // ---- Playground: Equation Solver: Next / Harder / Try another ----
   // When a problem is finished: Next (plum red, "Try in [next mode] Mode"), "Harder Equation" directly below it, and a small "Try another" link.
   // The Next button is the demo button in Demo (Start Demo, Pause demo, Resume demo ... and, when the demo is over, Next) and the right panel's Next in the other modes.
-  var SOL = { lvl: 0, fresh: true };   // lvl: how hard the variants are; fresh: the first Demo still shows 3x=9
+  var SOL = { lvl: 0, fresh: true, ups: false };   // ups: Level Up has been pressed, so Easier Equation shows under Try another
+  function easyUpd() { var on = !!(SOL.ups && BUILT[act] && BUILT[act].solver); if ($("dmEasy")) $("dmEasy").hidden = !(on && !$("dmLink").hidden); if ($("nxEasy")) $("nxEasy").hidden = !(on && mode !== "demo" && mode !== "create"); }   // lvl: how hard the variants are; fresh: the first Demo still shows 3x=9
   var SOLMODES = ["demo", "sequence", "calculate", "solo"];
   function solverFinish() { var m = nextMode(); dmFinish(nextLabel(), function () { solverGo(0, m); }, "Try another", function () { solverGo(0, "demo"); }); }
   function nextMode() { return SOLMODES[(SOLMODES.indexOf(mode) + 1) % SOLMODES.length]; }
@@ -4041,8 +4044,10 @@
     $("modePick").hidden = true;
     if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); }
   }
-  $("dmHard").addEventListener("click", function () { dmUI("idle"); solverGo(1, mode); });
-  $("nxHard").addEventListener("click", function () { solverGo(1, mode); });
+  $("dmHard").addEventListener("click", function () { SOL.ups = true; dmUI("idle"); solverGo(1, mode); easyUpd(); });
+  $("nxHard").addEventListener("click", function () { SOL.ups = true; solverGo(1, mode); easyUpd(); });
+  $("dmEasy").addEventListener("click", function () { dmUI("idle"); solverGo(-1, mode); easyUpd(); });   // Easier Equation: one rung down the ladder, the opposite of Level Up
+  $("nxEasy").addEventListener("click", function () { solverGo(-1, mode); easyUpd(); });
 
   // ---- Playground: Equation Solver: terms of one side can be rearranged (the commutative property of addition) by dragging.
   // A term carries its sign with it: dragging "2" out of 3x \u2212 2 gives \u22122 + 3x. Drop a term on the other side of the variable term, or on a term to swap places.
@@ -5235,7 +5240,7 @@
     if (mode === "demo" && BUILT[act].solver && locked && (!DM4.run || DM4.paused)) { DM4.run = DM4.paused = false; clearTimeout(DM4.t); dmUI("idle"); dmCap("Solved!"); solverFinish(); }
     if (mode === "demo") { nx.hidden = true; ag.hidden = true; return; }   // the demo button carries it
     if (BUILT[act].solver) {   // Next, then Harder, then the small Try another link
-      nx.textContent = nextLabel(); nx.hidden = false; nx.disabled = false; $("nxHard").hidden = false; $("nxHard").textContent = hardLabel(); ag.textContent = "Try another"; ag.hidden = false; return;
+      nx.textContent = nextLabel(); nx.hidden = false; nx.disabled = false; $("nxHard").hidden = false; $("nxHard").textContent = hardLabel(); ag.textContent = "Try another"; ag.hidden = false; easyUpd(); return;
     }
     nx.textContent = up ? up.label : EXP ? "Another expression" : BUILT[act].solver ? "Another equation" : "Next"; nx.hidden = false; nx.disabled = false;
     ag.textContent = stay; ag.hidden = !stay;
@@ -5393,7 +5398,7 @@
       var b = $(p[0]), l = $(p[2]); b.textContent = label; b.classList.remove("on", "paused", "ready"); b.classList.add("next"); b.setAttribute("aria-pressed", "false");
       $(p[1]).hidden = true; l.textContent = stay || ""; l.hidden = !stay;
     });
-    $("dmHard").hidden = !BUILT[act].solver; $("dmHard").textContent = hardLabel();
+    $("dmHard").hidden = !BUILT[act].solver; $("dmHard").textContent = hardLabel(); easyUpd();
   }
   function dmClickFinish() { var d = DMX; if (!d) return false; dmUI("idle"); d.go(); return true; }
   function dmUI(st) {
@@ -5406,6 +5411,7 @@
       e.hidden = st !== "paused" || progAct();   // Progress activities have no End demo button
     });
     if (BUILT[act] && BUILT[act].solver) { $("dmHard").hidden = false; $("dmHard").textContent = hardLabel(); $("dmLink").textContent = "Try another"; $("dmLink").hidden = false; }   // Level Up and Try another are always there
+    easyUpd();
     if (st === "idle") { dmCap(""); if (typeof DG !== "undefined" && DG) DG.go = false; }   // a new demo waits for its button again
   }
   function dmCap(t) { var c = $("stCap"); if (c) c.textContent = t || ""; dmHead(); }
@@ -12925,7 +12931,7 @@ var ESPIC = {
     clearTimeout(lockTip.t); lockTip.t = setTimeout(function () { T.hidden = true; }, 2800);
   }
   function modeLocksUI() { var S = $("modeSel"); if (!S) return; [].forEach.call(S.options, function (o) { var lk = modeLock(o.value); o.style.color = lk ? "#A3A8B0" : ""; o.classList.toggle("locked", !!lk); o.title = lk ? "Finish " + MODES[lk] + " first" : ""; }); }
-  function setMode(m) { m = lockFix(m); DG.go = false; dgArrow(false); setMode0(m); modeLocksUI(); urlSync(); }
+  function setMode(m) { m = lockFix(m); DG.go = false; dgArrow(false); setMode0(m); modeLocksUI(); urlSync(); easyUpd(); }
 
   // ==== Demo mode: the first click must be the demo button.  Until it is pressed, a click anywhere else does nothing and a big red arrow grows in, pointing at it
   // (the small activity / exercise / mode links at the top of the right panel still work) ====
