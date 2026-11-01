@@ -149,6 +149,20 @@
   @keyframes nlIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   #grpBox{position:fixed;z-index:4;font-family:"LM","Latin Modern Roman","CMU Serif","STIX Two Text",Georgia,"Times New Roman",serif;font-size:clamp(1.3rem,3.2vw,2.1rem);padding:.6rem 1rem .5rem;background:var(--bg);border:2px solid color-mix(in srgb,var(--ink) 22%,transparent);border-radius:16px;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.2);opacity:0;transform:translate(-50%,18px);transition:opacity .3s,transform .3s;touch-action:none}
   #grpBox.on{opacity:1;transform:translate(-50%,0)}
+  #fmBox{position:fixed;z-index:4;font-family:"LM","Latin Modern Roman","CMU Serif",Georgia,serif;font-size:clamp(1.2rem,2.8vw,1.8rem);padding:.6rem 1rem .5rem;background:var(--bg);border:2px solid color-mix(in srgb,var(--ink) 22%,transparent);border-radius:16px;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.2);opacity:0;transform:translate(-50%,-18px);transition:opacity .3s,transform .3s;text-align:center;-webkit-user-select:none;user-select:none}
+  #fmBox.on{opacity:1;transform:translate(-50%,0)}
+  #fmBox .fmTop{display:flex;align-items:center;gap:1.4em;justify-content:center}
+  #fmBox .fmForm{display:flex;align-items:flex-start;gap:.35em}
+  #fmBox .fmT{display:inline-flex;flex-direction:column;align-items:center;min-width:2.2em;padding:.1em .25em;border-radius:8px}
+  #fmBox .fmV{font-size:.75em;min-height:1.2em;opacity:.8}
+  #fmBox .fmO{padding-top:.1em}
+  #fmBox .fmTog{font:600 .5em system-ui,sans-serif;white-space:nowrap}
+  #fmBox .fmRow{margin-top:.25em}
+  #fmBox input{font:600 .6em system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:8px;padding:.25em .4em;text-align:center;width:6em}
+  #fmBox #fmF,#fmBox #fmK{width:11em;-webkit-user-select:text;user-select:text}
+  #fmBox .fmRes{margin-top:.35em;font-size:1.05em}
+  #fmBox .fmMsg{font:600 .45em system-ui,sans-serif;max-width:24em;margin:.6em auto 0;min-height:1.2em}
+  #fmBox .fmMsg.bad{color:var(--no)}
   #grpBox .grow{display:flex;align-items:center;justify-content:center;gap:0;transition:gap .35s}
   #grpBox.withSel .grow{gap:2.2em}
   #grpBox .gsel,#grpBox .gsel *{-webkit-user-select:none;user-select:none}
@@ -1616,6 +1630,7 @@
     }
     if ((t.lc || t.w) && fdOK(t)) { var fv = t.k === "x" ? exVarHtml(t.v || "x") : ""; return (t.w ? Math.abs(t.w.n) + "/" + t.w.d : exFr(mk(Math.abs(t.n.n), t.n.d))) + fv + (t.lc ? "<span class=\"exLc\" title=\"Click to multiply\">\u22c5</span>" + t.lc + "/" + t.lc : ""); }   // 1/2 ⋅ 3/3, then 3/6
     if (t.k === "q") return "<span class=\"fr\"><span>" + exHtml(t.num) + "</span><span>" + exHtml(t.den) + "</span></span>";
+    if (t.k === "g" && t.b && !t.c && !(EXP && EXP.eq) && JSON.stringify(t.items) === JSON.stringify(t.b) && same(t.m, mk(1)) && !(t.m.s && sSig(t.m.s))) return "<span class=\"exG\">(" + exHtml(t.items) + ")<sup>2</sup></span>";   // (2x + 3)(2x + 3) in an expression reads (2x + 3)²
     if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">" + exPar(t, t.items) + "</span>" + (t.b ? "<span class=\"exH\">" + exPar(t, t.b) + "</span>" : "") + (t.c ? "<span class=\"exH exJ\">" + exPar(t, t.c) + "</span>" : ""); }
     if (hasS(t)) return litHtml(t, false);
     var a = mk(Math.abs(t.n.n), t.n.d); if (t.u && t.k === "x") return Math.abs(t.u.n) + "/" + t.u.d + exVarHtml(t.v || "x");   // 6/4x
@@ -1684,7 +1699,7 @@
       }
       var kEl = el.querySelector(":scope > .exK");
       if (kEl && !EXP.grp) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, kEl, null, function (t) { exFactor(i, +t.dataset.drop.slice(3)); }, "ex:"); });
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { if (t.dataset.drop.indexOf("gb:") === 0) grPlace(+t.dataset.drop.slice(3), i); else exDrop(i, +t.dataset.drop.slice(3)); }, EXP.grp ? ["ex:", "gb:"] : "ex:", EXP.grp ? grShow : null, EXP.grp ? grEnd : null); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else if (dd.indexOf("gb:") === 0) grPlace(+dd.slice(3), i); else exDrop(i, +dd.slice(3)); }, EXP.grp ? ["ex:", "gb:", "fm:"] : ["ex:", "fm:"], function (dx, dy) { if (fmUp(null, i, dx, dy)) return; if (EXP.grp && !FM) grShow(); }, EXP.grp ? grEnd : null); });
     });
   }
   function exPush() { grHide(); hist.push(JSON.stringify(EXP.items)); updUndo(); }
@@ -1841,13 +1856,14 @@
     EXP.items = r; exEnd(); $("exSolo").hidden = true;
   }
   function exUndo() {
+    if (FM && !FM.done) { fmHide(); return; }   // Undo first closes the formula
     if (!hist.length) return;
     distHide(); if (EXP.eq) { eqUndo(); return; } EXP.items = JSON.parse(hist.pop()); locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false);
     clearLog(); exRender(); updUndo();
   }
   function exHide() { $("exBox").hidden = true; $("wsEl").style.display = ""; }
   function exBegin() {
-    hideKind(); distHide(); stopDemo(); closeAsk(false); stopParty(); busy = false; calc = null; $("modePick").hidden = true;
+    hideKind(); distHide(); fmHide(); stopDemo(); closeAsk(false); stopParty(); busy = false; calc = null; $("modePick").hidden = true;
     if (BUILT[act].solver) $("stT").textContent = svTitle();
     orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
     if (EXP.eq) { EXP.L = JSON.parse(JSON.stringify(EXP.orig.L)); EXP.R = JSON.parse(JSON.stringify(EXP.orig.R)); EXP.rel = EXP.orig.rel || "="; } else EXP.items = JSON.parse(JSON.stringify(EXP.orig));
@@ -1937,8 +1953,8 @@
     if (typeof r === "string") { err.textContent = r; return; }
     var fac = false, lit = false, lr = exFin(r) ? litFacTerms($("crIn").value) : null;   // a sum with letters (ax + ab) is read with the letters as coefficients
     if (lr) { r = lr; fac = true; lit = true; } else fac = exFin(r) && facAll(r) >= 2;
-    if (exFin(r) && !fac && !grTri(r)) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5, or a sum with a common factor to take out, like 3x+9 or ax+ab."; return; }
-    var gpx = !fac && !lit && !!grAny(r);   // four terms that factor by grouping (x^2 + 5x + 3x + 15), or a trinomial to split first (x^2 + 8x + 15)
+    if (exFin(r) && !fac && !grTri(r) && !fmFits(r)) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5, or a sum with a common factor to take out, like 3x+9 or ax+ab."; return; }
+    var gpx = !fac && !lit && (!!grAny(r) || !!fmFits(r));   // four terms that factor by grouping (x^2 + 5x + 3x + 15), or a trinomial to split first (x^2 + 8x + 15)
     EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, fac: fac, lit: lit, grp: gpx }; SOL.lvl = lit ? 6 : exLevel(r); SOL.fresh = false;
     $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your expression is in. Choose how you want to work on it.");
   }
@@ -2086,6 +2102,19 @@
       if (grOf(ts)) return ts;
     }
   }
+  function fmGen(n) {   // 3: fractions, x^2 - 1/4, x^2 + 2/3 x + 1/9; 4: letters, x^2 - 9y^2, 4a^2 + 12ab + 9b^2; otherwise as fmGen0
+    if (n !== 3 && n !== 4) return fmGen0(n);
+    var A = n === 3 ? { n: mk(rnd(3) ? 1 : 2 + rnd(2)), L: { x: 1 } } : { n: mk(1 + rnd(3)), L: rnd(2) ? { x: 1 } : { a: 1 } }, B = n === 3 ? { n: mk(1 + rnd(4), 2 + rnd(4)), L: {} } : { n: mk(1 + rnd(4)), L: A.L.x ? { y: 1 } : { b: 1 } };
+    if (n === 3 && B.n.d === 1) B.n = mk(1, 2);
+    var sq = function (m) { var L = {}; for (var l in m.L) L[l] = 2 * m.L[l]; return { n: mul(m.n, m.n), L: L }; }, LL = {}; [A.L, B.L].forEach(function (Q) { for (var l in Q) LL[l] = (LL[l] || 0) + Q[l]; });
+    if (rnd(2)) return [fmTerm(sq(A)), fmTerm(sq(B), true)];
+    return [fmTerm(sq(A)), fmTerm({ n: mul(mk((rnd(2) ? 1 : -1) * 2), mul(A.n, B.n)), L: LL }), fmTerm(sq(B))];
+  }
+  function fmGen0(n) {   // 1: a difference of squares, x^2 - 49, 9x^2 - 16; 2: a perfect square trinomial, x^2 + 6x + 9, 4x^2 - 20x + 25
+    var a = rnd(2) ? 1 : 2 + rnd(3), b = 1 + rnd(9), X2 = { k: "x", v: "x^2", n: mk(a * a) }, C = { k: "c", n: mk(n === 1 ? -b * b : b * b) };
+    if (n === 1) return rnd(4) ? [X2, C] : [C, X2];
+    return [X2, { k: "x", v: "x", n: mk((rnd(2) ? 1 : -1) * 2 * a * b) }, C];
+  }
   function grTriGen(lv) {   // a trinomial to split: 3 x^2 + 8x + 15 (a = 1), 4 a number in front of x^2: 6x^2 + 7x - 3
     for (;;) {
       var a = lv >= 4 ? 1 + rnd(3) : 1, c = lv >= 4 ? 1 + rnd(3) : 1, b = nz(7), d = nz(7); if ((lv >= 4 && a * c === 1) || mGcd(a, b) !== 1 || mGcd(c, d) !== 1 || a * d + b * c === 0) continue;
@@ -2207,10 +2236,177 @@
   }
   function grClear(k) { if (!GRP || GRP.done) return; GRP.cells[k] = null; grDirty(k); GRP.msg = ""; GRP.bad = false; grFill(); grMark(); }
   function grEnd(t) { if ((!t || t.dataset.drop.indexOf("gb:") !== 0) && GRP && !GRP.done && !GRP.cells.some(Boolean)) grHide(); }
+  // ---- factoring special products with a formula (Big Ideas Math Algebra 1, 7.7). Drag the x^2 term up: the polynomial half of a formula appears above the problem,
+  // A^2 ± 2AB + B^2 (a perfect square trinomial; ± stands for both versions), or A^2 - B^2 (a difference of squares) after the button. Drag each term of the problem onto
+  // its part; A = and B = appear under the formula as the squares come in; with every term placed, the factored half of the formula follows, and under it the problem factored.
+  var FM = null;
+  function fmSideOf(S) {   // the terms being factored: an expression, or the side of an equation whose other side is 0
+    if (!EXP) return null; if (!EXP.eq) return EXP.items;
+    var O = S === "L" ? "R" : "L"; return EXP[O].length === 1 && EXP[O][0].k === "c" && !EXP[O][0].n.n ? EXP[S] : null;
+  }
+  function fmMono(t) {   // a term as { n: a fraction, L: { letter: power } } (letters are variables in an expression; letters as coefficients count too), or null
+    if (!t || t.k === "g" || t.k === "q" || t.k === "r" || t.co || t.pm || t.abs) return null; var L = {};
+    if (t.k === "x") (t.v || "x").replace(/([a-z])(?:\^(\d+))?/g, function (_, l, e) { L[l] = (L[l] || 0) + (e ? +e : 1); });
+    if (t.s) Object.keys(t.s).forEach(function (l) { L[l] = (L[l] || 0) + t.s[l]; });
+    Object.keys(L).forEach(function (l) { if (!L[l]) delete L[l]; }); return { n: t.n, L: L };
+  }
+  function fmDeg(m) { return Object.keys(m.L).reduce(function (d, l) { return d + m.L[l]; }, 0); }
+  function fmSig(L) { return Object.keys(L).sort().map(function (l) { return l + (L[l] !== 1 ? "^" + L[l] : ""); }).join(""); }
+  function fmSq(m) {   // the square root of a positive monomial (fractions too: 9/4 x^2 gives 3/2 x), or null when it is not a perfect square
+    if (!m || m.n.n <= 0) return null; var rn = Math.round(Math.sqrt(m.n.n)), rd = Math.round(Math.sqrt(m.n.d)); if (rn * rn !== m.n.n || rd * rd !== m.n.d) return null;
+    var L = {}; for (var l in m.L) { if (m.L[l] % 2 || m.L[l] < 0) return null; L[l] = m.L[l] / 2; } return { n: mk(rn, rd), L: L };
+  }
+  function fmAbs(m) { return { n: mk(Math.abs(m.n.n), m.n.d), L: m.L }; }
+  function fmTerm(m, neg) { var n = neg ? mk(-m.n.n, m.n.d) : m.n, v = fmSig(m.L); return v ? { k: "x", v: v, n: n } : { k: "c", n: n }; }
+  function fmCand(its) {   // two or three terms, one of them a positive square with letters (x^2, 4y^2, a^2x^2, 9/4 x^2)
+    if (!its || its.length < 2 || its.length > 3) return false; var ms = its.map(fmMono); if (ms.some(function (m) { return !m || !m.n.n; })) return false;
+    return ms.some(function (m) { return fmDeg(m) > 0 && fmSq(m); });
+  }
+  function fmFits(its) {   // the problem is a difference of squares ("dos") or a perfect square trinomial ("pst"): { kind, A, B, sgn, ia, ib, iab }
+    if (!fmCand(its)) return null; var ms = its.map(fmMono), idx = ms.map(function (m, i) { return i; });
+    var sqPos = idx.filter(function (i) { return fmSq(ms[i]); }).sort(function (x, y) { return fmDeg(ms[y]) - fmDeg(ms[x]); });
+    if (its.length === 2) {
+      var ip = sqPos[0], iq = ip === 0 ? 1 : 0; if (ip == null) return null; var Bm = ms[iq].n.n < 0 ? fmSq(fmAbs(ms[iq])) : null; if (!Bm) return null;
+      return { kind: "dos", A: fmSq(ms[ip]), B: Bm, ia: ip, ib: iq };
+    }
+    if (sqPos.length < 2) return null;
+    for (var x = 0; x < sqPos.length; x++) for (var y = 0; y < sqPos.length; y++) {
+      if (x === y) continue; var ia = sqPos[x], ib = sqPos[y], im = 3 - ia - ib; if (im === ia || im === ib || im < 0 || im > 2) continue;
+      var A = fmSq(ms[ia]), B = fmSq(ms[ib]), M = ms[im], LL = {}; [A.L, B.L].forEach(function (Q) { for (var l in Q) LL[l] = (LL[l] || 0) + Q[l]; });
+      if (same(mk(Math.abs(M.n.n), M.n.d), mul(mk(2), mul(A.n, B.n))) && fmSig(LL) === fmSig(M.L) && fmDeg(A) >= fmDeg(B)) return { kind: "pst", A: A, B: B, sgn: M.n.n < 0 ? -1 : 1, ia: ia, ib: ib, iab: im };
+    }
+    return null;
+  }
+  function fmRoots(f) {   // the answers of (A + B)(A - B) = 0 or (A ± B)^2 = 0, when A is a number times x
+    var r = mul(f.B.n, inv(f.A.n)); return f.kind === "dos" ? [r, neg(r)] : [f.sgn < 0 ? r : neg(r)];
+  }
+  function fmUp(S, i, dx, dy) {   // a drag that begins upward on the squared term opens the formula
+    if (FM || !(dy < -Math.abs(dx))) return false; var its = fmSideOf(S || "L"); if (EXP && EXP.eq && !S) return false;
+    if (!its || !fmCand(its)) return false; var m = fmMono(its[i]); if (!m || !fmDeg(m) || !fmSq(m)) return false;
+    fmShow(S); return true;
+  }
+  function fmHide() { if (FM && FM.t) FM.t.forEach(clearTimeout); FM = null; var b = $("fmBox"); if (b) b.remove(); }
+  function fmShow(S) {
+    grHide(); FM = { S: EXP.eq ? S || "L" : null, kind: "pst", slots: {}, A: null, B: null, okF: mode !== "calculate", okFac: false, t: [], msg: "" };
+    var el = document.createElement("div"); el.id = "fmBox"; el.setAttribute("aria-label", "Factoring with a formula"); (document.querySelector(".app") || document.body).appendChild(el);
+    el.addEventListener("click", function (e) { var b = e.target.closest(".fmTog"); if (b) fmToggle(); });
+    fmDraw(); requestAnimationFrame(function () { if ($("fmBox") === el) el.classList.add("on"); });
+  }
+  function fmToggle() { if (!FM || FM.done) return; FM.kind = FM.kind === "pst" ? "dos" : "pst"; FM.slots = {}; FM.A = FM.B = null; FM.okF = mode !== "calculate"; FM.okFac = false; FM.msg = ""; fmDraw(); }
+  function fmTxt(m) { return exSay([fmTerm(m)]); }
+  function fmNeed() { return FM.kind === "pst" ? ["A2", "AB", "B2"] : ["A2", "B2"]; }
+  function fmDraw() {
+    var el = $("fmBox"); if (!el || !FM) return; var its = fmSideOf(FM.S || "L") || [], pst = FM.kind === "pst", A = "<i>A</i>", B = "<i>B</i>";
+    var slot = function (k, lab) { var c = FM.slots[k]; return "<span class=\"fmT\" data-drop=\"fm:" + k + "\"><span class=\"fmL\">" + lab + "</span><span class=\"fmV\">" + (c ? grTermHtml(c.t) : "&nbsp;") + "</span></span>"; };
+    var form = !FM.okF ? "<span class=\"fmIn\"><input id=\"fmF\" autocomplete=\"off\" placeholder=\"Type the formula\" aria-label=\"Type the formula\"></span>"
+      : pst ? slot("A2", A + "<sup>2</sup>") + "<span class=\"fmO\">±</span>" + slot("AB", "2" + A + B) + "<span class=\"fmO\">+</span>" + slot("B2", B + "<sup>2</sup>")
+      : slot("A2", A + "<sup>2</sup>") + "<span class=\"fmO\">−</span>" + slot("B2", B + "<sup>2</sup>");
+    var ab = ["A", "B"].map(function (w) {
+      var has = FM.slots[w + "2"]; if (!has) return "";
+      var v = FM[w]; return "<div class=\"fmRow\"><i>" + w + "</i> = " + (v ? grTermHtml(fmTerm(v)) : "<input class=\"fmAB\" data-w=\"" + w + "\" autocomplete=\"off\" placeholder=\"?\" aria-label=\"" + w + " =\">") + "</div>";
+    }).join("");
+    var all = FM.okF && fmNeed().every(function (k) { return FM.slots[k]; }) && FM.A && FM.B && FM.slotsOK, fac = "", res = "";
+    if (all) {
+      fac = FM.okFac ? "<div class=\"fmRow fmFac\">= " + (pst ? "(" + A + " ± " + B + ")<sup>2</sup>" : "(" + A + " + " + B + ")(" + A + " − " + B + ")") + "</div>" : "<div class=\"fmRow fmFac\">= <input id=\"fmK\" autocomplete=\"off\" placeholder=\"the factored half\" aria-label=\"The factored half of the formula\"></div>";
+      if (FM.okFac) { var gq0 = fmGroup(); res = "<div class=\"fmRes\">" + exHtml(its) + " = " + (pst ? "(" + exHtml(gq0.items) + ")<sup>2</sup>" : exHtml([gq0])) + "</div>"; }
+    }
+    el.innerHTML = "<div class=\"fmTop\"><div class=\"fmForm\">" + form + "</div><button type=\"button\" class=\"btn fmTog\">" + (pst ? "Difference of Squares" : "Perfect Square Trinomial") + "</button></div>" + ab + fac + res + "<div class=\"fmMsg" + (FM.bad ? " bad" : "") + "\">" + (FM.msg || fmHint()) + "</div>";
+    var R = $("exRow").getBoundingClientRect(); el.style.left = (R.left + R.width / 2) + "px"; el.style.bottom = (innerHeight - R.top + 18) + "px";
+    var f = el.querySelector("#fmF"); if (f) { f.addEventListener("keydown", function (e) { e.stopPropagation(); if (e.key === "Enter") fmCheckF(f.value, true); }); f.addEventListener("input", function () { fmCheckF(f.value, false); }); if (!FM.typing) f.focus(); }
+    [].forEach.call(el.querySelectorAll(".fmAB"), function (inp) { inp.addEventListener("keydown", function (e) { e.stopPropagation(); }); inp.addEventListener("input", function () { fmCheckAB(inp.dataset.w, inp.value); }); });
+    var k = el.querySelector("#fmK"); if (k) { k.addEventListener("keydown", function (e) { e.stopPropagation(); if (e.key === "Enter") fmCheckK(k.value, true); }); k.addEventListener("input", function () { fmCheckK(k.value, false); }); k.focus(); }
+    var first = el.querySelector(".fmAB"); if (first && !el.querySelector("#fmK") && !f) first.focus();
+  }
+  function fmHint() {
+    if (!FM.okF) return FM.kind === "pst" ? "Type the perfect square trinomial formula from memory (± can be typed +-)." : "Type the difference of squares formula from memory.";
+    var miss = fmNeed().filter(function (k) { return !FM.slots[k]; }); if (miss.length) return "Drag each term of the problem onto its part of the formula.";
+    if (!FM.A || !FM.B) return "Type A and B.";
+    if (!FM.okFac) return "Type the factored half of the formula from memory.";
+    return "Factored!";
+  }
+  function fmNorm(t) { return String(t).toLowerCase().replace(/\s+/g, "").replace(/²/g, "^2").replace(/[−–]/g, "-").replace(/±|\+\/-|\+-/g, "±").replace(/\*/g, ""); }
+  function fmCheckF(v, enter) {
+    var t = fmNorm(v), ok = FM.kind === "pst" ? ["a^2±2ab+b^2", "a^2+2ab+b^2±", "a^2±ab2+b^2"].indexOf(t) >= 0 || t === "a^2±2ab+b^2" : t === "a^2-b^2";
+    if (ok) { FM.okF = true; FM.msg = ""; FM.bad = false; fmDraw(); return; }
+    if (enter) { FM.msg = "Not quite. " + (FM.kind === "pst" ? "It has three terms: A squared, ± 2AB, and B squared." : "It has two squares, one subtracted from the other."); FM.bad = true; FM.typing = true; var keep = v; fmDraw(); var f = $("fmF"); if (f) { f.value = keep; f.focus(); } FM.typing = false; }
+  }
+  function fmCheckK(v, enter) {
+    var t = fmNorm(v), ok = FM.kind === "pst" ? ["(a±b)^2", "(a±b)(a±b)"].indexOf(t) >= 0 : ["(a+b)(a-b)", "(a-b)(a+b)"].indexOf(t) >= 0;
+    if (ok) { FM.okFac = true; FM.msg = ""; FM.bad = false; fmDraw(); fmFinish(); return; }
+    if (enter) { var k = $("fmK"), keep = v; FM.msg = "Not quite. " + (FM.kind === "pst" ? "It is a binomial squared." : "It is a sum times a difference."); FM.bad = true; fmDraw(); k = $("fmK"); if (k) { k.value = keep; k.focus(); } }
+  }
+  function fmCheckAB(w, v) {
+    var r = exParse(v); if (typeof r === "string" || r.length !== 1) return; var m = fmMono(r[0]), want = fmRoot(w); if (!m || !want) return;
+    if (same(m.n, want.n) && fmSig(m.L) === fmSig(want.L)) { FM[w] = want; FM.msg = ""; FM.bad = false; fmValidate(); fmDraw(); }
+  }
+  function fmRoot(w) {   // the square root of the term on A^2 or B^2
+    var c = FM.slots[w + "2"]; if (!c) return null; var m = fmMono(c.t); if (!m) return null; return fmSq(fmAbs(m));
+  }
+  function fmPlace(k, i) {   // term i was dropped on part k of the formula: "A2", "AB" or "B2"
+    if (!FM || FM.done || !FM.okF) return; var its = fmSideOf(FM.S || "L"); if (!its || !its[i]) return; var t = its[i], m = fmMono(t); FM.msg = ""; FM.bad = false;
+    var say = exSay([t]), err = null;
+    if (!m) err = "That term can't go in a formula.";
+    else if (k === "A2" || k === "B2") {
+      var neg = m.n.n < 0, sq = fmSq(fmAbs(m));
+      if (!sq) err = say + " is not a perfect square, so it can't be " + k[0] + "².";
+      else if (FM.kind === "pst" && neg) err = "In A² ± 2AB + B² both squares are added, but " + say + " is negative.";
+      else if (FM.kind === "dos" && k === "A2" && neg) err = "A² is the positive square: " + say + " is negative.";
+      else if (FM.kind === "dos" && k === "B2" && !neg) err = "In A² − B² the square B² is subtracted: drop the negative term here.";
+    }
+    var fit = fmFits(its); if (!err && k === "AB" && fit && fit.kind === "pst" && i !== fit.iab) err = "2AB is the middle term: " + exSay([its[fit.iab]]) + ".";
+    if (err) { FM.msg = err; FM.bad = true; fmDraw(); return; }
+    Object.keys(FM.slots).forEach(function (q) { if (FM.slots[q] && FM.slots[q].i === i) delete FM.slots[q]; });
+    FM.slots[k] = { i: i, t: JSON.parse(JSON.stringify(t)) };
+    if (k === "A2" || k === "B2") { var w = k[0]; FM[w] = mode === "calculate" ? null : fmRoot(w); }
+    fmValidate(); fmDraw();
+    if (FM.slotsOK && FM.A && FM.B && mode !== "calculate" && !FM.okFac) { FM.okFac = true; fmDraw(); fmFinish(); }
+  }
+  function fmValidate() {   // every term of the problem in its place, and the middle term really 2AB
+    var its = fmSideOf(FM.S || "L") || [], need = fmNeed(); FM.slotsOK = false;
+    if (!need.every(function (k) { return FM.slots[k]; })) return;
+    if (its.length !== need.length) { FM.msg = "This formula has " + need.length + " terms, but the problem has " + its.length + ". Try the other formula."; FM.bad = true; return; }
+    if (FM.kind === "pst" && FM.A && FM.B) {
+      var mm = fmMono(FM.slots.AB.t), LL = {}; [FM.A.L, FM.B.L].forEach(function (Q) { for (var l in Q) LL[l] = (LL[l] || 0) + Q[l]; }); var two = { n: mul(mk(2), mul(FM.A.n, FM.B.n)), L: LL };
+      if (!mm || !same(mk(Math.abs(mm.n.n), mm.n.d), two.n) || fmSig(mm.L) !== fmSig(LL)) { FM.msg = "2AB = 2(" + fmTxt(FM.A) + ")(" + fmTxt(FM.B) + ") = " + fmTxt(two) + ", not " + exSay([FM.slots.AB.t]).replace(/^−/, "") + ". This is not a perfect square trinomial."; FM.bad = true; return; }
+      FM.sgn = mm.n.n < 0 ? -1 : 1;
+    }
+    FM.slotsOK = true;
+  }
+  function fmGroup() {   // the problem, factored
+    var A = fmTerm(FM.A), B = fmTerm(FM.B), nB = fmTerm(FM.B, true);
+    if (FM.kind === "dos") return { k: "g", m: mk(1), items: [A, B], b: [JSON.parse(JSON.stringify(A)), nB] };
+    var sB = FM.sgn < 0 ? nB : B; return { k: "g", m: mk(1), items: [A, sB], b: [JSON.parse(JSON.stringify(A)), JSON.parse(JSON.stringify(sB))] };
+  }
+  function fmFinish() {
+    FM.done = true; var g = fmGroup(), its = fmSideOf(FM.S || "L").slice(), demo = mode === "demo" && DM4.run && !DM4.paused, S = FM.S;
+    var msg = (FM.kind === "pst" ? "A perfect square trinomial: A² ± 2AB + B² = (A ± B)², with A = " : "A difference of squares: A² − B² = (A + B)(A − B), with A = ") + fmTxt(FM.A) + " and B = " + fmTxt(FM.B) + ". " + exSay(its) + " = " + exSay([g]) + ".";
+    FM.t.push(setTimeout(function () {
+      fmHide();
+      if (EXP.eq) { hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: EXP.rel || "=", z: null })); updUndo(); EXP[S] = [g]; EXP[S === "L" ? "R" : "L"] = [{ k: "c", n: mk(0) }]; EXP.rel = "="; EXP.zpq = true; EXP.sq = false; EXP.grq = true; EXP.zp = null; closeAsk(false); eqRender(); note(msg + " Now drag a factor up or down to split it into equations."); }
+      else { EXP.grp = true; exSet([g], msg); }
+      if (demo && !locked) (EXP.eq ? eqDemoStep : exDemoStep)(900);
+    }, 1800));
+  }
+  function fmAnchor() { var a = $("fmAnchor"); if (!a) { a = document.createElement("div"); a.id = "fmAnchor"; a.style.cssText = "position:fixed;width:40px;height:20px;visibility:hidden;pointer-events:none"; document.body.appendChild(a); } var r = $("exRow").getBoundingClientRect(); a.style.left = (r.left + r.width / 2 - 20) + "px"; a.style.top = (r.top - 120) + "px"; return "#fmAnchor"; }
+  function fmDemoStep(ms) {   // the hand drags the squared term up, picks the formula, and drags each term onto its part
+    clearTimeout(DM4.t);
+    DM4.t = setTimeout(function () {
+      if (!EXP || !DM4.run || DM4.paused || locked) return;
+      var S = EXP.eq ? "L" : null, its = fmSideOf(S || "L"), f = fmFits(its), sel = function (i) { return (EXP.eq ? "#exRow .exT[data-s=\"L\"]" : "#exRow .exT") + "[data-i=\"" + i + "\"]"; }, more = function () { fmDemoStep(700); };
+      if (!f) return; if (FM && FM.done) return;
+      var ia = f.ia;
+      if (!FM) { dmCap("Drag the squared term up to factor with a formula."); exMoveDemo(sel(ia), fmAnchor(), function () { fmShow(S); }, more); return; }
+      if (FM.kind !== f.kind) { dmCap(f.kind === "dos" ? "Two terms, one subtracted: a difference of squares." : "Three terms: a perfect square trinomial."); exTapDemo("#fmBox .fmTog", function () { fmToggle(); }, more); return; }
+      var plan = { A2: f.ia, B2: f.ib, AB: f.iab };
+      var k = fmNeed().filter(function (q) { return !FM.slots[q]; })[0]; if (!k) { more(); return; }
+      dmCap("Drag " + exSay([its[plan[k]]]) + " onto " + (k === "A2" ? "A²" : k === "B2" ? "B²" : "2AB") + ".");
+      exMoveDemo(sel(plan[k]), "#fmBox [data-drop=\"fm:" + k + "\"]", function () { fmPlace(k, plan[k]); }, more);
+    }, ms);
+  }
   function grWire(R) {   // an equation to factor: any term of the left side can be dragged down into the square
     [].forEach.call(R.querySelectorAll(".exT[data-s=\"L\"]"), function (el) {
       var i = +el.dataset.i;
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, null, function (t) { grPlace(+t.dataset.drop.slice(3), i); }, "gb:", grShow, grEnd); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else grPlace(+dd.slice(3), i); }, ["gb:", "fm:"], function (dx, dy) { if (!fmUp("L", i, dx, dy) && !FM) grShow(); }, grEnd); });
     });
   }
   // a factor was accepted: the cursor moves on to an empty factor on the other side (a row's after a column's and the other way round), when its two terms are in the box
@@ -2274,7 +2470,7 @@
     clearTimeout(DM4.t);
     DM4.t = setTimeout(function () {
       if (!EXP || !DM4.run || DM4.paused || locked) return;
-      var its = grItems(), gp = grAny(its); if (!gp) return;
+      var its = grItems(); if (FM || fmFits(its)) { fmDemoStep(ms); return; } var gp = grAny(its); if (!gp) return;
       var alive = function () { return EXP && DM4.run && !DM4.paused && !locked; }, more = function () { grDemoStep(600); };
       if (!GRP) { exRender(); grShow(); dmCap("Drag each term down into a box."); grDemoStep(1200); return; }
       if (GRP.done) return;
@@ -2679,7 +2875,7 @@
         }
         mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, mEl, function () { eqDistribute(S, i); }, function (t2) { var dd = t2.dataset.drop; if (dd === "exg:" + S + ":" + i) eqDistribute(S, i); else if (dd === "eq=") eqDivGroup(S, i); else if (dd.indexOf("exg:") === 0 || dd.indexOf("et:") === 0) { var p2 = dd.split(":"); if (p2[1] !== S) eqDivGroup(S, i); else eqFactor(S, i, p2[1], +p2[2]); } }, ["exg:", "et:", "eq="]); });
       }
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; zdr(idx, e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, dropOf(S, i), ["et:", "eq="]); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; zdr(idx, e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, function (t2, ev) { if ((t2.dataset.drop || "").indexOf("fm:") === 0) { fmPlace(t2.dataset.drop.slice(3), i); return; } dropOf(S, i)(t2, ev); }, ["et:", "eq=", "fm:"], function (dx, dy) { fmUp(S, i, dx, dy); }); });
       var kEl = el.querySelector(":scope > .exK");
       if (kEl) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, kEl, null, function (t2) { var p = t2.dataset.drop.split(":"); if (p[0] === "et") eqFactor(S, i, p[1], +p[2]); else eqFactor(S, i, eqOther(S), -1); }, ["et:", "eq="]); });
       var co = el.querySelector(".exCo");
@@ -2947,7 +3143,7 @@
       }
     }
     if (EXP.zpq || EXP.grq || EXP.sq || EXP.av) {   // the answers are a set: "3, -2", "x = 3 or x = -2"
-      var mz = $("exMsg"), g0 = EXP.grq || EXP.sq || EXP.av ? null : zpOf(EXP.orig.L, EXP.orig.R), vz = EXP.vk || "x", want = EXP.av ? avRoots(EXP.orig.L, EXP.orig.R) : EXP.grq ? grRoots(grAny(EXP.orig.L)) : EXP.sq ? (function () { var sv = sqVal(EXP.orig.L, EXP.orig.R); return [mk(sv.root), mk(-sv.root)]; })() : zpRoots(g0, vz), tz = $("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, ""), parts = tz.split(/,|;|or|and/).filter(function (u) { return u; }), got = []; ansTouched = true;
+      var mz = $("exMsg"), g0 = EXP.grq || EXP.sq || EXP.av ? null : zpOf(EXP.orig.L, EXP.orig.R), vz = EXP.vk || "x", want = EXP.av ? avRoots(EXP.orig.L, EXP.orig.R) : EXP.grq ? (grAny(EXP.orig.L) ? grRoots(grAny(EXP.orig.L)) : fmRoots(fmFits(EXP.orig.L))) : EXP.sq ? (function () { var sv = sqVal(EXP.orig.L, EXP.orig.R); return [mk(sv.root), mk(-sv.root)]; })() : zpRoots(g0, vz), tz = $("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, ""), parts = tz.split(/,|;|or|and/).filter(function (u) { return u; }), got = []; ansTouched = true;
       tz = tz.replace(new RegExp("^" + vz + "="), ""); var pmM = /^(?:\u00b1|\+-|\+\/-)(.+)$/.exec(tz); if (pmM) tz = pmM[1] + ",-" + pmM[1]; parts = tz.split(/,|;|or|and/).filter(function (u) { return u; });
       for (var pi = 0; pi < parts.length; pi++) { var pv = parse(parts[pi].replace(new RegExp("^" + vz + "="), "")); if (!pv) { mz.className = "bad"; mz.textContent = "Type your answers like 3, \u22122 (separated by commas)."; return; } got.push(pv); }
       var has = function (arr, v) { return arr.some(function (u) { return same(u, v); }); };
@@ -3085,11 +3281,12 @@
     if (typeof L === "string" || typeof R === "string") { err.textContent = typeof L === "string" ? L : R; return; }
     var gq = false;   // x^2 + 5x + 3x + 15 = 0: factor by grouping, then the zero product property
     if (rel === "=") {
-      if (R.length === 1 && R[0].k === "c" && !R[0].n.n && grAny(L)) gq = true;
+      var fmOnly = function (A) { var f = fmFits(A); if (!f || grAny(A)) return false; var sv0 = sqVal(A, [{ k: "c", n: mk(0) }]); return !(f.kind === "dos" && sv0 && sv0.root); };   // (x^2 - 9 = 0 keeps its square-root steps; the formula is one drag away)
+      if (R.length === 1 && R[0].k === "c" && !R[0].n.n && (grAny(L) || fmOnly(L))) gq = true;
       else if (L.length === 1 && L[0].k === "c" && !L[0].n.n && grAny(R)) { var sw3 = L; L = R; R = sw3; gq = true; }
     }
     if (gq) {
-      EXP = { eq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: grAny(L).l, grq: true, zpq: false, zp: null };
+      EXP = { eq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: (grAny(L) || { l: "x" }).l, grq: true, zpq: false, zp: null };
       SOL.lvl = ladderEq(L, R, "="); SOL.fresh = false;
       $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
       return;
@@ -3254,11 +3451,11 @@
     { e: "eq", cmp: 1 }, { e: "eq", cmp: 2 }, { e: "eq", cmp: 3 },                                                                             // 2.5 compound inequalities: -3 < x + 2 <= 5, a negative in front of x, "or"
     { e: "eq", av: 1, ineq: 1 }, { e: "eq", av: 2, ineq: 1 }, { e: "eq", av: 3, ineq: 1 }, { e: "eq", av: 4, ineq: 1 },                         // 2.6 absolute value inequalities
     { e: "eq", zp: 1 }, { e: "eq", zp: 2 }, { e: "eq", zp: 3 }, { e: "eq", zp: 4 }, { e: "eq", zp: 5 },                                         // 7.4 polynomial equations in factored form
-    { e: "eq", grp: 3 }, { e: "eq", grp: 4 },                                                                                                   // 7.5 factoring x^2 + bx + c, 7.6 factoring ax^2 + bx + c
+    { e: "eq", grp: 3 }, { e: "eq", grp: 4 }, { e: "eq", fm: 1 }, { e: "eq", fm: 2 }, { e: "eq", fm: 3 },                                                                                                   // 7.5 factoring x^2 + bx + c, 7.6 factoring ax^2 + bx + c
     { e: "eq", grp: 1 }, { e: "eq", grp: 2 },                                                                                                   // 7.8 factoring by grouping
     { e: "eq", sq: 1 }, { e: "eq", sq: 2 }, { e: "eq", sq: 3 }                                                                                  // 9.3 solving quadratic equations using square roots
   ];
-  var EXLAD = [0, 1, 2, 3, 4, 11, 12, 7, 8, 9, 5, 6, 13, 14, 10];   // expressions, in the same book's order: like terms and the distributive property, fractions, multiplying polynomials (7.2), factoring out the GCF (7.4), trinomials (7.5, 7.6), grouping (7.8)
+  var EXLAD = [0, 1, 2, 3, 4, 11, 12, 7, 8, 9, 5, 6, 13, 14, 15, 16, 17, 10];   // 15, 16, 17: special products (7.7), 17 with fractions or letters   // 15, 16: special products (7.7)   // expressions, in the same book's order: like terms and the distributive property, fractions, multiplying polynomials (7.2), factoring out the GCF (7.4), trinomials (7.5, 7.6), grouping (7.8)
   function rung(e, f) { for (var i = 0; i < LADDER.length; i++) if (LADDER[i].e === e && f(LADDER[i])) return i; return 0; }
   function paneUnred(q) {   // the last step divides a whole number by a whole number that shares a factor with it, and the answer is not a whole number
     var sm = q.ks.reduce(function (t, k) { return add(t, k.k); }, mk(0)), c = add(q.c, neg(sm));
@@ -3269,6 +3466,7 @@
     var fdl = fdLevel(L, R); if (fdl) return rung("eq", function (r) { return r.fd === fdl && !r.ineq === (!rel || rel === "="); });
     var ao = avOf(L, R);
     if (ao) { var ar = avRoots(L, R), alv = ar.length < 2 ? 4 : ao.rest.length || !same(ao.g.m, mk(1)) ? 3 : same(exTot(ao.g.items).x || mk(1), mk(1)) ? 1 : 2; return rung("eq", function (r) { return r.av === alv && !r.ineq === (!rel || rel === "="); }); }
+    var fm4 = R.length === 1 && R[0].k === "c" && !R[0].n.n ? fmFits(L) : null; if (fm4) return rung("eq", function (r) { return r.fm === (fm4.A.n.d > 1 || fm4.B.n.d > 1 ? 3 : fm4.kind === "dos" ? 1 : 2); });
     var gg4 = R.length === 1 && R[0].k === "c" && !R[0].n.n ? grAny(L) : null;
     if (gg4) return rung("eq", function (r) { return r.grp === (gg4.tri ? 2 : 0) + (gg4.a === 1 ? 1 : 2); });
     var gz = zpOf(L, R);
@@ -3350,6 +3548,7 @@
       return p12;
     }
     if (lv === 10) return grGen(1 + rnd(2));
+    if (lv >= 15) return fmGen(lv === 15 ? 1 : lv === 16 ? 2 : 3 + rnd(2));
     if (lv >= 13) return grTriGen(lv === 13 ? 3 : 4);   // trinomials: x^2 + 8x + 15, then 6x^2 + 7x - 3   // factoring by grouping: x^2 + 5x + 3x + 15
     if (lv === 9) {   // three sets of parentheses: (x + 1)(x + 2)(x + 3), x(x - 2)(x + 4), (2x + 1)(x - 3)(x + 2)
       var big2 = rnd(3) === 0 ? rnd(3) : -1, fl = [rnd(5) === 0, false, false], fx = [];
@@ -3409,19 +3608,20 @@
     if (gb) return gb.c ? 9 : gb.items.length <= 2 && gb.b.length <= 2 ? 7 : 8;
     if (its.some(function (t) { return t.k === "g" && t.items.length >= 3; })) return 8;
     if (grOf(its)) return 10;
+    var fm0 = fmFits(its); if (fm0) return fm0.A.n.d > 1 || fm0.B.n.d > 1 || Object.keys(fm0.B.L).length || Object.keys(fm0.A.L).length > 1 ? 17 : fm0.kind === "dos" ? 15 : 16;
     var gt0 = grTri(its); if (gt0) return gt0.a === 1 ? 13 : 14;
     if (!g && exFin(its) && facAll(its) >= 2) return 5;
     return Math.max(0, Math.min(4, g ? (fr ? 4 : ng ? 3 : 2) : ng ? 1 : 0));
   }
   function solverGo(dl, m) {
     SOL.fresh = false; SOL.keep = true;
-    if (EXP && !EXP.eq) { SV = "x"; var ep = EXLAD.indexOf(SOL.lvl); if (ep < 0) ep = 0; SOL.lvl = EXLAD[Math.max(0, Math.min(EXLAD.length - 1, ep + dl))]; var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10 || SOL.lvl >= 13; }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
+    if (EXP && !EXP.eq) { SV = "x"; var ep = EXLAD.indexOf(SOL.lvl); if (ep < 0) ep = 0; SOL.lvl = EXLAD[Math.max(0, Math.min(EXLAD.length - 1, ep + dl))]; var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10 || SOL.lvl >= 13; fmHide(); }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
     else {
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
       if (st.e === "eq") {
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
-        EXP.cmp = null; EXP.c3 = null; EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp; EXP.zp = null; var g2 = st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: st.grp > 2 ? grTriGen(st.grp) : grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
+        EXP.cmp = null; EXP.c3 = null; EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp || !!st.fm; EXP.zp = null; var g2 = st.fm ? { L: fmGen(st.fm), R: [{ k: "c", n: mk(0) }] } : st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: st.grp > 2 ? grTriGen(st.grp) : grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
         EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)), rel: EXP.rel }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; EXP.vk = "x";
         if (st.cmp) cmpSetup(eqCmp(st.cmp));
       } else { EXP = null; useCustom = st.one ? solverOne() : st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); if (st.one && st.ineq) useCustom[0].rel = eqPickRel(); }
@@ -3618,7 +3818,7 @@
     function mv(ev) {
       var dx = ev.clientX - sx, dy = ev.clientY - sy;
       if (!moved && Math.hypot(dx, dy) < 6) return;
-      if (!moved && onStart) onStart();
+      if (!moved && onStart) onStart(dx, dy);
       moved = true; el.classList.add("drag"); el.style.transform = "translate(" + dx + "px," + dy + "px)";
       if (myOp) { myOp.classList.add("dragOp"); myOp.style.transform = el.style.transform; }
       if (eqE) showSign((ev.clientX < eqX ? -1 : 1) !== side0);
@@ -4954,7 +5154,7 @@
   function takeBoot() { var m = bootMode || "demo"; bootMode = null; return m; }
 
   function newProblem() {
-    nlHide(); hideKind(); d3Hide(); $("eqSubRow").hidden = true;
+    nlHide(); fmHide(); hideKind(); d3Hide(); $("eqSubRow").hidden = true;
     if (quiz()) { $("next").hidden = true; $("nxHard").hidden = true; $("again").hidden = true; qzStart(); return; }   // (nothing left over from the activity we came from)
     $("qzNext").hidden = true; $("qzAgain").hidden = true;
     exHide();
