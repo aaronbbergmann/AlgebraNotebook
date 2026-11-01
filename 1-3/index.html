@@ -156,7 +156,8 @@
   #fmBox .fmT{display:inline-flex;flex-direction:column;align-items:center;min-width:2.2em;padding:.1em .25em;border-radius:8px}
   #fmBox .fmV{font-size:.75em;min-height:1.2em;opacity:.8}
   #fmBox .fmO{padding-top:.1em}
-  #fmBox .fmTog{font:600 .5em system-ui,sans-serif;white-space:nowrap}
+  #fmTogBtn{width:auto!important;min-width:0;max-width:100%;white-space:nowrap;padding-left:1em;padding-right:1em}
+  #fmBox .fmAB0{font-size:.8em;margin-top:.15em;white-space:nowrap;min-height:1.2em}
   #fmBox .fmRow{margin-top:.25em}
   #fmBox input{font:600 .6em system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:8px;padding:.25em .4em;text-align:center;width:6em}
   #fmBox #fmF,#fmBox #fmK{width:11em;-webkit-user-select:text;user-select:text}
@@ -804,6 +805,7 @@
       <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Write</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo hard" id="dmHard" hidden>Level Up</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="reg" aria-pressed="false">Regression</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="btn" id="nxHard" hidden>Level Up</button><button class="link" id="again" hidden>Try another</button></div>
     <div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
       <button class="btn" id="ptTog" hidden>Parent Table</button>
+      <button class="btn" id="fmTogBtn" hidden>Difference of Squares</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="show">Show work</button></div></div>
@@ -2291,32 +2293,34 @@
     if (!its || !fmCand(its)) return false; var m = fmMono(its[i]); if (!m || !fmDeg(m) || !fmSq(m)) return false;
     fmShow(S); return true;
   }
-  function fmHide() { if (FM && FM.t) FM.t.forEach(clearTimeout); FM = null; var b = $("fmBox"); if (b) b.remove(); }
+  function fmHide() { if (FM && FM.t) FM.t.forEach(clearTimeout); FM = null; var b = $("fmBox"); if (b) b.remove(); var tb = $("fmTogBtn"); if (tb) tb.hidden = true; }
   function fmShow(S) {
     grHide(); FM = { S: EXP.eq ? S || "L" : null, kind: "pst", slots: {}, A: null, B: null, okF: mode !== "calculate", okFac: false, t: [], msg: "" };
     var el = document.createElement("div"); el.id = "fmBox"; el.setAttribute("aria-label", "Factoring with a formula"); (document.querySelector(".app") || document.body).appendChild(el);
-    el.addEventListener("click", function (e) { var b = e.target.closest(".fmTog"); if (b) fmToggle(); });
     fmDraw(); requestAnimationFrame(function () { if ($("fmBox") === el) el.classList.add("on"); });
   }
+  $("fmTogBtn").addEventListener("click", function () { fmToggle(); });
   function fmToggle() { if (!FM || FM.done) return; FM.kind = FM.kind === "pst" ? "dos" : "pst"; FM.slots = {}; FM.A = FM.B = null; FM.okF = mode !== "calculate"; FM.okFac = false; FM.msg = ""; fmDraw(); }
   function fmTxt(m) { return exSay([fmTerm(m)]); }
   function fmNeed() { return FM.kind === "pst" ? ["A2", "AB", "B2"] : ["A2", "B2"]; }
   function fmDraw() {
     var el = $("fmBox"); if (!el || !FM) return; var its = fmSideOf(FM.S || "L") || [], pst = FM.kind === "pst", A = "<i>A</i>", B = "<i>B</i>";
-    var slot = function (k, lab) { var c = FM.slots[k]; return "<span class=\"fmT\" data-drop=\"fm:" + k + "\"><span class=\"fmL\">" + lab + "</span><span class=\"fmV\">" + (c ? grTermHtml(c.t) : "&nbsp;") + "</span></span>"; };
+    var abOf = function (w) {   // A = or B =, right under A^2 or B^2
+      if (!FM.slots[w + "2"]) return "<span class=\"fmAB0\">&nbsp;</span>"; var v = FM[w];
+      return "<span class=\"fmAB0\"><i>" + w + "</i> = " + (v ? grTermHtml(fmTerm(v)) : "<input class=\"fmAB\" data-w=\"" + w + "\" autocomplete=\"off\" placeholder=\"?\" aria-label=\"" + w + " =\">") + "</span>";
+    };
+    var slot = function (k, lab) { var c = FM.slots[k]; return "<span class=\"fmT\" data-drop=\"fm:" + k + "\"><span class=\"fmL\">" + lab + "</span><span class=\"fmV\">" + (c ? grTermHtml(c.t) : "&nbsp;") + "</span>" + (k === "A2" || k === "B2" ? abOf(k[0]) : k === "AB" ? "<span class=\"fmAB0\">&nbsp;</span>" : "") + "</span>"; };
     var form = !FM.okF ? "<span class=\"fmIn\"><input id=\"fmF\" autocomplete=\"off\" placeholder=\"Type the formula\" aria-label=\"Type the formula\"></span>"
       : pst ? slot("A2", A + "<sup>2</sup>") + "<span class=\"fmO\">±</span>" + slot("AB", "2" + A + B) + "<span class=\"fmO\">+</span>" + slot("B2", B + "<sup>2</sup>")
       : slot("A2", A + "<sup>2</sup>") + "<span class=\"fmO\">−</span>" + slot("B2", B + "<sup>2</sup>");
-    var ab = ["A", "B"].map(function (w) {
-      var has = FM.slots[w + "2"]; if (!has) return "";
-      var v = FM[w]; return "<div class=\"fmRow\"><i>" + w + "</i> = " + (v ? grTermHtml(fmTerm(v)) : "<input class=\"fmAB\" data-w=\"" + w + "\" autocomplete=\"off\" placeholder=\"?\" aria-label=\"" + w + " =\">") + "</div>";
-    }).join("");
+    var ab = "";
     var all = FM.okF && fmNeed().every(function (k) { return FM.slots[k]; }) && FM.A && FM.B && FM.slotsOK, fac = "", res = "";
     if (all) {
-      fac = FM.okFac ? "<div class=\"fmRow fmFac\">= " + (pst ? "(" + A + " ± " + B + ")<sup>2</sup>" : "(" + A + " + " + B + ")(" + A + " − " + B + ")") + "</div>" : "<div class=\"fmRow fmFac\">= <input id=\"fmK\" autocomplete=\"off\" placeholder=\"the factored half\" aria-label=\"The factored half of the formula\"></div>";
+      fac = FM.okFac ? "<div class=\"fmRow fmFac\">" + (pst ? "(" + A + " ± " + B + ")<sup>2</sup>" : "(" + A + " + " + B + ")(" + A + " − " + B + ")") + "</div>" : "<div class=\"fmRow fmFac\"><input id=\"fmK\" autocomplete=\"off\" placeholder=\"the factored half\" aria-label=\"The factored half of the formula\"></div>";
       if (FM.okFac) { var gq0 = fmGroup(); res = "<div class=\"fmRes\">" + exHtml(its) + " = " + (pst ? "(" + exHtml(gq0.items) + ")<sup>2</sup>" : exHtml([gq0])) + "</div>"; }
     }
-    el.innerHTML = "<div class=\"fmTop\"><div class=\"fmForm\">" + form + "</div><button type=\"button\" class=\"btn fmTog\">" + (pst ? "Difference of Squares" : "Perfect Square Trinomial") + "</button></div>" + ab + fac + res + "<div class=\"fmMsg" + (FM.bad ? " bad" : "") + "\">" + (FM.msg || fmHint()) + "</div>";
+    var tb = $("fmTogBtn"); if (tb) { tb.hidden = false; tb.textContent = pst ? "Difference of Squares" : "Perfect Square Trinomial"; }   // the formula button sits in the right panel
+    el.innerHTML = "<div class=\"fmTop\"><div class=\"fmForm\">" + form + "</div></div>" + ab + fac + res + "<div class=\"fmMsg" + (FM.bad ? " bad" : "") + "\">" + (FM.msg || fmHint()) + "</div>";
     var R = $("exRow").getBoundingClientRect(); el.style.left = (R.left + R.width / 2) + "px"; el.style.bottom = (innerHeight - R.top + 18) + "px";
     var f = el.querySelector("#fmF"); if (f) { f.addEventListener("keydown", function (e) { e.stopPropagation(); if (e.key === "Enter") fmCheckF(f.value, true); }); f.addEventListener("input", function () { fmCheckF(f.value, false); }); if (!FM.typing) f.focus(); }
     [].forEach.call(el.querySelectorAll(".fmAB"), function (inp) { inp.addEventListener("keydown", function (e) { e.stopPropagation(); }); inp.addEventListener("input", function () { fmCheckAB(inp.dataset.w, inp.value); }); });
@@ -2402,7 +2406,7 @@
       if (!f) return; if (FM && FM.done) return;
       var ia = f.ia;
       if (!FM) { dmCap("Drag the squared term up to factor with a formula."); exMoveDemo(sel(ia), fmAnchor(), function () { fmShow(S); }, more); return; }
-      if (FM.kind !== f.kind) { dmCap(f.kind === "dos" ? "Two terms, one subtracted: a difference of squares." : "Three terms: a perfect square trinomial."); exTapDemo("#fmBox .fmTog", function () { fmToggle(); }, more); return; }
+      if (FM.kind !== f.kind) { dmCap(f.kind === "dos" ? "Two terms, one subtracted: a difference of squares." : "Three terms: a perfect square trinomial."); exTapDemo("#fmTogBtn", function () { fmToggle(); }, more); return; }
       var plan = { A2: f.ia, B2: f.ib, AB: f.iab };
       var k = fmNeed().filter(function (q) { return !FM.slots[q]; })[0]; if (!k) { more(); return; }
       dmCap("Drag " + exSay([its[plan[k]]]) + " onto " + (k === "A2" ? "A²" : k === "B2" ? "B²" : "2AB") + ".");
