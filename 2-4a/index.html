@@ -7845,7 +7845,7 @@ var ESPIC = {
   function vfnNext(line) { var s = vfnSt(); s.stage++; pqMsg(""); if (line) vfnLine(line); if (s.stage >= vfnStg().length) vfnDone(); else vfnSync(); }
   // the prompt over the graph, one step at a time
   var VFN_ASK = { graph: "Press the parabola button, then click the graph to place the vertex. Drag the points until it matches <i>f</i>.", h: "Click on the graph to find the <i>h</i> value.", k: "Click on the graph to find the <i>k</i> value.", v: "Click on the graph to find the coordinates of the vertex.", ax: "Click on the graph to find the equation of the axis of symmetry.", m1: "Click on a pair of mirror points.", m2: "Click on another pair of mirror points.",
-    a: "Click on the equation to find the <i>a</i> value.", b: "Click on the equation to find the <i>b</i> value.", c: "Click on the equation to find the <i>c</i> value.", drag: "Drag <i>x</i> = −<i>b</i>/(2<i>a</i>) into the table.", tbl: "Click each expression in the table to work it out." };
+    a: "Click on the equation to find the <i>a</i> value.", b: "Click on the equation to find the <i>b</i> value.", c: "Click on the equation to find the <i>c</i> value.", drag: "Drag <i>x</i> = −<i>b</i>/(2<i>a</i>) into the table.", tbl: "Click each expression in the table to simplify it, one step at a time." };
   function vfnAsk() {
     var s = vfnSt(); if (QZ.step >= 4 || s.ok) return "";
     if (vfnWr()) return "Plot 5 points on the parabola and draw its axis of symmetry with the dotted line. Then fill in the boxes and press Submit.";
@@ -8020,9 +8020,11 @@ var ESPIC = {
     if (p.c) t += (p.c < 0 ? " − " : " + ") + nf(Math.abs(p.c));
     return t;
   }
-  // Calculate: each click on a row's expression simplifies it one step, by the order of operations:
-  //   0 a(x)² + b(x) + c  →  1 the exponent  →  2 a times it  →  3 b times x  →  4 the first two added  →  5 one value (it goes into the y column)
+  // Demo and Sequence: each click on a row's expression simplifies it one step, by the order of operations (Calculate: the student works it out and types y):
+  //   0 a(x)² + b(x) + c  →  1 the exponent  →  2 both multiplications  →  3 the first two added  →  4 one value (it goes into the y column).  With no c, 3 is the value.
   var VFN_STEPS = 5;
+  function vfnNSt() { return vfnP().c ? 4 : 3; }
+  function vfnSqStep(x, st) { return vfnExprStep(x, (vfnP().c ? [0, 1, 3, 4, 5] : [0, 1, 3, 5])[Math.min(st, vfnNSt())]); }
   function vfnExprStep(x, st) {
     var p = vfnP(), X = "(" + nf(x) + ")", L = [], sgn = function (v, first) { return first ? nf(v) : (v < 0 ? " − " : " + ") + nf(Math.abs(v)); };
     if (st >= 5) return nf(vfnF(x));
@@ -8034,12 +8036,14 @@ var ESPIC = {
     return L.join("");
   }
   function vfnStepClick(r) {
-    var s = vfnSt(); if (QZ.step >= 4 || mode !== "calculate" || !s.gx || s.gy[r]) return;
+    var s = vfnSt(); if (QZ.step >= 4 || mode === "calculate" || vfnWr() || vfnSid() !== "tbl" || !s.gx || s.gy[r]) return;
     vfnPush(); s.gs[r] = (s.gs[r] || 0) + 1; pqMsg("");
-    if (s.gs[r] >= VFN_STEPS) {
-      var x = vfnP().h + VFN_XS[r], chain = []; for (var k = 0; k <= VFN_STEPS; k++) chain.push(vfnExprStep(x, k));
+    if (s.gs[r] >= vfnNSt()) {
+      var x = vfnP().h + VFN_XS[r], chain = []; for (var k = 0; k <= vfnNSt(); k++) chain.push(vfnSqStep(x, k));
       s.gy[r] = true; s.gt[r] = String(vfnF(x)); vfnLine("f(" + nf(x) + ") = " + chain.join(" = "));
-      vfnFly(r); vfnAll(); return;
+      vfnTb(); vfnFly(r);
+      if (VFN_XS.every(function (d, i) { return s.gy[i]; })) vfnNext(""); else vfnSync();
+      return;
     }
     vfnTb();
   }
@@ -8078,7 +8082,7 @@ var ESPIC = {
         el.innerHTML = hh + "</tbody></table>";
       }
       var cs = $("vfnChipS"); if (cs) cs.innerHTML = !calc && vfnSid() === "drag" ? vfnChipHTML() : "";
-      [].forEach.call(el.querySelectorAll("[data-vfr]"), function (e) { var r = +e.dataset.vfr, x = vfnP().h + VFN_XS[r]; e.classList.toggle("live", !done && !s.gy[r] && (calc || vfnSid() === "tbl")); if (calc) { var t = vfnExprStep(x, s.gy[r] ? 0 : s.gs[r] || 0); if (e.dataset.st !== t) { e.dataset.st = t; e.innerHTML = t; } } });
+      [].forEach.call(el.querySelectorAll("[data-vfr]"), function (e) { var r = +e.dataset.vfr, x = vfnP().h + VFN_XS[r]; e.classList.toggle("live", !done && !calc && !s.gy[r] && vfnSid() === "tbl"); var t = calc || s.gy[r] ? vfnExpr(x) : vfnSqStep(x, s.gs[r] || 0); if (e.dataset.st !== t) { e.dataset.st = t; e.innerHTML = t; } });
       [].forEach.call(el.querySelectorAll("[data-vfyv]"), function (e) { var r = +e.dataset.vfyv; e.textContent = s.gy[r] ? nf(vfnF(vfnP().h + VFN_XS[r])) : ""; });
       [].forEach.call(el.querySelectorAll("[data-vfy]"), function (e) { var r = e.dataset.vfy, v = s.gt[r] || ""; if (document.activeElement !== e && e.value !== v) e.value = v; e.classList.toggle("full", !!s.gy[r]); e.classList.toggle("badc", !s.gy[r] && !!s.wbad["g" + r]); e.readOnly = !!s.gy[r] || done || (pgRun && !pgPaused && !DN); });
       [].forEach.call(el.querySelectorAll(".vfnDrop"), function (e) { e.classList.toggle("on", !!(s.chipDrag)); });
@@ -8331,7 +8335,7 @@ var ESPIC = {
       var mv = function (ev) { vfnGhostAt(ev.clientX, ev.clientY); }, up = function (ev) { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); var over = vfnOverTable(ev.clientX, ev.clientY); vfnGhostEnd(); if (over) vfnDrop(); else vfnTb(); };
       document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
     });
-    $("vfnTb").addEventListener("click", function (e) { if (!vfN() || !e.target.closest) return; var c = e.target.closest("[data-vfr]"); if (!c) return; if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused) return; if (mode === "calculate") vfnStepClick(+c.dataset.vfr); else vfnRowClick(+c.dataset.vfr); });
+    $("vfnTb").addEventListener("click", function (e) { if (!vfN() || !e.target.closest) return; var c = e.target.closest("[data-vfr]"); if (!c) return; if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused) return; if (mode !== "calculate") vfnStepClick(+c.dataset.vfr); });
     $("vfnTb").addEventListener("input", function (e) { if (!vfN()) return; if (e.isTrusted) pgUser(); var s = vfnSt(), d = e.target.dataset; if (d.vtl != null) { s.tbl[d.vtl] = e.target.value; return; } if (d.vfy != null) { s.gt[d.vfy] = e.target.value; vfnYTyped(d.vfy, false); return; } if (!d.vtb) return; s.tb[d.vtb] = e.target.value; vfnTbTyped(d.vtb, false); });
     $("vfnTb").addEventListener("keydown", function (e) { if (e.key !== "Enter" || !vfN()) return; var d = e.target.dataset; if (d.vfy != null) { e.preventDefault(); vfnYTyped(d.vfy, true); return; } if (!d.vtb) return; e.preventDefault(); vfnTbTyped(d.vtb, true); });
     $("vfnOut").addEventListener("input", function (e) { var f = e.target.dataset && e.target.dataset.vff; if (!f || !vfN()) return; if (e.isTrusted) pgUser(); var s = vfnSt(); s.w[f] = e.target.value; if (!vfnWr()) vfnTyped(f, false); else { s.wbad[f] = false; e.target.classList.remove("bad"); if (typeof wsReadyUpd === "function") wsReadyUpd(); } });
@@ -8399,10 +8403,10 @@ var ESPIC = {
       cap(say); var e = document.querySelector("[data-vtb=\"" + k + "\"]"); if (!e) { n(); return; }
       go(ctr(e), function () { typeKeys(e, function () { return s.tb[k] || ""; }, function (v) { s.tb[k] = v; }, val, function () { vfnTbTyped(k, false); pgWait(500, n); }); });
     }; }
-    function yIn(r) { return function (n) {
-      var x = p.h + VFN_XS[r], e = document.querySelector("[data-vfr=\"" + r + "\"]"); if (!e) { n(); return; }
-      cap("Click f(" + nf(x) + ") to simplify it one step at a time: the exponent, then multiplying, then adding.");
-      (function one() { if (pgRun !== run) return; if (s.gy[r]) { pgWait(500, n); return; } var c = document.querySelector("[data-vfr=\"" + r + "\"]"); go(c ? ctr(c) : null, function () { vfnStepClick(r); pgWait(500, one); }); })();
+    function yIn(r) { return function (n) {   // Calculate: work out f(x) and type it in the y column
+      var x = p.h + VFN_XS[r], e = document.querySelector("[data-vfy=\"" + r + "\"]"); if (!e) { n(); return; }
+      cap("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x)) + ". Type it in the y column.");
+      go(ctr(e), function () { typeKeys(e, function () { return s.gt[r] || ""; }, function (v) { s.gt[r] = v; }, String(vfnF(x)), function () { vfnYTyped(r, false); pgWait(600, n); }); });
     }; }
     function dragChip(n) {
       cap("x = −b/(2a) = " + nf(p.h) + " is the centre of the table. Drag it into the table.");
@@ -8420,7 +8424,9 @@ var ESPIC = {
       });
     }
     function rowTap(r) { return function (n) { var x = p.h + VFN_XS[r]; cap("Click " + vfnExpr(x) + " to work it out."); clickTd(r, n); }; }
-    function clickTd(r, n) { var e = document.querySelector("[data-vfr=\"" + r + "\"]"); go(e ? ctr(e) : null, function () { vfnRowClick(r); pgWait(700, n); }); }
+    function clickTd(r, n) {   // Demo and Sequence: click the expression once per step until its value drops into the y column
+      (function one() { if (pgRun !== run) return; if (s.gy[r] || vfnSid() !== "tbl") { pgWait(500, n); return; } var e = document.querySelector("[data-vfr=\"" + r + "\"]"); go(e ? ctr(e) : null, function () { vfnStepClick(r); pgWait(550, one); }); })();
+    }
     var pt = function (q) { return "(" + q + ", " + vfnF(q) + ")"; }, vt = "(" + p.h + ", " + p.k + ")";
     var m1 = pairs[0] || [p.h - 1, p.h + 1], m2 = pairs[1] || m1, I = [], past = function (id) { return function () { return vfnPast(id); }; }, okF = function (f) { return function () { return !!(s.wok[f] || s.wok[f.replace(/^(m[12])[ab]$/, "$1")]); }; };
     var eqSay = { a: "a is the number in front of x².", b: "b is the number in front of x, with its sign.", c: "c is the constant term, with its sign." };
@@ -8445,7 +8451,7 @@ var ESPIC = {
         if (id === "graph") r = graph;
         else if (id === "a" || id === "b" || id === "c") r = (function (k) { return function (n) { clickOn("#pgQt [data-vfe=" + k + "]", VFN_ASK[k].replace(/<[^>]+>/g, "") + " " + eqSay[k], "e:" + k, n); }; })(id);
         else if (id === "drag") r = dragChip;
-        else if (id === "tbl") r = function (n) { var L = VFN_XS.map(function (d, i) { return i; }).filter(function (i) { return !s.gy[i]; }), j = 0; cap("Click each expression to work it out. Each finished row is a point on the graph."); (function nx() { if (pgRun !== run) return; if (j >= L.length || vfnSid() !== "tbl") { pgWait(800, n); return; } clickTd(L[j++], nx); })(); };
+        else if (id === "tbl") r = function (n) { var L = VFN_XS.map(function (d, i) { return i; }).filter(function (i) { return !s.gy[i]; }), j = 0; cap("Click each expression to simplify it one step at a time: the exponent, then multiplying, then adding. Each finished row is a point on the graph."); (function nx() { if (pgRun !== run) return; if (j >= L.length || vfnSid() !== "tbl") { pgWait(800, n); return; } clickTd(L[j++], nx); })(); };
         else if (id === "h") r = function (n) { clickOn("#vfnSvg [data-vfc=vh]", VFN_ASK.h.replace(/<[^>]+>/g, "") + " h is the x-coordinate of the vertex.", "vh", n); };
         else if (id === "k") r = function (n) { clickOn("#vfnSvg [data-vfc=vk]", VFN_ASK.k.replace(/<[^>]+>/g, "") + " k is the y-coordinate.", "vk", n); };
         else if (id === "v") r = function (n) { clickOn("#vfnSvg [data-vfc=vx]", VFN_ASK.v.replace(/<[^>]+>/g, ""), "vx", n); };
