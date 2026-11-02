@@ -397,6 +397,18 @@
   .vfnIn{font:1.05rem system-ui,sans-serif;padding:.25em .4em;border:2px solid #9AA0A8;border-radius:7px;box-sizing:border-box}
   .vfnIn.ok{border-color:#2E9E4F;background:#E4F3E8}.vfnIn.bad{border-color:#C74440}
   @media (max-width:760px){.vfnRow{flex-direction:column}#vfnTools{flex-direction:row}#vfnTools button[data-vft=undo]{margin-bottom:0;margin-right:1rem}body.vfN .vfnS{padding-left:0}}
+  .vfnE{border-radius:5px;padding:0 .12em}.vfnE.live{cursor:pointer;background:color-mix(in srgb,#2D70B3 10%,transparent)}.vfnE.live:hover{background:color-mix(in srgb,#2D70B3 22%,transparent)}.vfnE.got{color:#2E9E4F}
+  .vfnChipRow{min-height:2.3rem;margin-bottom:.4rem}
+  .vfnChip{display:inline-block;padding:.3em .7em;border:2px solid #7A3FB5;border-radius:999px;background:#F3ECFA;color:#1B2433;font:600 1rem system-ui,sans-serif;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;white-space:nowrap}
+  .vfnChipW .vfnChip{margin-left:.4rem}
+  .vfnGhost{position:fixed;z-index:9999;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.18);cursor:grabbing}
+  #vfnTb .vfnGt{font-size:1rem}#vfnTb .vfnGt tr.vfnMidRow td{font-weight:700}
+  #vfnTb .vfnGt td.mid{font-size:.92rem}#vfnTb .vfnGt td.mid.live{cursor:pointer;background:#DCE8F7}
+  #vfnTb .vfnGt td.vfnDrop{background:#fff;outline:2px dashed #9AA0A8;outline-offset:-4px}#vfnTb .vfnGt td.vfnDrop.on{outline-color:#7A3FB5;background:#F3ECFA}
+  .vfnFly{position:fixed;z-index:9999;transform:translate(-50%,-50%);font:400 1.05rem "LM",Georgia,serif;color:#1B2433;transition:left .35s ease,top .35s ease;pointer-events:none}
+  .cellGhost{position:fixed;z-index:9999;transform:translate(-50%,-50%);pointer-events:none;padding:.2em .6em;border-radius:6px;background:#fff;box-shadow:0 6px 16px rgba(0,0,0,.2);font:700 1.05rem "LM",Georgia,serif;color:#1B2433}
+  #vfnTb td.drop,#vfnTb td.drop input.qzCell,#ptTable td.drop,#ptTable td.drop input.qzCell{background:#F3ECFA}
+  #vfnTb td input.qzCell.full,#vfnTb td.par{cursor:grab}
   .grnG,.grnS{display:none}
   body.grN #pgGraphWrap,body.grN .pgSide,body.grN #qzTools,body.grN #ptTog,body.grN #wfSteps{display:none!important}
   body.grN .grnG{display:block;flex:1 1 22rem;max-width:34rem;width:100%}
@@ -657,7 +669,7 @@
   #eqSubRow{justify-content:center;margin:.6rem 0}#eqSubRow[hidden]{display:none}#eqSub{width:10.5em;font-size:.92rem}#eqSub.ready{background:#8E2465;border-color:#8E2465;color:#fff}#eqSub.ready:hover{background:#6E1A4E;border-color:#6E1A4E}
   #ansFields input.okc{border-color:#1E8A4C;box-shadow:0 0 0 2px rgba(30,138,76,.25)}#ansFields input.badc{border-color:#C0301E;box-shadow:0 0 0 2px rgba(192,48,30,.2)}
   body.pq.wsub #qzGo:not([hidden]){display:inline-block!important;width:10.5em;font-size:.92rem}
-  body.pq.wsub #qzGo.ready{background:#8E2465;border-color:#8E2465;color:#fff}body.pq.wsub #qzGo.ready:hover{background:#6E1A4E;border-color:#6E1A4E}
+  body.pq.wsub #qzGo{background:#8E2465;border-color:#8E2465;color:#fff}body.pq.wsub #qzGo:hover{background:#6E1A4E;border-color:#6E1A4E}   /* Write: Submit is always plum red */
   .descKeys .axB{display:none}.descIn.c2 .descKeys .axB{display:inline-block}   /* 2.1: the axis of a reflection */
   .descIn[hidden]{display:none}.descIn{display:flex;flex-direction:column;gap:.55rem}
   .descIn input{box-sizing:border-box;width:100%;padding:.55em .7em;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;font:400 1rem system-ui,sans-serif}
@@ -7686,18 +7698,27 @@ var ESPIC = {
     ], i = 0;
     (function next() { if (pgRun !== run) return; if (i < L.length) { L[i++](next); return; } s.ok = s.k === p.k; PG.demoFin = true; pgStop(); })();
   }
-  // ---- 2.2 Graphing Vertex Form, on its own graph (every mode).
-  // Demo, Sequence: the parabola button places a parabola (drag its vertex and its dilation point; the axis of symmetry comes with it), then every answer is a click on the graph:
-  //   h and k (the numbers in the vertex's coordinates), the vertex, the axis of symmetry (its equation or the vertex's h), and two pairs of mirror points; the answers collect in the centre pane.
-  // Calculate: the same graph, but the answers are typed in boxes in the centre pane, each marked right as soon as it is.
-  // Write: no parabola button: points (5 or more are joined by the polynomial through them), a dotted line for the axis, Undo; the boxes are checked only on Submit.
-  function vfN() { return pq() && act === "2.2" && lesson === 1 && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().vf && (mode === "demo" || mode === "sequence" || mode === "calculate" || mode === "solo"); }
+  // ---- 2.2 Graphing Vertex Form and Graphing Standard Form, on their own graph (every mode).
+  // Demo, Sequence: the parabola button places a parabola (drag its vertex and its dilation point; the axis of symmetry comes with it), and every answer is a click:
+  //   Vertex Form: graph, then h and k (the numbers in the vertex's coordinates), the vertex, the axis (its equation or the vertex's h), two pairs of mirror points.
+  //   Standard Form: a, b and c (clicked in the equation), then −b/(2a) is dragged into a graphing table (x | f(x) | y: the x column centred on it, each row's
+  //   expression to work out by clicking it), then the graph, the vertex, the axis and two pairs of mirror points. The answers collect in the centre pane.
+  // Calculate: the same, but every answer is typed in a box in the centre pane, marked right the moment it is (Vertex Form also has a parent table,
+  //   Standard Form the graphing table: −b/(2a) is typed, then dragged into it, and each y is typed).
+  // Write: no parabola button: points (5 or more are joined by the polynomial through them), a dotted line for the axis, Undo, ✕; the boxes are checked only on Submit.
+  function vfN() { return pq() && act === "2.2" && (lesson === 1 || lesson === 2) && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().vf && (mode === "demo" || mode === "sequence" || mode === "calculate" || mode === "solo"); }
   function vfnP() { return m3Cur().vf; }
-  var VFN_F = ["h", "k", "v", "ax", "m1a", "m1b", "m2a", "m2b"];
+  function vfnStd() { return !!vfnP().std; }
+  // the steps of Demo and Sequence, in order
+  function vfnStg() { return vfnStd() ? ["a", "b", "c", "drag", "tbl", "graph", "v", "ax", "m1", "m2"] : ["graph", "h", "k", "v", "ax", "m1", "m2"]; }
+  // the boxes of Calculate and Write
+  function vfnFs() { var std = vfnStd(), w = vfnWr(); return (std ? (w ? ["xv"] : ["a", "b", "c", "xv"]) : ["h", "k"]).concat(["v", "ax", "m1a", "m1b", "m2a", "m2b"]); }
   function vfnSt() {
-    if (!QZ.vf || QZ.vf.pi !== QZ.pi) QZ.vf = { pi: QZ.pi, par: null, tool: null, stage: 0, mp: [], sel: null, pairs: [], pts: [], dls: [], dlp: null, hov: null, drag: null, w: { h: "", k: "", v: "", ax: "", m1a: "", m1b: "", m2a: "", m2b: "" }, wok: {}, wbad: {}, tb: {}, tbok: {}, tbl: {}, gok: false, aok: false, ok: false, hist: [] };
+    if (!QZ.vf || QZ.vf.pi !== QZ.pi) QZ.vf = { pi: QZ.pi, par: null, tool: null, stage: 0, mp: [], sel: null, pairs: [], pts: [], dls: [], dlp: null, hov: null, drag: null, w: { a: "", b: "", c: "", xv: "", h: "", k: "", v: "", ax: "", m1a: "", m1b: "", m2a: "", m2b: "" }, wok: {}, wbad: {}, tb: {}, tbok: {}, tbl: {}, gx: false, gy: {}, gt: {}, gok: false, aok: false, ok: false, hist: [] };
     return QZ.vf;
   }
+  function vfnSid() { var s = vfnSt(); return s.ok || QZ.step >= 4 ? "" : vfnStg()[s.stage] || ""; }
+  function vfnPast(id) { var s = vfnSt(), i = vfnStg().indexOf(id); return s.ok || QZ.step >= 4 || (i >= 0 && s.stage > i); }
   function vfnWr() { return mode === "solo"; }
   function vfnF(x) { var p = vfnP(); return p.a * (x - p.h) * (x - p.h) + p.k; }
   // the graph: x and y from -10 to 10
@@ -7710,6 +7731,8 @@ var ESPIC = {
   function vfnSn(v, st) { var r = Math.round(v / st) * st; return Object.is(r, -0) ? 0 : r; }
   function vfnA(par) { var dx = par.dx - par.h; return dx ? (par.dy - par.k) / (dx * dx) : 0; }
   function vfnParOK(s) { var p = vfnP(), q = s.par; return !!q && q.h === p.h && q.k === p.k && Math.abs(vfnA(q) - p.a) < 1e-9; }
+  // may the parabola button be used now?  (Sequence and Demo: at its step; Calculate: any time)
+  function vfnParNow() { var s = vfnSt(); return !vfnWr() && !vfnParOK(s) && (mode === "calculate" || vfnSid() === "graph"); }
   // the polynomial through all the plotted points (Write), or null while there are fewer than 5 or two share an x
   function vfnPoly(pts) {
     if (pts.length < 5) return null;
@@ -7720,7 +7743,7 @@ var ESPIC = {
   function vfnUndo() {
     var s = vfnSt(); if (QZ.step >= 4 || !s.hist.length) return;
     var c = JSON.parse(s.hist.pop()), h = s.hist; if (QZ.ww && c.wwn < QZ.ww.steps.length) QZ.ww.steps.length = c.wwn; delete c.wwn;
-    Object.keys(c).forEach(function (k) { s[k] = c[k]; }); s.hist = h; s.drag = null; s.hov = null; if (s.tool !== "pt") s.tool = null; vfnKey = ""; pqMsg(""); vfnSync();
+    Object.keys(c).forEach(function (k) { s[k] = c[k]; }); s.hist = h; s.drag = null; s.hov = null; if (s.tool !== "pt") s.tool = null; vfnKey = ""; vfnTbKey = ""; pqMsg(""); vfnSync();
   }
   function vfnLine(t) { if (QZ.ww) QZ.ww.steps.push({ eqs: [t], cls: "cg" }); }
   function vfnBad(msg) { QZ.wrong++; pqMsg(msg); }
@@ -7729,19 +7752,25 @@ var ESPIC = {
     if (pgRun && pgPaused && !DN) { PG.demoFin = true; pgStop(); return; }
     if (!pgRun) drawPlay(); else vfnSync();
   }
-  // the prompt over the graph, one step at a time (Demo and Sequence)
-  var VFN_ASK = ["Press the parabola button, then click the graph to place the vertex. Drag the points until it matches <i>f</i>.", "Click on the graph to find the <i>h</i> value.", "Click on the graph to find the <i>k</i> value.", "Click on the graph to find the coordinates of the vertex.", "Click on the graph to find the equation of the axis of symmetry.", "Click on a pair of mirror points.", "Click on another pair of mirror points."];
+  function vfnNext(line) { var s = vfnSt(); s.stage++; pqMsg(""); if (line) vfnLine(line); if (s.stage >= vfnStg().length) vfnDone(); else vfnSync(); }
+  // the prompt over the graph, one step at a time
+  var VFN_ASK = { graph: "Press the parabola button, then click the graph to place the vertex. Drag the points until it matches <i>f</i>.", h: "Click on the graph to find the <i>h</i> value.", k: "Click on the graph to find the <i>k</i> value.", v: "Click on the graph to find the coordinates of the vertex.", ax: "Click on the graph to find the equation of the axis of symmetry.", m1: "Click on a pair of mirror points.", m2: "Click on another pair of mirror points.",
+    a: "Click on the equation to find the <i>a</i> value.", b: "Click on the equation to find the <i>b</i> value.", c: "Click on the equation to find the <i>c</i> value.", drag: "Drag <i>x</i> = −<i>b</i>/(2<i>a</i>) into the table.", tbl: "Click each expression in the table to work it out." };
   function vfnAsk() {
     var s = vfnSt(); if (QZ.step >= 4 || s.ok) return "";
     if (vfnWr()) return "Plot 5 points on the parabola and draw its axis of symmetry with the dotted line. Then fill in the boxes and press Submit.";
-    if (mode === "calculate") return s.stage === 0 ? VFN_ASK[0] : "Fill in the parent table and the boxes.";
-    if (s.stage === 5 && s.sel) return "Now click its mirror point.";
-    if (s.stage === 6 && s.sel) return "Now click its mirror point.";
-    return VFN_ASK[s.stage] || "";
+    if (mode === "calculate") {
+      if (!vfnStd()) return !vfnParOK(s) ? VFN_ASK.graph : "Fill in the parent table and the boxes.";
+      if (s.wok.xv && !s.gx) return VFN_ASK.drag;
+      return "Fill in the boxes and the table, and graph the parabola with the parabola button.";
+    }
+    var id = vfnSid();
+    if ((id === "m1" || id === "m2") && s.sel) return "Now click its mirror point.";
+    return VFN_ASK[id] || "";
   }
   function vfnDraw() {
-    var S = $("vfnSvg"), s = vfnSt(), p = vfnP(), wr = vfnWr(), h = "", F = function (v) { return Math.round(v * 100) / 100; }, x0 = vfnX(-10), x1 = vfnX(10), y0 = vfnY(-10), y1 = vfnY(10);
-    var halo = " stroke=\"#fff\" stroke-width=\"3.4\" paint-order=\"stroke\"", live = !QZ.step || QZ.step < 4;
+    var S = $("vfnSvg"), s = vfnSt(), wr = vfnWr(), h = "", F = function (v) { return Math.round(v * 100) / 100; }, x0 = vfnX(-10), x1 = vfnX(10), y0 = vfnY(-10), y1 = vfnY(10);
+    var halo = " stroke=\"#fff\" stroke-width=\"3.4\" paint-order=\"stroke\"", live = QZ.step < 4;
     h += "<defs><clipPath id=\"vfnClip\"><rect x=\"" + x0 + "\" y=\"" + y1 + "\" width=\"" + (x1 - x0) + "\" height=\"" + (y0 - y1) + "\"/></clipPath></defs>";
     h += "<rect x=\"" + x0 + "\" y=\"" + y1 + "\" width=\"" + (x1 - x0) + "\" height=\"" + (y0 - y1) + "\" fill=\"#fff\"/>";
     for (var g = -10; g <= 10; g++) {
@@ -7759,38 +7788,38 @@ var ESPIC = {
     if (wr) {
       // Write: the dotted lines, the plotted points and the polynomial through them
       s.dls.forEach(function (l, i) { h += vfnDl(l.p[0], l.p[1], i); });
-      if (s.dlp) { var q2 = s.hov || s.dlp; h += vfnDl(s.dlp, [q2.x != null ? q2.x : q2[0], q2.y != null ? q2.y : q2[1]], -1); }
+      if (s.dlp) { var q2 = s.hov || { x: s.dlp[0], y: s.dlp[1] }; h += vfnDl(s.dlp, [q2.x, q2.y], -1); }
       var P = vfnPoly(s.pts); if (P) h += curve(P, C2P, 3);
       s.pts.forEach(function (q, i) { h += dot(q[0], q[1], C2P, 5.5, live ? "data-vfh=\"p:" + i + "\" style=\"cursor:grab\"" : ""); });
       if (s.tool === "pt" && s.hov) h += dot(s.hov.x, s.hov.y, C2P, 5, "", true);
       S.innerHTML = h; return;
     }
     var par = s.par, A = par ? vfnA(par) : 0, lk = vfnParOK(s);
+    // the points from finished rows of the table
+    vfnTbPts().forEach(function (q) { if (Math.abs(q[1]) <= 10 && Math.abs(q[0]) <= 10) h += dot(q[0], q[1], C2B, 4.5); });
     if (par) {
       var Pf = function (x) { return A * (x - par.h) * (x - par.h) + par.k; };
       // the axis of symmetry comes with the parabola
-      var axLab = "<tspan font-style=\"italic\">x</tspan> = " + nf(par.h), axT = s.stage > 4 || (mode === "calculate" && s.wok.ax) ? " fill=\"" + C2G + "\"" : "";
+      var axLab = "<tspan font-style=\"italic\">x</tspan> = " + nf(par.h);
       h += "<line x1=\"" + F(vfnX(par.h)) + "\" y1=\"" + y0 + "\" x2=\"" + F(vfnX(par.h)) + "\" y2=\"" + y1 + "\" stroke=\"" + C2G + "\" stroke-width=\"2.2\" stroke-dasharray=\"7 5\" pointer-events=\"none\"/>";
       h += "<line data-vfc=\"ax\" x1=\"" + F(vfnX(par.h)) + "\" y1=\"" + y0 + "\" x2=\"" + F(vfnX(par.h)) + "\" y2=\"" + y1 + "\" stroke=\"transparent\" stroke-width=\"14\" style=\"cursor:pointer\"/>";
       var axR = par.h > 6, axX = F(vfnX(par.h) + (axR ? -7 : 7)), axY = y1 + 18;
       h += "<g data-vfc=\"ax\" style=\"cursor:pointer\"><rect x=\"" + (axR ? axX - 52 : axX - 3) + "\" y=\"" + (axY - 15) + "\" width=\"56\" height=\"21\" fill=\"transparent\"/><text x=\"" + axX + "\" y=\"" + axY + "\" text-anchor=\"" + (axR ? "end" : "start") + "\" font-weight=\"700\" fill=\"" + C2G + "\"" + halo + ">" + axLab + "</text></g>";
       h += curve(Pf, C2P, 3, "", "data-vfc=\"cv\" style=\"cursor:pointer\"");
       h += curve(Pf, "transparent", 16, "", "data-vfc=\"cv\" style=\"cursor:pointer\"");
-      // the mirror points found or picked so far
+      // the mirror points found or picked so far, each labelled on its side of the axis
       s.mp.forEach(function (q) { h += dot(q[0], q[1], C2O, 5.5, "data-vfc=\"mp\" data-x=\"" + q[0] + "\" style=\"cursor:pointer\""); h += lab(q[0], q[1], "(" + nf(q[0]) + ", " + nf(q[1]) + ")", C2O, q[0] < par.h ? "end" : "start", A > 0 ? 18 : -9); });
       // the vertex, with its coordinates: each number can be clicked
       var drag = !lk && live, vx = vfnX(par.h), vy = vfnY(par.k), right = par.h < 5, below = A > 0;
-      var hs = nf(par.h), ks = nf(par.k), gh = s.stage > 1 || s.wok.h, gk = s.stage > 2 || s.wok.k, lx = right ? vx + 11 : vx - 11, ly = below ? vy + 22 : vy - 12;
-      var ts = function (t, id, got) { return "<tspan data-vfc=\"" + id + "\" style=\"cursor:pointer\"" + (got ? " fill=\"" + C2G + "\"" : "") + ">" + t + "</tspan>"; };
+      var hs = nf(par.h), ks = nf(par.k), gh = vfnPast("h") || !!s.wok.h, gk = vfnPast("k") || !!s.wok.k, lx = right ? vx + 11 : vx - 11, ly = below ? vy + 22 : vy - 12;
+      var ts = function (t, id, got) { return "<tspan data-vfc=\"" + id + "\" style=\"cursor:pointer\"" + (got && !vfnStd() ? " fill=\"" + C2G + "\"" : "") + ">" + t + "</tspan>"; };
       h += "<text x=\"" + F(lx) + "\" y=\"" + F(ly) + "\" text-anchor=\"" + (right ? "start" : "end") + "\" font-size=\"15\" font-weight=\"700\" fill=\"#1B2433\"" + halo + ">(" + ts(hs, "vh", gh) + ", " + ts(ks, "vk", gk) + ")</text>";
-      var vfirst = s.stage > 3 || s.wok.v;
-      h += dot(par.h, par.k, C2P, vfirst ? 7 : 6.5, drag ? "data-vfh=\"v\" style=\"cursor:grab\"" : "data-vfc=\"vx\" style=\"cursor:pointer\"");
+      h += dot(par.h, par.k, C2P, vfnPast("v") ? 7 : 6.5, drag ? "data-vfh=\"v\" style=\"cursor:grab\"" : "data-vfc=\"vx\" style=\"cursor:pointer\"");
       if (!lk) {
         h += dot(par.dx, par.dy, C2P, 5.5, drag ? "data-vfh=\"d\" style=\"cursor:grab\"" : "", true);
-        if (s.drag === "d" && mode !== "solo") h += lab(par.dx, par.dy, "(" + nf(par.dx) + ", " + nf(par.dy) + ")", C2P, par.dx > 5 ? "end" : "start");
+        if (s.drag === "d") h += lab(par.dx, par.dy, "(" + nf(par.dx) + ", " + nf(par.dy) + ")", C2P, par.dx > 5 ? "end" : "start");
       }
     }
-    if (mode === "calculate") VFN_XS.forEach(function (x, r) { var q = vfnRowPt(r); if (q && Math.abs(q[1]) <= 10 && Math.abs(q[0]) <= 10) h += dot(q[0], q[1], C2B, 4.5); });
     if (s.tool === "U" && s.hov) { h += dot(s.hov.x, s.hov.y, C2P, 6, "", true); h += lab(s.hov.x, s.hov.y, "(" + nf(s.hov.x) + ", " + nf(s.hov.y) + ")", C2P, s.hov.x > 5 ? "end" : "start"); }
     S.innerHTML = h;
   }
@@ -7806,33 +7835,34 @@ var ESPIC = {
   }
   // the answers in the centre pane: found by clicking (Demo, Sequence), or boxes (Calculate, Write)
   var vfnKey = "";
-  var VFN_LAB = { h: "<i>h</i> =", k: "<i>k</i> =", v: "Vertex:", ax: "Axis of symmetry: <i>x</i> =", m1: "Mirror points:", m2: "Mirror points:" };
+  var VFN_LAB = { a: "<i>a</i> =", b: "<i>b</i> =", c: "<i>c</i> =", xv: "<i>x</i> = −<i>b</i>/(2<i>a</i>) =", h: "<i>h</i> =", k: "<i>k</i> =", v: "Vertex:", ax: "Axis of symmetry: <i>x</i> =", m1: "Mirror points:", m2: "Mirror points:" };
   function vfnOut() {
-    var s = vfnSt(), el = $("vfnOut"), done = QZ.step >= 4;
+    var s = vfnSt(), el = $("vfnOut"), done = QZ.step >= 4, p = vfnP();
     if (mode === "demo" || mode === "sequence") {
-      var row = function (lb, v, on) { return "<div class=\"vfnR" + (on ? " cur" : "") + "\"><span class=\"vfnL\">" + lb + "</span> " + (v == null ? "<span class=\"vfnQ\">?</span>" : "<span class=\"vfnV\">" + v + "</span> <span class=\"cueOk\">✓</span>") + "</div>"; }, p = vfnP(), pr = function (i) { var q = s.pairs[i]; return q ? "(" + nf(q[0][0]) + ", " + nf(q[0][1]) + ") and (" + nf(q[1][0]) + ", " + nf(q[1][1]) + ")" : null; };
-      var st = done ? 9 : s.stage;
-      el.innerHTML = row(VFN_LAB.h, st > 1 ? nf(p.h) : null, st === 1) + row(VFN_LAB.k, st > 2 ? nf(p.k) : null, st === 2) + row(VFN_LAB.v, st > 3 ? "(" + nf(p.h) + ", " + nf(p.k) + ")" : null, st === 3) + row(VFN_LAB.ax, st > 4 ? nf(p.h) : null, st === 4) + row(VFN_LAB.m1, pr(0), st === 5) + row(VFN_LAB.m2, pr(1), st === 6);
+      var id = vfnSid(), row = function (k, v, on) { return "<div class=\"vfnR" + (on ? " cur" : "") + "\"><span class=\"vfnL\">" + VFN_LAB[k] + "</span> " + (v == null ? "<span class=\"vfnQ\">?</span>" : "<span class=\"vfnV\">" + v + "</span> <span class=\"cueOk\">✓</span>") + "</div>"; };
+      var pr = function (i) { var q = s.pairs[i]; return q ? "(" + nf(q[0][0]) + ", " + nf(q[0][1]) + ") and (" + nf(q[1][0]) + ", " + nf(q[1][1]) + ")" : null; }, P = vfnPast;
+      var top = vfnStd() ? row("a", P("a") ? nf(p.a) : null, id === "a") + row("b", P("b") ? nf(p.b) : null, id === "b") + row("c", P("c") ? nf(p.c) : null, id === "c") + row("xv", P("drag") ? nf(p.h) : null, id === "drag")
+        : row("h", P("h") ? nf(p.h) : null, id === "h") + row("k", P("k") ? nf(p.k) : null, id === "k");
+      el.innerHTML = top + row("v", P("v") ? "(" + nf(p.h) + ", " + nf(p.k) + ")" : null, id === "v") + row("ax", P("ax") ? nf(p.h) : null, id === "ax") + row("m1", pr(0), id === "m1") + row("m2", pr(1), id === "m2");
       vfnKey = ""; return;
     }
-    var key = QZ.pi + ":" + mode;
+    var key = QZ.pi + ":" + mode + ":" + vfnStd();
     if (vfnKey !== key) {
       vfnKey = key;
       var inp = function (f, ph, wd) { return "<input class=\"vfnIn\" id=\"vfnF_" + f + "\" data-vff=\"" + f + "\" autocomplete=\"off\" spellcheck=\"false\" inputmode=\"" + (/^m|^v/.test(f) ? "text" : "decimal") + "\" placeholder=\"" + (ph || "") + "\" style=\"width:" + (wd || 4) + "rem\" aria-label=\"" + f + "\">"; };
-      el.innerHTML = "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB.h + "</span> " + inp("h") + "</div>" +
-        "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB.k + "</span> " + inp("k") + "</div>" +
-        "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB.v + "</span> " + inp("v", "Ex (3, −2)", 6.5) + "</div>" +
-        "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB.ax + "</span> " + inp("ax") + "</div>" +
+      var Fs = vfnFs(), one = function (f, ph, wd) { return Fs.indexOf(f) < 0 ? "" : "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB[f] + "</span> " + inp(f, ph, wd) + (f === "xv" && mode === "calculate" ? "<span class=\"vfnChipW\" id=\"vfnChipC\"></span>" : "") + "</div>"; };
+      el.innerHTML = one("a") + one("b") + one("c") + one("xv") + one("h") + one("k") + one("v", "Ex (3, −2)", 6.5) + one("ax") +
         "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB.m1 + "</span> " + inp("m1a", "(x, y)", 5.5) + " and " + inp("m1b", "(x, y)", 5.5) + "</div>" +
         "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB.m2 + "</span> " + inp("m2a", "(x, y)", 5.5) + " and " + inp("m2b", "(x, y)", 5.5) + "</div>";
     }
-    VFN_F.forEach(function (f) {
+    vfnFs().forEach(function (f) {
       var e = $("vfnF_" + f); if (!e) return;
       if (document.activeElement !== e && e.value !== s.w[f]) e.value = s.w[f];
-      var ok = !!s.wok[f.replace(/[ab]$/, "")] || !!s.wok[f]; e.classList.toggle("ok", ok); e.classList.toggle("bad", !ok && !!s.wbad[f]); e.readOnly = ok || done || (pgRun && !pgPaused && !DN);
+      var ok = !!s.wok[f.replace(/^(m[12])[ab]$/, "$1")] || !!s.wok[f]; e.classList.toggle("ok", ok); e.classList.toggle("bad", !ok && !!s.wbad[f]); e.readOnly = ok || done || (pgRun && !pgPaused && !DN);
     });
+    var cc = $("vfnChipC"); if (cc) cc.innerHTML = s.wok.xv && !s.gx && !done ? vfnChipHTML() : "";
   }
-  function vfnPt(t) { var m = String(t || "").replace(/[−–]/g, "-").replace(/[()\s]/g, "").split(/[,;]/); if (m.length !== 2) return null; var x = m3Num(m[0]), y = m3Num(m[1]); return isNaN(x) || isNaN(y) ? null : [x, y]; }
+  function vfnPt(t) { if (!/^\s*\(.*\)\s*$/.test(String(t || ""))) return null; var m = String(t || "").replace(/[−–]/g, "-").replace(/[()\s]/g, "").split(/[,;]/); if (m.length !== 2) return null; var x = m3Num(m[0]), y = m3Num(m[1]); return isNaN(x) || isNaN(y) ? null : [x, y]; }
   function vfnOn(q) { return Math.abs(vfnF(q[0]) - q[1]) < 1e-9; }
   // is this a pair of mirror points (and not the pair already given)?
   function vfnPair(a, b, other) {
@@ -7841,34 +7871,40 @@ var ESPIC = {
     if (!vfnOn(b)) return "(" + nf(b[0]) + ", " + nf(b[1]) + ") is not on the parabola.";
     if (Math.abs(a[0] - p.h) < 1e-9 || Math.abs(b[0] - p.h) < 1e-9) return "The vertex is on the axis of symmetry: it is its own mirror image. Choose points on either side.";
     if (Math.abs(a[0] + b[0] - 2 * p.h) > 1e-9) return "Mirror points are the same distance from the axis of symmetry, on opposite sides.";
-    if (other && Math.abs(Math.min(a[0], b[0]) - Math.min(other[0][0], other[1][0])) < 1e-9) return "You already have that pair. Choose a different pair.";
+    if (other && other[0] && other[1] && Math.abs(Math.min(a[0], b[0]) - Math.min(other[0][0], other[1][0])) < 1e-9) return "You already have that pair. Choose a different pair.";
     return true;
   }
-  function vfnCheckF(f, v, s) {   // a box's value: true when right (pairs are checked together)
-    var p = vfnP();
-    if (f === "h") return m3Num(v) === p.h;
-    if (f === "k") return m3Num(v) === p.k;
+  function vfnCheckF(f, v) {   // a box's value: true when right (pairs are checked together)
+    var p = vfnP(), n = m3Num(v);
+    if (f === "a" || f === "b" || f === "c") return n === p[f];
+    if (f === "h" || f === "xv") return n === p.h;
+    if (f === "k") return n === p.k;
     if (f === "ax") return m3Num(String(v).replace(/^\s*x\s*=/i, "")) === p.h;
     if (f === "v") { var q = vfnPt(v); return !!q && q[0] === p.h && q[1] === p.k; }
     return false;
   }
   function vfnPairBox(n, s) { var a = vfnPt(s.w["m" + n + "a"]), b = vfnPt(s.w["m" + n + "b"]), o = s.wok["m" + (3 - n)] ? [vfnPt(s.w["m" + (3 - n) + "a"]), vfnPt(s.w["m" + (3 - n) + "b"])] : null; return vfnPair(a, b, o); }
-  var VFN_SAY = { h: "h = ", k: "k = ", v: "vertex ", ax: "axis of symmetry x = " };
+  var VFN_SAY = { a: "a = ", b: "b = ", c: "c = ", xv: "x = −b/(2a) = ", h: "h = ", k: "k = ", v: "vertex ", ax: "axis of symmetry x = " };
+  var VFN_WRONG = { a: "Not quite. a is the number in front of x².", b: "Not quite. b is the number in front of x, with its sign.", c: "Not quite. c is the constant term, with its sign.", xv: "Not quite. Put a and b into −b/(2a).", v: "Not quite. The vertex is (h, k).", ax: "Not quite. The axis of symmetry is the vertical line through the vertex." };
   function vfnTyped(f, enter) {   // Calculate: a box is marked right the moment it is
     var s = vfnSt(); if (QZ.step >= 4 || vfnWr()) return;
     s.wbad[f] = false;
-    if (/^m/.test(f)) {
+    if (/^m[12][ab]$/.test(f)) {
       var n = f.charAt(1), r = vfnPairBox(n, s);
       if (r === true) { vfnPush(); s.wok["m" + n] = true; vfnLine("mirror points " + s.w["m" + n + "a"].trim() + " and " + s.w["m" + n + "b"].trim()); pqMsg(""); vfnAll(); return; }
+      if (enter && [s.w["m" + n + "a"], s.w["m" + n + "b"]].some(function (t) { return t.trim() && !/^\s*\(.*\)\s*$/.test(t); })) { pqMsg("Write each point with both parentheses: (x, y).", "note"); return; }
       if (enter && s.w["m" + n + "a"].trim() && s.w["m" + n + "b"].trim()) { s.wbad[f] = true; vfnBad(r || "Not quite. Try again."); vfnOut(); }
       else if (enter) { var e = $("vfnF_m" + n + (f.slice(-1) === "a" ? "b" : "a")); if (e) e.focus(); }
       return;
     }
-    if (vfnCheckF(f, s.w[f], s)) { vfnPush(); s.wok[f] = true; vfnLine(VFN_SAY[f] + s.w[f].trim()); pqMsg(""); var nx = VFN_F[VFN_F.indexOf(f) + 1]; vfnAll(); if (nx && !pgRun) { var e2 = $("vfnF_" + nx); if (e2) e2.focus(); } return; }
-    if (enter && String(s.w[f]).trim()) { s.wbad[f] = true; vfnBad(f === "v" ? "Not quite. The vertex is (h, k)." : f === "ax" ? "Not quite. The axis of symmetry is the vertical line through the vertex." : "Not quite. Look at f(x) = a(x − h)² + k."); vfnOut(); }
+    if (vfnCheckF(f, s.w[f])) { vfnPush(); s.wok[f] = true; vfnLine(VFN_SAY[f] + s.w[f].trim()); pqMsg(""); var L = vfnFs(), nx = L[L.indexOf(f) + 1]; vfnAll(); if (nx && !pgRun && f !== "xv") { var e2 = $("vfnF_" + nx); if (e2) e2.focus(); } return; }
+    if (enter && f === "v" && String(s.w[f]).trim() && !/^\s*\(.*\)\s*$/.test(s.w[f])) { pqMsg("Write the vertex as a point, with both parentheses: (x, y).", "note"); return; }
+    if (enter && String(s.w[f]).trim()) { s.wbad[f] = true; vfnBad(VFN_WRONG[f] || "Not quite. Look at f(x) = a(x − h)² + k."); vfnOut(); }
   }
-  // ---- Calculate: the parent table (as in 2.1): x | x | y | y | y. Columns 2 and 3 are the parent (x, x²); each change of f gets one new column:
-  // column 1 the new x (x + h), column 4 a·y, column 5 + k (with no stretch, + k uses column 4). Trivial steps (+ 0, × 1) get no column.
+
+  // ---- the tables (not in Write).  Vertex Form, Calculate: the parent table (as in 2.1): x | x | y | y | y, columns 2 and 3 the parent (x, x²), one new column
+  // for each change of f (column 1 the new x, column 4 a·y, column 5 + k; with no stretch, + k uses column 4; trivial steps get none).
+  // Standard Form: the graphing table x | f(x) | y: −b/(2a) dragged into it fills the x column around it, and the centre column holds each row's expression.
   var VFN_XS = [-2, -1, 0, 1, 2];
   function vfnCols() { var p = vfnP(), c = []; if (p.h) c.push(0); if (p.a !== 1) c.push(3); if (p.k) c.push(p.a !== 1 ? 4 : 3); return c; }
   function vfnTbAns(r, c) {
@@ -7878,18 +7914,48 @@ var ESPIC = {
     if (c === 4) return p.a * x * x + p.k;
     return NaN;
   }
-  function vfnTbLab(c) { var p = vfnP(); return c === 0 ? (p.h > 0 ? "+ " : "− ") + Math.abs(p.h) : c === 3 && p.a !== 1 ? "× " + nf(p.a) : (p.k > 0 ? "+ " : "− ") + Math.abs(p.k); }
   function vfnTbCells() { var C = vfnCols(), L = []; VFN_XS.forEach(function (x, r) { C.forEach(function (c) { L.push(r + ":" + c); }); }); return L; }
-  function vfnTbDone() { var s = vfnSt(); return vfnTbCells().every(function (k) { return s.tbok[k]; }); }
-  function vfnRowPt(r) {   // a finished row is a point of the graph: (new x, last y)
-    var s = vfnSt(), C = vfnCols(), p = vfnP(); if (!C.every(function (c) { return s.tbok[r + ":" + c]; })) return null;
+  function vfnTbDone() { var s = vfnSt(); return vfnStd() ? s.gx && VFN_XS.every(function (x, r) { return s.gy[r]; }) : vfnTbCells().every(function (k) { return s.tbok[k]; }); }
+  function vfnRowPt(r) {   // a finished row is a point of the graph
+    var s = vfnSt(), p = vfnP();
+    if (vfnStd()) return s.gx && s.gy[r] ? [p.h + VFN_XS[r], vfnF(p.h + VFN_XS[r])] : null;
+    if (mode !== "calculate" || !vfnCols().every(function (c) { return s.tbok[r + ":" + c]; })) return null;
     return [VFN_XS[r] + p.h, p.a * VFN_XS[r] * VFN_XS[r] + p.k];
   }
+  function vfnTbPts() { var o = []; if (vfnWr()) return o; VFN_XS.forEach(function (x, r) { var q = vfnRowPt(r); if (q) o.push(q); }); return o; }
+  // a row's expression: f with x replaced by the row's x
+  function vfnExpr(x) {
+    var p = vfnP(), X = "(" + nf(x) + ")", co = p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a), t = co + X + "²";
+    t += (p.b < 0 ? " − " : " + ") + (Math.abs(p.b) === 1 ? "" : nf(Math.abs(p.b))) + X;
+    if (p.c) t += (p.c < 0 ? " − " : " + ") + nf(Math.abs(p.c));
+    return t;
+  }
+  function vfnChipHTML() { var p = vfnP(); return "<span class=\"vfnChip\" data-vfchip=\"1\" title=\"Drag me into the table\">" + "<i>x</i> = −" + (p.b < 0 ? "(" + nf(p.b) + ")" : nf(p.b)) + "/(2·" + (p.a < 0 ? "(" + nf(p.a) + ")" : nf(p.a)) + ") = " + nf(p.h) + "</span>"; }
   var vfnTbKey = "";
   function vfnTb() {
-    var el = $("vfnTb"), s = vfnSt(), done = QZ.step >= 4;
-    if (mode !== "calculate") { el.hidden = true; el.innerHTML = ""; vfnTbKey = ""; return; }
-    el.hidden = false; var C = vfnCols(), key = QZ.pi + ":" + C.join(",");
+    var el = $("vfnTb"), s = vfnSt(), done = QZ.step >= 4, std = vfnStd();
+    if (vfnWr() || (!std && mode !== "calculate")) { el.hidden = true; el.innerHTML = ""; vfnTbKey = ""; return; }
+    el.hidden = false;
+    if (std) {
+      var calc = mode === "calculate", key2 = "g:" + QZ.pi + ":" + mode + ":" + s.gx;
+      if (vfnTbKey !== key2) {
+        vfnTbKey = key2; var p = vfnP();
+        var hh = "<div class=\"vfnChipRow\" id=\"vfnChipS\"></div><table class=\"pgTable vfnGt\" id=\"vfnTbl\" aria-label=\"Graphing table\"><colgroup><col style=\"width:16%\"><col><col style=\"width:16%\"></colgroup><thead><tr><th>x</th><th class=\"pgMid\"><i>f</i>(<i>x</i>)</th><th>y</th></tr></thead><tbody>";
+        VFN_XS.forEach(function (d, r) {
+          var x = p.h + d;
+          hh += "<tr" + (d === 0 ? " class=\"vfnMidRow\"" : "") + ">" + (s.gx ? "<td>" + nf(x) + "</td><td class=\"mid\" data-vfr=\"" + r + "\">" + vfnExpr(x) + "</td>" : "<td class=\"vfnDrop\"></td><td></td>") +
+            "<td>" + (s.gx && calc ? "<input class=\"qzCell\" data-vfy=\"" + r + "\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"y for x = " + nf(x) + "\">" : "<span class=\"cv\" data-vfyv=\"" + r + "\"></span>") + "</td></tr>";
+        });
+        el.innerHTML = hh + "</tbody></table>";
+      }
+      var cs = $("vfnChipS"); if (cs) cs.innerHTML = !calc && vfnSid() === "drag" ? vfnChipHTML() : "";
+      [].forEach.call(el.querySelectorAll("[data-vfr]"), function (e) { var r = +e.dataset.vfr; e.classList.toggle("live", !calc && vfnSid() === "tbl" && !s.gy[r] && !done); });
+      [].forEach.call(el.querySelectorAll("[data-vfyv]"), function (e) { var r = +e.dataset.vfyv; e.textContent = s.gy[r] ? nf(vfnF(vfnP().h + VFN_XS[r])) : ""; });
+      [].forEach.call(el.querySelectorAll("[data-vfy]"), function (e) { var r = e.dataset.vfy, v = s.gt[r] || ""; if (document.activeElement !== e && e.value !== v) e.value = v; e.classList.toggle("full", !!s.gy[r]); e.classList.toggle("badc", !s.gy[r] && !!s.wbad["g" + r]); e.readOnly = !!s.gy[r] || done || (pgRun && !pgPaused && !DN); });
+      [].forEach.call(el.querySelectorAll(".vfnDrop"), function (e) { e.classList.toggle("on", !!(s.chipDrag)); });
+      return;
+    }
+    var C = vfnCols(), key = QZ.pi + ":" + C.join(",");
     if (vfnTbKey !== key) {
       vfnTbKey = key; var off = function (c) { return c === 1 || c === 2 ? "" : C.indexOf(c) < 0 ? " off" : ""; };
       var h = "<table class=\"pgTable ptTable vfnPt\" aria-label=\"Parent table\"><colgroup><col><col><col><col><col></colgroup><thead><tr class=\"ptLr\">";
@@ -7913,13 +7979,13 @@ var ESPIC = {
     });
     [].forEach.call(el.querySelectorAll("[data-vtl]"), function (e) { var v = s.tbl[e.dataset.vtl] || ""; if (document.activeElement !== e && e.value !== v) e.value = v; e.readOnly = done; });
   }
-  function vfnTbTyped(k, enter) {
+  function vfnTbTyped(k, enter) {   // Vertex Form, Calculate: a parent-table cell
     var s = vfnSt(); if (QZ.step >= 4 || s.tbok[k]) return; s.wbad["t" + k] = false;
     var rc = k.split(":"), want = vfnTbAns(+rc[0], +rc[1]), v = m3Num(s.tb[k] || "");
     if (!isNaN(v) && Math.abs(v - want) < 1e-9) {
       vfnPush(); s.tbok[k] = true; pqMsg("");
-      var r = +rc[0]; if (vfnRowPt(r)) { var q = vfnRowPt(r); vfnLine("(" + nf(q[0]) + ", " + nf(q[1]) + ") from x = " + nf(VFN_XS[r])); }
-      var L = vfnTbCells(), nx = L.slice(L.indexOf(k) + 1).concat(L).filter(function (q) { return !s.tbok[q]; })[0];
+      var r = +rc[0], q = vfnRowPt(r); if (q) vfnLine("(" + nf(q[0]) + ", " + nf(q[1]) + ") from x = " + nf(VFN_XS[r]));
+      var col = +rc[1], nx = null, best = 99; VFN_XS.forEach(function (x2, r2) { var z = r2 + ":" + col, dd = Math.abs(r2 - r); if (!s.tbok[z] && dd < best) { best = dd; nx = z; } }); if (!nx) nx = vfnTbCells().filter(function (z) { return !s.tbok[z]; })[0];   // (the nearest empty cell in the same column)
       vfnAll(); if (nx && !pgRun) { var e = document.querySelector("[data-vtb=\"" + nx + "\"]"); if (e) e.focus(); }
       return;
     }
@@ -7929,20 +7995,61 @@ var ESPIC = {
       vfnTb();
     }
   }
-  function vfnAll() { var s = vfnSt(); if (vfnParOK(s) && (mode !== "calculate" || vfnTbDone()) && ["h", "k", "v", "ax", "m1", "m2"].every(function (k) { return s.wok[k]; })) vfnDone(); else vfnSync(); }
-  // Demo and Sequence: a click on the graph answers the step in hand
-  function vfnClick(what, q) {
-    var s = vfnSt(), p = vfnP(); if (QZ.step >= 4 || s.ok || !vfnParOK(s)) return;
-    if (mode === "calculate") {   // (any point of the curve can be clicked to see its coordinates)
-      if (what === "cv" && q) { var x = vfnCl(Math.round(q.x), -10, 10), y = vfnF(x); if (Math.abs(y) <= 10 && !s.mp.some(function (m) { return m[0] === x; })) { s.mp.push([x, y]); vfnSync(); } }
+  // Standard Form: −b/(2a) dropped into the table
+  function vfnDrop() {
+    var s = vfnSt(); if (s.gx || QZ.step >= 4) return;
+    if (mode === "calculate" ? !s.wok.xv : vfnSid() !== "drag") return;
+    vfnPush(); s.gx = true; vfnTbKey = "";
+    if (mode === "calculate") { vfnLine("table: x = " + nf(vfnP().h) + " in the centre row"); pqMsg(""); vfnSync(); var e = document.querySelector("[data-vfy=\"0\"]"); if (e && !pgRun) e.focus(); return; }
+    vfnNext("x = −b/(2a) = " + nf(vfnP().h) + ", the centre row of the table");
+  }
+  // Standard Form, Sequence and Demo: clicking a row's expression works it out (the value slides into the y column)
+  function vfnRowClick(r) {
+    var s = vfnSt(); if (QZ.step >= 4 || vfnSid() !== "tbl" || s.gy[r]) return;
+    vfnPush(); s.gy[r] = true; var x = vfnP().h + VFN_XS[r]; vfnLine("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x)));
+    var e = document.querySelector("[data-vfr=\"" + r + "\"]"), t = document.querySelector("[data-vfyv=\"" + r + "\"]");
+    if (e && t && !DN) { var a = e.getBoundingClientRect(), b = t.getBoundingClientRect(), g = document.createElement("div"); g.className = "vfnFly"; g.textContent = nf(vfnF(x)); g.style.left = (a.left + a.width / 2) + "px"; g.style.top = (a.top + a.height / 2) + "px"; document.body.appendChild(g); requestAnimationFrame(function () { g.style.left = (b.left + b.width / 2) + "px"; g.style.top = (b.top + b.height / 2) + "px"; }); setTimeout(function () { g.remove(); }, 420); }
+    if (VFN_XS.every(function (d, i) { return s.gy[i]; })) vfnNext(""); else { pqMsg(""); vfnSync(); }
+  }
+  // Standard Form, Calculate: a typed y
+  function vfnYTyped(r, enter) {
+    var s = vfnSt(); if (QZ.step >= 4 || s.gy[r]) return; s.wbad["g" + r] = false;
+    var x = vfnP().h + VFN_XS[+r], v = m3Num(s.gt[r] || "");
+    if (!isNaN(v) && Math.abs(v - vfnF(x)) < 1e-9) {
+      vfnPush(); s.gy[r] = true; vfnLine("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x))); pqMsg("");
+      var nx = null, best = 99; VFN_XS.forEach(function (d, i) { if (!s.gy[i] && Math.abs(i - +r) < best) { best = Math.abs(i - +r); nx = i; } }); vfnAll();
+      if (nx != null && !pgRun) { var e = document.querySelector("[data-vfy=\"" + nx + "\"]"); if (e) e.focus(); }
       return;
     }
-    var st = s.stage, ok = function (line, more) { vfnPush(); if (more) more(); s.stage++; pqMsg(""); vfnLine(line); if (s.stage > 6) vfnDone(); else vfnSync(); };
-    if (st === 1) { if (what === "vh") ok("h = " + nf(p.h)); else if (what === "vk") vfnBad("That is k, the y-coordinate of the vertex. Click h, its x-coordinate."); else if (what) vfnBad("h is the x-coordinate of the vertex. Click it in the vertex's coordinates."); else pqMsg("Click a number in the vertex's coordinates.", "note"); return; }
-    if (st === 2) { if (what === "vk") ok("k = " + nf(p.k)); else if (what === "vh") vfnBad("That is h. Click k, the y-coordinate of the vertex."); else if (what) vfnBad("k is the y-coordinate of the vertex. Click it in the vertex's coordinates."); else pqMsg("Click a number in the vertex's coordinates.", "note"); return; }
-    if (st === 3) { if (what === "vx" || what === "vh" || what === "vk") ok("vertex (" + nf(p.h) + ", " + nf(p.k) + ")"); else if (what) vfnBad("The vertex is the turning point of the parabola. Click it."); else pqMsg("Click the vertex.", "note"); return; }
-    if (st === 4) { if (what === "ax" || what === "vh") ok("axis of symmetry x = " + nf(p.h)); else if (what === "vk") vfnBad("The axis of symmetry is vertical: its equation uses h, the x-coordinate."); else if (what) vfnBad("Click the dashed axis of symmetry, its equation, or the vertex's h."); else pqMsg("Click the axis of symmetry.", "note"); return; }
-    if (st === 5 || st === 6) {
+    if (enter && String(s.gt[r] || "").trim()) { s.wbad["g" + r] = true; vfnBad("Not quite. Work out " + vfnExpr(x) + "."); vfnTb(); }
+  }
+  function vfnAll() {
+    var s = vfnSt(), boxes = vfnFs().map(function (f) { return f.replace(/^(m[12])[ab]$/, "$1"); }).every(function (k) { return s.wok[k]; });
+    if (vfnParOK(s) && (mode !== "calculate" || vfnTbDone()) && boxes) vfnDone(); else vfnSync();
+  }
+  // Demo and Sequence: a click on the graph (or, for a, b and c, on the equation) answers the step in hand
+  function vfnClick(what, q) {
+    var s = vfnSt(), p = vfnP(); if (QZ.step >= 4 || s.ok) return;
+    if (mode === "calculate") {   // (any point of the curve can be clicked to see its coordinates)
+      if (what === "cv" && q && vfnParOK(s)) { var x = vfnCl(Math.round(q.x), -10, 10), y = vfnF(x); if (Math.abs(y) <= 10 && !s.mp.some(function (m) { return m[0] === x; })) { s.mp.push([x, y]); vfnSync(); } }
+      return;
+    }
+    var st = vfnSid(), ok = function (line, more) { vfnPush(); if (more) more(); vfnNext(line); };
+    if (st === "a" || st === "b" || st === "c") {
+      var nm = { a: "a, the number in front of x²", b: "b, the number in front of x (with its sign)", c: "c, the constant term (with its sign)" };
+      if (what === "e:" + st) ok(st + " = " + nf(p[st]));
+      else if (/^e:/.test(what || "")) vfnBad("That is " + what.slice(2) + ". Click " + nm[st] + ".");
+      else pqMsg("Click " + nm[st] + " in the equation.", "note");
+      return;
+    }
+    if (st === "drag") { pqMsg("Drag x = −b/(2a) into the table.", "note"); return; }
+    if (st === "tbl") { pqMsg("Click each expression in the table.", "note"); return; }
+    if (!vfnParOK(s)) return;
+    if (st === "h") { if (what === "vh") ok("h = " + nf(p.h)); else if (what === "vk") vfnBad("That is k, the y-coordinate of the vertex. Click h, its x-coordinate."); else if (what) vfnBad("h is the x-coordinate of the vertex. Click it in the vertex's coordinates."); else pqMsg("Click a number in the vertex's coordinates.", "note"); return; }
+    if (st === "k") { if (what === "vk") ok("k = " + nf(p.k)); else if (what === "vh") vfnBad("That is h. Click k, the y-coordinate of the vertex."); else if (what) vfnBad("k is the y-coordinate of the vertex. Click it in the vertex's coordinates."); else pqMsg("Click a number in the vertex's coordinates.", "note"); return; }
+    if (st === "v") { if (what === "vx" || what === "vh" || what === "vk") ok("vertex (" + nf(p.h) + ", " + nf(p.k) + ")"); else if (what) vfnBad("The vertex is the turning point of the parabola. Click it."); else pqMsg("Click the vertex.", "note"); return; }
+    if (st === "ax") { if (what === "ax" || what === "vh") ok("axis of symmetry x = " + nf(p.h)); else if (what === "vk") vfnBad("The axis of symmetry is vertical: its equation uses the x-coordinate of the vertex."); else if (what) vfnBad("Click the dashed axis of symmetry, its equation, or the vertex's x-coordinate."); else pqMsg("Click the axis of symmetry.", "note"); return; }
+    if (st === "m1" || st === "m2") {
       if (what !== "cv" && what !== "mp" && what !== "vx") { if (what) vfnBad("Click points on the parabola."); else pqMsg("Click a point on the parabola.", "note"); return; }
       var X = what === "vx" ? p.h : vfnCl(Math.round(q.x), -10, 10), Y = vfnF(X), pt = [X, Y];
       if (Math.abs(Y) > 10) { pqMsg("That point is off the graph. Click a point you can see.", "note"); return; }
@@ -7951,19 +8058,19 @@ var ESPIC = {
       if (s.sel[0] === X) return;
       var r = vfnPair(s.sel, pt, s.pairs[0]);
       if (r === true) { var pr = [s.sel, pt].sort(function (u, v) { return u[0] - v[0]; }); ok("mirror points (" + nf(pr[0][0]) + ", " + nf(pr[0][1]) + ") and (" + nf(pr[1][0]) + ", " + nf(pr[1][1]) + ")", function () { s.pairs.push(pr); s.mp.push(pt); s.sel = null; }); return; }
-      vfnPush(); s.mp = s.mp.filter(function (m) { return m !== s.sel && !(m[0] === s.sel[0]); }); s.sel = null; vfnBad("(" + nf(pt[0]) + ", " + nf(pt[1]) + ") is not the mirror image of the first point. " + r); vfnSync();
+      vfnPush(); var sx = s.sel[0]; s.mp = s.mp.filter(function (m) { return m[0] !== sx; }); s.sel = null; vfnBad("(" + nf(pt[0]) + ", " + nf(pt[1]) + ") is not the mirror image of the first point. " + r); vfnSync();
     }
   }
   function vfnParCheck() {
-    var s = vfnSt(); if (!vfnParOK(s) || s.stage > 0) return;
-    s.stage = 1; vfnLine("graph of " + m3Cur().head);
-    pqMsg(""); if (mode === "calculate") vfnAll(); else vfnSync();
+    var s = vfnSt(); if (!vfnParOK(s)) return;
+    if (mode === "calculate") { if (!s.gpar) { s.gpar = true; vfnLine("graph of " + m3Cur().head); } vfnAll(); return; }
+    if (vfnSid() === "graph") vfnNext("graph of " + m3Cur().head);
   }
   function vfnTool(t) {
     var s = vfnSt(); if (QZ.step >= 4) return;
     if (t === "undo") { vfnUndo(); return; }
     if (t === "clear") { if (vfnWr()) { if (!s.pts.length && !s.dls.length && !s.dlp) return; vfnPush(); s.pts = []; s.dls = []; s.dlp = null; } else { if (!s.par || vfnParOK(s)) return; vfnPush(); s.par = null; } s.tool = null; s.hov = null; pqMsg(""); vfnSync(); return; }
-    if (t === "U" && (s.par && vfnParOK(s))) return;
+    if (t === "U" && !vfnParNow()) return;
     s.tool = s.tool === t ? null : t; s.dlp = null; s.hov = null; vfnSync();
   }
   function vfnSync() {
@@ -7971,33 +8078,47 @@ var ESPIC = {
     if (!on) return;
     var s = vfnSt(), done = QZ.step >= 4, wr = vfnWr();
     $("wfSteps").hidden = true; askArrow(false);
-    [].forEach.call(document.querySelectorAll("#vfnTools button"), function (b) { var t = b.dataset.vft; b.hidden = wr ? t === "U" : t !== "U" && t !== "clear"; b.classList.toggle("on", s.tool === t); b.disabled = done || ((t === "U" || t === "clear") && !wr && vfnParOK(s)) || (t === "clear" && (wr ? !s.pts.length && !s.dls.length && !s.dlp : !s.par)); });
+    [].forEach.call(document.querySelectorAll("#vfnTools button"), function (b) {
+      var t = b.dataset.vft; b.hidden = wr ? t === "U" : t !== "U" && t !== "clear"; b.classList.toggle("on", s.tool === t);
+      b.disabled = done || (t === "U" && !wr && !vfnParNow()) || (t === "clear" && (wr ? !s.pts.length && !s.dls.length && !s.dlp : !s.par || vfnParOK(s)));
+    });
     $("vfnAsk").innerHTML = vfnAsk();
+    if (vfnStd()) vfnEqUpd();
     vfnDraw(); vfnTb(); vfnOut();
     $("undo").hidden = !(mode === "sequence" || mode === "calculate") || done;
   }
+  // the question.  Standard Form: the terms of f can be clicked to find a, b and c (Demo and Sequence)
   function vfnQ() {
-    var pb = m3Cur();
-    return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story.replace(/lm cf/g, "lm") + "</div>" + pb.pic + "</div>";
+    var pb = m3Cur(), p = pb.vf;
+    if (!p.std) return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story.replace(/lm cf/g, "lm") + "</div>" + pb.pic + "</div>";
+    var X = "<i>x</i>", t = "<span class=\"vfnE\" data-vfe=\"a\">" + (p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a)) + X + "²</span>";
+    t += " <span class=\"vfnE\" data-vfe=\"b\">" + (p.b < 0 ? "− " : "+ ") + (Math.abs(p.b) === 1 ? "" : nf(Math.abs(p.b))) + X + "</span>";
+    if (p.c) t += " <span class=\"vfnE\" data-vfe=\"c\">" + (p.c < 0 ? "− " : "+ ") + nf(Math.abs(p.c)) + "</span>";
+    return "<div class=\"m3Top\"><div class=\"estP w5\">Graph <span class=\"lm vfnEq\" id=\"vfnEq\"><i>f</i>(" + X + ") = " + t + "</span>. Label the vertex and the axis of symmetry.</div></div>";
+  }
+  function vfnEqUpd() {
+    var live = (mode === "demo" || mode === "sequence") && QZ.step < 4, id = vfnSid();
+    [].forEach.call(document.querySelectorAll("#pgQt [data-vfe]"), function (e) { var k = e.dataset.vfe; e.classList.toggle("live", live && ["a", "b", "c"].indexOf(id) >= 0); e.classList.toggle("got", (mode === "demo" || mode === "sequence") && vfnPast(k)); });
   }
   // Write: what is still to do, and Submit (nothing is checked before it)
   function vfnMissing() {
     var s = vfnSt(), m = [];
     if (s.pts.length < 5) m.push("the parabola (5 points)");
     if (!s.dls.length) m.push("the axis of symmetry");
-    [["h", "h"], ["k", "k"], ["v", "the vertex"], ["ax", "the axis of symmetry's equation"]].forEach(function (q) { if (!String(s.w[q[0]]).trim()) m.push(q[1]); });
+    var nm = { xv: "−b/(2a)", h: "h", k: "k", v: "the vertex", ax: "the axis of symmetry's equation" };
+    vfnFs().forEach(function (f) { if (nm[f] && !String(s.w[f]).trim()) m.push(nm[f]); });
     if (["m1a", "m1b", "m2a", "m2b"].some(function (f) { return !String(s.w[f]).trim(); })) m.push("the mirror points");
     return m;
   }
   function vfnSubmit() {
     var miss = vfnMissing(); if (miss.length) { pqMsg("Not yet: still to complete " + wsList(miss) + ".", "note"); return; }
-    var s = vfnSt(), p = vfnP(), bad = [];
+    var s = vfnSt(), p = vfnP(), bad = [], nm = { xv: "−b/(2a)", v: "the vertex", ax: "the axis's equation", h: "h", k: "k" };
     vfnPush();
     s.gok = s.pts.length >= 5 && !!vfnPoly(s.pts) && s.pts.every(vfnOn);
     if (!s.gok) bad.push("the parabola");
     s.aok = s.dls.some(function (l) { return Math.abs(l.p[0][0] - p.h) < 1e-9 && Math.abs(l.p[1][0] - p.h) < 1e-9 && Math.abs(l.p[0][1] - l.p[1][1]) > 1e-9; });
     if (!s.aok) bad.push("the axis of symmetry");
-    ["h", "k", "v", "ax"].forEach(function (f) { s.wok[f] = vfnCheckF(f, s.w[f], s); s.wbad[f] = !s.wok[f]; if (!s.wok[f]) bad.push(f === "v" ? "the vertex" : f === "ax" ? "the axis's equation" : f); });
+    vfnFs().filter(function (f) { return !/^m/.test(f); }).forEach(function (f) { s.wok[f] = vfnCheckF(f, s.w[f]); s.wbad[f] = !s.wok[f]; if (!s.wok[f]) bad.push(nm[f] || f); });
     s.wok.m1 = false; s.wok.m2 = false;
     s.wok.m1 = vfnPairBox(1, s) === true; s.wok.m2 = vfnPairBox(2, s) === true;
     ["m1", "m2"].forEach(function (k) { s.wbad[k + "a"] = s.wbad[k + "b"] = !s.wok[k]; });
@@ -8006,6 +8127,12 @@ var ESPIC = {
     vfnLine("vertex (" + nf(p.h) + ", " + nf(p.k) + "), axis of symmetry x = " + nf(p.h)); vfnLine("mirror points " + s.w.m1a + " and " + s.w.m1b + "; " + s.w.m2a + " and " + s.w.m2b);
     s.tool = null; vfnDone();
   }
+  // dragging −b/(2a) into the table: a copy of the chip follows the pointer, and letting go over the table drops it there
+  var vfnGhost = null;
+  function vfnGhostAt(x, y) { if (vfnGhost) { vfnGhost.style.left = x + "px"; vfnGhost.style.top = y + "px"; } }
+  function vfnGhostMake(chip, x, y) { vfnGhostEnd(); var g = chip.cloneNode(true); g.className = "vfnChip vfnGhost"; document.body.appendChild(g); vfnGhost = g; vfnGhostAt(x, y); vfnSt().chipDrag = true; vfnTb(); }
+  function vfnGhostEnd() { if (vfnGhost) { vfnGhost.remove(); vfnGhost = null; } if (QZ && QZ.vf) { QZ.vf.chipDrag = false; } }
+  function vfnOverTable(x, y) { var t = $("vfnTbl"); if (!t) return false; var r = t.getBoundingClientRect(); return x >= r.left - 12 && x <= r.right + 12 && y >= r.top - 12 && y <= r.bottom + 12; }
   (function () {
     var S = $("vfnSvg");
     $("vfnTools").addEventListener("click", function (e) { var b = e.target.closest("button[data-vft]"); if (!b || !vfN()) return; if (e.isTrusted) pgUser(); vfnTool(b.dataset.vft); });
@@ -8030,7 +8157,7 @@ var ESPIC = {
         return;
       }
       if (s.tool === "U") { vfnPush(); s.par = { h: gx, k: gy, dx: gx + (gx < 10 ? 1 : -1), dy: gy + 1 }; if (s.par.dy > 10) s.par.dy = gy - 1; s.tool = null; s.hov = null; e.preventDefault(); vfnSync(); vfnParCheck(); return; }
-      if (!s.par) { pqMsg("Press the parabola button first.", "note"); return; }
+      if (!s.par && (mode === "calculate" || vfnSid() === "graph")) { pqMsg("Press the parabola button first.", "note"); return; }
       if (hd && !vfnParOK(s)) { vfnDrag(e, hd.dataset.vfh); return; }
       if (mode === "demo" && pgRun && !pgPaused) return;
       vfnClick(ck ? ck.dataset.vfc : null, g);
@@ -8042,24 +8169,35 @@ var ESPIC = {
       function up() { S.removeEventListener("pointermove", mv); S.removeEventListener("pointerup", up); S.removeEventListener("pointercancel", up); s.drag = null; var c = {}; Object.keys(s).forEach(function (k) { if (k !== "hist" && k !== "drag" && k !== "hov") c[k] = s[k]; }); c.wwn = QZ.ww ? QZ.ww.steps.length : 0; if (JSON.stringify(c) === before && s.hist.length === h0) s.hist.pop(); vfnSync(); vfnParCheck(); }
       S.addEventListener("pointermove", mv); S.addEventListener("pointerup", up); S.addEventListener("pointercancel", up);
     }
-    $("vfnTb").addEventListener("input", function (e) { if (!vfN()) return; if (e.isTrusted) pgUser(); var s = vfnSt(), k = e.target.dataset.vtb, l = e.target.dataset.vtl; if (l != null) { s.tbl[l] = e.target.value; return; } if (!k) return; s.tb[k] = e.target.value; vfnTbTyped(k, false); });
-    $("vfnTb").addEventListener("keydown", function (e) { if (e.key !== "Enter" || !vfN()) return; var k = e.target.dataset.vtb; if (!k) return; e.preventDefault(); vfnTbTyped(k, true); });
+    // the equation's terms (a, b, c)
+    $("pgQt").addEventListener("click", function (e) { if (!vfN() || !e.target.closest) return; var t = e.target.closest("[data-vfe]"); if (!t || !(mode === "demo" || mode === "sequence")) return; if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused) return; vfnClick("e:" + t.dataset.vfe); });
+    // the chip −b/(2a), and the table
+    document.addEventListener("pointerdown", function (e) {
+      if (!vfN() || !e.target.closest) return; var chip = e.target.closest("[data-vfchip]"); if (!chip || chip.classList.contains("vfnGhost")) return;
+      if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused) return;
+      e.preventDefault(); vfnGhostMake(chip, e.clientX, e.clientY);
+      var mv = function (ev) { vfnGhostAt(ev.clientX, ev.clientY); }, up = function (ev) { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); var over = vfnOverTable(ev.clientX, ev.clientY); vfnGhostEnd(); if (over) vfnDrop(); else vfnTb(); };
+      document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
+    });
+    $("vfnTb").addEventListener("click", function (e) { if (!vfN() || !e.target.closest) return; var c = e.target.closest("[data-vfr]"); if (!c) return; if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused) return; vfnRowClick(+c.dataset.vfr); });
+    $("vfnTb").addEventListener("input", function (e) { if (!vfN()) return; if (e.isTrusted) pgUser(); var s = vfnSt(), d = e.target.dataset; if (d.vtl != null) { s.tbl[d.vtl] = e.target.value; return; } if (d.vfy != null) { s.gt[d.vfy] = e.target.value; vfnYTyped(d.vfy, false); return; } if (!d.vtb) return; s.tb[d.vtb] = e.target.value; vfnTbTyped(d.vtb, false); });
+    $("vfnTb").addEventListener("keydown", function (e) { if (e.key !== "Enter" || !vfN()) return; var d = e.target.dataset; if (d.vfy != null) { e.preventDefault(); vfnYTyped(d.vfy, true); return; } if (!d.vtb) return; e.preventDefault(); vfnTbTyped(d.vtb, true); });
     $("vfnOut").addEventListener("input", function (e) { var f = e.target.dataset && e.target.dataset.vff; if (!f || !vfN()) return; if (e.isTrusted) pgUser(); var s = vfnSt(); s.w[f] = e.target.value; if (!vfnWr()) vfnTyped(f, false); else { s.wbad[f] = false; e.target.classList.remove("bad"); if (typeof wsReadyUpd === "function") wsReadyUpd(); } });
-    $("vfnOut").addEventListener("keydown", function (e) { if (e.key !== "Enter") return; var f = e.target.dataset && e.target.dataset.vff; if (!f || !vfN()) return; e.preventDefault(); if (vfnWr()) { var nx = VFN_F[VFN_F.indexOf(f) + 1]; if (nx) $("vfnF_" + nx).focus(); else if (!vfnMissing().length) vfnSubmit(); return; } vfnTyped(f, true); });
+    $("vfnOut").addEventListener("keydown", function (e) { if (e.key !== "Enter") return; var f = e.target.dataset && e.target.dataset.vff; if (!f || !vfN()) return; e.preventDefault(); if (vfnWr()) { var L = vfnFs(), nx = L[L.indexOf(f) + 1]; if (nx) $("vfnF_" + nx).focus(); else if (!vfnMissing().length) vfnSubmit(); return; } vfnTyped(f, true); });
   })();
   // a drag in progress: the vertex carries the whole parabola; the dilation point sets the stretch (grid x, half-unit y); Write's points and dotted-line points snap to the grid
   function vfnMove(which, x, y) {
     var s = vfnSt(), gx = vfnCl(vfnSn(x, 1), -10, 10), gy = vfnCl(vfnSn(y, 1), -10, 10);
     if (which === "v") { var q = s.par, dx = q.dx - q.h, dy = q.dy - q.k; q.h = gx; q.k = gy; q.dx = q.h + dx; q.dy = q.k + dy; }
-    else if (which === "d") { var r = s.par, nx = gx, ny = vfnCl(vfnSn(y, 0.5), -12, 12); if (nx === r.h) nx = r.h + (r.dx >= r.h ? 1 : -1); if (ny === r.k) ny = r.k + (r.dy >= r.k ? 0.5 : -0.5); r.dx = nx; r.dy = ny; }
+    else if (which === "d") { var r = s.par, nx = gx, ny = vfnCl(vfnSn(y, 0.5), -14, 14); if (nx === r.h) nx = r.h + (r.dx >= r.h ? 1 : -1); if (ny === r.k) ny = r.k + (r.dy >= r.k ? 0.5 : -0.5); r.dx = nx; r.dy = ny; }
     else if (which.charAt(0) === "p") { var i = +which.slice(2); if (!s.pts.some(function (q, j) { return j !== i && q[0] === gx && q[1] === gy; })) s.pts[i] = [gx, gy]; }
     else if (which.charAt(0) === "l") { var w = which.split(":"); s.dls[+w[1]].p[+w[2]] = [gx, gy]; }
     vfnDraw();
   }
-  // the demo: the hand graphs the parabola with the button, then clicks each answer on the graph (Calculate: types each answer in its box). ONE: only the next step
+  // the demo: each step in turn (ONE, for Demo next step: only the step in hand).  Each item: { done(), run(next) }
   function vfnDemo(run, ONE, cap) {
-    if (!ONE) { QZ.vf = null; vfnKey = ""; }
-    var s = vfnSt(), p = vfnP(), calc = mode === "calculate"; s.ok = false; vfnSync();
+    if (!ONE) { QZ.vf = null; vfnKey = ""; vfnTbKey = ""; }
+    var s = vfnSt(), p = vfnP(), calc = mode === "calculate", std = !!p.std; s.ok = false; vfnSync();
     var at = function (sel) { var e = document.querySelector(sel); return e ? ctr(e) : null; };
     function go(pt, then) { if (!pt) { then(); return; } handGo(pt, 650); pgWait(800, function () { if (pgRun !== run) return; handTap(); then(); }); }
     function slide(which, from, to, then) {
@@ -8083,7 +8221,7 @@ var ESPIC = {
         go(at("#vfnTools [data-vft=U]"), function () { vfnTool("U"); pgWait(700, function () { if (pgRun !== run) return; var v0 = [p.h === 0 && p.k === 0 ? 2 : 0, 0]; s.hov = { x: v0[0], y: v0[1] }; vfnDraw(); go(vfnScr(v0[0], v0[1]), function () { vfnPush(); s.par = { h: v0[0], k: v0[1], dx: v0[0] + 1, dy: v0[1] + 1 }; s.tool = null; s.hov = null; vfnSync(); pgWait(700, n2); }); }); });
       };
       place(function () {
-        var mvV = function (n3) { if (s.par.h === p.h && s.par.k === p.k) { n3(); return; } cap("The vertex of f is (h, k) = (" + nf(p.h) + ", " + nf(p.k) + "). Drag the vertex there."); slide("v", [s.par.h, s.par.k], [p.h, p.k], n3); };
+        var mvV = function (n3) { if (s.par.h === p.h && s.par.k === p.k) { n3(); return; } cap(std ? "The vertex is (" + nf(p.h) + ", " + nf(p.k) + "), the centre row of the table. Drag the vertex there." : "The vertex of f is (h, k) = (" + nf(p.h) + ", " + nf(p.k) + "). Drag the vertex there."); slide("v", [s.par.h, s.par.k], [p.h, p.k], n3); };
         mvV(function () {
           if (vfnParOK(s)) { vfnParCheck(); pgWait(600, n); return; }
           cap("a = " + nf(p.a) + ": from the vertex, go right " + dx + " and " + (p.a > 0 ? "up " : "down ") + nf(Math.abs(p.a * dx * dx)) + ". Drag the other point there.");
@@ -8091,50 +8229,123 @@ var ESPIC = {
         });
       });
     }
-    function clickOn(sel, say, what, q, n) { cap(say); var e = document.querySelector("#vfnSvg " + sel); go(e ? ctr(e) : null, function () { vfnClick(what, q); pgWait(1500, n); }); }
-    var pairs = [], used = {};
+    function clickOn(sel, say, what, n) { cap(say); var e = document.querySelector(sel); go(e ? ctr(e) : null, function () { vfnClick(what, null); pgWait(1500, n); }); }
+    var pairs = [];
     for (var d = 1; d <= 9 && pairs.length < 2; d++) { var y = vfnF(p.h + d); if (Math.abs(p.h + d) <= 10 && Math.abs(p.h - d) <= 10 && Math.abs(y) <= 9.5) pairs.push([p.h - d, p.h + d]); }
     function pair(i) { return function (n) {
       var pr = pairs[i] || pairs[0]; if (!pr) { n(); return; } var y = vfnF(pr[0]);
       cap(i ? "Another pair: two points at the same height, the same distance from the axis." : "Mirror points are at the same height, the same distance from the axis. Click one point…");
       go(vfnScr(pr[0], y), function () { vfnClick("cv", { x: pr[0], y: y }); pgWait(900, function () { if (pgRun !== run) return; cap("…then its mirror image across the axis."); go(vfnScr(pr[1], y), function () { vfnClick("cv", { x: pr[1], y: y }); pgWait(1500, n); }); }); });
     }; }
+    function typeKeys(e, get, set, val, after) { var i = 0; set(""); (function ch() { if (pgRun !== run) return; if (i >= val.length) { after(); return; } set(get() + val.charAt(i++)); e.value = get(); pgWait(110, ch); })(); }
     function typeIn(f, val, say) { return function (n) {
-      if (s.wok[f] || s.wok[f.replace(/[ab]$/, "")]) { n(); return; }
       cap(say); var e = $("vfnF_" + f); if (!e) { n(); return; }
-      go(ctr(e), function () {
-        var i = 0; s.w[f] = ""; vfnOut();
-        (function ch() { if (pgRun !== run) return; if (i >= val.length) { vfnTyped(f, false); pgWait(900, n); return; } s.w[f] += val.charAt(i++); e.value = s.w[f]; pgWait(110, ch); })();
-      });
+      go(ctr(e), function () { typeKeys(e, function () { return s.w[f]; }, function (v) { s.w[f] = v; }, val, function () { vfnTyped(f, false); pgWait(900, n); }); });
     }; }
     function cell(k, val, say) { return function (n) {
-      if (s.tbok[k]) { n(); return; }
       cap(say); var e = document.querySelector("[data-vtb=\"" + k + "\"]"); if (!e) { n(); return; }
-      go(ctr(e), function () { var i = 0; s.tb[k] = ""; (function ch() { if (pgRun !== run) return; if (i >= val.length) { vfnTbTyped(k, false); pgWait(500, n); return; } s.tb[k] += val.charAt(i++); e.value = s.tb[k]; pgWait(100, ch); })(); });
+      go(ctr(e), function () { typeKeys(e, function () { return s.tb[k] || ""; }, function (v) { s.tb[k] = v; }, val, function () { vfnTbTyped(k, false); pgWait(500, n); }); });
     }; }
-    var vt = "(" + p.h + ", " + p.k + ")", L = [graph], pt = function (q) { return "(" + q + ", " + vfnF(q) + ")"; };
+    function yIn(r) { return function (n) {
+      var x = p.h + VFN_XS[r], e = document.querySelector("[data-vfy=\"" + r + "\"]"); if (!e) { n(); return; }
+      cap("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x)) + ".");
+      go(ctr(e), function () { typeKeys(e, function () { return s.gt[r] || ""; }, function (v) { s.gt[r] = v; }, String(vfnF(x)), function () { vfnYTyped(String(r), false); pgWait(500, n); }); });
+    }; }
+    function dragChip(n) {
+      cap("x = −b/(2a) = " + nf(p.h) + " is the centre of the table. Drag it into the table.");
+      var c = document.querySelector("[data-vfchip]"); if (!c) { n(); return; }
+      var a = ctr(c);
+      go(a, function () {
+        vfnGhostMake(c, a.x, a.y); var t = $("vfnTbl"), r = t.getBoundingClientRect(), b = { x: r.left + r.width * 0.12, y: r.top + r.height * 0.6 }, t0 = null, ms = 1100;
+        function step(ts) {
+          if (pgRun !== run) { vfnGhostEnd(); return; } if (t0 === null) t0 = ts;
+          var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, q = { x: a.x + (b.x - a.x) * e, y: a.y + (b.y - a.y) * e };
+          vfnGhostAt(q.x, q.y); handAt(q);
+          if (u < 1) pgRaf(step); else { vfnGhostEnd(); vfnDrop(); pgWait(1200, n); }
+        }
+        pgRaf(step);
+      });
+    }
+    function rowTap(r) { return function (n) { var x = p.h + VFN_XS[r]; cap("Click " + vfnExpr(x) + " to work it out."); clickTd(r, n); }; }
+    function clickTd(r, n) { var e = document.querySelector("[data-vfr=\"" + r + "\"]"); go(e ? ctr(e) : null, function () { vfnRowClick(r); pgWait(700, n); }); }
+    var pt = function (q) { return "(" + q + ", " + vfnF(q) + ")"; }, vt = "(" + p.h + ", " + p.k + ")";
+    var m1 = pairs[0] || [p.h - 1, p.h + 1], m2 = pairs[1] || m1, I = [], past = function (id) { return function () { return vfnPast(id); }; }, okF = function (f) { return function () { return !!(s.wok[f] || s.wok[f.replace(/^(m[12])[ab]$/, "$1")]); }; };
+    var eqSay = { a: "a is the number in front of x².", b: "b is the number in front of x, with its sign.", c: "c is the constant term, with its sign." };
     if (calc) {
-      var m1 = pairs[0] || [p.h - 1, p.h + 1], m2 = pairs[1] || m1;
-      vfnTbCells().forEach(function (k) { var rc = k.split(":"), c = +rc[1], r = +rc[0], x = VFN_XS[r]; L.push(cell(k, String(vfnTbAns(r, c)), c === 0 ? "New x: " + nf(x) + (p.h > 0 ? " + " : " − ") + Math.abs(p.h) + "." : c === 3 && p.a !== 1 ? nf(p.a) + " × " + nf(x * x) + "." : "Then " + (p.k > 0 ? "add " : "subtract ") + Math.abs(p.k) + ".")); });
-      L.push(typeIn("h", String(p.h), "h is the x-coordinate of the vertex."), typeIn("k", String(p.k), "k is the y-coordinate of the vertex."), typeIn("v", vt, "The vertex is (h, k)."), typeIn("ax", String(p.h), "The axis of symmetry is the vertical line x = h."),
-        typeIn("m1a", pt(m1[0]), "A point on the parabola…"), typeIn("m1b", pt(m1[1]), "…and its mirror image across the axis."), typeIn("m2a", pt(m2[0]), "Another pair of mirror points."), typeIn("m2b", pt(m2[1]), "Same height, same distance from the axis."));
-    } else L.push(
-      function (n) { clickOn("[data-vfc=vh]", VFN_ASK[1].replace(/<[^>]+>/g, "") + " h is the x-coordinate of the vertex.", "vh", null, n); },
-      function (n) { clickOn("[data-vfc=vk]", VFN_ASK[2].replace(/<[^>]+>/g, "") + " k is the y-coordinate.", "vk", null, n); },
-      function (n) { clickOn("[data-vfc=vx]", VFN_ASK[3].replace(/<[^>]+>/g, ""), "vx", null, n); },
-      function (n) { clickOn("g[data-vfc=ax]", VFN_ASK[4].replace(/<[^>]+>/g, ""), "ax", null, n); },
-      pair(0), pair(1));
-    // the step in hand (Demo next step plays only it)
-    var cur = function () {
-      if (!vfnParOK(s)) return 0;
-      if (calc) { var T = vfnTbCells(), it = T.findIndex(function (k) { return !s.tbok[k]; }); if (it >= 0) return it + 1; var ix = VFN_F.findIndex(function (f) { return !(s.wok[f] || s.wok[f.replace(/[ab]$/, "")]); }); return ix < 0 ? L.length : T.length + ix + 1; }
-      if (s.stage >= 5 && s.sel) s.sel = null;
-      return s.stage;
-    };
-    if (ONE) { var k = cur(); if (k < L.length) L[k](function () { pgWait(700, function () { if (pgRun === run) pgStop(); }); }); else pgStop(); return; }
+      var fld = function (f, val, say) { I.push({ done: okF(f), run: typeIn(f, val, say) }); };
+      if (std) {
+        fld("a", String(p.a), eqSay.a); fld("b", String(p.b), eqSay.b); fld("c", String(p.c), eqSay.c);
+        fld("xv", String(p.h), "x = −b/(2a) = −(" + nf(p.b) + ")/(2·" + nf(p.a) + ") = " + nf(p.h) + ".");
+        I.push({ done: function () { return s.gx; }, run: dragChip });
+        VFN_XS.forEach(function (d, r) { I.push({ done: function () { return !!s.gy[r]; }, run: yIn(r) }); });
+        I.push({ done: function () { return vfnParOK(s); }, run: graph });
+      } else {
+        I.push({ done: function () { return vfnParOK(s); }, run: graph });
+        vfnTbCells().forEach(function (k) { var rc = k.split(":"), c = +rc[1], r = +rc[0], x = VFN_XS[r]; I.push({ done: function () { return !!s.tbok[k]; }, run: cell(k, String(vfnTbAns(r, c)), c === 0 ? "New x: " + nf(x) + (p.h > 0 ? " + " : " − ") + Math.abs(p.h) + "." : c === 3 && p.a !== 1 ? nf(p.a) + " × " + nf(x * x) + "." : "Then " + (p.k > 0 ? "add " : "subtract ") + Math.abs(p.k) + ".") }); });
+        fld("h", String(p.h), "h is the x-coordinate of the vertex."); fld("k", String(p.k), "k is the y-coordinate of the vertex.");
+      }
+      fld("v", vt, "The vertex is (" + nf(p.h) + ", " + nf(p.k) + ")."); fld("ax", String(p.h), "The axis of symmetry is the vertical line through the vertex.");
+      fld("m1a", pt(m1[0]), "A point on the parabola…"); fld("m1b", pt(m1[1]), "…and its mirror image across the axis."); fld("m2a", pt(m2[0]), "Another pair of mirror points."); fld("m2b", pt(m2[1]), "Same height, same distance from the axis.");
+    } else {
+      vfnStg().forEach(function (id) {
+        var r;
+        if (id === "graph") r = graph;
+        else if (id === "a" || id === "b" || id === "c") r = (function (k) { return function (n) { clickOn("#pgQt [data-vfe=" + k + "]", VFN_ASK[k].replace(/<[^>]+>/g, "") + " " + eqSay[k], "e:" + k, n); }; })(id);
+        else if (id === "drag") r = dragChip;
+        else if (id === "tbl") r = function (n) { var L = VFN_XS.map(function (d, i) { return i; }).filter(function (i) { return !s.gy[i]; }), j = 0; cap("Click each expression to work it out. Each finished row is a point on the graph."); (function nx() { if (pgRun !== run) return; if (j >= L.length || vfnSid() !== "tbl") { pgWait(800, n); return; } clickTd(L[j++], nx); })(); };
+        else if (id === "h") r = function (n) { clickOn("#vfnSvg [data-vfc=vh]", VFN_ASK.h.replace(/<[^>]+>/g, "") + " h is the x-coordinate of the vertex.", "vh", n); };
+        else if (id === "k") r = function (n) { clickOn("#vfnSvg [data-vfc=vk]", VFN_ASK.k.replace(/<[^>]+>/g, "") + " k is the y-coordinate.", "vk", n); };
+        else if (id === "v") r = function (n) { clickOn("#vfnSvg [data-vfc=vx]", VFN_ASK.v.replace(/<[^>]+>/g, ""), "vx", n); };
+        else if (id === "ax") r = function (n) { clickOn("#vfnSvg g[data-vfc=ax]", VFN_ASK.ax.replace(/<[^>]+>/g, ""), "ax", n); };
+        else r = pair(id === "m1" ? 0 : 1);
+        I.push({ done: past(id), run: r });
+      });
+    }
+    if (ONE) { if (s.sel) { s.sel = null; } var k = I.findIndex(function (it) { return !it.done(); }); if (k < 0) { pgStop(); return; } I[k].run(function () { pgWait(700, function () { if (pgRun === run) pgStop(); }); }); return; }
     var i = 0;
-    (function next() { if (pgRun !== run) return; if (i < L.length) { L[i++](next); return; } PG.demoFin = true; pgStop(); })();
+    (function next() { if (pgRun !== run) return; while (i < I.length && I[i].done()) i++; if (i < I.length) { I[i++].run(next); return; } PG.demoFin = true; pgStop(); })();
   }
+  // ---- parent tables (2.1 and 2.2) and the Standard Form table: a y value can be dragged onto an empty y cell, which copies it there (as in the graphing tables).
+  // A press only becomes a drag once the pointer moves, so a click on a cell still does what it did.
+  function cellDragCopy(e, text, targetAt, drop) {
+    var x0 = e.clientX, y0 = e.clientY, g = null, hot = null;
+    function at(ev) { var l = document.elementsFromPoint(ev.clientX, ev.clientY); for (var k = 0; k < l.length; k++) { var t = targetAt(l[k]); if (t) return t; } return null; }
+    function mv(ev) {
+      if (!g) { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) < 6) return; g = document.createElement("div"); g.className = "cellGhost"; g.textContent = text; document.body.appendChild(g); }
+      g.style.left = ev.clientX + "px"; g.style.top = ev.clientY + "px";
+      var t = at(ev); if (hot !== t) { if (hot) hot.classList.remove("drop"); hot = t; if (t) t.classList.add("drop"); }
+    }
+    function up(ev) { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); document.removeEventListener("pointercancel", up); if (hot) hot.classList.remove("drop"); if (!g) return; g.remove(); var t = at(ev); if (t) drop(t); }
+    document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); document.addEventListener("pointercancel", up);
+  }
+  (function () {
+    var PY = ["py", "sy", "gy"];   // 2.1: the parent table's y columns
+    $("ptTable").addEventListener("pointerdown", function (e) {
+      if (e.button > 0 || !e.target.closest || pgRun && !pgPaused) return;
+      var td = e.target.closest("td.pc"); if (!td || PY.indexOf(td.dataset.c) < 0) return;
+      var i = +td.dataset.r, c = td.dataset.c, r = ptRows()[i]; if (!r || !r.d[c]) return;
+      var v = nf(ptRight(r, c));
+      cellDragCopy(e, v, function (el) { var t = el.closest && el.closest("#ptTable td.pc"); if (!t || PY.indexOf(t.dataset.c) < 0 || !ptUse(t.dataset.c)) return null; var rr = ptRows()[+t.dataset.r]; return rr && !rr.d[t.dataset.c] && t !== td ? t : null; },
+        function (t) { if (e.isTrusted) pgUser(); var j = +t.dataset.r, c2 = t.dataset.c, val = v.replace(/−/g, "-"); if (!ptEnter(j, c2, val)) { ptRows()[j].t[c2] = val; drawPlay(); } });
+    });
+    $("vfnTb").addEventListener("pointerdown", function (e) {
+      if (e.button > 0 || !e.target.closest || !vfN() || QZ.step >= 4 || pgRun && !pgPaused) return;
+      var s = vfnSt(), td = e.target.closest("td"); if (!td) return;
+      if (!vfnStd()) {   // Vertex Form: the parent y (column 3) or a finished y cell (columns 4 and 5)
+        var tr = td.parentNode, r = [].indexOf.call(tr.parentNode.children, tr), c = [].indexOf.call(tr.children, td), inp = td.querySelector("[data-vtb]"), v;
+        if (!tr.parentNode || tr.parentNode.tagName !== "TBODY") return;
+        if (c === 2) v = VFN_XS[r] * VFN_XS[r]; else if ((c === 3 || c === 4) && inp && s.tbok[inp.dataset.vtb]) v = vfnTbAns(r, c); else return;
+        cellDragCopy(e, nf(v), function (el) { var t = el.closest && el.closest("#vfnTb td"); var q = t && t.querySelector("[data-vtb]"); if (!q || t === td) return null; var cc = +q.dataset.vtb.split(":")[1]; return (cc === 3 || cc === 4) && !s.tbok[q.dataset.vtb] ? t : null; },
+          function (t) { var k = t.querySelector("[data-vtb]").dataset.vtb; s.tb[k] = String(v); vfnTbTyped(k, false); vfnTb(); });
+        return;
+      }
+      // Standard Form, Calculate: a finished y onto an empty y (mirror rows share their y)
+      var yi = td.querySelector("[data-vfy]"); if (mode !== "calculate" || !yi || !s.gy[yi.dataset.vfy]) return;
+      var vy = vfnF(vfnP().h + VFN_XS[+yi.dataset.vfy]);
+      cellDragCopy(e, nf(vy), function (el) { var t = el.closest && el.closest("#vfnTb td"); var q = t && t.querySelector("[data-vfy]"); return q && t !== td && !s.gy[q.dataset.vfy] ? t : null; },
+        function (t) { var q = t.querySelector("[data-vfy]").dataset.vfy; s.gt[q] = String(vy); vfnYTyped(q, false); vfnTb(); });
+    });
+  })();
   // ---- 2.1 Show work: the work on each problem, written out (every exercise and mode). Finished problems are kept for the session; the one in hand is shown as it stands.
   var C21W = [];
   function c21On() { return pq() && act === "2.1" && !!QZ && !!QZ.order; }
@@ -9080,11 +9291,11 @@ var ESPIC = {
     var td = ptTd(i, c), el = td && td.querySelector("input"); if (!el) return false;
     el.focus(); if (keep) el.setSelectionRange(el.value.length, el.value.length); else el.select(); return true;
   }
-  // the next empty cell down the same column (wrapping to the top)
+  // the nearest empty cell in the same column (below first when two are as near)
   function ptFocusNext(i, c) {
     if (!ptUse(c)) return false;
     var R = ptRows(), n = R.length, empty = function (q) { var r = R[q]; return c === "px" ? r.px === undefined : !r.d[c]; };
-    for (var s = 1; s <= n; s++) { var q = (i + s) % n; if (empty(q) && ptFocus(q, c)) return true; }
+    for (var s = 1; s < n; s++) { var q = i + s; if (q < n && empty(q) && ptFocus(q, c)) return true; q = i - s; if (q >= 0 && empty(q) && ptFocus(q, c)) return true; }
     return false;
   }
   function ptSync() {
@@ -11772,7 +11983,8 @@ var ESPIC = {
       var F = function (x) { return a * x * x + b * x + c; }, s = rnd(2) ? 1 : -1, x3 = h + s; if (x3 === 0 || x3 === 2 * h) x3 = h - s; if (x3 === 0 || x3 === 2 * h) continue;
       var y3 = F(x3);
       if (Math.abs(c) > 9 || Math.abs(2 * h) > 9 || Math.abs(y3) > 9 || Math.abs(2 * h - x3) > 9 || Math.abs(k) > 9) continue;
-      var fS = c2Sf(a, b, c, "<i>f</i>(" + c2X + ")"), pb = { kind: 20 };
+      if (!c) continue; var nvp = 0; for (var dd = 1; dd <= 9; dd++) if (Math.abs(h + dd) <= 10 && Math.abs(h - dd) <= 10 && Math.abs(F(h + dd)) <= 9.5) nvp++; if (nvp < 2) continue;   // (c is clicked in the equation, and two pairs of mirror points must be on the graph)
+      var fS = c2Sf(a, b, c, "<i>f</i>(" + c2X + ")"), pb = { kind: 20, vf: { std: 1, a: a, b: b, c: c, h: h, k: k } };
       pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
       pb.story = "Graph <span class=\"lm cf\">" + fS[0] + "</span>. Label the vertex and the axis of symmetry.";
       pb.fig = function (x) { x = x || {}; var ex = { alt: "Coordinate plane" }; ex.vl = x.ax ? [{ x: h, col: C2G, lab: c2X + " = " + c2F(h) }] : []; ex.curves = x.cv ? [{ fn: F, col: C2P }] : []; return c2Pl(c2Plane(-9, 9), x, ex); };
