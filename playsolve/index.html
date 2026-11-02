@@ -314,6 +314,9 @@
   .welcome{flex:1 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem 1rem;min-height:100%;box-sizing:border-box}
   .welcome[hidden]{display:none}
   .wsmall{font:400 clamp(1.2rem,2.6vw,1.8rem) "LM","Latin Modern Roman","CMU Serif",Georgia,serif;font-style:italic;opacity:.75;margin-bottom:.2em}
+  .wsoonT{font:400 clamp(1.6rem,4vw,2.8rem)/1.15 "LM","Latin Modern Roman","CMU Serif",Georgia,serif;max-width:40rem}
+  .wsoon{font:400 clamp(2.2rem,6vw,4.4rem)/1.05 "LM","Latin Modern Roman","CMU Serif",Georgia,serif;margin-top:.5em;color:var(--plus)}
+  .wsoonP{max-width:32rem;margin:1em auto 0;opacity:.75}
   .wbig{font:400 clamp(2.6rem,7.5vw,5.4rem)/1.05 "LM","Latin Modern Roman","CMU Serif",Georgia,serif;letter-spacing:-.01em}
   body.wel .frame,body.wel .pg,body.wel .ctl-sel select,body.wel .ctl-sel label,body.wel .ctl-btn,body.wel .pgCtl,body.wel .composer,body.wel .log{display:none!important}
   body.wel .actBtn{width:auto;min-width:10.5em}
@@ -5096,19 +5099,39 @@
   }
 
   // ---- activities: AlgebraNotebook is a collection; each built activity sets its top lesson and its progress levels ----
+  // Activities follow the subsection titles of the annotated Alg 2 packet: each lettered subsection (1.1A, 1.1B ...) is its own activity.
+  // A subsection is a view onto one built section (its "base" in BUILT, whose code branches on act === "2.2" and lesson numbers are untouched):
+  // [new id, base section, the exercises it holds (lesson numbers of the base; "s" = 1.4 Substitution), full packet title]. An empty list opens to "Coming soon".
+  var VIEWS = [
+    ["1.1A", "1.1", ["1", "2"], "Parent Functions and Transformations"],
+    ["1.1B", "1.1", ["3"], "Parent Functions and Transformations: Desmos"],
+    ["1.1C", "1.1", [], "Parent Functions and Transformations: Shrink Stretch"],
+    ["1.2A", "1.2", ["1", "3"], "Transformations of Linear and Absolute Value Functions"],
+    ["1.2B", "1.2", ["2"], "Transformations of Linear and AbsVal Functions: Reflections"],
+    ["1.2C", "1.2", ["4", "5"], "Transformations of Linear and AbsVal Functions: Combinations"],
+    ["1.3A", "1.3", [], "Modeling with Linear Functions"],
+    ["1.3B", "1.3", ["1", "2", "3", "4"], "Modeling with Linear Functions (Day 2)"],
+    ["1.4A", "1.4D", ["4"], "Solve Linear Systems: Graphing"],
+    ["1.4B", "1.4D", ["1", "s"], "Solve Linear Systems Algebraically (Substitution)"],
+    ["1.4C", "1.4D", ["2"], "Solve Linear Systems Algebraically (Elimination)"],
+    ["1.4D", "1.4D", ["3"], "Solve Systems of Linear Equations in 3 Variables"],
+    ["2.1A", "2.1", ["1", "2"], "Transformations of Quadratic Functions"],
+    ["2.1B", "2.1", ["3", "4"], "Transformations of Quadratic Functions: Trans to Func"],
+    ["2.2A", "2.2", ["1", "2"], "Characteristics of Quadratic Functions"],
+    ["2.2B", "2.2", [], "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing"],
+    ["2.2C", "2.2", ["3", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
+    ["2.4A", "2.4", ["1", "2"], "Modeling with Quadratic Functions"],
+    ["2.4B", "2.4", ["3", "4"], "Modeling with Quadratic Functions (Day 2)"]
+  ];
+  var VW = {}, VBASE = {};
+  VIEWS.forEach(function (v, i) { VW[v[0]] = { id: v[0], base: v[1], ls: v[2], title: v[3], i: i }; VBASE[v[1]] = 1; });
+  function vwOf(b, k) { for (var i = 0; i < VIEWS.length; i++) if (VIEWS[i][1] === b && VIEWS[i][2].indexOf(String(k)) >= 0) return VIEWS[i][0]; return null; }   // the subsection holding exercise k of section b
   var ACTS = [
     ["Play Solve", "Playground: Equation Solver", "Playground: Equation Solver"],
     ["Play Graph", "Playground: Equation Table Graph Description", "Playground: Equation Table Graph Description"],
-    ["Play Data", "Playground: Data", "Playground: Data"],
-    ["1.1", "Parent Functions and Transformations", "1.1 Parent Functions and Transformations"],
-    ["1.2", "Transformations of Linear and Absolute Value Functions", "1.2 Transformations of Linear and Absolute Value Functions"],
-    ["1.3", "Modeling with Linear Functions", "1.3 Modeling with Linear Functions"],
-    ["1.4D", "Solve Systems of Linear Equations in 3 Variables", "1.4 Solve Systems of Linear Equations in 3 Variables"],
-    ["RevT1", "Review for Chapter 1 Test", "Review for Chapter 1 Test"],
-    ["2.1", "Transformations of Quadratic Functions", "2.1 Transformations of Quadratic Functions"],
-    ["2.2", "Characteristics of Quadratic Functions", "2.2 Characteristics of Quadratic Functions"],
-    ["2.4", "Modeling with Quadratic Functions", "2.4 Modeling with Quadratic Functions"]
+    ["Play Data", "Playground: Data", "Playground: Data"]
   ];
+  VIEWS.forEach(function (v) { if (v[0] === "2.1A") ACTS.push(["RevT1", "Review for Chapter 1 Test", "Review for Chapter 1 Test"]); ACTS.push([v[0], v[3], v[0] + " " + v[3]]); });
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   // Chapter 2 activities all keep the 1.2 / 1.3 pattern: per exercise Demo 10, Sequence 25, Calculate 40, Solo 55, then two more Solo rounds 80 and 100
   // (the first nPg exercises are on the Play Graph pane, like 1.1 Graph & Describe: Demo 10, Sequence 25, Solo 40, 70, 100)
@@ -5186,17 +5209,37 @@
   // each activity also lives at its own address: …/algebranotebook/1-4b/ opens that activity and stays there
   function isDataAct(id) { var b = BUILT[id || act]; return !!(b && (b.data || (!id && b.quiz && act === "1.1" && lesson === 3))); }   // (1.1's third exercise, Estimating a Value from a Graph, has the same centre pane as a Data Activity)   // Data Activities (Play Data, and more to come) are Graphing activities of a special kind
   function slugOf(id) { return id.toLowerCase().replace(/\./g, "-").replace(/\s+/g, ""); }
-  var fixedAct = null;
+  var fixedAct = null, view = null, soon = null;   // view: the subsection shown (act stays its base section); soon: a subsection with no exercises yet
+  function vwK() { return subx ? "s" : String(lesson); }
+  function vwSet(k) { subx = k === "s"; lesson = subx ? 2 : +k; }
+  function vwFix(reset) { if (!view) return; var ls = VW[view].ls; if (ls.length && (reset || ls.indexOf(vwK()) < 0)) vwSet(ls[0]); }
+  // saved Progress moves to each subsection's own key (copied once from its section's key: every earned level stays earned)
+  function vwKey(id) { return "algebraProgress:view:" + id; }
+  function vwMigrate() {
+    try {
+      VIEWS.forEach(function (v) {
+        var nk = vwKey(v[0]); if (localStorage.getItem(nk) !== null) return;
+        var old = JSON.parse(localStorage.getItem(BUILT[v[1]].key) || "{}") || {}, ks = v[2].map(function (k) { return v[1] === "1.4D" ? (k === "s" ? "4" : k === "4" ? "g" : k) : k; }), o = {};
+        Object.keys(old).forEach(function (p) { if (ks.indexOf(p.split(":")[0]) >= 0) o[p] = old[p]; });
+        localStorage.setItem(nk, JSON.stringify(o));
+      });
+    } catch (e) { }
+  }
+  vwMigrate();
   (function () {
     var seg = decodeURIComponent(location.pathname).replace(/\/index\.html$/i, "").replace(/\/+$/, "").split("/").pop().toLowerCase();
-    for (var id in BUILT) if (slugOf(id) === seg) fixedAct = id;
-    if (fixedAct) act = fixedAct;
+    for (var vid in VW) if (slugOf(vid) === seg) fixedAct = vid;
+    if (!fixedAct) for (var id in BUILT) if (!VBASE[id] && slugOf(id) === seg) fixedAct = id;
+    if (fixedAct && VW[fixedAct]) { if (VW[fixedAct].ls.length) { view = fixedAct; act = VW[view].base; } else soon = fixedAct; }
+    else if (fixedAct) act = fixedAct;
     if (BUILT[act].sub) lesson = 4;   // 1.4 opens on its first exercise, Graphing
-    if (fixedAct && BUILT[fixedAct].review) { rev = fixedAct; var it0 = BUILT[rev].items[0]; act = it0.act; lesson = it0.lesson; subx = !!it0.subx; }   // a review page starts on its first item
-    exBoot();   // ?ex=write-g opens that exercise
+    vwFix(true);
+    if (soon) { var a0 = act, l0 = lesson; act = VW[soon].base; exBoot(); act = a0; lesson = l0; subx = false; }
+    if (fixedAct && BUILT[fixedAct] && BUILT[fixedAct].review) { rev = fixedAct; var it0 = BUILT[rev].items[0]; act = it0.act; lesson = it0.lesson; subx = !!it0.subx; }   // a review page starts on its first item
+    if (!soon) exBoot();   // ?ex=write-g opens that exercise
   })();
   // with no activity in the address, show the welcome page until one is chosen
-  var welcome = !fixedAct, hub = /github\.io$/i.test(location.hostname);
+  var welcome = !fixedAct || !!soon, hub = /github\.io$/i.test(location.hostname);
   var LEVELS = levelsNow(), MORD = ["demo", "sequence", "calculate", "solo"];
   function topLesson() { return BUILT[act].top; }
   // RevT1 keeps its own progress: every item has its own levels (from the modes of the exercise it runs), stored under the review's key by item number
@@ -5209,8 +5252,16 @@
     });
     return out;
   }
-  function levelsNow() { return rev ? revLevels() : BUILT[act].levels; }
-  function progKey() { return rev ? BUILT[rev].key : BUILT[act].key; }
+  function levelsNow() {
+    if (rev) return revLevels();
+    if (!view) return BUILT[act].levels;
+    var ks = VW[view].ls.map(function (k) { return act === "1.4D" ? (k === "s" ? 4 : k === "4" ? "g" : +k) : +k; });
+    if (act !== "1.4D") return BUILT[act].levels.filter(function (l) { return ks.indexOf(l[0]) >= 0; });
+    // 1.4 split into four activities: each exercise keeps its modes and earns its own 0-100% (Graphing's levels as they were; the others on the same pattern)
+    var out = []; ks.forEach(function (k) { [["demo", 10, "Demo Mode"], ["sequence", 25, "Sequence Mode"], ["calculate", 40, "Calculate Mode"], ["solo", 55, "Write Mode"], ["solo", 80, "Write Mode, 2nd round", 2], ["solo", 100, "Write Mode, 3rd round", 3]].forEach(function (x) { out.push([k].concat(x)); }); });
+    return out;
+  }
+  function progKey() { return rev ? BUILT[rev].key : view ? vwKey(view) : BUILT[act].key; }
   // every Progress level already earned is remembered, so only a newly earned level is celebrated (once, with a full-screen takeover)
   var lvSeen = {};
   function lvId(l) { return progKey() + "|" + [l[0], l[1], l[2], l[4] || 1].join(","); }
@@ -5222,7 +5273,7 @@
     // a problem finished in a mode (1.1, 1.2) earns that mode's first level and every level below it at once; the later rounds need whole rounds
     if (!(l[4] > 1)) for (var m0 = MORD.indexOf(l[1]); m0 < 4; m0++) if (prog[l[0] + ":" + MORD[m0] + ":p"]) return true;
     var tot = 0; for (var m = MORD.indexOf(l[1]); m < 4; m++) tot += prog[l[0] + ":" + MORD[m]] || 0; return tot >= (l[4] || 1); }
-  function lvSkip(l) { if (rev) return l[0] !== revI; var B = BUILT[act]; if (B.sep) return B.sep.indexOf(l[0]) >= 0 ? l[0] !== LK() : B.sep.indexOf(LK()) >= 0; return !!B.perLesson && l[0] !== lesson; }   // 1.4: Graphing keeps a percentage of its own
+  function lvSkip(l) { if (rev) return l[0] !== revI; if (view) return String(l[0]) !== String(LK()); var B = BUILT[act]; if (B.sep) return B.sep.indexOf(l[0]) >= 0 ? l[0] !== LK() : B.sep.indexOf(LK()) >= 0; return !!B.perLesson && l[0] !== lesson; }   // 1.4: Graphing keeps a percentage of its own
   function pct() { var p = 0; LEVELS.forEach(function (l) { if (lvSkip(l)) return; if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }   // an activity with perLesson keeps a separate percentage for each exercise
   function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; var pl = $("progLnk"); if (pl) pl.textContent = pct() + "%"; lvCheer(); modeLocksUI(); }
   // a newly earned level: one phrase with the level beneath it, over the whole screen (Playgrounds have no levels, so never)
@@ -5232,7 +5283,7 @@
     partyShow(cheer(), top[3] + " · " + top[2] + "%");
   }
   function openProg() {
-    var p = pct(), h = "<h2 id=\"progT\">" + (rev || shortOf(act)) + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = rev ? -1 : 0;
+    var p = pct(), h = "<h2 id=\"progT\">" + (rev || view || shortOf(act)) + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = rev ? -1 : 0;
     LEVELS.forEach(function (l, i) {
       if (lvSkip(l)) return;
       if (l[0] !== last) { if (last !== -1 && last) h += "</ul>"; last = l[0]; h += "<h3>Exercise: " + (rev ? BUILT[rev].items[last].q : lessonName(last)) + "</h3><ul>"; }
@@ -5251,9 +5302,20 @@
     var B0 = BUILT[act], ml = (B0.modes || (B0.modesFor ? B0.modesFor(lesson) : ["demo", "sequence", "calculate", "solo"])).filter(function (m) { return m !== "create"; }), nx = ml[ml.indexOf(mode) + 1], stayT = "Try another in " + MODES[mode] + " mode";
     if (nx) up = { label: MODES[nx] + " Mode", stayText: stayT, go: function () { setMode(nx); } };   // the next mode is never Create
     else if (rev && mode === "solo") { var ri = BUILT[rev].items; if (pct() >= 100 && revI < ri.length - 1) up = { label: "Next: " + ri[revI + 1].q, stay: true, stayText: "Stay in this exercise", go: function () { revGo(revI + 1); } }; }   // a review: the Next button moves on to its next item
+    else if (view && mode === "solo") { var nv = vwNext(); if (nv && pct() >= 100) up = { label: "Next exercise: " + nv.name, stay: true, stayText: "Stay in this exercise", go: nv.go }; }   // at 100% the Next button moves on to the next exercise (the first of the next subsection of the section after the last)
     else if (mode === "solo" && !subx && lesson < topLesson() && BUILT[act].perLesson) { if (pct() >= 100) up = { label: "Next exercise: " + (BUILT[act].short[lesson] || lessonName(lesson + 1)), stay: true, stayText: "Stay in this exercise", go: function () { lesson++; $("lesson").value = String(lesson); setMode("demo"); } }; }   // at 100% the Next button moves on to the next exercise; a small link stays here
     else if (mode === "solo" && !subx && act === "1.4D" && lesson === 4) { if (pct() >= 100) up = { label: "Next exercise: " + LNAME[1], stay: true, stayText: "Stay in this exercise", go: function () { lesson = 1; $("lesson").value = "1"; setMode("demo"); } }; }   // 1.4: Graphing is first in the menu; at 100% the Next button moves on to One Variable
     else if (mode === "solo" && !subx && (act === "1.4D" ? lesson < 3 : lesson < topLesson())) { var nl = lesson + 1; up = { label: LNAME[nl], stayText: "Try another in " + MODES[mode] + " mode", go: function () { lesson = nl; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } }; }   // 1.4: Graphing is first in the menu, so it leads to One Variable and 3×3 is the last
+  }
+  function exShort(b, k) { var B = BUILT[b]; if (b === "1.4D") return k === "s" ? "Substitution" : LNAME[k === "4" ? 4 : +k]; return (B.short && B.short[+k - 1]) || B.lessons[+k - 1]; }
+  function vwNext() {
+    var ls = VW[view].ls, i = ls.indexOf(vwK()); if (i < 0) return null;
+    if (i < ls.length - 1) { var k = ls[i + 1]; return { name: exShort(act, k), go: function () { msSave(); vwSet(k); $("lesson").value = k; gdCustom = null; wfCustom = null; useCustom = null; buildModes(); setMode("demo"); } }; }
+    for (var j = VW[view].i + 1; j < VIEWS.length; j++) {
+      var v = VIEWS[j]; if (v[1] !== act) return null; if (!v[2].length) continue;
+      return { name: v[0] + " " + exShort(v[1], v[2][0]), go: (function (id) { return function () { setActivity(id); }; })(v[0]) };
+    }
+    return null;
   }
   // Demo progress is earned only by a demo that plays through to its end: a demo that was ended, left for another mode, or finished by hand
   // while paused earns nothing (1.4: the demo is still running when the problem is solved; 1.1: the whole demo script has played out)
@@ -5603,9 +5665,9 @@
     return true;
   }
   // a refresh keeps the mode (Demo, Sequence, Calculate, Solo, Create) of this activity for as long as the tab is open
-  function saveMode() { try { sessionStorage.setItem("an.mode." + act, mode); } catch (e) {} }
+  function saveMode() { try { sessionStorage.setItem("an.mode." + (view || act), mode); } catch (e) {} }
   var bootMode = (function () {
-    try { var m = sessionStorage.getItem("an.mode." + act), B = BUILT[act], ok = B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"]; return m && MODES[m] && ok.indexOf(m) >= 0 ? m : null; } catch (e) { return null; }
+    try { var m = sessionStorage.getItem("an.mode." + (view || act)), B = BUILT[act], ok = B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"]; return m && MODES[m] && ok.indexOf(m) >= 0 ? m : null; } catch (e) { return null; }
   })();
   function takeBoot() { var m = bootMode || "demo"; bootMode = null; return m; }
 
@@ -5934,7 +5996,7 @@
     if (p.length !== 2 || !p[0] || !p[1]) return "Type an equation with one = sign, like " + (lesson === 3 ? "2x+3y-z=12." : "2x+3y=12.");
     var L = parseSide(p[0]), R = parseSide(p[1]);
     if (!L || !R) return "I couldn't read that. Use numbers, " + (lesson === 3 ? "x, y, z" : "x, y") + ", + and −.";
-    if (lesson === 2 && (L.z.n || R.z.n)) return "This exercise uses x and y." + (topLesson() >= 3 ? " Use the dropdown to switch to 3×3 if your equation has z." : "");
+    if (lesson === 2 && (L.z.n || R.z.n)) return "This exercise uses x and y." + (view ? " Equations with z are in 1.4D Solve Systems of Linear Equations in 3 Variables." : topLesson() >= 3 ? " Use the dropdown to switch to 3×3 if your equation has z." : "");
     var q = { a: add(L.x, neg(R.x)), b: add(L.y, neg(R.y)), e: add(L.z, neg(R.z)), ks: [], c: add(R.k, neg(L.k)) };
     ["x", "y"].forEach(function (v) { if (lesson === 2 && /^[xy]$/.test(p[0]) && p[0] === v && !R[v].n) q.sol = v; });
     if (!allV().some(function (v) { return q[CK[v]].n; })) return "That equation needs at least one variable.";
@@ -8696,13 +8758,14 @@ var ESPIC = {
   ["change", "blur"].forEach(function (ev) { $("lesson").addEventListener(ev, function () { setTimeout(function () { lessonNames(false); }, 0); }); });
   function buildLessons() {
     if (rev) {   // a review: the menu lists its items
-      $("lesson").innerHTML = BUILT[rev].items.map(function (o, i) { return "<option value=\"" + i + "\" title=\"" + o.full + "\">" + o.q + "</option>"; }).join(""); $("lesson").value = String(revI);
+      $("lesson").innerHTML = BUILT[rev].items.map(function (o, i) { var src = vwOf(o.act, o.subx ? "s" : o.act === "1.4D" && o.lesson === 4 ? "4" : o.lesson); return "<option value=\"" + i + "\" title=\"" + o.full + (src ? " (from " + src + " > " + exShort(o.act, o.subx ? "s" : String(o.lesson)) + ")" : "") + "\">" + o.q + "</option>"; }).join(""); $("lesson").value = String(revI);
       document.body.classList.toggle("solver", !!BUILT[act].solver); valsPlace(); buildModes(); return;
     }
     if (lesson > topLesson()) lesson = topLesson();
     var h = "", sh = BUILT[act].short; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\" title=\"" + lessonName(l) + "\"" + (sh && sh[l - 1] ? " data-short=\"" + sh[l - 1] + "\" data-full=\"" + lessonName(l) + "\"" : "") + ">" + (sh && sh[l - 1] || lessonName(l)) + "</option>";
     if (!BUILT[act].sub) subx = false; else { var k1 = h.indexOf("</option>") + 9; h = h.slice(0, k1) + "<option value=\"s\" title=\"Substitution\">Substitution</option>" + h.slice(k1); }
     if (BUILT[act].sub) { var k4 = h.lastIndexOf("<option value=\"4\""); if (k4 > 0) h = h.slice(k4) + h.slice(0, k4); }   // 1.4: Graphing comes first in the menu
+    if (view) { vwFix(); var opt = {}; h.replace(/<option value="([^"]*)"[^>]*>[^<]*<\/option>/g, function (o, v) { opt[v] = o; return o; }); h = VW[view].ls.map(function (k) { return opt[k] || ""; }).join(""); }
     $("lesson").innerHTML = h; $("lesson").value = subx ? "s" : String(lesson);
     document.body.classList.toggle("solver", !!BUILT[act].solver); valsPlace();
     buildModes();
@@ -8716,10 +8779,10 @@ var ESPIC = {
   function shortOf(id) { return id === "1.4D" ? "1.4 Algebra" : id; }
   function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
   function buildActs() {
-    $("actLbl").textContent = welcome ? "Choose an activity" : rev ? rev : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
-    if (fixedAct) document.title = fullTitle(rev || act) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(rev || act));
+    $("actLbl").textContent = soon ? soon : welcome ? "Choose an activity" : rev ? rev : view ? view : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
+    var here = soon || rev || view || act; if (fixedAct) document.title = fullTitle(here) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(here));
     $("actList").innerHTML = ACTS.map(function (a) {
-      var ok = !!BUILT[a[0]], sel = !welcome && a[0] === (rev || act);
+      var ok = !!BUILT[a[0]] || !!VW[a[0]], sel = (!welcome || !!soon) && a[0] === here;
       return "<li role=\"option\" data-id=\"" + a[0] + "\"" + (ok ? " tabindex=\"-1\"" : "") + " aria-selected=\"" + sel + "\"" + (ok ? "" : " aria-disabled=\"true\"") + " class=\"" + (ok ? "" : "soon") + (sel ? " sel" : "") + "\">" + (ok ? fullTitle(a[0]) : fullTitle(a[0]) + " (coming soon)") + "</li>";
     }).join("");
   }
@@ -8751,21 +8814,23 @@ var ESPIC = {
   }
   function setActivity(id) {
     closeActs(); $("actBtn").blur(); d3Hide();   // once an activity is chosen the button is let go
-    if (!BUILT[id]) return;
+    var V = VW[id] || null; if (!BUILT[id] && !V) return;
     msSave();
     try { sessionStorage.removeItem("an.mode." + id); } catch (e) { }   // choosing an activity always starts it in Demo; only a refresh keeps the mode
-    // on the website every activity is its own page, so switching goes to that page
-    if (hub && id !== (rev || act)) { location.href = (fixedAct ? "../" : "") + slugOf(id) + "/"; return; }
-    if (BUILT[id].review) { if (welcome) { welcome = false; theme(); document.body.classList.remove("wel"); $("welcome").hidden = true; } rev = id; revGo(0, true); return; }
-    var wasRev = !!rev; rev = null;
+    // on the website every activity is its own page, so switching goes to that page (a subsection with no exercises yet is always its own "Coming soon" page)
+    var here = soon || rev || view || act;
+    if ((hub || (V && !V.ls.length)) && (id !== here || (welcome && !soon))) { location.href = (fixedAct ? "../" : "") + slugOf(id) + "/"; return; }
+    if (V && !V.ls.length) return;
+    if (BUILT[id] && BUILT[id].review) { view = null; soon = null;  if (welcome) { welcome = false; theme(); document.body.classList.remove("wel"); $("welcome").hidden = true; } rev = id; revGo(0, true); return; }
+    var wasRev = !!rev; rev = null; var base = V ? V.base : id;
     if (welcome) {
       // on the website each activity has its own page; elsewhere (a preview) it opens right here
-      if (hub) { location.href = slugOf(id) + "/"; return; }
-      welcome = false; theme(); document.body.classList.remove("wel"); $("welcome").hidden = true;
-      if (id === act) { buildActs(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
+      if (hub) { location.href = (fixedAct ? "../" : "") + slugOf(id) + "/"; return; }
+      welcome = false; soon = null; theme(); document.body.classList.remove("wel"); $("welcome").hidden = true;
+      if (base === act) { view = V ? id : null; vwFix(true); LEVELS = levelsNow(); loadProg(); buildActs(); buildLessons(); updProg(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
     }
-    if (id === act && !wasRev) { msMark(); return; }
-    var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = id; gdCustom = null; wfCustom = null; if (BUILT[act].quiz || BUILT[act].solver || BUILT[act].sub) { lesson = BUILT[act].sub ? 4 : 1; subx = false; } if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
+    if (id === here && !wasRev) { msMark(); return; }
+    var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = base; view = V ? id : null; gdCustom = null; wfCustom = null; if (BUILT[act].quiz || BUILT[act].solver || BUILT[act].sub) { lesson = BUILT[act].sub ? 4 : 1; subx = false; } vwFix(true); if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
     LEVELS = levelsNow(); loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     leaveQuiz();
@@ -13614,15 +13679,20 @@ var ESPIC = {
   })();
   // ==== The exercise in the address: …/2-1/?ex=write-g.  The abbreviation of the exercise (or a review item's name) is kept in the URL and follows every change ====
   function exSlug(s) { return String(s || "").replace(/×|&times;/g, "x").toLowerCase().replace(/&amp;|&/g, " ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
-  function exList() {
+  function exList(all) {
     if (rev) return BUILT[rev].items.map(function (o, i) { return [String(i), exSlug(o.q)]; });
     var B = BUILT[act]; if (!B || B.play || B.solver) return [];
-    if (B.sub) return [["4", "graphing"], ["1", "one-variable"], ["s", "substitution"], ["2", "2x2-systems"], ["3", "3x3-systems"]];
-    var out = []; for (var l = 1; l <= (B.top || 0); l++) out.push([String(l), exSlug((B.short && B.short[l - 1]) || (B.lessons && B.lessons[l - 1]) || "")]); return out;
+    var out = []; if (B.sub) out = [["4", "graphing"], ["1", "one-variable"], ["s", "substitution"], ["2", "2x2-systems"], ["3", "3x3-systems"]];
+    else for (var l = 1; l <= (B.top || 0); l++) out.push([String(l), exSlug((B.short && B.short[l - 1]) || (B.lessons && B.lessons[l - 1]) || "")]);
+    if (all || !view) return out;
+    return VW[view].ls.map(function (k) { return out.filter(function (e) { return e[0] === k; })[0]; }).filter(Boolean);   // a subsection lists only its own exercises, in its order
   }
   function exBoot() {   // (runs while the page starts: ?ex= opens that exercise)
     var m = /[?&]ex=([^&#]*)/.exec(location.search); if (!m) return; var want; try { want = exSlug(decodeURIComponent(m[1].replace(/\+/g, " "))); } catch (e) { return; }
-    var hit = exList().filter(function (e) { return e[1] === want; })[0]; if (!hit) return;
+    var hit = exList(!rev).filter(function (e) { return e[1] === want; })[0]; if (!hit) return;
+    if (!rev) {   // an exercise that now lives in another subsection: go there (old links such as …/1-4d/?ex=graphing)
+      var to = vwOf(act, hit[0]); if (to && to !== (view || soon)) { location.replace("../" + slugOf(to) + "/" + location.search + location.hash); return; }
+    }
     if (rev) { revI = +hit[0]; var it = BUILT[rev].items[revI]; act = it.act; lesson = it.lesson; subx = !!it.subx; return; }
     if (hit[0] === "s") { subx = true; lesson = 2; } else { subx = false; lesson = +hit[0]; }
   }
@@ -13942,6 +14012,7 @@ var ESPIC = {
   }
   buildActs(); buildLessons(); updProg();
   if (BUILT[act].play) { var bm = takeBoot(); setMode(bm); bootMode = bm; enterPlay(); bootMode = null; } else if (BUILT[act].quiz) enterQuiz(); else setMode(takeBoot());
+  if (soon) $("welcome").innerHTML = "<div class=\"wsmall\">" + soon + "</div><div class=\"wsoonT\">" + VW[soon].title + "</div><div class=\"wsoon\">Coming soon</div><p class=\"wsoonP\">The exercises for this activity are being built. Choose another activity from the menu.</p>";
   if (welcome) { document.body.classList.add("wel"); theme(); $("welcome").hidden = false; }
 </script>
 </body>
