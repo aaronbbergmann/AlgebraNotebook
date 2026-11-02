@@ -7943,7 +7943,7 @@ var ESPIC = {
         var hh = "<div class=\"vfnChipRow\" id=\"vfnChipS\"></div><table class=\"pgTable vfnGt\" id=\"vfnTbl\" aria-label=\"Graphing table\"><colgroup><col style=\"width:16%\"><col><col style=\"width:16%\"></colgroup><thead><tr><th>x</th><th class=\"pgMid\"><i>f</i>(<i>x</i>)</th><th>y</th></tr></thead><tbody>";
         VFN_XS.forEach(function (d, r) {
           var x = p.h + d;
-          hh += "<tr" + (d === 0 ? " class=\"vfnMidRow\"" : "") + ">" + (s.gx ? "<td>" + nf(x) + "</td><td class=\"mid\" data-vfr=\"" + r + "\">" + vfnExpr(x) + "</td>" : "<td class=\"vfnDrop\"></td><td></td>") +
+          hh += "<tr" + (d === 0 ? " class=\"vfnMidRow\"" : "") + ">" + (s.gx ? "<td>" + nf(x) + "</td><td class=\"mid\" data-vfr=\"" + r + "\">" + vfnExpr(x) + "</td>" : "<td" + (d === 0 ? " class=\"vfnDrop\" id=\"vfnDropX\"" : "") + "></td><td></td>") +
             "<td>" + (s.gx && calc ? "<input class=\"qzCell\" data-vfy=\"" + r + "\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"y for x = " + nf(x) + "\">" : "<span class=\"cv\" data-vfyv=\"" + r + "\"></span>") + "</td></tr>";
         });
         el.innerHTML = hh + "</tbody></table>";
@@ -8132,7 +8132,8 @@ var ESPIC = {
   function vfnGhostAt(x, y) { if (vfnGhost) { vfnGhost.style.left = x + "px"; vfnGhost.style.top = y + "px"; } }
   function vfnGhostMake(chip, x, y) { vfnGhostEnd(); var g = chip.cloneNode(true); g.className = "vfnChip vfnGhost"; document.body.appendChild(g); vfnGhost = g; vfnGhostAt(x, y); vfnSt().chipDrag = true; vfnTb(); }
   function vfnGhostEnd() { if (vfnGhost) { vfnGhost.remove(); vfnGhost = null; } if (QZ && QZ.vf) { QZ.vf.chipDrag = false; } }
-  function vfnOverTable(x, y) { var t = $("vfnTbl"); if (!t) return false; var r = t.getBoundingClientRect(); return x >= r.left - 12 && x <= r.right + 12 && y >= r.top - 12 && y <= r.bottom + 12; }
+  function vfnOverTable(x, y) { var t = $("vfnDropX"); if (!t) return false;   // (only the middle x cell takes it)
+  var r = t.getBoundingClientRect(); return x >= r.left - 12 && x <= r.right + 12 && y >= r.top - 12 && y <= r.bottom + 12; }
   (function () {
     var S = $("vfnSvg");
     $("vfnTools").addEventListener("click", function (e) { var b = e.target.closest("button[data-vft]"); if (!b || !vfN()) return; if (e.isTrusted) pgUser(); vfnTool(b.dataset.vft); });
@@ -8256,7 +8257,7 @@ var ESPIC = {
       var c = document.querySelector("[data-vfchip]"); if (!c) { n(); return; }
       var a = ctr(c);
       go(a, function () {
-        vfnGhostMake(c, a.x, a.y); var t = $("vfnTbl"), r = t.getBoundingClientRect(), b = { x: r.left + r.width * 0.12, y: r.top + r.height * 0.6 }, t0 = null, ms = 1100;
+        vfnGhostMake(c, a.x, a.y); var t = $("vfnDropX") || $("vfnTbl"), r = t.getBoundingClientRect(), b = { x: r.left + r.width / 2, y: r.top + r.height / 2 }, t0 = null, ms = 1100;
         function step(ts) {
           if (pgRun !== run) { vfnGhostEnd(); return; } if (t0 === null) t0 = ts;
           var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, q = { x: a.x + (b.x - a.x) * e, y: a.y + (b.y - a.y) * e };
