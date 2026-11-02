@@ -7714,7 +7714,7 @@ var ESPIC = {
   // the boxes of Calculate and Write
   function vfnFs() { var std = vfnStd(), w = vfnWr(); return (std ? (w ? ["xv"] : ["a", "b", "c", "xv"]) : ["h", "k"]).concat(["v", "ax", "m1a", "m1b", "m2a", "m2b"]); }
   function vfnSt() {
-    if (!QZ.vf || QZ.vf.pi !== QZ.pi) QZ.vf = { pi: QZ.pi, par: null, tool: null, stage: 0, mp: [], sel: null, pairs: [], pts: [], dls: [], dlp: null, hov: null, drag: null, w: { a: "", b: "", c: "", xv: "", h: "", k: "", v: "", ax: "", m1a: "", m1b: "", m2a: "", m2b: "" }, wok: {}, wbad: {}, tb: {}, tbok: {}, tbl: {}, gx: false, gy: {}, gt: {}, gok: false, aok: false, ok: false, hist: [] };
+    if (!QZ.vf || QZ.vf.pi !== QZ.pi) QZ.vf = { pi: QZ.pi, par: null, tool: null, stage: 0, mp: [], sel: null, pairs: [], pts: [], dls: [], dlp: null, hov: null, drag: null, w: { a: "", b: "", c: "", xv: "", h: "", k: "", v: "", ax: "", m1a: "", m1b: "", m2a: "", m2b: "" }, wok: {}, wbad: {}, tb: {}, tbok: {}, tbl: {}, gx: false, gy: {}, gt: {}, gs: {}, gok: false, aok: false, ok: false, hist: [] };
     return QZ.vf;
   }
   function vfnSid() { var s = vfnSt(); return s.ok || QZ.step >= 4 ? "" : vfnStg()[s.stage] || ""; }
@@ -7930,6 +7930,33 @@ var ESPIC = {
     if (p.c) t += (p.c < 0 ? " − " : " + ") + nf(Math.abs(p.c));
     return t;
   }
+  // Calculate: each click on a row's expression simplifies it one step, by the order of operations:
+  //   0 a(x)² + b(x) + c  →  1 the exponent  →  2 a times it  →  3 b times x  →  4 the first two added  →  5 one value (it goes into the y column)
+  var VFN_STEPS = 5;
+  function vfnExprStep(x, st) {
+    var p = vfnP(), X = "(" + nf(x) + ")", L = [], sgn = function (v, first) { return first ? nf(v) : (v < 0 ? " − " : " + ") + nf(Math.abs(v)); };
+    if (st >= 5) return nf(vfnF(x));
+    if (st === 4) return sgn(p.a * x * x + p.b * x, true) + sgn(p.c);
+    var co = p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a);
+    L.push(st >= 2 ? sgn(p.a * x * x, true) : st === 1 ? co + "(" + nf(x * x) + ")" : co + X + "²");
+    L.push(st >= 3 ? sgn(p.b * x) : (p.b < 0 ? " − " : " + ") + (Math.abs(p.b) === 1 ? "" : nf(Math.abs(p.b))) + X);
+    if (p.c) L.push(sgn(p.c));
+    return L.join("");
+  }
+  function vfnStepClick(r) {
+    var s = vfnSt(); if (QZ.step >= 4 || mode !== "calculate" || !s.gx || s.gy[r]) return;
+    vfnPush(); s.gs[r] = (s.gs[r] || 0) + 1; pqMsg("");
+    if (s.gs[r] >= VFN_STEPS) {
+      var x = vfnP().h + VFN_XS[r], chain = []; for (var k = 0; k <= VFN_STEPS; k++) chain.push(vfnExprStep(x, k));
+      s.gy[r] = true; s.gt[r] = String(vfnF(x)); vfnLine("f(" + nf(x) + ") = " + chain.join(" = "));
+      vfnFly(r); vfnAll(); return;
+    }
+    vfnTb();
+  }
+  function vfnFly(r) {
+    var e = document.querySelector("[data-vfr=\"" + r + "\"]"), t = document.querySelector("[data-vfy=\"" + r + "\"],[data-vfyv=\"" + r + "\"]");
+    if (!e || !t || DN) return; var x = vfnP().h + VFN_XS[r], a = e.getBoundingClientRect(), b = t.getBoundingClientRect(), g = document.createElement("div"); g.className = "vfnFly"; g.textContent = nf(vfnF(x)); g.style.left = (a.left + a.width / 2) + "px"; g.style.top = (a.top + a.height / 2) + "px"; document.body.appendChild(g); requestAnimationFrame(function () { g.style.left = (b.left + b.width / 2) + "px"; g.style.top = (b.top + b.height / 2) + "px"; }); setTimeout(function () { g.remove(); }, 420);
+  }
   function vfnChipHTML() { var p = vfnP(); return "<span class=\"vfnChip\" data-vfchip=\"1\" title=\"Drag me into the table\">" + "<i>x</i> = −" + (p.b < 0 ? "(" + nf(p.b) + ")" : nf(p.b)) + "/(2·" + (p.a < 0 ? "(" + nf(p.a) + ")" : nf(p.a)) + ") = " + nf(p.h) + "</span>"; }
   var vfnTbKey = "";
   function vfnTb() {
@@ -7949,7 +7976,7 @@ var ESPIC = {
         el.innerHTML = hh + "</tbody></table>";
       }
       var cs = $("vfnChipS"); if (cs) cs.innerHTML = !calc && vfnSid() === "drag" ? vfnChipHTML() : "";
-      [].forEach.call(el.querySelectorAll("[data-vfr]"), function (e) { var r = +e.dataset.vfr; e.classList.toggle("live", !calc && vfnSid() === "tbl" && !s.gy[r] && !done); });
+      [].forEach.call(el.querySelectorAll("[data-vfr]"), function (e) { var r = +e.dataset.vfr, x = vfnP().h + VFN_XS[r]; e.classList.toggle("live", !done && !s.gy[r] && (calc || vfnSid() === "tbl")); if (calc) { var t = vfnExprStep(x, s.gy[r] ? 0 : s.gs[r] || 0); if (e.dataset.st !== t) { e.dataset.st = t; e.innerHTML = t; } } });
       [].forEach.call(el.querySelectorAll("[data-vfyv]"), function (e) { var r = +e.dataset.vfyv; e.textContent = s.gy[r] ? nf(vfnF(vfnP().h + VFN_XS[r])) : ""; });
       [].forEach.call(el.querySelectorAll("[data-vfy]"), function (e) { var r = e.dataset.vfy, v = s.gt[r] || ""; if (document.activeElement !== e && e.value !== v) e.value = v; e.classList.toggle("full", !!s.gy[r]); e.classList.toggle("badc", !s.gy[r] && !!s.wbad["g" + r]); e.readOnly = !!s.gy[r] || done || (pgRun && !pgPaused && !DN); });
       [].forEach.call(el.querySelectorAll(".vfnDrop"), function (e) { e.classList.toggle("on", !!(s.chipDrag)); });
@@ -8016,7 +8043,7 @@ var ESPIC = {
     var s = vfnSt(); if (QZ.step >= 4 || s.gy[r]) return; s.wbad["g" + r] = false;
     var x = vfnP().h + VFN_XS[+r], v = m3Num(s.gt[r] || "");
     if (!isNaN(v) && Math.abs(v - vfnF(x)) < 1e-9) {
-      vfnPush(); s.gy[r] = true; vfnLine("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x))); pqMsg("");
+      vfnPush(); s.gy[r] = true; s.gs[r] = VFN_STEPS; vfnLine("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x))); pqMsg("");
       var nx = null, best = 99; VFN_XS.forEach(function (d, i) { if (!s.gy[i] && Math.abs(i - +r) < best) { best = Math.abs(i - +r); nx = i; } }); vfnAll();
       if (nx != null && !pgRun) { var e = document.querySelector("[data-vfy=\"" + nx + "\"]"); if (e) e.focus(); }
       return;
@@ -8180,7 +8207,7 @@ var ESPIC = {
       var mv = function (ev) { vfnGhostAt(ev.clientX, ev.clientY); }, up = function (ev) { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); var over = vfnOverTable(ev.clientX, ev.clientY); vfnGhostEnd(); if (over) vfnDrop(); else vfnTb(); };
       document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
     });
-    $("vfnTb").addEventListener("click", function (e) { if (!vfN() || !e.target.closest) return; var c = e.target.closest("[data-vfr]"); if (!c) return; if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused) return; vfnRowClick(+c.dataset.vfr); });
+    $("vfnTb").addEventListener("click", function (e) { if (!vfN() || !e.target.closest) return; var c = e.target.closest("[data-vfr]"); if (!c) return; if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused) return; if (mode === "calculate") vfnStepClick(+c.dataset.vfr); else vfnRowClick(+c.dataset.vfr); });
     $("vfnTb").addEventListener("input", function (e) { if (!vfN()) return; if (e.isTrusted) pgUser(); var s = vfnSt(), d = e.target.dataset; if (d.vtl != null) { s.tbl[d.vtl] = e.target.value; return; } if (d.vfy != null) { s.gt[d.vfy] = e.target.value; vfnYTyped(d.vfy, false); return; } if (!d.vtb) return; s.tb[d.vtb] = e.target.value; vfnTbTyped(d.vtb, false); });
     $("vfnTb").addEventListener("keydown", function (e) { if (e.key !== "Enter" || !vfN()) return; var d = e.target.dataset; if (d.vfy != null) { e.preventDefault(); vfnYTyped(d.vfy, true); return; } if (!d.vtb) return; e.preventDefault(); vfnTbTyped(d.vtb, true); });
     $("vfnOut").addEventListener("input", function (e) { var f = e.target.dataset && e.target.dataset.vff; if (!f || !vfN()) return; if (e.isTrusted) pgUser(); var s = vfnSt(); s.w[f] = e.target.value; if (!vfnWr()) vfnTyped(f, false); else { s.wbad[f] = false; e.target.classList.remove("bad"); if (typeof wsReadyUpd === "function") wsReadyUpd(); } });
@@ -8248,9 +8275,9 @@ var ESPIC = {
       go(ctr(e), function () { typeKeys(e, function () { return s.tb[k] || ""; }, function (v) { s.tb[k] = v; }, val, function () { vfnTbTyped(k, false); pgWait(500, n); }); });
     }; }
     function yIn(r) { return function (n) {
-      var x = p.h + VFN_XS[r], e = document.querySelector("[data-vfy=\"" + r + "\"]"); if (!e) { n(); return; }
-      cap("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x)) + ".");
-      go(ctr(e), function () { typeKeys(e, function () { return s.gt[r] || ""; }, function (v) { s.gt[r] = v; }, String(vfnF(x)), function () { vfnYTyped(String(r), false); pgWait(500, n); }); });
+      var x = p.h + VFN_XS[r], e = document.querySelector("[data-vfr=\"" + r + "\"]"); if (!e) { n(); return; }
+      cap("Click f(" + nf(x) + ") to simplify it one step at a time: the exponent, then multiplying, then adding.");
+      (function one() { if (pgRun !== run) return; if (s.gy[r]) { pgWait(500, n); return; } var c = document.querySelector("[data-vfr=\"" + r + "\"]"); go(c ? ctr(c) : null, function () { vfnStepClick(r); pgWait(500, one); }); })();
     }; }
     function dragChip(n) {
       cap("x = −b/(2a) = " + nf(p.h) + " is the centre of the table. Drag it into the table.");
