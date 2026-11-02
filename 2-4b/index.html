@@ -7892,7 +7892,7 @@ var ESPIC = {
       // the axis of symmetry comes with the parabola
       var axLab = "<tspan font-style=\"italic\">x</tspan> = " + nf(par.h);
       h += "<line x1=\"" + F(vfnX(par.h)) + "\" y1=\"" + y0 + "\" x2=\"" + F(vfnX(par.h)) + "\" y2=\"" + y1 + "\" stroke=\"" + C2G + "\" stroke-width=\"2.2\" stroke-dasharray=\"7 5\" pointer-events=\"none\"/>";
-      h += "<line data-vfc=\"ax\" x1=\"" + F(vfnX(par.h)) + "\" y1=\"" + y0 + "\" x2=\"" + F(vfnX(par.h)) + "\" y2=\"" + y1 + "\" stroke=\"transparent\" stroke-width=\"14\" style=\"cursor:pointer\"/>";
+      h += "<line data-vfc=\"ax\" x1=\"" + F(vfnX(par.h)) + "\" y1=\"" + y0 + "\" x2=\"" + F(vfnX(par.h)) + "\" y2=\"" + y1 + "\" stroke=\"transparent\" stroke-width=\"20\" style=\"cursor:pointer\"/>";
       var axR = par.h > 6, axX = F(vfnX(par.h) + (axR ? -7 : 7)), axY = y1 + 18;
       h += "<g data-vfc=\"ax\" style=\"cursor:pointer\"><rect x=\"" + (axR ? axX - 52 : axX - 3) + "\" y=\"" + (axY - 15) + "\" width=\"56\" height=\"21\" fill=\"transparent\"/><text x=\"" + axX + "\" y=\"" + axY + "\" text-anchor=\"" + (axR ? "end" : "start") + "\" font-weight=\"700\" fill=\"" + C2G + "\"" + halo + ">" + axLab + "</text></g>";
       h += curve(Pf, C2P, 3, "", "data-vfc=\"cv\" style=\"cursor:pointer\"");
@@ -8203,7 +8203,7 @@ var ESPIC = {
     if (st === "h") { if (what === "vh") ok("h = " + nf(p.h)); else if (what === "vk") vfnBad("That is k, the y-coordinate of the vertex. Click h, its x-coordinate."); else if (what) vfnBad("h is the x-coordinate of the vertex. Click it in the vertex's coordinates."); else pqMsg("Click a number in the vertex's coordinates.", "note"); return; }
     if (st === "k") { if (what === "vk") ok("k = " + nf(p.k)); else if (what === "vh") vfnBad("That is h. Click k, the y-coordinate of the vertex."); else if (what) vfnBad("k is the y-coordinate of the vertex. Click it in the vertex's coordinates."); else pqMsg("Click a number in the vertex's coordinates.", "note"); return; }
     if (st === "v") { if (what === "vx" || what === "vh" || what === "vk") ok("vertex (" + nf(p.h) + ", " + nf(p.k) + ")"); else if (what) vfnBad("The vertex is the turning point of the parabola. Click it."); else pqMsg("Click the vertex.", "note"); return; }
-    if (st === "ax") { if (what === "ax" || what === "vh") ok("axis of symmetry x = " + nf(p.h)); else if (what === "vk") vfnBad("The axis of symmetry is vertical: its equation uses the x-coordinate of the vertex."); else if (what) vfnBad("Click the dashed axis of symmetry, its equation, or the vertex's x-coordinate."); else pqMsg("Click the axis of symmetry.", "note"); return; }
+    if (st === "ax") { if (what === "ax" || what === "vh") ok("axis of symmetry x = " + nf(p.h)); else if (what === "vk") vfnBad("The axis of symmetry is vertical: its equation uses the x-coordinate of the vertex."); else if (what) vfnBad("Click the green dotted line or its equation."); else pqMsg("Click the axis of symmetry.", "note"); return; }
     if (st === "m1" || st === "m2") {
       if (what !== "cv" && what !== "mp" && what !== "vx") { if (what) vfnBad("Click points on the parabola."); else pqMsg("Click a point on the parabola.", "note"); return; }
       var X = what === "vx" ? p.h : vfnCl(Math.round(q.x), -10, 10), Y = vfnF(X), pt = [X, Y];
@@ -8316,6 +8316,7 @@ var ESPIC = {
       if (!s.par && (mode === "calculate" || vfnSid() === "graph")) { pqMsg("Press the parabola button first.", "note"); return; }
       if (hd && !vfnParOK(s)) { vfnDrag(e, hd.dataset.vfh); return; }
       if (mode === "demo" && pgRun && !pgPaused) return;
+      if (vfnSid() === "ax" && s.par && Math.abs(g.px - vfnX(s.par.h)) <= 10 && !(ck && ck.dataset.vfc === "vh")) { vfnClick("ax", g); return; }   // (the dotted line counts all along its length, where the vertex or the curve crosses it too)
       vfnClick(ck ? ck.dataset.vfc : null, g);
     });
     function vfnDrag(e, which) {
@@ -8455,7 +8456,7 @@ var ESPIC = {
         else if (id === "h") r = function (n) { clickOn("#vfnSvg [data-vfc=vh]", VFN_ASK.h.replace(/<[^>]+>/g, "") + " h is the x-coordinate of the vertex.", "vh", n); };
         else if (id === "k") r = function (n) { clickOn("#vfnSvg [data-vfc=vk]", VFN_ASK.k.replace(/<[^>]+>/g, "") + " k is the y-coordinate.", "vk", n); };
         else if (id === "v") r = function (n) { clickOn("#vfnSvg [data-vfc=vx]", VFN_ASK.v.replace(/<[^>]+>/g, ""), "vx", n); };
-        else if (id === "ax") r = function (n) { clickOn("#vfnSvg g[data-vfc=ax]", VFN_ASK.ax.replace(/<[^>]+>/g, ""), "ax", n); };
+        else if (id === "ax") r = function (n) { var py = vfnP(), yy = Math.abs(py.k) < 5 ? (py.a > 0 ? -6 : 6) : 0; cap(VFN_ASK.ax.replace(/<[^>]+>/g, "") + " Click the green dotted line or its equation."); go(vfnScr(py.h, yy), function () { vfnClick("ax", null); pgWait(1500, n); }); };
         else r = pair(id === "m1" ? 0 : 1);
         I.push({ done: past(id), run: r });
       });
