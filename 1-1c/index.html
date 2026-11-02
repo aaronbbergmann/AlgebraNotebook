@@ -647,6 +647,13 @@
   body.crPre .pgGraphWrap,body.crPre .pgTable,body.crPre .qzTools{visibility:hidden}
   .pgDesc i{font-family:"LM",Georgia,serif;font-style:italic}
   /* 2.1: the parent table (x | x | y | y | y) and the button that swaps it with the graphing table */
+  /* the parent tables (2.1, 2.2 Vertex Form): Demo and Sequence show only the columns the problem uses; Calculate starts with the parent and grows a column at a time with the + tabs */
+  .ptTable .ptHide{display:none!important}
+  @keyframes ptGrow{from{opacity:0;transform:scaleX(.15)}60%{opacity:1}to{opacity:1;transform:none}}
+  .ptTable .ptGrow{animation:ptGrow .4s ease-out;transform-origin:center}
+  .ptRow{display:flex;align-items:stretch;justify-content:center;gap:.35rem;width:100%}.ptRow>table{flex:0 1 auto;margin:0}
+  .ptAdd{flex:0 0 auto;width:1.8rem;border:1.5px dashed #9AA0A8;border-radius:7px;background:#fff;color:var(--plus);font:600 1.2rem system-ui,sans-serif;cursor:pointer;padding:0;line-height:1}
+  .ptAdd:hover,.ptAdd:focus-visible{background:#F3ECFA;border-color:#7A3FB5;outline:none}.ptAdd[hidden]{display:none}
   #ptTog[hidden]{display:none}.ptTable td.off{background:#F7F8FA}
   body.ptOn #pgTable,body.ptOn #pgDial{display:none!important}
   .ptWrap{display:flex;flex-direction:column;gap:.2rem}.ptWrap[hidden]{display:none}
@@ -5048,13 +5055,14 @@
     go(0);
   }
   function showWork() {
+    vfnPicNow();   // 2.2A: the graph and the table as they are now
     var c21 = c21On() && (!c2On() || grN());   // 2.1: its own record of the work (every exercise and mode)
     var list = c21 ? c21Show() : wf() || m3() ? works.filter(function (w) { return w.wf; }) : works.filter(function (w) { return w.steps.length >= 2; }), cur = c21 ? list[list.length - 1] : works[works.length - 1];
     if (!list.length) list = [{ steps: steps, label: "" }];
     var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
-      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + workHTML(w.steps) + "</div>"; }).join("");
-    var css = ".wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
+      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + workHTML(w.steps) + (w.pic ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + w.pic + "</section>" : "") + "</div>"; }).join("");
+    var css = ".wpic svg{max-width:100%;height:auto}.wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
     body = svHTML(body);
     var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;max-width:34rem;margin:2rem auto;padding:0 1rem}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#7A3FB5}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
     try { w = window.open("", "_blank"); } catch (e) {}
@@ -7133,7 +7141,7 @@ var ESPIC = {
   }
   function pqSetup() {
     closePt(); var fam = qFam();
-    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = []; PG.keep = []; PG.ptb = null; PG.ptl = {}; PT.ask = null; TB.askI = -1;
+    PG.tm = null; PG.tAns = null; PG.fam = fam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; PG.hv = null; PG.eqTxt = "f(x)="; PG.hist = []; PG.keep = []; PG.ptb = null; PG.ptl = {}; PG.pta = {}; PT.ask = null; TB.askI = -1;
     PG.show = { eq: false, table: false, graph: false, desc: true, parent: false }; PG.pdone = false; PG.dOK = false; PG.wsT = PG.wsG = false; $("pgDescTx").value = "";
     if (gd()) {
       var tr = QZ.tr[QZ.pi]; PG.h = tr.h; PG.k = tr.k; PG.a = tr.a || 1; PG.pa = [PG.h + 1, PG.k + PG.a]; PG.eqTxt = ""; PG.show = { eq: true, table: false, graph: false, desc: false, parent: false };
@@ -7776,7 +7784,7 @@ var ESPIC = {
   // the boxes of Calculate and Write
   function vfnFs() { var std = vfnStd(), w = vfnWr(); return (std ? (w ? ["xv"] : ["a", "b", "c", "xv"]) : ["h", "k"]).concat(["v", "ax", "m1a", "m1b", "m2a", "m2b"]); }
   function vfnSt() {
-    if (!QZ.vf || QZ.vf.pi !== QZ.pi) QZ.vf = { pi: QZ.pi, par: null, tool: null, stage: 0, mp: [], sel: null, pairs: [], pts: [], dls: [], dlp: null, hov: null, drag: null, w: { a: "", b: "", c: "", xv: "", h: "", k: "", v: "", ax: "", m1a: "", m1b: "", m2a: "", m2b: "" }, wok: {}, wbad: {}, tb: {}, tbok: {}, tbl: {}, gx: false, gy: {}, gt: {}, gs: {}, gok: false, aok: false, ok: false, hist: [] };
+    if (!QZ.vf || QZ.vf.pi !== QZ.pi) QZ.vf = { pi: QZ.pi, par: null, tool: null, stage: 0, mp: [], sel: null, pairs: [], pts: [], dls: [], dlp: null, hov: null, drag: null, w: { a: "", b: "", c: "", xv: "", h: "", k: "", v: "", ax: "", m1a: "", m1b: "", m2a: "", m2b: "" }, wok: {}, wbad: {}, tb: {}, tbok: {}, tbl: {}, tadd: {}, wtx: {}, wty: {}, gx: false, gy: {}, gt: {}, gs: {}, gok: false, aok: false, ok: false, hist: [] };
     return QZ.vf;
   }
   function vfnSid() { var s = vfnSt(); return s.ok || QZ.step >= 4 ? "" : vfnStg()[s.stage] || ""; }
@@ -7809,8 +7817,28 @@ var ESPIC = {
   }
   function vfnLine(t) { if (QZ.ww) QZ.ww.steps.push({ eqs: [t], cls: "cg" }); }
   function vfnBad(msg) { QZ.wrong++; pqMsg(msg); }
+  // Show work (2.2A, both exercises): a picture of the graph and the table as they are, kept with the problem's work (taken when it is finished, and again
+  // whenever Show work is opened while it is still going)
+  function vfnPic() {
+    var S = $("vfnSvg"), out = ""; if (!S) return "";
+    var g = S.cloneNode(true); g.removeAttribute("id"); g.setAttribute("width", "300"); g.setAttribute("height", "300"); g.setAttribute("style", "font:12px system-ui,sans-serif;border:1px solid #9AA0A8;background:#fff");
+    out += "<div class=\"wgr\">" + g.outerHTML + "</div>";
+    var tb = $("vfnTb"); if (tb) [].forEach.call(tb.querySelectorAll("input"), function (e) { e.setAttribute("value", e.value); });
+    if (tb && !tb.hidden) [].forEach.call(tb.querySelectorAll("table"), function (t0) {
+      var t = t0.cloneNode(true); t.removeAttribute("id"); t.removeAttribute("style");
+      [].forEach.call(t.querySelectorAll(".ptHide"), function (e) { e.remove(); });
+      [].forEach.call(t.querySelectorAll("col"), function (e) { e.remove(); });
+      [].forEach.call(t.querySelectorAll("input"), function (e) { var sp = document.createElement("span"); sp.textContent = e.getAttribute("value") || ""; e.replaceWith(sp); });
+      [].forEach.call(t.querySelectorAll("tr.ptLr"), function (r) { if (!r.textContent.trim()) r.remove(); });
+      [].forEach.call(t.querySelectorAll("td,th"), function (e) { var par = e.classList.contains("par"), off = e.classList.contains("off"); e.removeAttribute("class"); e.removeAttribute("id"); [].slice.call(e.attributes).forEach(function (a) { if (/^data-/.test(a.name)) e.removeAttribute(a.name); }); e.setAttribute("style", "border:1px solid #B8BCC2;padding:.2em .55em;text-align:center;min-width:1.8em" + (par ? ";background:#DDE1E8" : off ? ";background:#F7F8FA" : "")); });
+      t.setAttribute("style", "border-collapse:collapse;font:1rem LM,Georgia,serif"); t.removeAttribute("class");
+      out += "<div class=\"wtb\">" + t.outerHTML + "</div>";
+    });
+    return out;
+  }
+  function vfnPicNow() { try { var c = m3Cur(); if (pq() && act === "2.2" && lesson <= 2 && QZ.ww && c && c.vf && $("vfnSvg") && $("vfnSvg").getBoundingClientRect().width > 0) QZ.ww.pic = vfnPic(); } catch (e) { } }
   function vfnDone() {
-    var s = vfnSt(); s.ok = true; pqMsg("");
+    var s = vfnSt(); s.ok = true; pqMsg(""); if (!pgRun) setTimeout(vfnPicNow, 0);
     if (pgRun && pgPaused && !DN) { PG.demoFin = true; pgStop(); return; }
     if (!pgRun) drawPlay(); else vfnSync();
   }
@@ -7822,7 +7850,7 @@ var ESPIC = {
     var s = vfnSt(); if (QZ.step >= 4 || s.ok) return "";
     if (vfnWr()) return "Plot 5 points on the parabola and draw its axis of symmetry with the dotted line. Then fill in the boxes and press Submit.";
     if (mode === "calculate") {
-      if (!vfnStd()) return !vfnParOK(s) ? VFN_ASK.graph : "Fill in the parent table and the boxes.";
+      if (!vfnStd()) return !vfnParOK(s) ? VFN_ASK.graph : vfnCols().some(function (c) { return !(s.tadd || {})[c]; }) ? "Fill in the boxes, and grow the parent table: click the + on the left for a new x, on the right for a new y, one column for each change." : "Fill in the parent table and the boxes.";
       if (s.wok.xv && !s.gx) return VFN_ASK.drag;
       return "Fill in the boxes and the table, and graph the parabola with the parabola button.";
     }
@@ -7964,7 +7992,7 @@ var ESPIC = {
     if (enter && String(s.w[f]).trim()) { s.wbad[f] = true; vfnBad(VFN_WRONG[f] || "Not quite. Look at f(x) = a(x − h)² + k."); vfnOut(); }
   }
 
-  // ---- the tables (not in Write).  Vertex Form, Calculate: the parent table (as in 2.1): x | x | y | y | y, columns 2 and 3 the parent (x, x²), one new column
+  // ---- the tables.  Vertex Form, Calculate and Write: the parent table (as in 2.1): x | x | y | y | y, columns 2 and 3 the parent (x, x²), one new column
   // for each change of f (column 1 the new x, column 4 a·y, column 5 + k; with no stretch, + k uses column 4; trivial steps get none).
   // Standard Form: the graphing table x | f(x) | y: −b/(2a) dragged into it fills the x column around it, and the centre column holds each row's expression.
   var VFN_XS = [-2, -1, 0, 1, 2];
@@ -8023,8 +8051,20 @@ var ESPIC = {
   var vfnTbKey = "";
   function vfnTb() {
     var el = $("vfnTb"), s = vfnSt(), done = QZ.step >= 4, std = vfnStd();
-    if (vfnWr() || (!std && mode !== "calculate")) { el.hidden = true; el.innerHTML = ""; vfnTbKey = ""; return; }
+    if (!std && mode !== "calculate" && !vfnWr()) { el.hidden = true; el.innerHTML = ""; vfnTbKey = ""; return; }
     el.hidden = false;
+    if (std && vfnWr()) {   // Standard Form, Write: a graphing table where every x and y is typed (kept as typed, never marked, not needed to submit); the middle column shows f with the row's x put in
+      var kw = "w:" + QZ.pi + ":" + done;
+      if (vfnTbKey !== kw) {
+        vfnTbKey = kw; var hw = "<table class=\"pgTable vfnGt\" id=\"vfnTbl\" aria-label=\"Graphing table\"><colgroup><col style=\"width:16%\"><col><col style=\"width:16%\"></colgroup><thead><tr><th>x</th><th class=\"pgMid\"><i>f</i>(<i>x</i>)</th><th>y</th></tr></thead><tbody>";
+        VFN_XS.forEach(function (d0, r) { hw += "<tr><td><input class=\"qzCell\" data-vwx=\"" + r + "\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"x, row " + (r + 1) + "\"></td><td class=\"mid\" data-vwm=\"" + r + "\"></td><td><input class=\"qzCell\" data-vwy=\"" + r + "\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"y, row " + (r + 1) + "\"></td></tr>"; });
+        el.innerHTML = hw + "</tbody></table>";
+      }
+      var W = { x: s.wtx || (s.wtx = {}), y: s.wty || (s.wty = {}) };
+      [].forEach.call(el.querySelectorAll("[data-vwx],[data-vwy]"), function (e) { var r = e.dataset.vwx != null ? e.dataset.vwx : e.dataset.vwy, v = (e.dataset.vwx != null ? W.x : W.y)[r] || ""; if (document.activeElement !== e && e.value !== v) e.value = v; e.readOnly = done; });
+      [].forEach.call(el.querySelectorAll("[data-vwm]"), function (e) { var t = String(W.x[e.dataset.vwm] || "").trim(), x = t ? m3Num(t) : NaN, h2 = isFinite(x) ? vfnExpr(x) : ""; if (e.dataset.st !== h2) { e.dataset.st = h2; e.innerHTML = h2; } });
+      return;
+    }
     if (std) {
       var calc = mode === "calculate", key2 = "g:" + QZ.pi + ":" + mode + ":" + s.gx;
       if (vfnTbKey !== key2) {
@@ -8044,23 +8084,26 @@ var ESPIC = {
       [].forEach.call(el.querySelectorAll(".vfnDrop"), function (e) { e.classList.toggle("on", !!(s.chipDrag)); });
       return;
     }
-    var C = vfnCols(), key = QZ.pi + ":" + C.join(",");
+    var C = vfnCols(), TA = s.tadd || (s.tadd = {}), shw = function (c) { return c === 1 || c === 2 || !!TA[c]; }, SH = [0, 1, 2, 3, 4].filter(shw), key = QZ.pi + ":" + C.join(",") + ":" + SH.join(",") + ":" + done;
     if (vfnTbKey !== key) {
-      vfnTbKey = key; var off = function (c) { return c === 1 || c === 2 ? "" : C.indexOf(c) < 0 ? " off" : ""; };
-      var h = "<table class=\"pgTable ptTable vfnPt\" aria-label=\"Parent table\"><colgroup><col><col><col><col><col></colgroup><thead><tr class=\"ptLr\">";
+      // the parent columns first; the student grows the table outward a column at a time with the + tabs (x + h on the left; × a, then + k on the right)
+      var grow = vfnTbKey && vfnTbKey.split(":")[0] === String(QZ.pi) ? SH.filter(function (c) { return vfnTbKey.split(":")[2].split(",").indexOf(String(c)) < 0; })[0] : -1;
+      vfnTbKey = key; var off = function (c) { return (shw(c) ? "" : " ptHide") + (c === grow ? " ptGrow" : "") + (c === 1 || c === 2 ? "" : C.indexOf(c) < 0 ? " off" : ""); };
+      var addL = !done && !TA[0], addR = !done && (!TA[3] || !TA[4]);
+      var h = "<div class=\"ptRow\"><button type=\"button\" class=\"ptAdd\" data-vadd=\"L\" title=\"Add a column on the left (a new x)\" aria-label=\"Add a column on the left (a new x)\"" + (addL ? "" : " hidden") + ">+</button><table class=\"pgTable ptTable vfnPt\" aria-label=\"Parent table\" style=\"width:" + (SH.length * 20) + "%\"><colgroup>" + [0, 1, 2, 3, 4].map(function (c) { return "<col" + (shw(c) ? "" : " style=\"display:none\"") + ">"; }).join("") + "</colgroup><thead><tr class=\"ptLr\">";
       for (var c = 0; c < 5; c++) h += "<th class=\"" + off(c).trim() + "\">" + (C.indexOf(c) >= 0 ? "<input class=\"ptLin\" data-vtl=\"" + c + "\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"change\" aria-label=\"Label for column " + (c + 1) + "\">" : "") + "</th>";
-      h += "</tr><tr><th>x</th><th>x</th><th>y</th><th>y</th><th>y</th></tr></thead><tbody>";
+      h += "</tr><tr>" + ["x", "x", "y", "y", "y"].map(function (t, c) { return "<th class=\"" + off(c).trim() + "\">" + t + "</th>"; }).join("") + "</tr></thead><tbody>";
       VFN_XS.forEach(function (x, r) {
         h += "<tr>";
         for (var c2 = 0; c2 < 5; c2++) {
           if (c2 === 1) h += "<td class=\"par\">" + nf(x) + "</td>";
           else if (c2 === 2) h += "<td class=\"par\">" + nf(x * x) + "</td>";
-          else if (C.indexOf(c2) >= 0) h += "<td><input class=\"qzCell\" data-vtb=\"" + r + ":" + c2 + "\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Row " + (r + 1) + ", column " + (c2 + 1) + "\"></td>";
-          else h += "<td class=\"off\"></td>";
+          else if (C.indexOf(c2) >= 0) h += "<td class=\"" + off(c2).trim() + "\"><input class=\"qzCell\" data-vtb=\"" + r + ":" + c2 + "\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Row " + (r + 1) + ", column " + (c2 + 1) + "\"></td>";
+          else h += "<td class=\"" + off(c2).trim() + "\"></td>";
         }
         h += "</tr>";
       });
-      el.innerHTML = h + "</tbody></table>";
+      el.innerHTML = h + "</tbody></table><button type=\"button\" class=\"ptAdd\" data-vadd=\"R\" title=\"Add a column on the right (a new y)\" aria-label=\"Add a column on the right (a new y)\"" + (addR ? "" : " hidden") + ">+</button></div>";
     }
     [].forEach.call(el.querySelectorAll("[data-vtb]"), function (e) {
       var k = e.dataset.vtb, v = s.tb[k] || ""; if (document.activeElement !== e && e.value !== v) e.value = v;
@@ -8068,13 +8111,32 @@ var ESPIC = {
     });
     [].forEach.call(el.querySelectorAll("[data-vtl]"), function (e) { var v = s.tbl[e.dataset.vtl] || ""; if (document.activeElement !== e && e.value !== v) e.value = v; e.readOnly = done; });
   }
-  function vfnTbTyped(k, enter) {   // Vertex Form, Calculate: a parent-table cell
+  // Standard Form, Write: typing in the graphing table (Return moves down the column)
+  $("vfnTb").addEventListener("input", function (e) { var d0 = e.target.dataset; if (d0.vwx == null && d0.vwy == null) return; if (e.isTrusted) pgUser(); var s = vfnSt(); if (d0.vwx != null) s.wtx[d0.vwx] = e.target.value; else s.wty[d0.vwy] = e.target.value; vfnTb(); });
+  $("vfnTb").addEventListener("keydown", function (e) { var d0 = e.target.dataset; if (e.key !== "Enter" || (d0.vwx == null && d0.vwy == null)) return; e.preventDefault(); var x = d0.vwx != null, r = +(x ? d0.vwx : d0.vwy), n = document.querySelector("[data-" + (x ? "vwx" : "vwy") + "=\"" + ((r + 1) % VFN_XS.length) + "\"]"); if (n) n.focus(); });
+  function vfnAddNext(side) { var A = vfnSt().tadd || {}; return side === "L" ? (A[0] ? null : 0) : !A[3] ? 3 : !A[4] ? 4 : null; }
+  function vfnAddCol(side, quiet) {
+    var s = vfnSt(), c = vfnAddNext(side), p = vfnP(); if (c === null || QZ.step >= 4) return false;
+    if (vfnCols().indexOf(c) < 0) {
+      if (!quiet) { pqMsg(c === 0 ? "f doesn't move left or right, so the x-values don't change: no new x column is needed." : c === 3 ? "The y-values don't change, so no new y column is needed." : "Only one change happens to y, so one new y column is enough.", "note"); var b = document.querySelector("[data-vadd=\"" + side + "\"]"); if (b) ptShake(b); }
+      return false;
+    }
+    vfnPush(); (s.tadd || (s.tadd = {}))[c] = true; if (!quiet) pqMsg(""); vfnTb();
+    var e = document.querySelector("[data-vtb=\"0:" + c + "\"]"); if (e && !quiet && !pgRun) e.focus();
+    return true;
+  }
+  document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-vadd]"); if (!b) return; if (e.isTrusted) pgUser(); vfnAddCol(b.dataset.vadd); });
+  function vfnTbTyped(k, enter) {   // Vertex Form, Calculate and Write: a parent-table cell
+    if (vfnWr()) {   // Write: kept as typed, never marked (the table is the student's own work, and not needed to submit); Return moves down the column
+      if (enter) { var rc0 = k.split(":"), e0 = document.querySelector("[data-vtb=\"" + ((+rc0[0] + 1) % VFN_XS.length) + ":" + rc0[1] + "\"]"); if (e0) e0.focus(); }
+      return;
+    }
     var s = vfnSt(); if (QZ.step >= 4 || s.tbok[k]) return; s.wbad["t" + k] = false;
     var rc = k.split(":"), want = vfnTbAns(+rc[0], +rc[1]), v = m3Num(s.tb[k] || "");
     if (!isNaN(v) && Math.abs(v - want) < 1e-9) {
       vfnPush(); s.tbok[k] = true; pqMsg("");
       var r = +rc[0], q = vfnRowPt(r); if (q) vfnLine("(" + nf(q[0]) + ", " + nf(q[1]) + ") from x = " + nf(VFN_XS[r]));
-      var col = +rc[1], nx = null, best = 99; VFN_XS.forEach(function (x2, r2) { var z = r2 + ":" + col, dd = Math.abs(r2 - r); if (!s.tbok[z] && dd < best) { best = dd; nx = z; } }); if (!nx) nx = vfnTbCells().filter(function (z) { return !s.tbok[z]; })[0];   // (the nearest empty cell in the same column)
+      var col = +rc[1], nx = null, best = 99; VFN_XS.forEach(function (x2, r2) { var z = r2 + ":" + col, dd = Math.abs(r2 - r); if (!s.tbok[z] && dd < best) { best = dd; nx = z; } }); if (!nx) nx = vfnTbCells().filter(function (z) { return !s.tbok[z] && (s.tadd || {})[+z.split(":")[1]]; })[0];   // (the nearest empty cell in the same column)
       vfnAll(); if (nx && !pgRun) { var e = document.querySelector("[data-vtb=\"" + nx + "\"]"); if (e) e.focus(); }
       return;
     }
@@ -8333,6 +8395,7 @@ var ESPIC = {
       go(ctr(e), function () { typeKeys(e, function () { return s.w[f]; }, function (v) { s.w[f] = v; }, val, function () { vfnTyped(f, false); pgWait(900, n); }); });
     }; }
     function cell(k, val, say) { return function (n) {
+      var cc = +k.split(":")[1]; if (!(s.tadd || {})[cc]) { (s.tadd || (s.tadd = {}))[cc] = true; vfnTb(); }   // (the column is added first)
       cap(say); var e = document.querySelector("[data-vtb=\"" + k + "\"]"); if (!e) { n(); return; }
       go(ctr(e), function () { typeKeys(e, function () { return s.tb[k] || ""; }, function (v) { s.tb[k] = v; }, val, function () { vfnTbTyped(k, false); pgWait(500, n); }); });
     }; }
@@ -8710,6 +8773,7 @@ var ESPIC = {
       var tt = QZ.tr[QZ.pi], tool = QSHAPE[fam] === "line" ? "/" : QSHAPE[fam];
       if (!ok.parent) return n === 0 ? "Start with the parent: the simplest function in the " + QFAM[fam] + " family, f(x) = " + plain(qEqHTML(fam)) + ". Graph it with the " + tool + " tool." : fam === 0 ? "The parent is flat at y = 1." : fam === 1 ? "Use the / tool through (0, 0) and (1, 1)." : "Click the " + tool + " tool, then click the vertex, (0, 0).";
       if (!ok.graph) return n === 0 ? "g(x) is the parent translated " + gdWords(tt) + ". Graph it with the same tool." : fam === 0 ? "g(x) is flat at y = " + nf(1 + tt.k) + "." : fam === 1 ? "Use the / tool through (0, " + nf(tt.k) + ") and (1, " + nf(tt.k + (tt.a || 1)) + ")." : "Click the " + tool + " tool, then click the vertex, (" + nf(tt.h) + ", " + nf(tt.k) + ")." + (tt.a && tt.a !== 1 ? " Then drag a side point of the shape to set the stretch." : "");
+      if (!ok.table && ptOn() && mode === "calculate" && PTC.some(function (c) { return ptUse(c) && !ptShow(c); }) && n > 0) return "Each change gets a column of its own: click the + on the left for a new x (a move left or right), or on the right for a new y (a stretch, shrink or reflection, then a move up or down).";
       if (!ok.table && ptOn()) return n === 0 ? "Drag the parabola button or g(x) onto the parent table to fill in the parent columns. Then click each parent value to carry it across." : "The x of g is the parent x + h; the y of g is a times the parent y, plus k. Here h = " + nf(H()) + ", a = " + nf(A()) + " and k = " + nf(K()) + ".";
       if (!ok.table) return n === 0 ? "Drag g(x) onto a center cell of the table. Then click each calculation to simplify it, or type the y-value yourself." : "Put each x-value into g(x) = " + plain(rhsHTML()) + " to get its y-value.";
       if (gdTyped()) return "Type the description in the box: the translation with arrows and numbers, then any stretch, shrink or reflection.";
@@ -9241,6 +9305,32 @@ var ESPIC = {
   function ptApply(v, op) { return op.t === "a" ? op.v * v : v + op.v; }
   // is this column part of this problem's table?
   function ptUse(c) { var n = ptYOps(A(), K()).length; return c === "px" || c === "py" ? true : c === "gx" ? H() !== 0 : c === "sy" ? n >= 1 : n >= 2; }
+  // which columns show: Demo and Sequence, only the ones this problem uses; Calculate, the parent columns and the ones the student has added with the + tabs
+  // (outward from the parent: x + h on the left; on the right the first change to y, then the second); Write and Create, all five as before
+  function ptVisMode() { return mode === "demo" || mode === "sequence" ? "use" : mode === "calculate" ? "add" : "all"; }
+  function ptShow(c) { var m = ptVisMode(); if (m === "all" || c === "px" || c === "py") return true; if (m === "use") return ptUse(c); return !!(PG.pta && PG.pta[c]); }
+  function ptAddNext(side) { var a = PG.pta || {}; if (side === "L") return a.gx ? null : "gx"; return !a.sy ? "sy" : !a.gy ? "gy" : null; }
+  function ptAddCol(side, quiet) {
+    var c = ptAddNext(side); if (!c) return false;
+    if (!ptUse(c)) {
+      if (!quiet) { pqMsg(c === "gx" ? "g doesn't move left or right, so the x-values don't change: no new x column is needed." : c === "sy" ? "The y-values don't change in this transformation, so no new y column is needed." : "Only one change happens to y, so one new y column is enough.", "note"); ptShake($(side === "L" ? "ptAddL" : "ptAddR")); }
+      return false;
+    }
+    (PG.pta || (PG.pta = {}))[c] = true; PT.grow = c; if (!quiet) pqMsg(""); drawPlay(); return true;
+  }
+  function ptCols() {
+    var T = $("ptTable"); if (!T) return; var vis = PTC.filter(ptShow), add = ptVisMode() === "add" && QZ.step < 4;
+    [].forEach.call(T.querySelectorAll("tr"), function (tr) { [].forEach.call(tr.children, function (cell, j) { var c = PTC[j]; cell.classList.toggle("ptHide", !ptShow(c)); cell.classList.toggle("ptGrow", PT.grow === c); }); });
+    [].forEach.call(T.querySelectorAll("col"), function (col, j) { col.style.display = ptShow(PTC[j]) ? "" : "none"; });
+    T.style.width = vis.length < 5 ? (vis.length * 20) + "%" : "";   // the table grows outward from the parent
+    if (!$("ptAddL")) {
+      var row = document.createElement("div"); row.className = "ptRow"; T.parentNode.insertBefore(row, T);
+      var mk = function (id, side) { var b = document.createElement("button"); b.type = "button"; b.className = "ptAdd"; b.id = id; b.textContent = "+"; b.title = side === "L" ? "Add a column on the left (a new x)" : "Add a column on the right (a new y)"; b.setAttribute("aria-label", b.title); b.addEventListener("click", function (e) { if (e.isTrusted) pgUser(); ptAddCol(side); }); return b; };
+      row.appendChild(mk("ptAddL", "L")); row.appendChild(T); row.appendChild(mk("ptAddR", "R"));
+    }
+    $("ptAddL").hidden = !add || !ptAddNext("L"); $("ptAddR").hidden = !add || !ptAddNext("R");
+    PT.grow = null;
+  }
   function ptYKey() { var n = ptYOps(A(), K()).length; return n === 0 ? "py" : n === 1 ? "sy" : "gy"; }   // the column that holds g's y
   // the right value of a cell (null while the row has no parent x)
   function ptRight(r, c) {
@@ -9303,7 +9393,7 @@ var ESPIC = {
       if (L.ok) return "<th class=\"ptLc ok\" data-lc=\"" + c + "\"><span class=\"ptLv" + (PT.lpop === c ? " absorb" : "") + "\">" + ptLabText(c) + "</span></th>";
       return "<th class=\"ptLc\" data-lc=\"" + c + "\"><input class=\"ptLin\" data-lc=\"" + c + "\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"label\" aria-label=\"Label the column with its change\" value=\"" + String(L.txt || "").replace(/"/g, "") + "\"></th>";
     }).join("");
-    PT.lpop = null;
+    PT.lpop = null; ptCols();
     if (fc) { var el = row.querySelector("input[data-lc=\"" + fc + "\"]"); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   }
   function ptLabSet(c) { var L = ptLab(c); L.ok = true; L.txt = ""; PT.lpop = c; pqMsg(""); drawPlay(); }
@@ -9377,11 +9467,11 @@ var ESPIC = {
     var T0 = $("ptTable"), fa = document.activeElement, fi = null, T = ptTr();
     if (fa && T0.contains(fa) && fa.dataset && fa.dataset.c) fi = [+fa.dataset.r, fa.dataset.c];
     T0.querySelector("tbody").innerHTML = ptRows().map(function (r, i) { return "<tr data-r=\"" + i + "\"" + (ptRowDone(r) ? " class=\"rdone\"" : "") + ">" + PTC.map(function (c) { return ptCellHTML(r, i, c, T); }).join("") + "</tr>"; }).join("");
-    PT.pop = null; PT.popAll = false; ptOpsDraw();
+    PT.pop = null; PT.popAll = false; ptOpsDraw(); ptCols();
     if (fi && !ptFocus(fi[0], fi[1], true)) ptFocusNext(fi[0], fi[1]);
   }
   function ptFocus(i, c, keep) {
-    var td = ptTd(i, c), el = td && td.querySelector("input"); if (!el) return false;
+    var td = ptTd(i, c), el = td && td.querySelector("input"); if (!el || !ptShow(c)) return false;
     el.focus(); if (keep) el.setSelectionRange(el.value.length, el.value.length); else el.select(); return true;
   }
   // the nearest empty cell in the same column (below first when two are as near)
@@ -9448,6 +9538,10 @@ var ESPIC = {
     var T = ptTr(), td = ptTd(i, c);
     if (!T) { QZ.wrong++; ptShake(td); pqMsg("Type the transformation in the box first: it tells each value where to go."); return true; }
     if (ptLabReq() && !ptLabDone(to)) { ptShake(ptLabCell(to)); QZ.wrong++; pqMsg("Label that column first: drag its change from the description onto the box above the column, or type it there."); return true; }
+    if (!ptShow(to)) {
+      if (!demo) { ptShake($(to === "gx" ? "ptAddL" : "ptAddR")); pqMsg("Add a column for this change first: click the + on the " + (to === "gx" ? "left" : "right") + " of the table.", "note"); return true; }
+      PG.pta[to] = true; PT.grow = to; drawPlay();   // ("Demo next step" adds it itself)
+    }
     var st = ptStep(r, to, T);
     if (!st || Math.abs(st.want - ptRight(r, to)) > 1e-9) { QZ.wrong++; ptShake(td); pqMsg("That doesn't match g(x). Check the transformation in the box."); return true; }
     if (mode === "calculate" && !demo) { ptAsk(i, to, st.expr); return true; }
@@ -12730,7 +12824,7 @@ var ESPIC = {
     var ONE = pgOne; pgOne = null;
     closePt(); var run = ++pgRun; PG.demoFin = false; Object.keys(GPS).forEach(function (k) { if (k.split("|").indexOf("demo") >= 0) delete GPS[k]; }); if (!ONE) zoomHome(true); theme(); pgShift = 0; if (!ONE) dmUI("playing");
     var PQ = pq(), pqFam = PQ ? qFam() : 0;
-    if (!ONE) { PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = []; PG.ptb = null; PG.ptl = {}; PG.ptOn = false; PT.ask = null; PT.busy = false; }
+    if (!ONE) { PG.tm = null; PG.tAns = null; PG.fam = pqFam; PG.a = 1; PG.pa = [1, 1]; PG.h = 0; PG.k = 0; PG.pts = []; PG.sp = []; PG.tbl = null; PG.drows = null; PG.subd = false; PG.mfill = false; PG.off = 0; PG.shape = null; PG.tool = null; PG.clk = []; TB.targets = []; PG.ptb = null; PG.ptl = {}; PG.pta = {}; PG.ptOn = false; PT.ask = null; PT.busy = false; }
     var GD = PQ && gd();   // Graph & Describe: g(x) is already given, and the description is left for the hand to make
     if (PQ && wf() && !ONE) wfPG();
     if (PQ && m3() && !ONE) m3PG();
@@ -13216,6 +13310,7 @@ var ESPIC = {
       };
       // the hand types a value into a cell of the parent table
       var ptTypeD = function (i, c, text, then) {
+        if (!ptShow(c)) { (PG.pta || (PG.pta = {}))[c] = true; PT.grow = c; drawPlay(); }   // (Calculate: the demo adds the column it needs)
         var inp = function () { var td = PTD(i, c); return td && td.querySelector("input"); }, e0 = inp(); if (!e0) { then(); return; }
         var r0 = e0.getBoundingClientRect(); handGo({ x: r0.right - 12, y: r0.top + r0.height / 2 }, 600);
         pgWait(750, function () {
