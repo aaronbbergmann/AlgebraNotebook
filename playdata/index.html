@@ -815,7 +815,7 @@
         <div class="gwnW" id="gwnW" role="group" aria-label="Write a, h, k, the vertex and g(x)">
           <div class="gwnR"><label><i>a</i> =<input id="gwnWa" data-f="a" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="a"></label><label><i>h</i> =<input id="gwnWh" data-f="h" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="h"></label><label><i>k</i> =<input id="gwnWk" data-f="k" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="k"></label></div>
           <div class="gwnR"><label>Vertex<input id="gwnWv" class="wide" data-f="v" autocomplete="off" spellcheck="false" placeholder="Ex (3,-2)" aria-label="Vertex"></label></div>
-          <div class="gwnR"><label><span class="lm"><i>g</i>(<i>x</i>) =</span><input id="gwnWe" class="wide" data-f="e" autocomplete="off" spellcheck="false" aria-label="g(x)" style="width:14rem"></label><span class="gwnKeys" id="gwnKeys"><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^2" aria-label="Insert ^2 (squared)">^2</button></span></div>
+          <div class="gwnR"><label><span class="lm"><i>g</i>(<i>x</i>) =</span><input id="gwnWe" class="wide" data-f="e" autocomplete="off" spellcheck="false" aria-label="g(x)" style="width:14rem"></label><span class="gwnKeys" id="gwnKeys"><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="x²" aria-label="Insert x squared"><i>x</i>²</button></span></div>
         </div>
         <div class="gwnOut" id="gwnOut" aria-live="polite"></div>
       </div>
@@ -831,7 +831,7 @@
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
         <div class="row" style="flex-wrap:nowrap"><input id="crIn" autocomplete="off" aria-label="Equation"></div>
-        <div class="crKeys" id="crKeys" role="group" aria-label="Equation keys"><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^2" aria-label="Insert ^2 (squared)">^2</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" class="eqGo" id="crAdd">Submit</button></div>
+        <div class="crKeys" id="crKeys" role="group" aria-label="Equation keys"><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="x²" aria-label="Insert x squared"><i>x</i>²</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" class="eqGo" id="crAdd">Submit</button></div>
         <div class="err" id="crErr"></div>
       </section>
       <section class="panel modePick" id="modePick" hidden aria-label="Choose a mode"></section>
@@ -863,7 +863,7 @@
       <button class="btn" id="show">Show work</button></div></div>
     <section class="wfSteps" id="wfSteps" hidden aria-live="polite"></section>
     <section class="qz" id="qz" hidden aria-live="polite"><div class="qzT" id="qzT"></div><div id="qzIn"></div><div class="err" id="qzErr"></div><div class="qzRow"><button class="btn" id="qzGo">Check</button><button class="btn" id="qzNext" hidden>Next</button><button class="link" id="qzAgain" hidden>Another round</button></div></section>
-    <div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div><div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="^2" aria-label="Insert ^2 (squared)">^2</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
+    <div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div><div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="x²" aria-label="Insert x squared"><i>x</i>²</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
     <div class="composer" id="ask" hidden>
       <div id="askT" style="font-weight:600"></div>
       <div class="err" id="askErr"></div>
@@ -887,6 +887,18 @@
 
 <script>
   var $ = function (id) { return document.getElementById(id); };
+  // squares show as x² in every text box: typing ^2 turns into ² at once (and ^3 into ³), while the code reading a box still sees x^2
+  (function () {
+    var d = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value"), tx = function (el) { var t = el.getAttribute("type"); return !t || t === "text" || t === "search"; };
+    var up = function (v) { return v.replace(/\^2(?![0-9])/g, "\u00b2").replace(/\^3(?![0-9])/g, "\u00b3"); };
+    Object.defineProperty(HTMLInputElement.prototype, "value", { configurable: true, enumerable: true,
+      get: function () { var v = d.get.call(this); return tx(this) && v ? v.replace(/\u00b2/g, "^2").replace(/\u00b3/g, "^3") : v; },
+      set: function (v) { d.set.call(this, tx(this) && typeof v === "string" ? up(v) : v); } });
+    document.addEventListener("input", function (e) {
+      var el = e.target; if (!(el instanceof HTMLInputElement) || !tx(el)) return; var raw = d.get.call(el); if (!/\^[23](?![0-9])/.test(raw)) return;
+      var c = el.selectionStart == null ? raw.length : el.selectionStart, a = up(raw.slice(0, c)), b = up(raw.slice(c)); d.set.call(el, a + b); try { el.setSelectionRange(a.length, a.length); } catch (er) {}
+    }, true);
+  })();
   var logEl = $("log");
   var orig = [], ws = [], rows = [], orows = [], srows = [], sys = [], sysV = [], elim = "", elimInfo = null;
   var counted = false, introV = false, explainOn = false, lastExp = "", up = null, prog = {}, handEl = null;
@@ -1121,7 +1133,7 @@
   function eqName(i, n) { return n <= 1 ? "equation" : (n === 2 ? (i ? "bottom" : "top") : i === 0 ? "top" : i === n - 1 ? "bottom" : "middle") + " equation"; }
   function say(t, cls) {
     var d = document.createElement("div");
-    d.className = "msg" + (cls ? " " + cls : ""); d.textContent = t;
+    d.className = "msg" + (cls ? " " + cls : ""); d.textContent = sqTxt(t);
     logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight;
     return d;
   }
@@ -1480,7 +1492,7 @@
     if (o < 0) {
       r = litRat(p, false); if (typeof r === "string") return r; if (!isOneP(r.D)) return "Dividing by a sum isn't supported here.";
       if (!r.N.length) return { k: "c", n: mk(0) };
-      var u = r.N[0], e = u.s[vk] || 0; if (e !== 0 && e !== 1 && e !== 2) return "The " + vk + " can be to the first or second power here, like ax^2 + bx + c.";
+      var u = r.N[0], e = u.s[vk] || 0; if (e !== 0 && e !== 1 && e !== 2) return "The " + vk + " can be to the first or second power here, like ax² + bx + c.";
       var s2 = {}; Object.keys(u.s).forEach(function (l) { if (l !== vk) s2[l] = u.s[l]; });
       var t = e >= 1 ? { k: "x", v: e === 2 ? vk + "^2" : vk, n: mul(u.n, mk(sgn)) } : { k: "c", n: mul(u.n, mk(sgn)) }; if (sSig(s2)) t.s = s2; return t;
     }
@@ -3593,7 +3605,7 @@
         mn.className = "bad"; mn.textContent = "Not quite. Check your work and try again."; return;
       }
     }
-    if (EXP.qf) { var mq = $("exMsg"), tq = $("exSoloIn").value.replace(/^\s*x\s*=/i, ""); if (!qfSame(tq, "(-b\u00b1\u221a(b^2-4ac))/(2a)")) { mq.className = "bad"; mq.textContent = "Not quite. Type the formula, like (-b +- sqrt(b^2-4ac))/(2a)."; return; } EXP.qf.k = QFS.length - 1; $("exSolo").hidden = true; qfEnd(); return; }
+    if (EXP.qf) { var mq = $("exMsg"), tq = $("exSoloIn").value.replace(/^\s*x\s*=/i, ""); if (!qfSame(tq, "(-b\u00b1\u221a(b^2-4ac))/(2a)")) { mq.className = "bad"; mq.textContent = "Not quite. Type the formula, like (-b +- sqrt(b²-4ac))/(2a)."; return; } EXP.qf.k = QFS.length - 1; $("exSolo").hidden = true; qfEnd(); return; }
     var sgW = !EXP.zpq && !EXP.grq && !EXP.sq && !EXP.av && (EXP.qd ? qdRoots(EXP.orig.L, EXP.orig.R) : sqgRoots(EXP.orig.L, EXP.orig.R));
     if (EXP.zpq || EXP.grq || EXP.sq || EXP.av || sgW) {   // the answers are a set: "3, -2", "x = 3 or x = -2"
       var mz = $("exMsg"), g0 = EXP.grq || EXP.sq || EXP.av || sgW ? null : zpOf(EXP.orig.L, EXP.orig.R), vz = EXP.vk || "x", want = sgW ? sgW : EXP.av ? avRoots(EXP.orig.L, EXP.orig.R) : EXP.grq ? (grAny(EXP.orig.L) ? grRoots(grAny(EXP.orig.L)) : fmRoots(fmFits(EXP.orig.L))) : EXP.sq ? (function () { var sv = sqVal(EXP.orig.L, EXP.orig.R); if (sv.q.n < 0) return []; return sv.q.n ? [rootT(mk(0), mk(1), sv.q, 1), rootT(mk(0), mk(1), sv.q, -1)] : [mk(0)]; })() : zpRoots(g0, vz), tz = $("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, ""), parts = tz.split(/,|;|or|and/).filter(function (u) { return u; }), got = []; ansTouched = true;
@@ -3780,7 +3792,7 @@
       return;
     }
     if (vs.length === 1 && vs[0] === "x^2") {   // x^2 = 9, 3x^2 - 12 = 0: the exponent is dragged across the = (a square root)
-      if (rel !== "=") { err.textContent = "Use an equals sign with x^2, like x^2 = 9."; return; }
+      if (rel !== "=") { err.textContent = "Use an equals sign with x², like x² = 9."; return; }
       var sv = sqVal(L, R); if (!sv) { err.textContent = "The x^2 terms cancel each other. Type an equation that can be solved for x."; return; }
 
       EXP = { eq: true, sq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x", zpq: false, zp: null };
@@ -3788,7 +3800,7 @@
       $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
       return;
     }
-    if (vs.length > 1 || /[\^]/.test(s.replace(/\)\^2/g, ")")) || vs.some(function (v) { return /\^/.test(v); })) { err.textContent = "Use one variable, to the first power, like 3x=x+2 (or x^2 = 9)."; return; }
+    if (vs.length > 1 || /[\^]/.test(s.replace(/\)\^2/g, ")")) || vs.some(function (v) { return /\^/.test(v); })) { err.textContent = "Use one variable, to the first power, like 3x=x+2 (or x² = 9)."; return; }
     var keep = EXP; EXP = { eq: true, L: L, R: R, rel: rel, ask: null }; var k = eqKind();
     if (k) { EXP = keep; err.textContent = "That one is already solved. Type an equation that still needs work."; return; }
     EXP = { eq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: rel }, L: L, R: R, rel: rel, ask: null, vk: vs[0], zpq: !!zq, zp: null, dvq: !!(rel === "=" && dvOK(L, R)) };
@@ -3804,7 +3816,7 @@
       var pl = litParts(L, null), pr = litParts(R, null);
       if (!pl.X.length && !pr.X.length) { err.textContent = "Use x as the letter to solve for, like ax = b."; return; }
       var ls = litSolution(L, R); if (ls.kind !== "one") { err.textContent = "The x terms cancel each other. Type an equation that can be solved for x."; return; }
-    } else if (L.concat(R).some(function (t) { return t.k === "g"; })) { err.textContent = "With x^2 and letters, type the terms without parentheses, like ax^2 + bx + c = 0."; return; }
+    } else if (L.concat(R).some(function (t) { return t.k === "g"; })) { err.textContent = "With x² and letters, type the terms without parentheses, like ax² + bx + c = 0."; return; }
     var keep = EXP; EXP = { eq: true, lit: true, L: L, R: R, rel: "=", ask: null }; var k = eqKind();
     if (k) { EXP = keep; err.textContent = "That one is already solved. Type an equation that still needs work."; return; }
     EXP = { eq: true, lit: true, quad: quad, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x" };
@@ -5075,7 +5087,7 @@
     }
     return out.join("");
   }
-  function wkMath(e) { return String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&(?:amp|lt|gt);|[a-z]/g, function (m) { return m.length > 1 ? m : "<i>" + m + "</i>"; }).replace(/\^(\d)/g, "<sup>$1</sup>"); }
+  function wkMath(e) { return String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&(?:amp|lt|gt);|[a-z]/g, function (m) { return m.length > 1 ? m : "<i>" + m + "</i>"; }).replace(/\^2(?![0-9])/g, "\u00b2").replace(/\^3(?![0-9])/g, "\u00b3").replace(/\^(\d)/g, "<sup>$1</sup>"); }
   function wkBoxHTML(b) {   // the grouping box (row factors on the left, column factors on top) or the formula panel, drawn small in Show work
     var td = "border:1.5px solid #1B2433;padding:.35em .7em;text-align:center;min-width:3.5em", fc = "padding:.35em .7em;text-align:center";
     if (b.fm) return "<div class=\"r\" style=\"padding:.4rem 0\"><span class=\"m\"></span><table style=\"border-collapse:collapse;font-size:.85em\"><tr><td style=\"" + fc + "\">A\u00b2</td><td style=\"" + td + "\">" + wkMath(b.A2) + "</td><td style=\"" + fc + "\">B\u00b2</td><td style=\"" + td + "\">" + wkMath(b.B2) + "</td></tr><tr><td style=\"" + fc + "\">A</td><td style=\"" + td + "\">" + wkMath(b.A) + "</td><td style=\"" + fc + "\">B</td><td style=\"" + td + "\">" + wkMath(b.B) + "</td></tr></table><span style=\"align-self:center;font-size:.8em;margin-left:.6em\">" + (b.fm === "pst" ? "A\u00b2 \u00b1 2AB + B\u00b2 = (A \u00b1 B)\u00b2" : "A\u00b2 \u2212 B\u00b2 = (A + B)(A \u2212 B)") + "</span></div>";
@@ -5572,7 +5584,8 @@
     easyUpd();
     if (st === "idle") { dmCap(""); if (typeof DG !== "undefined" && DG) DG.go = false; }   // a new demo waits for its button again
   }
-  function dmCap(t) { var c = $("stCap"); if (c) c.textContent = t || ""; dmHead(); }
+  function sqTxt(t) { return t == null ? t : String(t).replace(/\^2(?![0-9])/g, "\u00b2").replace(/\^3(?![0-9])/g, "\u00b3"); }   // x^2 is written x² wherever words are shown
+  function dmCap(t) { var c = $("stCap"); if (c) c.textContent = sqTxt(t) || ""; dmHead(); }
   function dmTitle(t) { var c = $("stT"); if (t === "Solve" && BUILT[act] && BUILT[act].solver) t = svTitle(); if (c) c.textContent = t || ""; dmHead(); }
   function dmHead() {
     var h = $("stHead"); if (!h) return;
@@ -6130,6 +6143,7 @@
 
   $("lesson").addEventListener("change", function () { msSave(); if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; wfCustom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
   $("crAdd").addEventListener("click", crAdd);
+  ["askT", "askErr", "exMsg", "pgQmsg", "crErr", "stCap"].forEach(function (id) { var a = $(id); if (!a) return; new MutationObserver(function () { if (a.children.length) return; var t = a.textContent, u = sqTxt(t); if (u !== t) a.textContent = u; }).observe(a, { childList: true, characterData: true, subtree: true }); });   // prompts and messages write x², not x^2
   $("crKeys").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the box
   $("crKeys").addEventListener("click", function (e) {   // x, ^2 and | type into the Create box, where the cursor is
     var b = e.target.closest("button[data-ins]"), el = $("crIn"); if (!b) return;
@@ -10113,7 +10127,7 @@ var ESPIC = {
   }
   // can the typed function be graphed here?  A constant, a line, a|x - h| + k or a(x - h)^2 + k, with a in quarters and h, k whole numbers inside the window.
   // Returns {fam, a, h, k} (the same numbers the green and purple points set) or {err}
-  var EQ_NO = "I can't graph that here. Try a constant, a line, an absolute value like 2|x \u2212 3| + 1, or a parabola like \u2212(x + 2)^2 + 4.";
+  var EQ_NO = "I can't graph that here. Try a constant, a line, an absolute value like 2|x \u2212 3| + 1, or a parabola like \u2212(x + 2)² + 4.";
   function eqFit(t) {
     var f = eqFn(t); if (!f) return { err: EQ_NO };
     var v = function (x) { try { return f(x); } catch (e) { return NaN; } }, x;
@@ -10174,7 +10188,7 @@ var ESPIC = {
   // Graph & Describe, Create: the typed function becomes the problem
   function gdCreateAdopt(t) {
     var r = eqFit(t); if (r.err) { eqMsg(r.err); eqShake(); return; }
-    if (gd2() && r.fam !== 3) { eqMsg("Type a quadratic function, like 2(x \u2212 3)^2 + 1."); eqShake(); return; }
+    if (gd2() && r.fam !== 3) { eqMsg("Type a quadratic function, like 2(x \u2212 3)² + 1."); eqShake(); return; }
     if (r.fam === 0 ? r.k === 0 : r.a === 1 && !r.h && !r.k) { eqMsg("That is the parent function itself. Try one with a transformation."); eqShake(); return; }
     gdCustom = { fam: r.fam, h: r.h, k: r.k, a: r.a }; QZ.pick = true; eqMsg(""); pqPanel();   // the function is in: now the student chooses the mode to work on it in
   }
@@ -10957,7 +10971,7 @@ var ESPIC = {
       PG.fam = 1; PG.a = a5; PG.h = 0; PG.k = 0; PG.show.eq = true; PG.eqTxt = ""; pqMsg(""); drawPlay(); pqPanel(); return;
     }
     var r = eqFit(t);
-    if (wfQd()) { if (r.err || r.fam !== 3) { pqMsg("Type a parabola like x^2 or (x − 2)^2 + 1."); eqShake(); return; } }
+    if (wfQd()) { if (r.err || r.fam !== 3) { pqMsg("Type a parabola like x² or (x − 2)² + 1."); eqShake(); return; } }
     else if (r.err || r.fam === 0 || r.fam === 3 || (r.fam === 1 && !r.a)) { pqMsg("Type a line like 2x + 1 or an absolute value like |x − 2| + 1."); eqShake(); return; }
     QZ.wfp = [wfG({ fam: r.fam, fa: r.a, fh: r.fam >= 2 ? r.h : 0, fk: r.k, dh: 0, dk: 0 })]; QZ.cs = "move"; QZ.pi = 0; QZ.cc = []; QZ.cm = "";
     PG.fam = r.fam; PG.a = r.a; PG.h = r.fam >= 2 ? r.h : 0; PG.k = r.k; PG.show.eq = true; PG.eqTxt = ""; pqMsg("");
@@ -13154,7 +13168,7 @@ var ESPIC = {
         (function go(i) {
           if (pgRun !== run) return;
           if (i >= parts.length) { pgWait(900, function () { el.blur(); then(); }); return; }
-          var part = parts[i], base = el.value, kb = /^(x|\^2|\|)$/.test(part) ? document.querySelector("#eqKeys [data-ins=\"" + part + "\"]") : null;
+          var part = parts[i], base = el.value, kb = /^(x|x²|\|)$/.test(part) ? document.querySelector("#eqKeys [data-ins=\"" + part + "\"]") : null;
           if (kb) { handGo(ctr(kb), 600); pgWait(900, function () { handTap(); kb.classList.add("simPress"); pgWait(180, function () { kb.classList.remove("simPress"); el.focus(); el.setSelectionRange(el.value.length, el.value.length); kb.click(); pgWait(700, function () { go(i + 1); }); }); }); return; }
           (function put(c) { if (c > part.length) { go(i + 1); return; } el.value = base + part.slice(0, c); el.dispatchEvent(new Event("input", { bubbles: true })); pgWait(110, function () { put(c + 1); }); })(1);
         })(0);
@@ -13272,7 +13286,7 @@ var ESPIC = {
       function (n) { cap("Now click the parabola button and click the vertex, (" + DH + ", " + DK + ")."); clickTool("U", [DH, DK], null, n); },
       function (n) { cap("Drag its side point to set the stretch of " + DA + "."); stretch(DA, n, 1); },
       function (n) { cap("Now reveal the graph: the parabola and every point are right, so they get a check."); tap(tog("graph"), function () { pgWait(2300, n); }); },
-      function (n) { cap("While you type, the x, ^2 and | | buttons under the box enter those symbols for you."); tap($("pgEq"), function () { typeKeys(["g(x) = ", "x", "^2", " - 3"], function () { eqEnter(); pgWait(1400, n); }); }); },
+      function (n) { cap("While you type, the x, x² and | | buttons under the box enter those symbols for you."); tap($("pgEq"), function () { typeKeys(["g(x) = ", "x²", " - 3"], function () { eqEnter(); pgWait(1400, n); }); }); },
       function (n) { cap("Click the equation to type a function of your own."); tap($("pgEq"), function () { typeEq("g(x) = -|x+2|+4", function () { eqEnter(); pgWait(1200, n); }); }); },
       function (n) { cap("The family changed to absolute value, and the green and purple points moved to match."); pgWait(3200, n); },
       function (n) { zoomDemo(function () { rectDemo(n); }); },
