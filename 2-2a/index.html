@@ -132,6 +132,7 @@
   .fr>span:last-child{padding:.04em .12em 0}
   .exBox{display:flex;flex-direction:column;align-items:center;gap:1rem;margin:1rem auto;width:fit-content;max-width:100%;padding:.4em .8em;border-radius:.4em;background:color-mix(in srgb,var(--ink) 7%,var(--bg))}
   .exBox[hidden]{display:none}
+  .exG:has(> .pBig) > .exPw{position:relative;top:-.75em}   /* the exponent rides up with parentheses grown to hold a fraction */
   .pBig{display:inline-block;font-size:2em;line-height:1;vertical-align:-.2em;transform:scaleX(.6);margin:0 -.08em;font-weight:300}
   body.solver .exBox,body.solver .eqn{background:none!important;box-shadow:none!important}   /* Play Solve: no grey rectangle around the equation */
   .exLc{display:inline-block;padding:0 .18em;margin:0 .05em;border-radius:6px;cursor:pointer;transition:transform .2s}.exLc:hover{transform:scale(1.4)}   /* the ⋅ looks like any other sign; it only grows under the pointer */
@@ -2102,7 +2103,12 @@
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
       var mEl = el.querySelector(":scope > .exM") || exSignOf(el);
       if (mEl) mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, mEl, function () { note("Drag the number up or down and it disappears: it can never be 0."); }, function () {}, "zp:", null, function (t, ev) { if (out(ev)) zpDropM(idx); }); });
-      var pwZ = el.querySelector(".exPw"); if (pwZ) { pwZ.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); pwZ.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqPw(el.dataset.s || "L", +el.dataset.i, false); }); }
+      var pwZ = el.querySelector(".exPw"); if (pwZ) {   // click: write it as a product; drag across the =: take the square root of both sides, (x - 3/5)² = 0 becomes x - 3/5 = 0
+        var zS = el.dataset.s || "L", zI = +el.dataset.i;
+        pwZ.classList.add("exExp"); pwZ._eqEl = R.querySelector(".exEq");
+        pwZ._cross = function (on) { if (on) pwZ.style.width = pwZ.getBoundingClientRect().width + "px"; else pwZ.style.width = ""; pwZ.textContent = on ? "\u00b1\u221a" : "2"; pwZ.classList.toggle("exSqrt", on); };
+        pwZ.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, pwZ, function () { if (idx >= 0) zpFocus(idx); eqPw(zS, zI, false); }, function () { if (!sqgOf(EXP.L, EXP.R)) return; var z0 = EXP.zpq; EXP.zpq = false; var h0 = hist.length; eqRootG(zS, zI); if (hist.length === h0) EXP.zpq = z0; }, ["et:", "eq="]); });
+      }
       [".exG", ".exH", ".exJ"].forEach(function (sel, fi) {
         var pe = el.querySelector(":scope > " + sel); if (!pe) return; pe.dataset.drop = "zpf:" + fi;
         pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, pe, function () { note("Drag this factor up or down: if two numbers multiply to make 0, one of them has to be 0."); }, function (t2) { var f2 = (t2.dataset.drop || "").split(":"); if (f2[0] === "zpf" && +f2[1] !== fi && t2.closest(".exT") === el && zpSquare(EXP[el.dataset.s || "L"][+el.dataset.i])) eqPw(el.dataset.s || "L", +el.dataset.i, true); }, ["zp:", "zpf:"], null, function (t, ev) { var o = out(ev); if (o) zpSplit(fi, o === 1, idx); }); });
