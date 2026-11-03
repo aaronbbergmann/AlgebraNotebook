@@ -2827,9 +2827,10 @@
     }, ms);
   }
   function grWire(R) {   // an equation to factor: any term of the left side can be dragged down into the square
+    eqOpWire(R, -1);   // like terms can always be combined (a click on the + or − between them, or one dropped on the other)
     [].forEach.call(R.querySelectorAll(".exT[data-s=\"L\"]"), function (el) {
       var i = +el.dataset.i;
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else grPlace(+dd.slice(3), i); }, ["gb:", "fm:"], function (dx, dy) { if (!fmUp("L", i, dx, dy) && !FM) grShow(); }, function (t, ev) { if (!t && fmAbove("L", i, ev)) return; grEnd(t, ev); }); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else if (dd.indexOf("et:") === 0) { var q = dd.split(":"); if (q[1] === "L" && +q[2] !== i && exLike(EXP.L[i], EXP.L[+q[2]])) eqDrop("L", i, "L", +q[2]); } else grPlace(+dd.slice(3), i); }, ["gb:", "fm:", "et:L:"], function (dx, dy) { if (!fmUp("L", i, dx, dy) && !FM) grShow(); }, function (t, ev) { if (!t && fmAbove("L", i, ev)) return; grEnd(t, ev); }); });
     });
   }
   // a factor was accepted: the cursor moves on to an empty factor on the other side (a row's after a column's and the other way round), when its two terms are in the box
@@ -3275,11 +3276,11 @@
     if (ABS && ABS.side && R.id === "exRow") absorbNow(R, '.exT[data-s="' + ABS.side + '"][data-i="' + ABS.idx + '"]');
     var mulAsk = function () { if (EXP.ask || locked) return; if (idx >= 0 && EXP.zp && idx !== EXP.zp.act) { zpFocus(idx); eqRender(); } eqMulAsk(); };
     if (!locked && !un && !gq && !fin && !rad) { R.querySelector(".exEq").addEventListener("click", mulAsk); R.onclick = function (e) { if (e.target === R) mulAsk(); }; } else R.onclick = null;
-    if (live && un) { zpWire(R, idx); return; }
+    if (live && un) { eqOpWire(R, idx); zpWire(R, idx); return; }
     if (live && gq) { grWire(R); return; }
     if (!live) return;
     var dropOf = function (S, i) { return function (t) { if (t.dataset.drop === "eq=") eqDrop(S, i, eqOther(S), -1); else { var p = t.dataset.drop.split(":"); eqDrop(S, i, p[1], +p[2]); } }; };
-    [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { if (EXP.ask) return; if (idx >= 0) zpFocus(idx); var S = el.dataset.op[0], k = +el.dataset.op.slice(1); eqDrop(S, k - 1, S, k, { ta: R.querySelector('.exT[data-s="' + S + '"][data-i="' + (k - 1) + '"]'), tb: R.querySelector('.exT[data-s="' + S + '"][data-i="' + k + '"]'), op: el, S: S, res: k - 1 }); }); });
+    eqOpWire(R, idx);
     if (EXP.sq && !rad) [].forEach.call(R.querySelectorAll(".exT sup"), function (sp) {   // the exponent of x^2 is dragged across the = and becomes a square root
       sp.classList.add("exExp"); sp.title = "Drag the exponent across the = to take the square root"; sp._eqEl = R.querySelector(".exEq");
       sp._cross = function (on) { if (on) sp.style.width = sp.getBoundingClientRect().width + "px"; else sp.style.width = ""; sp.textContent = on ? "\u221a" : "2"; sp.classList.toggle("exSqrt", on); };
@@ -3349,6 +3350,8 @@
     if (!anim) { eqSet(N, msg, dg); return; }
     slideInto([anim.ta, anim.tb], anim.op, function () { if (anim.res >= 0) ABS = { side: anim.S, idx: anim.res, t: Date.now() }; eqSet(N, msg, dg); });
   }
+  // a click on the + or − between two like terms combines them, in every kind of equation
+  function eqOpWire(R, idx) { [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { if (EXP.ask) return; if (idx >= 0) zpFocus(idx); var S = el.dataset.op[0], k = +el.dataset.op.slice(1); eqDrop(S, k - 1, S, k, { ta: R.querySelector('.exT[data-s="' + S + '"][data-i="' + (k - 1) + '"]'), tb: R.querySelector('.exT[data-s="' + S + '"][data-i="' + k + '"]'), op: el, S: S, res: k - 1 }); }); }); }
   function eqDrop(S, i, S2, j, anim) {
     if (locked || busy || EXP.ask) return;
     var fa = EXP[S][i], fb = j >= 0 ? EXP[S2][j] : null;
