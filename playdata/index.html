@@ -4,6 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>(function(){var p=location.pathname.replace(/index\.html$/i,"").replace(/\/+$/,"").split("/").pop().toLowerCase();document.write('<script src="'+(p===""||p==="algebranotebook"?"":"../")+'auth.js"><\/script>')})()</script>
 <title>AlgebraNotebook</title>
 <link rel="icon" href="../favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="../icon-192.png"><link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <link rel="icon" href="favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -13921,7 +13922,7 @@ var ESPIC = {
     window.addEventListener(ty, function (e) {
       if (!e.isTrusted || !dgOn()) return; var t = e.target; if (!t || !t.closest) return;
       if (t.closest("#pgDemo,#dmBtn")) { if (ty === "click") { DG.go = true; dgArrow(false); } return; }
-      if (t.closest(".ctl-sel,#actList,#prog,#party,#lockTip") || !dgBtn()) return;
+      if (t.closest(".ctl-sel,#actList,#prog,#party,#lockTip,#anGate,#anChip") || !dgBtn()) return;
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
       if (ty === "pointerdown" || (ty === "click" && e.detail === 0)) dgArrow(true);
     }, { capture: true, passive: false });
@@ -14193,6 +14194,25 @@ var ESPIC = {
   if (BUILT[act].play) { var bm = takeBoot(); setMode(bm); bootMode = bm; enterPlay(); bootMode = null; } else if (BUILT[act].quiz) enterQuiz(); else setMode(takeBoot());
   if (soon) $("welcome").innerHTML = "<div class=\"wsmall\">" + soon + "</div><div class=\"wsoonT\">" + VW[soon].title + "</div><div class=\"wsoon\">Coming soon</div><p class=\"wsoonP\">The exercises for this activity are being built. Choose another activity from the menu.</p>";
   if (welcome) { document.body.classList.add("wel"); theme(); $("welcome").hidden = false; }
+  // for the sign-in sync (auth.js): every built activity's exercises and the percent each has earned, from what this browser has saved
+  window.AN_summary = function () {
+    var out = {}, keep = prog, r0 = rev, N14 = { "4": "Graphing", "1": "One Variable", s: "Substitution", "2": "2x2", "3": "3x3" };
+    function rd(k) { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } }
+    function best(lv, k) { var b = 0; lv.forEach(function (l) { if (String(l[0]) === String(k) && l[2] > b && lvDone(l)) b = l[2]; }); return b; }
+    try {
+      VIEWS.forEach(function (v) {
+        if (!v[2].length) return;
+        var b = v[1], B = BUILT[b], ks = v[2].map(function (k) { return b === "1.4D" ? (k === "s" ? 4 : k === "4" ? "g" : +k) : +k; }), lv = [], ex = {};
+        if (b !== "1.4D") lv = B.levels.filter(function (l) { return ks.indexOf(l[0]) >= 0; });
+        else ks.forEach(function (k) { [["demo", 10], ["sequence", 25], ["calculate", 40], ["solo", 55], ["solo", 80, "", 2], ["solo", 100, "", 3]].forEach(function (x) { lv.push([k, x[0], x[1], x[2] || "", x[3]]); }); });
+        prog = rd(vwKey(v[0]));
+        v[2].forEach(function (k, i) { ex[b === "1.4D" ? N14[k] : (B.short && B.short[+k - 1]) || (B.lessons && B.lessons[+k - 1]) || ("Exercise " + k)] = best(lv, ks[i]); });
+        out[v[0]] = ex;
+      });
+      if (BUILT.RevT1) { rev = "RevT1"; var rl = revLevels(), ex = {}; prog = rd(BUILT.RevT1.key); BUILT.RevT1.items.forEach(function (it, i) { ex[it.q || ("Item " + (i + 1))] = best(rl, i); }); out.RevT1 = ex; }
+    } catch (e) { } finally { prog = keep; rev = r0; }
+    return out;
+  };
 </script>
 </body>
 </html>
