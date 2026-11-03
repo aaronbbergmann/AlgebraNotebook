@@ -1793,7 +1793,7 @@
       var pwE = el.querySelector(".exPw"); if (pwE) { pwE.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); pwE.addEventListener("click", function (e) { e.stopPropagation(); if (!EXP.ask) exPw(i, false); }); }
       var kEl = el.querySelector(":scope > .exK");
       if (kEl && !EXP.grp) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, kEl, null, function (t) { exFactor(i, +t.dataset.drop.slice(3)); }, "ex:"); });
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else if (dd.indexOf("gb:") === 0) grPlace(+dd.slice(3), i); else exDrop(i, +dd.slice(3)); }, EXP.grp ? ["ex:", "gb:", "fm:"] : ["ex:", "fm:"], function (dx, dy) { if (fmUp(null, i, dx, dy)) return; if (EXP.grp && !FM) grShow(); }, EXP.grp ? grEnd : null); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else if (dd.indexOf("gb:") === 0) grPlace(+dd.slice(3), i); else exDrop(i, +dd.slice(3)); }, EXP.grp ? ["ex:", "gb:", "fm:"] : ["ex:", "fm:"], function (dx, dy) { if (fmUp(null, i, dx, dy)) return; if (EXP.grp && !FM) grShow(); }, function (t, ev) { if (!t && fmAbove(null, i, ev)) return; if (EXP.grp) grEnd(t, ev); }); });
     });
   }
   function exPush() { grHide(); hist.push(JSON.stringify(EXP.items)); updUndo(); }
@@ -2684,6 +2684,10 @@
   function fmRoots(f) {   // the answers of (A + B)(A - B) = 0 or (A ± B)^2 = 0, when A is a number times x
     var r = mul(f.B.n, inv(f.A.n)); return f.kind === "dos" ? [r, neg(r)] : [f.sgn < 0 ? r : neg(r)];
   }
+  function fmAbove(S, i, ev) {   // the squared term let go anywhere above the equation opens the formula
+    if (FM || !ev || !EXP) return false; var row = $("exRow"); if (!row) return false; var r = row.getBoundingClientRect(); if (ev.clientY >= r.top) return false;
+    return fmUp(S, i, 0, -1);
+  }
   function fmUp(S, i, dx, dy) {   // a drag that begins upward on the squared term opens the formula
     if (FM || !(dy < -Math.abs(dx))) return false; var its = fmSideOf(S || "L"); if (EXP && EXP.eq && !S) return false;
     if (!its || !fmCand(its)) return false; var m = fmMono(its[i]); if (!m || !fmDeg(m) || !fmSq(m)) return false;
@@ -2819,7 +2823,7 @@
   function grWire(R) {   // an equation to factor: any term of the left side can be dragged down into the square
     [].forEach.call(R.querySelectorAll(".exT[data-s=\"L\"]"), function (el) {
       var i = +el.dataset.i;
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else grPlace(+dd.slice(3), i); }, ["gb:", "fm:"], function (dx, dy) { if (!fmUp("L", i, dx, dy) && !FM) grShow(); }, grEnd); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else grPlace(+dd.slice(3), i); }, ["gb:", "fm:"], function (dx, dy) { if (!fmUp("L", i, dx, dy) && !FM) grShow(); }, function (t, ev) { if (!t && fmAbove("L", i, ev)) return; grEnd(t, ev); }); });
     });
   }
   // a factor was accepted: the cursor moves on to an empty factor on the other side (a row's after a column's and the other way round), when its two terms are in the box
@@ -3308,7 +3312,7 @@
         }
         mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, mEl, function () { eqDistribute(S, i); }, function (t2) { var dd = t2.dataset.drop; if (dd === "exg:" + S + ":" + i) eqDistribute(S, i); else if (dd === "eq=") eqDivGroup(S, i); else if (dd.indexOf("exg:") === 0 || dd.indexOf("et:") === 0) { var p2 = dd.split(":"); if (p2[1] !== S) eqDivGroup(S, i); else eqFactor(S, i, p2[1], +p2[2]); } }, ["exg:", "et:", "eq="]); });
       }
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; zdr(idx, e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, function (t2, ev) { if ((t2.dataset.drop || "").indexOf("fm:") === 0) { fmPlace(t2.dataset.drop.slice(3), i); return; } dropOf(S, i)(t2, ev); }, ["et:", "eq=", "fm:"], function (dx, dy) { fmUp(S, i, dx, dy); }); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; zdr(idx, e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, function (t2, ev) { if ((t2.dataset.drop || "").indexOf("fm:") === 0) { fmPlace(t2.dataset.drop.slice(3), i); return; } if (fmAbove(S, i, ev)) return; dropOf(S, i)(t2, ev); }, ["et:", "eq=", "fm:"], function (dx, dy) { fmUp(S, i, dx, dy); }, function (t2, ev) { if (!t2) fmAbove(S, i, ev); }); });
       var kEl = el.querySelector(":scope > .exK");
       if (kEl) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, kEl, null, function (t2) { var p = t2.dataset.drop.split(":"); if (p[0] === "et") eqFactor(S, i, p[1], +p[2]); else eqFactor(S, i, eqOther(S), -1); }, ["et:", "eq="]); });
       var co = el.querySelector(".exCo");
