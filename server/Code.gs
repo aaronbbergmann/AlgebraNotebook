@@ -9,6 +9,7 @@
  *   Sessions  - sign-in sessions (a random key per device, valid 90 days)
  */
 var CLIENT_ID = "";                       // same OAuth client ID as in auth.js
+var SHEET_ID = "";                        // the progress Sheet (needed when the script is not opened from the Sheet)
 var DOMAIN = "sch.org";                   // only this Google Workspace domain may sign in
 var TEACHERS = ["abergmann@sch.org"];     // may open the class progress page
 var SESSION_DAYS = 90;
@@ -37,7 +38,7 @@ function isTeacher(email) { return TEACHERS.map(function (t) { return t.toLowerC
 // ---- sheets ----
 function book() {
   var s = null; try { s = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) { }
-  if (!s) { var id = PropertiesService.getScriptProperties().getProperty("SHEET_ID"); s = SpreadsheetApp.openById(id); }
+  if (!s) { var id = SHEET_ID || PropertiesService.getScriptProperties().getProperty("SHEET_ID"); s = SpreadsheetApp.openById(id); }
   return s;
 }
 function sheet(name, header) {
