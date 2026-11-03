@@ -6,8 +6,8 @@
 (function () {
   "use strict";
   var CONFIG = {
-    CLIENT_ID: "",            // Google OAuth client ID, e.g. "1234-abc.apps.googleusercontent.com"
-    API_URL: "",              // Apps Script web app URL, ending in /exec
+    CLIENT_ID: "160859714217-010cnbk9qdbjo75h6k7uskud60s8cu30.apps.googleusercontent.com",
+    API_URL: "https://script.google.com/macros/s/AKfycbzgC-1EJrwb2kkMpFLxtHoa-N20jEqbLlLoFST9k-OpmcUFRbIvteSe6CuEdrLWI1q-tw/exec",
     DOMAIN: "sch.org",        // only accounts from this Google domain can sign in
     PLAYGROUNDS: ["playsolve", "playsolver", "playgraph", "playdata", "1-1play"]
   };

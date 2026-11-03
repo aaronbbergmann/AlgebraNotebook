@@ -8,8 +8,8 @@
  *   Data      - the raw saved progress (JSON, split over columns if long)
  *   Sessions  - sign-in sessions (a random key per device, valid 90 days)
  */
-var CLIENT_ID = "";                       // same OAuth client ID as in auth.js
-var SHEET_ID = "";                        // the progress Sheet (needed when the script is not opened from the Sheet)
+var CLIENT_ID = "160859714217-010cnbk9qdbjo75h6k7uskud60s8cu30.apps.googleusercontent.com";
+var SHEET_ID = "1HryFKwRUEdEqvbsTO52QCFk07JIp1gBzzlBbiFl-7kk";   // the progress Sheet "Algebra Notebook Progress"
 var DOMAIN = "sch.org";                   // only this Google Workspace domain may sign in
 var TEACHERS = ["abergmann@sch.org"];     // may open the class progress page
 var SESSION_DAYS = 90;
