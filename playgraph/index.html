@@ -3334,7 +3334,7 @@
     if (b.want && mode === "calculate") { b.anim = anim; eqAsk({ kind: "term", b: b }, b.label + " ="); return; }
     eqGo(b.N, b.msg, anim);
   }
-  function dvHandle(t) { return t.k === "x" && !t.u && !hasS(t) && !t.co && !t.ov && !t.lc && !t.w && !t.pm && t.n.d === 1 && Math.abs(t.n.n) > 1 && !EXP.lit && !EXP.zpq; }   // a whole-number coefficient that can be dragged across the =
+  function dvHandle(t) { return t.k === "x" && !t.u && !hasS(t) && !t.co && !t.ov && !t.lc && !t.w && !t.pm && t.n.d === 1 && Math.abs(t.n.n) > 1 && !EXP.lit; }   // a whole-number coefficient that can be dragged across the =
   // The Multiplication (Division) Property of Equality: divide every term on both sides by a. Whole numbers become fractions the student simplifies by clicking them
   // (ca + b = p - q becomes a + b/c = p/c - q/c). The same as clicking the = and choosing ÷. S, i: the term whose coefficient was dragged (its coefficient becomes 1), or -1.
   function eqDivAll(S, i, a, ready) {
