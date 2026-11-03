@@ -3223,7 +3223,7 @@
     return its.map(function (t, i) {
       var ng = (t.k === "g" ? t.m.n : t.n.n) < 0;
       var op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) && !its[i - 1].lc && !t.lc ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + S + i + "\">" + (ng ? "−" : "+") + "</span>" : ng && !(dv && dv.S === S) ? "<span class=\"exOp\">−</span>" : "";   // the minus sign of the term being divided by belongs to its handle, so the whole −1 lights up and moves
-      var body = dv && dv.S === S && !t.u ? (function () { var a = mk(Math.abs(t.n.n), t.n.d); return "<span class=\"exCo\" title=\"Drag me to the other side to divide\">" + (ng && !i ? "−" : "") + (hasS(t) ? litHtml(t, true) : a.n === 1 && a.d === 1 && ng && !i ? "" : exFr(a)) + "</span>" + exVarHtml(t.v || "x"); })() : exTerm(t);
+      var body = live && !(dv && dv.S === S) && dvHandle(t) ? "<span class=\"exCo exCoA\" title=\"Drag me across the = to divide both sides\">" + Math.abs(t.n.n) + "</span>" + exVarHtml(t.v || "x") : dv && dv.S === S && !t.u ? (function () { var a = mk(Math.abs(t.n.n), t.n.d); return "<span class=\"exCo\" title=\"Drag me to the other side to divide\">" + (ng && !i ? "−" : "") + (hasS(t) ? litHtml(t, true) : a.n === 1 && a.d === 1 && ng && !i ? "" : exFr(a)) + "</span>" + exVarHtml(t.v || "x"); })() : exTerm(t);
       return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && !t.abs && live && !EXP.zpq ? " pend" : "") + (hot && hot.indexOf(S + i) >= 0 ? " hot" : "") + "\" data-s=\"" + S + "\" data-i=\"" + i + "\" data-drop=\"et:" + S + ":" + i + "\">" + body + "</span>";
     }).join("");
   }
@@ -3297,7 +3297,8 @@
       var kEl = el.querySelector(":scope > .exK");
       if (kEl) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, kEl, null, function (t2) { var p = t2.dataset.drop.split(":"); if (p[0] === "et") eqFactor(S, i, p[1], +p[2]); else eqFactor(S, i, eqOther(S), -1); }, ["et:", "eq="]); });
       var co = el.querySelector(".exCo");
-      if (co) co.addEventListener("pointerdown", function (e) { if (EXP.ask) return; divCross(co, R.querySelector(".exEq")); co._hotAll = function (on) { [].forEach.call(R.querySelectorAll(".exT, .exEq, .exOp"), function (x) { x.classList.toggle("drop", on); }); }; zdr(idx, e, co, null, function () { eqDivide(); }, ["et:", "eq="]); });   // dividing acts on every term of both sides, so they all light up
+      if (co) co.addEventListener("pointerdown", function (e) { if (EXP.ask) return; divCross(co, R.querySelector(".exEq")); co._hotAll = function (on) { [].forEach.call(R.querySelectorAll(".exT, .exEq, .exOp"), function (x) { x.classList.toggle("drop", on); }); };
+        var all = co.classList.contains("exCoA"); zdr(idx, e, co, null, function (t2) { if (!all) { eqDivide(); return; } var dd = t2.dataset.drop || ""; if (dd === "eq=" || (dd.indexOf("et:") === 0 && dd.split(":")[1] !== S)) eqDivAll(S, i, mk(Math.abs(t.n.n))); }, ["et:", "eq="]); });   // dividing acts on every term of both sides, so they all light up
     });
   }
   function eqBuild(S, i, S2, j) {
@@ -3333,9 +3334,30 @@
     if (b.want && mode === "calculate") { b.anim = anim; eqAsk({ kind: "term", b: b }, b.label + " ="); return; }
     eqGo(b.N, b.msg, anim);
   }
+  function dvHandle(t) { return t.k === "x" && !t.u && !hasS(t) && !t.co && !t.ov && !t.lc && !t.w && !t.pm && t.n.d === 1 && Math.abs(t.n.n) > 1 && !EXP.lit && !EXP.zpq; }   // a whole-number coefficient that can be dragged across the =
+  // The Multiplication (Division) Property of Equality: divide every term on both sides by a. Whole numbers become fractions the student simplifies by clicking them
+  // (ca + b = p - q becomes a + b/c = p/c - q/c). The same as clicking the = and choosing ÷. S, i: the term whose coefficient was dragged (its coefficient becomes 1), or -1.
+  function eqDivAll(S, i, a, ready) {
+    if (locked || busy || EXP.ask || !a || !a.n) return;
+    if (EXP.lit || litAny(EXP.L.concat(EXP.R))) { eqMul(inv(a), ready, a); return; }
+    if (EXP.L.concat(EXP.R).some(function (t) { return t.k === "q" || t.co; })) { eqMul(inv(a), ready, a); return; }
+    var N = eqClone(), ia = inv(a), whole = a.d === 1 && Math.abs(a.n) > 1, flip = a.n < 0 && N.rel !== "=";
+    var dv = function (its, Sd) { return its.map(function (u, j) {
+      if (u.k === "g") { u.m = mul(u.m, ia); return u; }
+      var n0 = u.n; u.n = mul(u.n, ia); delete u.u; delete u.ov;
+      if (whole && !(Sd === S && j === i) && n0.d === 1 && (u.k === "c" || u.k === "x") && !hasS(u)) u.u = { n: n0.n * (a.n < 0 ? -1 : 1), d: Math.abs(a.n) };   // 8 ÷ 2 is written 8/2 until it is clicked
+      return u; }); };
+    N.L = dv(N.L, "L"); N.R = dv(N.R, "R");
+    ["L", "R"].forEach(function (Sd) { for (var j = N[Sd].length - 1; j >= 0; j--) { var g = N[Sd][j]; if (g.k === "g" && same(g.m, mk(1)) && !g.b && !g.abs && !g.pm) N[Sd].splice.apply(N[Sd], [j, 1].concat(g.items)); } });
+    N.L = eqNorm(N.L); N.R = eqNorm(N.R); if (flip) N.rel = relRev(N.rel);
+    var msg = "Divide both sides by " + sg(a) + ": every term on both sides is divided by " + sg(a) + "." + (whole ? " Click a fraction to simplify it." : "") + (flip ? " Dividing by a negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "." : "");
+    if (mode === "calculate" && !ready) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, "Divide both sides by " + sg(a) + ". Type the new " + ((EXP.rel || "=") !== "=" ? "inequality:" : "equation:")); $("askIn").placeholder = "e.g. x + 2/3 = 8/3"; return; }
+    eqSet(N, msg);
+  }
   function eqDivGroup(S, i) {   // the number in front of the parentheses dragged to the other side: every term on both sides is divided by it
     if (locked || busy || EXP.ask) return;
-    var g = EXP[S][i]; if (!g || g.k !== "g" || g.abs || g.pm || zpOf(EXP.L, EXP.R)) return;   // (a row of a split, like −(2u − 2) ≥ 6, can be divided by −1)
+    var g = EXP[S][i]; if (!g || g.k !== "g" || g.pm || zpOf(EXP.L, EXP.R)) return;
+    if (!EXP.lit && !litAny(EXP.L.concat(EXP.R)) && !same(g.m, mk(1)) && (g.abs || g.b || !dvOK(EXP.L, EXP.R))) { eqDivAll(S, i, g.m); return; }   // 2|3w + 9| + 2 = 8 becomes |3w + 9| + 2/2 = 8/2   // (a row of a split, like −(2u − 2) ≥ 6, can be divided by −1)
     if (EXP.lit || litAny(EXP.L.concat(EXP.R))) { note("Dividing both sides by a number in front of parentheses works without letters for now."); return; }
     var a = g.m; if (!a.n || same(a, mk(1))) return;
     var N = eqClone(), ia = inv(a), dv = function (its) { return its.map(function (u) { if (u.k === "g") u.m = mul(u.m, ia); else u.n = mul(u.n, ia); return u; }); }, flip = a.n < 0 && N.rel !== "=";
@@ -3447,7 +3469,7 @@
         if (locked || busy) return;
         if (!kk.n) { var rw = $("exRow"); rw.classList.remove("shake"); void rw.offsetWidth; rw.classList.add("shake"); return; }
         if (kk.terms) { if (op === "mul") eqMulTerm(kk.terms[0]); else eqAddTerms(kk.terms, op === "add" ? 1 : -1); return; }
-        if (op === "add") eqAddAll(kk); else if (op === "sub") eqAddAll(kNeg(kk)); else if (op === "div") eqMul(kInv(kk), false, kk); else eqMul(kk);
+        if (op === "add") eqAddAll(kk); else if (op === "sub") eqAddAll(kNeg(kk)); else if (op === "div") { if (!kk.s && kk.n) eqDivAll(null, -1, kk); else eqMul(kInv(kk), false, kk); } else eqMul(kk);
       });
     });
   }
@@ -3516,6 +3538,7 @@
     if ((kind === "none" || kind === "inf") && !asked && mode !== "solo") { kindAsk(kind, exLines()[0], function () { eqEnd(kind, true); }); eqRender(); return; }
     if (EXP.zp) {
       var zz = EXP.zp, sol = exSay(EXP.L) + " " + (EXP.rel || "=") + " " + exSay(EXP.R); zz.eqs[zz.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)), rel: EXP.rel || "=" }; zz.done[zz.act] = true;
+      zz.eqs.forEach(function (e, q) { if (zz.done[q] || q === zz.act || (e.rel || "=") !== "=") return; var kp = [EXP.L, EXP.R, EXP.rel]; EXP.L = e.L; EXP.R = e.R; EXP.rel = "="; var kq = eqKind(); EXP.L = kp[0]; EXP.R = kp[1]; EXP.rel = kp[2]; if (kq === "one") zz.done[q] = true; });   // a row that is already solved (x = 0 from x(x + 4) = 0) needs no more work
       var left = zz.done.filter(function (d) { return !d; }).length;
       if (left) { closeAsk(false); eqRender(); note((EXP.rel !== "=" ? "One inequality solved: " : "One answer: ") + sol + ". " + (left > 1 ? "Solve the other equations, in any order." : EXP.rel !== "=" ? "Now solve the other inequality." : "Now solve the other equation.")); return; } EXP.zp.eqs[EXP.zp.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)), rel: EXP.rel || "=" }; EXP.zp.done[EXP.zp.act] = true;
       var aiE = avIneqEnd() || cmpEnd(); if (aiE && aiE.kind !== "one") kind = aiE.kind; }
@@ -3623,6 +3646,7 @@
     if (sg0 && sg0.g.pw) return { mv: ['#exRow .exT[data-s="' + sg0.S + '"][data-i="0"] .exPw', "#exRow .exEq"], cap: "Drag the exponent across the =: it turns into \u00b1\u221a.", run: function () { eqRootG(sg0.S, 0); } };
     if (!EXP.zp && EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" && !radDone(t); })) { for (var q9 = 0; q9 < 2; q9++) { var S9 = q9 ? "R" : "L"; for (var i9 = 0; i9 < EXP[S9].length; i9++) if (EXP[S9][i9].k === "r" && !radDone(EXP[S9][i9])) return (function (S, i) { return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"] .exRad', cap: "Find the square root of " + EXP[S][i].r.n + ".", run: function () { eqSimp(S, i); } }; })(S9, i9); } }
     if (!EXP.zp && EXP.L.concat(EXP.R).some(function (t) { return t.pm; })) return { tap: ".exPm", cap: "\u00b1 means two equations. Click it to split them.", run: function () { eqPm(); } };
+    if (!EXP.zp) for (var uq = 0; uq < 2; uq++) { var Su = uq ? "R" : "L"; for (var ui = 0; ui < EXP[Su].length; ui++) if (EXP[Su][ui].u) return { tap: '.exT[data-s="' + Su + '"][data-i="' + ui + '"]', cap: "Click the fraction to simplify.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(Su, ui) }; }   // fractions from dividing every term are simplified first
     if ((EXP.sf || EXP.quq) && !EXP.zp && !EXP.grq) { var sfs = sfStep(); if (sfs) return sfs; }
     if (EXP.quq && !EXP.zp) { var qo = quStd(); if (qo && !qo.bad) return { tap: "#quBtn", cap: "Standard form: a = " + quNs(qo.a) + ", b = " + quNs(qo.b) + ", c = " + quNs(qo.c) + ". Click Quadratic Formula.", run: function () { quGo(qo); } }; }
     if (EXP.qd && !EXP.zp && !sg0 && !EXP.L.concat(EXP.R).some(function (t) { return t.k === "g"; })) { var qs = qdStep(); if (qs) return qs; }
@@ -4405,7 +4429,7 @@
       amtPop(r, op, rows[i], function (k) {
         if (locked || busy || calc || !ws[i]) return;
         if (!k.n) { bad(i); return; }
-        if (op === "add") addEqAll(i, k); else if (op === "sub") addEqAll(i, neg(k)); else if (op === "div") mulEq(i, inv(k), false, k); else mulEq(i, k);
+        if (op === "add") addEqAll(i, k); else if (op === "sub") addEqAll(i, neg(k)); else if (op === "div") { if (!(BUILT[act].solver && ws[i].ks.length && !k.s && paneDivAll(i, k, false))) mulEq(i, inv(k), false, k); } else mulEq(i, k);
       });
     }); else openAsk(i, "mul");
   }
@@ -4484,8 +4508,24 @@
     head(); if (mode === "demo" && !busy) peekNext();
   }
   // drag the coefficient over to the other side: divide the right side by it
+  // Play Solve: dividing while numbers are still on the variable's side (3x + 6 = 12) moves the equation into the equation engine, which divides every term on both
+  // sides and writes the results as fractions to simplify: x + 6/3 = 12/3
+  function paneEq(q) {
+    var vn = allV().filter(function (v) { return q[CK[v]].n; }); if (vn.length !== 1 || q.raw || q.ks.some(function (z) { return z.r; })) return null;
+    var C = function (z) { return { k: "c", n: z.k }; }, sk = q.ks.filter(function (z) { return z.v === vn[0]; }).map(C), ok = q.ks.filter(function (z) { return z.v !== vn[0]; }).map(C);   // (a number kept with the variable is written before it, see kslot)
+    var o = { L: sk.concat([{ k: "x", v: "x", n: q[CK[vn[0]]] }], ok), R: [{ k: "c", n: q.c }], rel: qRel(q), S: "L", xi: sk.length };
+    if (q.flip && lesson === 1) { var t = o.L; o.L = o.R; o.R = t; o.rel = relRev(o.rel); o.S = "R"; }
+    return o;
+  }
+  function paneDivAll(i, a, co) {
+    if (locked || !BUILT[act].solver) return false; var cur = paneEq(ws[i]), o0 = paneEq(orig[0]) || cur; if (!cur) return false;
+    EXP = { eq: true, src: "", orig: { L: JSON.parse(JSON.stringify(o0.L)), R: JSON.parse(JSON.stringify(o0.R)), rel: o0.rel }, L: [], R: [], rel: "=", ask: null, vk: "x", zpq: false, zp: null };
+    var dm = mode === "demo"; exBegin(); EXP.L = cur.L; EXP.R = cur.R; EXP.rel = cur.rel; eqRender(); if (dm) dmUI("idle");
+    eqDivAll(co ? cur.S : null, co ? cur.xi : -1, a); return true;
+  }
   function coefDrop(i) {
     if (locked) return; var q = ws[i], vn = allV().filter(function (v) { return q[CK[v]].n; });
+    if (BUILT[act].solver && vn.length === 1 && q.ks.length && !q.raw && q[CK[vn[0]]].d === 1 && Math.abs(q[CK[vn[0]]].n) > 1 && paneDivAll(i, q[CK[vn[0]]], true)) return;
     if (vn.length !== 1 || q.ks.length || q.raw) { bad(i); return; }
     snap();
     var key = CK[vn[0]], co = q[key], n = { a: mk(0), b: mk(0), e: mk(0), ks: [], c: mul(q.c, inv(co)) };
