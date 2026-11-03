@@ -1,6 +1,8 @@
 # Google sign-in: one-time setup
 
-Sign-in stays off (the site works exactly as before) until both values in `auth.js` are filled in.
+**Status: on since 2026-11-03.** Sheet "Algebra Notebook Progress" (abergmann@sch.org's Drive), Apps Script project "Algebra Notebook Server" (standalone, opens the Sheet by SHEET_ID; deployment "Sign-in and progress", Execute as Me, Anyone), Google Cloud project "AlgebraNotebook" (consent screen Internal, web client "Algebra Notebook website", origin https://aaronbbergmann.github.io). To change the server: edit the script, save, Deploy > Manage deployments > Edit > New version > Deploy (the /exec address stays the same).
+
+Sign-in stays off (the site works exactly as before) when either value in `auth.js` is empty.
 
 ## 1. Progress Sheet and server
 1. In Google Drive (signed in as abergmann@sch.org) create a new Google Sheet named **Algebra Notebook Progress**.
