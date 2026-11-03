@@ -1741,7 +1741,7 @@
   function exWork() {
     if (!EXP || !$("exBox") || $("exBox").hidden) return;
     var L = exLines(), sp = !!(EXP.eq && EXP.zp), ai = sp && locked ? avIneqEnd() || cmpEnd() : null, key = L.join("\n") + (ai ? "\n" + ai.say : "");
-    var mkS = function () { var o = { eqs: L, ms: L.map(function () { return ""; }) }; if (sp) o.split = true; if (ai) o.fin = ai.say; return o; };
+    var mkS = function () { var o = { eqs: L, ms: L.map(function () { return ""; }) }; if (sp) o.split = true; if (ai) o.fin = ai.say; if (wkBox) { o.box = wkBox; wkBox = null; } return o; };
     if (!steps.length) { steps.push(mkS()); works.push({ steps: steps, label: MODES[mode] + " mode, Play Solve" }); if (works.length > 300) works.shift(); }
     else {
       var k = -1; for (var i = steps.length - 1; i >= 0; i--) if (steps[i].eqs.join("\n") + (steps[i].fin ? "\n" + steps[i].fin : "") === key) { k = i; break; }
@@ -1947,7 +1947,7 @@
   function exBegin() {
     hideKind(); distHide(); fmHide(); stopDemo(); closeAsk(false); stopParty(); busy = false; calc = null; $("modePick").hidden = true;
     if (BUILT[act].solver) $("stT").textContent = svTitle();
-    orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
+    wkBox = null; orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
     if (EXP.eq) { EXP.L = JSON.parse(JSON.stringify(EXP.orig.L)); EXP.R = JSON.parse(JSON.stringify(EXP.orig.R)); EXP.rel = EXP.orig.rel || "="; } else EXP.items = JSON.parse(JSON.stringify(EXP.orig));
     EXP.ask = null; EXP.zp = null; EXP.negSq = false; if (EXP.grq) EXP.zpq = false; if (EXP.eq) { EXP.cmp = null; EXP.c3 = null; if (EXP.orig.cmp) cmpInit(); if (EXP.orig.qf) EXP.qf = { k: 0 }; EXP.qu = null; } logEl.innerHTML = ""; DM4.brk = false;
     $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
@@ -2774,6 +2774,7 @@
   }
   function fmFinish() {
     FM.done = true; var g = fmGroup(), its = fmSideOf(FM.S || "L").slice(), demo = mode === "demo" && DM4.run && !DM4.paused, S = FM.S;
+    wkBox = { fm: FM.kind, A2: FM.slots.A2 ? exSay([FM.slots.A2.t]) : "", B2: FM.slots.B2 ? exSay([(function (t) { t = JSON.parse(JSON.stringify(t)); t.n = mk(Math.abs(t.n.n), t.n.d); return t; })(FM.slots.B2.t)]) : "", A: fmTxt(FM.A), B: fmTxt(FM.B), res: exSay([g]) };
     var msg = (FM.kind === "pst" ? "A perfect square trinomial: A² ± 2AB + B² = (A ± B)², with A = " : "A difference of squares: A² − B² = (A + B)(A − B), with A = ") + fmTxt(FM.A) + " and B = " + fmTxt(FM.B) + ". " + exSay(its) + " = " + exSay([g]) + ".";
     FM.t.push(setTimeout(function () {
       fmHide();
@@ -2850,8 +2851,10 @@
     if (GRP.rf[0] && GRP.rf[1] && GRP.cf[0] && GRP.cf[1]) grComplete();
     return null;
   }
+  var wkBox = null;   // the box (grouping) or the formula panel just used: the next Show work step shows it above its equation
   function grComplete() {
     GRP.done = true; GRP.msg = ""; grFill();
+    wkBox = { cells: GRP.cells.map(function (c) { return c ? exSay([c.t]) : ""; }), rf: GRP.rf.map(function (t) { return t ? exSay([t]) : ""; }), cf: GRP.cf.map(function (t) { return t ? exSay([t]) : ""; }) };
     var rf = GRP.rf.map(function (t) { return JSON.parse(JSON.stringify(t)); }), cf = GRP.cf.map(function (t) { return JSON.parse(JSON.stringify(t)); }), neg = function (t) { t.n = mk(-t.n.n, t.n.d); return t; };
     if (rf[0].n.n < 0 && cf[0].n.n < 0) { rf.forEach(neg); cf.forEach(neg); }
     var g = { k: "g", m: mk(1), items: rf, b: cf }, was = grItems().slice();
@@ -5062,7 +5065,7 @@
 
   // ---- show work: "Make One Change And Recopy" (just the equations) ----
   function workHTML(st) {   // once an equation splits, its rows become side-by-side columns, each solved down its own column
-    var out = [], q = 0, esc = function (e) { return String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&(?:amp|lt|gt);|[a-z]/g, function (m) { return m.length > 1 ? m : "<i>" + m + "</i>"; }); };
+    var out = [], q = 0, esc = wkMath;
     while (q < st.length) {
       if (!st[q].split) { out.push(workHTML0([st[q]])); q++; continue; }
       var n = st[q].eqs.length, blk = []; while (q < st.length && st[q].split && st[q].eqs.length === n) blk.push(st[q++]);
@@ -5072,10 +5075,17 @@
     }
     return out.join("");
   }
+  function wkMath(e) { return String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&(?:amp|lt|gt);|[a-z]/g, function (m) { return m.length > 1 ? m : "<i>" + m + "</i>"; }).replace(/\^(\d)/g, "<sup>$1</sup>"); }
+  function wkBoxHTML(b) {   // the grouping box (row factors on the left, column factors on top) or the formula panel, drawn small in Show work
+    var td = "border:1.5px solid #1B2433;padding:.35em .7em;text-align:center;min-width:3.5em", fc = "padding:.35em .7em;text-align:center";
+    if (b.fm) return "<div class=\"r\" style=\"padding:.4rem 0\"><span class=\"m\"></span><table style=\"border-collapse:collapse;font-size:.85em\"><tr><td style=\"" + fc + "\">A\u00b2</td><td style=\"" + td + "\">" + wkMath(b.A2) + "</td><td style=\"" + fc + "\">B\u00b2</td><td style=\"" + td + "\">" + wkMath(b.B2) + "</td></tr><tr><td style=\"" + fc + "\">A</td><td style=\"" + td + "\">" + wkMath(b.A) + "</td><td style=\"" + fc + "\">B</td><td style=\"" + td + "\">" + wkMath(b.B) + "</td></tr></table><span style=\"align-self:center;font-size:.8em;margin-left:.6em\">" + (b.fm === "pst" ? "A\u00b2 \u00b1 2AB + B\u00b2 = (A \u00b1 B)\u00b2" : "A\u00b2 \u2212 B\u00b2 = (A + B)(A \u2212 B)") + "</span></div>";
+    return "<div class=\"r\" style=\"padding:.4rem 0\"><span class=\"m\"></span><table style=\"border-collapse:collapse;font-size:.85em\"><tr><td></td><td style=\"" + fc + "\">" + wkMath(b.cf[0]) + "</td><td style=\"" + fc + "\">" + wkMath(b.cf[1]) + "</td></tr>" +
+      [0, 1].map(function (r) { return "<tr><td style=\"" + fc + "\">" + wkMath(b.rf[r]) + "</td><td style=\"" + td + "\">" + wkMath(b.cells[2 * r]) + "</td><td style=\"" + td + "\">" + wkMath(b.cells[2 * r + 1]) + "</td></tr>"; }).join("") + "</table></div>";
+  }
   function workHTML0(st) {
     return st.map(function (w) {
       if (w.txt) return "<section>" + w.eqs.map(function (e) { return "<div class=\"r" + (w.cls ? " " + w.cls : "") + "\" style=\"font:1rem system-ui,sans-serif\"><span>" + String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</span></div>"; }).join("") + "</section>";
-      return "<section>" + w.eqs.map(function (e, j) { return "<div class=\"r" + (w.cls ? " " + w.cls : "") + "\"><span class=\"m\">" + ((w.ms && w.ms[j]) || "") + "</span><span>" + e.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&(?:amp|lt|gt);|[a-z]/g, function (m) { return m.length > 1 ? m : "<i>" + m + "</i>"; }) + "</span></div>"; }).join("") + "</section>";
+      return "<section>" + (w.box ? wkBoxHTML(w.box) : "") + w.eqs.map(function (e, j) { return "<div class=\"r" + (w.cls ? " " + w.cls : "") + "\"><span class=\"m\">" + ((w.ms && w.ms[j]) || "") + "</span><span>" + wkMath(e) + "</span></div>"; }).join("") + "</section>";
     }).join("");
   }
   // every problem worked in the session is kept, so Show work can page back and forward through them
