@@ -134,6 +134,7 @@ function save(who, data, summary) {
 function writeSummary(st, row, summary) {
   var head = st.getRange(1, 1, 1, Math.max(st.getLastColumn(), 3)).getValues()[0];
   Object.keys(summary).forEach(function (act) {
+    if (act.charAt(0) === "_") return;   // (bookkeeping, such as when an activity last changed: kept only in the Detail column)
     var ex = summary[act] || {}, names = Object.keys(ex); if (!names.length) return;
     var w = [], b = Math.floor(50 / names.length), r = 50 - b * names.length; names.forEach(function (n, i) { w.push(b + (i < r ? 1 : 0)); });
     var got = names.map(function (n, i) { return Math.floor((Number(ex[n]) || 0) * w[i] / 100 + 1e-9); }), tot = got.reduce(function (s, v) { return s + v; }, 0);
@@ -151,7 +152,7 @@ function roster() {
   var st = students(), n = st.getLastRow(), w = st.getLastColumn(); if (n < 2) return { students: [] };
   var head = st.getRange(1, 1, 1, w).getValues()[0], v = st.getRange(2, 1, n - 1, w).getValues(), dc = head.indexOf("Detail (JSON)");
   return {
-    students: v.map(function (r) {
+    students: v.filter(function (r) { return !isTeacher(r[0]); }).map(function (r) {   // (a teacher's own progress is not a student's)
       var d = {}; if (dc >= 0 && r[dc]) { try { d = JSON.parse(r[dc]); } catch (e) { } }
       return { email: r[0], name: r[1], saved: r[2] ? new Date(r[2]).toISOString() : "", detail: d };
     })

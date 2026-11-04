@@ -124,8 +124,9 @@
     "#anGate .anP{margin:.4em 0 1.2em;color:#333;line-height:1.4}#anGate .anB{display:flex;justify-content:center;min-height:44px}" +
     "#anGate .anM{min-height:1.4em;margin-top:.9em;color:#333}#anGate .anM.anE{color:#c0262d}" +
     "#anGate .anPg{display:block!important;margin-top:2.2em;padding-top:1.2em;border-top:1px solid #e3e3ea;font-size:.92em;color:#444}#anGate .anPg a{color:#111;margin:0 .45em;white-space:nowrap}" +
-    "#anChip{position:fixed;left:6px;bottom:6px;z-index:2147483000;font:11px -apple-system,BlinkMacSystemFont,sans-serif;color:#555;background:rgba(255,255,255,.85);border:1px solid #e3e3ea;border-radius:10px;padding:2px 8px;opacity:.55}" +
-    "#anChip:hover{opacity:1}#anChip a{color:#111;cursor:pointer;margin-left:.6em}@media print{#anChip{display:none}}";
+    "#anChip{position:fixed;right:8px;top:6px;z-index:2147483000;font:12px -apple-system,BlinkMacSystemFont,sans-serif;color:#555;background:rgba(255,255,255,.85);border:1px solid #e3e3ea;border-radius:10px;padding:2px 8px}" +
+    "#anChip.anIn{position:static;display:block;text-align:right;background:none;border:0;border-radius:0;padding:6px 12px 0}" +
+    "#anChip a{color:#111;cursor:pointer;margin-left:.6em;text-decoration:underline}@media print{#anChip{display:none}}";
   var st = document.createElement("style"); st.textContent = css; (document.head || document.documentElement).appendChild(st);
 
   function setMsg(t, err) { var m = document.getElementById("anMsg"); if (m) { m.textContent = t || ""; m.className = "anM" + (err ? " anE" : ""); } }
@@ -158,14 +159,19 @@
       c.innerHTML = "<span></span>" + (a.teacher ? "<a href=\"" + BASE + "teacher/\">Class progress</a>" : "") + "<a id=\"anOut\">Sign out</a>";
       c.firstChild.textContent = a.name || a.email;
       c.querySelector("#anOut").onclick = signOut;
-      document.body.appendChild(c);
+      place(c);
     });
+  }
+  // the name, Class progress and Sign out sit at the top right: above the activity links in the side panel, or where a page asks for them ([data-an-chip])
+  function place(c) {
+    var go = function () { var t = document.querySelector("[data-an-chip]") || document.querySelector("aside.chat"); if (t) { c.className = "anIn"; t.insertBefore(c, t.firstChild); } else document.body.appendChild(c); };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", go); else go();   // (the page may still be arriving)
   }
   function signInLink() {
     whenBody(function () {
       var c = document.createElement("div"); c.id = "anChip";
       c.innerHTML = "<span>Students: </span><a href=\"" + BASE + "\">Sign in to save progress</a>";
-      document.body.appendChild(c);
+      place(c);
     });
   }
 

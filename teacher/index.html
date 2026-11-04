@@ -33,14 +33,20 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px 18px; padding: 4px 0; }
   .grid b { display: block; margin-top: 6px; }
   .msg { padding: 40px 16px; text-align: center; color: var(--muted); }
-  @media (max-width: 600px) { .tools { margin-left: 0; width: 100%; } input[type=search] { flex: 1; } }
+  .topbar { min-height: 22px; }
+  .chk { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; } .chk label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
+  th .act { color: var(--bar); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; } th .act:hover { color: var(--plum); }
+  th button.sort { border: 0; background: none; padding: 0 2px 0 6px; font: inherit; color: #888; cursor: pointer; } th button.sort.on { color: var(--ink); } th button.sort:hover { color: var(--plum); }
+  thead th.ac { cursor: default; }
+  @media (max-width: 600px) { .tools { margin-left: 0; width: 100%; flex-wrap: wrap; } input[type=search] { flex: 1; } }
 </style>
 </head>
 <body>
+<div class="topbar" data-an-chip></div>
 <header>
   <h1>Class Progress</h1>
   <span class="sub" id="sub"></span>
-  <div class="tools"><input type="search" id="q" placeholder="Find a student"><button id="csv">Download CSV</button><button id="ref">Refresh</button></div>
+  <div class="tools"><input type="search" id="q" placeholder="Find a student" aria-label="Find a student"><span class="chk" role="group" aria-label="Show activities"><label><input type="checkbox" data-f="1"> Ch1</label><label><input type="checkbox" data-f="2"> Ch2</label><label><input type="checkbox" data-f="3"> Ch3</label><label><input type="checkbox" data-f="recent"> Recent</label></span><button id="csv">Download CSV</button><button id="ref">Refresh</button></div>
 </header>
 <div class="wrap" id="wrap"><div class="msg">Loading…</div></div>
 <script>
@@ -66,22 +72,35 @@
     if (!AN.user.teacher) return msg("This page is for teachers.");
     msg("Loading…");
     AN.api("roster").then(function (j) {
-      rows = j.students || [];
-      var seen = {}; rows.forEach(function (r) { Object.keys(r.detail || {}).forEach(function (a) { seen[a] = 1; }); });
+      var me = String(AN.user.email || "").toLowerCase();
+      rows = (j.students || []).filter(function (r) { return String(r.email || "").toLowerCase() !== me; });   // (the teacher's own progress is not a student's)
+      var seen = {}; rows.forEach(function (r) { Object.keys(r.detail || {}).forEach(function (a) { if (a.charAt(0) !== "_") seen[a] = 1; }); });
       acts = ORDER.filter(function (a) { return seen[a]; }).concat(Object.keys(seen).filter(function (a) { return ORDER.indexOf(a) < 0; }).sort());
       $("sub").textContent = rows.length + " student" + (rows.length === 1 ? "" : "s");
       draw();
     }).catch(function (e) { msg(e.message || "Could not load the class."); });
   }
   function val(r, k) { if (k === "name") return (r.name || r.email).toLowerCase(); if (k === "saved") return r.saved || ""; var a = stars((r.detail || {})[k]); return a == null ? -1 : a; }
+  // which activities to show: the checked chapters (none checked: all), and with Recent the 3 whose progress changed most recently across the class
+  function chap(a) { var m = /^(\d+)\./.exec(a) || /^RevT(\d+)/i.exec(a); return m ? m[1] : ""; }
+  function changed(a) {   // when the class last changed this activity (saved with each student's progress; older saves: the student's last save, if they have progress in it)
+    var t = 0; rows.forEach(function (r) { var d = r.detail || {}, v = +d["_t:" + a] || 0; if (!v && stars(d[a]) > 0) v = Date.parse(r.saved) || 0; if (v > t) t = v; }); return t;
+  }
+  function shown() {
+    var on = {}; [].forEach.call(document.querySelectorAll(".chk input"), function (c) { on[c.dataset.f] = c.checked; });
+    var L = acts.filter(function (a) { return !(on["1"] || on["2"] || on["3"]) || on[chap(a)]; });
+    if (on.recent) L = L.map(function (a) { return [a, changed(a)]; }).filter(function (x) { return x[1] > 0; }).sort(function (x, y) { return y[1] - x[1]; }).slice(0, 3).map(function (x) { return x[0]; }).sort(function (x, y) { return acts.indexOf(x) - acts.indexOf(y); });
+    return L;
+  }
+  function slug(a) { return String(a).toLowerCase().replace(/\./g, "-").replace(/\s+/g, ""); }
   function draw() {
-    var q = $("q").value.trim().toLowerCase();
+    var q = $("q").value.trim().toLowerCase(), acts = shown();
     var list = rows.filter(function (r) { return !q || (r.name + " " + r.email).toLowerCase().indexOf(q) >= 0; })
       .sort(function (a, b) { var x = val(a, sortBy), y = val(b, sortBy); return (x < y ? -1 : x > y ? 1 : 0) * dir; });
     if (!rows.length) return msg("No students have signed in yet.");
     var arrow = function (k) { return sortBy === k ? (dir > 0 ? " ▲" : " ▼") : ""; };
     var h = "<table><thead><tr><th data-k=\"name\">Student" + arrow("name") + "</th><th data-k=\"saved\">Last saved" + arrow("saved") + "</th>";
-    acts.forEach(function (a) { h += "<th data-k=\"" + esc(a) + "\">" + esc(a) + arrow(a) + "</th>"; });
+    acts.forEach(function (a) { var on = sortBy === a; h += "<th class=\"ac\"><a class=\"act\" href=\"../" + esc(slug(a)) + "/\" title=\"Open " + esc(a) + "\">" + esc(a) + "</a><button type=\"button\" class=\"sort" + (on ? " on" : "") + "\" data-k=\"" + esc(a) + "\" aria-label=\"Sort by " + esc(a) + " progress\">" + (on ? (dir > 0 ? "▲" : "▼") : "↕") + "</button></th>"; });
     h += "</tr></thead><tbody>";
     list.forEach(function (r) {
       var isOpen = openRow === r.email;
@@ -91,7 +110,7 @@
         var tip = ex ? Object.keys(es).map(function (n) { return n + ": " + st1(es[n][0]) + " of " + st1(es[n][1]) + " stars"; }).join("\n") : "";
         h += p == null || p === 0 && !Object.keys(ex || {}).some(function (n) { return ex[n] > 0; })
           ? "<td class=\"p none\" title=\"" + esc(tip) + "\">–</td>"
-          : "<td class=\"p" + (p === 50 ? " full" : "") + "\" title=\"" + esc(tip) + "\" aria-label=\"" + st1(p) + " of 5 stars\"><span class=\"pc\">" + st1(p) + "</span>" + starsHTML(p, 11) + "</td>";
+          : "<td class=\"p" + (p === 50 ? " full" : "") + "\" title=\"" + esc(tip) + "\" aria-label=\"" + st1(p) + " of 5 stars\"><span class=\"pc\">" + st1(p) + "</span></td>";
       });
       h += "</tr>";
       if (isOpen) {
@@ -103,10 +122,13 @@
     $("wrap").innerHTML = h + "</tbody></table>";
   }
   $("wrap").addEventListener("click", function (e) {
-    var th = e.target.closest("th"); if (th) { var k = th.dataset.k; if (sortBy === k) dir = -dir; else { sortBy = k; dir = k === "name" ? 1 : -1; } return draw(); }
+    if (e.target.closest("a.act")) return;   // (the activity name opens the activity)
+    var th = e.target.closest("button.sort") || e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; if (sortBy === k) dir = -dir; else { sortBy = k; dir = k === "name" ? 1 : -1; } return draw(); }
+    if (e.target.closest("th")) return;
     var tr = e.target.closest("tr[data-e]"); if (tr) { openRow = openRow === tr.dataset.e ? null : tr.dataset.e; draw(); }
   });
   $("q").addEventListener("input", draw);
+  [].forEach.call(document.querySelectorAll(".chk input"), function (c) { try { c.checked = localStorage.getItem("an:tf:" + c.dataset.f) === "1"; } catch (e) { } c.addEventListener("change", function () { try { localStorage.setItem("an:tf:" + c.dataset.f, c.checked ? "1" : "0"); } catch (e) { } draw(); }); });
   $("ref").addEventListener("click", load);
   $("csv").addEventListener("click", function () {
     var cols = ["Name", "Email", "Last saved"], lines = [];

@@ -5394,7 +5394,7 @@
   function lvMark() { var nw = []; LEVELS.forEach(function (l) { var id = lvId(l); if (!lvSeen[id] && lvDone(l)) { lvSeen[id] = 1; nw.push(l); } }); return nw; }
   function loadProg() { try { prog = JSON.parse(localStorage.getItem(progKey()) || "{}") || {}; } catch (e) { prog = {}; } lvMark(); }   // (what is already earned is never celebrated)
   loadProg();
-  function saveProg() { try { localStorage.setItem(progKey(), JSON.stringify(prog)); } catch (e) {} }
+  function saveProg() { try { var k = progKey(), v = JSON.stringify(prog); if (localStorage.getItem(k) !== v) { var T = JSON.parse(localStorage.getItem("algebraProgress:time") || "{}") || {}; T[rev || view || act] = Date.now(); localStorage.setItem("algebraProgress:time", JSON.stringify(T)); } localStorage.setItem(k, v); } catch (e) {} }   // (and when each activity last changed, for the teacher's "Recent")
   function lvDone(l) {
     // a problem finished in a mode (1.1, 1.2) earns that mode's first level and every level below it at once; the later rounds need whole rounds
     if (!(l[4] > 1)) for (var m0 = MORD.indexOf(l[1]); m0 < 4; m0++) if (prog[l[0] + ":" + MORD[m0] + ":p"]) return true;
@@ -14761,6 +14761,7 @@ var ESPIC = {
         v[2].forEach(function (k, i) { ex[b === "1.4D" ? N14[k] : (B.short && B.short[+k - 1]) || (B.lessons && B.lessons[+k - 1]) || ("Exercise " + k)] = best(lv, ks[i]); });
         out[v[0]] = ex;
       });
+      var T = rd("algebraProgress:time"); Object.keys(T).forEach(function (id) { if (out[id] || id === "RevT1") out["_t:" + id] = +T[id] || 0; });   // when each activity last changed (a number: the Sheet script passes it by)
       if (BUILT.RevT1) { rev = "RevT1"; var rl = revLevels(), ex = {}; prog = rd(BUILT.RevT1.key); BUILT.RevT1.items.forEach(function (it, i) { ex[it.q || ("Item " + (i + 1))] = best(rl, i); }); out.RevT1 = ex; }
     } catch (e) { } finally { prog = keep; rev = r0; }
     return out;
