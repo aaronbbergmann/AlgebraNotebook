@@ -24,9 +24,8 @@
   thead th:first-child { z-index: 3; background: var(--head); }
   td.p { min-width: 64px; }
   .pc { display: block; font-variant-numeric: tabular-nums; }
-  .bar { display: block; height: 4px; border-radius: 2px; background: var(--bar0); margin-top: 3px; overflow: hidden; }
-  .bar i { display: block; height: 100%; background: var(--bar); }
-  .full .bar i { background: var(--plum); }
+  .stars { display: inline-flex; gap: calc(var(--sz) * .1); line-height: 0; margin-top: 3px; } .stars .st { position: relative; display: inline-block; width: var(--sz); height: var(--sz); } .stars svg { display: block; width: var(--sz); height: var(--sz); } .stars .stG { position: absolute; left: 0; top: 0; height: 100%; overflow: hidden; }
+  .full .pc { color: var(--plum); font-weight: 700; }
   .none { color: #bbb; }
   .email { color: var(--muted); font-size: .9em; }
   tr.open + tr.det td { background: #fafafc; }
@@ -49,7 +48,14 @@
   var ORDER = ["1.1A","1.1B","1.1C","1.2A","1.2B","1.2C","1.3A","1.3B","1.4A","1.4B","1.4C","1.4D","RevT1","2.1A","2.1B","2.2A","2.2B","2.2C","2.4A","2.4B"];
   var rows = [], acts = [], sortBy = "name", dir = 1, openRow = null;
   var $ = function (id) { return document.getElementById(id); };
-  function avg(ex) { var n = Object.keys(ex || {}); if (!n.length) return null; return Math.round(n.reduce(function (s, k) { return s + (+ex[k] || 0); }, 0) / n.length); }
+  // Progress in stars, as the students see it: a finished activity is 5.0 stars, split over its exercises in tenths (larger shares first); each exercise earns
+  // its share in proportion to how far it has come (the saved summary holds that as 0-100 per exercise), rounded down to a tenth
+  function starW(n) { var b = n ? Math.floor(50 / n) : 0, r = 50 - b * n, w = []; for (var i = 0; i < n; i++) w.push(b + (i < r ? 1 : 0)); return w; }
+  function exStars(ex) { var n = Object.keys(ex || {}), w = starW(n.length), o = {}; n.forEach(function (k, i) { o[k] = [Math.floor((+ex[k] || 0) * w[i] / 100 + 1e-9), w[i]]; }); return o; }   // name: [earned, share], in tenths
+  function stars(ex) { var n = Object.keys(ex || {}); if (!n.length) return null; var o = exStars(ex), t = 0; n.forEach(function (k) { t += o[k][0]; }); return t; }
+  function st1(t) { return (t / 10).toFixed(1); }
+  var SP = "M12 1.2 14.9 8.4 22.6 8.9 16.7 13.9 18.6 21.5 12 17.3 5.4 21.5 7.3 13.9 1.4 8.9 9.1 8.4Z";
+  function starsHTML(t, px) { var h = "<span class=\"stars\" style=\"--sz:" + px + "px\" aria-hidden=\"true\">"; for (var i = 0; i < 5; i++) { var f = Math.max(0, Math.min(1, (t - i * 10) / 10)); h += "<span class=\"st\"><svg viewBox=\"0 0 24 24\"><path d=\"" + SP + "\" fill=\"#7C8079\"/></svg><span class=\"stG\" style=\"width:" + (f * 100) + "%\"><svg viewBox=\"0 0 24 24\"><path d=\"" + SP + "\" fill=\"#EDBB3F\"/></svg></span></span>"; } return h + "</span>"; }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function when(iso) { if (!iso) return "never"; var d = new Date(iso), m = (Date.now() - d) / 6e4; if (m < 2) return "just now"; if (m < 60) return Math.round(m) + " min ago"; if (m < 1440) return Math.round(m / 60) + " h ago"; return d.toLocaleDateString(); }
   function msg(t) { $("wrap").innerHTML = '<div class="msg">' + esc(t) + "</div>"; }
@@ -67,7 +73,7 @@
       draw();
     }).catch(function (e) { msg(e.message || "Could not load the class."); });
   }
-  function val(r, k) { if (k === "name") return (r.name || r.email).toLowerCase(); if (k === "saved") return r.saved || ""; var a = avg((r.detail || {})[k]); return a == null ? -1 : a; }
+  function val(r, k) { if (k === "name") return (r.name || r.email).toLowerCase(); if (k === "saved") return r.saved || ""; var a = stars((r.detail || {})[k]); return a == null ? -1 : a; }
   function draw() {
     var q = $("q").value.trim().toLowerCase();
     var list = rows.filter(function (r) { return !q || (r.name + " " + r.email).toLowerCase().indexOf(q) >= 0; })
@@ -81,16 +87,16 @@
       var isOpen = openRow === r.email;
       h += "<tr data-e=\"" + esc(r.email) + "\"" + (isOpen ? " class=\"open\"" : "") + " style=\"cursor:pointer\"><td><div>" + esc(r.name || r.email) + "</div><div class=\"email\">" + esc(r.email) + "</div></td><td>" + esc(when(r.saved)) + "</td>";
       acts.forEach(function (a) {
-        var ex = (r.detail || {})[a], p = avg(ex);
-        var tip = ex ? Object.keys(ex).map(function (n) { return n + ": " + ex[n] + "%"; }).join("\n") : "";
+        var ex = (r.detail || {})[a], p = stars(ex), es = exStars(ex);
+        var tip = ex ? Object.keys(es).map(function (n) { return n + ": " + st1(es[n][0]) + " of " + st1(es[n][1]) + " stars"; }).join("\n") : "";
         h += p == null || p === 0 && !Object.keys(ex || {}).some(function (n) { return ex[n] > 0; })
           ? "<td class=\"p none\" title=\"" + esc(tip) + "\">–</td>"
-          : "<td class=\"p" + (p === 100 ? " full" : "") + "\" title=\"" + esc(tip) + "\"><span class=\"pc\">" + p + "%</span><span class=\"bar\"><i style=\"width:" + p + "%\"></i></span></td>";
+          : "<td class=\"p" + (p === 50 ? " full" : "") + "\" title=\"" + esc(tip) + "\" aria-label=\"" + st1(p) + " of 5 stars\"><span class=\"pc\">" + st1(p) + "</span>" + starsHTML(p, 11) + "</td>";
       });
       h += "</tr>";
       if (isOpen) {
         h += "<tr class=\"det\"><td colspan=\"" + (acts.length + 2) + "\"><div class=\"grid\">";
-        acts.forEach(function (a) { var ex = (r.detail || {})[a] || {}; h += "<div><b>" + esc(a) + "</b>" + Object.keys(ex).map(function (n) { return esc(n) + ": " + (+ex[n] || 0) + "%"; }).join("<br>") + "</div>"; });
+        acts.forEach(function (a) { var ex = (r.detail || {})[a] || {}; h += "<div><b>" + esc(a) + "</b>" + (function (es) { return Object.keys(es).map(function (n) { return esc(n) + ": " + st1(es[n][0]) + " of " + st1(es[n][1]) + " ★"; }).join("<br>"); })(exStars(ex)) + "</div>"; });
         h += "</div></td></tr>";
       }
     });
@@ -104,11 +110,11 @@
   $("ref").addEventListener("click", load);
   $("csv").addEventListener("click", function () {
     var cols = ["Name", "Email", "Last saved"], lines = [];
-    acts.forEach(function (a) { var names = {}; rows.forEach(function (r) { Object.keys((r.detail || {})[a] || {}).forEach(function (n) { names[n] = 1; }); }); Object.keys(names).forEach(function (n) { cols.push(a + " " + n); }); });
+    acts.forEach(function (a) { var names = {}; rows.forEach(function (r) { Object.keys((r.detail || {})[a] || {}).forEach(function (n) { names[n] = 1; }); }); Object.keys(names).forEach(function (n) { cols.push(a + " " + n); }); });   // (each exercise's stars earned)
     lines.push(cols);
     rows.forEach(function (r) {
       var line = [r.name, r.email, r.saved];
-      cols.slice(3).forEach(function (c) { var a = acts.filter(function (x) { return c.indexOf(x + " ") === 0; }).sort(function (x, y) { return y.length - x.length; })[0], n = c.slice(a.length + 1), ex = (r.detail || {})[a] || {}; line.push(n in ex ? ex[n] : ""); });
+      cols.slice(3).forEach(function (c) { var a = acts.filter(function (x) { return c.indexOf(x + " ") === 0; }).sort(function (x, y) { return y.length - x.length; })[0], n = c.slice(a.length + 1), ex = (r.detail || {})[a] || {}; var es = exStars(ex); line.push(n in es ? st1(es[n][0]) : ""); });
       lines.push(line);
     });
     var csv = lines.map(function (l) { return l.map(function (v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","); }).join("\n");

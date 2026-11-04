@@ -39,6 +39,10 @@
   .top{display:flex;gap:2.2rem;justify-content:center;align-items:flex-start;flex-wrap:wrap}
   .top .vals{flex-direction:column;align-items:flex-start;gap:.5rem;min-height:0;padding:0;font-size:clamp(1rem,2.2vw,1.5rem)}
   .vals:empty{display:none}
+  .stars{display:inline-flex;gap:calc(var(--sz) * .1);vertical-align:-.12em;line-height:0}.stars .st{position:relative;display:inline-block;width:var(--sz);height:var(--sz)}.stars svg{display:block;width:var(--sz);height:var(--sz)}.stars .stG{position:absolute;left:0;top:0;height:100%;overflow:hidden}
+  #progLnk b{font-weight:700;margin-right:.1em}
+  .progStars{display:flex;align-items:center;gap:.8rem;margin:.2rem 0 .6rem}.progN{font:700 1.6rem system-ui,sans-serif}.progN small{font-size:.55em;font-weight:600;color:#5B6577}.exSt{font-weight:600;font-size:.85em;color:#5B6577;white-space:nowrap}.lv .pc{min-width:3.6em}
+  .slayStars{display:flex;align-items:center;justify-content:center;gap:.25em;margin-top:.25em;font-size:.6em}.slayStars .stars svg{filter:drop-shadow(0 .06em 0 #6a2fb8)}.slayN{font-size:1em;margin-left:.2em}
   #party{position:fixed;inset:0;z-index:100;pointer-events:none;overflow:hidden}
   .pe{position:absolute;line-height:1;will-change:transform}
   .slay.slayLv{flex-direction:column;gap:.25em}
@@ -891,7 +895,7 @@
     <div class="ctlbox"><div class="ctl-sel"><div class="act"><button type="button" class="actBtn" id="actBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="actList" title="Activity"><span id="actLbl">1.4D</span></button><ul class="actList" id="actList" role="listbox" aria-label="Activity" hidden></ul></div><label class="sr" for="lesson" style="position:absolute;left:-9999px">Exercise</label>
       <select id="lesson"><option value="1" selected>One Variable</option><option value="2">2&times;2 Systems</option><option value="3">3&times;3 Systems</option></select>
       <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Write</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo hard" id="dmHard" hidden>Level Up</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button><button type="button" class="link dmLink dmEasy" id="dmEasy" hidden>Easier Equation</button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="reg" aria-pressed="false">Regression</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="btn" id="nxHard" hidden>Level Up</button><button class="link" id="again" hidden>Try another</button><button class="link nxEasy" id="nxEasy" hidden>Easier Equation</button></div>
-    <div class="ctl-btn"><button class="btn" id="progBtn">Progress 0%</button>
+    <div class="ctl-btn"><button class="btn" id="progBtn">Progress 0.0 stars</button>
       <button class="btn" id="ptTog" hidden>Parent Table</button>
       <button class="btn" id="fmTogBtn" hidden>Difference of Squares</button>
       <button class="btn" id="quBtn" hidden>Quadratic Formula</button>
@@ -5202,13 +5206,14 @@
   // the phrase over the whole screen for 3 seconds (2.1 shows every finishing message this way, in place of the green line under the question)
   // sub: the level just reached, in smaller text under the phrase. A level takeover is never replaced by another phrase (one takeover at a time)
   var partyLv = 0;
-  function partyShow(t, sub) {
+  function partyShow(t, sub, st) {
     if (party && partyLv && !sub && Date.now() - partyLv < 3000) return;   // (a newly earned level is already up)
     if (party && !sub && party.textContent === t) return;   // (the same phrase is already up)
     stopParty(); partyLv = sub ? Date.now() : 0;
     var P = document.createElement("div"), e = document.createElement("div"), reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     P.id = "party"; P.setAttribute("aria-hidden", "true"); e.className = "slay";
-    if (sub) { var w = document.createElement("div"), b = document.createElement("div"); w.textContent = t; b.className = "slaySub"; b.textContent = sub; e.appendChild(w); e.appendChild(b); e.classList.add("slayLv"); P.setAttribute("aria-hidden", "false"); P.setAttribute("role", "status"); }
+    if (sub) { var w = document.createElement("div"), b = document.createElement("div"); w.textContent = t; b.className = "slaySub"; b.textContent = sub; e.appendChild(w); e.appendChild(b); e.classList.add("slayLv"); P.setAttribute("aria-hidden", "false"); P.setAttribute("role", "status");
+      if (st) { var r = document.createElement("div"); r.className = "slayStars"; r.innerHTML = starsHTML(st.s10, Math.min(72, Math.round(innerWidth / 9)), st.from) + "<span class=\"slayN\">" + starTxt(st.s10) + "</span>"; e.appendChild(r); setTimeout(function () { starsGrow(r, 250); }, 0); } }
     else e.textContent = t;
     P.appendChild(e); document.body.appendChild(P); party = P;
     P.animate([{ background: "rgba(20,10,40,0)" }, { background: "rgba(20,10,40,.78)", offset: .12 }, { background: "rgba(20,10,40,.78)", offset: .8 }, { background: "rgba(20,10,40,0)" }], { duration: 3000, fill: "both", easing: "linear" });
@@ -5395,21 +5400,48 @@
     if (!(l[4] > 1)) for (var m0 = MORD.indexOf(l[1]); m0 < 4; m0++) if (prog[l[0] + ":" + MORD[m0] + ":p"]) return true;
     var tot = 0; for (var m = MORD.indexOf(l[1]); m < 4; m++) tot += prog[l[0] + ":" + MORD[m]] || 0; return tot >= (l[4] || 1); }
   function lvSkip(l) { if (rev) return l[0] !== revI; if (view) return String(l[0]) !== String(LK()); var B = BUILT[act]; if (B.sep) return B.sep.indexOf(l[0]) >= 0 ? l[0] !== LK() : B.sep.indexOf(LK()) >= 0; return !!B.perLesson && l[0] !== lesson; }   // 1.4: Graphing keeps a percentage of its own
-  function pct() { var p = 0; LEVELS.forEach(function (l) { if (lvSkip(l)) return; if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }   // an activity with perLesson keeps a separate percentage for each exercise
-  function updProg() { $("progBtn").textContent = "Progress " + pct() + "%"; var pl = $("progLnk"); if (pl) pl.textContent = pct() + "%"; lvCheer(); modeLocksUI(); }
+  function pct() { var p = 0; LEVELS.forEach(function (l) { if (lvSkip(l)) return; if (lvDone(l) && l[2] > p) p = l[2]; }); return p; }   // (inside only: how far the current exercise has come, 0-100; never shown)
+  // ---- Progress in stars: a finished activity is 5.0 stars, split over its exercises in tenths (3 exercises: 1.7, 1.7, 1.6, the larger shares first).
+  // An exercise earns its share in proportion to how far it has come, rounded down to a tenth, so a partly finished activity never shows 5.0.
+  function exKeys(L) { var o = []; (L || LEVELS).forEach(function (l) { if (o.indexOf(String(l[0])) < 0) o.push(String(l[0])); }); return o; }
+  function starW(n) { var b = n ? Math.floor(50 / n) : 0, r = 50 - b * n, w = []; for (var i = 0; i < n; i++) w.push(b + (i < r ? 1 : 0)); return w; }   // each exercise's share, in tenths of a star
+  function exPct(k, L) { var p = 0; (L || LEVELS).forEach(function (l) { if (String(l[0]) === String(k) && lvDone(l) && l[2] > p) p = l[2]; }); return p; }
+  function starsOf(ps) { var w = starW(ps.length), t = 0; ps.forEach(function (p, i) { t += Math.floor(p * w[i] / 100 + 1e-9); }); return t; }   // tenths of a star
+  function stars10() { return starsOf(exKeys().map(function (k) { return exPct(k); })); }
+  function starTxt(s10) { return (s10 / 10).toFixed(1); }
+  var STAR_P = "M12 1.2 14.9 8.4 22.6 8.9 16.7 13.9 18.6 21.5 12 17.3 5.4 21.5 7.3 13.9 1.4 8.9 9.1 8.4Z";
+  // five stars like an online rating: gold (#EDBB3F) over grey (#7C8079), a star partly filled from the left by its tenths. from10: the stars before (a celebration fills from there)
+  function starsHTML(s10, px, from10) {
+    var h = "<span class=\"stars\" style=\"--sz:" + px + "px\" role=\"img\" aria-label=\"" + starTxt(s10) + " of 5 stars\">";
+    for (var i = 0; i < 5; i++) {
+      var f = Math.max(0, Math.min(1, (s10 - i * 10) / 10)), f0 = from10 == null ? f : Math.max(0, Math.min(1, (from10 - i * 10) / 10));
+      h += "<span class=\"st\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"" + STAR_P + "\" fill=\"#7C8079\"/></svg><span class=\"stG\" data-f=\"" + f + "\" data-f0=\"" + f0 + "\" style=\"width:" + (f0 * 100) + "%\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"" + STAR_P + "\" fill=\"#EDBB3F\"/></svg></span></span>";
+    }
+    return h + "</span>";
+  }
+  function starsGrow(root, delay) {   // the gold fills in, one star after another, from where it was to where it is now
+    var k = 0; [].forEach.call(root.querySelectorAll(".stG"), function (e) {
+      var f = +e.dataset.f, f0 = +e.dataset.f0; if (f === f0) return; e.style.width = (f * 100) + "%";
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches || !e.animate) return;
+      e.animate([{ width: (f0 * 100) + "%" }, { width: (f * 100) + "%" }], { duration: 380, delay: (delay || 0) + k++ * 300, easing: "ease-out", fill: "backwards" });
+    });
+  }
+  var starsSeen = {};
+  function updProg() { var s10 = stars10(); $("progBtn").textContent = "Progress " + starTxt(s10) + " stars"; var pl = $("progLnk"); if (pl) { pl.innerHTML = "<b>" + starTxt(s10) + "</b> " + starsHTML(s10, 13); pl.setAttribute("aria-label", "Progress: " + starTxt(s10) + " of 5 stars"); } lvCheer(); if (!(progKey() in starsSeen) || !party) starsSeen[progKey()] = s10; modeLocksUI(); }
   // a newly earned level: one phrase with the level beneath it, over the whole screen (Playgrounds have no levels, so never)
   function lvCheer() {
     var nw = lvMark().filter(function (l) { return !lvSkip(l); }); if (!nw.length || DNX) return;
     var top = nw.reduce(function (a, l) { return l[2] > a[2] ? l : a; });
-    partyShow(cheer(), top[3] + " · " + top[2] + "%");
+    var s10 = stars10(), was = progKey() in starsSeen ? starsSeen[progKey()] : s10; starsSeen[progKey()] = s10;
+    partyShow(cheer(), top[3], { s10: s10, from: Math.min(was, s10) });
   }
   function openProg() {
-    var p = pct(), h = "<h2 id=\"progT\">" + (rev || view || shortOf(act)) + " Progress " + p + "%</h2><div class=\"bar\"><i style=\"width:" + p + "%\"></i></div><ul><li class=\"lv done\"><span class=\"ck\">✓</span><span class=\"pc\">0%</span><span>Not started</span></li></ul>", last = rev ? -1 : 0;
+    var s10 = stars10(), ks = exKeys(), W = starW(ks.length), h = "<h2 id=\"progT\">" + (rev || view || shortOf(act)) + " Progress</h2><div class=\"progStars\">" + starsHTML(s10, 34) + "<span class=\"progN\">" + starTxt(s10) + " <small>of 5.0 stars</small></span></div>", last = rev ? -1 : 0;
     LEVELS.forEach(function (l, i) {
-      if (lvSkip(l)) return;
-      if (l[0] !== last) { if (last !== -1 && last) h += "</ul>"; last = l[0]; h += "<h3>Exercise: " + (rev ? BUILT[rev].items[last].q : lessonName(last)) + "</h3><ul>"; }
+      var wk = W[ks.indexOf(String(l[0]))] || 0;
+      if (l[0] !== last) { if (last !== -1 && last) h += "</ul>"; last = l[0]; h += "<h3>Exercise: " + (rev ? BUILT[rev].items[last].q : lessonName(last)) + " <span class=\"exSt\">" + starTxt(Math.floor(exPct(l[0]) * wk / 100 + 1e-9)) + " of " + starTxt(wk) + " ★</span></h3><ul>"; }
       var d = lvDone(l);
-      h += "<li class=\"lv" + (d ? " done" : "") + "\"><span class=\"ck\">" + (d ? "✓" : "○") + "</span><span class=\"pc\">" + l[2] + "%</span><span>" + l[3] + "</span></li>";
+      h += "<li class=\"lv" + (d ? " done" : "") + "\"><span class=\"ck\">" + (d ? "✓" : "○") + "</span><span class=\"pc\">" + starTxt(Math.floor(l[2] * wk / 100 + 1e-9)) + " ★</span><span>" + l[3] + "</span></li>";
     });
     $("progBody").innerHTML = h + "</ul>"; $("prog").hidden = false; $("progX").focus();
   }
@@ -14360,7 +14392,7 @@ var ESPIC = {
     var sel = document.querySelector(".ctl-sel");
     function wrap(el, cls) { var w = document.createElement("span"); w.className = "cs" + (cls ? " " + cls : ""); el.parentNode.insertBefore(w, el); w.appendChild(el); return w; }
     wrap(sel.querySelector(".act")); wrap($("lesson")); wrap($("modeSel"));
-    var pl = document.createElement("button"); pl.type = "button"; pl.id = "progLnk"; pl.className = "ctlLink"; pl.title = "Progress"; pl.textContent = "0%";
+    var pl = document.createElement("button"); pl.type = "button"; pl.id = "progLnk"; pl.className = "ctlLink"; pl.title = "Progress"; pl.textContent = "0.0";
     var pw = document.createElement("span"); pw.className = "cs eq"; pw.appendChild(pl); sel.appendChild(pw);
     pl.addEventListener("click", openProg);
     var cv = document.createElement("canvas").getContext("2d");

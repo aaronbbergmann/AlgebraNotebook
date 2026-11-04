@@ -4,7 +4,7 @@
  * Deploy > New deployment > Web app (Execute as: Me, Who has access: Anyone).
  *
  * Sheets it keeps:
- *   Students  - one row per student: email, name, last saved, then one column per activity (percent)
+ *   Students  - one row per student: email, name, last saved, then one column per activity (stars, 0.0 to 5.0)
  *   Data      - the raw saved progress (JSON, split over columns if long)
  *   Sessions  - sign-in sessions (a random key per device, valid 90 days)
  */
@@ -129,16 +129,18 @@ function save(who, data, summary) {
   } finally { lock.releaseLock(); }
   return { ok: true, updated: now };
 }
-// Students sheet: one column per activity with the average of its exercises' percents; a note on each cell lists the exercises
+// Students sheet: one column per activity with its stars (a finished activity is 5.0, split over its exercises in tenths, larger shares first;
+// an exercise earns its share in proportion to how far it has come, rounded down to a tenth); a note on each cell lists the exercises
 function writeSummary(st, row, summary) {
   var head = st.getRange(1, 1, 1, Math.max(st.getLastColumn(), 3)).getValues()[0];
   Object.keys(summary).forEach(function (act) {
     var ex = summary[act] || {}, names = Object.keys(ex); if (!names.length) return;
-    var avg = Math.round(names.reduce(function (s, n) { return s + (Number(ex[n]) || 0); }, 0) / names.length);
+    var w = [], b = Math.floor(50 / names.length), r = 50 - b * names.length; names.forEach(function (n, i) { w.push(b + (i < r ? 1 : 0)); });
+    var got = names.map(function (n, i) { return Math.floor((Number(ex[n]) || 0) * w[i] / 100 + 1e-9); }), tot = got.reduce(function (s, v) { return s + v; }, 0);
     var col = head.indexOf(act) + 1;
     if (!col) { col = head.length + 1; st.getRange(1, col).setValue(act).setFontWeight("bold"); head.push(act); }
-    var cell = st.getRange(row, col); cell.setValue(avg / 100).setNumberFormat("0%");
-    cell.setNote(names.map(function (n) { return n + ": " + (Number(ex[n]) || 0) + "%"; }).join("\n"));
+    var cell = st.getRange(row, col); cell.setValue(tot / 10).setNumberFormat('0.0 "★"');
+    cell.setNote(names.map(function (n, i) { return n + ": " + (got[i] / 10).toFixed(1) + " of " + (w[i] / 10).toFixed(1) + " stars"; }).join("\n"));
   });
   // keep a copy of the full breakdown for the class progress page
   var c = head.indexOf("Detail (JSON)") + 1;
