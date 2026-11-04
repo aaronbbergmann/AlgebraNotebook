@@ -384,6 +384,8 @@
   .ivnG{display:none}
   body.ivN #pgGraphWrap,body.ivN .pgSide,body.ivN #qzTools,body.ivN #ptTog,body.ivN #wfSteps{display:none!important}
   body.ivN .ivnG{display:flex;flex-direction:column;align-items:center;gap:.7rem;width:100%;max-width:44rem;margin:.4rem auto 0}
+  body.ivN #pgQt .estP{font:700 1.6rem/1.35 system-ui,sans-serif;color:#1B2433}body.ivN #pgQt .estP .lm{font-size:1.15em;font-weight:400}
+  .ivnAsk[hidden]{display:none}
   .ivnAsk{font:700 1.08rem system-ui,sans-serif;color:#1B2433;min-height:1.5em;text-align:center}
   #ivnTools{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
   #ivnTools button{height:2.9rem;min-width:4.6rem;border-radius:10px;border:2px solid #1B2433;background:#fff;color:#1B2433;font:700 1.25rem/1 system-ui,sans-serif;cursor:pointer;padding:0 .45rem;touch-action:none}
@@ -8930,7 +8932,7 @@ var ESPIC = {
       ivPicNow();
     }
     [].forEach.call(document.querySelectorAll("#ivnTools button"), function (b) { var t = b.dataset.ivt; b.classList.toggle("on", s.tool === t && !done); b.disabled = done || (t === "clear" && !s.pcs.length && !s.p1); b.setAttribute("aria-pressed", s.tool === t ? "true" : "false"); });
-    $("ivnAsk").innerHTML = ivnAsk();
+    $("ivnAsk").innerHTML = ""; $("ivnAsk").hidden = true;   // (2.2B: no instructions, only the question)
     var showLine = gr || P.show === "both" || P.show === "line"; $("ivnLine").hidden = !showLine;
     $("ivnFig").hidden = !P.dom; if (P.dom && $("ivnFig").dataset.k !== QZ.pi + "|" + m3Cur().head) { $("ivnFig").dataset.k = QZ.pi + "|" + m3Cur().head; $("ivnFig").innerHTML = ivDomSvg(P, 300); if (P.mono && (mode === "sequence" || mode === "calculate")) ivRide(P); }
     var hn = P.dom && !done ? (gr ? "Hint: <span class=\"lm\">" + ivIneq(P) + "</span>" : mode === "calculate" ? "Hint: " + (P.mono ? "where it is " + (P.mono > 0 ? "increasing" : "decreasing") : "the " + (P.v === "y" ? "range" : "domain")) + " on a number line" : "") : ""; $("ivnHint").innerHTML = hn; $("ivnHint").hidden = !hn;
