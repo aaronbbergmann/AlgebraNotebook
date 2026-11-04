@@ -8679,7 +8679,7 @@ var ESPIC = {
       if (n > 1 && K.some(function (k, i) { return i > 0 && i < n && (k[1] - K[i - 1][1]) * (k[1] - K[i + 1][1]) <= 0; })) continue;
       var ca = !!rnd(2), cb = !!rnd(2), pcs = [];
       for (var j = 0; j < n; j++) if ((K[j + 1][1] > K[j][1]) === (dir > 0)) pcs.push({ lo: { v: xs[j], cl: j === 0 ? ca : true }, hi: { v: xs[j + 1], cl: j + 1 === n ? cb : true } });
-      if (!pcs.length) continue;
+      if (pcs.length !== 1) continue;   // (one rise, or one fall: a single interval)
       if (mode === "demo" && (pcs.length > 1 || pcs[0].lo.cl === pcs[0].hi.cl)) continue;   // (the demo shows the switch button too)
       var vals = []; pcs.forEach(function (p) { vals.push(p.lo.v, p.hi.v); }); var M = ivMarksAll(vals); if (!M) continue;
       var show = ivGr() ? "graph" : mode === "calculate" ? "both" : "fig";
