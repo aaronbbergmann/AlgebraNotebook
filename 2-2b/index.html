@@ -325,7 +325,7 @@
   .log .msg{align-self:stretch;max-width:none;background:none;padding:0;border-radius:0;font-size:1rem;line-height:1.45}
   .log .msg+.msg{padding-top:.6rem;border-top:1px solid color-mix(in srgb,var(--ink) 15%,transparent)}
   /* ---- 1.1 quiz ---- */
-  body.quiz:not(.pq) .pgCtl,body.quiz:not(.wf):not(.gwN):not(.grN):not(.vfN) #undo,body.quiz:not(.wf):not(.m3):not(.c21) #show{display:none!important}
+  body.quiz:not(.pq) .pgCtl,body.quiz:not(.wf):not(.gwN):not(.grN):not(.vfN):not(.ivN) #undo,body.quiz:not(.wf):not(.m3):not(.c21) #show{display:none!important}
   .pgQ{display:none}
   body.pq .pgQ{display:block;flex:0 0 100%;margin:0 0 .3rem .2rem}
   .pgQt{font:600 1.25rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B2433}
@@ -380,10 +380,42 @@
   /* 2.1 Write g (Demo, Sequence, Calculate, Write): its own graph, the a, h, k sliders and the equation text (Write: typed a, h, k, vertex and equation, no graph) */
   /* 2.1 Real Life: its own graph (h dotted, g blue), the k slider and g's equation (Write: the axes, h(x) = and g(x) = boxes) */
   .vfnG,.vfnS{display:none}
+  /* 2.2B Interval Notation: its own number line (5 numbered marks, arrows for ∞), the ray buttons, and the interval keyboard */
+  .ivnG{display:none}
+  body.ivN #pgGraphWrap,body.ivN .pgSide,body.ivN #qzTools,body.ivN #ptTog,body.ivN #wfSteps{display:none!important}
+  body.ivN .ivnG{display:flex;flex-direction:column;align-items:center;gap:.7rem;width:100%;max-width:44rem;margin:.4rem auto 0}
+  .ivnAsk{font:700 1.08rem system-ui,sans-serif;color:#1B2433;min-height:1.5em;text-align:center}
+  #ivnTools{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+  #ivnTools button{height:2.9rem;min-width:4.6rem;border-radius:10px;border:2px solid #1B2433;background:#fff;color:#1B2433;font:700 1.25rem/1 system-ui,sans-serif;cursor:pointer;padding:0 .45rem;touch-action:none}
+  #ivnTools button svg{display:block;margin:auto;pointer-events:none}
+  #ivnTools button.on{background:#2D70B3;border-color:#2D70B3;color:#fff}#ivnTools button.on svg [fill="#fff"]{fill:#2D70B3}
+  #ivnTools button:disabled{opacity:.4;cursor:default}
+  .ivnLine{width:100%}.ivnLine[hidden]{display:none}
+  #ivnSvg{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none}
+  #ivnSvg.live{cursor:crosshair}#ivnSvg.sw{cursor:pointer}
+  #ivnSvg .ivAx{stroke:#000;stroke-width:2;fill:none}#ivnSvg .ivTk{stroke:#000;stroke-width:2}
+  #ivnSvg .ivLb{font:400 22px "LM","Latin Modern Roman","CMU Serif",Georgia,serif;fill:#000;text-anchor:middle}
+  #ivnSvg .ivSh{stroke:#000;stroke-width:7}#ivnSvg .ivAr{fill:#000}#ivnSvg .ivDot{stroke:#000;stroke-width:3}
+  #ivnSvg .ivPv{opacity:.35}
+  #ivnSvg.sw .ivDot:hover{stroke:#2D70B3}
+  .ivnOut{text-align:center;font:1.1rem system-ui,sans-serif;min-height:2.6rem}
+  .ivRes{font:600 1.05rem system-ui,sans-serif}
+  .ivV{font:400 1.5rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;margin-left:.3em}.ivV.ivPrev{color:#8A93A3}.ivQ{color:#8A93A3}
+  .ivOr{font-style:normal;margin:0 .25em}
+  .ivRow{display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;font-weight:600}
+  .ivIn{font:400 1.4rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;width:15rem;max-width:80vw;padding:.2em .5em;border:2px solid #9AA0A8;border-radius:8px;text-align:center;box-sizing:border-box}
+  .ivIn.ok{border-color:#2E9E4F;background:#E4F3E8;color:#000}.ivIn.bad{border-color:#C74440;animation:shake .3s}
+  .ivKeys{display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:.6rem}
+  .ivKeys button{min-width:2.8rem;height:2.6rem;font:400 1.3rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;cursor:pointer}
+  .ivKeys button:hover{background:#EEF1F6}
+  .ivnFig{width:100%;display:flex;justify-content:center}.ivnFig[hidden],.ivnHint[hidden]{display:none}.ivnFig svg{width:300px;max-width:80vw;height:auto;display:block}
+  .ivnHint{font:600 1rem system-ui,sans-serif;color:#5B6577}.ivnHint .lm{font-size:1.15rem;color:#1B2433}
+  .ivGhost{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);width:26px;height:26px}
   body.vfN #pgGraphWrap,body.vfN .pgSide,body.vfN #qzTools,body.vfN #ptTog,body.vfN #wfSteps{display:none!important}
   body.vfN .vfnG{display:block;flex:1 1 24rem;max-width:34rem;width:100%}
   body.vfN .vfnS{display:flex;flex-direction:column;gap:.55rem;box-sizing:border-box;padding-left:1.5rem;flex:1 1 15rem;max-width:24rem}
   body.quiz.vfN #undo{display:block}
+  body.quiz.ivN #undo{display:block}
   .vfnAsk{font:700 1.12rem system-ui,sans-serif;color:#1B2433;min-height:1.5em;margin:0 0 .5rem}
   .vfnRow{display:flex;gap:.6rem;align-items:flex-start}
   #vfnTools{display:flex;flex-direction:column;gap:.5rem}
@@ -805,6 +837,7 @@
         <div class="gwnOut grnOut" id="grnOut" aria-live="polite"></div>
       </div>
       <div class="vfnG" id="vfnG"><div class="vfnAsk" id="vfnAsk" aria-live="polite"></div><div class="vfnRow"><div id="vfnTools" aria-label="Graph tools"><button type="button" data-vft="clear" title="Delete: clear the graph" aria-label="Delete">✕</button><button type="button" data-vft="U" title="Parabola: press, then click the graph to place the vertex. Drag the vertex and the other point" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mkv3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mkv3)" marker-end="url(#mkv3)"/></svg></button><button type="button" data-vft="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-vft="pt" title="Point: click the graph to plot a point; drag a point to move it" aria-label="Point">●</button><button type="button" data-vft="dl" title="Dotted line: click one point, then another" aria-label="Dotted line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mkv1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3" markerHeight="3" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" stroke-dasharray="0.1 5.2" marker-start="url(#mkv1)" marker-end="url(#mkv1)"/></svg></button></div><svg id="vfnSvg" viewBox="0 0 420 420" role="img" aria-label="Graph of the parabola"></svg></div></div>
+      <div class="ivnG" id="ivnG"><div class="ivnFig" id="ivnFig" hidden></div><div class="ivnHint" id="ivnHint" hidden></div><div class="ivnAsk" id="ivnAsk" aria-live="polite"></div><div id="ivnTools" role="group" aria-label="Number line tools"><button type="button" data-ivt="o" title="Open dot (boundary not included): click, then click the line twice; or drag it onto the line" aria-label="Open-dot ray"><svg viewBox="0 0 64 26" width="58" height="24" aria-hidden="true"><line x1="17" y1="13" x2="50" y2="13" stroke="currentColor" stroke-width="5"/><path d="M62 13 L49 5 L49 21 Z" fill="currentColor"/><circle cx="10" cy="13" r="7" fill="#fff" stroke="currentColor" stroke-width="3"/></svg></button><button type="button" data-ivt="c" title="Closed dot (boundary included): click, then click the line twice; or drag it onto the line" aria-label="Closed-dot ray"><svg viewBox="0 0 64 26" width="58" height="24" aria-hidden="true"><line x1="17" y1="13" x2="50" y2="13" stroke="currentColor" stroke-width="5"/><path d="M62 13 L49 5 L49 21 Z" fill="currentColor"/><circle cx="10" cy="13" r="7" fill="currentColor" stroke="currentColor" stroke-width="3"/></svg></button><button type="button" data-ivt="sw" title="Switch a dot between open and closed: press, then click a dot" aria-label="Switch a dot between open and closed"><svg viewBox="0 0 64 26" width="58" height="24" aria-hidden="true"><circle cx="10" cy="13" r="7" fill="#fff" stroke="currentColor" stroke-width="3"/><path d="M22 9 H42 M37 4 L43 9 L37 14 M42 17 H22 M27 12 L21 17 L27 22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="54" cy="13" r="7" fill="currentColor" stroke="currentColor" stroke-width="3"/></svg></button><button type="button" data-ivt="clear" title="Delete: clear the number line" aria-label="Clear the number line">✕</button></div><div class="ivnLine" id="ivnLine"><svg id="ivnSvg" viewBox="0 0 640 100" role="img" aria-label="Number line"></svg></div><div class="ivnOut" id="ivnOut" aria-live="polite"></div></div>
       <div class="vfnS" id="vfnS"><div id="vfnTb" hidden></div><div class="vfnOut" id="vfnOut" aria-live="polite"></div></div>
       <div class="gwnG" id="gwnG"><svg id="gwnSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph of f and g"></svg></div>
       <div class="gwnS" id="gwnS">
@@ -4634,6 +4667,7 @@
     nlHide();
     if (pq() && grN()) { grnUndo(); return; }
     if (pq() && vfN()) { vfnUndo(); return; }
+    if (pq() && ivN()) { ivnUndo(); return; }
     if (pq() && gwN()) { gwnUndo(); return; }
     if (wf()) { wfUndo(); return; }
     hideKind();
@@ -5202,7 +5236,7 @@
     ["2.1A", "2.1", ["1", "2"], "Transformations of Quadratic Functions"],
     ["2.1B", "2.1", ["3", "4"], "Transformations of Quadratic Functions: Trans to Func"],
     ["2.2A", "2.2", ["1", "2"], "Characteristics of Quadratic Functions"],
-    ["2.2B", "2.2", [], "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing"],
+    ["2.2B", "2.2", ["6", "7", "8"], "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing"],
     ["2.2C", "2.2", ["3", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
     ["2.4A", "2.4", ["1", "2"], "Modeling with Quadratic Functions"],
     ["2.4B", "2.4", ["3", "4"], "Modeling with Quadratic Functions (Day 2)"]
@@ -5257,7 +5291,7 @@
       [4, "solo", 80, "Write Mode, 2nd round", 2], [4, "solo", 100, "Write Mode, 3rd round", 3]
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
-    "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare"]),
+    "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range"]),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression"], ["Vertex & Point", "Intercepts", "Three Points", "Regression"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -5274,6 +5308,7 @@
       ["g", "solo", 80, "Write Mode, 2nd round", 2], ["g", "solo", 100, "Write Mode, 3rd round", 3]
     ] }
   };
+  BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return l[0] < 6; }); [6, 7, 8].forEach(function (n) { BUILT["2.2"].levels.push([n, "demo", 10, "Demo Mode"], [n, "sequence", 40, "Sequence Mode, 3 problems"], [n, "calculate", 70, "Calculate Mode, 3 problems"], [n, "solo", 100, "Write Mode, 3 problems"]); });   // 2.2B Interval Notation: each mode needs a whole round of three
   // RevT1 holds no exercises of its own: each item runs one of the original exercises (the same code), so a change to an original shows up here too.
   // Its progress is the original's progress.  Questions refer to Algebra 2 Chapter 1 Test 1.
   BUILT["RevT1"] = { review: true, key: "algebraProgress:RevT1", levels: [], top: 0, items: [
@@ -5382,7 +5417,7 @@
   function levelUp() {
     up = null; var c = prog[LK() + ":" + mode] || 0;
     if (mode === "create") return;
-    if (mode === "solo" ? c < 2 : !modeEarned()) return;
+    if (mode === "solo" ? c < (ivL() ? 1 : 2) : !modeEarned()) return;   // (2.2B Interval Notation: one whole round of Write)
     var B0 = BUILT[act], ml = (B0.modes || (B0.modesFor ? B0.modesFor(lesson) : ["demo", "sequence", "calculate", "solo"])).filter(function (m) { return m !== "create"; }), nx = ml[ml.indexOf(mode) + 1], stayT = "Try another in " + MODES[mode] + " mode";
     if (nx) up = { label: MODES[nx] + " Mode", stayText: stayT, go: function () { setMode(nx); } };   // the next mode is never Create
     else if (rev && mode === "solo") { var ri = BUILT[rev].items; if (pct() >= 100 && revI < ri.length - 1) up = { label: "Next: " + ri[revI + 1].q, stay: true, stayText: "Stay in this exercise", go: function () { revGo(revI + 1); } }; }   // a review: the Next button moves on to its next item
@@ -7025,7 +7060,7 @@
     gdDescUI(); estUI();
     if (!pq() || !QZ.order) return;
     if (est()) { var oe = pqParts(), alle = QZ.step >= 4; $("pgQcue").innerHTML = (QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length + ": " : "") + [["Table", oe.table], ["Regression", oe.graph], ["Estimate", oe.desc]].map(function (a) { return a[0] + (alle || a[1] ? " <span class=\"cueOk\">\u2713</span>" : "?"); }).join(" &nbsp; "); return; }
-    if (vfN()) { $("pgQcue").innerHTML = QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : ""; return; }
+    if (vfN() || ivN()) { $("pgQcue").innerHTML = QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : ""; return; }
     if (grN()) { $("pgQcue").innerHTML = QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : ""; return; }
     if (m3()) { $("pgQcue").innerHTML = m3Cue(); return; }
     if (gwN()) { $("pgQcue").innerHTML = QZ.order.length > 1 ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : ""; return; }   // (one thing to answer, g: only the problem count)
@@ -7298,6 +7333,7 @@ var ESPIC = {
   function wsMissing() {
     if (grN()) return grnMissing();
     if (vfN()) return vfnMissing();
+    if (ivN()) return ivnMissing();
     if (gwN()) return gwnMissing();
     if (m3()) return m3wMissing();
     var miss = [], num = function (t) { return !!parse(String(t || "").replace(/−/g, "-").trim()); };
@@ -7330,6 +7366,7 @@ var ESPIC = {
   function wsubSubmit() {
     if (grN()) { grnSubmit(); return; }
     if (vfN()) { vfnSubmit(); return; }
+    if (ivN()) { ivnSubmit(); return; }
     if (gwN()) { gwnSubmit(); return; }
     var miss = wsMissing();
     if (miss.length) { pqMsg("Not yet: still to complete " + wsList(miss) + ".", "note"); return; }   // (a reminder, not an error: it does not cost the Progress)
@@ -8543,6 +8580,428 @@ var ESPIC = {
     var i = 0;
     (function next() { if (pgRun !== run) return; while (i < I.length && I[i].done()) i++; if (i < I.length) { I[i++].run(next); return; } PG.demoFin = true; pgStop(); })();
   }
+  // ---- 2.2B Interval Notation (the sixth exercise of 2.2). A problem is an inequality (or two joined by "or"); its number line has 5 numbered marks
+  // and an arrow at each end (−∞ on the left, ∞ on the right).
+  // Demo and Sequence: the inequality is graphed on the number line with three buttons: an open-dot ray, a closed-dot ray, and a switch that changes one dot
+  //   between open and closed. A ray button is a three-part sequence: the dot (the button), where the first dot goes, where the shading goes (a mark, or an
+  //   arrow for ∞); any two neighbouring parts can be one drag (button onto the line, or press on the line and drag the shading). Between the parts the
+  //   shading and the interval notation are previewed under the pointer.
+  // Calculate: the inequality and its number line are given, and the interval notation is typed (with the interval keyboard).
+  // Write: only the inequality or only the number line; the interval notation is typed and checked with Submit.
+  // Every mode but Demo is a round of three problems shown one at a time, and the mode's Progress level needs the whole round.
+  var IVI = 1e9, IVB = { W: 640, H: 100, y: 44, x0: 130, dx: 95 };
+  function ivL() { return act === "2.2" && lesson >= 6 && lesson <= 8; }   // 2.2B: Interval Notation, Domain, Range
+  function ivN() { return pq() && ivL() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().iv && (mode === "demo" || mode === "sequence" || mode === "calculate" || mode === "solo"); }
+  function ivP() { return m3Cur().iv; }
+  function ivSt() { if (!QZ.iv || QZ.iv.pi !== QZ.pi) QZ.iv = { pi: QZ.pi, tool: null, p1: null, pcs: [], hov: null, txt: "", ok: false, bad: false, hist: [] }; return QZ.iv; }
+  function ivGr() { return mode === "demo" || mode === "sequence"; }
+  function ivFin(v) { return Math.abs(v) < IVI; }
+  function ivNum(v) { return v <= -IVI ? "−∞" : v >= IVI ? "∞" : c2F(v); }
+  function ivPc(a, b) {   // a piece from its two ends, smallest first; ∞ is never included
+    var lo = a.v <= b.v ? a : b, hi = lo === a ? b : a;
+    return { lo: { v: lo.v, cl: ivFin(lo.v) && !!lo.cl }, hi: { v: hi.v, cl: ivFin(hi.v) && !!hi.cl } };
+  }
+  function ivSort(L) { return L.slice().sort(function (p, q) { return p.lo.v - q.lo.v || p.hi.v - q.hi.v; }); }
+  function ivStr(L) { return ivSort(L).map(function (p) { return (p.lo.cl ? "[" : "(") + ivNum(p.lo.v) + ", " + ivNum(p.hi.v) + (p.hi.cl ? "]" : ")"); }).join(" ∪ "); }
+  function ivSame(A, B) { return A.length === B.length && ivStr(A) === ivStr(B); }
+  function ivSpan(p, q) { return p.lo.v === q.lo.v && p.hi.v === q.hi.v; }
+  function ivIneq(P, plain) {
+    var X = plain ? (P.v || "x") : "<i>" + (P.v || "x") + "</i>", r = function (cl, gt) { return gt ? (cl ? "≥" : ">") : (cl ? "≤" : "<"); }, L = ivSort(P.pcs);
+    if (P.flip && L.length === 1) { var f = L[0]; if (!ivFin(f.lo.v)) return c2F(f.hi.v) + " " + r(f.hi.cl, 1) + " " + X; if (!ivFin(f.hi.v)) return c2F(f.lo.v) + " " + r(f.lo.cl, 0) + " " + X; }
+    return L.map(function (p) {
+      if (!ivFin(p.lo.v) && !ivFin(p.hi.v)) return "all real numbers";
+      if (!ivFin(p.lo.v)) return X + " " + r(p.hi.cl, 0) + " " + c2F(p.hi.v);
+      if (!ivFin(p.hi.v)) return X + " " + r(p.lo.cl, 1) + " " + c2F(p.lo.v);
+      return c2F(p.lo.v) + " " + r(p.lo.cl, 0) + " " + X + " " + r(p.hi.cl, 0) + " " + c2F(p.hi.v);
+    }).join(plain ? " or " : " <span class=\"ivOr\">or</span> ");
+  }
+  function ivEsc(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  // the problems: a round gets harder (a ray; two boundaries, or a ray written backwards; mixed dots, or "or")
+  function c2M226(tier) {
+    var demo = mode === "demo", st = c2Pick(tier === 0 ? [1, 1, 2] : tier === 1 ? [1, 2, 5] : [2, 5, 10]), m0 = st * c2Rng(-4, 0), M = [0, 1, 2, 3, 4].map(function (i) { return m0 + i * st; });
+    var kind = demo ? "mix" : tier === 0 ? "one" : tier === 1 ? c2Pick(["two", "mix", "one"]) : c2Pick(["mix", "or", "or"]), cl = function () { return !!rnd(2); }, pcs, flip = false, i, j;
+    if (kind === "one") { var b = M[1 + rnd(3)], c = cl(); pcs = [rnd(2) ? ivPc({ v: -IVI }, { v: b, cl: c }) : ivPc({ v: b, cl: c }, { v: IVI })]; flip = tier === 1; }
+    else if (kind === "or") { i = rnd(2); j = i + 2 + rnd(3 - i); pcs = [ivPc({ v: -IVI }, { v: M[i], cl: cl() }), ivPc({ v: M[j], cl: cl() }, { v: IVI })]; }
+    else { i = rnd(3); j = i + 2 + rnd(3 - i); var c1 = cl(), c2 = kind === "mix" ? !c1 : c1; pcs = [ivPc({ v: M[i], cl: c1 }, { v: M[j], cl: c2 })]; }
+    var show = ivGr() ? "graph" : mode === "calculate" ? "both" : tier === 0 ? "ineq" : tier === 1 ? "line" : c2Pick(["ineq", "line"]);
+    var P = { M: M, pcs: pcs, flip: flip, show: show }, pb = { kind: 26, iv: P, pic: "" };
+    pb.head = ivIneq(P, true);
+    pb.story = show === "line" ? "Write the numbers graphed on the number line in interval notation." : (ivGr() ? "Graph " : "Write ") + "<span class=\"lm\">" + ivIneq(P) + "</span>" + (ivGr() ? " on the number line." : " in interval notation.");
+    pb.fig = function () { return ""; };
+    pb.steps = [{ id: "iv", lab: "Interval notation", type: "ivn", ask: "" }];
+    pb.ex = "A closed dot and a bracket [ ] mean the boundary is included (≤ or ≥); an open dot and a parenthesis ( ) mean it is not (< or >). ∞ and −∞ always take a parenthesis. " + ivIneq(P, true) + " in interval notation is " + ivStr(pcs) + ".";
+    return pb;
+  }
+
+  // ---- 2.2B Domain (2.2's seventh exercise): a graph (a segment or a curve) that starts and ends with dots; the domain is the interval of its x-values.
+  // Demo and Sequence: the inequality is a hint and the answer is graphed on the number line. Calculate: the number line is the hint, the interval is typed.
+  // Write: only the graph.
+  function ivPoly(N) { return function (x) { var s = 0; for (var i = 0; i < N.length; i++) { var t = N[i][1]; for (var j = 0; j < N.length; j++) if (j !== i) t *= (x - N[j][0]) / (N[i][0] - N[j][0]); s += t; } return s; }; }
+  function c2M227(tier) {
+    for (var t = 0; t < 4000; t++) {
+      var a = c2Rng(-6, 2), b = a + c2Rng(2, 8); if (b > 6) continue;
+      var st = b - a <= 4 ? 1 : (b - a) % 2 ? 0 : 2; if (!st) continue;
+      var lo = Math.max(-6 * st, b - 4 * st), hi = a, opts = []; for (var m = lo; m <= hi; m += 1) if ((a - m) % st === 0) opts.push(m); if (!opts.length) continue;
+      var m0 = c2Pick(opts), M = [0, 1, 2, 3, 4].map(function (i) { return m0 + i * st; }); if (M.indexOf(b) < 0) continue;
+      var deg = tier === 0 ? c2Pick([1, 2]) : tier === 1 ? c2Pick([2, 3]) : c2Pick([1, 2, 3, 3]), N = [];
+      for (var i = 0; i <= deg; i++) N.push([a + (b - a) * i / deg, c2Rng(-5, 5)]);
+      if (deg === 1 && N[0][1] === N[1][1]) continue;
+      var F = ivPoly(N), ok = true; for (var x = a; x <= b + 1e-9; x += (b - a) / 60) if (Math.abs(F(x)) > 6.4) ok = false; if (!ok) continue;
+      var ya = Math.round(F(a)), yb = Math.round(F(b)), c1 = !!rnd(2), c2 = demoMix() ? !c1 : tier === 0 ? c1 : !!rnd(2);
+      var pcs = [ivPc({ v: a, cl: c1 }, { v: b, cl: c2 })], show = ivGr() ? "graph" : mode === "calculate" ? "both" : "fig";
+      var P = { M: M, pcs: pcs, show: show, dom: { N: N, a: a, b: b, ya: ya, yb: yb } }, pb = { kind: 27, iv: P, pic: "" };
+      pb.head = "domain " + ivIneq(P, true) + " " + JSON.stringify(N);
+      pb.story = "What is the domain of the graph?";
+      pb.fig = function () { return ""; };
+      pb.steps = [{ id: "iv", lab: "Domain", type: "ivn", ask: "" }];
+      pb.ex = "The domain is every x-value of the graph. It starts at x = " + c2F(a) + (c1 ? " (closed dot: included)" : " (open dot: not included)") + " and ends at x = " + c2F(b) + (c2 ? " (closed dot: included)" : " (open dot: not included)") + ", so the domain is " + ivIneq(P, true) + ", or " + ivStr(pcs) + " in interval notation.";
+      return pb;
+    }
+  }
+  function demoMix() { return mode === "demo"; }
+  // ---- 2.2B Range (2.2's eighth exercise): the same as Domain, in y. The graph is a segment, or a smooth curve whose turning points sit on whole numbers;
+  // the range runs from its lowest to its highest y-value, each included unless the graph has it only at an open dot.
+  function ivKnot(K) { return function (x) { for (var i = 0; i < K.length - 1; i++) if (x <= K[i + 1][0] + 1e-9) { var t = (x - K[i][0]) / (K[i + 1][0] - K[i][0]); return K[i][1] + (K[i + 1][1] - K[i][1]) * (1 - Math.cos(Math.PI * Math.max(0, Math.min(1, t)))) / 2; } return K[K.length - 1][1]; }; }
+  function ivMarks(lo, hi) {
+    var st = hi - lo <= 4 ? 1 : (hi - lo) % 2 ? 0 : 2; if (!st || hi - lo > 8) return null;
+    var opts = []; for (var m = hi - 4 * st; m <= lo; m++) if ((lo - m) % st === 0) opts.push(m); if (!opts.length) return null;
+    var m0 = c2Pick(opts); return [0, 1, 2, 3, 4].map(function (i) { return m0 + i * st; });
+  }
+  function c2M228(tier) {
+    for (var t = 0; t < 4000; t++) {
+      var n = tier === 0 ? 1 : tier === 1 ? 2 : 3, xs = [c2Rng(-6, 0)], K;
+      for (var i = 0; i < n; i++) xs.push(xs[i] + (n === 1 ? c2Rng(3, 8) : c2Rng(2, n === 2 ? 5 : 4))); if (xs[n] > 6) continue;
+      K = xs.map(function (x) { return [x, c2Rng(-6, 6)]; }); if (K.some(function (k, i) { return i && k[1] === K[i - 1][1]; })) continue;
+      if (n > 1 && K.some(function (k, i) { return i > 0 && i < n && (k[1] - K[i - 1][1]) * (k[1] - K[i + 1][1]) <= 0; })) continue;   // every inside point is a turning point
+      var ca = !!rnd(2), cb = !!rnd(2), ys = K.map(function (k) { return k[1]; }), lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys);
+      var inc = function (v) { return K.some(function (k, i) { return k[1] === v && (i === 0 ? ca : i === n ? cb : true); }); }, cl = inc(lo), ch = inc(hi);
+      if (mode === "demo" && cl === ch) continue;
+      var M = ivMarks(lo, hi); if (!M) continue;
+      var pcs = [ivPc({ v: lo, cl: cl }, { v: hi, cl: ch })], show = ivGr() ? "graph" : mode === "calculate" ? "both" : "fig";
+      var P = { M: M, pcs: pcs, show: show, v: "y", dom: { K: K, a: K[0][0], b: K[n][0], ya: K[0][1], yb: K[n][1], ca: ca, cb: cb } }, pb = { kind: 28, iv: P, pic: "" };
+      if (n === 1) P.dom.K = null, P.dom.N = K;   // (a segment: drawn straight)
+      pb.head = "range " + ivIneq(P, true) + " " + JSON.stringify(K) + ca + cb;
+      pb.story = "What is the range of the graph?";
+      pb.fig = function () { return ""; };
+      pb.steps = [{ id: "iv", lab: "Range", type: "ivn", ask: "" }];
+      pb.ex = "The range is every y-value of the graph. The lowest is y = " + c2F(lo) + (cl ? " (the graph reaches it: included)" : " (only at an open dot: not included)") + " and the highest is y = " + c2F(hi) + (ch ? " (included)" : " (only at an open dot: not included)") + ", so the range is " + ivIneq(P, true) + ", or " + ivStr(pcs) + " in interval notation.";
+      return pb;
+    }
+  }
+
+  function ivDomSvg(P, w) {
+    var D = P.dom, S = 300, R = 7, X = function (x) { return S / 2 + x / R * (S / 2 - 8); }, Y = function (y) { return S / 2 - y / R * (S / 2 - 8); }, g = "", F = D.K ? ivKnot(D.K) : ivPoly(D.N);
+    for (var k = -R + 1; k < R; k++) g += "<line x1=\"" + X(k) + "\" y1=\"" + Y(-R) + "\" x2=\"" + X(k) + "\" y2=\"" + Y(R) + "\" stroke=\"#E3E6EB\"/><line x1=\"" + X(-R) + "\" y1=\"" + Y(k) + "\" x2=\"" + X(R) + "\" y2=\"" + Y(k) + "\" stroke=\"#E3E6EB\"/>";
+    g += "<line x1=\"" + X(-R) + "\" y1=\"" + Y(0) + "\" x2=\"" + X(R) + "\" y2=\"" + Y(0) + "\" stroke=\"#1B2433\" stroke-width=\"1.5\"/><line x1=\"" + X(0) + "\" y1=\"" + Y(-R) + "\" x2=\"" + X(0) + "\" y2=\"" + Y(R) + "\" stroke=\"#1B2433\" stroke-width=\"1.5\"/>";
+    [-6, -4, -2, 2, 4, 6].forEach(function (k) { g += "<text x=\"" + X(k) + "\" y=\"" + (Y(0) + 13) + "\" font-size=\"10\" text-anchor=\"middle\" fill=\"#5B6577\">" + c2F(k) + "</text><text x=\"" + (X(0) - 4) + "\" y=\"" + (Y(k) + 3.5) + "\" font-size=\"10\" text-anchor=\"end\" fill=\"#5B6577\">" + c2F(k) + "</text>"; });
+    var pts = []; for (var i = 0; i <= 120; i++) { var x = D.a + (D.b - D.a) * i / 120; pts.push(X(x).toFixed(1) + "," + Y(F(x)).toFixed(1)); }
+    g += "<polyline points=\"" + pts.join(" ") + "\" fill=\"none\" stroke=\"#2D70B3\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>";
+    [[D.a, D.ya, D.ca != null ? D.ca : P.pcs[0].lo.cl], [D.b, D.yb, D.cb != null ? D.cb : P.pcs[0].hi.cl]].concat((D.K || []).slice(1, -1).map(function (k) { return [k[0], k[1], null]; })).forEach(function (q, j) {
+      var cx = X(q[0]), cy = Y(F(q[0])), lx = cx + (j ? 8 : -8), ly = cy + (cy < 30 ? 18 : -9), anc = j ? "start" : "end";
+      if (lx < 50 && !j) { anc = "start"; lx = cx + 6; } if (lx > S - 50 && j) { anc = "end"; lx = cx - 6; }
+      if (q[2] !== null) g += "<circle cx=\"" + cx + "\" cy=\"" + cy + "\" r=\"5\" fill=\"" + (q[2] ? "#2D70B3" : "#fff") + "\" stroke=\"#2D70B3\" stroke-width=\"2.5\"/>"; else { lx = cx; ly = cy + (F(q[0] + 0.01) > F(q[0]) ? 18 : -9); anc = "middle"; } g += "<text x=\"" + lx + "\" y=\"" + ly + "\" font-size=\"13\" text-anchor=\"" + anc + "\" fill=\"#1B2433\" font-family=\"LM,Georgia,serif\" paint-order=\"stroke\" stroke=\"#fff\" stroke-width=\"4\">(" + c2F(q[0]) + ", " + c2F(Math.round(F(q[0]) * 10) / 10) + ")</text>";
+    });
+    return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " + S + " " + S + "\" width=\"" + (w || S) + "\" role=\"img\" aria-label=\"Graph from x = " + c2F(D.a) + " to x = " + c2F(D.b) + "\" style=\"font-family:system-ui,sans-serif;background:#fff;border:1px solid #9AA0A8\">" + g + "</svg>";
+  }
+  // ---- the number line (an SVG: the interactive one, the given one, and the picture in Show work) ----
+  function ivXP(P, v) { if (v <= -IVI) return 20; if (v >= IVI) return IVB.W - 20; return IVB.x0 + (v - P.M[0]) / (P.M[1] - P.M[0]) * IVB.dx; }
+  function ivAt(px) { var P = ivP(); if (px < IVB.x0 - IVB.dx * .55) return -IVI; if (px > IVB.x0 + 4 * IVB.dx + IVB.dx * .55) return IVI; return P.M[Math.max(0, Math.min(4, Math.round((px - IVB.x0) / IVB.dx)))]; }
+  function ivSvg(P, pcs, o) {   // o (the live line): { p1, hov, tool }
+    o = o || {}; var y = IVB.y, W = IVB.W, X = function (v) { return ivXP(P, v); }, g = "", sh = "", pv = null;
+    if (o.p1 && o.hov != null && o.hov !== o.p1.v) pv = ivPc(o.p1, { v: o.hov, cl: o.p1.cl });
+    var all = pcs.concat(pv ? [pv] : []), L = all.some(function (p) { return !ivFin(p.lo.v); }) || (o.p1 && o.p1.v <= -IVI), R = all.some(function (p) { return !ivFin(p.hi.v); }) || (o.p1 && o.p1.v >= IVI);
+    var arrow = function (v, c) { var t = X(v), d = v < 0 ? -1 : 1; return "<path class=\"ivAr" + c + "\" d=\"M" + (t + d * 4) + " " + y + " L" + (t - d * 16) + " " + (y - 11) + " L" + (t - d * 16) + " " + (y + 11) + " Z\"/>"; };
+    g += "<line class=\"ivAx\" x1=\"26\" y1=\"" + y + "\" x2=\"" + (W - 26) + "\" y2=\"" + y + "\"/>";
+    g += "<path class=\"ivAx\" d=\"" + (L ? "" : "M33 " + (y - 8) + " L22 " + y + " L33 " + (y + 8)) + (R ? "" : " M" + (W - 33) + " " + (y - 8) + " L" + (W - 22) + " " + y + " L" + (W - 33) + " " + (y + 8)) + "\"/>";
+    P.M.forEach(function (v) { var x = X(v); g += "<line class=\"ivTk\" x1=\"" + x + "\" y1=\"" + (y - 9) + "\" x2=\"" + x + "\" y2=\"" + (y + 9) + "\"/><text class=\"ivLb\" x=\"" + x + "\" y=\"" + (y + 38) + "\">" + c2F(v) + "</text>"; });
+    function piece(p, c, i) {
+      var a = ivFin(p.lo.v) ? X(p.lo.v) : X(-IVI) + 14, b = ivFin(p.hi.v) ? X(p.hi.v) : X(IVI) - 14, h = "<line class=\"ivSh" + c + "\" x1=\"" + a + "\" y1=\"" + y + "\" x2=\"" + b + "\" y2=\"" + y + "\"/>";
+      if (!ivFin(p.lo.v)) h += arrow(-IVI, c); if (!ivFin(p.hi.v)) h += arrow(IVI, c);
+      ["lo", "hi"].forEach(function (e) { var q = p[e]; if (ivFin(q.v)) h += "<circle class=\"ivDot" + c + "\" cx=\"" + X(q.v) + "\" cy=\"" + y + "\" r=\"9\" fill=\"" + (q.cl ? "#000" : "#fff") + "\"" + (i >= 0 ? " data-ivd=\"" + i + ":" + e + "\"" : "") + "/>"; });
+      return h;
+    }
+    pcs.forEach(function (p, i) { sh += piece(p, "", o.live ? i : -1); });
+    if (pv) sh += piece(pv, " ivPv", -1);
+    if (o.p1) sh += ivFin(o.p1.v) ? "<circle class=\"ivDot\" cx=\"" + X(o.p1.v) + "\" cy=\"" + y + "\" r=\"9\" fill=\"" + (o.p1.cl ? "#000" : "#fff") + "\" data-ivd=\"p1\"/>" : pv ? "" : arrow(o.p1.v, "");
+    else if (o.hov != null && (o.tool === "o" || o.tool === "c")) sh += ivFin(o.hov) ? "<circle class=\"ivDot ivPv\" cx=\"" + X(o.hov) + "\" cy=\"" + y + "\" r=\"9\" fill=\"" + (o.tool === "c" ? "#000" : "#fff") + "\"/>" : arrow(o.hov, " ivPv");
+    return g + sh;
+  }
+  function ivPicSvg(P, pcs, w) { return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " + IVB.W + " " + IVB.H + "\" width=\"" + (w || 420) + "\" style=\"font-family:LM,Georgia,serif\"><style>.ivAx{stroke:#000;stroke-width:2;fill:none}.ivTk{stroke:#000;stroke-width:2}.ivLb{font-size:22px;text-anchor:middle;fill:#000}.ivSh{stroke:#000;stroke-width:7}.ivAr{fill:#000}.ivDot{stroke:#000;stroke-width:3}</style>" + ivSvg(P, pcs) + "</svg>"; }
+  // ---- state changes ----
+  function ivPush() { var s = ivSt(); s.hist.push(JSON.stringify({ tool: s.tool, p1: s.p1, pcs: s.pcs })); if (s.hist.length > 60) s.hist.shift(); }
+  function ivnUndo() { var s = ivSt(); if (QZ.step >= 4 || s.ok || !s.hist.length) return; var c = JSON.parse(s.hist.pop()); s.tool = c.tool; s.p1 = c.p1; s.pcs = c.pcs; s.hov = null; pqMsg(""); ivnSync(); }
+  function ivTool(t) {
+    var s = ivSt(); if (QZ.step >= 4 || s.ok) return;
+    if (t === "clear") { if (!s.pcs.length && !s.p1) return; ivPush(); s.pcs = []; s.p1 = null; s.tool = null; s.hov = null; pqMsg(""); ivnSync(); return; }
+    if (t === "o" || t === "c") { if (s.p1) { ivPush(); s.p1.cl = t === "c"; s.tool = t; ivnSync(); return; } s.tool = s.tool === t ? null : t; }
+    else s.tool = s.tool === t ? null : t;
+    s.hov = null; ivnSync();
+  }
+  function ivFirst(v) { var s = ivSt(); if (s.tool !== "o" && s.tool !== "c") return; ivPush(); s.p1 = { v: v, cl: s.tool === "c" }; s.hov = null; pqMsg(""); ivnSync(); }
+  function ivSecond(v) {
+    var s = ivSt(); if (!s.p1 || v == null || v === s.p1.v) return;
+    ivPush(); var pc = ivPc(s.p1, { v: v, cl: s.p1.cl }); s.p1 = null; s.hov = null; s.tool = null; s.pcs.push(pc); ivCheck(pc);
+  }
+  function ivDir() {
+    var P = ivP(), L = ivSort(P.pcs);
+    if (L.length === 2) return "With \"or\", shade to the left of " + c2F(L[0].hi.v) + " and to the right of " + c2F(L[1].lo.v) + ".";
+    var p = L[0];
+    if (!ivFin(p.lo.v)) return "x " + (p.hi.cl ? "≤" : "<") + " " + c2F(p.hi.v) + " means the numbers less than " + c2F(p.hi.v) + ": shade to the left, toward −∞.";
+    if (!ivFin(p.hi.v)) return "x " + (p.lo.cl ? "≥" : ">") + " " + c2F(p.lo.v) + " means the numbers greater than " + c2F(p.lo.v) + ": shade to the right, toward ∞.";
+    return "Shade between " + c2F(p.lo.v) + " and " + c2F(p.hi.v) + ".";
+  }
+  function ivWhy(pc) {
+    var P = ivP(), fin = [];
+    P.pcs.forEach(function (q) { [q.lo, q.hi].forEach(function (e) { if (ivFin(e.v) && fin.indexOf(e.v) < 0) fin.push(e.v); }); });
+    var ends = [pc.lo.v, pc.hi.v].filter(ivFin);
+    if (P.dom && P.v === "y") return "Not quite. The range is the y-values the graph covers: look at its lowest and highest points.";
+    if (P.dom) return "Not quite. The domain is the x-values the graph covers: look at where it starts and stops, from left to right.";
+    if (ends.length && ends.every(function (v) { return fin.indexOf(v) >= 0; })) return "Not quite: that shading is not part of the answer. " + ivDir();
+    return "Not quite. The boundar" + (fin.length > 1 ? "ies of " + ivIneq(P, true) + " are " + fin.map(c2F).join(" and ") : "y of " + ivIneq(P, true) + " is " + c2F(fin[0])) + ". Try again.";
+  }
+  var IV_DOTS = "An open dot means the boundary is not included (< or >); a closed dot means it is (≤ or ≥).";
+  function ivCheck(pc) {
+    var s = ivSt(), P = ivP(), t = P.pcs.filter(function (q) { return ivSpan(q, pc); })[0], twice = s.pcs.filter(function (q) { return q !== pc && ivSpan(q, pc); }).length;
+    if (!t || twice) { s.pcs.pop(); QZ.wrong++; pqMsg(t ? "That part is already graphed." : ivWhy(pc)); ivnSync(); return; }
+    var bad = (pc.lo.cl !== t.lo.cl) || (pc.hi.cl !== t.hi.cl), mixed = ivFin(t.lo.v) && ivFin(t.hi.v) && t.lo.cl !== t.hi.cl;
+    if (bad && mixed) pqMsg("One boundary is included and one is not. Use the switch button to change a dot.", "note");
+    else if (bad) { QZ.wrong++; pqMsg("Check the dots. " + IV_DOTS + " Use the switch button to change a dot."); }
+    else pqMsg(s.pcs.length < P.pcs.length ? "" : "");
+    ivWin();
+  }
+  function ivSwitch(k) {   // k: "i:lo", "i:hi" or "p1"
+    var s = ivSt(); if (QZ.step >= 4 || s.ok) return;
+    ivPush();
+    if (k === "p1") { if (s.p1) s.p1.cl = !s.p1.cl; ivnSync(); return; }
+    var w = k.split(":"), p = s.pcs[+w[0]]; if (!p || !ivFin(p[w[1]].v)) { s.hist.pop(); return; }
+    p[w[1]].cl = !p[w[1]].cl; pqMsg(""); ivWin();
+  }
+  function ivLine(t, math) { if (QZ.ww) QZ.ww.steps.push(math ? { eqs: [t], cls: "cg" } : { txt: true, eqs: [t], cls: "cg" }); }
+  function ivWin() {
+    var s = ivSt(), P = ivP();
+    if (!s.p1 && ivSame(s.pcs, P.pcs)) { ivLine("Graphed on the number line."); ivLine(ivStr(P.pcs), true); ivnDone(); return; }
+    ivnSync();
+  }
+  function ivPicNow() { try { if (ivN() && QZ.ww) { var P = ivP(); if (P.dom) QZ.ww.pic = ivDomSvg(P, 260) + (P.show === "both" || P.show === "graph" ? ivPicSvg(P, P.pcs, 360) : ""); else if (P.show === "line") QZ.ww.pic = ivPicSvg(P, P.pcs, 360); } } catch (e) { } }
+  function ivnDone() {
+    var s = ivSt(); s.ok = true; s.tool = null; s.hov = null; pqMsg(""); ivPicNow();
+    if (pgRun && pgPaused && !DN) { PG.demoFin = true; pgStop(); return; }
+    if (!pgRun) drawPlay(); else ivnSync();
+  }
+  // ---- typing interval notation (Calculate and Write) ----
+  function ivParse(t) {
+    t = String(t || "").replace(/\s+/g, "").replace(/[−–—]/g, "-").replace(/infinity|inf|oo/gi, "∞").replace(/\+∞/g, "∞").replace(/[uU]/g, "∪");
+    if (!t) return { err: "empty" };
+    var parts = t.split("∪"), raw = [], val = function (x) { return x === "∞" ? IVI : x === "-∞" ? -IVI : +x; };
+    for (var i = 0; i < parts.length; i++) {
+      var m = /^([\[(])(-?∞|-?(?:\d+\.?\d*|\.\d+)),(-?∞|-?(?:\d+\.?\d*|\.\d+))([\])])$/.exec(parts[i]);
+      if (!m) return { err: parts[i].indexOf(",") < 0 ? "comma" : "form" };
+      raw.push({ ob: m[1], a: val(m[2]), b: val(m[3]), cb: m[4] });
+    }
+    for (var k = 0; k < raw.length; k++) {
+      var x = raw[k]; if (x.a >= x.b) return { err: "order" };
+      if ((x.ob === "[" && !ivFin(x.a)) || (x.cb === "]" && !ivFin(x.b))) return { err: "inf" };
+    }
+    return { pcs: raw.map(function (x) { return { lo: { v: x.a, cl: x.ob === "[" }, hi: { v: x.b, cl: x.cb === "]" } }; }) };
+  }
+  function ivOk(t) { var r = ivParse(t); return !!r.pcs && ivSame(r.pcs, ivP().pcs); }
+  function ivFb(t) {
+    var r = ivParse(t), P = ivP();
+    if (r.err) return { comma: "Separate the two ends with a comma, like [1, 5).", order: "Write the smaller end first, then the larger one: left to right on the number line.", inf: "∞ and −∞ are not numbers, so they are never included: always use ( or ) next to them." }[r.err] || "Type an interval like [1, 5) or (−∞, 3].";
+    if (r.pcs.length !== P.pcs.length) return P.pcs.length > 1 ? "\"Or\" makes two intervals: write both and join them with ∪." : "This one is a single interval.";
+    var A = ivSort(r.pcs), B = ivSort(P.pcs);
+    if (A.every(function (p, i) { return ivSpan(p, B[i]); })) return "Check the brackets: [ or ] means the boundary is included (≤ or ≥, a closed dot); ( or ) means it is not (< or >, an open dot).";
+    if (P.dom && P.v === "y") return "Not quite. Check the ends: what are the lowest and the highest y-values of the graph, and does the graph reach them?";
+    if (P.dom) return "Not quite. Check the ends: where does the graph start and stop, from left to right?";
+    return "Not quite. Check the ends: which numbers make " + (P.show === "line" ? "the graph" : ivIneq(P, true)) + " true?";
+  }
+  function ivnTyped(enter) {
+    var s = ivSt(); if (QZ.step >= 4 || s.ok || mode !== "calculate") return;
+    if (ivOk(s.txt)) { ivLine("Interval notation:"); ivLine(ivStr(ivP().pcs), true); ivnDone(); return; }
+    if (enter && String(s.txt).trim()) { QZ.wrong++; s.bad = true; pqMsg(ivFb(s.txt)); var e = $("ivnIn"); if (e) { e.classList.remove("bad"); void e.offsetWidth; e.classList.add("bad"); } }
+  }
+  function ivnMissing() { return String(ivSt().txt).trim() ? [] : ["the interval notation"]; }
+  function ivnSubmit() {
+    var miss = ivnMissing(); if (miss.length) { pqMsg("Not yet: still to complete " + wsList(miss) + ".", "note"); return; }
+    var s = ivSt(), e = $("ivnIn");
+    if (!ivOk(s.txt)) { QZ.wrong++; s.bad = true; pqMsg(ivFb(s.txt) + " Then press Submit again."); if (e) { e.classList.remove("bad"); void e.offsetWidth; e.classList.add("bad"); } return; }
+    ivLine("Interval notation:"); ivLine(ivStr(ivP().pcs), true); ivnDone();
+  }
+  function ivIns(k) {
+    var e = $("ivnIn"); if (!e || e.disabled) return;
+    var a = e.selectionStart == null ? e.value.length : e.selectionStart, b = e.selectionEnd == null ? a : e.selectionEnd;
+    e.value = e.value.slice(0, a) + k + e.value.slice(b); var c = a + k.length; e.focus(); try { e.setSelectionRange(c, c); } catch (er) { }
+    e.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  // ---- what the pane shows ----
+  function ivnQ() { var pb = m3Cur(); return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div></div>"; }
+  function ivnAsk() {
+    var s = ivSt(), P = ivP(); if (QZ.step >= 4 || s.ok) return "";
+    if (mode === "calculate") return "Type the interval notation. Use the buttons for [ ] ( ) and ∞.";
+    if (mode === "solo") return "Type the interval notation, then press Submit.";
+    if (s.tool === "sw") return "Click a dot to switch it between open and closed.";
+    if (s.p1) return "Click where the shading ends: a number, or an arrow for ∞.";
+    if (s.tool) return "Click the number line where the first dot goes (or press there and drag the shading).";
+    if (s.pcs.length && s.pcs.length < P.pcs.length) return "Now graph the other part: choose a dot again.";
+    return "Choose a dot (open: not included, closed: included). Click it, or drag it onto the number line.";
+  }
+  var ivOutKey = "";
+  function ivnOut() {
+    var s = ivSt(), P = ivP(), el = $("ivnOut"), done = QZ.step >= 4 || s.ok;
+    if (ivGr()) {
+      ivOutKey = "";
+      var pv = s.p1 && s.hov != null && s.hov !== s.p1.v ? ivPc(s.p1, { v: s.hov, cl: s.p1.cl }) : null, L = s.pcs.concat(pv ? [pv] : []);
+      el.innerHTML = done ? "<div class=\"ivRes\"><span class=\"cueOk\">✓</span> <span class=\"lm\">" + ivIneq(P) + "</span> &nbsp;is&nbsp; <span class=\"ivV\">" + ivStr(P.pcs) + "</span></div>"
+        : "<div class=\"ivRes\">Interval notation: <span class=\"ivV" + (pv ? " ivPrev" : "") + "\">" + (L.length ? ivStr(L) : "<span class=\"ivQ\">?</span>") + "</span></div>";
+      return;
+    }
+    var key = QZ.pi + "|" + mode + "|" + (done ? 1 : 0);
+    if (ivOutKey !== key || !$("ivnIn")) {
+      ivOutKey = key;
+      el.innerHTML = "<div class=\"ivRow\" id=\"ivnInRow\"><label for=\"ivnIn\">Interval notation:</label><input id=\"ivnIn\" class=\"ivIn\" autocomplete=\"off\" autocapitalize=\"off\" spellcheck=\"false\" placeholder=\"Ex [1, 5)\" aria-label=\"Interval notation\"" + (done ? " disabled" : "") + "></div>" +
+        (done ? "" : "<div class=\"ivKeys\" role=\"group\" aria-label=\"Interval keyboard\">" + ["[", "(", ")", "]", ",", "−∞", "∞", "∪", "−"].map(function (k) { return "<button type=\"button\" data-ivk=\"" + k + "\" aria-label=\"Insert " + k + "\">" + k + "</button>"; }).join("") + "</div>");
+    }
+    var e = $("ivnIn"); if (e && e.value !== s.txt && document.activeElement !== e) e.value = s.txt;
+    if (e) { e.classList.toggle("ok", done); if (done) { e.value = ivStr(P.pcs); e.disabled = true; } }
+  }
+  function ivnSync() {
+    var on = ivN(); document.body.classList.toggle("ivN", on); if (!on) return;
+    var s = ivSt(), P = ivP(), done = QZ.step >= 4 || s.ok, gr = ivGr(), S = $("ivnSvg");
+    $("wfSteps").hidden = true; $("ivnTools").hidden = !gr;
+    if (QZ.ww && QZ.ww.ivh !== QZ.pi + mode) {   // Show work: the question in words, then the answer
+      QZ.ww.ivh = QZ.pi + mode; QZ.ww.label = MODES[mode] + " mode, " + (P.dom ? (P.v === "y" ? "Range" : "Domain") : "Interval Notation");
+      QZ.ww.steps = P.dom ? [{ txt: true, cls: "cf", eqs: [P.v === "y" ? "What is the range of the graph?" : "What is the domain of the graph?"] }] : P.show === "line" ? [{ txt: true, cls: "cf", eqs: ["Write the numbers graphed on the number line in interval notation."] }] : [{ txt: true, cls: "cf", eqs: [(gr ? "Graph " : "Write ") + ivIneq(P, true) + (gr ? " on the number line." : " in interval notation.")] }];
+      ivPicNow();
+    }
+    [].forEach.call(document.querySelectorAll("#ivnTools button"), function (b) { var t = b.dataset.ivt; b.classList.toggle("on", s.tool === t && !done); b.disabled = done || (t === "clear" && !s.pcs.length && !s.p1); b.setAttribute("aria-pressed", s.tool === t ? "true" : "false"); });
+    $("ivnAsk").innerHTML = ivnAsk();
+    var showLine = gr || P.show === "both" || P.show === "line"; $("ivnLine").hidden = !showLine;
+    $("ivnFig").hidden = !P.dom; if (P.dom && $("ivnFig").dataset.k !== QZ.pi + "|" + m3Cur().head) { $("ivnFig").dataset.k = QZ.pi + "|" + m3Cur().head; $("ivnFig").innerHTML = ivDomSvg(P, 300); }
+    var hn = P.dom && !done ? (gr ? "Hint: <span class=\"lm\">" + ivIneq(P) + "</span>" : mode === "calculate" ? "Hint: the " + (P.v === "y" ? "range" : "domain") + " on a number line" : "") : ""; $("ivnHint").innerHTML = hn; $("ivnHint").hidden = !hn;
+    if (showLine) {
+      S.innerHTML = ivSvg(P, gr ? s.pcs : P.pcs, gr && !done ? { p1: s.p1, hov: s.hov, tool: s.tool, live: true } : null);
+      S.classList.toggle("live", gr && !done && !!s.tool); S.classList.toggle("sw", gr && !done && s.tool === "sw");
+      S.setAttribute("aria-label", gr ? "Number line: " + (s.pcs.length ? ivStr(s.pcs) : "nothing graphed yet") : "Number line showing " + ivStr(P.pcs));
+    }
+    ivnOut();
+    $("undo").hidden = mode !== "sequence" || done;
+    $("show").hidden = mode !== "solo";
+    if (typeof wsReadyUpd === "function") wsReadyUpd();
+  }
+  // ---- pointer work: the ray buttons (click, or drag onto the line), the line (click, click; or press and drag), the switch ----
+  var ivGhost = null, ivJust = 0;
+  function ivGhostMake(t, x, y) { ivGhostEnd(); var g = document.createElement("div"); g.className = "ivGhost"; g.innerHTML = "<svg width=\"26\" height=\"26\" viewBox=\"0 0 26 26\"><circle cx=\"13\" cy=\"13\" r=\"9\" fill=\"" + (t === "c" ? "#000" : "#fff") + "\" stroke=\"#000\" stroke-width=\"3\"/></svg>"; document.body.appendChild(g); ivGhost = g; ivGhostAt(x, y); }
+  function ivGhostAt(x, y) { if (ivGhost) { ivGhost.style.left = x + "px"; ivGhost.style.top = y + "px"; } }
+  function ivGhostEnd() { if (ivGhost) { ivGhost.remove(); ivGhost = null; } }
+  function ivSx(cx, cy) { var S = $("ivnSvg"), m = S.getScreenCTM(); if (!m) return 0; var q = S.createSVGPoint(); q.x = cx; q.y = cy || 0; return q.matrixTransform(m.inverse()).x; }
+  function ivScr(v) { var S = $("ivnSvg"), m = S.getScreenCTM(), q = S.createSVGPoint(); q.x = ivXP(ivP(), v); q.y = IVB.y; q = q.matrixTransform(m); return { x: q.x, y: q.y }; }
+  function ivOver(cx, cy) { var r = $("ivnSvg").getBoundingClientRect(); if (cx < r.left - 10 || cx > r.right + 10 || cy < r.top - 30 || cy > r.bottom + 20) return null; return ivAt(ivSx(cx, cy)); }
+  function ivBusy() { return mode === "demo" && pgRun && !pgPaused; }
+  (function () {
+    var S = $("ivnSvg"), T = $("ivnTools");
+    T.addEventListener("click", function (e) { var b = e.target.closest("button[data-ivt]"); if (!b || !ivN()) return; if (Date.now() - ivJust < 400) return; if (e.isTrusted) pgUser(); if (ivBusy()) return; ivTool(b.dataset.ivt); });
+    T.addEventListener("pointerdown", function (e) {
+      var b = e.target.closest("button[data-ivt]"); if (!b || e.button > 0 || !ivN() || !ivGr()) return; var t = b.dataset.ivt; if (t !== "o" && t !== "c") return;
+      var s = ivSt(); if (QZ.step >= 4 || s.ok) return;
+      var x0 = e.clientX, y0 = e.clientY, drag = false;
+      function mv(ev) {
+        if (!drag) { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) < 7) return; drag = true; if (ev.isTrusted) pgUser(); if (ivBusy()) { up(); return; } s.tool = t; if (s.p1) { ivPush(); s.p1 = null; } ivGhostMake(t, ev.clientX, ev.clientY); }
+        ivGhostAt(ev.clientX, ev.clientY); var v = ivOver(ev.clientX, ev.clientY); if (v !== s.hov) { s.hov = v; ivnSync(); }
+      }
+      function up(ev) {
+        document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); document.removeEventListener("pointercancel", up);
+        if (!drag) return; ivJust = Date.now(); ivGhostEnd(); var v = ev ? ivOver(ev.clientX, ev.clientY) : null; s.hov = null; if (v != null) ivFirst(v); else ivnSync();
+      }
+      document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); document.addEventListener("pointercancel", up);
+    });
+    S.addEventListener("pointermove", function (e) {
+      if (!ivN() || !ivGr() || (e.buttons & 1)) return; var s = ivSt(); if (s.ok || QZ.step >= 4 || !(s.tool === "o" || s.tool === "c" || s.p1)) return;
+      var v = ivAt(ivSx(e.clientX, e.clientY)); if (v !== s.hov) { s.hov = v; ivnSync(); }
+    });
+    S.addEventListener("pointerleave", function () { if (!ivN() || ivBusy()) return; var s = ivSt(); if (s.hov != null && !s.down) { s.hov = null; ivnSync(); } });
+    S.addEventListener("pointerdown", function (e) {
+      if (e.button > 0 || !ivN() || !ivGr()) return; var s = ivSt(); if (s.ok || QZ.step >= 4) return;
+      if (e.isTrusted) pgUser(); if (ivBusy()) return;
+      var px = ivSx(e.clientX, e.clientY), v = ivAt(px);
+      if (s.tool === "sw") {   // the nearest dot within reach switches
+        var best = null, bd = 18;
+        [].forEach.call(S.querySelectorAll("[data-ivd]"), function (c) { var d = Math.abs(+c.getAttribute("cx") - px); if (d < bd) { bd = d; best = c.getAttribute("data-ivd"); } });
+        if (best) ivSwitch(best); else pqMsg("Click on a dot to switch it.", "note");
+        return;
+      }
+      if (s.tool !== "o" && s.tool !== "c" && !s.p1) { pqMsg("First choose the open-dot or the closed-dot button.", "note"); return; }
+      e.preventDefault(); try { S.setPointerCapture(e.pointerId); } catch (er) { }
+      var first = !s.p1, start = v;
+      if (first) ivFirst(v); else { s.hov = v; ivnSync(); }
+      s.down = true;
+      function mv(ev) { var w = ivAt(ivSx(ev.clientX, ev.clientY)); if (w !== s.hov) { s.hov = w; ivnSync(); } }
+      function up() {
+        S.removeEventListener("pointermove", mv); S.removeEventListener("pointerup", up); S.removeEventListener("pointercancel", up); s.down = false;
+        if (first) { if (s.hov != null && s.hov !== start) ivSecond(s.hov); return; }   // pressed on the line and dragged: the dot and the shading in one move
+        ivSecond(s.hov != null ? s.hov : start);
+      }
+      S.addEventListener("pointermove", mv); S.addEventListener("pointerup", up); S.addEventListener("pointercancel", up);
+    });
+    var O = $("ivnOut");
+    O.addEventListener("mousedown", function (e) { if (e.target.closest && e.target.closest("[data-ivk]")) e.preventDefault(); });   // (the keyboard keeps the cursor in the box)
+    O.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ivk]"); if (!b || !ivN()) return; if (e.isTrusted) pgUser(); ivIns(b.dataset.ivk); });
+    O.addEventListener("input", function (e) { if (e.target.id !== "ivnIn" || !ivN()) return; if (e.isTrusted) pgUser(); var s = ivSt(); s.txt = e.target.value; e.target.classList.remove("bad"); if (mode === "calculate") ivnTyped(false); else if (typeof wsReadyUpd === "function") wsReadyUpd(); });
+    O.addEventListener("keydown", function (e) { if (e.key !== "Enter" || e.target.id !== "ivnIn" || !ivN()) return; e.preventDefault(); if (mode === "calculate") ivnTyped(true); else if (mode === "solo") ivnSubmit(); });
+  })();
+  // ---- the demo (ONE, for Demo next step: only the next part) ----
+  function ivnDemo(run, ONE, cap) {
+    if (!ONE) QZ.iv = null;
+    var s = ivSt(), P = ivP(); s.ok = false; ivnSync();
+    function go(pt, then) { handGo(pt, 650); pgWait(800, function () { if (pgRun !== run) return; handTap(); then(); }); }
+    function btn(t) { return document.querySelector("#ivnTools [data-ivt=\"" + t + "\"]"); }
+    function glide(a, b, ms, each, then) {
+      var t0 = null;
+      function step(ts) { if (pgRun !== run) { ivGhostEnd(); return; } if (t0 === null) t0 = ts; var u = Math.min(1, (ts - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, q = { x: a.x + (b.x - a.x) * e, y: a.y + (b.y - a.y) * e }; handAt(q); each(q); if (u < 1) pgRaf(step); else pgWait(300, then); }
+      pgRaf(step);
+    }
+    var say = function (v) { return ivFin(v) ? c2F(v) : v < 0 ? "−∞ (the left arrow)" : "∞ (the right arrow)"; };
+    function draw(t, first) { return function (n) {
+      var f = ivFin(t.lo.v) ? t.lo : t.hi, e = f === t.lo ? t.hi : t.lo, typ = f.cl ? "c" : "o";
+      s.p1 = null; s.tool = null; s.hov = null; ivnSync();
+      cap((P.dom && P.v === "y" ? "The lowest y-value of the graph is " + c2F(f.v) + (f.cl ? ", and the graph reaches it, so " + c2F(f.v) + " is in the range. " : " at an open dot, so " + c2F(f.v) + " is not in the range. ") : P.dom ? "The graph starts at x = " + c2F(f.v) + (f.cl ? " with a closed dot, so " + c2F(f.v) + " is in the domain. " : " with an open dot, so " + c2F(f.v) + " is not in the domain. ") : f.cl ? "≤ or ≥: " + c2F(f.v) + " is included, a closed dot. " : "< or >: " + c2F(f.v) + " is not included, an open dot. ") + "Drag the " + (f.cl ? "closed" : "open") + "-dot button to " + c2F(f.v) + ".");
+      var a = ctr(btn(typ));
+      go(a, function () {
+        s.tool = typ; ivGhostMake(typ, a.x, a.y); ivnSync(); var to = ivScr(f.v);
+        glide(a, to, 1200, function (q) { ivGhostAt(q.x, q.y); var v = ivOver(q.x, q.y); if (v !== s.hov) { s.hov = v; ivnSync(); } }, function () {
+          ivGhostEnd(); s.hov = null; ivFirst(f.v);
+          cap("Now move toward " + say(e.v) + ": the shading and the interval notation grow with the pointer. Click to finish.");
+          pgWait(700, function () {
+            if (pgRun !== run) return; var b = ivScr(e.v);
+            glide(to, b, 2000, function (q) { var v = ivAt(ivSx(q.x, q.y)); if (v !== s.hov) { s.hov = v; ivnSync(); } }, function () { handTap(); ivSecond(e.v); pgWait(1300, n); });
+          });
+        });
+      });
+    }; }
+    function swap(i, end) { return function (n) {
+      var q = s.pcs[i][end], t = ivSort(P.pcs).filter(function (r) { return ivSpan(r, s.pcs[i]); })[0];
+      cap((P.dom && P.v === "y" ? "The highest y-value is " + c2F(q.v) + ": " + (t && t[end].cl ? "the graph reaches it, so its dot must be closed." : "it is only at an open dot, so its dot must be open.") : P.dom ? "The graph ends at x = " + c2F(q.v) + " with " + (t && t[end].cl ? "a closed dot: it is in the domain, so its dot must be closed." : "an open dot: it is not in the domain, so its dot must be open.") : c2F(q.v) + (t && t[end].cl ? " is included (≤ or ≥): its dot must be closed." : " is not included (< or >): its dot must be open.")) + " Press the switch button, then click the dot.");
+      go(ctr(btn("sw")), function () { if (s.tool !== "sw") ivTool("sw"); pgWait(500, function () { if (pgRun !== run) return; go(ivScr(q.v), function () { ivSwitch(i + ":" + end); pgWait(1600, n); }); }); });
+    }; }
+    function typeAns(n) {
+      var e = $("ivnIn"); if (!e) { n(); return; } var val = ivStr(P.pcs), i = 0;
+      cap("[ ] for a boundary that is included, ( ) for one that is not, and always ( ) next to ∞. Type " + val + ".");
+      go(ctr(e), function () { s.txt = ""; e.value = ""; (function ch() { if (pgRun !== run) return; if (i >= val.length) { ivnTyped(false); pgWait(900, n); return; } s.txt += val.charAt(i++); e.value = s.txt; pgWait(120, ch); })(); });
+    }
+    function nextItem() {   // what is still to do on the line
+      if (mode === "calculate") return s.ok ? null : typeAns;
+      var T = ivSort(P.pcs);
+      if (s.p1) { s.p1 = null; s.tool = null; }
+      s.pcs = s.pcs.filter(function (p) { return T.some(function (t) { return ivSpan(t, p); }); });
+      for (var k = 0; k < T.length; k++) if (!s.pcs.some(function (p) { return ivSpan(p, T[k]); })) return draw(T[k]);
+      for (var i = 0; i < s.pcs.length; i++) { var t = T.filter(function (r) { return ivSpan(r, s.pcs[i]); })[0]; if (!t) continue; if (s.pcs[i].lo.cl !== t.lo.cl) return swap(i, "lo"); if (s.pcs[i].hi.cl !== t.hi.cl) return swap(i, "hi"); }
+      return null;
+    }
+    if (ONE) { var it = nextItem(); if (!it) { pgStop(); return; } it(function () { pgWait(700, function () { if (pgRun === run) pgStop(); }); }); return; }
+    (function next() {
+      if (pgRun !== run) return; if (s.ok) { cap("The interval notation is " + ivStr(P.pcs) + "."); pgWait(2200, function () { if (pgRun !== run) return; PG.demoFin = true; pgStop(); }); return; }
+      var it = nextItem(); if (!it) { PG.demoFin = true; pgStop(); return; } it(next);
+    })();
+  }
   // ---- parent tables (2.1 and 2.2) and the Standard Form table: a y value can be dragged onto an empty y cell, which copies it there (as in the graphing tables).
   // A press only becomes a drag once the pointer moves, so a click on a cell still does what it did.
   function cellDragCopy(e, text, targetAt, drop) {
@@ -8729,6 +9188,7 @@ var ESPIC = {
     }
     else if (grN()) $("pgQt").innerHTML = grnQ();
     else if (vfN()) $("pgQt").innerHTML = vfnQ();
+    else if (ivN()) $("pgQt").innerHTML = ivnQ();
     else if (m3()) $("pgQt").innerHTML = m3Q();
     else if (wf()) $("pgQt").innerHTML = wfQ();
     else if (gd() && mode === "create" && !QZ.cr && QZ.pick) { $("pgQt").textContent = "Your function is in."; showPick($("pgQ"), "How would you like to work on it?"); }
@@ -8755,11 +9215,11 @@ var ESPIC = {
     $("hint").hidden = done || soloish();   // a right answer needs no hint
     if (wf()) { $("show").hidden = false; wfUndoVis(); }
     else if (m3()) { $("show").hidden = false; $("undo").hidden = true; }
-    wfSteps(); gwnSync(); grnSync(); vfnSync(); c21Sync();
+    wfSteps(); gwnSync(); grnSync(); vfnSync(); ivnSync(); c21Sync();
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
   // is each part right?  The equation has been checked and revealed, every table row is done, and the drawn shape is the parent
-  function pqParts() { if (vfN()) { var vk = !!(QZ.vf && QZ.vf.pi === QZ.pi && QZ.vf.ok); return { eq: vk, table: true, graph: vk, parent: true, desc: true }; } if (grN()) { var rk = !!(QZ.gr && QZ.gr.pi === QZ.pi && QZ.gr.ok); return { eq: rk, table: true, graph: rk, parent: true, desc: true }; } if (gwN()) { var gk = !!(QZ.gn && QZ.gn.pi === QZ.pi && QZ.gn.ok); return { eq: gk, table: true, graph: gk, parent: true, desc: true }; } if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: wfL() === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: wsub() ? !!PG.wsT : estTableOK(), graph: wsub() ? !!PG.wsG : estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: mode === "solo" || TB.rows().every(function (r) { return r.done; }) || (ptAvail() && ptAllDone()), graph: gd() || wsub() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
+  function pqParts() { if (ivN()) { var ik = !!(QZ.iv && QZ.iv.pi === QZ.pi && QZ.iv.ok); return { eq: ik, table: true, graph: ik, parent: true, desc: true }; } if (vfN()) { var vk = !!(QZ.vf && QZ.vf.pi === QZ.pi && QZ.vf.ok); return { eq: vk, table: true, graph: vk, parent: true, desc: true }; } if (grN()) { var rk = !!(QZ.gr && QZ.gr.pi === QZ.pi && QZ.gr.ok); return { eq: rk, table: true, graph: rk, parent: true, desc: true }; } if (gwN()) { var gk = !!(QZ.gn && QZ.gn.pi === QZ.pi && QZ.gn.ok); return { eq: gk, table: true, graph: gk, parent: true, desc: true }; } if (m3()) return { eq: !!QZ.m3done, table: true, graph: !!QZ.m3done, parent: true, desc: true }; if (wf()) return { eq: !!PG.show.eq, table: true, graph: wfL() === 5 ? !!QZ.we : !!PG.show.graph, parent: true, desc: true }; if (est()) return { eq: true, table: wsub() ? !!PG.wsT : estTableOK(), graph: wsub() ? !!PG.wsG : estModelOK(), parent: true, desc: !!PG.eOK }; return { eq: !!PG.show.eq, table: mode === "solo" || TB.rows().every(function (r) { return r.done; }) || (ptAvail() && ptAllDone()), graph: gd() || wsub() ? !!PG.show.graph : !!(PG.shape && shapeOK(PG.shape)), parent: !gd() || !!PG.pdone, desc: !gd() || !!PG.dOK }; }
   var pqBusy = false;
   function pqEval() {
     if (!pq() || pqBusy || QZ.step >= 4 || pgRun || !QZ.order || (gd() && mode === "create" && !QZ.cr) || wfCr()) return;
@@ -8772,7 +9232,7 @@ var ESPIC = {
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
         QZ.step = 4; var last = QZ.pi === QZ.order.length - 1; if (act === "2.1") c21Save();
         var c2Err = QZ.wrong > 0;   // any error message in this round (in Demo, this problem) means no Progress for it
-        if (!QZ.custom && mode !== "create" && mode !== "demo" && !c2Err) { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
+        if (!QZ.custom && mode !== "create" && mode !== "demo" && !c2Err && !ivL()) { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
         pqMsg(mode === "solo" ? cheer() : est() || wf() || m3() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last && QZ.order.length > 1 ? (QZ.order.length === 3 ? "You have finished all three!" : "You have finished all four!") : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
         if (QZ.custom) {   // the student's own function: no Progress, and Next offers the next mode with the same function
           pqMsg(mode === "solo" ? cheer() : "Well done!", "ok"); var cm = wf() || gd2() ? ["demo", "sequence", "calculate", "solo"] : ["demo", "sequence", "solo"], cn = cm[cm.indexOf(mode) + 1];
@@ -8784,7 +9244,7 @@ var ESPIC = {
           up = nm && nm !== "create" ? { label: MODES[nm] + " Mode", stayText: "Try another in " + MODES[mode] + " mode", go: function () { setMode(nm); } } : null;
         } else if (last && c2Err) { up = { label: "Try another", go: function () { pqRegen(); } }; }   // (2.1: a round with errors earns nothing; another round is offered)
         else if (last) { QZ.locked = true; counted = false; tally(); }
-        else if (mode !== "solo" && !c2Err) levelUp();   // the mode's level earned partway through a round: Next offers the next mode, the small link the next problem here   // Sequence and Solo count a round only when all four parents are done
+        else if (mode !== "solo" && !c2Err && !ivL()) levelUp();   // the mode's level earned partway through a round: Next offers the next mode, the small link the next problem here   // Sequence and Solo count a round only when all four parents are done
         pqPanel();
         if (c2Err && !QZ.custom && mode !== "create") pqMsg(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : "No Progress for this round: there were error messages along the way." + (last ? " Try another round with none." : ""));
       }
@@ -11231,7 +11691,7 @@ var ESPIC = {
   }
   function m3Steps() {
     var el = $("wfSteps"); if (!el) return;
-    if (grN() || vfN()) { el.hidden = true; el.innerHTML = ""; return; }
+    if (grN() || vfN() || ivN()) { el.hidden = true; el.innerHTML = ""; return; }
     if (m3wOn() && m3Cur()) { m3wSteps(); return; }
     m3wKey = "";
     var pb = m3Cur(), st = m3Step();
@@ -11438,7 +11898,7 @@ var ESPIC = {
     var svg = document.querySelector("svg.m3Fig"), g = svg.dataset.g.split(",").map(Number), pt = svg.createSVGPoint();
     var xo = g[6] || 0, yo = g[7] || 0; pt.x = g[0] + (x - xo) / (g[4] - xo) * g[2]; pt.y = g[1] + g[3] - (y - yo) / (g[5] - yo) * g[3]; var q = pt.matrixTransform(svg.getScreenCTM()); return { x: q.x, y: q.y };
   }
-  function m3Redraw() { if (grN()) { grnSync(); return; } if (vfN()) { vfnSync(); return; } $("pgQt").innerHTML = m3Q(); m3Steps(); }
+  function m3Redraw() { if (grN()) { grnSync(); return; } if (vfN()) { vfnSync(); return; } if (ivN()) { ivnSync(); return; } $("pgQt").innerHTML = m3Q(); m3Steps(); }
   function m3Plot(p) {
     if (m3wOn()) { m3wPlot(p); return; }
     var st = m3Step(), pb = m3Cur(); if (!st || !pb) return; if (pb.kind === 20) { c2Plot(p, st, pb); return; } if (pb.kind === 2) { m3Plot2(p, st, pb); return; } if (pb.kind === 5) { glPlot(p, st, pb); return; } if (pb.kind !== 1) return; var t = st.type, x = QZ.m3x, near = function (qx, qy) { return Math.hypot(p.vx - p.X(qx), p.vy - p.Y(qy)) <= 16; };
@@ -11954,7 +12414,7 @@ var ESPIC = {
     TB.sync(); ptSync(); $("qzTools").hidden = wf() || m3(); posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
-    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd(); gwnSync(); grnSync(); vfnSync(); c21Sync();
+    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd(); gwnSync(); grnSync(); vfnSync(); ivnSync(); c21Sync();
   }
   // ---- Chapter 2 (Quadratic Functions).  2.1 Using a Transformed Quadratic and every exercise of 2.2, 2.3 and 2.4 run on the 1.3 engine: a problem is a story or a function,
   // a figure, and steps (Demo, Sequence and Calculate take every small step; Solo takes only the big ones).  The figure here is a whole coordinate plane that can draw
@@ -12532,7 +12992,7 @@ var ESPIC = {
   // which exercise makes the problem
   function c2Make(tier) {
     c2Dec = act === "2.1" || act === "2.4" || (act === "2.2" && lesson === 5);
-    var pb = act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225][lesson - 1](tier)
+    var pb = act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228][lesson - 1](tier)
       : [c2M241, c2M242, c2M243, c2M244][lesson - 1](tier);
     pb.head = m3Plain(pb.head);   // (Show work's first line is plain text)
     return pb;
@@ -12917,6 +13377,7 @@ var ESPIC = {
     if (!ONE) { Object.keys(PG.show).forEach(function (k) { PG.show[k] = false; }); if (est()) { PG.fam = 0; PG.eOK = false; PG.eqTxt = ""; } else if (wf()) { PG.eqTxt = "g(x)="; } else { if (PQ && !GD) PG.show.desc = true; else PG.show.eq = true; if (PQ && !GD) PG.eqTxt = "f(x)="; if (GD && gwOn()) { PG.show.eq = false; PG.eqTxt = "g(x)="; QZ.gwd = 0; QZ.gwAsk = false; } } drawPlay(); }   // (2.1 Write g: the hand builds g(x) from g(x) = f(x))
     function cap(t) { t = wf() ? wfNm(t) : t; if (ONE) note(t); else dmCap(t); }
     if (PQ && grN()) { grnDemo(run, ONE, cap); return; }
+    if (PQ && ivN()) { ivnDemo(run, ONE, cap); return; }   // 2.2B Interval Notation: the ray buttons and the number line (Calculate: typed)
     if (PQ && vfN()) { vfnDemo(run, ONE, cap); return; }   // 2.2 Vertex Form: the parabola button, then clicks on the graph (Calculate: typed answers)   // 2.1 Real Life: the hand drags the y-intercept (Calculate: slides k)
     if (PQ && gwN()) { gwnDemo(run, ONE, cap); return; }   // 2.1 Write g: the hand drags g's points (Calculate: slides the sliders)
     function tog(part) { return document.querySelector(".tog[data-part=\"" + part + "\"]"); }
