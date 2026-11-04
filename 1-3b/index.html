@@ -8619,7 +8619,7 @@ var ESPIC = {
   // the problems: a round gets harder (a ray; two boundaries, or a ray written backwards; mixed dots, or "or")
   function c2M226(tier) {
     var demo = mode === "demo", st = c2Pick(tier === 0 ? [1, 1, 2] : tier === 1 ? [1, 2, 5] : [2, 5, 10]), m0 = st * c2Rng(-4, 0), M = [0, 1, 2, 3, 4].map(function (i) { return m0 + i * st; });
-    var kind = demo ? "mix" : tier === 0 ? "one" : tier === 1 ? c2Pick(["two", "mix", "one"]) : c2Pick(["mix", "or", "or"]), cl = function () { return !!rnd(2); }, pcs, flip = false, i, j;
+    var kind = demo ? "mix" : tier === 0 ? "one" : tier === 1 ? c2Pick(["two", "mix", "one"]) : c2Pick(["mix", "mix", "two"]), cl = function () { return !!rnd(2); }, pcs, flip = false, i, j;
     if (kind === "one") { var b = M[1 + rnd(3)], c = cl(); pcs = [rnd(2) ? ivPc({ v: -IVI }, { v: b, cl: c }) : ivPc({ v: b, cl: c }, { v: IVI })]; flip = tier === 1; }
     else if (kind === "or") { i = rnd(2); j = i + 2 + rnd(3 - i); pcs = [ivPc({ v: -IVI }, { v: M[i], cl: cl() }), ivPc({ v: M[j], cl: cl() }, { v: IVI })]; }
     else { i = rnd(3); j = i + 2 + rnd(3 - i); var c1 = cl(), c2 = kind === "mix" ? !c1 : c1; pcs = [ivPc({ v: M[i], cl: c1 }, { v: M[j], cl: c2 })]; }
