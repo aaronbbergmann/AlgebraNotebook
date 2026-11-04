@@ -8916,7 +8916,7 @@ var ESPIC = {
     var key = QZ.pi + "|" + mode + "|" + (done ? 1 : 0);
     if (ivOutKey !== key || !$("ivnIn")) {
       ivOutKey = key;
-      el.innerHTML = "<div class=\"ivRow\" id=\"ivnInRow\"><label for=\"ivnIn\">Interval notation:</label><input id=\"ivnIn\" class=\"ivIn\" autocomplete=\"off\" autocapitalize=\"off\" spellcheck=\"false\" placeholder=\"Ex [1, 5)\" aria-label=\"Interval notation\"" + (done ? " disabled" : "") + "></div>" +
+      el.innerHTML = "<div class=\"ivRow\" id=\"ivnInRow\"><input id=\"ivnIn\" class=\"ivIn\" autocomplete=\"off\" autocapitalize=\"off\" spellcheck=\"false\" placeholder=\"Ex [1, 5)\" aria-label=\"Interval notation\"" + (done ? " disabled" : "") + "></div>" +
         (done ? "" : "<div class=\"ivKeys\" role=\"group\" aria-label=\"Interval keyboard\">" + ["[", "(", ")", "]", ",", "−∞", "∞", "∪", "−"].map(function (k) { return "<button type=\"button\" data-ivk=\"" + k + "\" aria-label=\"Insert " + k + "\">" + k + "</button>"; }).join("") + "</div>");
     }
     var e = $("ivnIn"); if (e && e.value !== s.txt && document.activeElement !== e) e.value = s.txt;
