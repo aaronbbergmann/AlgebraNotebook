@@ -5236,7 +5236,7 @@
     ["2.1A", "2.1", ["1", "2"], "Transformations of Quadratic Functions"],
     ["2.1B", "2.1", ["3", "4"], "Transformations of Quadratic Functions: Trans to Func"],
     ["2.2A", "2.2", ["1", "2"], "Characteristics of Quadratic Functions"],
-    ["2.2B", "2.2", ["6", "7", "8"], "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing"],
+    ["2.2B", "2.2", ["6", "7", "8", "9", "10"], "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing"],
     ["2.2C", "2.2", ["3", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
     ["2.4A", "2.4", ["1", "2"], "Modeling with Quadratic Functions"],
     ["2.4B", "2.4", ["3", "4"], "Modeling with Quadratic Functions (Day 2)"]
@@ -5291,7 +5291,7 @@
       [4, "solo", 80, "Write Mode, 2nd round", 2], [4, "solo", 100, "Write Mode, 3rd round", 3]
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
-    "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range"]),
+    "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing"]),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression"], ["Vertex & Point", "Intercepts", "Three Points", "Regression"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -5308,7 +5308,7 @@
       ["g", "solo", 80, "Write Mode, 2nd round", 2], ["g", "solo", 100, "Write Mode, 3rd round", 3]
     ] }
   };
-  BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return l[0] < 6; }); [6, 7, 8].forEach(function (n) { BUILT["2.2"].levels.push([n, "demo", 10, "Demo Mode"], [n, "sequence", 40, "Sequence Mode, 3 problems"], [n, "calculate", 70, "Calculate Mode, 3 problems"], [n, "solo", 100, "Write Mode, 3 problems"]); });   // 2.2B Interval Notation: each mode needs a whole round of three
+  BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return l[0] < 6; }); [6, 7, 8, 9, 10].forEach(function (n) { BUILT["2.2"].levels.push([n, "demo", 10, "Demo Mode"], [n, "sequence", 40, "Sequence Mode, 3 problems"], [n, "calculate", 70, "Calculate Mode, 3 problems"], [n, "solo", 100, "Write Mode, 3 problems"]); });   // 2.2B Interval Notation: each mode needs a whole round of three
   // RevT1 holds no exercises of its own: each item runs one of the original exercises (the same code), so a change to an original shows up here too.
   // Its progress is the original's progress.  Questions refer to Algebra 2 Chapter 1 Test 1.
   BUILT["RevT1"] = { review: true, key: "algebraProgress:RevT1", levels: [], top: 0, items: [
@@ -8590,7 +8590,7 @@ var ESPIC = {
   // Write: only the inequality or only the number line; the interval notation is typed and checked with Submit.
   // Every mode but Demo is a round of three problems shown one at a time, and the mode's Progress level needs the whole round.
   var IVI = 1e9, IVB = { W: 640, H: 100, y: 44, x0: 130, dx: 95 };
-  function ivL() { return act === "2.2" && lesson >= 6 && lesson <= 8; }   // 2.2B: Interval Notation, Domain, Range
+  function ivL() { return act === "2.2" && lesson >= 6 && lesson <= 10; }   // 2.2B: Interval Notation, Domain, Range, Increasing, Decreasing
   function ivN() { return pq() && ivL() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().iv && (mode === "demo" || mode === "sequence" || mode === "calculate" || mode === "solo"); }
   function ivP() { return m3Cur().iv; }
   function ivSt() { if (!QZ.iv || QZ.iv.pi !== QZ.pi) QZ.iv = { pi: QZ.pi, tool: null, p1: null, pcs: [], hov: null, txt: "", ok: false, bad: false, hist: [] }; return QZ.iv; }
@@ -8613,7 +8613,7 @@ var ESPIC = {
       if (!ivFin(p.lo.v)) return X + " " + r(p.hi.cl, 0) + " " + c2F(p.hi.v);
       if (!ivFin(p.hi.v)) return X + " " + r(p.lo.cl, 1) + " " + c2F(p.lo.v);
       return c2F(p.lo.v) + " " + r(p.lo.cl, 0) + " " + X + " " + r(p.hi.cl, 0) + " " + c2F(p.hi.v);
-    }).join(plain ? " or " : " <span class=\"ivOr\">or</span> ");
+    }).join(plain ? " " + (P.join || "or") + " " : " <span class=\"ivOr\">" + (P.join || "or") + "</span> ");
   }
   function ivEsc(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   // the problems: a round gets harder (a ray; two boundaries, or a ray written backwards; mixed dots, or "or")
@@ -8659,6 +8659,59 @@ var ESPIC = {
     }
   }
   function demoMix() { return mode === "demo"; }
+  // ---- 2.2B Increasing and Decreasing (2.2's ninth and tenth exercises): the same as Domain, but the answer is where the graph goes up (or down) from left to right.
+  // A turning point belongs to both sides (closed); an end of the graph keeps its own dot. Two parts are joined with ∪ (the hint says "and", as in the packet).
+  // A new graph (Sequence, Calculate) and a new demo send a rider along it from left to right, tilted to the slope.
+  function ivMarksAll(vals) {
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    for (var st = 1; st <= 2; st++) {
+      if (hi - lo > 4 * st || vals.some(function (v) { return (v - lo) % st; })) continue;
+      var opts = []; for (var m = hi - 4 * st; m <= lo; m++) if ((lo - m) % st === 0) opts.push(m);
+      if (opts.length) { var m0 = c2Pick(opts); return [0, 1, 2, 3, 4].map(function (i) { return m0 + i * st; }); }
+    }
+    return null;
+  }
+  function ivMono(tier, dir) {
+    for (var t = 0; t < 8000; t++) {
+      var n = tier === 0 ? c2Pick([1, 2]) : tier === 1 ? 2 : 3, xs = [c2Rng(-6, 0)];
+      for (var i = 0; i < n; i++) xs.push(xs[i] + (n === 1 ? c2Rng(3, 8) : c2Rng(2, 4))); if (xs[n] > 6) continue;
+      var K = xs.map(function (x) { return [x, c2Rng(-6, 6)]; }); if (K.some(function (k, i) { return i && k[1] === K[i - 1][1]; })) continue;
+      if (n > 1 && K.some(function (k, i) { return i > 0 && i < n && (k[1] - K[i - 1][1]) * (k[1] - K[i + 1][1]) <= 0; })) continue;
+      var ca = !!rnd(2), cb = !!rnd(2), pcs = [];
+      for (var j = 0; j < n; j++) if ((K[j + 1][1] > K[j][1]) === (dir > 0)) pcs.push({ lo: { v: xs[j], cl: j === 0 ? ca : true }, hi: { v: xs[j + 1], cl: j + 1 === n ? cb : true } });
+      if (!pcs.length) continue;
+      if (mode === "demo" && (pcs.length > 1 || pcs[0].lo.cl === pcs[0].hi.cl)) continue;   // (the demo shows the switch button too)
+      var vals = []; pcs.forEach(function (p) { vals.push(p.lo.v, p.hi.v); }); var M = ivMarksAll(vals); if (!M) continue;
+      var show = ivGr() ? "graph" : mode === "calculate" ? "both" : "fig";
+      var P = { M: M, pcs: pcs, show: show, join: "and", mono: dir, dom: { K: n > 1 ? K : null, N: n > 1 ? null : K, a: xs[0], b: xs[n], ya: K[0][1], yb: K[n][1], ca: ca, cb: cb } }, pb = { kind: 29, iv: P, pic: "" }, w = dir > 0 ? "increasing" : "decreasing";
+      pb.head = w + " " + ivIneq(P, true) + " " + JSON.stringify(K) + ca + cb;
+      pb.story = "Where is the graph " + w + "?";
+      pb.fig = function () { return ""; };
+      pb.steps = [{ id: "iv", lab: w, type: "ivn", ask: "" }];
+      pb.ex = "Move along the graph from left to right. It goes " + (dir > 0 ? "up" : "down") + " for " + ivIneq(P, true) + ". A turning point belongs to the interval (closed); an end of the graph keeps its own dot. In interval notation: " + ivStr(pcs) + ".";
+      return pb;
+    }
+  }
+  function c2M229(tier) { return ivMono(tier, 1); }
+  function c2M2210(tier) { return ivMono(tier, -1); }
+  var IV_RIDERS = [["🏃", 1], ["🚶", 1], ["⛷️", 0], ["🛼", 0], ["🎢", 0]], ivRideN = 0, ivRideId = 0;
+  function ivRide(P) {
+    var svg = $("ivnFig").querySelector("svg"); if (!svg || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var D = P.dom, F = D.K ? ivKnot(D.K) : ivPoly(D.N), S = 300, R = 7, X = function (x) { return S / 2 + x / R * (S / 2 - 8); }, Y = function (y) { return S / 2 - y / R * (S / 2 - 8); };
+    var rd = IV_RIDERS[ivRideN++ % IV_RIDERS.length], id = ++ivRideId, ns = "http://www.w3.org/2000/svg", g = document.createElementNS(ns, "g"), tx = document.createElementNS(ns, "text");
+    tx.setAttribute("font-size", "34"); tx.setAttribute("text-anchor", "middle"); tx.setAttribute("y", "-2"); tx.textContent = rd[0]; if (rd[1]) tx.setAttribute("transform", "scale(-1,1)");   // (runners and walkers face left: turned to face the way they go)
+    g.appendChild(tx); g.setAttribute("pointer-events", "none"); g.setAttribute("class", "ivRide"); svg.appendChild(g);
+    var ms = 3800, t0 = null;
+    function step(ts) {
+      if (id !== ivRideId || !g.isConnected) { g.remove(); return; } if (t0 === null) t0 = ts;
+      var u = Math.min(1, (ts - t0) / ms), x = D.a + (D.b - D.a) * u, h = (D.b - D.a) / 300, x1 = Math.max(D.a, x - h), x2 = Math.min(D.b, x + h), sl = (F(x2) - F(x1)) / (x2 - x1);
+      g.setAttribute("transform", "translate(" + X(x).toFixed(2) + "," + Y(F(x)).toFixed(2) + ") rotate(" + (-Math.atan(sl) * 180 / Math.PI).toFixed(2) + ")");
+      g.style.opacity = u < .06 ? u / .06 : u > .94 ? (1 - u) / .06 : 1;
+      if (u < 1) requestAnimationFrame(step); else g.remove();
+    }
+    requestAnimationFrame(step);
+  }
+
   // ---- 2.2B Range (2.2's eighth exercise): the same as Domain, in y. The graph is a segment, or a smooth curve whose turning points sit on whole numbers;
   // the range runs from its lowest to its highest y-value, each included unless the graph has it only at an open dot.
   function ivKnot(K) { return function (x) { for (var i = 0; i < K.length - 1; i++) if (x <= K[i + 1][0] + 1e-9) { var t = (x - K[i][0]) / (K[i + 1][0] - K[i][0]); return K[i][1] + (K[i + 1][1] - K[i][1]) * (1 - Math.cos(Math.PI * Math.max(0, Math.min(1, t)))) / 2; } return K[K.length - 1][1]; }; }
@@ -8754,6 +8807,7 @@ var ESPIC = {
     var P = ivP(), fin = [];
     P.pcs.forEach(function (q) { [q.lo, q.hi].forEach(function (e) { if (ivFin(e.v) && fin.indexOf(e.v) < 0) fin.push(e.v); }); });
     var ends = [pc.lo.v, pc.hi.v].filter(ivFin);
+    if (P.mono) return "Not quite. Graph the x-values where the graph goes " + (P.mono > 0 ? "up" : "down") + " as you move from left to right.";
     if (P.dom && P.v === "y") return "Not quite. The range is the y-values the graph covers: look at its lowest and highest points.";
     if (P.dom) return "Not quite. The domain is the x-values the graph covers: look at where it starts and stops, from left to right.";
     if (ends.length && ends.every(function (v) { return fin.indexOf(v) >= 0; })) return "Not quite: that shading is not part of the answer. " + ivDir();
@@ -8808,9 +8862,11 @@ var ESPIC = {
   function ivFb(t) {
     var r = ivParse(t), P = ivP();
     if (r.err) return { comma: "Separate the two ends with a comma, like [1, 5).", order: "Write the smaller end first, then the larger one: left to right on the number line.", inf: "∞ and −∞ are not numbers, so they are never included: always use ( or ) next to them." }[r.err] || "Type an interval like [1, 5) or (−∞, 3].";
+    if (P.mono && r.pcs.length !== P.pcs.length) return "The graph " + (P.mono > 0 ? "rises" : "falls") + " in " + (P.pcs.length > 1 ? P.pcs.length + " separate parts: write an interval for each and join them with ∪." : "one part: it is a single interval.");
     if (r.pcs.length !== P.pcs.length) return P.pcs.length > 1 ? "\"Or\" makes two intervals: write both and join them with ∪." : "This one is a single interval.";
     var A = ivSort(r.pcs), B = ivSort(P.pcs);
     if (A.every(function (p, i) { return ivSpan(p, B[i]); })) return "Check the brackets: [ or ] means the boundary is included (≤ or ≥, a closed dot); ( or ) means it is not (< or >, an open dot).";
+    if (P.mono) return "Not quite. Check the ends: where does the graph start and stop going " + (P.mono > 0 ? "up" : "down") + ", from left to right?";
     if (P.dom && P.v === "y") return "Not quite. Check the ends: what are the lowest and the highest y-values of the graph, and does the graph reach them?";
     if (P.dom) return "Not quite. Check the ends: where does the graph start and stop, from left to right?";
     return "Not quite. Check the ends: which numbers make " + (P.show === "line" ? "the graph" : ivIneq(P, true)) + " true?";
@@ -8869,15 +8925,15 @@ var ESPIC = {
     var s = ivSt(), P = ivP(), done = QZ.step >= 4 || s.ok, gr = ivGr(), S = $("ivnSvg");
     $("wfSteps").hidden = true; $("ivnTools").hidden = !gr;
     if (QZ.ww && QZ.ww.ivh !== QZ.pi + mode) {   // Show work: the question in words, then the answer
-      QZ.ww.ivh = QZ.pi + mode; QZ.ww.label = MODES[mode] + " mode, " + (P.dom ? (P.v === "y" ? "Range" : "Domain") : "Interval Notation");
-      QZ.ww.steps = P.dom ? [{ txt: true, cls: "cf", eqs: [P.v === "y" ? "What is the range of the graph?" : "What is the domain of the graph?"] }] : P.show === "line" ? [{ txt: true, cls: "cf", eqs: ["Write the numbers graphed on the number line in interval notation."] }] : [{ txt: true, cls: "cf", eqs: [(gr ? "Graph " : "Write ") + ivIneq(P, true) + (gr ? " on the number line." : " in interval notation.")] }];
+      QZ.ww.ivh = QZ.pi + mode; QZ.ww.label = MODES[mode] + " mode, " + lessonName(lesson);
+      QZ.ww.steps = P.dom ? [{ txt: true, cls: "cf", eqs: [m3Cur().story] }] : P.show === "line" ? [{ txt: true, cls: "cf", eqs: ["Write the numbers graphed on the number line in interval notation."] }] : [{ txt: true, cls: "cf", eqs: [(gr ? "Graph " : "Write ") + ivIneq(P, true) + (gr ? " on the number line." : " in interval notation.")] }];
       ivPicNow();
     }
     [].forEach.call(document.querySelectorAll("#ivnTools button"), function (b) { var t = b.dataset.ivt; b.classList.toggle("on", s.tool === t && !done); b.disabled = done || (t === "clear" && !s.pcs.length && !s.p1); b.setAttribute("aria-pressed", s.tool === t ? "true" : "false"); });
     $("ivnAsk").innerHTML = ivnAsk();
     var showLine = gr || P.show === "both" || P.show === "line"; $("ivnLine").hidden = !showLine;
-    $("ivnFig").hidden = !P.dom; if (P.dom && $("ivnFig").dataset.k !== QZ.pi + "|" + m3Cur().head) { $("ivnFig").dataset.k = QZ.pi + "|" + m3Cur().head; $("ivnFig").innerHTML = ivDomSvg(P, 300); }
-    var hn = P.dom && !done ? (gr ? "Hint: <span class=\"lm\">" + ivIneq(P) + "</span>" : mode === "calculate" ? "Hint: the " + (P.v === "y" ? "range" : "domain") + " on a number line" : "") : ""; $("ivnHint").innerHTML = hn; $("ivnHint").hidden = !hn;
+    $("ivnFig").hidden = !P.dom; if (P.dom && $("ivnFig").dataset.k !== QZ.pi + "|" + m3Cur().head) { $("ivnFig").dataset.k = QZ.pi + "|" + m3Cur().head; $("ivnFig").innerHTML = ivDomSvg(P, 300); if (P.mono && (mode === "sequence" || mode === "calculate")) ivRide(P); }
+    var hn = P.dom && !done ? (gr ? "Hint: <span class=\"lm\">" + ivIneq(P) + "</span>" : mode === "calculate" ? "Hint: " + (P.mono ? "where it is " + (P.mono > 0 ? "increasing" : "decreasing") : "the " + (P.v === "y" ? "range" : "domain")) + " on a number line" : "") : ""; $("ivnHint").innerHTML = hn; $("ivnHint").hidden = !hn;
     if (showLine) {
       S.innerHTML = ivSvg(P, gr ? s.pcs : P.pcs, gr && !done ? { p1: s.p1, hov: s.hov, tool: s.tool, live: true } : null);
       S.classList.toggle("live", gr && !done && !!s.tool); S.classList.toggle("sw", gr && !done && s.tool === "sw");
@@ -8951,7 +9007,7 @@ var ESPIC = {
   // ---- the demo (ONE, for Demo next step: only the next part) ----
   function ivnDemo(run, ONE, cap) {
     if (!ONE) QZ.iv = null;
-    var s = ivSt(), P = ivP(); s.ok = false; ivnSync();
+    var s = ivSt(), P = ivP(); s.ok = false; ivnSync(); if (!ONE && P.mono) ivRide(P);
     function go(pt, then) { handGo(pt, 650); pgWait(800, function () { if (pgRun !== run) return; handTap(); then(); }); }
     function btn(t) { return document.querySelector("#ivnTools [data-ivt=\"" + t + "\"]"); }
     function glide(a, b, ms, each, then) {
@@ -8963,7 +9019,7 @@ var ESPIC = {
     function draw(t, first) { return function (n) {
       var f = ivFin(t.lo.v) ? t.lo : t.hi, e = f === t.lo ? t.hi : t.lo, typ = f.cl ? "c" : "o";
       s.p1 = null; s.tool = null; s.hov = null; ivnSync();
-      cap((P.dom && P.v === "y" ? "The lowest y-value of the graph is " + c2F(f.v) + (f.cl ? ", and the graph reaches it, so " + c2F(f.v) + " is in the range. " : " at an open dot, so " + c2F(f.v) + " is not in the range. ") : P.dom ? "The graph starts at x = " + c2F(f.v) + (f.cl ? " with a closed dot, so " + c2F(f.v) + " is in the domain. " : " with an open dot, so " + c2F(f.v) + " is not in the domain. ") : f.cl ? "≤ or ≥: " + c2F(f.v) + " is included, a closed dot. " : "< or >: " + c2F(f.v) + " is not included, an open dot. ") + "Drag the " + (f.cl ? "closed" : "open") + "-dot button to " + c2F(f.v) + ".");
+      cap((P.mono ? "The graph " + (P.mono > 0 ? "rises" : "falls") + " from x = " + c2F(f.v) + " to x = " + c2F(e.v) + ". " + c2F(f.v) + (f.cl ? " is included: a closed dot. " : " is not included (the graph has an open dot there): an open dot. ") : P.dom && P.v === "y" ? "The lowest y-value of the graph is " + c2F(f.v) + (f.cl ? ", and the graph reaches it, so " + c2F(f.v) + " is in the range. " : " at an open dot, so " + c2F(f.v) + " is not in the range. ") : P.dom ? "The graph starts at x = " + c2F(f.v) + (f.cl ? " with a closed dot, so " + c2F(f.v) + " is in the domain. " : " with an open dot, so " + c2F(f.v) + " is not in the domain. ") : f.cl ? "≤ or ≥: " + c2F(f.v) + " is included, a closed dot. " : "< or >: " + c2F(f.v) + " is not included, an open dot. ") + "Drag the " + (f.cl ? "closed" : "open") + "-dot button to " + c2F(f.v) + ".");
       var a = ctr(btn(typ));
       go(a, function () {
         s.tool = typ; ivGhostMake(typ, a.x, a.y); ivnSync(); var to = ivScr(f.v);
@@ -8979,7 +9035,7 @@ var ESPIC = {
     }; }
     function swap(i, end) { return function (n) {
       var q = s.pcs[i][end], t = ivSort(P.pcs).filter(function (r) { return ivSpan(r, s.pcs[i]); })[0];
-      cap((P.dom && P.v === "y" ? "The highest y-value is " + c2F(q.v) + ": " + (t && t[end].cl ? "the graph reaches it, so its dot must be closed." : "it is only at an open dot, so its dot must be open.") : P.dom ? "The graph ends at x = " + c2F(q.v) + " with " + (t && t[end].cl ? "a closed dot: it is in the domain, so its dot must be closed." : "an open dot: it is not in the domain, so its dot must be open.") : c2F(q.v) + (t && t[end].cl ? " is included (≤ or ≥): its dot must be closed." : " is not included (< or >): its dot must be open.")) + " Press the switch button, then click the dot.");
+      cap((P.mono ? "x = " + c2F(q.v) + (t && t[end].cl ? " is included, so its dot must be closed." : " is not included (the graph has an open dot there), so its dot must be open.") : P.dom && P.v === "y" ? "The highest y-value is " + c2F(q.v) + ": " + (t && t[end].cl ? "the graph reaches it, so its dot must be closed." : "it is only at an open dot, so its dot must be open.") : P.dom ? "The graph ends at x = " + c2F(q.v) + " with " + (t && t[end].cl ? "a closed dot: it is in the domain, so its dot must be closed." : "an open dot: it is not in the domain, so its dot must be open.") : c2F(q.v) + (t && t[end].cl ? " is included (≤ or ≥): its dot must be closed." : " is not included (< or >): its dot must be open.")) + " Press the switch button, then click the dot.");
       go(ctr(btn("sw")), function () { if (s.tool !== "sw") ivTool("sw"); pgWait(500, function () { if (pgRun !== run) return; go(ivScr(q.v), function () { ivSwitch(i + ":" + end); pgWait(1600, n); }); }); });
     }; }
     function typeAns(n) {
@@ -12992,7 +13048,7 @@ var ESPIC = {
   // which exercise makes the problem
   function c2Make(tier) {
     c2Dec = act === "2.1" || act === "2.4" || (act === "2.2" && lesson === 5);
-    var pb = act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228][lesson - 1](tier)
+    var pb = act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210][lesson - 1](tier)
       : [c2M241, c2M242, c2M243, c2M244][lesson - 1](tier);
     pb.head = m3Plain(pb.head);   // (Show work's first line is plain text)
     return pb;
