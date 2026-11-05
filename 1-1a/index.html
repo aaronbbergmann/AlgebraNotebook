@@ -8451,7 +8451,7 @@ var ESPIC = {
     if (!isNaN(v) && Math.abs(v - want) < 1e-9) {
       vfnPush(); s.xok[r] = true; pqMsg("");
       if ([0, 2, 4].every(function (k) { return s.xok[k]; })) {
-        s.gx = true; s.gy[1] = s.gy[3] = true; s.gt[1] = s.gt[3] = "0"; s.gs[1] = s.gs[3] = 9; vfnTbKey = "";
+        s.gx = true; vfnTbKey = "";   // (every y, the intercepts' too, is worked out by the student)
         var line = "x column: " + VFN_XS.map(function (d, k) { return nf(vfnRX(k)); }).join(", ");
         if (mode === "calculate") { vfnLine(line); vfnSync(); var e0 = document.querySelector("[data-vfy=\"0\"]"); if (e0 && !pgRun) e0.focus(); return; }
         vfnNext(line); return;
@@ -8469,7 +8469,7 @@ var ESPIC = {
     if (r !== want) { vfnBad("The smaller x-intercept goes in row 2 and the larger in row 4, so x increases down the table."); vfnTb(); return; }
     vfnPush(); s.dx = s.dx || {}; s.dx[r] = true; pqMsg("");
     if (s.dx[1] && s.dx[3]) {
-      vfnTbKey = ""; var line = "x-intercepts " + nf(Math.min(p.p1, p.q1)) + " and " + nf(Math.max(p.p1, p.q1)) + " in rows 2 and 4 (y = 0)";
+      vfnTbKey = ""; var line = "x-intercepts " + nf(Math.min(p.p1, p.q1)) + " and " + nf(Math.max(p.p1, p.q1)) + " in rows 2 and 4";
       if (mode === "calculate") { vfnLine(line); vfnSync(); setTimeout(function () { var e = document.querySelector("#vfnTb [data-vfxi]"); if (e && !pgRun) e.focus(); }, 0); return; }
       vfnNext(line); setTimeout(function () { var e = document.querySelector("#vfnTb [data-vfxi]"); if (e && !pgRun) e.focus(); }, 0); return;
     }
@@ -8836,7 +8836,7 @@ var ESPIC = {
         else if (id === "a" || id === "b" || id === "c" || id === "p" || id === "q") r = (function (k) { return function (n) { clickOn("#pgQt [data-vfe=" + k + "]", VFN_ASK[k].replace(/<[^>]+>/g, "") + " " + eqSay[k], "e:" + k, n); }; })(id);
         else if (id === "drag") r = p.ip ? dragPQ : dragChip;
         else if (id === "xs") r = typeXs;
-        else if (id === "tbl") r = function (n) { var L = VFN_XS.map(function (d, i) { return i; }).filter(function (i) { return !s.gy[i]; }), j = 0; cap(p.ip ? "The x-intercepts p and q are already in the table. Click each other expression: first the subtractions, then multiply. Each finished row is a point on the graph." : "Click each expression to simplify it one step at a time: the exponent, then multiplying, then adding. Each finished row is a point on the graph."); (function nx() { if (pgRun !== run) return; if (j >= L.length || vfnSid() !== "tbl") { pgWait(800, n); return; } clickTd(L[j++], nx); })(); };
+        else if (id === "tbl") r = function (n) { var L = VFN_XS.map(function (d, i) { return i; }).filter(function (i) { return !s.gy[i]; }), j = 0; cap(p.ip ? "Click each expression: first the subtractions, then multiply. Each finished row is a point on the graph." : "Click each expression to simplify it one step at a time: the exponent, then multiplying, then adding. Each finished row is a point on the graph."); (function nx() { if (pgRun !== run) return; if (j >= L.length || vfnSid() !== "tbl") { pgWait(800, n); return; } clickTd(L[j++], nx); })(); };
         else if (id === "h") r = function (n) { clickOn("#vfnSvg [data-vfc=vh]", VFN_ASK.h.replace(/<[^>]+>/g, "") + " h is the x-coordinate of the vertex.", "vh", n); };
         else if (id === "k") r = function (n) { clickOn("#vfnSvg [data-vfc=vk]", VFN_ASK.k.replace(/<[^>]+>/g, "") + " k is the y-coordinate.", "vk", n); };
         else if (id === "v") r = function (n) { clickOn("#vfnSvg [data-vfc=vx]", VFN_ASK.v.replace(/<[^>]+>/g, ""), "vx", n); };
