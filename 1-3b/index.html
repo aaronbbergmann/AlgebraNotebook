@@ -9301,6 +9301,7 @@ var ESPIC = {
     L.push({ k: "ctr", ask: "In Standard Form, type the formula for the <i>x</i>-value in the centre row of the table." });
     L.push({ k: "mc", a: "s", ask: "This picture is associated with which form?", show: "<img class=\"csqPic\" src=\"../assets/card-standard-table.png\" alt=\"x = −b/(2a), worked out, being dragged into the centre row of a table\">" });
     L.push({ k: "mc", a: "v", ask: "This picture is associated with which form?", show: "<img class=\"csqPic\" src=\"../assets/card-vertex-table.png\" alt=\"A parent table with its centre row filled in\">" });
+    L.push({ k: "mc", a: "i", ask: "This picture is associated with which form?", show: "<img class=\"csqPic\" src=\"../assets/card-intercept-table.png\" alt=\"A blank table with rows 2 and 4 of the x column ready for p and q\">" });
     var a1 = c2Pick([1, -1, 2, -2, 3, 0.5]), F1 = c2Sf(a1, nz(-6, 6), nz(-9, 9), "<i>f</i>(<i>x</i>)")[0], F2 = c2Vf(c2Pick([1, -1, 2, -3, 0.5]), nz(-5, 5), nz(-7, 7), "x", "<i>f</i>(<i>x</i>)")[0], p0 = nz(-6, 5), F3 = c2If(c2Pick([1, -1, 2, -2, 3]), p0, p0 + c2Rng(1, 6), "<i>f</i>(<i>x</i>)")[0];
     L.push({ k: "mc", a: "s", ask: "This function is in which form?", show: "<span class=\"lm\">" + F1 + "</span>" }, { k: "mc", a: "v", ask: "This function is in which form?", show: "<span class=\"lm\">" + F2 + "</span>" }, { k: "mc", a: "i", ask: "This function is in which form?", show: "<span class=\"lm\">" + F3 + "</span>" });
     L.push(c2Pick([{ k: "mc", a: "v", ask: "In which form is (<i>h</i>, <i>k</i>) the vertex?" }, { k: "mc", a: "i", ask: "In which form are <i>p</i> and <i>q</i> the <i>x</i>-intercepts?" }, { k: "mc", a: "s", ask: "In which form is the vertex at <i>x</i> = −<i>b</i>/(2<i>a</i>)?" }]));
@@ -9371,15 +9372,15 @@ var ESPIC = {
     G.addEventListener("input", function (e) { if (e.target.id !== "csqIn" || !csN()) return; if (e.isTrusted) pgUser(); csqSt().txt = e.target.value; csqTyped(false); });
     G.addEventListener("keydown", function (e) { if (e.key !== "Enter" || !csN() || mode !== "calculate") return; if (e.target.id === "csqIn") { e.preventDefault(); csqTyped(true); } });
   })();
-  // ---- 2.2C Memorize (2.2's eleventh exercise): a card sort, like Amplify's. Eleven cards for the three forms of a quadratic are shuffled in a deck; the student
+  // ---- 2.2C Memorize (2.2's eleventh exercise): a card sort, like Amplify's. Twelve cards for the three forms of a quadratic are shuffled in a deck; the student
   // drags each into one of three piles (a click on a card, then on a pile, works too). A pile takes its form from its first card; a card that belongs to another
   // form goes back to the deck with a message. A pile is finished when it holds all its form's cards. Demo (the hand sorts them) and Sequence only.
   var CS_CARDS = {
     s0: { t: "Standard Form", hd: 1 }, s1: { h: "<i>f</i>(<i>x</i>) = <i>ax</i>² + <i>bx</i> + <i>c</i>", m: 1 }, s2: { h: "<i>x</i> = − <span class=\"csFr\"><span><i>b</i></span><span>2<i>a</i></span></span>", m: 1 }, s3: { img: "card-standard-table.png", alt: "x = −b/(2a), worked out, being dragged into the centre row of a table" },
     v0: { t: "Vertex Form", hd: 1 }, v1: { h: "<i>f</i>(<i>x</i>) = <i>a</i>(<i>x</i> − <i>h</i>)² + <i>k</i>", m: 1 }, v2: { h: "(<i>h</i>, <i>k</i>) is the vertex" }, v3: { img: "card-vertex-table.png", alt: "A parent table with its centre row filled in" },
-    i0: { t: "Intercept Form", hd: 1 }, i1: { h: "<i>f</i>(<i>x</i>) = <i>a</i>(<i>x</i> − <i>p</i>)(<i>x</i> − <i>q</i>)", m: 1 }, i2: { h: "<i>p</i> and <i>q</i> are the <i>x</i>-intercepts" }
+    i0: { t: "Intercept Form", hd: 1 }, i1: { h: "<i>f</i>(<i>x</i>) = <i>a</i>(<i>x</i> − <i>p</i>)(<i>x</i> − <i>q</i>)", m: 1 }, i2: { h: "<i>p</i> and <i>q</i> are the <i>x</i>-intercepts" }, i3: { img: "card-intercept-table.png", alt: "A blank table with rows 2 and 4 of the x column ready for p and q" }
   };
-  var CS_N = { s: 4, v: 4, i: 3 }, CS_NM = { s: "Standard Form", v: "Vertex Form", i: "Intercept Form" };
+  var CS_N = { s: 4, v: 4, i: 4 }, CS_NM = { s: "Standard Form", v: "Vertex Form", i: "Intercept Form" };
   function csL() { return act === "2.2" && lesson === 11; }
   function csN() { return pq() && csL() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().cs && (mode === "demo" || mode === "sequence" || mode === "calculate"); }
   function c2M2211() {
@@ -9452,7 +9453,7 @@ var ESPIC = {
       return;
     }
     if (!ONE) QZ.cs = null; var s = csSt(); s.ok = false; csnSync();
-    var SAY = { s0: "Standard Form gets its own pile.", s1: "Standard Form: f(x) = ax² + bx + c.", s2: "In Standard Form the vertex is at x = −b/(2a).", s3: "That value of x goes in the centre row of the table.", v0: "Vertex Form starts a second pile.", v1: "Vertex Form: f(x) = a(x − h)² + k.", v2: "In Vertex Form, (h, k) is the vertex.", v3: "The parent table's centre row is the vertex.", i0: "Intercept Form starts the third pile.", i1: "Intercept Form: f(x) = a(x − p)(x − q).", i2: "In Intercept Form, p and q are the x-intercepts." };
+    var SAY = { s0: "Standard Form gets its own pile.", s1: "Standard Form: f(x) = ax² + bx + c.", s2: "In Standard Form the vertex is at x = −b/(2a).", s3: "That value of x goes in the centre row of the table.", v0: "Vertex Form starts a second pile.", v1: "Vertex Form: f(x) = a(x − h)² + k.", v2: "In Vertex Form, (h, k) is the vertex.", v3: "The parent table's centre row is the vertex.", i0: "Intercept Form starts the third pile.", i1: "Intercept Form: f(x) = a(x − p)(x − q).", i2: "In Intercept Form, p and q are the x-intercepts.", i3: "Their table starts with p and q in rows 2 and 4." };
     function next() {
       for (var g in CS_N) { var have = s.piles.filter(function (P) { return csPileG(P) === g; })[0]; for (var n = 0; n < CS_N[g]; n++) { var id = g + n; if (s.deck.indexOf(id) >= 0) return { id: id, k: have ? s.piles.indexOf(have) : s.piles.findIndex(function (P) { return !P.length; }) }; } }
       return null;
