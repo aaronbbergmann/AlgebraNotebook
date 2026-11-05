@@ -387,6 +387,8 @@
   /* 2.2B Interval Notation: its own number line (5 numbered marks, arrows for ∞), the ray buttons, and the interval keyboard */
   /* 2.2C Memorize: the card sort (three piles above the deck) */
   .csnG{display:none}
+  .dsmSteps{display:none}body.dsmOn .dsmSteps{display:block;width:100%;max-width:46rem;margin:0 0 .3rem}
+  body.dsmOn #wfSteps{text-align:left;padding:.2rem 0 .4rem}body.dsmOn #wfSteps .wfAsk{font:700 1.15rem/1.4 system-ui,sans-serif;margin:.2rem 0 .45rem}body.dsmOn #wfSteps .wfRow{justify-content:flex-start}
   .dsmWrap{display:none}body.dsmOn .dsmWrap{display:block;width:100%;margin:.4rem 0 .8rem}.dsmCalc{width:100%;height:440px;border:1px solid #9AA0A8;border-radius:8px;overflow:hidden}.dsmNote{font:600 .98rem system-ui,sans-serif;color:#1B2433;margin:0 0 .35rem;min-height:1.4em}
   .csq{max-width:40rem;margin:0 auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.8rem}
   .csqN{font:600 .95rem system-ui,sans-serif;color:#5B6577}.csqAsk{font:700 1.45rem/1.35 system-ui,sans-serif;color:#1B2433}
@@ -851,6 +853,7 @@
     <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
       <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQcue" id="pgQcue">(Equation, Table, Graph)</div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div>
+      <div class="dsmSteps" id="dsmSteps"></div>
       <div class="dsmWrap" id="dsmWrap"><div class="dsmNote" id="dsmNote" aria-live="polite"></div><div class="dsmCalc" id="dsmCalc"></div></div>
       <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope. Or drag it onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
       <div class="pgGraphWrap" id="pgGraphWrap"><div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div><div class="zmRow" id="zmRow" role="group" aria-label="Zoom the graph"><button type="button" id="zmData" title="Data: zoom to fit all the data" aria-label="Zoom to fit all the data"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 3.5v17h17"/><circle cx="8" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="11.5" cy="11" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/></svg></button><button type="button" id="zmIn" title="Zoom in" aria-label="Zoom in">+</button><button type="button" id="zmOut" title="Zoom out" aria-label="Zoom out">−</button><button type="button" id="zmHome" title="Home: back to the default view" aria-label="Home view"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"/><path d="M6 10v9.5h4.5v-5.5h3v5.5H18V10"/></svg></button></div></div>
@@ -9545,8 +9548,14 @@ var ESPIC = {
     if (n && !DSM.fail) n.innerHTML = st && st.type === "dsm" ? "Path 1 " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") + " &nbsp; Path 2 " + (g[1] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : "Click a path to see its intercepts and its maximum.";
     if (st && st.type === "dsm" && g[0] && g[1]) m3Accept(st, "");
   }
+  var dsmHome = null;   // where the step list (#wfSteps) normally sits, in the side panel
   function dsmSync() {
-    var on = dsmOn(); document.body.classList.toggle("dsmOn", on); if (!on) return;
+    var on = dsmOn(), W = $("wfSteps"); document.body.classList.toggle("dsmOn", on);
+    if (!dsmHome) dsmHome = { p: W.parentNode, n: W.nextSibling };
+    if (on && W.parentNode !== $("dsmSteps")) $("dsmSteps").appendChild(W);   // Compare: the questions and their answer boxes sit in the centre pane, under the question
+    else if (!on && W.parentNode !== dsmHome.p) dsmHome.p.insertBefore(W, dsmHome.n);
+    if (!on) return;
+    $("show").hidden = mode !== "solo";   // (Show work: Write mode only)
     dsmLoad(); if (!DSM.calc) { dsmCheck(); return; }
     var P = m3Cur().dsm, key = QZ.pi + "|" + mode + "|" + m3Cur().head;
     if (DSM.key !== key) { DSM.key = key; DSM.calc.setBlank(); DSM.calc.setMathBounds({ left: -P.xmax * 0.06, right: P.xmax, bottom: -P.ymax * 0.12, top: P.ymax }); }
@@ -9777,7 +9786,7 @@ var ESPIC = {
     } else if (!pgRun) dmUI("idle");   // a fresh demo waits, its button highlighted
     $("hint").hidden = done || soloish();   // a right answer needs no hint
     if (wf()) { $("show").hidden = false; wfUndoVis(); }
-    else if (m3()) { $("show").hidden = false; $("undo").hidden = true; }
+    else if (m3()) { $("show").hidden = dsmOn() && mode !== "solo"; $("undo").hidden = true; }   // (2.2C Compare: Show work in Write mode only)
     wfSteps(); gwnSync(); grnSync(); vfnSync(); ivnSync(); csnSync(); c21Sync();
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
@@ -12270,7 +12279,7 @@ var ESPIC = {
     else if (mode === "sequence") h += "<div class=\"wfRow m3Opts\">" + m3Opts(st).map(function (o, i) { return "<button type=\"button\" class=\"btn wfBtn lm\" data-m3=\"opt\" data-v=\"" + i + "\">" + o.t + "</button>"; }).join("") + "</div>";
     else h += "<div class=\"wfRow cg\">" + (st.pre ? "<span>" + st.pre + "</span>" : "") + "<input id=\"m3In\" class=\"m3In\" data-key=\"" + key + "\" style=\"width:" + (t === "eq" || t === "fn" ? "13" : "8") + "rem\" inputmode=\"" + (t === "eq" || t === "fn" ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Your answer\">" + (st.post ? "<span>" + st.post + "</span>" : "") + "</div>";
     el.innerHTML = h; el.hidden = false; if (gl()) glFocus();
-    var inp = el.querySelector(".m3In"); if (inp) { if (kk === key && kv) inp.value = kv; if (mode !== "demo") inp.focus(); if (QZ.arrowAt !== QZ.m3i) { QZ.arrowAt = QZ.m3i; askArrow(true, inp.parentNode); } } else askArrow(false);
+    var inp = el.querySelector(".m3In"); if (inp) { if (kk === key && kv) inp.value = kv; if (mode !== "demo") inp.focus(); if (QZ.arrowAt !== QZ.m3i && !dsmOn()) { QZ.arrowAt = QZ.m3i; askArrow(true, inp.parentNode); } } else askArrow(false);
   }
   // ---- Write mode on the step engine (1.3, 1.4 Graphing, 2.1 Using a Transformed Quadratic, 2.2, 2.4): every step is on the page at once and nothing
   // is checked before Submit, which checks them all, keeps the right ones (each with its check mark) and names the rest ----
@@ -13354,7 +13363,7 @@ var ESPIC = {
       var f1 = c2Vf(a1, D1 / 2, H1, "x", c2Y)[0], f2 = c2Y + " = −" + c2F(a) + c2X + "(" + c2X + " − " + D2 + ")", pb = { kind: 20, sc: sc };
       pb.dsm = { F1: F1, F2: F2, D1: D1, D2: D2, xmax: Math.max(D1, D2) * 1.12, ymax: Math.max(H1, H2) * 1.35, l1: "y=" + c2T(a1, 6) + "\\left(x-" + D1 / 2 + "\\right)^{2}+" + H1, l2: "y=-" + c2T(a, 6) + "x\\left(x-" + D2 + "\\right)" };
       pb.head = sc.s + " Path 1: " + f1.replace(/<[^>]+>/g, "") + "  Path 2: " + f2.replace(/<[^>]+>/g, ""); pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + " In each path, " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + ").<br>Path of the first " + it + ": <span class=\"lm cf\">" + f1 + "</span><br>Path of the second " + it + ": <span class=\"lm cg\">" + f2 + "</span><br>Graph both in Desmos. Which " + it + " travels farther before landing? Which travels higher?";
+      pb.story = sc.s + " In each path, " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + ").<br>Path of the first " + it + ": <span class=\"lm cf\">" + f1 + "</span><br>Path of the second " + it + ": <span class=\"lm cg\">" + f2 + "</span><br>Graph both in Desmos. <b>Which " + it + " travels farther before landing? Which travels higher?</b>";
       pb.fig = function () { return ""; };
       var far = D1 > D2 ? "first" : "second", hi = H1 > H2 ? "first" : "second";
       pb.steps = [
