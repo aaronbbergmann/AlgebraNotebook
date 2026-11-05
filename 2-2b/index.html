@@ -977,6 +977,10 @@
       var c = el.selectionStart == null ? raw.length : el.selectionStart, a = up(raw.slice(0, c)), b = up(raw.slice(c)); d.set.call(el, a + b); try { el.setSelectionRange(a.length, a.length); } catch (er) {}
     }, true);
   })();
+  function kbIns(el, t) {   // an on-screen key: its text goes in at the cursor, replacing any selection
+    el.focus(); try { el.setRangeText(t, el.selectionStart == null ? 0 : el.selectionStart, el.selectionEnd == null ? 0 : el.selectionEnd, "end"); } catch (er) { el.value = el.value + t; }
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }
   var logEl = $("log");
   var orig = [], ws = [], rows = [], orows = [], srows = [], sys = [], sysV = [], elim = "", elimInfo = null;
   var counted = false, introV = false, explainOn = false, lastExp = "", up = null, prog = {}, handEl = null;
@@ -8182,10 +8186,7 @@ var ESPIC = {
       var m = e.target.closest("[data-vfmm]"); if (m) { if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused) return; s.w.mmk = m.dataset.vfmm; s.wbad.mm = false; vfnIvSync(); if (!vfnWr()) vfnTyped("mm", false); else if (typeof wsReadyUpd === "function") wsReadyUpd(); var mi = $("vfnF_mm"); if (mi && !s.wok.mm) mi.focus(); return; }
       var b = e.target.closest("[data-vfk]"); if (!b) return; if (e.isTrusted) pgUser();
       var kb = b.closest(".vfnKeys"), f = (kb && kb.dataset.for) || vfnKeyTo || VFN_IV.filter(function (g) { return g !== "mm" && !s.wok[g]; })[0], el = $("vfnF_" + f); if (!el || el.readOnly) return;
-      var a = el.selectionStart == null ? el.value.length : el.selectionStart, z = el.selectionEnd == null ? a : el.selectionEnd, k = b.dataset.vfk;
-      if (k === "(−∞, ∞)") { el.value = k; a = 0; z = 0; } else el.value = el.value.slice(0, a) + k + el.value.slice(z);
-      var c = k === "(−∞, ∞)" ? k.length : a + k.length; el.focus(); try { el.setSelectionRange(c, c); } catch (er) { }
-      el.dispatchEvent(new Event("input", { bubbles: true }));
+      var k = b.dataset.vfk; if (k === "(−∞, ∞)") { el.value = ""; kbIns(el, k); } else kbIns(el, k);
     });
   })();
   function vfnPt(t) { if (!/^\s*\(.*\)\s*$/.test(String(t || ""))) return null; var m = String(t || "").replace(/[−–]/g, "-").replace(/[()\s]/g, "").split(/[,;]/); if (m.length !== 2) return null; var x = m3Num(m[0]), y = m3Num(m[1]); return isNaN(x) || isNaN(y) ? null : [x, y]; }
@@ -9148,9 +9149,7 @@ var ESPIC = {
   }
   function ivIns(k) {
     var e = $("ivnIn"); if (!e || e.disabled) return;
-    var a = e.selectionStart == null ? e.value.length : e.selectionStart, b = e.selectionEnd == null ? a : e.selectionEnd;
-    e.value = e.value.slice(0, a) + k + e.value.slice(b); var c = a + k.length; e.focus(); try { e.setSelectionRange(c, c); } catch (er) { }
-    e.dispatchEvent(new Event("input", { bubbles: true }));
+    kbIns(e, k);
   }
   // ---- what the pane shows ----
   function ivnQ() { var pb = m3Cur(); return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div></div>"; }
@@ -9401,7 +9400,7 @@ var ESPIC = {
       if (!csN() || mode !== "calculate" || !e.target.closest) return; if (e.isTrusted) pgUser();
       var b = e.target.closest("[data-csq]"); if (b) { var it = csqCur(); if (it) csqAnswer(b.dataset.csq === it.a); return; }
       if (e.target.closest("#csqGo")) { csqNext(); return; }
-      var k = e.target.closest("[data-csk]"); if (k) { var el = $("csqIn"); if (!el || el.disabled) return; var a = el.selectionStart == null ? el.value.length : el.selectionStart, z = el.selectionEnd == null ? a : el.selectionEnd; el.value = el.value.slice(0, a) + k.dataset.csk + el.value.slice(z); var c = a + k.dataset.csk.length; el.focus(); try { el.setSelectionRange(c, c); } catch (er) { } el.dispatchEvent(new Event("input", { bubbles: true })); }
+      var k = e.target.closest("[data-csk]"); if (k) { var el = $("csqIn"); if (!el || el.disabled) return; kbIns(el, k.dataset.csk); }
     });
     G.addEventListener("input", function (e) { if (e.target.id !== "csqIn" || !csN()) return; if (e.isTrusted) pgUser(); csqSt().txt = e.target.value; csqTyped(false); });
     G.addEventListener("keydown", function (e) { if (e.key !== "Enter" || !csN() || mode !== "calculate") return; if (e.target.id === "csqIn") { e.preventDefault(); csqTyped(true); } });
