@@ -9545,7 +9545,7 @@ var ESPIC = {
   }
   function dsmCheck() {
     if (!dsmOn()) return; var st = m3Step(), g = dsmGraphed(), n = $("dsmNote");
-    if (n && !DSM.fail) n.innerHTML = st && st.type === "dsm" ? "Path 1 " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") + " &nbsp; Path 2 " + (g[1] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : "Click a path to see its intercepts and its maximum.";
+    if (n && !DSM.fail) n.innerHTML = st && st.type === "dsm" ? "Path 1 " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") + " &nbsp; Path 2 " + (g[1] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : "Zoom out or drag the graph to see the whole paths. Click a path to see its intercepts and its maximum.";
     if (st && st.type === "dsm" && g[0] && g[1]) m3Accept(st, "");
   }
   var dsmHome = null;   // where the step list (#wfSteps) normally sits, in the side panel
@@ -9558,18 +9558,24 @@ var ESPIC = {
     $("show").hidden = mode !== "solo";   // (Show work: Write mode only)
     dsmLoad(); if (!DSM.calc) { dsmCheck(); return; }
     var P = m3Cur().dsm, key = QZ.pi + "|" + mode + "|" + m3Cur().head;
-    if (DSM.key !== key) { DSM.key = key; DSM.calc.setBlank(); DSM.calc.setMathBounds({ left: -P.xmax * 0.06, right: P.xmax, bottom: -P.ymax * 0.12, top: P.ymax }); }
+    if (DSM.key !== key) { DSM.key = key; DSM.calc.setBlank(); dsmHomeView(); }   // a new problem starts at Desmos's standard home window: the student zooms out to see the paths
     DSM.calc.resize(); dsmCheck();
+  }
+  function dsmHomeView() { var b = $("dsmCalc").getBoundingClientRect(), r = b.width ? b.height / b.width : 0.6; DSM.calc.setMathBounds({ left: -10, right: 10, bottom: -10 * r, top: 10 * r }); }
+  function dsmZoomOut(run, n) {   // the demo: the window widens from home until both paths fit
+    var P = m3Cur().dsm, b = $("dsmCalc").getBoundingClientRect(), r = b.width ? b.height / b.width : 0.6, A = { l: -10, r: 10, b: -10 * r, t: 10 * r }, B = { l: -P.xmax * 0.06, r: P.xmax, b: -P.ymax * 0.12, t: P.ymax }, k = 0, N = 30;
+    (function st() { if (pgRun !== run) return; var u = ++k / N, e = u * u * (3 - 2 * u); DSM.calc.setMathBounds({ left: A.l + (B.l - A.l) * e, right: A.r + (B.r - A.r) * e, bottom: A.b + (B.b - A.b) * e, top: A.t + (B.t - A.t) * e }); if (k < N) pgWait(60, st); else pgWait(800, n); })();
   }
   // the demo: the hand types each equation into Desmos's expression list
   function dsmDemoType(run, n) {
     var P = m3Cur().dsm, box = $("dsmCalc"); if (!DSM.calc) { pgWait(800, n); return; }
+    var pgCapDsm = function (t) { dmCap(t); };
     var r = box.getBoundingClientRect(), L = [P.l1, P.l2], i = 0;
     (function one() {
       if (pgRun !== run) return; if (i >= L.length) { pgWait(900, n); return; }
       var lt = L[i], id = "p" + (i + 1), c = 0, at = { x: r.left + Math.min(150, r.width * 0.2), y: r.top + 40 + i * 50 };
       handGo(at, 650);
-      pgWait(800, function () { handTap(); (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else { i++; dsmCheck(); pgWait(700, one); } })(); });
+      pgWait(800, function () { handTap(); (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else { i++; if (i >= L.length) { pgCapDsm("The paths go off the screen. Zoom out to see them whole."); handGo({ x: r.right - 30, y: r.top + 70 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); dsmZoomOut(run, function () { dsmCheck(); pgWait(500, one); }); }); return; } dsmCheck(); pgWait(700, one); } })(); });
     })();
   }
   // ---- parent tables (2.1 and 2.2) and the Standard Form table: a y value can be dragged onto an empty y cell, which copies it there (as in the graphing tables).
