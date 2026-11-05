@@ -387,6 +387,7 @@
   /* 2.2B Interval Notation: its own number line (5 numbered marks, arrows for ∞), the ray buttons, and the interval keyboard */
   /* 2.2C Memorize: the card sort (three piles above the deck) */
   .csnG{display:none}
+  .dsmWrap{display:none}body.dsmOn .dsmWrap{display:block;width:100%;margin:.4rem 0 .8rem}.dsmCalc{width:100%;height:440px;border:1px solid #9AA0A8;border-radius:8px;overflow:hidden}.dsmNote{font:600 .98rem system-ui,sans-serif;color:#1B2433;margin:0 0 .35rem;min-height:1.4em}
   .csq{max-width:40rem;margin:0 auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.8rem}
   .csqN{font:600 .95rem system-ui,sans-serif;color:#5B6577}.csqAsk{font:700 1.45rem/1.35 system-ui,sans-serif;color:#1B2433}
   .csqShow{font-size:1.6rem}.csqShow .lm{font:400 1.7rem "LM","Latin Modern Roman","CMU Serif",Georgia,serif}.csqPic{width:22rem;max-width:90%;border:2px solid #1B2433;border-radius:10px;display:block}
@@ -850,6 +851,7 @@
     <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
       <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQcue" id="pgQcue">(Equation, Table, Graph)</div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div>
+      <div class="dsmWrap" id="dsmWrap"><div class="dsmNote" id="dsmNote" aria-live="polite"></div><div class="dsmCalc" id="dsmCalc"></div></div>
       <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope. Or drag it onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
       <div class="pgGraphWrap" id="pgGraphWrap"><div class="pgGraph" id="pgGraph"><svg id="pgSvg" viewBox="-10 -10 20 20" role="img" aria-label="Graph"></svg></div><div class="zmRow" id="zmRow" role="group" aria-label="Zoom the graph"><button type="button" id="zmData" title="Data: zoom to fit all the data" aria-label="Zoom to fit all the data"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 3.5v17h17"/><circle cx="8" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="11.5" cy="11" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/></svg></button><button type="button" id="zmIn" title="Zoom in" aria-label="Zoom in">+</button><button type="button" id="zmOut" title="Zoom out" aria-label="Zoom out">−</button><button type="button" id="zmHome" title="Home: back to the default view" aria-label="Home view"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5 12 4l8.5 7.5"/><path d="M6 10v9.5h4.5v-5.5h3v5.5H18V10"/></svg></button></div></div>
       <div class="pgSide">
@@ -9506,6 +9508,61 @@ var ESPIC = {
     cap("Sort into three piles: one for each form of a quadratic.");
     pgWait(1400, function loop() { if (pgRun !== run) return; if (s.ok || !next()) { cap("Three piles: Standard Form, Vertex Form and Intercept Form."); pgWait(1800, function () { if (pgRun !== run) return; PG.demoFin = true; pgStop(); }); return; } one(loop); });
   }
+  // ---- 2.2C Compare: an embedded Desmos graphing calculator (the Desmos API). Both paths' equations are in the question; the student graphs them in
+  // Desmos (the first step checks the expression list), then answers questions read off the graphs (clicking a curve in Desmos shows its intercepts and
+  // maximum). Write mode keeps Desmos to use, without the graphing step. If Desmos cannot load, the graphing step is passed with a note.
+  var DESMOS_KEY = "dcb31709b452b1cf9dc26972add0fda6";   // Desmos's public demonstration key: request a free key from Desmos for classroom use and put it here
+  var DSM = { calc: null, state: "", key: "", fail: false };
+  function dsmOn() { return pq() && act === "2.2" && lesson === 5 && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm; }
+  function dsmLoad() {
+    if (DSM.state) return; DSM.state = "loading";
+    var sc = document.createElement("script"); sc.src = "https://www.desmos.com/api/v1.11/calculator.js?apiKey=" + DESMOS_KEY; sc.async = true;
+    sc.onload = function () {
+      try {
+        DSM.calc = Desmos.GraphingCalculator($("dsmCalc"), { keypad: true, expressions: true, settingsMenu: false, expressionsTopbar: true, zoomButtons: true, border: false, images: false, folders: false, notes: false, sliders: false });
+        DSM.state = "ready"; DSM.key = ""; DSM.calc.observeEvent("change", dsmCheck); dsmSync();
+      } catch (e) { dsmFail(); }
+    };
+    sc.onerror = dsmFail; document.head.appendChild(sc);
+  }
+  function dsmFail() { DSM.state = "failed"; DSM.fail = true; var n = $("dsmNote"); if (n) n.textContent = "Desmos could not load here. Open desmos.com in another tab to graph the paths, then answer the questions."; dsmCheck(); }
+  // a Desmos expression (LaTeX) as a function of x, or null
+  function dsmFn(lt) {
+    var t = String(lt || "").replace(/\\left\\\{[\s\S]*$/, "").replace(/\\left/g, "").replace(/\\right/g, "").replace(/\\cdot/g, "*").replace(/\\ /g, "").replace(/\s+/g, "");
+    for (var g = 0; g < 6 && /\\frac\{/.test(t); g++) t = t.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, "(($1)/($2))");
+    t = t.replace(/\^\{([^{}]*)\}/g, "^($1)").replace(/^(y|[a-z]\(x\))=/, "");
+    if (!t || /[\\{}=<>]/.test(t)) return null;
+    return function (x) { return csqEval(t, { x: x }); };
+  }
+  function dsmMatch(F, D) { return function (fn) { for (var i = 0; i <= 6; i++) { var x = D * i / 6 + 0.37, y = fn(x); if (!isFinite(y) || Math.abs(y - F(x)) > 1e-6 * Math.max(1, Math.abs(F(x)))) return false; } return true; }; }
+  function dsmGraphed() {
+    var P = m3Cur().dsm; if (DSM.fail) return [true, true]; if (!DSM.calc) return [false, false];
+    var L = DSM.calc.getExpressions().filter(function (e) { return e.type === "expression" && e.latex; }).map(function (e) { return dsmFn(e.latex); }).filter(Boolean);
+    return [L.some(dsmMatch(P.F1, P.D1)), L.some(dsmMatch(P.F2, P.D2))];
+  }
+  function dsmCheck() {
+    if (!dsmOn()) return; var st = m3Step(), g = dsmGraphed(), n = $("dsmNote");
+    if (n && !DSM.fail) n.innerHTML = st && st.type === "dsm" ? "Path 1 " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") + " &nbsp; Path 2 " + (g[1] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : "Click a path to see its intercepts and its maximum.";
+    if (st && st.type === "dsm" && g[0] && g[1]) m3Accept(st, "");
+  }
+  function dsmSync() {
+    var on = dsmOn(); document.body.classList.toggle("dsmOn", on); if (!on) return;
+    dsmLoad(); if (!DSM.calc) { dsmCheck(); return; }
+    var P = m3Cur().dsm, key = QZ.pi + "|" + mode + "|" + m3Cur().head;
+    if (DSM.key !== key) { DSM.key = key; DSM.calc.setBlank(); DSM.calc.setMathBounds({ left: -P.xmax * 0.06, right: P.xmax, bottom: -P.ymax * 0.12, top: P.ymax }); }
+    DSM.calc.resize(); dsmCheck();
+  }
+  // the demo: the hand types each equation into Desmos's expression list
+  function dsmDemoType(run, n) {
+    var P = m3Cur().dsm, box = $("dsmCalc"); if (!DSM.calc) { pgWait(800, n); return; }
+    var r = box.getBoundingClientRect(), L = [P.l1, P.l2], i = 0;
+    (function one() {
+      if (pgRun !== run) return; if (i >= L.length) { pgWait(900, n); return; }
+      var lt = L[i], id = "p" + (i + 1), c = 0, at = { x: r.left + Math.min(150, r.width * 0.2), y: r.top + 40 + i * 50 };
+      handGo(at, 650);
+      pgWait(800, function () { handTap(); (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else { i++; dsmCheck(); pgWait(700, one); } })(); });
+    })();
+  }
   // ---- parent tables (2.1 and 2.2) and the Standard Form table: a y value can be dragged onto an empty y cell, which copies it there (as in the graphing tables).
   // A press only becomes a drag once the pointer moves, so a click on a cell still does what it did.
   function cellDragCopy(e, text, targetAt, drop) {
@@ -12115,7 +12172,7 @@ var ESPIC = {
   }
   // ---- steps.  A step: {id, lab (Solo's short name), fine (only in Demo, Sequence and Calculate), ask, pre (before the box), post (after it), type: num | eq | pick | pts | btn,
   //   ans (a number, or a function of the problem), tol, a & b (an equation), opts (pick), wrong(v) -> message, hint:[two hints], line (for Show work), nums (extra wrong choices)}
-  var M3ACT = ["gpt", "yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab", "geq", "grow"];   // the steps that are answered on the graph
+  var M3ACT = ["dsm", "gpt", "yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab", "geq", "grow"];   // the steps that are answered on the graph
   function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.csteps && mode === "calculate" ? pb.csteps : pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine : !s.so; }) : []; }
   function m3Step() { if (!QZ || QZ.m3done) return null; return m3L()[QZ.m3i] || null; }
   function m3V(v) { return typeof v === "function" ? v(m3Cur(), QZ.m3x || {}) : v; }
@@ -12920,7 +12977,7 @@ var ESPIC = {
     TB.sync(); ptSync(); $("qzTools").hidden = wf() || m3(); posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
-    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd(); gwnSync(); grnSync(); vfnSync(); ivnSync(); csnSync(); c21Sync();
+    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd(); gwnSync(); grnSync(); vfnSync(); ivnSync(); csnSync(); dsmSync(); c21Sync();
   }
   // ---- Chapter 2 (Quadratic Functions).  2.1 Using a Transformed Quadratic and every exercise of 2.2, 2.3 and 2.4 run on the 1.3 engine: a problem is a story or a function,
   // a figure, and steps (Demo, Sequence and Calculate take every small step; Solo takes only the big ones).  The figure here is a whole coordinate plane that can draw
@@ -13288,32 +13345,28 @@ var ESPIC = {
     { pic: "balloon", s: "A water balloon launcher fires two balloons.", it: "launch", u: "feet", Ds: [60, 80, 100, 120], Hs: [15, 45] }
   ];
   function c2M225(tier) {
-    for (var t = 0; t < 4000; t++) {
+    for (var t = 0; t < 6000; t++) {
       var sc = c2Pick(C2S225), D1 = c2Pick(sc.Ds), D2 = c2Pick(sc.Ds), H1 = c2Rng(sc.Hs[0], sc.Hs[1]), a = c2Pick([0.01, 0.02, 0.025, 0.04, 0.05, 0.08, 0.1, 0.125, 0.2, 0.25]);
-      var H2 = a * D2 * D2 / 4; if (D1 === D2 || !Number.isInteger(H2) || H2 === H1 || H2 < sc.Hs[0] || H2 > sc.Hs[1] || D1 % 2 || D2 % 2) continue;
+      var H2 = a * D2 * D2 / 4, a1 = c2R(-4 * H1 / (D1 * D1), 9); if (D1 === D2 || !Number.isInteger(H2) || H2 === H1 || H2 < sc.Hs[0] || H2 > sc.Hs[1] || D1 % 2 || D2 % 2) continue;
+      if (Math.abs(a1 * 10000 - Math.round(a1 * 10000)) > 1e-7) continue;   // (the first path's a is a short decimal)
       if (tier < 2 && (D1 > D2) === (H1 > H2) && rnd(3)) continue;   // usually one goes farther and the other higher
-      var F1 = function (x) { return -4 * H1 / (D1 * D1) * x * (x - D1); }, F2 = function (x) { return -a * x * (x - D2); }, u = sc.u, it = sc.it;
-      var f2 = "<i>f</i>(" + c2X + ") = −" + c2F(a) + c2X + "(" + c2X + " − " + D2 + ")", pb = { kind: 20, sc: sc };
-      pb.head = sc.s + " Second path: " + f2.replace(/<[^>]+>/g, ""); pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + " The parabola shows the path of the first " + it + ", where " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + "). The path of the second " + it + " is modeled by <span class=\"lm cf\">" + f2 + "</span>. Which " + it + " travels farther before landing? Which travels higher?";
-      var xa = c2Axis(0, Math.max(D1, D2) + 2), ya = c2Axis(0, Math.max(H1, H2) * 1.25);
-      pb.fig = function (x) {
-        x = x || {}; var o = { xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Horizontal distance (" + u + ")", yl: "Height (" + u + ")", alt: "Path of the first " + it };
-        o.curves = [{ fn: F1, col: C2B, lo: 0, hi: D1 }]; o.pts = [{ x: 0, y: 0, col: C2B }, { x: D1 / 2, y: H1, col: C2B, lab: true }, { x: D1, y: 0, col: C2B, lab: true, dy: -8 }];
-        if (x.h2) { o.curves.push({ fn: F2, col: C2P, lo: 0, hi: D2, dash: "7 5" }); o.pts.push({ x: D2 / 2, y: H2, col: C2P, lab: true, tc: C2P }); }
-        return c2Fig(o);
-      };
+      var F1 = function (x) { return a1 * (x - D1 / 2) * (x - D1 / 2) + H1; }, F2 = function (x) { return -a * x * (x - D2); }, u = sc.u, it = sc.it;
+      var f1 = c2Vf(a1, D1 / 2, H1, "x", c2Y)[0], f2 = c2Y + " = −" + c2F(a) + c2X + "(" + c2X + " − " + D2 + ")", pb = { kind: 20, sc: sc };
+      pb.dsm = { F1: F1, F2: F2, D1: D1, D2: D2, xmax: Math.max(D1, D2) * 1.12, ymax: Math.max(H1, H2) * 1.35, l1: "y=" + c2T(a1, 6) + "\\left(x-" + D1 / 2 + "\\right)^{2}+" + H1, l2: "y=-" + c2T(a, 6) + "x\\left(x-" + D2 + "\\right)" };
+      pb.head = sc.s + " Path 1: " + f1.replace(/<[^>]+>/g, "") + "  Path 2: " + f2.replace(/<[^>]+>/g, ""); pb.pic = c2Pic(sc.pic);
+      pb.story = sc.s + " In each path, " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + ").<br>Path of the first " + it + ": <span class=\"lm cf\">" + f1 + "</span><br>Path of the second " + it + ": <span class=\"lm cg\">" + f2 + "</span><br>Graph both in Desmos. Which " + it + " travels farther before landing? Which travels higher?";
+      pb.fig = function () { return ""; };
       var far = D1 > D2 ? "first" : "second", hi = H1 > H2 ? "first" : "second";
       pb.steps = [
-        { id: "d1", lab: "Distance 1", ask: "How far does the first " + it + " travel before it lands? Read the " + c2X + "-intercepts of the graph.", post: u, ans: D1, hint: ["It starts at (0, 0) and lands at the other " + c2X + "-intercept.", "The other " + c2X + "-intercept is (" + D1 + ", 0)."], line: "first " + it + ": " + D1 + " " + u },
-        { id: "h1", lab: "Height 1", ask: "What is the maximum height of the first " + it + "? It is the " + c2Y + "-coordinate of the vertex.", post: u, ans: H1, hint: ["The vertex is halfway between the " + c2X + "-intercepts.", "The vertex is (" + D1 / 2 + ", " + H1 + ")."], line: "first " + it + " height: " + H1 + " " + u },
-        { id: "q", lab: "Distance 2", ask: c2S("Write the second path as −" + c2F(a) + "(" + c2X + " − 0)(" + c2X + " − " + D2 + "). Its " + c2X + "-intercepts are 0 and <i>q</i>. How far does it travel?", "How far does the second " + it + " travel?"), post: u, ans: D2, hint: ["A factor is zero when " + c2X + " is the number subtracted in it.", c2X + " − " + D2 + " = 0 when " + c2X + " = " + D2 + "."], line: "second " + it + ": " + D2 + " " + u },
-        { id: "m", fine: 1, lab: "x of vertex", ask: "The vertex of the second path is halfway between 0 and " + D2 + ".", pre: c2X + " =", ans: D2 / 2, hint: ["(0 + " + D2 + ") ÷ 2.", c2X + " = " + D2 / 2 + "."], line: "vertex at " + c2X + " = " + D2 / 2 },
-        { id: "h2", lab: "Height 2", ask: c2S("Find <i>f</i>(" + D2 / 2 + "), the maximum height of the second " + it + ".", "What is the maximum height of the second " + it + "?"), post: u, ans: H2, after: function (x) { x.h2 = true; }, hint: ["Replace " + c2X + " with " + D2 / 2 + ".", "−" + c2F(a) + "(" + D2 / 2 + ")(" + D2 / 2 + " − " + D2 + ") = " + H2 + "."], line: "second " + it + " height: " + H2 + " " + u },
+        { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph both paths in Desmos: type each equation into the expression list.", line: "graphed both paths in Desmos" },
+        { id: "d1", lab: "Distance 1", ask: "How far does the first " + it + " travel before it lands? Click its path in Desmos to see the " + c2X + "-intercepts.", post: u, ans: D1, hint: ["It starts at (0, 0) and lands at the other " + c2X + "-intercept.", "The other " + c2X + "-intercept is (" + D1 + ", 0)."], line: "first " + it + ": " + D1 + " " + u },
+        { id: "h1", lab: "Height 1", ask: "What is the maximum height of the first " + it + "? Click its path to see the maximum.", post: u, ans: H1, hint: ["The maximum is the vertex: the top of the path.", "The vertex is (" + D1 / 2 + ", " + H1 + ")."], line: "first " + it + " height: " + H1 + " " + u },
+        { id: "d2", lab: "Distance 2", ask: "How far does the second " + it + " travel before it lands?", post: u, ans: D2, hint: ["Read the " + c2X + "-intercept where it lands.", "It lands at (" + D2 + ", 0)."], line: "second " + it + ": " + D2 + " " + u },
+        { id: "h2", lab: "Height 2", ask: "What is the maximum height of the second " + it + "?", post: u, ans: H2, hint: ["Click the second path's maximum.", "The vertex is (" + D2 / 2 + ", " + H2 + ")."], line: "second " + it + " height: " + H2 + " " + u },
         { id: "far", lab: "Farther", type: "pick", ask: "Which " + it + " travels farther before landing?", opts: c2Pk("The " + far + " " + it, [["The " + (far === "first" ? "second" : "first") + " " + it, "Compare " + D1 + " and " + D2 + " " + u + "."]]), hint: ["Compare the two distances.", Math.max(D1, D2) + " " + u + " is farther."], line: "the " + far + " " + it + " travels farther" },
         { id: "hi", lab: "Higher", type: "pick", ask: "Which " + it + " travels higher?", opts: c2Pk("The " + hi + " " + it, [["The " + (hi === "first" ? "second" : "first") + " " + it, "Compare " + H1 + " and " + H2 + " " + u + "."]]), hint: ["Compare the two maximum heights.", Math.max(H1, H2) + " " + u + " is higher."], line: "the " + hi + " " + it + " travels higher" }
       ];
-      pb.ex = "The first " + it + " lands at " + D1 + " " + u + " with its vertex at (" + D1 / 2 + ", " + H1 + "). The second path, −" + c2F(a) + "(" + c2X + " − 0)(" + c2X + " − " + D2 + "), has " + c2X + "-intercepts 0 and " + D2 + ", and its vertex is at " + c2X + " = " + D2 / 2 + " with height " + H2 + ". So the " + far + " " + it + " travels farther and the " + hi + " " + it + " travels higher.";
+      pb.ex = "In Desmos, the first path lands at (" + D1 + ", 0) and its maximum is (" + D1 / 2 + ", " + H1 + "); the second lands at (" + D2 + ", 0) and its maximum is (" + D2 / 2 + ", " + H2 + "). So the " + far + " " + it + " travels farther and the " + hi + " " + it + " travels higher.";
       return pb;
     }
   }
@@ -14595,6 +14648,7 @@ var ESPIC = {
           });
           return;
         }
+        if (t === "dsm") { pgWait(1400, function () { dsmDemoType(run, n); }); return; }   // 2.2C Compare: the hand types both equations into Desmos
         if (t === "gpt") {   // Chapter 2: click each point (for "any points on the curve", the demo picks points that work)
           var GP = st.pts ? st.pts.slice() : c2DemoPts(st);
           pgWait(1600, function () { (function nx(i) { if (i >= GP.length || pgRun !== run || !m3Step() || m3Step().id !== st.id) { n(); return; } m3HClick(m3Scr(GP[i][0], GP[i][1]), function () { nx(i + 1); }); })(0); }); return;
