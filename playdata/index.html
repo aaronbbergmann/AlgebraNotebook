@@ -9511,7 +9511,7 @@ var ESPIC = {
   // ---- 2.2C Compare: an embedded Desmos graphing calculator (the Desmos API). Both paths' equations are in the question; the student graphs them in
   // Desmos (the first step checks the expression list), then answers questions read off the graphs (clicking a curve in Desmos shows its intercepts and
   // maximum). Write mode keeps Desmos to use, without the graphing step. If Desmos cannot load, the graphing step is passed with a note.
-  var DESMOS_KEY = "dcb31709b452b1cf9dc26972add0fda6";   // Desmos's public demonstration key: request a free key from Desmos for classroom use and put it here
+  var DESMOS_KEY = "243b1d1f290d4a7587adbb90879f4751";   // the school's Desmos API key
   var DSM = { calc: null, state: "", key: "", fail: false };
   function dsmOn() { return pq() && act === "2.2" && lesson === 5 && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm; }
   function dsmLoad() {
