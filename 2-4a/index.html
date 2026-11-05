@@ -9372,7 +9372,8 @@ var ESPIC = {
   function csqAnswer(ok) {   // the question in hand: right (on to the next), or wrong (show the right answer; it comes back at the end)
     var s = csqSt(), it = csqCur(); if (!it || s.fb || s.ok) return;
     if (ok) { s.q.shift(); s.txt = ""; s.n++; pqMsg(""); if (!s.q.length) { s.ok = true; if (pgRun && pgPaused && !DN) { csnSync(); PG.demoFin = true; pgStop(); return; } if (!pgRun) drawPlay(); else csnSync(); return; } csnSync(); csqFocus(); return; }
-    s.fb = { right: csqRight(it) }; pqMsg("Not quite.");   // ("Circle Back": a miss costs no Progress; the question comes back after the others until it is answered right once) csnSync(); var b = $("csqGo"); if (b) b.focus();
+    // ("Circle Back": a miss costs no Progress; the question comes back after the others until it is answered right once)
+    s.fb = { right: csqRight(it) }; pqMsg("Not quite."); csnSync(); var b = $("csqGo"); if (b) b.focus();
   }
   function csqNext() { var s = csqSt(); if (!s.fb) return; s.fb = null; s.q.push(s.q.shift()); s.txt = ""; pqMsg(""); csnSync(); csqFocus(); }
   function csqFocus() { setTimeout(function () { var e = $("csqIn"); if (e && !pgRun) e.focus(); }, 0); }
