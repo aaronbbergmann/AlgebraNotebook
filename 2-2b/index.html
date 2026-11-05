@@ -466,7 +466,7 @@
   .vfnIn{font:1.05rem system-ui,sans-serif;padding:.25em .4em;border:2px solid #9AA0A8;border-radius:7px;box-sizing:border-box}
   .vfnIn.ok{border-color:#2E9E4F;background:#E4F3E8}.vfnIn.bad{border-color:#C74440}
   @media (max-width:760px){.vfnRow{flex-direction:column}#vfnTools{flex-direction:row}#vfnTools button[data-vft=undo]{margin-bottom:0;margin-right:1rem}body.vfN .vfnS{padding-left:0}}
-  .vfnE{border-radius:5px;padding:0 .12em}.vfnE.live{cursor:pointer;background:color-mix(in srgb,#2D70B3 10%,transparent)}.vfnE.live:hover{background:color-mix(in srgb,#2D70B3 22%,transparent)}.vfnE.got{color:#2E9E4F}
+  .vfnE{border-radius:5px;padding:0 .12em}.vfnE.vfnE1{display:inline-block;min-width:.75em;height:1.1em;vertical-align:-.15em}.vfnE.vfnE1.live{outline:2px dashed #2D70B3;outline-offset:1px}.vfnE.live{cursor:pointer;background:color-mix(in srgb,#2D70B3 10%,transparent)}.vfnE.live:hover{background:color-mix(in srgb,#2D70B3 22%,transparent)}.vfnE.got{color:#2E9E4F}
   .vfnMM{display:inline-flex;gap:.3rem}.vfnMMb{font:600 .92rem system-ui,sans-serif;padding:.25em .6em;border:2px solid #1B2433;border-radius:8px;background:#fff;color:#1B2433;cursor:pointer}.vfnMMb.on{background:#2D70B3;border-color:#2D70B3;color:#fff}.vfnMMb:disabled{cursor:default;opacity:.75}
   #vfnOut .vfnKeys{margin:.1rem 0 .3rem;justify-content:flex-start}#vfnOut .vfnKeys button{min-width:2.4rem;height:2.3rem;font-size:1.15rem}#vfnOut .vfnKeys .vfnAllR{font:700 1.3rem "Times New Roman",Georgia,serif}#vfnOut .vfnKeys[hidden]{display:none}
   .vfnChipRow{min-height:2.3rem;margin-bottom:.4rem}
@@ -7964,7 +7964,7 @@ var ESPIC = {
   function vfnStd() { return !!vfnP().std; }
   // the steps of Demo and Sequence, in order
   var VFN_IV = ["dom", "rng", "inc", "dec", "mm"];   // (Intercept Form: then the domain, range, where it increases and decreases, and its minimum or maximum, typed)
-  function vfnStg() { return vfnIp() ? (vfnP().a === 1 ? [] : ["a"]).concat(["p", "q", "drag", "tbl", "graph", "v", "ax"], VFN_IV) : vfnStd() ? ["a", "b", "c", "drag", "tbl", "graph", "v", "ax", "m1", "m2"] : ["graph", "h", "k", "v", "ax", "m1", "m2"]; }
+  function vfnStg() { return vfnIp() ? ["a", "p", "q", "drag", "tbl", "graph", "v", "ax"].concat(VFN_IV) : vfnStd() ? ["a", "b", "c", "drag", "tbl", "graph", "v", "ax", "m1", "m2"] : ["graph", "h", "k", "v", "ax", "m1", "m2"]; }
   // the boxes of Calculate and Write
   function vfnFs() { var std = vfnStd(), w = vfnWr(); if (vfnIp()) return (w ? [] : ["a", "p", "q"]).concat(["v", "ax"], VFN_IV); return (std ? (w ? ["xv"] : ["a", "b", "c", "xv"]) : ["h", "k"]).concat(["v", "ax", "m1a", "m1b", "m2a", "m2b"]); }
   function vfnSt() {
@@ -8029,7 +8029,7 @@ var ESPIC = {
   }
   function vfnNext(line) { var s = vfnSt(); s.stage++; pqMsg(""); if (line) vfnLine(line); if (s.stage >= vfnStg().length) vfnDone(); else vfnSync(); }
   // the prompt over the graph, one step at a time
-  var VFN_ASK = { ipdrag: "Drag <i>p</i> and <i>q</i> from the equation into the <i>x</i> column: the smaller in row 2, the larger in row 4.", p: "Click on the equation to find the <i>p</i> value.", q: "Click on the equation to find the <i>q</i> value.", dom: "What is the domain?", rng: "What is the range?", inc: "Where is it increasing?", dec: "Where is it decreasing?", mm: "Is the vertex a minimum or a maximum? What is its value?", graph: "Press the parabola button, then click the graph to place the vertex. Drag the points until it matches <i>f</i>.", h: "Click on the graph to find the <i>h</i> value.", k: "Click on the graph to find the <i>k</i> value.", v: "Click on the graph to find the coordinates of the vertex.", ax: "Click on the graph to find the equation of the axis of symmetry.", m1: "Click on a pair of mirror points.", m2: "Click on another pair of mirror points.",
+  var VFN_ASK = { ip1: "Click on the equation to find the <i>a</i> value. With no number in front of the parentheses, click the space where it would be.", ipdrag: "Drag <i>p</i> and <i>q</i> from the equation into the <i>x</i> column: the smaller in row 2, the larger in row 4.", p: "Click on the equation to find the <i>p</i> value.", q: "Click on the equation to find the <i>q</i> value.", dom: "What is the domain?", rng: "What is the range?", inc: "Where is it increasing?", dec: "Where is it decreasing?", mm: "Is the vertex a minimum or a maximum? What is its value?", graph: "Press the parabola button, then click the graph to place the vertex. Drag the points until it matches <i>f</i>.", h: "Click on the graph to find the <i>h</i> value.", k: "Click on the graph to find the <i>k</i> value.", v: "Click on the graph to find the coordinates of the vertex.", ax: "Click on the graph to find the equation of the axis of symmetry.", m1: "Click on a pair of mirror points.", m2: "Click on another pair of mirror points.",
     a: "Click on the equation to find the <i>a</i> value.", b: "Click on the equation to find the <i>b</i> value.", c: "Click on the equation to find the <i>c</i> value.", drag: "Drag <i>x</i> = −<i>b</i>/(2<i>a</i>) into the table.", tbl: "Click each expression in the table to simplify it, one step at a time." };
   function vfnAsk() {
     var s = vfnSt(); if (QZ.step >= 4 || s.ok) return "";
@@ -8042,6 +8042,7 @@ var ESPIC = {
     }
     var id = vfnSid();
     if (id === "drag" && vfnIp()) return VFN_ASK.ipdrag;
+    if (id === "a" && vfnIp() && vfnP().a === 1) return VFN_ASK.ip1;
     if ((id === "m1" || id === "m2") && s.sel) return "Now click its mirror point.";
     return VFN_ASK[id] || "";
   }
@@ -8123,7 +8124,7 @@ var ESPIC = {
         if (id !== f || done) return row(f, null, false);
         return "<div class=\"vfnR cur\"><span class=\"vfnL\">" + VFN_LAB[f] + "</span> " + vfnIvIn(f) + "</div>" + vfnKeysHTML(f);
       };
-      var top = vfnIp() ? row("a", P("a") || p.a === 1 ? nf(p.a) : null, id === "a") + row("p", P("p") ? nf(p.p1) : null, id === "p") + row("q", P("q") ? nf(p.q1) : null, id === "q") : vfnStd() ? row("a", P("a") ? nf(p.a) : null, id === "a") + row("b", P("b") ? nf(p.b) : null, id === "b") + row("c", P("c") ? nf(p.c) : null, id === "c") + row("xv", P("drag") ? nf(p.h) : null, id === "drag")
+      var top = vfnIp() ? row("a", P("a") ? nf(p.a) : null, id === "a") + row("p", P("p") ? nf(p.p1) : null, id === "p") + row("q", P("q") ? nf(p.q1) : null, id === "q") : vfnStd() ? row("a", P("a") ? nf(p.a) : null, id === "a") + row("b", P("b") ? nf(p.b) : null, id === "b") + row("c", P("c") ? nf(p.c) : null, id === "c") + row("xv", P("drag") ? nf(p.h) : null, id === "drag")
         : row("h", P("h") ? nf(p.h) : null, id === "h") + row("k", P("k") ? nf(p.k) : null, id === "k");
       var sig = el.innerHTML ? null : null; if (el.dataset.sig !== top + "|" + (vfnIp() ? VFN_IV.map(ivr).join("") : "") + "|" + id + "|" + (P("m2") ? 1 : 0) + "|" + JSON.stringify(s.pairs)) {
         el.dataset.sig = top + "|" + (vfnIp() ? VFN_IV.map(ivr).join("") : "") + "|" + id + "|" + (P("m2") ? 1 : 0) + "|" + JSON.stringify(s.pairs);
@@ -8543,7 +8544,7 @@ var ESPIC = {
     var pb = m3Cur(), p = pb.vf;
     if (p.ip) {
       var X0 = "<i>x</i>", fc = function (r, k) { return "<span class=\"vfnE\" data-vfe=\"" + k + "\">" + (r ? "(" + X0 + (r < 0 ? " + " + nf(-r) : " − " + nf(r)) + ")" : X0) + "</span>"; };
-      return "<div class=\"m3Top\"><div class=\"estP w5\">Graph <span class=\"lm vfnEq\" id=\"vfnEq\"><i>f</i>(" + X0 + ") = <span class=\"vfnE\" data-vfe=\"a\">" + (p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a)) + "</span>" + fc(p.p1, "p") + fc(p.q1, "q") + "</span>. Label the <i>x</i>-intercepts, the vertex and the axis of symmetry.</div></div>";
+      return "<div class=\"m3Top\"><div class=\"estP w5\">Graph <span class=\"lm vfnEq\" id=\"vfnEq\"><i>f</i>(" + X0 + ") = <span class=\"vfnE" + (p.a === 1 ? " vfnE1" : "") + "\" data-vfe=\"a\"" + (p.a === 1 ? " title=\"No number here means a = 1\" aria-label=\"a, the space in front of the parentheses\"" : "") + ">" + (p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a)) + "</span>" + fc(p.p1, "p") + fc(p.q1, "q") + "</span>. Label the <i>x</i>-intercepts, the vertex and the axis of symmetry.</div></div>";
     }
     if (!p.std) return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story.replace(/lm cf/g, "lm") + "</div>" + pb.pic + "</div>";
     var X = "<i>x</i>", t = "<span class=\"vfnE\" data-vfe=\"a\">" + (p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a)) + X + "²</span>";
@@ -8736,7 +8737,7 @@ var ESPIC = {
     }
     var pt = function (q) { return "(" + q + ", " + vfnF(q) + ")"; }, vt = "(" + p.h + ", " + p.k + ")";
     var m1 = pairs[0] || [p.h - 1, p.h + 1], m2 = pairs[1] || m1, I = [], past = function (id) { return function () { return vfnPast(id); }; }, okF = function (f) { return function () { return !!(s.wok[f] || s.wok[f.replace(/^(m[12])[ab]$/, "$1")]); }; };
-    var eqSay = p.ip ? { a: "a is the number in front of the parentheses.", p: "p is subtracted from x in the first factor: (x − p).", q: "q is subtracted from x in the second factor: (x − q)." } : { a: "a is the number in front of x².", b: "b is the number in front of x, with its sign.", c: "c is the constant term, with its sign." };
+    var eqSay = p.ip ? { a: p.a === 1 ? "No number in front of the parentheses means a = 1. Click the space where it would be." : "a is the number in front of the parentheses.", p: "p is subtracted from x in the first factor: (x − p).", q: "q is subtracted from x in the second factor: (x − q)." } : { a: "a is the number in front of x².", b: "b is the number in front of x, with its sign.", c: "c is the constant term, with its sign." };
     var ivAns = function (f) { return f === "mm" ? String(p.k) : ivStr(vfnIvAns(f)); }, ivSayD = { dom: "The parabola goes on forever left and right: every x. Press ℝ for all real numbers.", rng: "The y-values start at the vertex, y = " + nf(p.k) + ", and go " + (p.a > 0 ? "up" : "down") + " forever.", inc: "Left to right, the graph goes up " + (p.a > 0 ? "after" : "until") + " the vertex.", dec: "Left to right, the graph goes down " + (p.a > 0 ? "until" : "after") + " the vertex.", mm: "It opens " + (p.a > 0 ? "up, so the vertex is a minimum" : "down, so the vertex is a maximum") + ": y = " + nf(p.k) + "." };
     function dragPQ(n) {   // Intercept Form: the hand drags p, then q, from the equation into rows 2 and 4 of the x column
       var L = [["p", p.p1], ["q", p.q1]].filter(function (z) { var r = z[1] === Math.min(p.p1, p.q1) ? 1 : 3; return !(s.dx || {})[r]; });
