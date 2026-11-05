@@ -7972,12 +7972,12 @@ var ESPIC = {
   function vfnStd() { return !!vfnP().std; }
   // the steps of Demo and Sequence, in order
   var VFN_IV = ["dom", "rng", "inc", "dec", "mm"];   // (Intercept Form: then the domain, range, where it increases and decreases, and its minimum or maximum, typed)
-  function vfnStg() { return vfnIp() ? ["a", "p", "q", "drag", "tbl", "graph", "v", "ax"].concat(VFN_IV) : vfnStd() ? ["a", "b", "c", "drag", "tbl", "graph", "v", "ax", "m1", "m2"] : ["graph", "h", "k", "v", "ax", "m1", "m2"]; }
+  function vfnStg() { return vfnIp() ? ["a", "p", "q", "drag", "xs", "tbl", "graph", "v", "ax"].concat(VFN_IV) : vfnStd() ? ["a", "b", "c", "drag", "tbl", "graph", "v", "ax", "m1", "m2"] : ["graph", "h", "k", "v", "ax", "m1", "m2"]; }
   // the boxes of Calculate and Write
   function vfnFs() { var std = vfnStd(), w = vfnWr(); if (vfnIp()) return (w ? [] : ["a", "p", "q"]).concat(["v", "ax"], VFN_IV); return (std ? (w ? ["xv"] : ["a", "b", "c", "xv"]) : ["h", "k"]).concat(["v", "ax", "m1a", "m1b", "m2a", "m2b"]); }
   function vfnSt() {
     if (!QZ.vf || QZ.vf.pi !== QZ.pi) { QZ.vf = { pi: QZ.pi, par: null, tool: null, stage: 0, mp: [], sel: null, pairs: [], pts: [], dls: [], dlp: null, hov: null, drag: null, w: { a: "", b: "", c: "", xv: "", h: "", k: "", v: "", ax: "", m1a: "", m1b: "", m2a: "", m2b: "" }, wok: {}, wbad: {}, tb: {}, tbok: {}, tbl: {}, tadd: {}, wtx: {}, wty: {}, gx: false, gy: {}, gt: {}, gs: {}, gok: false, aok: false, ok: false, hist: [] };
-      if (vfnIp()) { var P0 = vfnP(), Q = QZ.vf; Q.dx = {}; ["dom", "rng", "inc", "dec", "mm", "p", "q"].forEach(function (f) { Q.w[f] = ""; }); Q.w.mmk = ""; } }
+      if (vfnIp()) { var P0 = vfnP(), Q = QZ.vf; Q.dx = {}; Q.xt = {}; Q.xok = {}; ["dom", "rng", "inc", "dec", "mm", "p", "q"].forEach(function (f) { Q.w[f] = ""; }); Q.w.mmk = ""; } }
     return QZ.vf;
   }
   function vfnSid() { var s = vfnSt(); return s.ok || QZ.step >= 4 ? "" : vfnStg()[s.stage] || ""; }
@@ -8037,7 +8037,7 @@ var ESPIC = {
   }
   function vfnNext(line) { var s = vfnSt(); s.stage++; pqMsg(""); if (line) vfnLine(line); if (s.stage >= vfnStg().length) vfnDone(); else vfnSync(); }
   // the prompt over the graph, one step at a time
-  var VFN_ASK = { ip1: "Click on the equation to find the <i>a</i> value. With no number in front of the parentheses, click the space where it would be.", ipdrag: "Drag <i>p</i> and <i>q</i> from the equation into the <i>x</i> column: the smaller in row 2, the larger in row 4.", p: "Click on the equation to find the <i>p</i> value.", q: "Click on the equation to find the <i>q</i> value.", dom: "What is the domain?", rng: "What is the range?", inc: "Where is it increasing?", dec: "Where is it decreasing?", mm: "Is the vertex a minimum or a maximum? What is its value?", graph: "Press the parabola button, then click the graph to place the vertex. Drag the points until it matches <i>f</i>.", h: "Click on the graph to find the <i>h</i> value.", k: "Click on the graph to find the <i>k</i> value.", v: "Click on the graph to find the coordinates of the vertex.", ax: "Click on the graph to find the equation of the axis of symmetry.", m1: "Click on a pair of mirror points.", m2: "Click on another pair of mirror points.",
+  var VFN_ASK = { ipxs: "Type the other <i>x</i>-values: row 3 is halfway between <i>p</i> and <i>q</i>, and the rows are evenly spaced.", ip1: "Click on the equation to find the <i>a</i> value. With no number in front of the parentheses, click the space where it would be.", ipdrag: "Drag <i>p</i> and <i>q</i> from the equation into the <i>x</i> column: the smaller in row 2, the larger in row 4.", p: "Click on the equation to find the <i>p</i> value.", q: "Click on the equation to find the <i>q</i> value.", dom: "What is the domain?", rng: "What is the range?", inc: "Where is it increasing?", dec: "Where is it decreasing?", mm: "Is the vertex a minimum or a maximum? What is its value?", graph: "Press the parabola button, then click the graph to place the vertex. Drag the points until it matches <i>f</i>.", h: "Click on the graph to find the <i>h</i> value.", k: "Click on the graph to find the <i>k</i> value.", v: "Click on the graph to find the coordinates of the vertex.", ax: "Click on the graph to find the equation of the axis of symmetry.", m1: "Click on a pair of mirror points.", m2: "Click on another pair of mirror points.",
     a: "Click on the equation to find the <i>a</i> value.", b: "Click on the equation to find the <i>b</i> value.", c: "Click on the equation to find the <i>c</i> value.", drag: "Drag <i>x</i> = −<i>b</i>/(2<i>a</i>) into the table.", tbl: "Click each expression in the table to simplify it, one step at a time." };
   function vfnAsk() {
     var s = vfnSt(); if (QZ.step >= 4 || s.ok) return "";
@@ -8045,11 +8045,12 @@ var ESPIC = {
     if (mode === "calculate") {
       if (!vfnStd()) return !vfnParOK(s) ? VFN_ASK.graph : vfnCols().some(function (c) { return !(s.tadd || {})[c]; }) ? "Fill in the boxes, and grow the parent table: click the + on the left for a new x, on the right for a new y, one column for each change." : "Fill in the parent table and the boxes.";
       if (s.wok.xv && !s.gx) return VFN_ASK.drag;
-      if (vfnIp() && !s.gx) return VFN_ASK.ipdrag;
+      if (vfnIp() && !s.gx) return s.dx && s.dx[1] && s.dx[3] ? VFN_ASK.ipxs : VFN_ASK.ipdrag;
       return "Fill in the boxes and the table, and graph the parabola with the parabola button.";
     }
     var id = vfnSid();
     if (id === "drag" && vfnIp()) return VFN_ASK.ipdrag;
+    if (id === "xs") return VFN_ASK.ipxs;
     if (id === "a" && vfnIp() && vfnP().a === 1) return VFN_ASK.ip1;
     if ((id === "m1" || id === "m2") && s.sel) return "Now click its mirror point.";
     return VFN_ASK[id] || "";
@@ -8338,18 +8339,19 @@ var ESPIC = {
       }
       var W = { x: s.wtx || (s.wtx = {}), y: s.wty || (s.wty = {}) };
       [].forEach.call(el.querySelectorAll("[data-vwx],[data-vwy]"), function (e) { var r = e.dataset.vwx != null ? e.dataset.vwx : e.dataset.vwy, v = (e.dataset.vwx != null ? W.x : W.y)[r] || ""; if (document.activeElement !== e && e.value !== v) e.value = v; e.readOnly = done; });
-      [].forEach.call(el.querySelectorAll("[data-vwm]"), function (e) { var t = String(W.x[e.dataset.vwm] || "").trim(), x = t ? m3Num(t) : NaN, h2 = isFinite(x) ? vfnExpr(x) : ""; if (e.dataset.st !== h2) { e.dataset.st = h2; e.innerHTML = h2; } });
+      var allX = !vfnIp() || VFN_XS.every(function (d, k) { return isFinite(m3Num(String(W.x[k] || "").trim())); });
+      [].forEach.call(el.querySelectorAll("[data-vwm]"), function (e) { var t = allX ? String(W.x[e.dataset.vwm] || "").trim() : "", x = t ? m3Num(t) : NaN, h2 = isFinite(x) ? vfnExpr(x) : ""; if (e.dataset.st !== h2) { e.dataset.st = h2; e.innerHTML = h2; } });
       return;
     }
     if (std) {
-      var calc = mode === "calculate", key2 = "g:" + QZ.pi + ":" + mode + ":" + s.gx + ":" + JSON.stringify(s.dx || {});
+      var calc = mode === "calculate", key2 = "g:" + QZ.pi + ":" + mode + ":" + s.gx + ":" + JSON.stringify(s.dx || {}) + JSON.stringify(s.xok || {});
       if (vfnTbKey !== key2) {
         vfnTbKey = key2; var p = vfnP();
         var hh = "<div class=\"vfnChipRow\" id=\"vfnChipS\"></div><table class=\"pgTable vfnGt\" id=\"vfnTbl\" aria-label=\"Graphing table\"><colgroup><col style=\"width:16%\"><col><col style=\"width:16%\"></colgroup><thead><tr><th>x</th><th class=\"pgMid\"><i>f</i>(<i>x</i>)</th><th>y</th></tr></thead><tbody>";
         VFN_XS.forEach(function (d, r) {
           var x = vfnRX(r);
-          var ipx = vfnIp() && (r === 1 || r === 3);
-          hh += "<tr" + (d === 0 && !vfnIp() ? " class=\"vfnMidRow\"" : "") + ">" + (s.gx ? "<td>" + nf(x) + "</td><td class=\"mid\" data-vfr=\"" + r + "\">" + vfnExpr(x) + "</td>" : ipx ? (s.dx && s.dx[r] ? "<td>" + nf(x) + "</td><td></td>" : "<td class=\"vfnDrop\" data-vfdx=\"" + r + "\"></td><td></td>") : "<td" + (d === 0 && !vfnIp() ? " class=\"vfnDrop\" id=\"vfnDropX\"" : "") + "></td><td></td>") +
+          var ipx = vfnIp() && (r === 1 || r === 3), ipt = vfnIp() && !ipx && s.dx && s.dx[1] && s.dx[3];
+          hh += "<tr" + (d === 0 && !vfnIp() ? " class=\"vfnMidRow\"" : "") + ">" + (s.gx ? "<td>" + nf(x) + "</td><td class=\"mid\" data-vfr=\"" + r + "\">" + vfnExpr(x) + "</td>" : ipx ? (s.dx && s.dx[r] ? "<td>" + nf(x) + "</td><td></td>" : "<td class=\"vfnDrop\" data-vfdx=\"" + r + "\"></td><td></td>") : ipt ? (s.xok[r] ? "<td>" + nf(x) + "</td><td></td>" : "<td><input class=\"qzCell\" data-vfxi=\"" + r + "\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"x, row " + (r + 1) + "\"></td><td></td>") : "<td" + (d === 0 && !vfnIp() ? " class=\"vfnDrop\" id=\"vfnDropX\"" : "") + "></td><td></td>") +
             "<td>" + (s.gx && calc ? "<input class=\"qzCell\" data-vfy=\"" + r + "\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"y for x = " + nf(x) + "\">" : "<span class=\"cv\" data-vfyv=\"" + r + "\"></span>") + "</td></tr>";
         });
         el.innerHTML = hh + "</tbody></table>";
@@ -8359,6 +8361,7 @@ var ESPIC = {
       [].forEach.call(el.querySelectorAll("[data-vfyv]"), function (e) { var r = +e.dataset.vfyv; e.textContent = s.gy[r] ? nf(vfnF(vfnRX(r))) : ""; });
       [].forEach.call(el.querySelectorAll("[data-vfy]"), function (e) { var r = e.dataset.vfy, v = s.gt[r] || ""; if (document.activeElement !== e && e.value !== v) e.value = v; e.classList.toggle("full", !!s.gy[r]); e.classList.toggle("badc", !s.gy[r] && !!s.wbad["g" + r]); e.readOnly = !!s.gy[r] || done || (pgRun && !pgPaused && !DN); });
       [].forEach.call(el.querySelectorAll(".vfnDrop"), function (e) { e.classList.toggle("on", !!(s.chipDrag)); });
+      [].forEach.call(el.querySelectorAll("[data-vfxi]"), function (e) { var r = e.dataset.vfxi, v = (s.xt || {})[r] || ""; if (document.activeElement !== e && e.value !== v) e.value = v; e.classList.toggle("badc", !!s.wbad["x" + r]); e.readOnly = done || (pgRun && !pgPaused && !DN); });
       return;
     }
     var C = vfnCols(), TA = s.tadd || (s.tadd = {}), shw = function (c) { return c === 1 || c === 2 || !!TA[c]; }, SH = [0, 1, 2, 3, 4].filter(shw), key = QZ.pi + ":" + C.join(",") + ":" + SH.join(",") + ":" + done;
@@ -8434,6 +8437,25 @@ var ESPIC = {
   // Standard Form, Sequence and Demo: clicking a row's expression works it out (the value slides into the y column)
   // Intercept Form: p or q dragged from the equation into the x column (the smaller in row 2, the larger in row 4); with both in, the column fills in
   var vfnDragJust = 0;
+  // Intercept Form: rows 1, 3 and 5 of the x column are typed; with all five x-values in, the f(x) column fills in
+  function vfnIpXCan() { var s = vfnSt(); return vfnIp() && !s.gx && s.dx && s.dx[1] && s.dx[3] && QZ.step < 4 && !vfnWr() && (mode === "calculate" || vfnSid() === "xs"); }
+  function vfnIpX(r, enter) {
+    var s = vfnSt(); if (!vfnIpXCan() || s.xok[r]) return; s.wbad["x" + r] = false;
+    var v = m3Num(s.xt[r] || ""), want = vfnRX(r);
+    if (!isNaN(v) && Math.abs(v - want) < 1e-9) {
+      vfnPush(); s.xok[r] = true; pqMsg("");
+      if ([0, 2, 4].every(function (k) { return s.xok[k]; })) {
+        s.gx = true; s.gy[1] = s.gy[3] = true; s.gt[1] = s.gt[3] = "0"; s.gs[1] = s.gs[3] = 9; vfnTbKey = "";
+        var line = "x column: " + VFN_XS.map(function (d, k) { return nf(vfnRX(k)); }).join(", ");
+        if (mode === "calculate") { vfnLine(line); vfnSync(); var e0 = document.querySelector("[data-vfy=\"0\"]"); if (e0 && !pgRun) e0.focus(); return; }
+        vfnNext(line); return;
+      }
+      vfnTb(); var nx = [0, 2, 4].filter(function (k) { return !s.xok[k]; })[0], e = document.querySelector("#vfnTb [data-vfxi=\"" + nx + "\"]"); if (e && !pgRun) e.focus(); return;
+    }
+    if (enter && String(s.xt[r] || "").trim()) { s.wbad["x" + r] = true; vfnBad("Not quite. The x-values go up by the same amount each row: " + nf(Math.min(vfnP().p1, vfnP().q1)) + " is in row 2 and " + nf(Math.max(vfnP().p1, vfnP().q1)) + " in row 4."); vfnTb(); }
+  }
+  $("vfnTb").addEventListener("input", function (e) { var d0 = e.target.dataset; if (d0.vfxi == null || !vfN()) return; if (e.isTrusted) pgUser(); vfnSt().xt[d0.vfxi] = e.target.value; vfnIpX(+d0.vfxi, false); });
+  $("vfnTb").addEventListener("keydown", function (e) { var d0 = e.target.dataset; if (e.key !== "Enter" || d0.vfxi == null || !vfN()) return; e.preventDefault(); vfnIpX(+d0.vfxi, true); });
   function vfnIpCan() { var s = vfnSt(); return vfnIp() && !s.gx && QZ.step < 4 && !vfnWr() && (mode === "calculate" || vfnSid() === "drag"); }
   function vfnIpDrop(k, r) {
     var s = vfnSt(), p = vfnP(); if (!vfnIpCan() || (s.dx || {})[r]) return;
@@ -8441,10 +8463,9 @@ var ESPIC = {
     if (r !== want) { vfnBad("The smaller x-intercept goes in row 2 and the larger in row 4, so x increases down the table."); vfnTb(); return; }
     vfnPush(); s.dx = s.dx || {}; s.dx[r] = true; pqMsg("");
     if (s.dx[1] && s.dx[3]) {
-      s.gx = true; s.gy[1] = s.gy[3] = true; s.gt[1] = s.gt[3] = "0"; s.gs[1] = s.gs[3] = 9; vfnTbKey = "";
-      var line = "x-intercepts " + nf(Math.min(p.p1, p.q1)) + " and " + nf(Math.max(p.p1, p.q1)) + " in rows 2 and 4 (y = 0)";
-      if (mode === "calculate") { vfnLine(line); vfnSync(); return; }
-      vfnNext(line); return;
+      vfnTbKey = ""; var line = "x-intercepts " + nf(Math.min(p.p1, p.q1)) + " and " + nf(Math.max(p.p1, p.q1)) + " in rows 2 and 4 (y = 0)";
+      if (mode === "calculate") { vfnLine(line); vfnSync(); setTimeout(function () { var e = document.querySelector("#vfnTb [data-vfxi]"); if (e && !pgRun) e.focus(); }, 0); return; }
+      vfnNext(line); setTimeout(function () { var e = document.querySelector("#vfnTb [data-vfxi]"); if (e && !pgRun) e.focus(); }, 0); return;
     }
     vfnTbKey = ""; vfnSync();
   }
@@ -8504,6 +8525,7 @@ var ESPIC = {
     if (st === "drag") { pqMsg(p.ip ? "Drag p and q from the equation into the x column of the table." : "Drag x = −b/(2a) into the table.", "note"); return; }
     if (st === "tbl") { pqMsg("Click each expression in the table.", "note"); return; }
     if (VFN_IV.indexOf(st) >= 0) { pqMsg("Type the answer in the box.", "note"); return; }
+    if (st === "xs") { pqMsg("Type the other x-values in the table.", "note"); return; }
     if (!vfnParOK(s)) return;
     if (st === "h") { if (what === "vh") ok("h = " + nf(p.h)); else if (what === "vk") vfnBad("That is k, the y-coordinate of the vertex. Click h, its x-coordinate."); else if (what) vfnBad("h is the x-coordinate of the vertex. Click it in the vertex's coordinates."); else pqMsg("Click a number in the vertex's coordinates.", "note"); return; }
     if (st === "k") { if (what === "vk") ok("k = " + nf(p.k)); else if (what === "vh") vfnBad("That is h. Click k, the y-coordinate of the vertex."); else if (what) vfnBad("k is the y-coordinate of the vertex. Click it in the vertex's coordinates."); else pqMsg("Click a number in the vertex's coordinates.", "note"); return; }
@@ -8747,6 +8769,15 @@ var ESPIC = {
     var m1 = pairs[0] || [p.h - 1, p.h + 1], m2 = pairs[1] || m1, I = [], past = function (id) { return function () { return vfnPast(id); }; }, okF = function (f) { return function () { return !!(s.wok[f] || s.wok[f.replace(/^(m[12])[ab]$/, "$1")]); }; };
     var eqSay = p.ip ? { a: p.a === 1 ? "No number in front of the parentheses means a = 1. Click the space where it would be." : "a is the number in front of the parentheses.", p: "p is subtracted from x in the first factor: (x − p).", q: "q is subtracted from x in the second factor: (x − q)." } : { a: "a is the number in front of x².", b: "b is the number in front of x, with its sign.", c: "c is the constant term, with its sign." };
     var ivAns = function (f) { return f === "mm" ? String(p.k) : ivStr(vfnIvAns(f)); }, ivSayD = { dom: "The parabola goes on forever left and right: every x. Press ℝ for all real numbers.", rng: "The y-values start at the vertex, y = " + nf(p.k) + ", and go " + (p.a > 0 ? "up" : "down") + " forever.", inc: "Left to right, the graph goes up " + (p.a > 0 ? "after" : "until") + " the vertex.", dec: "Left to right, the graph goes down " + (p.a > 0 ? "until" : "after") + " the vertex.", mm: "It opens " + (p.a > 0 ? "up, so the vertex is a minimum" : "down, so the vertex is a maximum") + ": y = " + nf(p.k) + "." };
+    function typeXs(n) {   // Intercept Form: the hand types rows 1, 3 and 5 of the x column
+      var L = [0, 2, 4].filter(function (r) { return !s.xok[r]; });
+      cap("The rows are evenly spaced: row 3 is halfway between p and q. Type the other x-values.");
+      (function one() {
+        if (pgRun !== run) return; var r = L.shift(); if (r == null) { pgWait(900, n); return; }
+        var e = document.querySelector("#vfnTb [data-vfxi=\"" + r + "\"]"); if (!e) { one(); return; }
+        go(ctr(e), function () { var v = String(vfnRX(r)), i = 0; s.xt[r] = ""; (function ch() { if (pgRun !== run) return; if (i >= v.length) { vfnIpX(r, false); pgWait(600, one); return; } s.xt[r] += v.charAt(i++); var e2 = document.querySelector("#vfnTb [data-vfxi=\"" + r + "\"]"); if (e2) e2.value = s.xt[r]; pgWait(110, ch); })(); });
+      })();
+    }
     function dragPQ(n) {   // Intercept Form: the hand drags p, then q, from the equation into rows 2 and 4 of the x column
       var L = [["p", p.p1], ["q", p.q1]].filter(function (z) { var r = z[1] === Math.min(p.p1, p.q1) ? 1 : 3; return !(s.dx || {})[r]; });
       cap("The x-intercepts are p = " + nf(p.p1) + " and q = " + nf(p.q1) + ". Drag them into the x column: the smaller in row 2, the larger in row 4.");
@@ -8773,7 +8804,8 @@ var ESPIC = {
       var fld = function (f, val, say) { I.push({ done: okF(f), run: typeIn(f, val, say) }); };
       if (p.ip) {
         fld("a", String(p.a), eqSay.a); fld("p", String(p.p1), eqSay.p); fld("q", String(p.q1), eqSay.q);
-        I.push({ done: function () { return s.gx; }, run: dragPQ });
+        I.push({ done: function () { return s.dx && s.dx[1] && s.dx[3]; }, run: dragPQ });
+        I.push({ done: function () { return s.gx; }, run: typeXs });
         VFN_XS.forEach(function (d, r) { I.push({ done: function () { return !!s.gy[r]; }, run: yIn(r) }); });
         I.push({ done: function () { return vfnParOK(s); }, run: graph });
       } else if (std) {
@@ -8797,6 +8829,7 @@ var ESPIC = {
         else if (VFN_IV.indexOf(id) >= 0) r = ivType(id);
         else if (id === "a" || id === "b" || id === "c" || id === "p" || id === "q") r = (function (k) { return function (n) { clickOn("#pgQt [data-vfe=" + k + "]", VFN_ASK[k].replace(/<[^>]+>/g, "") + " " + eqSay[k], "e:" + k, n); }; })(id);
         else if (id === "drag") r = p.ip ? dragPQ : dragChip;
+        else if (id === "xs") r = typeXs;
         else if (id === "tbl") r = function (n) { var L = VFN_XS.map(function (d, i) { return i; }).filter(function (i) { return !s.gy[i]; }), j = 0; cap(p.ip ? "The x-intercepts p and q are already in the table. Click each other expression: first the subtractions, then multiply. Each finished row is a point on the graph." : "Click each expression to simplify it one step at a time: the exponent, then multiplying, then adding. Each finished row is a point on the graph."); (function nx() { if (pgRun !== run) return; if (j >= L.length || vfnSid() !== "tbl") { pgWait(800, n); return; } clickTd(L[j++], nx); })(); };
         else if (id === "h") r = function (n) { clickOn("#vfnSvg [data-vfc=vh]", VFN_ASK.h.replace(/<[^>]+>/g, "") + " h is the x-coordinate of the vertex.", "vh", n); };
         else if (id === "k") r = function (n) { clickOn("#vfnSvg [data-vfc=vk]", VFN_ASK.k.replace(/<[^>]+>/g, "") + " k is the y-coordinate.", "vk", n); };
