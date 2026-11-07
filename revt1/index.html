@@ -859,6 +859,7 @@
   .wyo .wyoTx{z-index:1;isolation:isolate}
   .wyoGl .glPT thead{pointer-events:auto}.wyoGl{pointer-events:none}.wyoGl .glPT th input{pointer-events:auto}.wyoGl .glPT tbody{opacity:.45}.wyoGl .wyoTx{top:2.4em}
   #wyoPg{display:none}body.wyoPg #wyoPg{display:block;width:100%}body.wyoPg #pgTable,body.wyoPg #pgDial,body.wyoPg #ptWrap{display:none!important}
+  .fhBtn{display:block;margin:1.2rem auto;min-width:9rem;font-weight:700}
   /* example (placeholder) text disappears as soon as the field is clicked, not when typing starts */
   input:focus::placeholder,textarea:focus::placeholder{color:transparent!important;opacity:0!important}
   [contenteditable]:focus:empty::before{content:none!important}
@@ -8005,7 +8006,7 @@ var ESPIC = {
   function vfN() { return pq() && act === "2.2" && (lesson === 1 || lesson === 2 || lesson === 4) && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().vf && (mode === "demo" || mode === "sequence" || mode === "calculate" || mode === "solo"); }
   function vfnP() { return m3Cur().vf; }
   function vfnIp() { return !!vfnP().ip; }   // 2.2C Graphing Intercept Form: f(x) = a(x − p)(x − q), on the Standard Form engine
-  function vfnRX(r) { var p = vfnP(); return p.h + VFN_XS[r] * (p.ts || 1); }   // the x of a table row
+  function vfnRX(r) { var p = vfnP(), q = QZ && QZ.vf; if (p.ip && q && q.pi === QZ.pi && q.rx && q.rx[r] != null) return q.rx[r]; return p.h + VFN_XS[r] * (p.ts || 1); }   // the x of a table row (Intercept Form: the student's own x-values)
   function vfnStd() { return !!vfnP().std; }
   // the steps of Demo and Sequence, in order
   var VFN_IV = ["dom", "rng", "inc", "dec", "mm"];   // (Intercept Form: then the domain, range, where it increases and decreases, and its minimum or maximum, typed)
@@ -8046,7 +8047,7 @@ var ESPIC = {
     Object.keys(c).forEach(function (k) { s[k] = c[k]; }); s.hist = h; s.drag = null; s.hov = null; if (s.tool !== "pt") s.tool = null; vfnKey = ""; vfnTbKey = ""; pqMsg(""); vfnSync();
   }
   function vfnLine(t) { if (QZ.ww) QZ.ww.steps.push({ eqs: [t], cls: "cg" }); }
-  function vfnBad(msg) { QZ.wrong++; pqMsg(msg); }
+  function vfnBad(msg, f) { QZ.wrong++; pqMsg(f ? ansAdd(msg, typeof f === "string" && f.charAt(0) === "=" ? f.slice(1) : vfnAnsTx(f)) : msg); }
   // Show work (2.2A, both exercises): a picture of the graph and the table as they are, kept with the problem's work (taken when it is finished, and again
   // whenever Show work is opened while it is still going)
   function vfnPic() {
@@ -8271,12 +8272,12 @@ var ESPIC = {
     if (VFN_IV.indexOf(f) >= 0 && (mode === "demo" || mode === "sequence")) {   // Intercept Form, Demo and Sequence: the stage in hand
       if (vfnSid() !== f) return;
       if (vfnCheckF(f, s.w[f])) { vfnPush(); s.wok[f] = true; vfnNext(vfnIvSay(f, s)); return; }
-      if (enter && (String(s.w[f]).trim() || f === "mm")) { s.wbad[f] = true; vfnBad(vfnIvWhy(f, s.w[f])); vfnOut(); }
+      if (enter && (String(s.w[f]).trim() || f === "mm")) { s.wbad[f] = true; vfnBad(vfnIvWhy(f, s.w[f]), f); vfnOut(); }
       return;
     }
     if (VFN_IV.indexOf(f) >= 0) {
       if (vfnCheckF(f, s.w[f])) { vfnPush(); s.wok[f] = true; vfnLine(vfnIvSay(f, s)); pqMsg(""); vfnAll(); return; }
-      if (enter && (String(s.w[f]).trim() || f === "mm")) { s.wbad[f] = true; vfnBad(vfnIvWhy(f, s.w[f])); vfnOut(); }
+      if (enter && (String(s.w[f]).trim() || f === "mm")) { s.wbad[f] = true; vfnBad(vfnIvWhy(f, s.w[f]), f); vfnOut(); }
       return;
     }
     if (/^m[12][ab]$/.test(f)) {
@@ -8289,7 +8290,7 @@ var ESPIC = {
     }
     if (vfnCheckF(f, s.w[f])) { vfnPush(); s.wok[f] = true; vfnLine(VFN_SAY[f] + s.w[f].trim()); pqMsg(""); var L = vfnFs(), nx = L[L.indexOf(f) + 1]; vfnAll(); if (nx && !pgRun && f !== "xv") { var e2 = $("vfnF_" + nx); if (e2) e2.focus(); } return; }
     if (enter && f === "v" && String(s.w[f]).trim() && !/^\s*\(.*\)\s*$/.test(s.w[f])) { pqMsg("Write the vertex as a point, with both parentheses: (x, y).", "note"); return; }
-    if (enter && String(s.w[f]).trim()) { s.wbad[f] = true; vfnBad(VFN_WRONG[f] || "Not quite. Look at f(x) = a(x − h)² + k."); vfnOut(); }
+    if (enter && String(s.w[f]).trim()) { s.wbad[f] = true; vfnBad(VFN_WRONG[f] || "Not quite. Look at f(x) = a(x − h)² + k.", f); vfnOut(); }
   }
 
   // ---- the tables.  Vertex Form, Calculate and Write: the parent table (as in 2.1): x | x | y | y | y, columns 2 and 3 the parent (x, x²), one new column
@@ -8503,9 +8504,17 @@ var ESPIC = {
   function vfnIpXCan() { var s = vfnSt(); return vfnIp() && !s.gx && s.dx && s.dx[1] && s.dx[3] && QZ.step < 4 && !vfnWr() && (mode === "calculate" || vfnSid() === "xs"); }
   function vfnIpX(r, enter) {
     var s = vfnSt(); if (!vfnIpXCan() || s.xok[r]) return; s.wbad["x" + r] = false;
-    var v = m3Num(s.xt[r] || ""), want = vfnRX(r);
-    if (!isNaN(v) && Math.abs(v - want) < 1e-9) {
-      vfnPush(); s.xok[r] = true; pqMsg("");
+    var v = m3Num(s.xt[r] || ""), p0 = vfnP(), lo = Math.min(p0.p1, p0.q1), hi = Math.max(p0.p1, p0.q1), why = "";
+    if (r === 2) { if (isNaN(v) || Math.abs(v - p0.h) > 1e-9) why = "Not quite. The middle x is halfway between the intercepts, the x of the vertex."; }
+    else {   // rows 1 and 5: any x that is not between the intercepts (and not already in the table); checked on Return, since there is no single answer
+      if (!enter) return;
+      if (isNaN(v)) why = "Type a number.";
+      else if (v >= lo - 1e-9 && v <= hi + 1e-9) why = "Choose an x that is not between the x-intercepts " + nf(lo) + " and " + nf(hi) + ".";
+      else if (Math.abs(v) > 10) why = "Choose an x from −10 to 10, so the point is on the graph.";
+      else if ([0, 4].some(function (k) { return k !== r && s.xok[k] && Math.abs(s.rx[k] - v) < 1e-9; })) why = "That x is already in the table. Choose a different one.";
+    }
+    if (!why) {
+      vfnPush(); s.xok[r] = true; s.rx = s.rx || {}; s.rx[r] = v; pqMsg("");
       if ([0, 2, 4].every(function (k) { return s.xok[k]; })) {
         s.gx = true; vfnTbKey = "";   // (every y, the intercepts' too, is worked out by the student)
         var line = "x column: " + VFN_XS.map(function (d, k) { return nf(vfnRX(k)); }).join(", ");
@@ -8514,18 +8523,20 @@ var ESPIC = {
       }
       vfnTb(); var nx = [0, 2, 4].filter(function (k) { return !s.xok[k]; })[0], e = document.querySelector("#vfnTb [data-vfxi=\"" + nx + "\"]"); if (e && !pgRun) e.focus(); return;
     }
-    if (enter && String(s.xt[r] || "").trim()) { s.wbad["x" + r] = true; vfnBad("Not quite. The x-values go up by the same amount each row: " + nf(Math.min(vfnP().p1, vfnP().q1)) + " is in row 2 and " + nf(Math.max(vfnP().p1, vfnP().q1)) + " in row 4."); vfnTb(); }
+    if (enter && String(s.xt[r] || "").trim()) { s.wbad["x" + r] = true; vfnBad(why, r === 2 ? "=" + nf(p0.h) : "=any x less than " + nf(lo) + " or greater than " + nf(hi) + ", like " + nf(r === 0 === (s.rx && s.rx[1] > s.rx[3]) ? hi + 1 : lo - 1)); vfnTb(); }
   }
   $("vfnTb").addEventListener("input", function (e) { var d0 = e.target.dataset; if (d0.vfxi == null || !vfN()) return; if (e.isTrusted) pgUser(); vfnSt().xt[d0.vfxi] = e.target.value; vfnIpX(+d0.vfxi, false); });
-  $("vfnTb").addEventListener("keydown", function (e) { var d0 = e.target.dataset; if (e.key !== "Enter" || d0.vfxi == null || !vfN()) return; e.preventDefault(); vfnIpX(+d0.vfxi, true); });
+  $("vfnTb").addEventListener("keydown", function (e) { var d0 = e.target.dataset; if (e.key !== "Enter" || d0.vfxi == null || !vfN()) return; e.preventDefault(); d0.chk = e.target.value; vfnIpX(+d0.vfxi, true); });
+  $("vfnTb").addEventListener("change", function (e) { var d0 = e.target.dataset; if (d0.vfxi == null || !vfN() || !String(e.target.value).trim() || d0.chk === e.target.value) return; d0.chk = e.target.value; vfnIpX(+d0.vfxi, true); });   // (leaving a row 1 or 5 box checks it too)
   function vfnIpCan() { var s = vfnSt(); return vfnIp() && !s.gx && QZ.step < 4 && !vfnWr() && (mode === "calculate" || vfnSid() === "drag"); }
   function vfnIpDrop(k, r) {
     var s = vfnSt(), p = vfnP(); if (!vfnIpCan() || (s.dx || {})[r]) return;
-    var v = p[k + "1"], want = v === Math.min(p.p1, p.q1) ? 1 : 3;
-    if (r !== want) { vfnBad("The smaller x-intercept goes in row 2 and the larger in row 4, so x increases down the table."); vfnTb(); return; }
-    vfnPush(); s.dx = s.dx || {}; s.dx[r] = true; pqMsg("");
+    var v = p[k + "1"], o = r === 1 ? 3 : 1;   // (either intercept in either row: x may go up or down the table)
+    if (r !== 1 && r !== 3) { vfnBad("The x-intercepts go in rows 2 and 4."); vfnTb(); return; }
+    if (s.rx && s.rx[o] === v && p.p1 !== p.q1) { vfnBad("That intercept is already in the table. Drag the other one."); vfnTb(); return; }
+    vfnPush(); s.dx = s.dx || {}; s.dx[r] = true; s.rx = s.rx || {}; s.rx[r] = v; pqMsg("");
     if (s.dx[1] && s.dx[3]) {
-      vfnTbKey = ""; var line = "x-intercepts " + nf(Math.min(p.p1, p.q1)) + " and " + nf(Math.max(p.p1, p.q1)) + " in rows 2 and 4";
+      vfnTbKey = ""; var line = "x-intercepts " + nf(s.rx[1]) + " and " + nf(s.rx[3]) + " in rows 2 and 4";
       if (mode === "calculate") { vfnLine(line); vfnSync(); setTimeout(function () { var e = document.querySelector("#vfnTb [data-vfxi]"); if (e && !pgRun) e.focus(); }, 0); return; }
       vfnNext(line); setTimeout(function () { var e = document.querySelector("#vfnTb [data-vfxi]"); if (e && !pgRun) e.focus(); }, 0); return;
     }
@@ -8563,7 +8574,7 @@ var ESPIC = {
       if (nx != null && !pgRun) { var e = document.querySelector("[data-vfy=\"" + nx + "\"]"); if (e) e.focus(); }
       return;
     }
-    if (enter && String(s.gt[r] || "").trim()) { s.wbad["g" + r] = true; vfnBad("Not quite. Work out " + vfnExpr(x) + "."); vfnTb(); }
+    if (enter && String(s.gt[r] || "").trim()) { s.wbad["g" + r] = true; vfnBad("Not quite. Work out " + vfnExpr(x) + ".", "=" + nf(vfnF(x))); vfnTb(); }
   }
   function vfnAll() {
     var s = vfnSt(), boxes = vfnFs().map(function (f) { return f.replace(/^(m[12])[ab]$/, "$1"); }).every(function (k) { return s.wok[k]; });
@@ -8676,7 +8687,7 @@ var ESPIC = {
       ["m1", "m2"].forEach(function (k) { s.wbad[k + "a"] = s.wbad[k + "b"] = !s.wok[k]; });
       if (!s.wok.m1 || !s.wok.m2) bad.push("the mirror points");
     }
-    if (bad.length) { QZ.wrong++; pqMsg("Not quite. Check " + wsList(bad) + ", then press Submit again."); vfnSync(); return; }
+    if (bad.length) { QZ.wrong++; var ansW = c2cOn() ? vfnFs().filter(function (f) { return !/^m/.test(f) && !s.wok[f]; }).concat(vfnIp() && !s.wok.mm ? ["mm"] : []).map(function (f) { return (VFN_SAY[f] || (f === "mm" ? "" : f + " ")) + (f === "ax" ? nf(p.h) : vfnAnsTx(f)); }) : []; pqMsg("Not quite. Check " + wsList(bad) + ", then press Submit again." + (ansW.length ? " The answers: " + ansW.join("; ") + "." : "")); vfnSync(); return; }
     vfnLine("vertex (" + nf(p.h) + ", " + nf(p.k) + "), axis of symmetry x = " + nf(p.h)); if (!vfnIp()) vfnLine("mirror points " + s.w.m1a + " and " + s.w.m1b + "; " + s.w.m2a + " and " + s.w.m2b);
     if (vfnIp()) VFN_IV.forEach(function (f) { vfnLine(vfnIvSay(f, s)); });
     s.tool = null; vfnDone();
@@ -9882,11 +9893,12 @@ var ESPIC = {
         else if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
           if (!c2Err) tally(); var ml = (BUILT[act].modesFor ? BUILT[act].modesFor(lesson) : BUILT[act].modes) || ["demo", "sequence", "calculate", "solo"], nm = ml[ml.indexOf(mode) + 1];
           up = nm && nm !== "create" ? { label: MODES[nm] + " Mode", stayText: "Try another in " + MODES[mode] + " mode", go: function () { setMode(nm); } } : null;
-        } else if (last && c2Err) { up = { label: "Try another", go: function () { pqRegen(); } }; }   // (2.1: a round with errors earns nothing; another round is offered)
+        } else if (c2Err && retryOn()) { up = { label: "Retry", go: pqRetry }; }   // ("Retry" questioning: this problem comes back, the others stay done)
+        else if (last && c2Err) { up = { label: "Try another", go: function () { pqRegen(); } }; }   // (2.1: a round with errors earns nothing; another round is offered)
         else if (last) { QZ.locked = true; counted = false; tally(); }
         else if (mode !== "solo" && !c2Err && !ivL()) levelUp();   // the mode's level earned partway through a round: Next offers the next mode, the small link the next problem here   // Sequence and Solo count a round only when all four parents are done
         pqPanel();
-        if (c2Err && !QZ.custom && mode !== "create") pqMsg(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : "No Progress for this round: there were error messages along the way." + (last ? " Try another round with none." : ""));
+        if (c2Err && !QZ.custom && mode !== "create") pqMsg(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : retryOn() ? "There were error messages along the way, so this one comes back: press Retry for a new problem like it. The problems already done stay done." : "No Progress for this round: there were error messages along the way." + (last ? " Try another round with none." : ""));
       }
     } finally { pqBusy = false; pqCue(); }
   }
@@ -12273,7 +12285,7 @@ var ESPIC = {
     QZ.m3i++; if (QZ.m3i >= m3L().length) QZ.m3done = true;
     QZ.hn = 0; pqMsg(""); drawPlay(); pqPanel();
   }
-  function m3Bad(el, msg) { QZ.wrong++; if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } pqMsg(m3Plain(msg || "Not quite. Try again.")); }
+  function m3Bad(el, msg) { QZ.wrong++; if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } pqMsg(m3Plain(ansAdd(msg || "Not quite. Try again.", el ? m3AnsTx(m3Step()) : ""))); }
   function m3Try(el, enter) {
     var st = m3Step(); if (!st || st.type === "pick" || st.type === "pts" || st.type === "btn" || M3ACT.indexOf(st.type) >= 0) return;
     if (st.type === "sent") {   // Calculate: the amount of the change is typed
@@ -12304,7 +12316,7 @@ var ESPIC = {
     var st = m3Step(); if (!st) return; var k = b.dataset.m3;
     if (k === "go") { if (st.type === "btn") { QZ.m3x.reg = true; m3Accept(st, ""); } return; }
     var list = st.type === "pick" ? st.opts : m3Opts(st), o = list[+b.dataset.v]; if (!o) return;
-    if (o.ok) m3Accept(st, o.t); else { b.classList.remove("bad"); void b.offsetWidth; b.classList.add("bad"); QZ.wrong++; pqMsg((o.why) || "Not quite. Try again."); }
+    if (o.ok) m3Accept(st, o.t); else { b.classList.remove("bad"); void b.offsetWidth; b.classList.add("bad"); QZ.wrong++; pqMsg(m3Plain(ansAdd((o.why) || "Not quite. Try again.", m3AnsTx(st)))); }
   }
   // Line of Fit: two dots on the line are clicked
   function m3Dot(i) {
@@ -12321,6 +12333,7 @@ var ESPIC = {
     var pb = m3Cur(); if (!pb) return "";
     var done = QZ.m3l.map(function (l) { return "<div><span class=\"cueOk\">✓</span> " + l + "</div>"; }).join("");
     var fig = pb.fig(QZ.m3x || {}), tb = typeof pb.tbl === "function" ? pb.tbl(QZ.m3x || {}) : pb.tbl || "";
+    if (fig && fhGraph()) fig = "<button type=\"button\" class=\"btn fhBtn\" data-fh title=\"Show the graph: a Free Hint costs nothing\">Free Hint</button>";
     return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div>" + tb + "<div class=\"m3Body\">" + (fig ? "<div class=\"m3FigC\"><div class=\"m3FigW\">" + fig + "</div>" + (m3wOn() && pb.kind === 5 ? "<div class=\"glTools\"><button type=\"button\" class=\"btn\" data-glw=\"line\" title=\"Draw a line through the points you have plotted (2 points)\">Line</button><button type=\"button\" class=\"btn\" data-glw=\"clear\" title=\"Remove your lines and the points you clicked\">Clear</button></div>" : "") + "</div>" : "") + (done ? "<div class=\"m3Done\">" + done + "</div>" : "") + "</div>";
   }
   function m3PG() {
@@ -12481,7 +12494,7 @@ var ESPIC = {
     });
     if (L.every(function (st) { return W.ok[st.id]; })) { QZ.m3i = L.length; QZ.m3done = true; }
     m3wKey = "";
-    if (bad.length) { QZ.wrong++; drawPlay(); m3Redraw(); pqMsg("Not quite. Check " + wsList(bad) + ", then press Submit again."); return; }
+    if (bad.length) { QZ.wrong++; drawPlay(); m3Redraw(); var ansM = c2cOn() ? m3L().filter(function (q) { return !QZ.m3w.ok[q.id] && m3AnsTx(q); }).map(function (q) { return m3wLab(q) + ": " + m3AnsTx(q); }) : []; pqMsg(m3Plain("Not quite. Check " + wsList(bad) + ", then press Submit again." + (ansM.length ? " The answers: " + ansM.join("; ") + "." : ""))); return; }
     pqMsg(""); drawPlay(); pqEval();
   }
   $("wfSteps").addEventListener("input", function (e) { if (m3() && e.target.classList.contains("m3In")) { if (m3wOn()) { QZ.m3w.v[e.target.dataset.sid] = e.target.value; return; } m3Try(e.target, false); } });
@@ -12799,7 +12812,7 @@ var ESPIC = {
   }
   function m3Explain() { var pb = m3Cur(); return pb ? m3Plain(pb.ex) : ""; }
   // a message shown as plain text: fractions written n/d, tags dropped
-  function m3Plain(t) { return String(t).replace(/<span class="fr"><span>([^<]*)<\/span><span>([^<]*)<\/span><\/span>/g, "$1/$2").replace(/<[^>]+>/g, ""); }
+  function m3Plain(t) { return String(t).replace(/<span class="fr"><span>([^<]*)<\/span><span>([^<]*)<\/span><\/span>/g, "$1/$2").replace(/<\/?[A-Za-z][^>]*>/g, ""); }
 
   // ---- Exercise 1: Equation from a Graph.  A line is drawn for a story; write y = mx + b, say what the slope means, and solve for a target
   var M3A = [
@@ -13713,6 +13726,50 @@ var ESPIC = {
   function wyoParent() { var H = ["<i>x</i>", "<i>x</i>", "<i>y</i>", "<i>y</i>"]; return wyoPic(H, [-2, -1, 0, 1, 2].map(function (x) { return ["", nf(x), nf(x * x), ""]; }), "wyoPar"); }
   function wyoPgOn() { return pq() && mode === "solo" && ((act === "1.1" && lesson <= 2) || (act === "2.1" && lesson <= 2)); }
   function wyoSync() { var on = wyoPgOn(); document.body.classList.toggle("wyoPg", on); var w = $("wyoPg"); if (on && w && !w.innerHTML) w.innerHTML = wyoGraphing(act === "2.1" ? "<i>g</i>(<i>x</i>)" : " "); }
+
+  // ==== 2.2C: a wrong answer shows the right answer (all modes) ====
+  function c2cOn() { return pq() && act === "2.2" && (lesson === 3 || lesson === 4 || lesson === 5); }
+  function ansAdd(msg, a) { msg = msg || "Not quite."; if (!c2cOn() || a == null || a === "") return msg; return msg.replace(/\s*Try again\.?\s*$/, "") + " The answer is " + String(a).replace(/\.\s*$/, "") + "."; }
+  function m3AnsTx(st) {
+    if (!st) return ""; var t = st.type || "num";
+    try {
+      if (t === "pick") { var o = (st.opts || []).filter(function (q) { return q.ok; })[0]; return o ? String(o.t).replace(/<\/?[A-Za-z][^>]*>/g, "").replace(/\.\s*$/, "") : ""; }
+      if (t === "num") { var v = m3V(st.ans); return v == null || !isFinite(v) ? "" : c2T(v, 6).replace(/-/g, "−") + (st.post ? " " + String(st.post).replace(/<[^>]+>/g, "") : ""); }
+      if (t === "eq") return m3Eq(m3V(st.a), m3V(st.b));
+      if (t === "fn") return st.typed || "";
+    } catch (e) { }
+    return "";
+  }
+  function vfnAnsTx(f) {
+    var p = vfnP();
+    if (f === "p" || f === "q") return nf(p[f + "1"]);
+    if (f === "a" || f === "b" || f === "c") return nf(p[f]);
+    if (f === "h" || f === "xv") return nf(p.h);
+    if (f === "k") return nf(p.k);
+    if (f === "ax") return "x = " + nf(p.h);
+    if (f === "v") return "(" + nf(p.h) + ", " + nf(p.k) + ")";
+    if (f === "mm") return (p.a > 0 ? "a minimum" : "a maximum") + ", y = " + nf(p.k);
+    if (VFN_IV.indexOf(f) >= 0) return ivStr(vfnIvAns(f));
+    return "";
+  }
+  // ==== a Free Hint: help that costs nothing (it is not an error message and does not stop Progress).  2.2C Min & Max, Calculate: the graph is a Free Hint ====
+  function fhGraph() { return pq() && act === "2.2" && lesson === 3 && mode === "calculate" && !(QZ.fh && QZ.fh[QZ.pi]); }
+  document.addEventListener("click", function (e) { var b = e.target.closest("[data-fh]"); if (!b || !pq() || !QZ) return; QZ.fh = QZ.fh || {}; QZ.fh[QZ.pi] = true; pqPanel(); });
+  // ==== "Retry" questioning: when a round has several problems and one of them has an error message, that problem comes back (a new one like it)
+  // until it is done with none; the problems already done stay done.  (3 problems, #2 wrong five times and #3 once: 1 2 2 2 2 2 2 3 3) ====
+  function retryOn() { return mode !== "demo" && mode !== "create" && !QZ.custom && QZ.order && QZ.order.length > 1; }
+  function pqRetry() {
+    up = null; var i = QZ.pi, t = Math.min(i, 2);
+    try {
+      if (m3() && QZ.m3p) { var h0 = QZ.m3p[i].head, q = null; for (var g = 0; g < 25; g++) { q = m3Make(t); if (q.head !== h0) break; } QZ.m3p[i] = q; }
+      else if (est() && QZ.est) QZ.est[i] = estSet(1)[0];
+      else if (wf() && QZ.wfp) { var w0 = JSON.stringify(QZ.wfp[i]); for (var g2 = 0; g2 < 25; g2++) { var W = wfSet(QZ.wfp.length)[i]; if (JSON.stringify(W) !== w0) { QZ.wfp[i] = W; break; } } }
+      else if (gd2() && QZ.tr) QZ.tr[i] = gdMake21(i);
+      else if (gd() && QZ.tr) QZ.tr[i] = gdMake(QZ.order[i]);
+    } catch (e) { }
+    QZ.wrong = 0; QZ.step = 0; QZ.vf = null; QZ.iv = null; QZ.gr = null; QZ.gn = null; QZ.cs = null; if (QZ.fh) QZ.fh[i] = false;
+    pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel(); if (dsmOn()) { DSM.key = ""; dsmSync(); } if (e11On()) { DSM.key = ""; e11Sync(); }
+  }
   // ==== 2.2A Vertex Form, Create: the student types a function in vertex form (nothing else is accepted), then picks the mode to work on it in ====
   var c2Custom = null;
   function vcr() { return pq() && act === "2.2" && lesson === 1 && mode === "create"; }
