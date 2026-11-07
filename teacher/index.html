@@ -38,6 +38,14 @@
   th .act { color: var(--bar); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; } th .act:hover { color: var(--plum); }
   th button.sort { border: 0; background: none; padding: 0 2px 0 6px; font: inherit; color: #888; cursor: pointer; } th button.sort.on { color: var(--ink); } th button.sort:hover { color: var(--plum); }
   thead th.ac { cursor: default; }
+  th label.due { display: block; font-weight: 400; font-size: .8em; color: var(--muted); margin-top: 3px; } th label.due input { font: inherit; padding: 1px 2px; border: 1px solid var(--line); border-radius: 4px; width: 8.5em; } th label.due.set input { border-color: var(--plum); color: var(--plum); }
+  td.late .pc { color: #B45309; font-weight: 700; }
+  .note { margin: 0 16px 10px; padding: 8px 12px; border-radius: 8px; background: #eef1f7; }
+  .dlgBg { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 10; padding: 16px; }
+  .dlgBg[hidden] { display: none; }
+  .dlg { background: #fff; border-radius: 12px; padding: 18px 20px; max-width: 460px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,.25); } .dlg h2 { margin: 0 0 8px; font: 600 1.2rem Georgia, serif; } .dlg p { color: var(--muted); margin: 0 0 12px; line-height: 1.4; }
+  .gcList { display: grid; gap: 6px; max-height: 50vh; overflow: auto; margin-bottom: 14px; } .gcList label { display: flex; gap: 8px; align-items: center; cursor: pointer; } .gcErr { color: #C8102E; }
+  .dlgB { display: flex; justify-content: flex-end; gap: 8px; } button.pri { background: var(--plum); color: #fff; border-color: var(--plum); } button:disabled { opacity: .6; cursor: default; }
   @media (max-width: 600px) { .tools { margin-left: 0; width: 100%; flex-wrap: wrap; } input[type=search] { flex: 1; } }
 </style>
 </head>
@@ -46,13 +54,15 @@
 <header>
   <h1>Class Progress</h1>
   <span class="sub" id="sub"></span>
-  <div class="tools"><input type="search" id="q" placeholder="Find a student" aria-label="Find a student"><span class="chk" role="group" aria-label="Show activities"><label><input type="checkbox" data-f="1"> Ch1</label><label><input type="checkbox" data-f="2"> Ch2</label><label><input type="checkbox" data-f="3"> Ch3</label><label><input type="checkbox" data-f="recent"> Recent</label></span><button id="csv">Download CSV</button><button id="ref">Refresh</button></div>
+  <div class="tools"><input type="search" id="q" placeholder="Find a student" aria-label="Find a student"><span class="chk" role="group" aria-label="Show activities"><label><input type="checkbox" data-f="1"> Ch1</label><label><input type="checkbox" data-f="2"> Ch2</label><label><input type="checkbox" data-f="3"> Ch3</label><label><input type="checkbox" data-f="recent"> Recent</label></span><button id="gc">Sync with Google Classroom</button><button id="csv">Download CSV</button><button id="ref">Refresh</button></div>
 </header>
+<div class="note" id="note" hidden role="status"></div>
 <div class="wrap" id="wrap"><div class="msg">Loading…</div></div>
+<div class="dlgBg" id="gcDlg" hidden><div class="dlg" role="dialog" aria-labelledby="gcT"><h2 id="gcT">Sync with Google Classroom</h2><p>Choose your classes. Students who aren't in them leave this list (their saved work is kept, and comes back if they rejoin); students who are in them and haven't signed in yet are added. The classes' teachers can open this page.</p><div class="gcList" id="gcList"></div><div class="dlgB"><button id="gcNo">Cancel</button><button id="gcGo" class="pri">Sync</button></div></div></div>
 <script>
 (function () {
   var ORDER = ["1.1A","1.1B","1.1C","1.2A","1.2B","1.2C","1.3A","1.3B","1.4A","1.4B","1.4C","1.4D","RevT1","2.1A","2.1B","2.2A","2.2B","2.2C","2.4A","2.4B"];
-  var rows = [], acts = [], sortBy = "name", dir = 1, openRow = null;
+  var rows = [], acts = [], due = {}, sortBy = "name", dir = 1, openRow = null;
   var $ = function (id) { return document.getElementById(id); };
   // Progress in stars, as the students see it: a finished activity is 5.0 stars, split over its exercises in tenths (larger shares first); each exercise earns
   // its share in proportion to how far it has come (the saved summary holds that as 0-100 per exercise), rounded down to a tenth
@@ -75,12 +85,22 @@
       var me = String(AN.user.email || "").toLowerCase();
       rows = (j.students || []).filter(function (r) { return String(r.email || "").toLowerCase() !== me; });   // (the teacher's own progress is not a student's)
       var seen = {}; rows.forEach(function (r) { Object.keys(r.detail || {}).forEach(function (a) { if (a.charAt(0) !== "_") seen[a] = 1; }); });
+      due = j.due || {}; Object.keys(due).forEach(function (a) { seen[a] = 1; }); ORDER.forEach(function (a) { seen[a] = 1; });   // (every activity has a column, so a due date can be set before anyone starts it)
       acts = ORDER.filter(function (a) { return seen[a]; }).concat(Object.keys(seen).filter(function (a) { return ORDER.indexOf(a) < 0; }).sort());
       $("sub").textContent = rows.length + " student" + (rows.length === 1 ? "" : "s");
       draw();
     }).catch(function (e) { msg(e.message || "Could not load the class."); });
   }
-  function val(r, k) { if (k === "name") return (r.name || r.email).toLowerCase(); if (k === "saved") return r.saved || ""; var a = stars((r.detail || {})[k]); return a == null ? -1 : a; }
+  // sorted by last name (then first name); a student with no name sorts by email
+  function lastFirst(r) { var w = String(r.name || "").trim().split(/\s+/).filter(Boolean); if (!w.length || /@/.test(r.name || "")) return String(r.email || "").toLowerCase(); var L = w.pop(); return (L + " " + w.join(" ")).toLowerCase(); }
+  // late: a due date is set, and 5 stars were not earned by the end of that day (when they were earned: saved with the progress; older saves: the last change)
+  function dueEnd(a) { var d = due[a]; if (!d) return 0; var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d); return m ? new Date(+m[1], +m[2] - 1, +m[3], 23, 59, 59).getTime() : 0; }
+  function late(r, a) {
+    var end = dueEnd(a); if (!end) return false; var d = r.detail || {}, p = stars(d[a]) || 0;
+    if (p >= 50) { var t = +d["_d:" + a] || +d["_t:" + a] || Date.parse(r.saved) || 0; return t > end; }
+    return Date.now() > end;
+  }
+  function val(r, k) { if (k === "name") return lastFirst(r); if (k === "saved") return r.saved || ""; var a = stars((r.detail || {})[k]); return a == null ? -1 : a; }
   // which activities to show: the checked chapters (none checked: all), and with Recent the 3 whose progress changed most recently across the class
   function chap(a) { var m = /^(\d+)\./.exec(a) || /^RevT(\d+)/i.exec(a); return m ? m[1] : ""; }
   function changed(a) {   // when the class last changed this activity (saved with each student's progress; older saves: the student's last save, if they have progress in it)
@@ -100,7 +120,7 @@
     if (!rows.length) return msg("No students have signed in yet.");
     var arrow = function (k) { return sortBy === k ? (dir > 0 ? " ▲" : " ▼") : ""; };
     var h = "<table><thead><tr><th data-k=\"name\">Student" + arrow("name") + "</th><th data-k=\"saved\">Last saved" + arrow("saved") + "</th>";
-    acts.forEach(function (a) { var on = sortBy === a; h += "<th class=\"ac\"><a class=\"act\" href=\"../" + esc(slug(a)) + "/\" title=\"Open " + esc(a) + "\">" + esc(a) + "</a><button type=\"button\" class=\"sort" + (on ? " on" : "") + "\" data-k=\"" + esc(a) + "\" aria-label=\"Sort by " + esc(a) + " progress\">" + (on ? (dir > 0 ? "▲" : "▼") : "↕") + "</button></th>"; });
+    acts.forEach(function (a) { var on = sortBy === a; h += "<th class=\"ac\"><a class=\"act\" href=\"../" + esc(slug(a)) + "/\" title=\"Open " + esc(a) + "\">" + esc(a) + "</a><button type=\"button\" class=\"sort" + (on ? " on" : "") + "\" data-k=\"" + esc(a) + "\" aria-label=\"Sort by " + esc(a) + " progress\">" + (on ? (dir > 0 ? "▲" : "▼") : "↕") + "</button><label class=\"due" + (due[a] ? " set" : "") + "\" title=\"Due date: without 5 stars by the end of this day, progress shows L\">Due <input type=\"date\" data-due=\"" + esc(a) + "\" value=\"" + esc(due[a] || "") + "\" aria-label=\"Due date for " + esc(a) + "\"></label></th>"; });
     h += "</tr></thead><tbody>";
     list.forEach(function (r) {
       var isOpen = openRow === r.email;
@@ -108,6 +128,7 @@
       acts.forEach(function (a) {
         var ex = (r.detail || {})[a], p = stars(ex), es = exStars(ex);
         var tip = ex ? Object.keys(es).map(function (n) { return n + ": " + st1(es[n][0]) + " of " + st1(es[n][1]) + " stars"; }).join("\n") : "";
+        if (late(r, a)) { h += "<td class=\"p late\" title=\"Late: " + esc(p == null ? "0.0" : st1(p)) + " of 5 stars" + (tip ? "\n" + esc(tip) : "") + "\" aria-label=\"Late, " + (p == null ? "0.0" : st1(p)) + " of 5 stars\"><span class=\"pc\">L</span></td>"; return; }
         h += p == null || p === 0 && !Object.keys(ex || {}).some(function (n) { return ex[n] > 0; })
           ? "<td class=\"p none\" title=\"" + esc(tip) + "\">–</td>"
           : "<td class=\"p" + (p === 50 ? " full" : "") + "\" title=\"" + esc(tip) + "\" aria-label=\"" + st1(p) + " of 5 stars\"><span class=\"pc\">" + st1(p) + "</span></td>";
@@ -122,12 +143,40 @@
     $("wrap").innerHTML = h + "</tbody></table>";
   }
   $("wrap").addEventListener("click", function (e) {
-    if (e.target.closest("a.act")) return;   // (the activity name opens the activity)
+    if (e.target.closest("a.act") || e.target.closest("label.due")) return;   // (the activity name opens the activity; the due date is set in its box)
     var th = e.target.closest("button.sort") || e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; if (sortBy === k) dir = -dir; else { sortBy = k; dir = k === "name" ? 1 : -1; } return draw(); }
     if (e.target.closest("th")) return;
     var tr = e.target.closest("tr[data-e]"); if (tr) { openRow = openRow === tr.dataset.e ? null : tr.dataset.e; draw(); }
   });
   $("q").addEventListener("input", draw);
+  // a due date: saved for the class at once (clearing the box removes it)
+  $("wrap").addEventListener("change", function (e) {
+    var b = e.target.closest("input[data-due]"); if (!b) return; var a = b.dataset.due, v = b.value || "";
+    b.disabled = true;
+    AN.api("setDue", { act: a, date: v }).then(function (j) { due = j.due || due; draw(); }).catch(function (er) { b.disabled = false; alertBar(er.message || "Could not save the due date."); });
+  });
+  function alertBar(t) { var m = $("note"); m.textContent = t; m.hidden = false; clearTimeout(alertBar.t); alertBar.t = setTimeout(function () { m.hidden = true; }, 8000); }
+  // Google Classroom: choose the classes, then the student list is made to match them
+  $("gc").addEventListener("click", function () {
+    var D = $("gcDlg"), L = $("gcList"); L.innerHTML = "Loading your classes…"; $("gcGo").disabled = true; D.hidden = false;
+    AN.api("courses").then(function (j) {
+      var cs = j.courses || [], last = j.last || [];
+      if (!cs.length) { L.textContent = "No active Google Classroom classes were found where you are a teacher."; return; }
+      L.innerHTML = cs.map(function (c) { return "<label><input type=\"checkbox\" value=\"" + esc(c.id) + "\"" + (last.indexOf(c.id) >= 0 || cs.length === 1 ? " checked" : "") + "> " + esc(c.name) + "</label>"; }).join("");
+      $("gcGo").disabled = false;
+    }).catch(function (er) { L.textContent = (er.message || "Could not reach Google Classroom.") + " (The Apps Script needs the Google Classroom service: see the note at the top of Code.gs.)"; });
+  });
+  $("gcNo").addEventListener("click", function () { $("gcDlg").hidden = true; });
+  $("gcGo").addEventListener("click", function () {
+    var ids = [].map.call(document.querySelectorAll("#gcList input:checked"), function (c) { return c.value; });
+    if (!ids.length) { $("gcList").insertAdjacentHTML("beforeend", "<div class=\"gcErr\">Choose at least one class.</div>"); return; }
+    $("gcGo").disabled = true; $("gcGo").textContent = "Syncing…";
+    AN.api("syncClassroom", { courseIds: ids }).then(function (j) {
+      $("gcDlg").hidden = true; $("gcGo").textContent = "Sync";
+      alertBar("Synced with Google Classroom: " + j.students + " students in the class" + (j.added ? ", " + j.added + " added" : "") + (j.removed ? ", " + j.removed + " removed from the list (their saved work is kept)" : "") + ".");
+      load();
+    }).catch(function (er) { $("gcGo").disabled = false; $("gcGo").textContent = "Sync"; $("gcList").insertAdjacentHTML("beforeend", "<div class=\"gcErr\">" + esc(er.message || "The sync didn't finish.") + "</div>"); });
+  });
   [].forEach.call(document.querySelectorAll(".chk input"), function (c) { try { c.checked = localStorage.getItem("an:tf:" + c.dataset.f) === "1"; } catch (e) { } c.addEventListener("change", function () { try { localStorage.setItem("an:tf:" + c.dataset.f, c.checked ? "1" : "0"); } catch (e) { } draw(); }); });
   $("ref").addEventListener("click", load);
   $("csv").addEventListener("click", function () {
