@@ -9893,12 +9893,13 @@ var ESPIC = {
         else if (mode === "demo") {   // one complete demo counts: Progress shows it, and Sequence mode is suggested next
           if (!c2Err) tally(); var ml = (BUILT[act].modesFor ? BUILT[act].modesFor(lesson) : BUILT[act].modes) || ["demo", "sequence", "calculate", "solo"], nm = ml[ml.indexOf(mode) + 1];
           up = nm && nm !== "create" ? { label: MODES[nm] + " Mode", stayText: "Try another in " + MODES[mode] + " mode", go: function () { setMode(nm); } } : null;
-        } else if (c2Err && retryOn()) { up = { label: "Retry", go: pqRetry }; }   // ("Retry" questioning: this problem comes back, the others stay done)
+        } else if (c2Err && ivL() && retryOn() && QZ.m3p) { QZ.order.push(QZ.order[QZ.pi]); QZ.m3p.push(QZ.m3p[QZ.pi]); up = null; }   // (2.2B, "Circle Back" questioning: this question comes back after the others; a miss costs no Progress)
+        else if (c2Err && retryOn()) { up = { label: "Retry", go: pqRetry }; }   // ("Retry" questioning: this problem comes back, the others stay done)
         else if (last && c2Err) { up = { label: "Try another", go: function () { pqRegen(); } }; }   // (2.1: a round with errors earns nothing; another round is offered)
         else if (last) { QZ.locked = true; counted = false; tally(); }
         else if (mode !== "solo" && !c2Err && !ivL()) levelUp();   // the mode's level earned partway through a round: Next offers the next mode, the small link the next problem here   // Sequence and Solo count a round only when all four parents are done
         pqPanel();
-        if (c2Err && !QZ.custom && mode !== "create") pqMsg(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : retryOn() ? "There were error messages along the way, so this one comes back: press Retry for a new problem like it. The problems already done stay done." : "No Progress for this round: there were error messages along the way." + (last ? " Try another round with none." : ""));
+        if (c2Err && !QZ.custom && mode !== "create") pqMsg(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : ivL() && retryOn() ? "This one comes back after the others. Press Next to go on." : retryOn() ? "There were error messages along the way, so this one comes back: press Retry for a new problem like it. The problems already done stay done." : "No Progress for this round: there were error messages along the way." + (last ? " Try another round with none." : ""));
       }
     } finally { pqBusy = false; pqCue(); }
   }
