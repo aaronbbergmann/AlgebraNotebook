@@ -2262,7 +2262,7 @@
   function sfOn() {   // standard form reached: 0 goes on the right, and factoring opens up
     if (!EXP || !EXP.eq || !EXP.sf || EXP.zp || EXP.zpq) return;
     if (sfZero(EXP.L) && (grAny(EXP.R) || fmFits(EXP.R))) { var t = EXP.L; EXP.L = EXP.R; EXP.R = t; }
-    EXP.grq = sfZero(EXP.R) && !!(grAny(EXP.L) || fmFits(EXP.L));
+    EXP.grq = sfZero(EXP.R) && !!(grAny(EXP.L) || fmFits(EXP.L) || EXP.grUser);
   }
   function sfStep() {   // the next demo step toward standard form: { mv, cap, run }, or null when there are parentheses to multiply first or it is in standard form
     var all = EXP.L.concat(EXP.R); if (all.some(function (t) { return t.k === "g"; })) return null;
@@ -2794,6 +2794,16 @@
   }
   function fmRoots(f) {   // the answers of (A + B)(A - B) = 0 or (A ± B)^2 = 0, when A is a number times x
     var r = mul(f.B.n, inv(f.A.n)); return f.kind === "dos" ? [r, neg(r)] : [f.sgn < 0 ? r : neg(r)];
+  }
+  function grDown(S, i, ev) {   // a squared term let go anywhere below the equation opens the 2x2 box for factoring (any quadratic in standard form)
+    if (!EXP || !EXP.eq || EXP.zp || EXP.zpq || EXP.qu || EXP.qf || GRP || FM || !ev || EXP.ask || locked) return false;
+    var row = $("exRow"); if (!row || ev.clientY <= row.getBoundingClientRect().bottom) return false;
+    var t = EXP[S] && EXP[S][i]; if (!t || t.k !== "x" || !/\^2$/.test(t.v || "")) return false;
+    if (sfZero(EXP.L) && EXP.R.length > 1) { var sw = EXP.L; EXP.L = EXP.R; EXP.R = sw; if (EXP.rel && EXP.rel !== "=") EXP.rel = relRev(EXP.rel); }
+    if (!sfZero(EXP.R)) { eqRender(); note("To factor with the box, first write the equation in standard form: bring every term to one side so the other side is 0."); return true; }
+    if (!grAny(EXP.L)) { eqRender(); note("These terms do not factor with whole numbers, so the box cannot finish it. Combine like terms and simplify fractions first, or try completing the square or the Quadratic Formula."); return true; }
+    EXP.grq = true; EXP.grUser = true; eqRender(); grShow(); note("Drag a term down into the square to factor by grouping: put each term in a box, then click the spaces on the left and above to type the greatest common factor of each row and column.");
+    return true;
   }
   function fmAbove(S, i, ev) {   // the squared term let go anywhere above the equation opens the formula
     if (FM || !ev || !EXP) return false; var row = $("exRow"); if (!row) return false; var r = row.getBoundingClientRect(); if (ev.clientY >= r.top) return false;
@@ -3429,12 +3439,12 @@
         }
         mEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, mEl, function () { eqDistribute(S, i); }, function (t2) { var dd = t2.dataset.drop; if (dd === "exg:" + S + ":" + i) eqDistribute(S, i); else if (dd === "eq=") eqDivGroup(S, i); else if (dd.indexOf("exg:") === 0 || dd.indexOf("et:") === 0) { var p2 = dd.split(":"); if (p2[1] !== S) eqDivGroup(S, i); else eqFactor(S, i, p2[1], +p2[2]); } }, ["exg:", "et:", "eq="]); });
       }
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; zdr(idx, e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, function (t2, ev) { if ((t2.dataset.drop || "").indexOf("fm:") === 0) { fmPlace(t2.dataset.drop.slice(3), i); return; } if (fmAbove(S, i, ev)) return; dropOf(S, i)(t2, ev); }, ["et:", "eq=", "fm:"], function (dx, dy) { fmUp(S, i, dx, dy); }, function (t2, ev) { if (!t2) fmAbove(S, i, ev); }); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask || (e.target.closest && e.target.closest(".exCo"))) return; zdr(idx, e, el, t.k === "g" ? function () { eqDistribute(S, i); } : null, function (t2, ev) { if ((t2.dataset.drop || "").indexOf("fm:") === 0) { fmPlace(t2.dataset.drop.slice(3), i); return; } if (fmAbove(S, i, ev) || grDown(S, i, ev)) return; dropOf(S, i)(t2, ev); }, ["et:", "eq=", "fm:"], function (dx, dy) { fmUp(S, i, dx, dy); }, function (t2, ev) { if (!t2 && !fmAbove(S, i, ev)) grDown(S, i, ev); }); });
       var kEl = el.querySelector(":scope > .exK");
       if (kEl) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, kEl, null, function (t2) { var p = t2.dataset.drop.split(":"); if (p[0] === "et") eqFactor(S, i, p[1], +p[2]); else eqFactor(S, i, eqOther(S), -1); }, ["et:", "eq="]); });
       var co = el.querySelector(".exCo");
       if (co) co.addEventListener("pointerdown", function (e) { if (EXP.ask) return; divCross(co, R.querySelector(".exEq")); co._hotAll = function (on) { [].forEach.call(R.querySelectorAll(".exT, .exEq, .exOp"), function (x) { x.classList.toggle("drop", on); }); };
-        var all = co.classList.contains("exCoA"); zdr(idx, e, co, null, function (t2) { if (!all) { eqDivide(); return; } var dd = t2.dataset.drop || ""; if (dd === "eq=" || (dd.indexOf("et:") === 0 && dd.split(":")[1] !== S)) eqDivAll(S, i, mk(Math.abs(t.n.n))); }, ["et:", "eq="]); });   // dividing acts on every term of both sides, so they all light up
+        var all = co.classList.contains("exCoA"); zdr(idx, e, co, null, function (t2, ev) { if (grDown(S, i, ev)) return; if (!all) { eqDivide(); return; } var dd = t2.dataset.drop || ""; if (dd === "eq=" || (dd.indexOf("et:") === 0 && dd.split(":")[1] !== S)) eqDivAll(S, i, mk(Math.abs(t.n.n))); }, ["et:", "eq="], null, function (t2, ev) { if (!t2) grDown(S, i, ev); }); });   // dividing acts on every term of both sides, so they all light up
     });
   }
   function eqBuild(S, i, S2, j) {
@@ -4244,7 +4254,7 @@
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
       if (st.e === "eq") {
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
-        EXP.cmp = null; EXP.c3 = null; EXP.qf = null; EXP.qu = null; EXP.quq = !!st.qu; EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp || !!st.fm; EXP.qd = !!st.cs || !!st.sf || !!st.qu; EXP.sf = !!st.sf; EXP.zp = null; var g2 = st.qu ? quGen(st.qu) : st.sf ? sfGen(st.sf) : st.cs ? qdGen(st.cs) : st.sqg ? eqSqgGen() : st.fm ? { L: fmGen(st.fm), R: [{ k: "c", n: mk(0) }] } : st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: st.grp > 2 ? grTriGen(st.grp) : grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
+        EXP.cmp = null; EXP.c3 = null; EXP.qf = null; EXP.qu = null; EXP.grUser = false; EXP.quq = !!st.qu; EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp || !!st.fm; EXP.qd = !!st.cs || !!st.sf || !!st.qu; EXP.sf = !!st.sf; EXP.zp = null; var g2 = st.qu ? quGen(st.qu) : st.sf ? sfGen(st.sf) : st.cs ? qdGen(st.cs) : st.sqg ? eqSqgGen() : st.fm ? { L: fmGen(st.fm), R: [{ k: "c", n: mk(0) }] } : st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: st.grp > 2 ? grTriGen(st.grp) : grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
         EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)), rel: EXP.rel }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; EXP.vk = "x";
         if (st.cmp) cmpSetup(eqCmp(st.cmp));
         if (st.qf) { qfSetup(); SV = "x"; }
