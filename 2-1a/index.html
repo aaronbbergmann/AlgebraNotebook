@@ -8319,8 +8319,8 @@ var ESPIC = {
     var key = QZ.pi + ":" + mode + ":" + vfnStd() + ":" + vfnIp();
     if (vfnKey !== key) {
       vfnKey = key;
-      var inp = function (f, ph, wd) { return "<input class=\"vfnIn\" id=\"vfnF_" + f + "\" data-vff=\"" + f + "\" autocomplete=\"off\" spellcheck=\"false\" inputmode=\"" + (/^m|^v/.test(f) ? "text" : "decimal") + "\" placeholder=\"" + (ph || "") + "\" style=\"width:" + (wd || 4) + "rem\" aria-label=\"" + f + "\">"; };
-      var Fs = vfnFs(), one = function (f, ph, wd) { return Fs.indexOf(f) < 0 ? "" : "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB[f] + "</span> " + inp(f, ph, wd) + (f === "xv" && mode === "calculate" ? "<span class=\"vfnChipW\" id=\"vfnChipC\"></span>" : "") + "</div>"; };
+      var inp = function (f, ph, wd) { return "<input class=\"vfnIn\" id=\"vfnF_" + f + "\" data-vff=\"" + f + "\" autocomplete=\"off\" spellcheck=\"false\" inputmode=\"" + (/^m|^v|^ax/.test(f) ? "text" : "decimal") + "\" placeholder=\"" + (ph || "") + "\" style=\"width:" + (wd || 4) + "rem\" aria-label=\"" + f + "\">"; };
+      var Fs = vfnFs(), one = function (f, ph, wd) { return Fs.indexOf(f) < 0 ? "" : "<div class=\"vfnR\"><span class=\"vfnL\">" + (f === "ax" && vfnWr() ? "Axis of Symmetry:" : VFN_LAB[f]) + "</span> " + inp(f, f === "ax" && vfnWr() ? "x = …" : ph, f === "ax" && vfnWr() ? 6.5 : wd) + (f === "xv" && mode === "calculate" ? "<span class=\"vfnChipW\" id=\"vfnChipC\"></span>" : "") + "</div>"; };
       el.innerHTML = one("a") + one("b") + one("c") + one("p") + one("q") + one("xv") + one("h") + one("k") + one("v", "Ex (3, −2)", 6.5) + one("ax") +
         (vfnIp() ? "" : "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB.m1 + "</span> " + inp("m1a", "(x, y)", 5.5) + " and " + inp("m1b", "(x, y)", 5.5) + "</div>" +
         "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB.m2 + "</span> " + inp("m2a", "(x, y)", 5.5) + " and " + inp("m2b", "(x, y)", 5.5) + "</div>") +
@@ -8395,7 +8395,7 @@ var ESPIC = {
     if (f === "a" || f === "b" || f === "c") return n === p[f];
     if (f === "h" || f === "xv") return n === p.h;
     if (f === "k") return n === p.k;
-    if (f === "ax") return m3Num(String(v).replace(/^\s*x\s*=/i, "")) === p.h;
+    if (f === "ax") { if (vfnWr() && !/^\s*x\s*=/i.test(String(v))) return false; return m3Num(String(v).replace(/^\s*x\s*=/i, "")) === p.h; }   // Write: the whole equation, x = -2
     if (f === "v") { var q = vfnPt(v); return !!q && q[0] === p.h && q[1] === p.k; }
     return false;
   }
