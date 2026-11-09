@@ -164,7 +164,7 @@
   #fmBox .fmV{font-size:.75em;min-height:1.2em;opacity:.8}
   #fmBox .fmO{padding-top:.1em}
   #fmTogBtn,#quBtn{width:auto!important;min-width:0;max-width:100%;white-space:nowrap;padding-left:1em;padding-right:1em}
-  .quS .fr>span:first-child{padding:0 .25em}.quOr{margin:0 .8em;font-style:italic}.quIn.grab,.quRt.grab,.quPm.grab,.quBar.grab,.quA.grab{cursor:pointer;border-radius:6px}.quIn.grab:hover,.quRt.grab:hover,.quPm.grab:hover,.quBar.grab:hover,.quA.grab:hover{background:color-mix(in srgb,var(--plus) 25%,transparent)}
+  .quS .fr>span:first-child{padding:0 .25em}.quOr{margin:0 .8em;font-style:italic}.quK.grab{cursor:pointer;border-radius:6px}.quK.grab:hover{background:color-mix(in srgb,var(--plus) 25%,transparent)}
   #fmBox .fmAB0{font-size:.8em;margin-top:.15em;white-space:nowrap;min-height:1.2em}
   #fmBox .fmRow{margin-top:.25em}
   #fmBox input{font:600 .6em system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:8px;padding:.25em .4em;text-align:center;width:6em}
@@ -2312,47 +2312,64 @@
     Q.g = Q.D > 0 && Q.r === null ? gcd(gcd(Q.B, Q.co), Q.Q) : 1;
     return Q;
   }
-  function quNum(B, pm, k) { return (B ? quNs(B) + " " : "") + "<span class=\"exPm quPm\">±</span> " + k; }   // −b ± something
-  function quRhs() {   // the right side of x = ... for the stage we are at
-    var Q = EXP.qu, k = Q.k, g = Q.g;
-    if (k === 1) return quFr((Q.b < 0 ? "−(" + quNs(Q.b) + ")" : "−" + Q.b) + " ± " + quRad(quPn(Q.b) + "<sup>2</sup> − 4(" + quNs(Q.a) + ")(" + quNs(Q.c) + ")", "quIn"), "2(" + quNs(Q.a) + ")");
-    if (k === 2) return quFr(quNum(Q.B, 1, quRad(quNs(Q.D), "quRt")), quNs(Q.Q));
-    if (k === 3 && Q.r !== null) return quFr(quNum(Q.B, 1, Q.r), quNs(Q.Q));
-    var co = function (c) { return (c === 1 ? "" : c) + quRad(String(Q.m)); };
-    if (k === 3) return quFr(quNum(Q.B, 1, co(Q.co)), quNs(Q.Q), g > 1 ? "quBar" : "");
-    if (k === 4 && Q.r !== null) return "<span class=\"quA\">" + quFr(quNs(Q.B) + " + " + Q.r, quNs(Q.Q)) + "</span><span class=\"quOr\">or</span><i>x</i> = <span class=\"quA\">" + quFr(quNs(Q.B) + " − " + Q.r, quNs(Q.Q)) + "</span>";
-    if (k === 4) { var B2 = Q.B / g, c2 = Q.co / g, Q2 = Q.Q / g; if (Q2 < 0) { B2 = -B2; Q2 = -Q2; } var top = (B2 ? quNs(B2) + " " : "") + "± " + co(c2); return Q2 === 1 ? top : quFr(top, Q2); }
-    if (k === 5) return Q.r === 0 ? quVal(Q.B, Q.Q) : quVal(Q.B + Q.r, Q.Q) + "<span class=\"quOr\">or</span><i>x</i> = " + quVal(Q.B - Q.r, Q.Q);
-    return "";
+  // one operation per click: −(−b), 2(a), b², 4(a), (4a)(c), the subtraction under the root, the root, then ± and each answer (adding, then reducing)
+  function quOps() {   // the operations that can be clicked now, in the order the demo does them
+    var Q = EXP.qu, o = [];
+    if (!Q.split) {
+      if (Q.b < 0 && !Q.nbD) o.push("nb");
+      if (!Q.dD) o.push("den");
+      if (!Q.dfD) { if (!Q.sqD) o.push("sq"); if (!Q.p1D) o.push("p1"); else if (!Q.p2D) o.push("p2"); if (Q.sqD && Q.p2D) o.push("df"); }
+      else if (!Q.rtD) o.push("rt");
+      if (Q.dfD && Q.rtD && Q.D >= 0 && (Q.b >= 0 || Q.nbD) && Q.dD) { if (Q.r !== null) o.push("pm"); else if (Q.g > 1 && !Q.gD) o.push("bar"); }
+    } else Q.ans.forEach(function (an, j) { if (an.st === 0) o.push("a" + j); else if (an.st === 1 && quRed(an.n)) o.push("r" + j); });
+    return o;
   }
-  function quText() {   // the same, as text for Show work
-    var Q = EXP.qu, k = Q.k, g = Q.g, co = function (c) { return (c === 1 ? "" : c) + "√" + Q.m; };
-    if (k === 1) return "x = (" + (Q.b < 0 ? "−(" + quNs(Q.b) + ")" : "−" + Q.b) + " ± √(" + quPn(Q.b) + "² − 4(" + quNs(Q.a) + ")(" + quNs(Q.c) + "))) / 2(" + quNs(Q.a) + ")";
-    if (k === 2) return "x = (" + (Q.B ? quNs(Q.B) + " " : "") + "± √" + (Q.D < 0 ? "(" + quNs(Q.D) + ")" : Q.D) + ") / " + quNs(Q.Q);
-    if (k === 3) return "x = (" + (Q.B ? quNs(Q.B) + " " : "") + "± " + (Q.r !== null ? Q.r : co(Q.co)) + ") / " + quNs(Q.Q);
-    if (k === 4 && Q.r !== null) return "x = (" + quNs(Q.B) + " + " + Q.r + ") / " + quNs(Q.Q) + " or x = (" + quNs(Q.B) + " − " + Q.r + ") / " + quNs(Q.Q);
-    if (k === 4) { var B2 = Q.B / g, c2 = Q.co / g, Q2 = Q.Q / g; if (Q2 < 0) { B2 = -B2; Q2 = -Q2; } var top = (B2 ? quNs(B2) + " " : "") + "± " + co(c2); return "x = " + (Q2 === 1 ? top : "(" + top + ") / " + Q2); }
-    if (k === 5) return Q.r === 0 ? "x = " + quSay(Q.B, Q.Q) : "x = " + quSay(Q.B + Q.r, Q.Q) + " or x = " + quSay(Q.B - Q.r, Q.Q);
-    return "";
+  function quRed(n) { var Q = EXP.qu; return gcd(n, Q.Q) !== 1 || Q.Q < 0; }   // n/2a can still be reduced (or its sign moved up)
+  function quOpInfo(op) {   // { label (Calculate), want, msg } for an operation
+    var Q = EXP.qu, j = +op.slice(1);
+    if (op === "nb") return { label: "−(" + quNs(Q.b) + ") =", want: [-Q.b], msg: "−(" + quNs(Q.b) + ") = " + quNs(-Q.b) + "." };
+    if (op === "den") return { label: "2(" + quNs(Q.a) + ") =", want: [Q.Q], msg: "2(" + quNs(Q.a) + ") = " + quNs(Q.Q) + "." };
+    if (op === "sq") return { label: quPn(Q.b) + "² =", want: [Q.b * Q.b], msg: quPn(Q.b) + "² = " + Q.b * Q.b + "." };
+    if (op === "p1") return { label: "4(" + quNs(Q.a) + ") =", want: [4 * Q.a], msg: "4(" + quNs(Q.a) + ") = " + quNs(4 * Q.a) + "." };
+    if (op === "p2") return { label: quPn(4 * Q.a) + "(" + quNs(Q.c) + ") =", want: [4 * Q.a * Q.c], msg: quPn(4 * Q.a) + "(" + quNs(Q.c) + ") = " + quNs(4 * Q.a * Q.c) + "." };
+    if (op === "df") return { label: Q.b * Q.b + " − " + quPn(4 * Q.a * Q.c) + " =", want: [Q.D], msg: Q.b * Q.b + " − " + quPn(4 * Q.a * Q.c) + " = " + quNs(Q.D) + (Q.D < 0 ? ": negative under the square root." : ".") };
+    if (op === "rt") return { label: "√" + Q.D + " =", want: [Math.sqrt(Math.max(Q.D, 0))], msg: Q.D < 0 ? "No real number squares to " + quNs(Q.D) + "." : "√" + Q.D + " = " + (Q.r !== null ? Q.r : (Q.co === 1 ? "" : Q.co) + "√" + Q.m) + "." };
+    if (op === "pm") return { msg: Q.r === 0 ? "± 0 changes nothing, so there is one answer." : "± gives two answers: one with +, one with −." };
+    if (op === "bar") return { label: "Simplified, x =", all: true, want: [(Q.B + Q.co * Math.sqrt(Q.m)) / Q.Q, (Q.B - Q.co * Math.sqrt(Q.m)) / Q.Q], msg: "Every number shares a factor of " + Q.g + ": divide each by " + Q.g + "." };
+    var an = Q.ans[j];
+    if (op.charAt(0) === "a") return { label: an.say + " =", want: [an.n], msg: an.say + " = " + quNs(an.n) + "." };
+    return { label: quNs(an.n) + "/" + Q.Q + " =", want: [an.n / Q.Q], msg: quNs(an.n) + "/" + quNs(Q.Q) + " = " + quSay(an.n, Q.Q) + "." };
   }
-  function quNext() {   // the gesture for this stage: { sel, cap, ask, run }
-    var Q = EXP.qu, k = Q.k;
-    if (k === 1) return { sel: "#exRow .quIn", cap: "a = " + quNs(Q.a) + ", b = " + quNs(Q.b) + ", c = " + quNs(Q.c) + ". Click under the square root to evaluate b² − 4ac.", ask: { label: "b² − 4ac =", want: [Q.D] }, msg: "b² − 4ac = " + quPn(Q.b) + "² − 4(" + quNs(Q.a) + ")(" + quNs(Q.c) + ") = " + quNs(Q.D) + (Q.D < 0 ? "." : ", −b = " + quNs(Q.B) + " and 2a = " + quNs(Q.Q) + ".") };
-    if (k === 2) return { sel: "#exRow .quRt", cap: Q.r !== null ? "Click the square root to find it." : "Click the square root to simplify it.", ask: { label: "√" + Q.D + " =", want: [Math.sqrt(Q.D)] }, msg: "√" + Q.D + " = " + (Q.r !== null ? Q.r : (Q.co === 1 ? "" : Q.co) + "√" + Q.m) + "." };
-    if (k === 3 && Q.r !== null) return { sel: "#exRow .quPm", cap: "± means two answers. Click it to split them.", msg: "± gives two answers: one with +, one with −." };
-    if (k === 3) return { sel: "#exRow .quBar", cap: "Every number shares a factor of " + Q.g + ": click the fraction bar to divide it out.", ask: { label: "Simplified, x =", want: [(Q.B + Q.co * Math.sqrt(Q.m)) / Q.Q, (Q.B - Q.co * Math.sqrt(Q.m)) / Q.Q], all: true }, msg: "Divide every number by " + Q.g + "." };
-    if (k === 4) return { sel: "#exRow .quA", cap: "Work out each answer: click it.", ask: { label: "Both answers, x =", want: [(Q.B + Q.r) / Q.Q, (Q.B - Q.r) / Q.Q], all: true }, msg: "x = " + quSay(Q.B + Q.r, Q.Q) + " or x = " + quSay(Q.B - Q.r, Q.Q) + "." };
-    return null;
+  function quDo(op) {   // carry out an operation
+    var Q = EXP.qu, j = +op.slice(1);
+    if (op === "nb") Q.nbD = true; else if (op === "den") Q.dD = true; else if (op === "sq") Q.sqD = true; else if (op === "p1") Q.p1D = true; else if (op === "p2") Q.p2D = true;
+    else if (op === "df") { Q.dfD = true; if (Q.D > 0 && Q.r === null && Q.co === 1) Q.rtD = true; }   // √17 is as simple as it gets: nothing to click
+    else if (op === "rt") Q.rtD = true; else if (op === "bar") Q.gD = true;
+    else if (op === "pm") { Q.split = true; Q.ans = Q.r === 0 ? [{ st: 1, n: Q.B, say: quNs(Q.B) }] : [{ st: 0, n: Q.B + Q.r, say: quNs(Q.B) + " + " + Q.r }, { st: 0, n: Q.B - Q.r, say: quNs(Q.B) + " − " + Q.r }]; }
+    else if (op.charAt(0) === "a") Q.ans[j].st = 1; else Q.ans[j].st = 2;
   }
-  function quAfter(k) {   // the stage that follows k (skipping steps there is nothing to do in)
-    var Q = EXP.qu;
-    if (k === 1) return 2;
-    if (k === 2) return Q.r === 0 ? 5 : 3;
-    if (k === 3) return 4;
-    if (k === 4) return Q.r !== null ? 5 : 0;
-    return 0;
+  function quH(op, h, live) { return live && quOps().indexOf(op) >= 0 ? "<span class=\"quK\" data-op=\"" + op + "\">" + h + "</span>" : h; }
+  function quRhs(tx) {   // the right side of x = ..., as html (tx: as text for Show work)
+    var Q = EXP.qu, live = !tx, H = function (op, h) { return tx ? h : quH(op, h, live); }, fr = function (t, bt, op) { return tx ? "(" + t + ") / " + bt : quFr(t, bt, op ? "quK\" data-op=\"" + op : ""); }, rad = function (h) { return tx ? "√(" + h + ")" : quRad(h); };
+    if (Q.split) return Q.ans.map(function (an, j) {
+      if (an.st === 2 || (an.st === 1 && !quRed(an.n))) return tx ? quSay(an.n, Q.Q) : quVal(an.n, Q.Q);
+      if (an.st === 1) return tx ? quNs(an.n) + "/" + quNs(Q.Q) : (live ? "<span class=\"quK\" data-op=\"r" + j + "\">" : "") + quFr(quNs(an.n), quNs(Q.Q)) + (live ? "</span>" : "");
+      return fr(H("a" + j, an.say), quNs(Q.Q));
+    }).join(tx ? " or x = " : "<span class=\"quOr\">or</span><i>x</i> = ");
+    var nb = Q.b === 0 ? "" : Q.b < 0 && !Q.nbD ? H("nb", "−(" + quNs(Q.b) + ")") : quNs(-Q.b), den = Q.dD ? quNs(Q.Q) : H("den", "2(" + quNs(Q.a) + ")"), root;
+    if (!Q.dfD && Q.sqD && Q.p2D) root = rad(H("df", String(Q.b * Q.b) + " \u2212 " + quPn(4 * Q.a * Q.c)));   // both parts worked out: click to subtract
+    else if (!Q.dfD) root = rad(H("sq", Q.sqD ? String(Q.b * Q.b) : quPn(Q.b) + (tx ? "²" : "<sup>2</sup>")) + " − " + (Q.p2D ? quPn(4 * Q.a * Q.c) : Q.p1D ? H("p2", quPn(4 * Q.a) + "(" + quNs(Q.c) + ")") : H("p1", "4(" + quNs(Q.a) + ")") + "(" + quNs(Q.c) + ")"));
+    else if (!Q.rtD) root = H("rt", rad(quNs(Q.D)));
+    else if (Q.D < 0) root = rad(quNs(Q.D));
+    else root = Q.r !== null ? String(Q.r) : (Q.co === 1 ? "" : Q.co) + rad(String(Q.m));
+    var pm = H("pm", "±");
+    if (Q.gD) { var B2 = Q.B / Q.g, c2 = Q.co / Q.g, Q2 = Q.Q / Q.g; if (Q2 < 0) { B2 = -B2; Q2 = -Q2; } var top = (B2 ? quNs(B2) + " " : "") + "± " + (c2 === 1 ? "" : c2) + rad(String(Q.m)); return Q2 === 1 ? top : tx ? "(" + top + ") / " + Q2 : quFr(top, Q2); }
+    var t0 = (nb ? nb + " " : "") + pm + " " + root;
+    return tx ? "(" + t0 + ") / " + (Q.dD ? quNs(Q.Q) : "2(" + quNs(Q.a) + ")") : quFr(t0, den, live && quOps().indexOf("bar") >= 0 ? "quBar quK\" data-op=\"bar" : "");
   }
-  function quFinal() { var Q = EXP.qu; return Q.k === 2 && Q.D < 0 || Q.k === 5 || (Q.r === null && Q.D > 0 && (Q.k === 4 || (Q.k === 3 && Q.g === 1) || (Q.k === 2 && Q.co === 1))); }
+  function quText() { return "x = " + quRhs(true); }
+  function quFinal() { var Q = EXP.qu; return (Q.dfD && Q.D < 0 && Q.rtD) || !quOps().length; }
+
   function quStart() {
     if (locked || busy || (EXP && EXP.ask)) return;
     var o = quStd(); if (!o) return; if (o.bad) { note(o.bad); return; }
@@ -2364,26 +2381,27 @@
     fmHide(); grHide(); EXP.qu = quCalc({ a: o.a, b: o.b, c: o.c, k: 1 }); closeAsk(false); eqRender();
     note("Quadratic formula: x = (−b ± √(b² − 4ac)) / 2a, with a = " + quNs(o.a) + ", b = " + quNs(o.b) + ", c = " + quNs(o.c) + ".");
   }
-  function quStep() {   // the gesture for this stage was made
-    if (locked || busy || EXP.ask) return; var nx = quNext(); if (!nx) return;
-    if (mode === "calculate" && nx.ask) { eqAsk({ kind: "qu", nx: nx }, nx.ask.label); $("askIn").placeholder = nx.ask.all ? "e.g. 3/2, 1" : "e.g. 1"; return; }
-    quAdv(nx);
+  function quStep(op) {   // an operation was clicked
+    if (locked || busy || EXP.ask) return; if (quOps().indexOf(op) < 0) return;
+    var inf = quOpInfo(op);
+    if (mode === "calculate" && inf.want) { eqAsk({ kind: "qu", op: op, inf: inf }, inf.label); $("askIn").placeholder = inf.all ? "e.g. 3/2, 1" : "e.g. 1"; return; }
+    quAdv(op, inf);
   }
-  function quAdv(nx) {
-    var Q = EXP.qu, to = quAfter(Q.k); hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: "=", z: null, qu: JSON.parse(JSON.stringify(Q)) })); updUndo();
-    if (Q.k === 2 && Q.D < 0) to = 2; Q.k = to || Q.k;
-    closeAsk(false); eqRender(); note(nx.msg + " " + quText());
+  function quAdv(op, inf) {
+    var Q = EXP.qu; hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: "=", z: null, qu: JSON.parse(JSON.stringify(Q)) })); updUndo();
+    quDo(op); closeAsk(false); eqRender(); note(inf.msg + " " + quText());
     if (quFinal()) quEnd();
   }
   function quAskOK(k) {
     if (k.abc) { var v = $("askIn").value.replace(/−/g, "-").split(/[,;\s]+/).filter(function (u) { return u; }).map(Number);
       if (v.length === 3 && v[0] === k.abc.a && v[1] === k.abc.b && v[2] === k.abc.c) { quGo(k.abc); return; }
       $("askErr").textContent = "Not quite. a is the number in front of x², b the number in front of x, c the number alone (with their signs)."; $("askIn").select(); return; }
-    var w = k.nx.ask.want, got = []; $("askIn").value.toLowerCase().replace(/^\s*x\s*=/, "").split(/,|;|\bor\b|\band\b/).forEach(function (u) { var nv = u.trim() ? numVal(u.replace(/x=/, "")) : null; if (nv) got = got.concat(nv); else if (u.trim()) got.push(NaN); });
+    var w = k.inf.want, got = []; $("askIn").value.toLowerCase().replace(/^\s*x\s*=/, "").split(/,|;|\bor\b|\band\b/).forEach(function (u) { var nv = u.trim() ? numVal(u.replace(/x=/, "")) : null; if (nv) got = got.concat(nv); else if (u.trim()) got.push(NaN); });
     var has = function (arr, x) { return arr.some(function (u) { return Math.abs(u - x) < 1e-9; }); };
-    if (got.length && got.every(function (x) { return has(w, x); }) && w.every(function (x) { return has(got, x); })) { quAdv(k.nx); return; }
-    $("askErr").textContent = k.nx.ask.all && got.length && got.every(function (x) { return has(w, x); }) ? "That one works, but there is another answer. Type both, like 3/2, 1." : "Not quite. Check your work and try again."; $("askIn").select();
+    if (got.length && got.every(function (x) { return has(w, x); }) && w.every(function (x) { return has(got, x); })) { quAdv(k.op, k.inf); return; }
+    $("askErr").textContent = k.inf.all && got.length && got.every(function (x) { return has(w, x); }) ? "That one works, but there is another answer. Type both, like 3/2, 1." : "Not quite. Check your work and try again."; $("askIn").select();
   }
+
   function quEnd() {
     var Q = EXP.qu; locked = true; eqRender(); closeAsk(false);
     var none = Q.D < 0, ap = function (v) { return String(Math.round(v * 100) / 100).replace("-", "\u2212"); }, txt = none ? "No real solutions: b² − 4ac = " + quNs(Q.D) + " is negative, and no real number squares to a negative number." : Q.r === 0 ? "Solved: " + quText().replace(/^x = /, "x = ") + ". b² − 4ac = 0, so there is one solution." : Q.r !== null ? "Solved: " + quText() + "." : "Solved: " + quText() + ", so x ≈ " + ap((Q.B + Q.co * Math.sqrt(Q.m)) / Q.Q) + " or x ≈ " + ap((Q.B - Q.co * Math.sqrt(Q.m)) / Q.Q) + ".";
@@ -2393,13 +2411,14 @@
   }
   function quRender(R) {
     var live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked;
-    R.innerHTML = "<span class=\"qdS\"><i>x</i></span><span class=\"exEq\">=</span><span class=\"qdS quS\">" + quRhs() + "</span>";
-    if (!live) return; var nx = quNext(); if (!nx) return;
-    [].forEach.call(R.querySelectorAll(".quIn, .quRt, .quPm, .quBar, .quA"), function (el) {
-      el.classList.add("grab"); el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (el.matches(nx.sel.replace("#exRow ", ""))) quStep(); else note("Not that one yet. " + nx.cap); });
+    R.innerHTML = "<span class=\"qdS\"><i>x</i></span><span class=\"exEq\">=</span><span class=\"qdS quS\">" + quRhs(!live ? false : false) + "</span>";
+    if (!live) { [].forEach.call(R.querySelectorAll(".quK"), function (el) { el.classList.remove("quK"); }); return; }
+    [].forEach.call(R.querySelectorAll(".quK"), function (el) {
+      el.classList.add("grab"); el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; var op = el.dataset.op, ops = quOps(); if (op === "df" && !(EXP.qu.sqD && EXP.qu.p2D)) { note("First work out the square and the product, then subtract."); return; } quStep(op); });
     });
   }
-  function quDemoStep() { var nx = quNext(); return nx ? { tap: nx.sel, cap: nx.cap, run: function () { quAdv(nx); } } : null; }
+  function quDemoStep() { var ops = quOps(); if (!ops.length) return null; var op = ops[0], inf = quOpInfo(op); return { tap: '#exRow .quK[data-op="' + op + '"]', cap: op === "pm" ? "± means two answers. Click it to split them." : op === "bar" ? "Click the fraction bar to divide out the common factor." : "Click " + (inf.label || "it").replace(/ =$/, "") + " to work it out.", run: function () { quAdv(op, inf); } }; }
+
   function quGen(n) {   // 1: two answers that are whole numbers or fractions; 2: answers with a square root (sometimes one answer, or none); 3: not in standard form yet
     var X = function (k, v) { return { k: "x", v: v || "x", n: mk(k) }; }, C = function (k) { return { k: "c", n: mk(k) }; };
     for (;;) {
@@ -2602,7 +2621,8 @@
     }
   }
   function grItems() { return EXP.eq ? EXP.L : EXP.items; }
-  function grAvail() { return !!(EXP && !locked && !EXP.ask && (EXP.eq ? EXP.grq && !EXP.zpq : EXP.grp)); }
+  function grSq() { return EXP.L.concat(EXP.R).some(function (t) { return t.k === "x" && /\^2$/.test(t.v || ""); }); }   // factoring mode only while there is still an x^2 term (2t + 8 = 0 is solved the usual way)
+  function grAvail() { return !!(EXP && !locked && !EXP.ask && (EXP.eq ? EXP.grq && !EXP.zpq && grSq() : EXP.grp)); }
   function grTermHtml(t) { return "<span>" + (t.n.n < 0 ? "−" : "") + exTerm(t) + "</span>"; }
   function grHide() { if (GRP && GRP.t) GRP.t.forEach(clearTimeout); GRP = null; var b = $("grpBox"); if (b) b.remove(); grMark(); }
   function grMark() {   // the terms that are in the square are dimmed in the equation
@@ -3390,7 +3410,7 @@
   }
   function eqRenderRow(R, hot, idx, fin) {   // one equation in a row; idx is its place in a split (the zero product property), -1 when not split
     if (idx >= 0) R.dataset.zrow = idx; else R.removeAttribute("data-zrow");
-    var live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked && !fin, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !!zpOf(EXP.L, EXP.R), gq = EXP.grq && !EXP.zpq, rad = EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.u; });
+    var live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked && !fin, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !!zpOf(EXP.L, EXP.R), gq = EXP.grq && !EXP.zpq && grSq(), rad = EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.u; });
     R.innerHTML = wrap("L") + "<span class=\"exEq" + (live && !un ? " grab" : "") + "\" data-drop=\"eq=\">" + relGlyph(EXP.rel) + "</span>" + wrap("R");
     grMark();
     if (ABS && ABS.side && R.id === "exRow") absorbNow(R, '.exT[data-s="' + ABS.side + '"][data-i="' + ABS.idx + '"]');
@@ -3771,7 +3791,7 @@
     eqEnd(want.kind); $("exSolo").hidden = true;
   }
   function eqDemoStep(ms) {
-    if (EXP.grq && !EXP.zpq) { grDemoStep(ms); return; }
+    if (EXP.grq && !EXP.zpq && grSq()) { grDemoStep(ms); return; }
     clearTimeout(DM4.t);
     DM4.t = setTimeout(function () {
       if (!EXP || !DM4.run || DM4.paused) return;
