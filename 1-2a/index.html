@@ -8571,22 +8571,21 @@ var ESPIC = {
 
   // 2.2A Vertex Form, Demo and Sequence: the parent table, with the parabola on the graph worked through it.  Its values follow the parabola as it is
   // dragged (x + h on the left, a·y + k on the right), and are blank while there is no parabola on the graph
-  function vfnLiveTb(el, s) {
+  function vfnLiveTb(el, s) {   // columns only for the changes that happen: x + h on the left (only if h is not 0); on the right × a (only if a is not 1), then + k (only if k is not 0)
     el.hidden = false;
-    var key = "live:" + QZ.pi;
+    var q = s.par, on = !!q, A = on ? vfnA(q) : 0, Ar = Math.round(A * 1000) / 1000, sg = function (v) { return v < 0 ? " − " + nf(-v) : " + " + nf(v); };
+    var cx = on && !!q.h, ca = on && Ar !== 1, ck = on && !!q.k, key = "live:" + QZ.pi + ":" + cx + ca + ck;
     if (vfnTbKey !== key) {
       vfnTbKey = key;
-      var h = "<table class=\"pgTable ptTable vfnPt vfnLive\" aria-label=\"Parent table\"><thead><tr class=\"ptLr\"><th data-vll=\"0\"></th><th colspan=\"2\">parent</th><th data-vll=\"3\"></th></tr><tr><th>x</th><th>x</th><th>y</th><th>y</th></tr></thead><tbody>";
-      VFN_XS.forEach(function (x, r) { h += "<tr><td data-vlv=\"" + r + ":0\"></td><td class=\"par\" data-vlv=\"" + r + ":1\"></td><td class=\"par\" data-vlv=\"" + r + ":2\"></td><td data-vlv=\"" + r + ":3\"></td></tr>"; });
+      var h = "<table class=\"pgTable ptTable vfnPt vfnLive\" aria-label=\"Parent table\" style=\"width:" + ((2 + cx + ca + ck) * 20) + "%\"><thead><tr class=\"ptLr\">" + (cx ? "<th data-vll=\"x\"></th>" : "") + "<th colspan=\"2\">parent</th>" + (ca ? "<th data-vll=\"a\"></th>" : "") + (ck ? "<th data-vll=\"k\"></th>" : "") + "</tr><tr>" + (cx ? "<th>x</th>" : "") + "<th>x</th><th>y</th>" + (ca ? "<th>y</th>" : "") + (ck ? "<th>y</th>" : "") + "</tr></thead><tbody>";
+      VFN_XS.forEach(function (x, r) { h += "<tr>" + (cx ? "<td data-vlv=\"" + r + ":x\"></td>" : "") + "<td class=\"par\" data-vlv=\"" + r + ":px\"></td><td class=\"par\" data-vlv=\"" + r + ":py\"></td>" + (ca ? "<td data-vlv=\"" + r + ":a\"></td>" : "") + (ck ? "<td data-vlv=\"" + r + ":k\"></td>" : "") + "</tr>"; });
       el.innerHTML = h + "</tbody></table>";
     }
-    var q = s.par, on = !!q, A = on ? vfnA(q) : 0, sg = function (v) { return v < 0 ? " − " + nf(-v) : " + " + nf(v); };
-    var L = el.querySelectorAll("[data-vll]");
-    if (L[0]) L[0].innerHTML = on ? "<i>x</i>" + (q.h ? sg(q.h) : "") : "";
-    var Ar = Math.round(A * 1000) / 1000; if (L[1]) L[1].innerHTML = on ? (Ar === 1 ? "" : Ar === -1 ? "−" : nf(Ar)) + "<i>y</i>" + (q.k ? sg(q.k) : "") : "";
+    var ay = (Ar === 1 ? "" : Ar === -1 ? "−" : nf(Ar)) + "<i>y</i>";
+    [].forEach.call(el.querySelectorAll("[data-vll]"), function (e) { var c = e.dataset.vll, t = !on ? "" : c === "x" ? "<i>x</i>" + sg(q.h) : c === "a" ? ay : (ca ? ay : "<i>y</i>") + sg(q.k); if (e.innerHTML !== t) e.innerHTML = t; });
     [].forEach.call(el.querySelectorAll("[data-vlv]"), function (e) {
-      var w = e.dataset.vlv.split(":"), x = VFN_XS[+w[0]], c = +w[1], v = "";
-      if (on) v = c === 0 ? nf(x + q.h) : c === 1 ? nf(x) : c === 2 ? nf(x * x) : nf(Math.round((A * x * x + q.k) * 1000) / 1000);
+      var w = e.dataset.vlv.split(":"), x = VFN_XS[+w[0]], c = w[1], v = "", R = function (n) { return nf(Math.round(n * 1000) / 1000); };
+      if (on) v = c === "x" ? nf(x + q.h) : c === "px" ? nf(x) : c === "py" ? nf(x * x) : c === "a" ? R(A * x * x) : R(A * x * x + q.k);
       if (e.textContent !== v) e.textContent = v;
     });
   }
