@@ -60,6 +60,7 @@
   body.quiz #lesson{width:9.66rem;padding:.68em .2em .68em .7em;font-size:.84rem}   /* room for "Graph & Describe" */
   .ctl-sel{display:flex;flex-direction:column;align-items:center;gap:.5rem}.ctl-sel select{box-sizing:border-box;width:10.5em;font-size:.92rem;padding:.6em .8em}
   .ctl-btn{display:flex;flex-direction:column;align-items:center;gap:.5rem}
+  body.solver #undo[hidden],body.solver #hint[hidden]{display:block!important;visibility:hidden}   /* Play Solve: a hidden Undo keeps its room, so Show work never moves */
   .ctl-btn .btn{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;text-align:center;white-space:nowrap}
   .ctl{display:flex;flex-direction:column;gap:.5rem;position:sticky;top:0;z-index:3}
   .ctl-l{align-items:stretch}.ctl-r{align-items:stretch}
@@ -300,6 +301,7 @@
   .sheet{position:fixed;inset:0;z-index:30;overflow:auto;padding:1.5rem;background:var(--bg);font:1.4rem "LM","Latin Modern Roman","CMU Serif","STIX Two Text",Georgia,"Times New Roman",serif}
   .sheet section{border-bottom:1px solid color-mix(in srgb,var(--ink) 25%,transparent);padding:.7rem 0}
   .r{display:flex;gap:.8em}
+  .sheet .r>span{white-space:nowrap}   /* an equation never wraps: the columns grow to fit it */
   .r .m{min-width:3.4em;text-align:right;color:var(--plus);font-size:.85em}
   .sheet i{font-style:italic}
   .sheet .wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.sheet .wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid var(--ink);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer}.sheet .wt{font:600 .95rem system-ui,sans-serif;opacity:.7;margin-bottom:.2rem}.sheet .wp[hidden]{display:none}
@@ -958,11 +960,11 @@
       <label class="sr" for="modeSel" style="position:absolute;left:-9999px">Mode</label><select id="modeSel"><option value="demo">Demo</option><option value="sequence">Sequence</option><option value="calculate">Calculate</option><option value="solo">Write</option><option value="create">Create</option></select></div><div class="pgCtl" id="dmCtl" hidden><button type="button" class="btn pgDemo" id="dmBtn">Start Demo</button><button type="button" class="btn pgDemo hard" id="dmHard" hidden>Level Up</button><button type="button" class="btn pgDemo" id="dmEnd" hidden>End demo</button><button type="button" class="link dmLink" id="dmLink" hidden></button><button type="button" class="link dmLink dmEasy" id="dmEasy" hidden>Easier Equation</button></div><div class="pgCtl" id="pgCtl" hidden><button type="button" class="btn pgDemo" id="pgDemo">Start Demo</button><button type="button" class="btn pgDemo" id="pgEnd" hidden>End demo</button><button type="button" class="link dmLink" id="pgLink" hidden></button><div class="pgCap" id="pgCap" aria-live="polite"></div><button type="button" class="btn pgFam" id="pgFam">Change Family</button><div class="lbl">Show</div><button type="button" class="tog" data-part="eq" aria-pressed="false">Equation</button><button type="button" class="tog" data-part="table" aria-pressed="false">Table</button><button type="button" class="tog" data-part="graph" aria-pressed="false">Graph</button><button type="button" class="tog" data-part="reg" aria-pressed="false">Regression</button><button type="button" class="tog" data-part="desc" aria-pressed="false">Description</button><button type="button" class="tog" data-part="parent" aria-pressed="false">Parent</button></div><div class="qzRow nxRow" id="nxRow"><button class="btn next" id="next" hidden>Next</button><button class="btn" id="nxHard" hidden>Level Up</button><button class="link" id="again" hidden>Try another</button><button class="link nxEasy" id="nxEasy" hidden>Easier Equation</button></div>
     <div class="ctl-btn"><button class="btn" id="progBtn">Progress 0.0 stars</button>
       <button class="btn" id="ptTog" hidden>Parent Table</button>
-      <button class="btn" id="fmTogBtn" hidden>Difference of Squares</button>
-      <button class="btn" id="quBtn" hidden>Quadratic Formula</button>
       <button class="btn" id="hint">Hint</button>
       <button class="btn" id="undo">Undo</button>
-      <button class="btn" id="show">Show work</button></div></div>
+      <button class="btn" id="show">Show work</button>
+      <button class="btn" id="fmTogBtn" hidden>Difference of Squares</button>
+      <button class="btn" id="quBtn" hidden>Quadratic Formula</button></div></div>
     <section class="wfSteps" id="wfSteps" hidden aria-live="polite"></section>
     <section class="qz" id="qz" hidden aria-live="polite"><div class="qzT" id="qzT"></div><div id="qzIn"></div><div class="err" id="qzErr"></div><div class="qzRow"><button class="btn" id="qzGo">Check</button><button class="btn" id="qzNext" hidden>Next</button><button class="link" id="qzAgain" hidden>Another round</button></div></section>
     <div class="ptEdit" id="pgPt" hidden role="group" aria-label="Edit point"><button type="button" class="ptX" id="pgPtX0" aria-label="Close">×</button><label>x = <input id="pgPtX" inputmode="decimal" autocomplete="off"></label><label>y = <input id="pgPtY" inputmode="decimal" autocomplete="off"></label></div><div class="eqKeys" id="eqKeys" hidden><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="x²" aria-label="Insert x squared"><i>x</i>²</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" class="eqGo" data-go="1">Submit</button></div>
@@ -3408,7 +3410,7 @@
     EXP.relPrev = g; EXP.relPrevO = EXP.orig;
   }
   function eqRender0(hot) {
-    sfOn(); quBtnUpd(); zpPaint();
+    sfOn(); quBtnUpd(); zpPaint(); exDnUpd();
     if (EXP.c3) { cmpRender($("exRow")); return; }
     if (EXP.qf) { qfRender($("exRow")); return; }
     if (EXP.qu) { quRender($("exRow")); return; }
@@ -4322,8 +4324,8 @@
     $("modePick").hidden = true;
     if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); }
   }
-  $("dmHard").addEventListener("click", function () { SOL.ups = true; dmUI("idle"); solverGo(1, mode); easyUpd(); });
-  $("nxHard").addEventListener("click", function () { SOL.ups = true; solverGo(1, mode); easyUpd(); });
+  $("dmHard").addEventListener("click", function () { SOL.ups = true; dmUI("idle"); solverGo(1, "demo"); easyUpd(); });   // a new level starts in Demo
+  $("nxHard").addEventListener("click", function () { SOL.ups = true; solverGo(1, "demo"); easyUpd(); });
   $("dmEasy").addEventListener("click", function () { dmUI("idle"); solverGo(-1, mode); easyUpd(); });   // Easier Equation: one rung down the ladder, the opposite of Level Up
   $("nxEasy").addEventListener("click", function () { solverGo(-1, mode); easyUpd(); });
 
@@ -5321,7 +5323,7 @@
       list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + workHTML(w.steps) + (w.pic ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + w.pic + "</section>" : "") + "</div>"; }).join("");
     var css = ".wpic svg{max-width:100%;height:auto}.wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
     body = svHTML(body);
-    var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;max-width:34rem;margin:2rem auto;padding:0 1rem}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#7A3FB5}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
+    var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;min-width:min(34rem,90vw);width:fit-content;max-width:none;margin:2rem auto;padding:0 1rem}.r>span,.r td{white-space:nowrap}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#7A3FB5}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
     try { w = window.open("", "_blank"); } catch (e) {}
     if (w) { w.document.write(doc); w.document.close(); }
     else { $("sheetBody").innerHTML = body; $("sheet").hidden = false; workNavInit($("sheetBody")); }
@@ -5642,7 +5644,17 @@
   }
   // ---- "Demo next step" (Progress activities, in place of Hint): the demo performs only the student's next step, then puts the work back ----
   var DNX = false, pgOne = null, DN = null, DNH = 0;   // DNH: how many steps there were before "Demo next step" played one
-  function dnOn() { return mode !== "demo" && mode !== "solo" && mode !== "create" && !!BUILT[act] && (!!BUILT[act].sub || (quiz() && !est())); }
+  function exDn() { return !!(BUILT[act] && BUILT[act].solver && EXP && EXP.eq && $("exBox") && !$("exBox").hidden && (mode === "sequence" || mode === "calculate")); }   // Play Solve equations: Demo next step
+  function dnOn() { return mode !== "demo" && mode !== "solo" && mode !== "create" && !!BUILT[act] && (!!BUILT[act].sub || (quiz() && !est()) || exDn()); }
+  function exDnUpd() { if (!exDn()) return; var h = $("hint"); h.hidden = !!locked; h.textContent = "Demo next step"; h.disabled = DNX; }
+  function exDemoNext() {   // play the student's next step, let it sit a moment, then put the work back
+    if (locked || busy || EXP.ask || DNX) return; var st = null; try { st = eqNextStep(); } catch (e) {}
+    if (!st) { note("Nothing more to demonstrate here."); return; }
+    if (!st.run) { note("Next: " + (st.cap || "keep going.")); return; }
+    var h0 = hist.length, m0 = mode, g0 = MS.gen; DNX = true; $("hint").disabled = true; if (mode === "calculate") mode = "sequence";
+    SIM = { done: false, dn: true }; try { st.run(); } catch (e) {} SIM = null; mode = m0; note("Next step: " + (st.cap || ""));
+    setTimeout(function () { if (g0 !== MS.gen) { DNX = false; return; } while (hist.length > h0) eqUndo(); DNX = false; $("hint").disabled = false; closeAsk(false); eqRender(); note("Your turn: " + (st.cap || "")); }, 1600);
+  }
   function hintLbl() { return mode === "demo" ? "Explain" : dnOn() ? "Demo next step" : "Hint"; }
   function dnCl(o) { return JSON.parse(JSON.stringify(o)); }
   function dnTake() {
@@ -5657,7 +5669,7 @@
     try { drawPlay(); TB.draw(); } catch (e) {}
   }
   function demoNext() {
-    $("hint").blur();
+    $("hint").blur(); if (exDn()) { exDemoNext(); return; }
     if (BUILT[act].sub && !quiz()) {   // the equation pane: play the next step, wait, then undo it
       if (busy || calc || locked || DNX) return;
       peekNext(); if (!pend) return;
