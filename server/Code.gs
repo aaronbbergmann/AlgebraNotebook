@@ -7,7 +7,7 @@
  *   Students  - one row per student: email, name, last saved, then one column per activity (stars, 0.0 to 5.0)
  *   Data      - the raw saved progress (JSON, split over columns if long)
  *   Sessions  - sign-in sessions (a random key per device, valid 90 days)
- *   Settings  - due dates (due:<activity> = yyyy-mm-dd), the Google Classroom classes last synced, and their teachers
+ *   Settings  - due dates (due:<activity> = yyyy-mm-ddThh:mm, or yyyy-mm-dd from older saves), the Google Classroom classes last synced, and their teachers
  *
  * Google Classroom sync (the "Sync with Google Classroom" button on the class progress page) needs the Classroom service:
  * in the Apps Script editor, Services (+) > Google Classroom API > Add, then run "setup" once to approve the new permissions.
@@ -178,11 +178,11 @@ function roster() {
   };
 }
 
-// ---- due dates: one per activity (yyyy-mm-dd); the class progress page marks "L" when 5 stars were not earned by the end of that day ----
+// ---- due dates: one per activity (yyyy-mm-ddThh:mm, New York time; older saves yyyy-mm-dd = the end of that day); the class progress page marks "L" when 5 stars were not earned by then ----
 function dueDates() { var o = {}, s = allSettings(); Object.keys(s).forEach(function (k) { if (k.indexOf("due:") === 0) o[k.slice(4)] = s[k]; }); return o; }
 function setDue(act, date) {
   if (!act) return { error: "bad", message: "Which activity?" };
-  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "bad", message: "That date isn't valid." };
+  if (date && !/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(date)) return { error: "bad", message: "That date isn't valid." };
   var lock = LockService.getScriptLock(); lock.waitLock(20000);
   try { putSetting("due:" + act, date || ""); } finally { lock.releaseLock(); }
   return { ok: true, due: dueDates() };

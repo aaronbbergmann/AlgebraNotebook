@@ -38,7 +38,9 @@
   th .act { color: var(--bar); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; } th .act:hover { color: var(--plum); }
   th button.sort { border: 0; background: none; padding: 0 2px 0 6px; font: inherit; color: #888; cursor: pointer; } th button.sort.on { color: var(--ink); } th button.sort:hover { color: var(--plum); }
   thead th.ac { cursor: default; }
-  th label.due { display: block; font-weight: 400; font-size: .8em; color: var(--muted); margin-top: 3px; } th label.due input { font: inherit; padding: 1px 2px; border: 1px solid var(--line); border-radius: 4px; width: 8.5em; } th label.due.set input { border-color: var(--plum); color: var(--plum); }
+  th .dueL { display: block; margin-top: 3px; padding: 0; border: 0; background: none; font-family: inherit; font-size: .8em; font-weight: 400; line-height: 1.3; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; border-radius: 0; } th .dueL:hover { color: var(--plum); } th .dueL.set { color: var(--plum); font-weight: 600; } th .dueL:focus { outline: none; } th .dueL:focus-visible { outline: 1px solid var(--plum); outline-offset: 2px; }
+  .dueM { position: fixed; z-index: 20; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.18); max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 4px 0; min-width: 170px; outline: none; }
+  .dueM div { padding: 7px 14px; cursor: pointer; white-space: nowrap; font-variant-numeric: tabular-nums; } .dueM div:hover { background: var(--head); } .dueM div.sel { background: #f4e8ee; color: var(--plum); font-weight: 600; } .dueM div.past { color: #999; } .dueM div.clr { color: var(--muted); border-bottom: 1px solid var(--line); }
   td.late .pc { color: #B45309; font-weight: 700; }
   .note { margin: 0 16px 10px; padding: 8px 12px; border-radius: 8px; background: #eef1f7; }
   .dlgBg { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 10; padding: 16px; }
@@ -93,8 +95,25 @@
   }
   // sorted by last name (then first name); a student with no name sorts by email
   function lastFirst(r) { var w = String(r.name || "").trim().split(/\s+/).filter(Boolean); if (!w.length || /@/.test(r.name || "")) return String(r.email || "").toLowerCase(); var L = w.pop(); return (L + " " + w.join(" ")).toLowerCase(); }
-  // late: a due date is set, and 5 stars were not earned by the end of that day (when they were earned: saved with the progress; older saves: the last change)
-  function dueEnd(a) { var d = due[a]; if (!d) return 0; var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d); return m ? new Date(+m[1], +m[2] - 1, +m[3], 23, 59, 59).getTime() : 0; }
+  // Class dates and starting times (school year 2026-27; New York time) — the choices in each activity's Due list
+  var CLASS = "11/2 1:55,11/4 9:15,11/5 12:55,11/10 8:15,11/11 11:00,11/12 1:55,11/16 9:15,11/17 12:55,11/19 8:15,11/20 11:00,11/23 1:55,11/30 9:15,12/1 12:55,12/3 8:15,12/4 11:00,12/7 1:55,12/9 9:15,12/10 12:55,12/14 8:15,12/15 11:00,12/16 1:55,12/18 9:15,1/4 12:55,1/6 8:15,1/7 11:00,1/8 1:55,1/12 9:15,1/13 12:55,1/15 8:15,1/19 11:00,1/20 1:55,1/22 9:15,1/25 12:55,1/27 8:15,1/28 11:00,1/29 1:55,2/2 9:15,2/3 12:55,2/5 8:15,2/8 11:00,2/9 1:55,2/11 9:15,2/16 12:55,2/18 8:15,2/19 11:00,2/22 1:55,2/24 9:15,2/25 12:55,3/1 8:15,3/2 11:00,3/3 1:55,3/5 9:15,3/8 12:55,3/10 8:15,3/11 11:00,3/12 1:55,3/16 9:15,3/17 12:55,3/31 8:15,4/1 11:00,4/2 1:55,4/6 9:15,4/7 12:55,4/9 8:15,4/12 11:00,4/13 1:55,4/15 9:15,4/16 12:55,4/20 8:15,4/21 11:00,4/22 1:55,4/26 9:15,4/27 12:55,4/29 8:15,5/3 11:00,5/4 1:55,5/6 9:15,5/7 12:55,5/11 8:15,5/12 11:00,5/13 1:55,5/17 9:15,5/18 12:55,5/20 8:15,5/21 11:00,5/24 1:55,5/26 9:15,5/27 12:55".split(",").map(function (x) {
+    var m = /^(\d+)\/(\d+) (\d+):(\d+)$/.exec(x), mo = +m[1], h = +m[3]; if (h < 7) h += 12;   // (12:55 and 1:55 are PM)
+    var p2 = function (n) { return (n < 10 ? "0" : "") + n; };
+    return (mo >= 7 ? 2026 : 2027) + "-" + p2(mo) + "-" + p2(+m[2]) + "T" + p2(h) + ":" + m[4];
+  });
+  var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+  // a New York wall-clock time (yyyy-mm-ddThh:mm) as a moment in time
+  function nyMs(y, mo, d, h, mi) {
+    var g = Date.UTC(y, mo - 1, d, h, mi), off = 0;
+    for (var i = 0; i < 2; i++) { var f = {}; new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric" }).formatToParts(new Date(g - off)).forEach(function (p) { f[p.type] = +p.value; }); off = Date.UTC(f.year, f.month - 1, f.day, f.hour % 24, f.minute) - (g - off); }
+    return g - off;
+  }
+  function parseDue(v) { var m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/.exec(v || ""); return m ? { y: +m[1], mo: +m[2], d: +m[3], h: m[4] == null ? null : +m[4], mi: m[4] == null ? null : +m[5] } : null; }
+  // when it is due: the date and time chosen (older saves with a date only: the end of that day)
+  function dueMs(v) { var p = parseDue(v); if (!p) return 0; return p.h == null ? nyMs(p.y, p.mo, p.d, 23, 59) + 59999 : nyMs(p.y, p.mo, p.d, p.h, p.mi); }
+  function dueText(v, wd) { var p = parseDue(v); if (!p) return ""; var s = p.mo + "/" + p.d; if (wd) s = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date(Date.UTC(p.y, p.mo - 1, p.d)).getUTCDay()] + " " + s; if (p.h != null) s += " " + ((p.h + 11) % 12 + 1) + ":" + pad(p.mi) + " " + (p.h < 12 ? "AM" : "PM"); return s; }
+  // late: a due date is set, and 5 stars were not earned by that date and time (when they were earned: saved with the progress; older saves: the last change)
+  function dueEnd(a) { return dueMs(due[a]); }
   function late(r, a) {
     var end = dueEnd(a); if (!end) return false; var d = r.detail || {}, p = stars(d[a]) || 0;
     if (p >= 50) { var t = +d["_d:" + a] || +d["_t:" + a] || Date.parse(r.saved) || 0; return t > end; }
@@ -120,7 +139,7 @@
     if (!rows.length) return msg("No students have signed in yet.");
     var arrow = function (k) { return sortBy === k ? (dir > 0 ? " ▲" : " ▼") : ""; };
     var h = "<table><thead><tr><th data-k=\"name\">Student" + arrow("name") + "</th><th data-k=\"saved\">Last saved" + arrow("saved") + "</th>";
-    acts.forEach(function (a) { var on = sortBy === a; h += "<th class=\"ac\"><a class=\"act\" href=\"../" + esc(slug(a)) + "/\" title=\"Open " + esc(a) + "\">" + esc(a) + "</a><button type=\"button\" class=\"sort" + (on ? " on" : "") + "\" data-k=\"" + esc(a) + "\" aria-label=\"Sort by " + esc(a) + " progress\">" + (on ? (dir > 0 ? "▲" : "▼") : "↕") + "</button><label class=\"due" + (due[a] ? " set" : "") + "\" title=\"Due date: without 5 stars by the end of this day, progress shows L\">Due <input type=\"date\" data-due=\"" + esc(a) + "\" value=\"" + esc(due[a] || "") + "\" aria-label=\"Due date for " + esc(a) + "\"></label></th>"; });
+    acts.forEach(function (a) { var on = sortBy === a; h += "<th class=\"ac\"><a class=\"act\" href=\"../" + esc(slug(a)) + "/\" title=\"Open " + esc(a) + "\">" + esc(a) + "</a><button type=\"button\" class=\"sort" + (on ? " on" : "") + "\" data-k=\"" + esc(a) + "\" aria-label=\"Sort by " + esc(a) + " progress\">" + (on ? (dir > 0 ? "▲" : "▼") : "↕") + "</button><button type=\"button\" class=\"dueL" + (due[a] ? " set" : "") + "\" data-due=\"" + esc(a) + "\" aria-haspopup=\"listbox\" title=\"" + (due[a] ? "Due " + esc(dueText(due[a], true)) + ": without 5 stars by then, progress shows L" : "Choose a due date: without 5 stars by then, progress shows L") + "\">Due" + (due[a] ? " " + esc(dueText(due[a])) : "") + "</button></th>"; });
     h += "</tr></thead><tbody>";
     list.forEach(function (r) {
       var isOpen = openRow === r.email;
@@ -143,18 +162,50 @@
     $("wrap").innerHTML = h + "</tbody></table>";
   }
   $("wrap").addEventListener("click", function (e) {
-    if (e.target.closest("a.act") || e.target.closest("label.due")) return;   // (the activity name opens the activity; the due date is set in its box)
+    if (e.target.closest("a.act")) return;   // (the activity name opens the activity)
+    var dl = e.target.closest("button.dueL"); if (dl) return openDue(dl);
     var th = e.target.closest("button.sort") || e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; if (sortBy === k) dir = -dir; else { sortBy = k; dir = k === "name" ? 1 : -1; } return draw(); }
     if (e.target.closest("th")) return;
     var tr = e.target.closest("tr[data-e]"); if (tr) { openRow = openRow === tr.dataset.e ? null : tr.dataset.e; draw(); }
   });
   $("q").addEventListener("input", draw);
-  // a due date: saved for the class at once (clearing the box removes it)
-  $("wrap").addEventListener("change", function (e) {
-    var b = e.target.closest("input[data-due]"); if (!b) return; var a = b.dataset.due, v = b.value || "";
-    b.disabled = true;
-    AN.api("setDue", { act: a, date: v }).then(function (j) { due = j.due || due; draw(); }).catch(function (er) { b.disabled = false; alertBar(er.message || "Could not save the due date."); });
-  });
+  // a due date and time: "Due" opens a list of the class dates and starting times; the choice is saved for the class at once ("None" removes it)
+  var menu = null;
+  function closeDue() { if (menu) { menu.remove(); menu = null; } }
+  function openDue(btn) {
+    var a = btn.dataset.due; if (menu && menu.dataset.a === a) return closeDue(); closeDue();
+    var now = Date.now(), cur = due[a] || "", sel = -1;
+    if (cur) { sel = CLASS.indexOf(cur); if (sel < 0) { var cm = dueMs(cur), dd = cur.slice(0, 10); sel = CLASS.findIndex(function (c) { return c.slice(0, 10) === dd; }); if (sel < 0) sel = CLASS.findIndex(function (c) { return dueMs(c) >= cm; }); } }
+    if (sel < 0) sel = CLASS.findIndex(function (c) { return dueMs(c) > now; });
+    if (sel < 0) sel = CLASS.length - 1;
+    menu = document.createElement("div"); menu.className = "dueM"; menu.dataset.a = a; menu.setAttribute("role", "listbox"); menu.setAttribute("aria-label", "Due date for " + a); menu.tabIndex = -1;
+    menu.innerHTML = "<div class=\"clr\" role=\"option\" data-v=\"\">None</div>" + CLASS.map(function (c, i) { return "<div role=\"option\" data-v=\"" + c + "\"" + (i === sel ? " class=\"sel\" aria-selected=\"true\"" : dueMs(c) < now ? " class=\"past\"" : "") + ">" + dueText(c, true) + "</div>"; }).join("");
+    document.body.appendChild(menu);
+    menu.btn = btn; placeDue();
+    var s = menu.querySelector(".sel"); if (s) menu.scrollTop = s.offsetTop - (menu.clientHeight - s.offsetHeight) / 2;
+    menu.focus({ preventScroll: true });
+    menu.addEventListener("click", function (e) { var o = e.target.closest("[data-v]"); if (!o) return; closeDue(); saveDue(a, o.dataset.v); });
+  }
+  function placeDue() {   // under its "Due" link (above it when there is no room below); closed once the link scrolls out of view
+    if (!menu) return; var r = menu.btn.getBoundingClientRect(), W = $("wrap").getBoundingClientRect(), w = menu.offsetWidth, hgt = menu.offsetHeight;
+    if (!menu.btn.isConnected || r.right < W.left || r.left > W.right) return closeDue();
+    var left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)), top = r.bottom + 4;
+    if (top + hgt > window.innerHeight - 8 && r.top - hgt - 4 > 8) top = r.top - hgt - 4;
+    menu.style.left = left + "px"; menu.style.top = Math.max(8, top) + "px";
+  }
+  function saveDue(a, v) {
+    var before = due[a]; if (v) due[a] = v; else delete due[a]; draw();
+    AN.api("setDue", { act: a, date: v }).then(function (j) { due = j.due || due; draw(); }).catch(function (er) {
+      if (v && /T/.test(v) && /date/i.test(er.message || "")) {   // (an Apps Script not yet updated takes dates only: the date is saved, and the time waits for the update)
+        return AN.api("setDue", { act: a, date: v.slice(0, 10) }).then(function (j) { due = j.due || due; draw(); alertBar("The due date was saved without its time: the Apps Script (server/Code.gs) needs to be updated and redeployed to save due times."); });
+      }
+      throw er;
+    }).catch(function (er) { if (before) due[a] = before; else delete due[a]; draw(); alertBar(er.message || "Could not save the due date."); });
+  }
+  document.addEventListener("pointerdown", function (e) { if (menu && !menu.contains(e.target) && !e.target.closest("button.dueL")) closeDue(); }, true);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && menu) closeDue(); });
+  window.addEventListener("resize", closeDue);
+  $("wrap").addEventListener("scroll", placeDue); window.addEventListener("scroll", placeDue);
   function alertBar(t) { var m = $("note"); m.textContent = t; m.hidden = false; clearTimeout(alertBar.t); alertBar.t = setTimeout(function () { m.hidden = true; }, 8000); }
   // Google Classroom: choose the classes, then the student list is made to match them
   $("gc").addEventListener("click", function () {
