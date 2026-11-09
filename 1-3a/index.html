@@ -2836,13 +2836,18 @@
   }
   function fmHide() { if (FM && FM.t) FM.t.forEach(clearTimeout); FM = null; var b = $("fmBox"); if (b) b.remove(); var tb = $("fmTogBtn"); if (tb) tb.hidden = true; }
   function fmShow(S) {
-    grHide(); FM = { S: EXP.eq ? S || "L" : null, kind: "pst", slots: {}, A: null, B: null, okF: mode !== "calculate", okFac: false, t: [], msg: "" };
+    grHide(); var its0 = fmSideOf(EXP.eq ? S || "L" : null) || []; FM = { S: EXP.eq ? S || "L" : null, kind: its0.length === 2 ? "dos" : "pst", slots: {}, A: null, B: null, okF: mode !== "calculate", okFac: false, t: [], msg: "" };
     var el = document.createElement("div"); el.id = "fmBox"; el.setAttribute("aria-label", "Factoring with a formula"); (document.querySelector(".app") || document.body).appendChild(el);
     fmDraw(); requestAnimationFrame(function () { if ($("fmBox") === el) el.classList.add("on"); });
   }
   $("fmTogBtn").addEventListener("click", function () { fmToggle(); });
   $("quBtn").addEventListener("click", function () { quStart(); });
-  function fmToggle() { if (!FM || FM.done) return; FM.kind = FM.kind === "pst" ? "dos" : "pst"; FM.slots = {}; FM.A = FM.B = null; FM.okF = mode !== "calculate"; FM.okFac = false; FM.msg = ""; fmDraw(); }
+  function fmToggle() {   // switch formulas: the terms already dropped on A² and B² carry over
+    if (!FM || FM.done) return; var keep = FM.slots, okF = FM.okF; FM.kind = FM.kind === "pst" ? "dos" : "pst"; FM.slots = {}; FM.A = FM.B = null; FM.okF = mode !== "calculate"; FM.okFac = false; FM.msg = ""; FM.bad = false;
+    if (mode !== "calculate") ["A2", "B2"].forEach(function (k) { if (keep[k] && FM && !FM.done) { fmPlace(k, keep[k].i); if (FM && FM.bad) { delete FM.slots[k]; FM.bad = false; FM.msg = ""; } } });
+    if (!FM) return;
+    fmDraw();
+  }
   function fmTxt(m) { return exSay([fmTerm(m)]); }
   function fmNeed() { return FM.kind === "pst" ? ["A2", "AB", "B2"] : ["A2", "B2"]; }
   function fmDraw() {
@@ -4476,6 +4481,7 @@
       if (!moved && Math.hypot(dx, dy) < 6) return;
       if (!moved && onStart) onStart(dx, dy);
       moved = true; el.classList.add("drag"); el.style.transform = "translate(" + dx + "px," + dy + "px)";
+      if (typeof FM !== "undefined" && !FM && EXP && el.classList.contains("exT") && el.dataset.i != null) fmAbove(EXP.eq ? el.dataset.s || null : null, +el.dataset.i, ev);   // a squared term carried above the equation opens the formulas at once, so it can be dropped straight onto A² (one drag)
       if (myOp) { myOp.classList.add("dragOp"); myOp.style.transform = el.style.transform; }
       if (eqE) showSign((ev.clientX < eqX ? -1 : 1) !== side0);
       var t = under(ev, el, prefix) || farTarget(ev);
