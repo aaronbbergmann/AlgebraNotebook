@@ -2932,7 +2932,12 @@
     }, ms);
   }
   function grWire(R) {   // an equation to factor: any term of the left side can be dragged down into the square
-    eqOpWire(R, -1);   // like terms can always be combined (a click on the + or − between them, or one dropped on the other)
+    eqOpWire(R, -1);
+    [].forEach.call(R.querySelectorAll(".exCoA"), function (co) {   // the number in front of a term can still be dragged across the = to divide every term on both sides
+      var el = co.closest(".exT"), S = el.dataset.s, i = +el.dataset.i;
+      co.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; var t = EXP[S][i]; if (!t) return; divCross(co, R.querySelector(".exEq")); co._hotAll = function (on) { [].forEach.call(R.querySelectorAll(".exT, .exEq, .exOp"), function (x) { x.classList.toggle("drop", on); }); };
+        zdr(-1, e, co, null, function (t2) { var dd = t2.dataset.drop || ""; if (dd === "eq=" || (dd.indexOf("et:") === 0 && dd.split(":")[1] !== S)) { if (GRP && !GRP.done) grHide(); if (FM) fmHide(); eqDivAll(S, i, mk(Math.abs(t.n.n))); } }, ["et:", "eq="]); });
+    });   // like terms can always be combined (a click on the + or − between them, or one dropped on the other)
     [].forEach.call(R.querySelectorAll(".exT[data-s=\"L\"]"), function (el) {
       var i = +el.dataset.i;
       el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else if (dd.indexOf("et:") === 0) { var q = dd.split(":"); if (q[1] === "L" && +q[2] !== i && exLike(EXP.L[i], EXP.L[+q[2]])) eqDrop("L", i, "L", +q[2]); } else grPlace(+dd.slice(3), i); }, ["gb:", "fm:", "et:L:"], function (dx, dy) { if (!fmUp("L", i, dx, dy) && !FM) grShow(); }, function (t, ev) { if (!t && fmAbove("L", i, ev)) return; grEnd(t, ev); }); });
@@ -3376,11 +3381,11 @@
   function eqRenderRow(R, hot, idx, fin) {   // one equation in a row; idx is its place in a split (the zero product property), -1 when not split
     if (idx >= 0) R.dataset.zrow = idx; else R.removeAttribute("data-zrow");
     var live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked && !fin, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !!zpOf(EXP.L, EXP.R), gq = EXP.grq && !EXP.zpq, rad = EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.u; });
-    R.innerHTML = wrap("L") + "<span class=\"exEq" + (live && !un && !gq ? " grab" : "") + "\" data-drop=\"eq=\">" + relGlyph(EXP.rel) + "</span>" + wrap("R");
+    R.innerHTML = wrap("L") + "<span class=\"exEq" + (live && !un ? " grab" : "") + "\" data-drop=\"eq=\">" + relGlyph(EXP.rel) + "</span>" + wrap("R");
     grMark();
     if (ABS && ABS.side && R.id === "exRow") absorbNow(R, '.exT[data-s="' + ABS.side + '"][data-i="' + ABS.idx + '"]');
     var mulAsk = function () { if (EXP.ask || locked) return; if (idx >= 0 && EXP.zp && idx !== EXP.zp.act) { zpFocus(idx); eqRender(); } eqMulAsk(); };
-    if (!locked && !un && !gq && !fin && !rad) { R.querySelector(".exEq").addEventListener("click", mulAsk); R.onclick = function (e) { if (e.target === R) mulAsk(); }; } else R.onclick = null;
+    if (!locked && !un && !fin && !rad) { R.querySelector(".exEq").addEventListener("click", mulAsk); R.onclick = function (e) { if (e.target === R) mulAsk(); }; } else R.onclick = null;
     if (live && un) { eqOpWire(R, idx); zpWire(R, idx); return; }
     if (live && gq) { grWire(R); return; }
     if (!live) return;
