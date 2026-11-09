@@ -5438,7 +5438,7 @@
     ["2.2B", "2.2", ["6", "7", "8", "9", "10"], "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing"],
     ["2.2C", "2.2", ["11", "3", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
     ["2.4A", "2.4", ["1", "2"], "Modeling with Quadratic Functions"],
-    ["2.4B", "2.4", ["3", "4"], "Modeling with Quadratic Functions (Day 2)"]
+    ["2.4B", "2.4", ["4"], "Modeling with Quadratic Functions (Day 2)"]   // (exercise 3, Three Points with first and second differences, was taken out)
   ];
   var VW = {}, VBASE = {};
   VIEWS.forEach(function (v, i) { VW[v[0]] = { id: v[0], base: v[1], ls: v[2], title: v[3], i: i }; VBASE[v[1]] = 1; });
@@ -9721,8 +9721,11 @@ var ESPIC = {
   // Desmos (the first step checks the expression list), then answers questions read off the graphs (clicking a curve in Desmos shows its intercepts and
   // maximum). Write mode keeps Desmos to use, without the graphing step. If Desmos cannot load, the graphing step is passed with a note.
   var DESMOS_KEY = "243b1d1f290d4a7587adbb90879f4751";   // the school's Desmos API key
-  var DSM = { calc: null, state: "", key: "", fail: false };
-  function dsmOn() { return pq() && act === "2.2" && lesson === 5 && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm; }
+  // 2.4 Modeling with Quadratic Functions uses the same blank Desmos graph in place of its own graph: the student types the data in a Desmos table
+  // and runs a regression (the "dsm" step checks for both), then answers the typed questions from it (problems with dsm.reg)
+  var DSM = { calc: null, state: "", key: "", km: "", fail: false, saved: {} };
+  function dsmOn() { return pq() && ((act === "2.2" && lesson === 5) || act === "2.4") && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm; }
+  function dsmReg() { return dsmOn() && !!m3Cur().dsm.reg; }
   function dsmLoad() {
     if (DSM.state) return; DSM.state = "loading";
     var sc = document.createElement("script"); sc.src = "https://www.desmos.com/api/v1.11/calculator.js?apiKey=" + DESMOS_KEY; sc.async = true;
@@ -9734,7 +9737,7 @@ var ESPIC = {
     };
     sc.onerror = dsmFail; document.head.appendChild(sc);
   }
-  function dsmFail() { DSM.state = "failed"; DSM.fail = true; var n = $("dsmNote"); if (n) n.textContent = "Desmos could not load here. Open desmos.com in another tab to graph the paths, then answer the questions."; dsmCheck(); e11Sync(); }
+  function dsmFail() { DSM.state = "failed"; DSM.fail = true; $("dsmCalc").hidden = true; var n = $("dsmNote"); if (n) n.textContent = "Desmos could not load here. Open desmos.com in another tab to graph the paths, then answer the questions."; dsmCheck(); e11Sync(); if (dsmReg()) { drawPlay(); pqPanel(); } }   // (2.4: its own graph comes back)
   // a Desmos expression (LaTeX) as a function of x, or null
   function dsmFn(lt) {
     var t = String(lt || "").replace(/\\left\\\{[\s\S]*$/, "").replace(/\\left/g, "").replace(/\\right/g, "").replace(/\\cdot/g, "*").replace(/\\ /g, "").replace(/\s+/g, "");
@@ -9749,8 +9752,36 @@ var ESPIC = {
     var L = DSM.calc.getExpressions().filter(function (e) { return e.type === "expression" && e.latex; }).map(function (e) { return dsmFn(e.latex); }).filter(Boolean);
     return [L.some(dsmMatch(P.F1, P.D1)), L.some(dsmMatch(P.F2, P.D2))];
   }
+  // 2.4: [the data are in a Desmos table, a regression of that table is working]
+  function dsmRegDone() {
+    var P = m3Cur().dsm; if (DSM.fail) return [true, true]; if (!DSM.calc) return [false, false];
+    var T = e11Tab({ x: P.xs, y: P.ys }); if (!T) return [false, false];
+    var L = e11Ex(), A = DSM.calc.expressionAnalysis || {};
+    for (var q = 0; q < L.length; q++) {
+      var x = L[q]; if (x.type !== "expression" || !x.latex) continue;
+      var t = e11Lx(x.latex), k = t.indexOf("\\sim"); if (k < 0) continue;
+      var lhs = t.slice(0, k), rhs = t.slice(k + 4); if (lhs !== T.y || rhs.indexOf(T.x) < 0) continue;
+      if (A[x.id] && A[x.id].isError) continue;
+      if (/\^\{?2/.test(rhs) || rhs.split(T.x).length > 2) return [true, true];   // a quadratic: x squared, or x twice (intercept form)
+    }
+    return [true, false];
+  }
   function dsmCheck() {
-    if (!dsmOn()) return; var st = m3Step(), g = dsmGraphed(), n = $("dsmNote");
+    if (!dsmOn()) return; var st = m3Step(), n = $("dsmNote");
+    if (dsmReg()) {
+      var R = dsmRegDone(), any = e11AnyReg();
+      if (n) {
+        if (DSM.fail) n.textContent = "Desmos could not load here. Open desmos.com in another tab to make the table and the regression, then answer the questions.";
+        else if (!DSM.calc) n.textContent = "Loading Desmos…";
+        else if (st && st.type === "dsm") n.innerHTML = "Table " + (R[0] ? "<span class=\"cueOk\">✓</span>" : "not entered yet") + " &nbsp; Regression " + (R[1] ? "<span class=\"cueOk\">✓</span>" : any ? "not working yet" : "not run yet");
+        else if (QZ.m3done || QZ.step >= 4) n.textContent = "";
+        else if (R[1]) n.innerHTML = "Table <span class=\"cueOk\">✓</span> &nbsp; Regression <span class=\"cueOk\">✓</span> &nbsp; Use them to answer the questions.";
+        else n.textContent = "Type the data in a Desmos table and run a regression to answer the questions.";
+      }
+      if (st && st.type === "dsm" && R[0] && R[1]) m3Accept(st, "");
+      return;
+    }
+    var g = dsmGraphed();
     if (n && !DSM.fail) n.innerHTML = st && st.type === "dsm" ? "Path 1 " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") + " &nbsp; Path 2 " + (g[1] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : "Zoom out or drag the graph to see the whole paths. Click a path to see its intercepts and its maximum.";
     if (st && st.type === "dsm" && g[0] && g[1]) m3Accept(st, "");
   }
@@ -9761,15 +9792,20 @@ var ESPIC = {
     if (on && W.parentNode !== $("dsmSteps")) $("dsmSteps").appendChild(W);   // Compare: the questions and their answer boxes sit in the centre pane, under the question
     else if (!on && W.parentNode !== dsmHome.p) dsmHome.p.insertBefore(W, dsmHome.n);
     if (!on) return;
-    $("show").hidden = mode !== "solo";   // (Show work: Write mode only)
+    if (act === "2.2") $("show").hidden = mode !== "solo";   // (2.2C Compare's Show work: Write mode only)
     dsmLoad(); if (!DSM.calc) { dsmCheck(); return; }
-    var P = m3Cur().dsm, key = QZ.pi + "|" + mode + "|" + m3Cur().head;
-    if (DSM.key !== key) { DSM.key = key; DSM.calc.setBlank(); dsmHomeView(); }   // a new problem starts at Desmos's standard home window: the student zooms out to see the paths
+    var P = m3Cur().dsm, key = QZ.pi + "|" + mode + "|" + m3Cur().head + (P.reg ? "|" + P.xs.join(",") + "|" + P.ys.join(",") : "");
+    if (DSM.key !== key) {   // a new problem starts blank, at Desmos's standard home window: the student zooms out to see the paths (or the data)
+      try { if (DSM.key && DSM.km !== "demo") DSM.saved[DSM.key] = DSM.calc.getState(); } catch (e) { }   // what was typed for a mode's problem is kept: a switch back to that mode puts it back
+      var sv = mode !== "demo" && DSM.saved[key]; DSM.key = key; DSM.km = mode;
+      if (sv) { try { DSM.calc.setState(sv, { allowUndo: false }); } catch (e) { sv = null; } }
+      if (!sv) { DSM.calc.setBlank(); dsmHomeView(); }
+    }
     DSM.calc.resize(); dsmCheck();
   }
   function dsmHomeView() { var b = $("dsmCalc").getBoundingClientRect(), r = b.width ? b.height / b.width : 0.6; DSM.calc.setMathBounds({ left: -10, right: 10, bottom: -10 * r, top: 10 * r }); }
   function dsmZoomOut(run, n) {   // the demo: the window widens from home until both paths fit
-    var P = m3Cur().dsm, b = $("dsmCalc").getBoundingClientRect(), r = b.width ? b.height / b.width : 0.6, A = { l: -10, r: 10, b: -10 * r, t: 10 * r }, B = { l: -P.xmax * 0.06, r: P.xmax, b: -P.ymax * 0.12, t: P.ymax }, k = 0, N = 30;
+    var P = m3Cur().dsm, b = $("dsmCalc").getBoundingClientRect(), r = b.width ? b.height / b.width : 0.6, A = { l: -10, r: 10, b: -10 * r, t: 10 * r }, B = { l: -P.xmax * 0.06, r: P.xmax, b: P.ymin != null && P.ymin < 0 ? P.ymin * 1.12 : -P.ymax * 0.12, t: P.ymax }, k = 0, N = 30;
     (function st() { if (pgRun !== run) return; var u = ++k / N, e = u * u * (3 - 2 * u); DSM.calc.setMathBounds({ left: A.l + (B.l - A.l) * e, right: A.r + (B.r - A.r) * e, bottom: A.b + (B.b - A.b) * e, top: A.t + (B.t - A.t) * e }); if (k < N) pgWait(60, st); else pgWait(800, n); })();
   }
   // the demo: the hand types each equation into Desmos's expression list
@@ -9783,6 +9819,30 @@ var ESPIC = {
       handGo(at, 650);
       pgWait(800, function () { handTap(); (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else { i++; if (i >= L.length) { pgCapDsm("The paths go off the screen. Zoom out to see them whole."); handGo({ x: r.right - 30, y: r.top + 70 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); dsmZoomOut(run, function () { dsmCheck(); pgWait(500, one); }); }); return; } dsmCheck(); pgWait(700, one); } })(); });
     })();
+  }
+  // 2.4, the demo: the data go into a Desmos table a row at a time, the window moves to show them, then the regression is typed (the step is checked as soon
+  // as it works), then f(x) with the regression's numbers and the value the questions ask for (Desmos shows it at the right of the line)
+  function dsmDemoReg(run, n, cap) {
+    var P = m3Cur().dsm, box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { pgWait(800, n); return; }
+    var r = box.getBoundingClientRect(), at = function (i) { return { x: r.left + Math.min(150, r.width * 0.2), y: r.top + 40 + i * 50 }; }, X = [], Y = [];
+    function typeL(id, lt, then) { var c = 0; (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else pgWait(700, then); })(); }
+    cap("Type the data in a Desmos table"); handGo(at(0), 650);
+    pgWait(900, function () {
+      if (pgRun !== run) return; handTap();
+      (function row(i) {
+        if (pgRun !== run) return;
+        if (i >= P.xs.length) { dsmCheck(); cap("Zoom out to see the points"); handGo({ x: r.right - 30, y: r.top + 70 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); dsmZoomOut(run, step2); }); return; }
+        X.push(c2T(P.xs[i], 6)); Y.push(c2T(P.ys[i], 6));
+        DSM.calc.setExpression({ id: "t", type: "table", columns: [{ latex: "x_{1}", values: X.slice() }, { latex: "y_{1}", values: Y.slice() }] }); pgWait(380, function () { row(i + 1); });
+      })(0);
+    });
+    var k0 = P.xs.length + 1;
+    function step2() { cap("Type the regression: y₁ ~ …"); handGo(at(Math.min(k0, 6)), 500); pgWait(700, function () { if (pgRun !== run) return; handTap(); typeL("r", "y_{1}\\sim " + P.rg, function () { dsmCheck(); pgWait(1500, step3); }); }); }
+    function step3() { cap("Name the model f(x), with the regression's numbers"); handGo(at(Math.min(k0 + 1, 7)), 500); pgWait(700, function () { if (pgRun !== run) return; handTap(); typeL("f", "f\\left(x\\right)=" + P.fx, function () { pgWait(800, function () { ev(0); }); }); }); }
+    function ev(i) {
+      if (pgRun !== run) return; if (i >= (P.ev || []).length) { pgWait(900, n); return; }
+      cap("Desmos works out the value"); handGo(at(Math.min(k0 + 2 + i, 8)), 500); pgWait(700, function () { if (pgRun !== run) return; handTap(); typeL("v" + i, P.ev[i], function () { pgWait(900, function () { ev(i + 1); }); }); });
+    }
   }
   // ---- parent tables (2.1 and 2.2) and the Standard Form table: a y value can be dragged onto an empty y cell, which copies it there (as in the graphing tables).
   // A press only becomes a drag once the pointer moves, so a click on a cell still does what it did.
@@ -10004,7 +10064,7 @@ var ESPIC = {
     } else if (!pgRun) dmUI("idle");   // a fresh demo waits, its button highlighted
     $("hint").hidden = done || soloish();   // a right answer needs no hint
     if (wf()) { $("show").hidden = false; wfUndoVis(); }
-    else if (m3()) { $("show").hidden = dsmOn() && mode !== "solo"; $("undo").hidden = true; }   // (2.2C Compare: Show work in Write mode only)
+    else if (m3()) { $("show").hidden = dsmOn() && act === "2.2" && mode !== "solo"; $("undo").hidden = true; }   // (2.2C Compare: Show work in Write mode only)
     wfSteps(); gwnSync(); grnSync(); vfnSync(); ivnSync(); csnSync(); c21Sync(); e11Sync(); wyoSync();
     if (!demo && !done) { var f = $("pgEq").querySelector(".eqIn"); if (f && !PG.show.eq && !document.activeElement.closest("#pgTable")) { /* the cursor stays where the student last was */ } }
   }
@@ -13620,19 +13680,22 @@ var ESPIC = {
       if (tier === 0 && !Number.isInteger(yX)) continue;
       var sc = c2Pick(C2S241), pb = { kind: 20, sc: sc }, E = c2Vf(a, h, k, "x", c2Y);
       pb.head = sc.s; pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + " The graph shows the path, where " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in feet). The path lands " + X + " feet away. " + sc.q;
+      pb.story = sc.s + " Here " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in feet). The path starts at " + c2Pt(0, y0) + ", where it " + sc.y0 + ". Its highest point, the vertex, is " + c2Pt(h, k) + ", and it lands " + X + " feet away. " + sc.q + "<br>Use Desmos: type the points in a table and run a regression.";
       var xa = c2Axis(0, X + 2), ya = c2Axis(0, k * 1.2);
-      pb.fig = function (x) {
+      pb.dsm = { reg: 1, xs: [0, h], ys: [y0, k], rg: "a\\left(x_{1}" + c24Sg(-h) + "\\right)^{2}" + c24Sg(k), fx: "a\\left(x" + c24Sg(-h) + "\\right)^{2}" + c24Sg(k), ev: ["f\\left(" + X + "\\right)"], xmax: xa.max, ymax: ya.max };
+      pb.fig = function (x) { return DSM.fail ? fig0(x) : ""; };   // (a blank Desmos graph takes the place of the graph; the old graph comes back only if Desmos cannot load)
+      var fig0 = function (x) {
         x = x || {};
         return c2Fig({ xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Horizontal distance (feet)", yl: "Height (feet)", alt: "Path", curves: [{ fn: F, col: x.eq ? C2P : C2B, lo: 0, hi: X }],
           pts: [{ x: 0, y: y0, col: C2B, lab: true, an: "start", dy: 16 }, { x: h, y: k, col: C2B, lab: true }, { x: X, y: F(X), col: x.yv ? C2P : C2B, hollow: !x.yv, lab: x.yv ? "(" + X + ", " + c2F(yX) + ")" : "", an: "end" }] });
       };
       pb.steps = [
-        { id: "h", fine: 1, lab: "h", ask: "The vertex (<i>h</i>, <i>k</i>) is the highest point of the path. What is <i>h</i>?", pre: "<i>h</i> =", ans: h, hint: ["Read the vertex from the graph.", "The vertex is (" + h + ", " + k + ")."], line: "<i>h</i> = " + h },
+        { id: "h", fine: 1, lab: "h", ask: "The vertex (<i>h</i>, <i>k</i>) is the highest point of the path. What is <i>h</i>?", pre: "<i>h</i> =", ans: h, hint: ["The vertex is given in the problem.", "The vertex is (" + h + ", " + k + ")."], line: "<i>h</i> = " + h },
         { id: "k", fine: 1, lab: "k", ask: "What is <i>k</i>?", pre: "<i>k</i> =", ans: k, hint: ["<i>k</i> is the height at the vertex.", "<i>k</i> = " + k + "."], line: "<i>k</i> = " + k },
-        { id: "a", lab: "a", ask: c2S("Use vertex form " + c2Y + " = <i>a</i>(" + c2X + " − " + h + ")² + " + k + " and the point (0, " + c2F(y0) + "): " + c2F(y0) + " = <i>a</i>(0 − " + h + ")² + " + k + ". Solve for <i>a</i>.", "Find <i>a</i> in vertex form."), pre: "<i>a</i> =", ans: a, tol: 1e-7, wrong: function (v) { return v === -a ? "Check the sign: the path opens down, so a is negative." : ""; }, hint: [c2F(y0) + " = " + (h * h) + "<i>a</i> + " + k + ". Subtract " + k + ", then divide by " + (h * h) + ".", "(" + c2F(y0) + " − " + k + ") ÷ " + (h * h) + " = " + c2F(a, 6) + "."], line: "<i>a</i> = " + c2F(a, 6) },
+        { id: "dsm", fine: 1, lab: "Desmos", type: "dsm", ask: "In Desmos, type the two points " + c2Pt(0, y0) + " and " + c2Pt(h, k) + " in a table (columns <i>x</i>₁ and <i>y</i>₁). On a new line, type the regression in vertex form with the vertex's numbers: <span class=\"lm\"><i>y</i>₁ ~ <i>a</i>(<i>x</i>₁ − " + h + ")² + " + k + "</span>.", hint: ["Press + in Desmos and choose table, then type the points.", "On a new line type y₁ ~ a(x₁ − " + h + ")^2 + " + k + " (type ~ for the regression)."], line: "Desmos: the points in a table and the regression <i>y</i>₁ ~ <i>a</i>(<i>x</i>₁ − " + h + ")² + " + k },
+        { id: "a", lab: "a", ask: c2S("Desmos shows <i>a</i> under the regression. (Or solve " + c2F(y0) + " = <i>a</i>(0 − " + h + ")² + " + k + " for <i>a</i>.) What is <i>a</i>?", "Find <i>a</i> in vertex form."), pre: "<i>a</i> =", ans: a, tol: 1e-7, wrong: function (v) { return v === -a ? "Check the sign: the path opens down, so a is negative." : ""; }, hint: [c2F(y0) + " = " + (h * h) + "<i>a</i> + " + k + ". Subtract " + k + ", then divide by " + (h * h) + ".", "(" + c2F(y0) + " − " + k + ") ÷ " + (h * h) + " = " + c2F(a, 6) + "."], line: "<i>a</i> = " + c2F(a, 6) },
         { id: "eq", lab: "Equation", type: "fn", ask: c2S("Write the equation of the path in vertex form.", "Write an equation of the path."), fn: F, xs: [0, 10, 20, h, X, 5], eg: "y = −0.008(x − 50)^2 + 35", typed: E[1], fo: c2Fo(E[0], [c2Vf(-a, h, k, "x", c2Y)[0], c2Vf(a, -h, k, "x", c2Y)[0], c2Vf(a, k, h, "x", c2Y)[0]]), after: function (x) { x.eq = true; }, hint: ["Put <i>a</i>, <i>h</i> and <i>k</i> into " + c2Y + " = <i>a</i>(" + c2X + " − <i>h</i>)² + <i>k</i>.", E[0] + "."], line: E[0] },
-        { id: "y", lab: "Height", ask: c2S("Find the height when " + c2X + " = " + X + ".", sc.q), pre: c2Y + " =", post: "feet", ans: yX, tol: 0.051, after: function (x) { x.yv = true; }, hint: ["Put " + c2X + " = " + X + " into your equation.", c2F(a, 6) + "(" + X + " − " + h + ")² + " + k + " = " + c2F(yX) + "."], line: "at " + c2X + " = " + X + ", " + c2Y + " = " + c2F(yX) + " feet" }
+        { id: "y", lab: "Height", ask: c2S("Find the height when " + c2X + " = " + X + ". In Desmos, type <span class=\"lm\"><i>f</i>(<i>x</i>) = <i>a</i>(<i>x</i> − " + h + ")² + " + k + "</span> on a new line, then <i>f</i>(" + X + ").", sc.q), pre: c2Y + " =", post: "feet", ans: yX, tol: 0.051, after: function (x) { x.yv = true; }, hint: ["Put " + c2X + " = " + X + " into your equation.", c2F(a, 6) + "(" + X + " − " + h + ")² + " + k + " = " + c2F(yX) + "."], line: "at " + c2X + " = " + X + ", " + c2Y + " = " + c2F(yX) + " feet" }
       ];
       pb.ex = "The vertex is (" + h + ", " + k + ") and the path passes through (0, " + c2F(y0) + "), so " + c2F(y0) + " = <i>a</i>(0 − " + h + ")² + " + k + " and <i>a</i> = " + c2F(a, 6) + ". The path is " + E[0] + ", and at " + c2X + " = " + X + " the height is " + c2F(yX) + " feet.";
       return pb;
@@ -13656,9 +13719,12 @@ var ESPIC = {
       if (tier === 0 && !Number.isInteger(ex)) continue;
       var pb = { kind: 20, sc: sc }, E = c2If(a, p, q, c2Y), u = sc.u;
       pb.head = sc.s; pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + " Write a function <i>f</i> for the parabola. What is the " + sc.ext + "?";
+      pb.story = sc.s + " The parabola crosses the " + c2X + "-axis at " + c2Pt(p, 0) + " and " + c2Pt(q, 0) + " and passes through " + c2Pt(x0, y0) + ". Write a function <i>f</i> for the parabola. What is the " + sc.ext + "?<br>Use Desmos: type the points in a table and run a regression.";
       var xa = c2Axis(0, q + 2), ya = c2Axis(Math.min(0, ex, y0), Math.max(0, ex, y0) * 1.15 + (sc.up ? 2 : 0));
-      pb.fig = function (x) {
+      var fac1 = function (r, v) { return r ? "\\left(" + v + c24Sg(-r) + "\\right)" : v; }, facH = function (r) { return r ? "(<i>x</i>₁ − " + r + ")" : "<i>x</i>₁"; }, P3 = [[p, 0], [q, 0], [x0, y0]].sort(function (u, v) { return u[0] - v[0]; });
+      pb.dsm = { reg: 1, xs: P3.map(function (z) { return z[0]; }), ys: P3.map(function (z) { return z[1]; }), rg: "a" + fac1(p, "x_{1}") + fac1(q, "x_{1}"), fx: "a" + fac1(p, "x") + fac1(q, "x"), ev: ["f\\left(" + m + "\\right)"], xmax: xa.max, ymax: ya.max, ymin: ya.min };
+      pb.fig = function (x) { return DSM.fail ? fig0(x) : ""; };   // (a blank Desmos graph takes the place of the graph; the old graph comes back only if Desmos cannot load)
+      var fig0 = function (x) {
         x = x || {}; var o = { xmin: Math.min(0, xa.min), xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: sc.xl, yl: sc.yl, alt: "Parabola",
           curves: [{ fn: F, col: x.eq ? C2P : C2B, lo: sc.up ? 0 : p, hi: q }], pts: [{ x: p, y: 0, col: C2B, lab: true, dy: sc.up ? -8 : 16 }, { x: q, y: 0, col: C2B, lab: true, dy: sc.up ? -8 : 16 }] };
         if (x0 !== p) o.pts.push({ x: x0, y: y0, col: C2B, lab: true, an: x0 < m ? "end" : "start" });
@@ -13666,57 +13732,15 @@ var ESPIC = {
         return c2Fig(o);
       };
       pb.steps = [
-        { id: "p", fine: 1, lab: "p", ask: "The " + c2X + "-intercepts are <i>p</i> and <i>q</i>. What is the smaller one, <i>p</i>?", pre: "<i>p</i> =", ans: p, hint: ["Read where the parabola meets the " + c2X + "-axis.", "<i>p</i> = " + p + "."], line: "<i>p</i> = " + p },
+        { id: "p", fine: 1, lab: "p", ask: "The " + c2X + "-intercepts are <i>p</i> and <i>q</i>. What is the smaller one, <i>p</i>?", pre: "<i>p</i> =", ans: p, hint: ["The points where the parabola crosses the " + c2X + "-axis are given in the problem.", "<i>p</i> = " + p + "."], line: "<i>p</i> = " + p },
         { id: "q", fine: 1, lab: "q", ask: "What is <i>q</i>?", pre: "<i>q</i> =", ans: q, hint: ["The other " + c2X + "-intercept.", "<i>q</i> = " + q + "."], line: "<i>q</i> = " + q },
-        { id: "a", lab: "a", ask: c2S("Use intercept form " + c2Y + " = <i>a</i>(" + c2X + " − " + p + ")(" + c2X + " − " + q + ") and the point " + c2Pt(x0, y0) + ": " + c2F(y0) + " = <i>a</i>(" + c2F(x0) + " − " + p + ")(" + c2F(x0) + " − " + q + "). Solve for <i>a</i>.", "Find <i>a</i> in intercept form."), pre: "<i>a</i> =", ans: a, tol: 1e-7, wrong: function (v) { return v === -a ? "Check the sign: the parabola opens " + (sc.up ? "up" : "down") + "." : ""; }, hint: ["(" + c2F(x0) + " − " + p + ")(" + c2F(x0) + " − " + q + ") = " + c2F((x0 - p) * (x0 - q)) + ".", c2F(y0) + " ÷ " + c2F((x0 - p) * (x0 - q)) + " = " + c2F(a) + "."], line: "<i>a</i> = " + c2F(a) },
+        { id: "dsm", fine: 1, lab: "Desmos", type: "dsm", ask: "In Desmos, type the three points " + P3.map(function (z) { return c2Pt(z[0], z[1]); }).join(", ") + " in a table (columns <i>x</i>₁ and <i>y</i>₁). On a new line, type the regression in intercept form with the intercepts' numbers: <span class=\"lm\"><i>y</i>₁ ~ <i>a</i>" + facH(p) + facH(q) + "</span>.", hint: ["Press + in Desmos and choose table, then type the points.", "On a new line type y₁ ~ a" + facH(p).replace(/<[^>]+>/g, "") + facH(q).replace(/<[^>]+>/g, "") + " (type ~ for the regression)."], line: "Desmos: the points in a table and the regression <i>y</i>₁ ~ <i>a</i>" + facH(p) + facH(q) },
+        { id: "a", lab: "a", ask: c2S("Desmos shows <i>a</i> under the regression. (Or solve " + c2F(y0) + " = <i>a</i>(" + c2F(x0) + " − " + p + ")(" + c2F(x0) + " − " + q + ") for <i>a</i>.) What is <i>a</i>?", "Find <i>a</i> in intercept form."), pre: "<i>a</i> =", ans: a, tol: 1e-7, wrong: function (v) { return v === -a ? "Check the sign: the parabola opens " + (sc.up ? "up" : "down") + "." : ""; }, hint: ["(" + c2F(x0) + " − " + p + ")(" + c2F(x0) + " − " + q + ") = " + c2F((x0 - p) * (x0 - q)) + ".", c2F(y0) + " ÷ " + c2F((x0 - p) * (x0 - q)) + " = " + c2F(a) + "."], line: "<i>a</i> = " + c2F(a) },
         { id: "eq", lab: "Equation", type: "fn", ask: c2S("Write the function in intercept form.", "Write a function for the parabola."), fn: F, xs: [0, 1, 2, p, q, m, 3.5], eg: "y = 0.1(x − 4)(x − 24)", typed: E[1], fo: c2Fo(E[0], [c2If(-a, p, q, c2Y)[0], c2If(a, -p, -q, c2Y)[0], c2If(a * 2, p, q, c2Y)[0]]), after: function (x) { x.eq = true; }, hint: ["Put <i>a</i>, <i>p</i> and <i>q</i> into " + c2Y + " = <i>a</i>(" + c2X + " − <i>p</i>)(" + c2X + " − <i>q</i>).", E[0] + "."], line: E[0] },
         { id: "m", fine: 1, lab: "x of vertex", ask: "The " + sc.ext + " is at the vertex, halfway between the " + c2X + "-intercepts.", pre: c2X + " =", ans: m, hint: ["(<i>p</i> + <i>q</i>) ÷ 2.", "(" + p + " + " + q + ") ÷ 2 = " + m + "."], line: c2X + " = " + m },
-        { id: "ex", lab: sc.up ? "Coldest" : "Highest", ask: c2S("Find <i>f</i>(" + m + ").", "What is the " + sc.ext + "?"), pre: sc.ext + " =", post: u, ans: ex, tol: 0.011, after: function (x) { x.ev = true; }, hint: ["Put " + c2X + " = " + m + " into your function.", c2F(a) + "(" + m + " − " + p + ")(" + m + " − " + q + ") = " + c2F(ex) + "."], line: "the " + sc.ext + " is " + c2F(ex) + " " + u }
+        { id: "ex", lab: sc.up ? "Coldest" : "Highest", ask: c2S("Find <i>f</i>(" + m + "). In Desmos, type <span class=\"lm\"><i>f</i>(<i>x</i>) = <i>a</i>" + facH(p).replace(/₁/g, "") + facH(q).replace(/₁/g, "") + "</span> on a new line, then <i>f</i>(" + m + ").", "What is the " + sc.ext + "?"), pre: sc.ext + " =", post: u, ans: ex, tol: 0.011, after: function (x) { x.ev = true; }, hint: ["Put " + c2X + " = " + m + " into your function.", c2F(a) + "(" + m + " − " + p + ")(" + m + " − " + q + ") = " + c2F(ex) + "."], line: "the " + sc.ext + " is " + c2F(ex) + " " + u }
       ];
       pb.ex = "The " + c2X + "-intercepts are " + p + " and " + q + ", and the parabola passes through " + c2Pt(x0, y0) + ", so <i>a</i> = " + c2F(a) + " and " + E[0] + ". The vertex is halfway between the intercepts, at " + c2X + " = " + m + ", so the " + sc.ext + " is <i>f</i>(" + m + ") = " + c2F(ex) + " " + u + ".";
-      return pb;
-    }
-  }
-  // Example 3: Writing a Quadratic Equation Using Three Points (equally spaced inputs: constant second differences, then a system for a, b, c)
-  var C2S243 = [
-    { pic: "rocket", s: "A model rocket is launched. The table shows its height " + c2Y + " (in feet) " + c2X + " seconds after launch.", xn: "Time (s)", yn: "Height (ft)", xs: [0, 1], a: [-16], q: "the height of the rocket", u: "feet" },
-    { pic: "ticket", s: "A theater club estimates its profit " + c2Y + " (in dollars) when it charges " + c2X + " dollars per ticket.", xn: "Ticket price ($)", yn: "Profit ($)", xs: [2, 2], a: [-25, -50], q: "the profit", u: "dollars" },
-    { pic: "plane", s: "A plane flies a parabolic path for a weightless ride. The table shows its height " + c2Y + " (in feet) " + c2X + " seconds after the path starts.", xn: "Time (s)", yn: "Height (ft)", xs: [10, 5], a: [-8, -10, -12], q: "the height of the plane", u: "feet" },
-    { pic: "garden", s: "A gardener has fencing for a rectangular garden. The table shows the area " + c2Y + " (in square feet) for a width of " + c2X + " feet.", xn: "Width (ft)", yn: "Area (sq ft)", xs: [2, 2], a: [-1, -2], q: "the area", u: "square feet" }
-  ];
-  function c2M243(tier) {
-    for (var t = 0; t < 4000; t++) {
-      var sc = c2Pick(C2S243), a = c2Pick(sc.a), x0 = sc.xs[0], s = sc.xs[1], n = 6, xv = x0 + s * c2Pick([2, 2.5, 3, 3.5]);
-      var b = -2 * a * xv, c;
-      if (sc.pic === "garden") c = 0; else if (sc.pic === "rocket") c = c2Pick([0, 2, 3, 4, 5, 6]); else if (sc.pic === "plane") c = c2Pick([16000, 18000, 20000, 21000, 22000]); else c = -c2Pick([200, 300, 400, 500, 800]);
-      if (!Number.isInteger(b)) continue;
-      var F = function (x) { return a * x * x + b * x + c; }, xs = [], ys = [], i; for (i = 0; i < n; i++) { xs.push(x0 + s * i); ys.push(F(x0 + s * i)); }
-      if (ys.some(function (y) { return sc.pic === "ticket" ? false : y < 0; })) continue;
-      var d1 = ys.map(function (y, j) { return j ? y - ys[j - 1] : null; }).slice(1), d2 = d1[1] - d1[0];
-      var X = c2R(x0 + s * (n - 1) + s * c2Pick([0.5, 1, 1.5]) , 4); if (sc.pic === "rocket") X = c2R(xv + c2Pick([0.5, 1.5, 2.5]), 2);
-      var yX = c2R(F(X), 4); if ((sc.pic !== "ticket" && yX < 0) || !Number.isInteger(c2R(yX * 100, 4))) continue;
-      var P1 = [xs[0], ys[0]], P2 = [xs[2], ys[2]], P3 = [xs[4], ys[4]], E = c2Sf(a, b, c, c2Y), pb = { kind: 20, sc: sc };
-      var eq = function (P) { return c2F(P[0] * P[0]) + "<i>a</i> + " + c2F(P[0]) + "<i>b</i> + <i>c</i> = " + c2F(P[1]); };
-      pb.head = sc.s; pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + " Write a function that models the data, and use it to find " + sc.q + " when " + c2X + " = " + c2F(X) + ".";
-      pb.tbl = m3Tbl(sc.xn, sc.yn, xs.map(function (v) { return c2F(v); }), ys.map(function (v) { return c2F(v); }));
-      var xa = c2Axis(Math.min(0, x0), Math.max(X, xs[n - 1]) + s * .5), yl = Math.min.apply(null, ys.concat([yX, 0])), yh = Math.max.apply(null, ys.concat([yX])), ya = c2Axis(yl, yh * 1.1, sc.pic === "plane" ? false : true);
-      pb.fig = function (x) {
-        x = x || {}; var o = { xmin: xa.min, xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: sc.xn, yl: sc.yn, alt: "The data", scat: xs.map(function (v, j) { return [v, ys[j]]; }) };
-        if (x.eq) { o.curves = [{ fn: F, col: C2P }]; if (x.ev) o.pts = [{ x: X, y: yX, col: C2P, lab: true, tc: C2P }]; }
-        return c2Fig(o);
-      };
-      pb.steps = [
-        { id: "d1", fine: 1, lab: "first difference", ask: "The inputs are equally spaced. Find the first differences: subtract each output from the next one. What is the first one?", pre: c2F(ys[1]) + " − " + c2F(ys[0]) + " =", ans: d1[0], hint: ["Subtract the first output from the second.", c2F(ys[1]) + " − " + c2F(ys[0]) + " = " + c2F(d1[0]) + "."], line: "first differences: " + d1.map(function (v) { return c2F(v); }).join(", ") },
-        { id: "d2", lab: "Second difference", ask: c2S("The first differences are " + d1.map(function (v) { return c2F(v); }).join(", ") + ". Find the second differences: subtract each first difference from the next one.", "Find the second differences of the outputs."), pre: "second difference =", ans: d2, hint: ["Subtract consecutive first differences.", c2F(d1[1]) + " − " + c2F(d1[0]) + " = " + c2F(d2) + ", and all of them are " + c2F(d2) + "."], line: "second differences: all " + c2F(d2) },
-        { id: "mdl", lab: "Model", type: "pick", ask: "What kind of function models the data?", opts: c2Pk("Quadratic: the second differences are constant.", [["Linear: the first differences are constant.", "The first differences change: " + c2F(d1[0]) + ", " + c2F(d1[1]) + ", …"], ["Neither: the differences are not constant.", "The second differences are all " + c2F(d2) + "."]]), hint: ["Linear data have constant first differences; quadratic data have constant second differences.", "The second differences are constant, so a quadratic fits."], line: "quadratic (constant second differences)" },
-        { id: "a", fine: 1, lab: "a", ask: "Write <i>y</i> = <i>ax</i>² + <i>bx</i> + <i>c</i> for three points: " + eq(P1) + ", " + eq(P2) + ", " + eq(P3) + ". Solve the system, starting with <i>a</i>.", pre: "<i>a</i> =", ans: a, hint: ["Subtract the equations in pairs to remove <i>c</i>, then solve the two equations that are left. (With equally spaced inputs, <i>a</i> = second difference ÷ (2 × step²).)", c2F(d2) + " ÷ (2 × " + s + "²) = " + c2F(a) + "."], line: "<i>a</i> = " + c2F(a) },
-        { id: "b", fine: 1, lab: "b", ask: "Now find <i>b</i>.", pre: "<i>b</i> =", ans: b, hint: ["Put <i>a</i> = " + c2F(a) + " into the difference of two of the equations.", "<i>b</i> = " + c2F(b) + "."], line: "<i>b</i> = " + c2F(b) },
-        { id: "c", fine: 1, lab: "c", ask: "Now find <i>c</i>.", pre: "<i>c</i> =", ans: c, hint: ["Put <i>a</i> and <i>b</i> into the first equation.", "<i>c</i> = " + c2F(c) + "."], line: "<i>c</i> = " + c2F(c) },
-        { id: "eq", lab: "Equation", type: "fn", ask: c2S("Write the function.", "Write a function that models the data."), fn: F, xs: xs.concat([X]), eg: "y = −16x^2 + 96x + 5", typed: E[1], fo: c2Fo(E[0], [c2Sf(a, -b, c, c2Y)[0], c2Sf(-a, b, c, c2Y)[0], c2Sf(a, b, -c, c2Y)[0]]), after: function (x) { x.eq = true; }, hint: ["Put <i>a</i>, <i>b</i> and <i>c</i> into " + c2Y + " = <i>ax</i>² + <i>bx</i> + <i>c</i>.", E[0] + "."], line: E[0] },
-        { id: "ev", lab: "Evaluate", ask: "Use the function to find " + sc.q + " when " + c2X + " = " + c2F(X) + ".", pre: c2Y + " =", post: sc.u, ans: yX, tol: 0.011, after: function (x) { x.ev = true; }, hint: ["Put " + c2X + " = " + c2F(X) + " into your function.", c2F(a) + "(" + c2F(X) + ")² " + (b < 0 ? "− " : "+ ") + c2F(Math.abs(b)) + "(" + c2F(X) + ")" + (c ? (c < 0 ? " − " : " + ") + c2F(Math.abs(c)) : "") + " = " + c2F(yX) + "."], line: "when " + c2X + " = " + c2F(X) + ", " + c2Y + " = " + c2F(yX) }
-      ];
-      pb.ex = "The first differences are " + d1.map(function (v) { return c2F(v); }).join(", ") + " and the second differences are all " + c2F(d2) + ", so a quadratic fits. Three points give a system whose solution is <i>a</i> = " + c2F(a) + ", <i>b</i> = " + c2F(b) + ", <i>c</i> = " + c2F(c) + ": " + E[0] + ". When " + c2X + " = " + c2F(X) + ", " + c2Y + " = " + c2F(yX) + ".";
       return pb;
     }
   }
@@ -13737,6 +13761,7 @@ var ESPIC = {
     xs.forEach(function (x, i) { var e = ys[i] - (a * x * x + b * x + cc); ss += e * e; st += (ys[i] - my) * (ys[i] - my); });
     return { a: a, b: b, c: cc, r2: 1 - ss / st };
   }
+  function c24Sg(v) { return v ? (v < 0 ? "-" : "+") + c2T(Math.abs(v), 6) : ""; }   // a signed number for Desmos LaTeX (+28, -20; nothing for 0)
   function c2Sig(v, n) { if (!v) return 0; var d = Math.ceil(Math.log10(Math.abs(v))), p = n - d; return c2R(Math.round(v * Math.pow(10, p)) / Math.pow(10, p), 8); }
   function c2M244(tier) {
     for (var t = 0; t < 400; t++) {
@@ -13746,28 +13771,36 @@ var ESPIC = {
       var R = c2Reg(xs, ys); if (R.r2 < 0.97 || R.r2 > 0.99995) continue;
       var a = c2Sig(R.a, 3), b = c2Sig(R.b, 3), c = c2Sig(R.c, 3), r2 = c2R(R.r2, 4), F = function (x) { return a * x * x + b * x + c; };
       var xv = c2R(-b / (2 * a), 2), val = c2R(F(-b / (2 * a)), 2), X = sc.X, yX = X != null ? c2R(F(X), 2) : null;
+      // (Desmos's regression keeps every digit: the answers accept the rounded model's values and the full regression's alike)
+      var Ff = function (x) { return R.a * x * x + R.b * x + R.c; }, xvF = -R.b / (2 * R.a), valF = Ff(xvF), yXF = X != null ? Ff(X) : null, u3 = function (v) { return v ? Math.pow(10, Math.floor(Math.log10(Math.abs(v))) - 2) * 1.01 : 1e-9; };
       var E = c2Sf(a, b, c, c2Y), pb = { kind: 20, sc: sc };
       pb.head = sc.s; pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + " Write a function that models the data. Then " + (sc.ask === "max" ? "approximate the " + sc.what + "." : "estimate the " + sc.what + ".");
+      pb.story = sc.s + " Write a function that models the data. Then " + (sc.ask === "max" ? "approximate the " + sc.what + "." : "estimate the " + sc.what + ".") + "<br>Use Desmos: type the data in a table and run a quadratic regression.";
+      pb.dsm = { reg: 1, xs: xs.slice(), ys: ys.slice(), rg: "ax_{1}^{2}+bx_{1}+c", fx: "ax^{2}+bx+c", ev: sc.ask === "max" ? ["\\frac{-b}{2a}", "f\\left(\\frac{-b}{2a}\\right)"] : ["f\\left(" + X + "\\right)"] };
       pb.tbl = m3Tbl(sc.xn.replace(/ \(.*/, ""), sc.yn.replace(/ \(.*/, ""), xs, ys.map(function (v) { return c2F(v); }));
       var xa = c2Axis(0, Math.max(xs[xs.length - 1], X || 0) + 1), ya = c2Axis(0, Math.max.apply(null, ys.concat([yX || 0, sc.ask === "max" ? val : 0])) * 1.12);
-      pb.fig = function (x) {
+      pb.dsm.xmax = xa.max; pb.dsm.ymax = ya.max;
+      pb.fig = function (x) { return DSM.fail ? fig0(x) : ""; };   // (a blank Desmos graph takes the place of the scatter plot; it comes back only if Desmos cannot load)
+      var fig0 = function (x) {
         x = x || {}; var o = { xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: sc.xn, yl: sc.yn, alt: "Scatter plot", scat: xs.map(function (v, j) { return [v, ys[j]]; }) };
         if (x.reg) o.curves = [{ fn: F, col: C2P }];
         if (x.av) o.pts = [sc.ask === "max" ? { x: xv, y: val, col: C2P, lab: "(" + c2F(xv) + ", " + c2F(val) + ")", tc: C2P } : { x: X, y: yX, col: C2P, lab: "(" + X + ", " + c2F(yX) + ")", tc: C2P, an: "end" }];
         return c2Fig(o);
       };
       var steps = [
-        { id: "reg", lab: "Regression", type: "btn", btn: "Quadratic Regression", ask: "The " + c2X + "-values are not equally spaced, so the differences cannot be used. Press Quadratic Regression: the calculator finds the parabola that fits the data best.", after: function (x) { x.reg = true; }, hint: ["The calculator does the hard work.", "Press the button."], line: "Quadratic regression: " + E[0] + ", <i>R</i>² = " + r2 },
-        { id: "r2", fine: 1, lab: "R²", type: "pick", ask: "The calculator shows <i>R</i>² = " + r2 + " (rounded: " + E[0] + "). What does <i>R</i>² tell you?", opts: c2Pk("It is close to 1, so the parabola fits the data well.", [["It is close to 1, so a line would fit better.", "R² describes how well this parabola fits: close to 1 is a good fit."], ["It is the maximum value of the function.", "R² measures the fit, not a value of the function."]]), hint: ["<i>R</i>² is between 0 and 1. Close to 1 means the model is close to the data.", "<i>R</i>² = " + r2 + " is close to 1: a good fit."], line: "<i>R</i>² = " + r2 + ": a good fit" }
+        { id: "dsm", fine: 1, lab: "Desmos", type: "dsm", ask: "In Desmos, type the data in a table (columns <i>x</i>₁ and <i>y</i>₁). On a new line, type the quadratic regression <span class=\"lm\"><i>y</i>₁ ~ <i>ax</i>₁² + <i>bx</i>₁ + <i>c</i></span>: Desmos finds the parabola that fits the data best.", after: function (x) { x.reg = true; }, hint: ["Press + in Desmos and choose table, then type the " + xs.length + " data pairs.", "On a new line type y₁ ~ ax₁^2 + bx₁ + c (type ~ for the regression)."], line: "Desmos: the data in a table and the regression <i>y</i>₁ ~ <i>ax</i>₁² + <i>bx</i>₁ + <i>c</i>" },
+        { id: "ra", lab: "a", ask: "What is <i>a</i> in the regression? Round to three significant figures.", pre: "<i>a</i> ≈", ans: a, tol: u3(a), nums: [-a, c2Sig(a * 10, 3), c2Sig(a / 10, 3)], after: function (x) { x.reg = true; }, hint: ["Desmos lists <i>a</i>, <i>b</i> and <i>c</i> under the regression.", "<i>a</i> ≈ " + c2F(a, 8) + "."], line: "<i>a</i> ≈ " + c2F(a, 8) },
+        { id: "rb", lab: "b", ask: "What is <i>b</i>? Round to three significant figures.", pre: "<i>b</i> ≈", ans: b, tol: u3(b), nums: [-b, c2Sig(b * 10, 3), c2Sig(b / 10, 3)], hint: ["Desmos lists <i>b</i> under the regression.", "<i>b</i> ≈ " + c2F(b, 8) + "."], line: "<i>b</i> ≈ " + c2F(b, 8) },
+        { id: "rc", lab: "c", ask: "What is <i>c</i>? Round to three significant figures.", pre: "<i>c</i> ≈", ans: c, tol: u3(c), nums: [-c, c2Sig(c * 10, 3), c2Sig(c / 10, 3)], hint: ["Desmos lists <i>c</i> under the regression.", "<i>c</i> ≈ " + c2F(c, 8) + "."], line: "<i>c</i> ≈ " + c2F(c, 8) + ": " + E[0] + ", <i>R</i>² = " + r2 },
+        { id: "r2", fine: 1, lab: "R²", type: "pick", ask: "Desmos shows <i>R</i>² = " + r2 + " (the model, rounded: " + E[0] + "). What does <i>R</i>² tell you?", opts: c2Pk("It is close to 1, so the parabola fits the data well.", [["It is close to 1, so a line would fit better.", "R² describes how well this parabola fits: close to 1 is a good fit."], ["It is the maximum value of the function.", "R² measures the fit, not a value of the function."]]), hint: ["<i>R</i>² is between 0 and 1. Close to 1 means the model is close to the data.", "<i>R</i>² = " + r2 + " is close to 1: a good fit."], line: "<i>R</i>² = " + r2 + ": a good fit" }
       ];
       if (sc.ask === "max") steps.push(
-        { id: "xv", fine: 1, lab: "x of vertex", ask: "The " + sc.what + " is the maximum value, at the vertex: " + c2X + " = −<i>b</i> ÷ (2<i>a</i>). Use the rounded values. Round to the nearest hundredth.", pre: c2X + " ≈", ans: xv, tol: Math.max(0.06, Math.abs(xv) * 0.004), hint: ["<i>a</i> = " + c2F(a) + " and <i>b</i> = " + c2F(b) + ".", "−(" + c2F(b) + ") ÷ (2 × " + c2F(a) + ") ≈ " + c2F(xv) + "."], line: c2X + " ≈ " + c2F(xv) },
-        { id: "val", lab: "Maximum", ask: c2S("Find the maximum value: put " + c2X + " ≈ " + c2F(xv) + " into the model.", "Approximate the " + sc.what + "."), pre: "≈", post: sc.u, ans: val, tol: Math.max(0.15, Math.abs(val) * 0.01), after: function (x) { x.av = true; }, hint: ["Evaluate " + E[0] + " at " + c2X + " ≈ " + c2F(xv) + ".", "About " + c2F(val) + " " + sc.u + "."], line: "the " + sc.what + " is about " + c2F(val) + " " + sc.u });
+        { id: "xv", fine: 1, lab: "x of vertex", ask: "The " + sc.what + " is the maximum value, at the vertex: " + c2X + " = −<i>b</i> ÷ (2<i>a</i>). In Desmos, type −b/(2a) on a new line (or click the vertex of the parabola). Round to the nearest hundredth.", pre: c2X + " ≈", ans: xv, tol: Math.max(0.06, Math.abs(xv) * 0.004) + Math.abs(xv - xvF), hint: ["<i>a</i> = " + c2F(a) + " and <i>b</i> = " + c2F(b) + ".", "−(" + c2F(b) + ") ÷ (2 × " + c2F(a) + ") ≈ " + c2F(xv) + "."], line: c2X + " ≈ " + c2F(xv) },
+        { id: "val", lab: "Maximum", ask: c2S("Find the maximum value: put " + c2X + " ≈ " + c2F(xv) + " into the model. In Desmos, type <span class=\"lm\"><i>f</i>(<i>x</i>) = <i>ax</i>² + <i>bx</i> + <i>c</i></span> on a new line, then <i>f</i>(−<i>b</i>/(2<i>a</i>)).", "Approximate the " + sc.what + "."), pre: "≈", post: sc.u, ans: val, tol: Math.max(0.15, Math.abs(val) * 0.01) + Math.abs(val - valF), after: function (x) { x.av = true; }, hint: ["Evaluate " + E[0] + " at " + c2X + " ≈ " + c2F(xv) + ".", "About " + c2F(val) + " " + sc.u + "."], line: "the " + sc.what + " is about " + c2F(val) + " " + sc.u });
       else steps.push(
-        { id: "est", lab: "Estimate", ask: c2S("Put " + c2X + " = " + X + " into the model to estimate the " + sc.what + ".", "Estimate the " + sc.what + "."), pre: c2Y + " ≈", post: sc.u, ans: yX, tol: Math.max(0.15, Math.abs(yX) * 0.01), after: function (x) { x.av = true; }, hint: ["Evaluate " + E[0] + " at " + c2X + " = " + X + ".", "About " + c2F(yX) + " " + sc.u + "."], line: "estimate: about " + c2F(yX) + " " + sc.u });
+        { id: "est", lab: "Estimate", ask: c2S("Put " + c2X + " = " + X + " into the model to estimate the " + sc.what + ". In Desmos, type <span class=\"lm\"><i>f</i>(<i>x</i>) = <i>ax</i>² + <i>bx</i> + <i>c</i></span> on a new line, then <i>f</i>(" + X + ").", "Estimate the " + sc.what + "."), pre: c2Y + " ≈", post: sc.u, ans: yX, tol: Math.max(0.15, Math.abs(yX) * 0.01) + Math.abs(yX - yXF), after: function (x) { x.av = true; }, hint: ["Evaluate " + E[0] + " at " + c2X + " = " + X + ".", "About " + c2F(yX) + " " + sc.u + "."], line: "estimate: about " + c2F(yX) + " " + sc.u });
       pb.steps = steps;
-      pb.ex = "Quadratic regression gives " + E[0] + " with <i>R</i>² = " + r2 + ", a close fit. " + (sc.ask === "max" ? "The maximum is at " + c2X + " ≈ " + c2F(xv) + ", where " + c2Y + " ≈ " + c2F(val) + " " + sc.u + "." : "At " + c2X + " = " + X + ", " + c2Y + " ≈ " + c2F(yX) + " " + sc.u + ".");
+      pb.ex = "In Desmos, the quadratic regression of the table gives " + E[0] + " (rounded) with <i>R</i>² = " + r2 + ", a close fit. " + (sc.ask === "max" ? "The maximum is at " + c2X + " ≈ " + c2F(xv) + ", where " + c2Y + " ≈ " + c2F(val) + " " + sc.u + "." : "At " + c2X + " = " + X + ", " + c2Y + " ≈ " + c2F(yX) + " " + sc.u + ".");
       return pb;
     }
   }
@@ -13785,8 +13818,8 @@ var ESPIC = {
   }
   function e11Ex() { try { return DSM.calc ? DSM.calc.getExpressions() : []; } catch (er) { return []; } }
   // a Desmos table holding every data pair on one row: { x: its x column, y: its y column }
-  function e11Tab() {
-    var e = estProb(); if (!e) return null; var L = e11Ex();
+  function e11Tab(E) {   // (E: other data, { x: [...], y: [...] }, as in 2.4)
+    var e = E || estProb(); if (!e) return null; var L = e11Ex();
     for (var q = 0; q < L.length; q++) {
       var T = L[q]; if (T.type !== "table" || !T.columns || T.columns.length < 2) continue;
       var C = T.columns.map(function (c) { return { lx: e11Lx(c.latex), v: (c.values || []).map(e11Num) }; });
@@ -13959,7 +13992,7 @@ var ESPIC = {
   function c2Make(tier) {
     c2Dec = act === "2.1" || act === "2.4" || (act === "2.2" && lesson === 5);
     var pb = act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211][lesson - 1](tier)
-      : [c2M241, c2M242, c2M243, c2M244][lesson - 1](tier);
+      : ([c2M241, c2M242, null, c2M244][lesson - 1] || c2M244)(tier);   // (2.4 exercise 3, Three Points with first and second differences, was taken out)
     pb.head = m3Plain(pb.head);   // (Show work's first line is plain text)
     return pb;
   }
@@ -15065,6 +15098,7 @@ var ESPIC = {
           });
           return;
         }
+        if (t === "dsm" && P1.dsm && P1.dsm.reg) { pgWait(1400, function () { dsmDemoReg(run, n, cap); }); return; }   // 2.4: the hand types the table, the regression, f(x) and the value asked for into Desmos
         if (t === "dsm") { pgWait(1400, function () { dsmDemoType(run, n); }); return; }   // 2.2C Compare: the hand types both equations into Desmos
         if (t === "gpt") {   // Chapter 2: click each point (for "any points on the curve", the demo picks points that work)
           var GP = st.pts ? st.pts.slice() : c2DemoPts(st);
@@ -15303,7 +15337,8 @@ var ESPIC = {
     var m = /[?&]ex=([^&#]*)/.exec(location.search); if (!m) return; var want; try { want = exSlug(decodeURIComponent(m[1].replace(/\+/g, " "))); } catch (e) { return; }
     var hit = exList(!rev).filter(function (e) { return e[1] === want; })[0]; if (!hit) return;
     if (!rev) {   // an exercise that now lives in another subsection: go there (old links such as …/1-4d/?ex=graphing)
-      var to = vwOf(act, hit[0]); if (to && to !== (view || soon)) { location.replace("../" + slugOf(to) + "/" + location.search + location.hash); return; }
+      var to = vwOf(act, hit[0]); if (!to && (view || soon)) return;   // (an exercise that was taken out, such as 2.4 Three Points: the activity opens as usual)
+      if (to && to !== (view || soon)) { location.replace("../" + slugOf(to) + "/" + location.search + location.hash); return; }
     }
     if (rev) { revI = +hit[0]; var it = BUILT[rev].items[revI]; act = it.act; lesson = it.lesson; subx = !!it.subx; return; }
     if (hit[0] === "s") { subx = true; lesson = 2; } else { subx = false; lesson = +hit[0]; }
