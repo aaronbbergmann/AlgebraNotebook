@@ -8984,7 +8984,7 @@ var ESPIC = {
       (function one() {
         if (pgRun !== run) return; var r = L.shift(); if (r == null) { pgWait(900, n); return; }
         var e = document.querySelector("#vfnTb [data-vfxi=\"" + r + "\"]"); if (!e) { one(); return; }
-        go(ctr(e), function () { var v = String(vfnRX(r)), i = 0; s.xt[r] = ""; (function ch() { if (pgRun !== run) return; if (i >= v.length) { vfnIpX(r, false); pgWait(600, one); return; } s.xt[r] += v.charAt(i++); var e2 = document.querySelector("#vfnTb [data-vfxi=\"" + r + "\"]"); if (e2) e2.value = s.xt[r]; pgWait(110, ch); })(); });
+        go(ctr(e), function () { var v = String(vfnRX(r)), i = 0; s.xt[r] = ""; (function ch() { if (pgRun !== run) return; if (i >= v.length) { vfnIpX(r, true); pgWait(600, one); return; } s.xt[r] += v.charAt(i++); var e2 = document.querySelector("#vfnTb [data-vfxi=\"" + r + "\"]"); if (e2) e2.value = s.xt[r]; pgWait(110, ch); })(); });
       })();
     }
     function dragPQ(n) {   // Intercept Form: the hand drags p, then q, from the equation into rows 2 and 4 of the x column
@@ -9936,6 +9936,7 @@ var ESPIC = {
     QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : gd2() ? o.map(function (f, i) { return gdMake21(i); }) : o.map(gdMake), est: est() ? estSet(o.length) : null, cr: false, custom: !!cu }; updProg();
     if (wf()) { QZ.custom = !!cuw; QZ.tr = []; QZ.wfp = cuw ? [wfCustom] : mode === "create" ? [null] : wfSet(o.length); QZ.cs = "f"; QZ.wd = {}; QZ.wl = []; if (mode === "create") wfCustom = null; }
     if (m3() && csL()) { o = [0]; QZ.order = o; }   // (2.2C Memorize: one sort)
+    if (m3() && act === "2.2" && [1, 2, 3, 4, 5].indexOf(+lesson) >= 0 && o.length > 1) { o = [0]; QZ.order = o; if (QZ.m3p && QZ.m3p.length > 1) QZ.m3p = QZ.m3p.slice(0, 1); }   // 2.2A and 2.2C: one problem per round (Write still needs three rounds for full Progress)
     if (c2Cu()) QZ.custom = true; if (vcr()) QZ.pick = false;
     if (m3()) { QZ.tr = []; QZ.m3p = m3Set(o.length); }
     if (mode !== "demo") explainOn = false;
