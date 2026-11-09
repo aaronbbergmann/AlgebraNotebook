@@ -60,6 +60,10 @@
   body.quiz #lesson{width:9.66rem;padding:.68em .2em .68em .7em;font-size:.84rem}   /* room for "Graph & Describe" */
   .ctl-sel{display:flex;flex-direction:column;align-items:center;gap:.5rem}.ctl-sel select{box-sizing:border-box;width:10.5em;font-size:.92rem;padding:.6em .8em}
   .ctl-btn{display:flex;flex-direction:column;align-items:center;gap:.5rem}
+  #radWheel{position:fixed;z-index:45;background:var(--bg);border:2px solid var(--ink);border-radius:14px;padding:.5rem .7rem;box-shadow:0 8px 24px rgba(0,0,0,.15);text-align:center;font:1.4rem "LM",Georgia,serif;color:var(--ink);max-width:18rem}
+  #radWheel .rwT{margin-bottom:.3rem}#radWheel .rwL{height:7.2rem;overflow-y:auto;scroll-snap-type:y mandatory;border-top:1px solid color-mix(in srgb,var(--ink) 30%,transparent);border-bottom:1px solid color-mix(in srgb,var(--ink) 30%,transparent);scrollbar-width:none}
+  #radWheel .rwPad{height:2.6rem}#radWheel .rwI{display:block;width:100%;height:2rem;scroll-snap-align:center;border:0;background:none;font:inherit;color:color-mix(in srgb,var(--ink) 45%,transparent);cursor:pointer;user-select:none}#radWheel .rwI.on{color:var(--ink);font-weight:600}
+  #radWheel .rwM{font:600 .85rem system-ui,sans-serif;margin-top:.35rem;min-height:1em}#radWheel .rwM.no{color:var(--no)}
   body.solver #undo[hidden],body.solver #hint[hidden]{display:block!important;visibility:hidden}   /* Play Solve: a hidden Undo keeps its room, so Show work never moves */
   .ctl-btn .btn{box-sizing:border-box;width:10.5em;padding:.6em .6em;font-size:.92rem;text-align:center;white-space:nowrap}
   .ctl{display:flex;flex-direction:column;gap:.5rem;position:sticky;top:0;z-index:3}
@@ -2311,7 +2315,7 @@
   function quCalc(Q) {   // everything about the answers, from a, b, c
     Q.B = -Q.b; Q.Q = 2 * Q.a; Q.D = Q.b * Q.b - 4 * Q.a * Q.c;
     if (Q.D >= 0) { var rs = radSq(Q.D); Q.co = rs.s; Q.m = rs.m; Q.r = rs.m === 1 ? rs.s : null; if (!Q.D) { Q.co = 0; Q.m = 1; Q.r = 0; } }
-    Q.g = Q.D > 0 && Q.r === null ? gcd(gcd(Q.B, Q.co), Q.Q) : 1;
+    Q.g = Q.D > 0 && Q.r === null ? gcd(gcd(Q.B, Q.co), Q.Q) : 1; Q.rc = 1; Q.rm = Q.D;   // rc√rm: the root as simplified so far
     return Q;
   }
   // one operation per click: −(−b), 2(a), b², 4(a), (4a)(c), the subtraction under the root, the root, then ± and each answer (adding, then reducing)
@@ -2342,11 +2346,12 @@
     if (op.charAt(0) === "a") return { label: an.say + " =", want: [an.n], msg: an.say + " = " + quNs(an.n) + "." };
     return { label: quNs(an.n) + "/" + Q.Q + " =", want: [an.n / Q.Q], msg: quNs(an.n) + "/" + quNs(Q.Q) + " = " + quSay(an.n, Q.Q) + "." };
   }
-  function quDo(op) {   // carry out an operation
+  function quDo(op, arg) {   // carry out an operation
     var Q = EXP.qu, j = +op.slice(1);
     if (op === "nb") Q.nbD = true; else if (op === "den") Q.dD = true; else if (op === "sq") Q.sqD = true; else if (op === "p1") Q.p1D = true; else if (op === "p2") Q.p2D = true;
     else if (op === "df") { Q.dfD = true; if (Q.D > 0 && Q.r === null && Q.co === 1) Q.rtD = true; }   // √17 is as simple as it gets: nothing to click
-    else if (op === "rt") Q.rtD = true; else if (op === "bar") Q.gD = true;
+    else if (op === "rt") { if (Q.D > 0 && Q.r === null) { var sq = arg || radSq(Q.rm).s * radSq(Q.rm).s; Q.rc *= Math.round(Math.sqrt(sq)); Q.rm /= sq; if (radSq(Q.rm).s === 1) Q.rtD = true; } else Q.rtD = true; }
+    else if (op === "bar") Q.gD = true;
     else if (op === "pm") { Q.split = true; Q.ans = Q.r === 0 ? [{ st: 1, n: Q.B, say: quNs(Q.B) }] : [{ st: 0, n: Q.B + Q.r, say: quNs(Q.B) + " + " + Q.r }, { st: 0, n: Q.B - Q.r, say: quNs(Q.B) + " − " + Q.r }]; }
     else if (op.charAt(0) === "a") Q.ans[j].st = 1; else Q.ans[j].st = 2;
   }
@@ -2361,7 +2366,7 @@
     var nb = Q.b === 0 ? "" : Q.b < 0 && !Q.nbD ? H("nb", "−(" + quNs(Q.b) + ")") : quNs(-Q.b), den = Q.dD ? quNs(Q.Q) : H("den", "2(" + quNs(Q.a) + ")"), root;
     if (!Q.dfD && Q.sqD && Q.p2D) root = rad(H("df", String(Q.b * Q.b) + " \u2212 " + quPn(4 * Q.a * Q.c)));   // both parts worked out: click to subtract
     else if (!Q.dfD) root = rad(H("sq", Q.sqD ? String(Q.b * Q.b) : quPn(Q.b) + (tx ? "²" : "<sup>2</sup>")) + " − " + (Q.p2D ? quPn(4 * Q.a * Q.c) : Q.p1D ? H("p2", quPn(4 * Q.a) + "(" + quNs(Q.c) + ")") : H("p1", "4(" + quNs(Q.a) + ")") + "(" + quNs(Q.c) + ")"));
-    else if (!Q.rtD) root = H("rt", rad(quNs(Q.D)));
+    else if (!Q.rtD) root = (Q.rc > 1 ? Q.rc : "") + H("rt", rad(quNs(Q.rm)));
     else if (Q.D < 0) root = rad(quNs(Q.D));
     else root = Q.r !== null ? String(Q.r) : (Q.co === 1 ? "" : Q.co) + rad(String(Q.m));
     var pm = H("pm", "±");
@@ -2385,13 +2390,18 @@
   }
   function quStep(op) {   // an operation was clicked
     if (locked || busy || EXP.ask) return; if (quOps().indexOf(op) < 0) return;
-    var inf = quOpInfo(op);
+    var inf = quOpInfo(op), Q = EXP.qu;
+    if (op === "rt" && Q.D > 0 && Q.r === null) {   // not a perfect square: pick a factor pair with a perfect square in it
+      var n0 = Q.rm, take = function (sq) { quAdv("rt", { msg: "\u221a" + n0 + " = \u221a(" + sq + " \u00b7 " + n0 / sq + ") = " + Math.round(Math.sqrt(sq)) + "\u221a" + n0 / sq + "." }, sq); };
+      if (mode === "calculate") { eqAsk({ kind: "radp", n: n0, take: take }, "\u221a" + n0 + ": type a factor pair with a perfect square in it"); $("askIn").placeholder = "e.g. 4\u00b710"; return; }
+      radWheel(n0, document.querySelector('#exRow .quK[data-op="rt"]') || $("exRow"), take); return;
+    }
     if (mode === "calculate" && inf.want) { eqAsk({ kind: "qu", op: op, inf: inf }, inf.label); $("askIn").placeholder = inf.all ? "e.g. 3/2, 1" : "e.g. 1"; return; }
     quAdv(op, inf);
   }
-  function quAdv(op, inf) {
+  function quAdv(op, inf, arg) {
     var Q = EXP.qu; hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: "=", z: null, qu: JSON.parse(JSON.stringify(Q)) })); updUndo();
-    quDo(op); closeAsk(false); eqRender(); note(inf.msg + " " + quText());
+    quDo(op, arg); closeAsk(false); eqRender(); note(inf.msg + " " + quText());
     if (quFinal()) quEnd();
   }
   function quAskOK(k) {
@@ -3131,9 +3141,43 @@
     if (mode === "calculate") { eqAsk({ kind: "term", b: { N: N, msg: say, want: isX ? { k: "x", v: t.v, n: t.n, simp: true } : { k: "c", n: t.n, simp: true } } }, "Simplified ="); $("askIn").placeholder = isX ? "e.g. 3/2" + (t.v || "x") : "e.g. 3/2"; return; }
     eqSet(N, say);
   }
-  function eqSimp(S, i) {   // click the square root: simplify it (√9 = 3, √12 = 2√3, √(49/4) = 7/2)
+  // ---- square roots, one choice at a time: a perfect square simplifies at once; otherwise a wheel of the radicand's factor pairs (Sequence) or a typed pair (Calculate).
+  // A pair with a perfect square factor (other than 1) is right: √200 = √(4·50) = 2√50, and the student clicks again until no perfect square is left
+  function radPairs(n) { var o = []; for (var f = 1; f * f <= n; f++) if (n % f === 0) o.push([f, n / f]); return o; }
+  function isSq(n) { var r = Math.round(Math.sqrt(n)); return n > 1 && r * r === n; }
+  function radPairOK(pr) { return isSq(pr[0]) ? pr[0] : isSq(pr[1]) ? pr[1] : 0; }   // the perfect square in the pair, or 0
+  function radWheelHide() { var w = $("radWheel"); if (w) w.remove(); }
+  function radWheel(n, el, done) {   // a wheel of factor pairs under the square root; done(square) once a right pair is chosen
+    radWheelHide(); var P = radPairs(n), w = document.createElement("div"); w.id = "radWheel"; w.setAttribute("aria-label", "Factor pairs of " + n);
+    w.innerHTML = "<div class=\"rwT\">\u221a" + n + " = \u221a( ? )</div><div class=\"rwL\">" + "<div class=\"rwPad\"></div>" + P.map(function (pr, k) { return "<button type=\"button\" class=\"rwI\" data-k=\"" + k + "\">" + pr[0] + " \u00b7 " + pr[1] + "</button>"; }).join("") + "<div class=\"rwPad\"></div></div><div class=\"rwM\"></div>";
+    document.body.appendChild(w); var r = el.getBoundingClientRect(); w.style.left = Math.max(8, Math.min(window.innerWidth - w.offsetWidth - 8, r.left + r.width / 2 - w.offsetWidth / 2)) + "px"; w.style.top = Math.max(8, r.top - w.offsetHeight - 14) + "px";
+    var L = w.querySelector(".rwL"), items = [].slice.call(w.querySelectorAll(".rwI")), tmr = null, act = false;
+    var mid = function () { var c = L.getBoundingClientRect(), y = c.top + c.height / 2, best = 0, bd = 1e9; items.forEach(function (b, k) { var q = b.getBoundingClientRect(), d = Math.abs(q.top + q.height / 2 - y); if (d < bd) { bd = d; best = k; } }); return best; };
+    var mark = function () { var k = mid(); items.forEach(function (b, j) { b.classList.toggle("on", j === k); }); return k; };
+    var judge = function (k) { var pr = P[k], sq = radPairOK(pr), m = w.querySelector(".rwM");
+      if (sq) { radWheelHide(); done(sq, pr); } else { m.textContent = pr[0] + " \u00b7 " + pr[1] + ": " + (pr[0] === 1 ? "1 is a perfect square, but taking it out changes nothing." : "neither " + pr[0] + " nor " + pr[1] + " is a perfect square."); m.className = "rwM no"; } };
+    L.scrollTop = 0; mark();
+    L.addEventListener("scroll", function () { mark(); if (!act) return; clearTimeout(tmr); tmr = setTimeout(function () { judge(mark()); }, 700); });
+    ["pointerdown", "wheel", "touchstart", "keydown"].forEach(function (ev) { L.addEventListener(ev, function () { act = true; }, { passive: true }); });
+    items.forEach(function (b, k) { b.addEventListener("click", function (e) { e.stopPropagation(); clearTimeout(tmr); b.scrollIntoView({ block: "center", behavior: "smooth" }); judge(k); }); });
+    setTimeout(function () { document.addEventListener("pointerdown", function off(e) { if (!$("radWheel")) { document.removeEventListener("pointerdown", off, true); return; } if (!w.contains(e.target)) { radWheelHide(); document.removeEventListener("pointerdown", off, true); } }, true); }, 0);
+  }
+  function radParse(v, n) {   // a typed pair, "4*50", "4·50", "4 50" or "4, 50": [a, b] with a·b = n
+    var m = String(v).replace(/[\u221a()]/g, " ").match(/(\d+)\s*(?:[*\u00b7x\u00d7,]|\s)\s*(\d+)/); if (!m) return null; var a = +m[1], b = +m[2]; return a * b === n ? [a, b] : null;
+  }
+  function eqSimp(S, i, pick) {   // click the square root: simplify it (√9 = 3, √12 = 2√3, √(49/4) = 7/2)
     if (locked || busy || EXP.ask) return;
     var t = EXP[S][i]; if (!t || t.k !== "r") return;
+    if (t.r.d === 1 && !isSq(t.r.n) && t.r.n > 1) {   // not a perfect square: choose a factor pair with a perfect square in it
+      var rs0 = radSq(t.r.n); if (rs0.s === 1) { note("\u221a" + t.r.n + " is already as simple as it gets: no perfect square divides " + t.r.n + "."); return; }
+      var take = function (sq) { var N2 = eqClone(), u2 = { k: "r", n: mul(t.n, mk(Math.round(Math.sqrt(sq)))), r: mk(t.r.n / sq) }; if (t.pm) u2.pm = true; if (u2.r.n === 1) { u2 = { k: "c", n: u2.n }; if (t.pm) u2.pm = true; }
+        N2[S][i] = u2; eqSet(N2, "\u221a" + t.r.n + " = \u221a(" + sq + " \u00b7 " + t.r.n / sq + ") = \u221a" + sq + " \u00b7 \u221a" + t.r.n / sq + " = " + exSay([u2]).replace(/^\u00b1/, "") + "." + (radSq(t.r.n / sq).s > 1 ? " Click the square root again: a perfect square still divides " + t.r.n / sq + "." : "")); };
+      if (pick) { take(pick); return; }
+      if (SIM) { take(rs0.s * rs0.s); return; }
+      if (mode === "sequence") { var el = document.querySelector('#exRow .exT[data-s="' + S + '"][data-i="' + i + '"] .exRad') || $("exRow"); radWheel(t.r.n, el, function (sq) { take(sq); }); return; }
+      if (mode === "calculate") { eqAsk({ kind: "radp", n: t.r.n, take: take }, "\u221a" + t.r.n + ": type a factor pair with a perfect square in it"); $("askIn").placeholder = "e.g. 4\u00b750"; return; }
+      take(rs0.s * rs0.s); return;   // Demo (and Show work): the biggest perfect square
+    }
     var rs = radSimp(t.r), c0 = mul(t.n, rs.c), N = eqClone(), u = rs.m === 1 ? { k: "c", n: c0 } : { k: "r", n: c0, r: mk(rs.m) }; if (t.pm) u.pm = true;
     if (rs.m !== 1 && same(rs.c, mk(1))) { note("\u221a" + exFr(t.r) + " is already as simple as it gets: no perfect square divides " + exFr(t.r) + "."); return; }
     N[S][i] = u; var say = "\u221a" + exFr(t.r) + " = " + exSay([u]).replace(/^\u00b1/, "") + ".";
@@ -3675,6 +3719,7 @@
     var k = EXP && EXP.ask; if (!k) return;
     if (k.kind === "qu") { quAskOK(k); return; }
     if (k.kind === "qf") { if (qfCheckEq($("askIn").value, k.k)) { closeAsk(false); qfGo(k.k); } else { $("askErr").textContent = "Not quite. " + QFS[k.k - 1].why; $("askIn").select(); } return; }
+    if (k.kind === "radp") { var pp = radParse($("askIn").value, k.n), sqp = pp ? radPairOK(pp) : 0; if (sqp) { closeAsk(false); k.take(sqp); } else { $("askErr").textContent = pp ? "Neither " + pp[0] + " nor " + pp[1] + " is a perfect square (other than 1). Try another pair." : "Type two numbers that multiply to " + k.n + ", like " + radPairs(k.n)[1].join("\u00b7") + "."; $("askIn").select(); } return; }
     if (k.kind === "rad") { var vv = numVal($("askIn").value); if (vv && vv.length === 1 && Math.abs(Math.abs(vv[0]) - Math.abs(k.want)) < 1e-9) { eqSet(k.b.N, k.b.msg); } else { $("askErr").textContent = "Not quite. Take out the biggest perfect square."; $("askIn").select(); } return; } var m = $("askErr"), ep = function (v) { return EXP.lit ? litTerms(v, "x", true) : exParse(v); }, r = k.kind === "mulq" ? [] : ep($("askIn").value);
     if (typeof r === "string") { m.textContent = "Type the result, like 5x or −2."; return; }
     var ok;
