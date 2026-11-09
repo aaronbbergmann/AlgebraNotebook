@@ -5448,7 +5448,7 @@
     ["Play Graph", "Playground: Equation Table Graph Description", "Playground: Equation Table Graph Description"],
     ["Play Data", "Playground: Data", "Playground: Data"]
   ];
-  VIEWS.forEach(function (v) { if (v[0] === "2.1A") ACTS.push(["RevT1", "Review for Chapter 1 Test", "Review for Chapter 1 Test"]); ACTS.push([v[0], v[3], v[0] + " " + v[3]]); });
+  VIEWS.forEach(function (v) { if (v[0] === "2.1A") ACTS.push(["RevT1", "Review for Chapter 1 Test", "Review for Chapter 1 Test"]); if (v[0] === "2.4A") ACTS.push(["RevQ2", "Review for 2.1-2.2 Quiz", "Review for 2.1-2.2 Quiz"]); ACTS.push([v[0], v[3], v[0] + " " + v[3]]); });
   // progress levels: [lesson, mode, percent, label, problems needed]. A higher mode of the same lesson also earns the lower modes.
   // Chapter 2 activities all keep the 1.2 / 1.3 pattern: per exercise Demo 10, Sequence 25, Calculate 40, Solo 55, then two more Solo rounds 80 and 100
   // (the first nPg exercises are on the Play Graph pane, like 1.1 Graph & Describe: Demo 10, Sequence 25, Solo 40, 70, 100)
@@ -5522,6 +5522,18 @@
     { q: "Q6 Elimination", full: "Question 6: check the solution algebraically, by elimination", act: "1.4D", lesson: 2 },
     { q: "Q7 Three Variables", full: "Question 7: solve the system of three linear equations", act: "1.4D", lesson: 3 },
     { q: "Q8 Word Problem", full: "Question 8: read a word problem about two plans, write the equations and find where they meet", act: "1.4D", lesson: 4 }
+  ] };
+  // RevQ2 works the same way (items run the originals' own code, progress of its own). Questions refer to the Algebra 2 Chapter 2.1-2.2 Quiz.
+  BUILT["RevQ2"] = { review: true, key: "algebraProgress:RevQ2", levels: [], top: 0, items: [
+    { q: "Q1 Standard Form", full: "Question 1: a height function in standard form: what the y-intercept means, and x = \u2212b/(2a)", act: "2.2", lesson: 2 },
+    { q: "Q1 Max or Min", full: "Question 1: the sign of a tells whether the parabola opens down (a maximum) or up (a minimum), at x = \u2212b/(2a)", act: "2.2", lesson: 3 },
+    { q: "Q2 Vertex Form", full: "Question 2: graph a(x \u2212 h)\u00b2 + k with a table, and identify the vertex", act: "2.2", lesson: 1 },
+    { q: "Q2 Domain", full: "Question 2: state the domain in interval notation", act: "2.2", lesson: 7 },
+    { q: "Q2 Range", full: "Question 2: state the range in interval notation", act: "2.2", lesson: 8 },
+    { q: "Q2 Reflect & Stretch", full: "Question 2: describe the transformation a makes to f(x) = x\u00b2 (reflection, stretch or shrink)", act: "2.1", lesson: 2 },
+    { q: "Q2 Translations", full: "Question 2: describe the translations h and k make to f(x) = x\u00b2", act: "2.1", lesson: 1 },
+    { q: "Q3 Intercept Form", full: "Question 3: a(x \u2212 p)(x \u2212 q): the x-intercepts, the x-coordinate of the vertex, and the maximum", act: "2.2", lesson: 4 },
+    { q: "Q3 Golf Paths", full: "Question 3: golf paths in intercept form: where the ball lands and how high it goes", act: "2.2", lesson: 5 }
   ] };
   var rev = null, revI = 0;
   var act = "1.4D";
@@ -15677,8 +15689,8 @@ var ESPIC = {
         v[2].forEach(function (k, i) { ex[b === "1.4D" ? N14[k] : (B.short && B.short[+k - 1]) || (B.lessons && B.lessons[+k - 1]) || ("Exercise " + k)] = best(lv, ks[i]); });
         out[v[0]] = ex;
       });
-      var T = rd("algebraProgress:time"); Object.keys(T).forEach(function (id) { if (out[id] || id === "RevT1") out["_t:" + id] = +T[id] || 0; }); var D0 = rd("algebraProgress:done"); Object.keys(D0).forEach(function (id) { if (out[id] || id === "RevT1") out["_d:" + id] = +D0[id] || 0; });   // (when each activity first reached 5 stars)   // when each activity last changed (a number: the Sheet script passes it by)
-      if (BUILT.RevT1) { rev = "RevT1"; var rl = revLevels(), ex = {}; prog = rd(BUILT.RevT1.key); BUILT.RevT1.items.forEach(function (it, i) { ex[it.q || ("Item " + (i + 1))] = best(rl, i); }); out.RevT1 = ex; }
+      var T = rd("algebraProgress:time"); Object.keys(T).forEach(function (id) { if (out[id] || (BUILT[id] && BUILT[id].review)) out["_t:" + id] = +T[id] || 0; }); var D0 = rd("algebraProgress:done"); Object.keys(D0).forEach(function (id) { if (out[id] || (BUILT[id] && BUILT[id].review)) out["_d:" + id] = +D0[id] || 0; });   // (when each activity first reached 5 stars)   // when each activity last changed (a number: the Sheet script passes it by)
+      Object.keys(BUILT).forEach(function (id) { if (!BUILT[id].review) return; rev = id; var rl = revLevels(), ex = {}; prog = rd(BUILT[id].key); BUILT[id].items.forEach(function (it, i) { ex[it.q || ("Item " + (i + 1))] = best(rl, i); }); out[id] = ex; });   // every review (RevT1, RevQ2)
     } catch (e) { } finally { prog = keep; rev = r0; }
     return out;
   };
