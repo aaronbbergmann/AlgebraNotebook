@@ -1838,7 +1838,7 @@
   }
   function exSay(its) {   // plain text, for the log and the prompts
     if (its.length === 1 && its[0].k !== "g" && its[0].n.n === 0) return "0";
-    var d = document.createElement("div"); d.innerHTML = exHtml(its).replace(/<sup>(\d+)<\/sup>/g, "^$1").replace(/<span class="fr"><span>([\s\S]*?)<\/span><span>([\s\S]*?)<\/span><\/span>/g, function (_, a, b) { var A = a.replace(/<[^>]*>/g, ""), B = b.replace(/<[^>]*>/g, ""); return (A.length > 1 && /[+\u2212]/.test(A) ? "(" + A + ")" : A) + "/" + (B.length > 1 ? "(" + B + ")" : B); }); return d.textContent.replace(/([+−])/g, " $1 ").replace(/^ − /, "−").replace(/\( − /g, "(−").replace(/\| − /g, "|−").replace(/^\|\s+/, "|").trim();
+    var d = document.createElement("div"); d.innerHTML = exHtml(its).replace(/<sup[^>]*>(\d+)<\/sup>/g, "^$1").replace(/<span class="fr"><span>([\s\S]*?)<\/span><span>([\s\S]*?)<\/span><\/span>/g, function (_, a, b) { var A = a.replace(/<[^>]*>/g, ""), B = b.replace(/<[^>]*>/g, ""); return (A.length > 1 && /[+\u2212]/.test(A) ? "(" + A + ")" : A) + "/" + (B.length > 1 ? "(" + B + ")" : B); }); return d.textContent.replace(/([+−])/g, " $1 ").replace(/^ − /, "−").replace(/\( − /g, "(−").replace(/\| − /g, "|−").replace(/^\|\s+/, "|").trim();
   }
   function exPair(i, j) { var its = EXP.items; return i < j ? [its[i], its[j]] : [its[j], its[i]]; }
   // a minus sign in front of parentheses is the drag handle that distributes it (it means -1): -(x + 1) becomes -x - 1
@@ -2403,6 +2403,7 @@
   }
 
   function quEnd() {
+    if (SIM) { SIM.done = true; eqRender(); return; }
     var Q = EXP.qu; locked = true; eqRender(); closeAsk(false);
     var none = Q.D < 0, ap = function (v) { return String(Math.round(v * 100) / 100).replace("-", "\u2212"); }, txt = none ? "No real solutions: b² − 4ac = " + quNs(Q.D) + " is negative, and no real number squares to a negative number." : Q.r === 0 ? "Solved: " + quText().replace(/^x = /, "x = ") + ". b² − 4ac = 0, so there is one solution." : Q.r !== null ? "Solved: " + quText() + "." : "Solved: " + quText() + ", so x ≈ " + ap((Q.B + Q.co * Math.sqrt(Q.m)) / Q.Q) + " or x ≈ " + ap((Q.B - Q.co * Math.sqrt(Q.m)) / Q.Q) + ".";
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note(txt);
@@ -3707,7 +3708,39 @@
     EXP.L = N.L; EXP.R = N.R; EXP.rel = N.rel || "="; closeAsk(false); eqRender(); if (msg) note(msg);
     var k = eqKind(); if (k) eqEnd(k); else if (!msg) clearLog();
   }
+  // Write mode: the student types only the answer, so Show work is filled in by solving the problem again quietly, step by step, the way it would be written on paper
+  var SIM = null;
+  function simFactor() {   // a trinomial = 0 that factors: write it factored, a(px - m)(qx - n) = 0 (the box's result)
+    var rq = qdRoots(EXP.L, EXP.R); if (!rq || !rq.length || rq.some(function (v) { return v.terms; })) return false;
+    var A = exTot(EXP.L)["x^2"]; if (!A) return false;
+    var r1 = rq[0], r2 = rq[1] || rq[0], k = mul(A, inv(mk(r1.d * r2.d))), whole = k.d === 1;   // (3x - 2)(x + 1) when the number in front comes out whole, otherwise (x - 2/3)(x + 1)
+    var fac = function (r) { return whole ? [{ k: "x", v: "x", n: mk(r.d) }, { k: "c", n: mk(-r.n) }] : [{ k: "x", v: "x", n: mk(1) }, { k: "c", n: neg(r) }]; };
+    var g = { k: "g", m: whole ? k : A, items: fac(r1), b: fac(r2) }; if (!rq[1]) g.pw = true;
+    EXP.L = [g]; EXP.R = [{ k: "c", n: mk(0) }]; EXP.zpq = true; EXP.grq = false; EXP.sf = false; eqRender(); return true;
+  }
+  function simSq() {   // completing the square: the perfect square trinomial side is written as (x + h)^2 (the formula's result)
+    for (var q = 0; q < 2; q++) { var S = q ? "R" : "L", its = EXP[S]; if (its.length < 2 || !its.some(function (t) { return t.k === "x" && /\^2$/.test(t.v || ""); })) continue;
+      var rq = qdRoots(its, [{ k: "c", n: mk(0) }]), A = exTot(its)["x^2"]; if (!rq || rq.length !== 1 || rq[0].terms || !A || !same(A, mk(1))) continue;
+      EXP[S] = [{ k: "g", m: mk(1), items: [{ k: "x", v: "x", n: mk(1) }, { k: "c", n: neg(rq[0]) }], b: [{ k: "x", v: "x", n: mk(1) }, { k: "c", n: neg(rq[0]) }], pw: true }]; EXP.zpq = !!zpOf(EXP.L, EXP.R); eqRender(); return true; }
+    return false;
+  }
+  function wkSim() {
+    if (!EXP || !EXP.eq || EXP.qf || !EXP.orig || !EXP.orig.L) return;
+    var keep = { EXP: EXP, hist: hist, locked: locked, steps: steps, wkBox: wkBox, log: logEl.innerHTML, busy: busy }, sim = steps.length ? [steps[0]] : [];
+    if (!sim.length) return;
+    try {
+      var X = JSON.parse(JSON.stringify(EXP)); X.L = JSON.parse(JSON.stringify(X.orig.L)); X.R = JSON.parse(JSON.stringify(X.orig.R)); X.rel = X.orig.rel || "="; X.ask = null; X.zp = null; X.negSq = false; X.qu = null; X.cmp = null; X.c3 = null; X.zpq = !!zpOf(X.L, X.R) && !X.grq;
+      EXP = X; if (X.orig.cmp) cmpInit(); SIM = { done: false }; locked = false; busy = false; hist = []; steps = sim; wkBox = null; GRP = null; FM = null;
+      for (var n = 0; n < 80 && !SIM.done; n++) {
+        if (EXP.grq && !EXP.zpq && grSq() && sfZero(EXP.R) && simFactor()) continue;
+        var st = eqNextStep(); if (st && !st.run && simSq()) continue; if (!st || !st.run) break; st.run();
+      }
+    } catch (er) {}
+    var ok = SIM && sim.length > 1; EXP = keep.EXP; hist = keep.hist; locked = keep.locked; busy = keep.busy; wkBox = keep.wkBox; logEl.innerHTML = keep.log; SIM = null; GRP = null; FM = null;
+    if (ok) { keep.steps.length = 0; sim.forEach(function (x) { keep.steps.push(x); }); } steps = keep.steps;
+  }
   function eqEnd(kind, asked) {
+    if (SIM === null && mode === "solo" && EXP && EXP.eq) wkSim();
     if ((kind === "none" || kind === "inf") && !asked && mode !== "solo") { kindAsk(kind, exLines()[0], function () { eqEnd(kind, true); }); eqRender(); return; }
     if (EXP.zp) {
       var zz = EXP.zp, sol = exSay(EXP.L) + " " + (EXP.rel || "=") + " " + exSay(EXP.R); zz.eqs[zz.act] = { L: JSON.parse(JSON.stringify(EXP.L)), R: JSON.parse(JSON.stringify(EXP.R)), rel: EXP.rel || "=" }; zz.done[zz.act] = true;
@@ -3719,6 +3752,7 @@
       var tidy = function (e) { if (e.R.length === 1 && e.R[0].k === "x" && same(e.R[0].n, mk(1)) && e.L.some(function (t) { return t.k === "r"; })) { var t0 = e.L; e.L = e.R; e.R = t0; } if (e.L.length === 1 && e.L[0].k === "x" && e.R.some(function (t) { return t.k === "r"; })) e.R.sort(function (p, q) { return (p.k === "r") - (q.k === "r"); }); };
       var cur = { L: EXP.L, R: EXP.R }; tidy(cur); EXP.L = cur.L; EXP.R = cur.R; if (EXP.zp) { EXP.zp.eqs.forEach(function (e) { if (!e.rel || e.rel === "=") tidy(e); }); EXP.zp.eqs[EXP.zp.act] = { L: EXP.L, R: EXP.R, rel: "=" }; }
     }
+    if (SIM) { SIM.done = true; eqRender(); return; }
     locked = true; eqRender(); closeAsk(false); nlEq(kind);
     var iq = eqIneq(), txt = kind === "one" ? "Solved: " + (EXP.zp ? zpSay() : exSay(EXP.L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(EXP.R) : exSay(EXP.R))) + "." : kind === "none" ? (iq ? "No solution: the inequality is never true." : EXP.negSq ? "No real solution: no number squares to a negative number." : EXP.av ? "No solution: an absolute value is a distance from 0, so it can never be negative." : "No solution: the two sides can never be equal.") : (iq ? "Every number is a solution: the inequality is always true." : "Infinitely many solutions: the two sides are always equal.");
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note(txt);
