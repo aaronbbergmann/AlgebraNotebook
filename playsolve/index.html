@@ -5675,14 +5675,14 @@
     if (nx) up = { label: MODES[nx] + " Mode", stayText: stayT, go: function () { setMode(nx); } };   // the next mode is never Create
     else if (rev && mode === "solo") { var ri = BUILT[rev].items; if (pct() >= 100 && revI < ri.length - 1) up = { label: "Next: " + ri[revI + 1].q, stay: true, stayText: "Stay in this exercise", go: function () { revGo(revI + 1); } }; }   // a review: the Next button moves on to its next item
     else if (view && (mode === "solo" || !nx)) { var nv = vwNext(); if (nv && pct() >= 100) up = { label: "Next exercise: " + nv.name, stay: true, stayText: "Stay in this exercise", go: nv.go }; }   // at 100% the Next button moves on to the next exercise (the first of the next subsection of the section after the last)
-    else if (mode === "solo" && !subx && lesson < topLesson() && BUILT[act].perLesson) { if (pct() >= 100) up = { label: "Next exercise: " + (BUILT[act].short[lesson] || lessonName(lesson + 1)), stay: true, stayText: "Stay in this exercise", go: function () { lesson++; $("lesson").value = String(lesson); setMode("demo"); } }; }   // at 100% the Next button moves on to the next exercise; a small link stays here
-    else if (mode === "solo" && !subx && act === "1.4D" && lesson === 4) { if (pct() >= 100) up = { label: "Next exercise: " + LNAME[1], stay: true, stayText: "Stay in this exercise", go: function () { lesson = 1; $("lesson").value = "1"; setMode("demo"); } }; }   // 1.4: Graphing is first in the menu; at 100% the Next button moves on to One Variable
-    else if (mode === "solo" && !subx && (act === "1.4D" ? lesson < 3 : lesson < topLesson())) { var nl = lesson + 1; up = { label: LNAME[nl], stayText: "Try another in " + MODES[mode] + " mode", go: function () { lesson = nl; $("lesson").value = String(lesson); useCustom = null; setMode("demo"); } }; }   // 1.4: Graphing is first in the menu, so it leads to One Variable and 3×3 is the last
+    else if (mode === "solo" && !subx && lesson < topLesson() && BUILT[act].perLesson) { if (pct() >= 100) up = { label: "Next exercise: " + (BUILT[act].short[lesson] || lessonName(lesson + 1)), stay: true, stayText: "Stay in this exercise", go: function () { lesson++; $("lesson").value = String(lesson); setMode(resumeMode()); } }; }   // at 100% the Next button moves on to the next exercise; a small link stays here
+    else if (mode === "solo" && !subx && act === "1.4D" && lesson === 4) { if (pct() >= 100) up = { label: "Next exercise: " + LNAME[1], stay: true, stayText: "Stay in this exercise", go: function () { lesson = 1; $("lesson").value = "1"; setMode(resumeMode()); } }; }   // 1.4: Graphing is first in the menu; at 100% the Next button moves on to One Variable
+    else if (mode === "solo" && !subx && (act === "1.4D" ? lesson < 3 : lesson < topLesson())) { var nl = lesson + 1; up = { label: LNAME[nl], stayText: "Try another in " + MODES[mode] + " mode", go: function () { lesson = nl; $("lesson").value = String(lesson); useCustom = null; setMode(resumeMode()); } }; }   // 1.4: Graphing is first in the menu, so it leads to One Variable and 3×3 is the last
   }
   function exShort(b, k) { var B = BUILT[b]; if (b === "1.4D") return k === "s" ? "Substitution" : LNAME[k === "4" ? 4 : +k]; return (B.short && B.short[+k - 1]) || B.lessons[+k - 1]; }
   function vwNext() {
     var ls = VW[view].ls, i = ls.indexOf(vwK()); if (i < 0) return null;
-    if (i < ls.length - 1) { var k = ls[i + 1]; return { name: exShort(act, k), go: function () { msSave(); vwSet(k); $("lesson").value = k; gdCustom = null; wfCustom = null; c2Custom = null; useCustom = null; buildModes(); setMode("demo"); } }; }
+    if (i < ls.length - 1) { var k = ls[i + 1]; return { name: exShort(act, k), go: function () { msSave(); vwSet(k); $("lesson").value = k; gdCustom = null; wfCustom = null; c2Custom = null; useCustom = null; buildModes(); setMode(resumeMode()); } }; }
     for (var j = VW[view].i + 1; j < VIEWS.length; j++) {
       var v = VIEWS[j]; if (v[1] !== act) return null; if (!v[2].length) continue;
       return { name: v[0] + " " + exShort(v[1], v[2][0]), go: (function (id) { return function () { setActivity(id); }; })(v[0]) };
@@ -6052,7 +6052,10 @@
   var bootMode = (function () {
     try { var m = sessionStorage.getItem("an.mode." + (view || act)), B = BUILT[act], ok = B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"]; return m && MODES[m] && ok.indexOf(m) >= 0 ? m : null; } catch (e) { return null; }
   })();
-  function takeBoot() { var m = bootMode || "demo"; bootMode = null; return m; }
+  function takeBoot() { var m = bootMode || resumeMode(); bootMode = null; return m; }
+  // with no mode kept for this tab (a new tab, a returning student, or a newly chosen activity / exercise), the exercise opens in the mode its saved Progress has
+  // reached: the first mode on the ladder not yet finished (Write once everything below it is finished), so earned Progress never sends a student back to Demo
+  function resumeMode() { try { if (!ladOn()) return "demo"; var L = ladder(); for (var i = 0; i < L.length; i++) if (!modeFin(L[i])) return L[i]; return L[L.length - 1] || "demo"; } catch (e) { return "demo"; } }
 
   function newProblem() {
     nlHide(); fmHide(); if ($("quBtn")) $("quBtn").hidden = true; hideKind(); d3Hide(); $("eqSubRow").hidden = true;
@@ -6453,7 +6456,7 @@
     return "Substitute " + s[1];
   }
 
-  $("lesson").addEventListener("change", function () { msSave(); if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; wfCustom = null; c2Custom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
+  $("lesson").addEventListener("change", function () { msSave(); if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; wfCustom = null; c2Custom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode(resumeMode()); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
   $("crAdd").addEventListener("click", crAdd);
   ["askT", "askErr", "exMsg", "pgQmsg", "crErr", "stCap"].forEach(function (id) { var a = $(id); if (!a) return; new MutationObserver(function () { if (a.children.length) return; var t = a.textContent, u = sqTxt(t); if (u !== t) a.textContent = u; }).observe(a, { childList: true, characterData: true, subtree: true }); });   // prompts and messages write x², not x^2
   $("crKeys").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the box
@@ -10353,16 +10356,16 @@ var ESPIC = {
       LEVELS = levelsNow(); loadProg(); buildActs(); buildLessons(); updProg();
       if (mode === "create") orig = []; useCustom = null;
       leaveQuiz();
-      if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) { leavePlay(); enterQuiz(); } else { leavePlay(); setMode("demo"); }
+      if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) { leavePlay(); enterQuiz(); } else { leavePlay(); setMode(resumeMode()); }
     } else {
-      lesson = it.lesson; subx = !!it.subx; gdCustom = null; wfCustom = null; c2Custom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode("demo"); $("lesson").value = String(i);
+      lesson = it.lesson; subx = !!it.subx; gdCustom = null; wfCustom = null; c2Custom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode(resumeMode()); $("lesson").value = String(i);
     }
   }
   function setActivity(id) {
     closeActs(); $("actBtn").blur(); d3Hide();   // once an activity is chosen the button is let go
     var V = VW[id] || null; if (!BUILT[id] && !V) return;
     msSave();
-    try { sessionStorage.removeItem("an.mode." + id); } catch (e) { }   // choosing an activity always starts it in Demo; only a refresh keeps the mode
+    try { sessionStorage.removeItem("an.mode." + id); } catch (e) { }   // a newly chosen activity opens at the mode its saved Progress has reached (resumeMode); a refresh keeps the mode in use
     // on the website every activity is its own page, so switching goes to that page (a subsection with no exercises yet is always its own "Coming soon" page)
     var here = soon || rev || view || act;
     if ((hub || (V && !V.ls.length)) && (id !== here || (welcome && !soon))) { location.href = (fixedAct ? "../" : "") + slugOf(id) + "/"; return; }
@@ -10373,14 +10376,14 @@ var ESPIC = {
       // on the website each activity has its own page; elsewhere (a preview) it opens right here
       if (hub) { location.href = (fixedAct ? "../" : "") + slugOf(id) + "/"; return; }
       welcome = false; soon = null; theme(); document.body.classList.remove("wel"); $("welcome").hidden = true;
-      if (base === act) { view = V ? id : null; vwFix(true); LEVELS = levelsNow(); loadProg(); buildActs(); buildLessons(); updProg(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode("demo"); } return; }
+      if (base === act) { view = V ? id : null; vwFix(true); LEVELS = levelsNow(); loadProg(); buildActs(); buildLessons(); updProg(); if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) enterQuiz(); else { leavePlay(); setMode(resumeMode()); } return; }
     }
     if (id === here && !wasRev) { msMark(); return; }
     var wasSolver = !!BUILT[act].solver; EXP = null; SOL.fresh = true; SOL.lvl = 0; act = base; view = V ? id : null; gdCustom = null; wfCustom = null; c2Custom = null; if (BUILT[act].quiz || BUILT[act].solver || BUILT[act].sub) { lesson = BUILT[act].sub ? 4 : 1; subx = false; } vwFix(true); if (wasSolver && !BUILT[act].solver) { mode = "demo"; orig = []; }
     LEVELS = levelsNow(); loadProg(); buildActs(); buildLessons(); updProg();
     if (mode === "create") orig = []; useCustom = null;
     leaveQuiz();
-    if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) { leavePlay(); enterQuiz(); } else { leavePlay(); setMode("demo"); }
+    if (BUILT[act].play) enterPlay(); else if (BUILT[act].quiz) { leavePlay(); enterQuiz(); } else { leavePlay(); setMode(resumeMode()); }
   }
   $("actBtn").addEventListener("click", function () { if ($("actList").hidden) openActs(); else closeActs(); });
   $("actBtn").addEventListener("keydown", function (e) { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); openActs(); } });
