@@ -5684,7 +5684,7 @@
     var s10 = stars10(), ks = exKeys(), W = starW(ks.length), h = "<h2 id=\"progT\">" + (rev || view || shortOf(act)) + " Progress</h2><div class=\"progStars\">" + starsHTML(s10, 34) + "<span class=\"progN\">" + starTxt(s10) + " <small>of 5.0 stars</small></span></div>", last = rev ? -1 : 0;
     LEVELS.forEach(function (l, i) {
       var wk = W[ks.indexOf(String(l[0]))] || 0;
-      if (l[0] !== last) { if (last !== -1 && last) h += "</ul>"; last = l[0]; h += "<h3>Exercise: " + (rev ? BUILT[rev].items[last].q : lessonName(last)) + " <span class=\"exSt\">" + starTxt(Math.floor(exPct(l[0]) * wk / 100 + 1e-9)) + " of " + starTxt(wk) + " ★</span></h3><ul>"; }
+      if (l[0] !== last) { if (last !== -1 && last) h += "</ul>"; last = l[0]; h += "<h3>Exercise: " + (rev ? revAbbr(rev, last) : lessonName(last)) + " <span class=\"exSt\">" + starTxt(Math.floor(exPct(l[0]) * wk / 100 + 1e-9)) + " of " + starTxt(wk) + " ★</span></h3><ul>"; }
       var d = lvDone(l);
       h += "<li class=\"lv" + (d ? " done" : "") + "\"><span class=\"ck\">" + (d ? "✓" : "○") + "</span><span class=\"pc\">" + starTxt(Math.floor(l[2] * wk / 100 + 1e-9)) + " ★</span><span>" + l[3] + "</span></li>";
     });
@@ -10344,9 +10344,11 @@ var ESPIC = {
   ["mousedown", "focus"].forEach(function (ev) { $("lesson").addEventListener(ev, function () { lessonNames(true); }); });
   $("lesson").addEventListener("keydown", function (e) { if (e.key === "Escape") setTimeout(function () { lessonNames(false); }, 0); else if (/^(Arrow|Enter| )/.test(e.key)) lessonNames(true); });
   ["change", "blur"].forEach(function (ev) { $("lesson").addEventListener(ev, function () { setTimeout(function () { lessonNames(false); }, 0); }); });
+  // a review question's abbreviation: its number only (Q1, Q2, ...); a number shared by several questions gets letters (Q6a, Q6b, Q6c)
+  function revAbbr(R, i) { var it = BUILT[R].items, n = function (o) { return String(o.q).split(" ")[0]; }, me = n(it[i]), same = it.filter(function (o) { return n(o) === me; }); return same.length > 1 ? me + "abcdefgh".charAt(same.indexOf(it[i])) : me; }
   function buildLessons() {
     if (rev) {   // a review: the menu lists its items
-      $("lesson").innerHTML = BUILT[rev].items.map(function (o, i) { var src = vwOf(o.act, o.subx ? "s" : o.act === "1.4D" && o.lesson === 4 ? "4" : o.lesson); return "<option value=\"" + i + "\" title=\"" + o.full + (src ? " (from " + src + " > " + exShort(o.act, o.subx ? "s" : String(o.lesson)) + ")" : "") + "\">" + o.q + "</option>"; }).join(""); $("lesson").value = String(revI);
+      $("lesson").innerHTML = BUILT[rev].items.map(function (o, i) { var src = vwOf(o.act, o.subx ? "s" : o.act === "1.4D" && o.lesson === 4 ? "4" : o.lesson); var kk = o.subx ? "s" : String(o.lesson), B0 = BUILT[o.act], nm = o.act === "1.4D" || !B0.lessons ? exShort(o.act, kk) : B0.lessons[+kk - 1] || exShort(o.act, kk); return "<option value=\"" + i + "\" title=\"" + o.full + (src ? " (from " + src + " > " + exShort(o.act, kk) + ")" : "") + "\" data-short=\"" + revAbbr(rev, i) + "\" data-full=\"" + nm + "\">" + revAbbr(rev, i) + "</option>"; }).join("");   // (the open menu lists each question by its exercise's name in the original activity; Q1, Q2, ... is its abbreviation) $("lesson").value = String(revI);
       document.body.classList.toggle("solver", !!BUILT[act].solver); valsPlace(); buildModes(); return;
     }
     if (lesson > topLesson()) lesson = topLesson();
