@@ -7355,6 +7355,7 @@
   function gdParse(t) {
     t = String(t).toLowerCase().replace(/\u2212/g, "-");
     var o = { h: 0, k: 0, n: 0, tr: /translat|shift|slide|move/.test(t), rf: /reflect/.test(t), st: null, sh: null, both: /stretch/.test(t) && /shrink/.test(t), ax: /x[\s-]?axis/.test(t) ? "x" : /y[\s-]?axis/.test(t) ? "y" : "" };
+    var dm = /(horizontal|vertical)\w*\s+(?:stretch|shrink)/.exec(t) || /(?:stretch|shrink)\w*\s+(horizontal|vertical)/.exec(t); o.sdir = dm ? dm[1] : "";   // (which way the stretch or shrink goes)
     var fm = /(stretch|shrink)\D*?(\d*\.?\d+(?:\s*\/\s*\d+)?)/.exec(t);
     if (fm) { o[fm[1] === "stretch" ? "st" : "sh"] = gdNum(fm[2]); t = t.replace(fm[0], " "); }
     var re = /(\u2192|\u2190|\u2191|\u2193|\bright\b|\bleft\b|\bup\b|\bdown\b)\s*(?:by\s*)?(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:units?\s*)?(\u2192|\u2190|\u2191|\u2193|\bright\b|\bleft\b|\bup\b|\bdown\b)/g, m;
@@ -7368,6 +7369,7 @@
     var a = A(), ab = Math.abs(a), th = shifts() ? H() : 0, tk = K(), need = th !== 0 || tk !== 0, tr;
     if (need) tr = m.tr && m.n > 0 && (PG.fam === 1 ? Math.abs((m.k - a * m.h) - tk) < 1e-6 : PG.fam === 0 ? (m.h === 0 && Math.abs(m.k - tk) < 1e-6) : (Math.abs(m.h - th) < 1e-6 && Math.abs(m.k - tk) < 1e-6));   // a line slid sideways is the same line slid up or down
     else tr = m.n === 0;
+    if ((m.st !== null || m.sh !== null) && (m.sdir === "horizontal" || (gd2() && m.sdir !== "vertical"))) return false;   // (every stretch and shrink here is vertical; 2.1 must say so)
     var sc = m.both ? false : ab > 1 ? (m.st !== null && Math.abs(m.st - ab) < 1e-6) : ab < 1 ? (m.sh !== null && Math.abs(m.sh - ab) < 1e-6) : (m.st === null && m.sh === null);
     return !!(tr && sc && (a < 0) === m.rf && (!gd2() || !m.rf || m.ax === "x"));   // 2.1: a reflection names its axis, the x-axis
   }
