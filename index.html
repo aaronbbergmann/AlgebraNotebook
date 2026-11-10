@@ -12688,10 +12688,10 @@ var ESPIC = {
   function c2CmpPic(pb) {
     var P = pb.dsm, H1 = P.F1(P.D1 / 2), H2 = P.F2(P.D2 / 2), xa = c2Axis(0, Math.max(P.D1, P.D2) * 1.18), ya = c2Axis(0, Math.max(H1, H2) * 1.18), r = function (v) { return Math.round(v * 100) / 100; };
     var svg = c2Fig({ H: 300, xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Horizontal distance (" + pb.grid.u + ")", yl: "Height (" + pb.grid.u + ")", alt: "Both paths",
-      curves: [{ fn: P.F1, col: C2B, lo: 0, hi: P.D1 }, { fn: P.F2, col: C2P, lo: 0, hi: P.D2 }],
+      curves: [{ fn: P.F1, col: "#C74440", lo: 0, hi: P.D1 }, { fn: P.F2, col: "#2D70B3", lo: 0, hi: P.D2 }],
       pts: [{ x: 0, y: 0, col: "#1B2433", lab: "(0, 0)", an: "start", dy: -8 },
-        { x: P.D1, y: 0, col: C2B, tc: C2B, lab: "(" + r(P.D1) + ", 0)", an: P.D1 > P.D2 ? "start" : "end", dy: -8 }, { x: P.D1 / 2, y: H1, col: C2B, tc: C2B, lab: "(" + r(P.D1 / 2) + ", " + r(H1) + ")", dy: -8 },
-        { x: P.D2, y: 0, col: C2P, tc: C2P, lab: "(" + r(P.D2) + ", 0)", an: P.D2 > P.D1 ? "start" : "end", dy: -8 }, { x: P.D2 / 2, y: H2, col: C2P, tc: C2P, lab: "(" + r(P.D2 / 2) + ", " + r(H2) + ")", dy: -8 }] });
+        { x: P.D1, y: 0, col: "#C74440", tc: "#C74440", lab: "(" + r(P.D1) + ", 0)", an: P.D1 > P.D2 ? "start" : "end", dy: -8 }, { x: P.D1 / 2, y: H1, col: "#C74440", tc: "#C74440", lab: "(" + r(P.D1 / 2) + ", " + r(H1) + ")", dy: -8 },
+        { x: P.D2, y: 0, col: "#2D70B3", tc: "#2D70B3", lab: "(" + r(P.D2) + ", 0)", an: P.D2 > P.D1 ? "start" : "end", dy: -8 }, { x: P.D2 / 2, y: H2, col: "#2D70B3", tc: "#2D70B3", lab: "(" + r(P.D2 / 2) + ", " + r(H2) + ")", dy: -8 }] });
     return "<div class=\"wgr\" style=\"color:#1B2433;--bg:#fff\">" + svg.replace("<svg ", "<svg width=\"560\" ") + "</div>";
   }
   function m3Steps() {
@@ -13920,7 +13920,7 @@ var ESPIC = {
       var f1 = c2Vf(a1, D1 / 2, H1, "x", c2Y)[0], f2 = c2Y + " = −" + c2F(a) + c2X + "(" + c2X + " − " + D2 + ")", pb = { kind: 20, sc: sc };
       pb.dsm = { F1: F1, F2: F2, D1: D1, D2: D2, xmax: Math.max(D1, D2) * 1.12, ymax: Math.max(H1, H2) * 1.35, l1: "y=" + c2T(a1, 6) + "\\left(x-" + D1 / 2 + "\\right)^{2}+" + H1, l2: "y=-" + c2T(a, 6) + "x\\left(x-" + D2 + "\\right)" };
       pb.head = sc.s + " Path 1: " + f1.replace(/<[^>]+>/g, "") + "  Path 2: " + f2.replace(/<[^>]+>/g, ""); pb.pic = c2Pic(sc.pic);
-      var st0 = sc.s + " In each path, " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + ").<br>Path of the first " + it + ": <span class=\"lm cf\">" + f1 + "</span><br>Path of the second " + it + ": <span class=\"lm cg\">" + f2 + "</span>";
+      var st0 = sc.s + " In each path, " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + ").<br>Path of the first " + it + ": <span class=\"lm\" style=\"color:#C74440\">" + f1 + "</span><br>Path of the second " + it + ": <span class=\"lm\" style=\"color:#2D70B3\">" + f2 + "</span>";   // (red and blue, as Desmos draws the first and second expressions)
       Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () { return st0 + (mode === "solo" ? "<br><b>Graph both in Desmos, then fill in the table and press Submit.</b>" : ""); } });
       pb.cb = 1; pb.qc = 1; pb.grid = { it: it, u: u };   // (Circle Back in Demo, Sequence and Calculate; one static grid in Write)
       pb.fig = function () { return ""; };
