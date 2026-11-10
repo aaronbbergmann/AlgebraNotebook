@@ -5951,14 +5951,42 @@
       return JSON.stringify(orig || null);
     } catch (e) { return ""; }
   }
+  // ---- Going down a mode keeps the question: from Write to Calculate, Sequence or Demo (or Calculate to Sequence, ...) the student meets the very
+  // problem they were on, in the lower mode, instead of a new one.  carryQ holds it until the lower mode deals its first problem (pqStart / newProblem) ====
+  var carryQ = null;
+  function carryTake(m) {
+    carryQ = null;
+    if (!(MORD.indexOf(m) >= 0 && MORD.indexOf(mode) > MORD.indexOf(m)) || BUILT[act].solver || BUILT[act].play) return false;
+    try {
+      if (quiz()) {
+        if (!pq() || !QZ || !QZ.order) return false;
+        var i = QZ.pi || 0, c = { order: QZ.order[i] };
+        if (QZ.tr && QZ.tr[i]) c.tr = JSON.parse(JSON.stringify(QZ.tr[i]));
+        if (QZ.wfp && QZ.wfp[i]) c.wfp = QZ.wfp[i];
+        if (QZ.m3p && QZ.m3p[i]) c.m3p = QZ.m3p[i];
+        if (QZ.est && QZ.est[i]) c.est = QZ.est[i];
+        if (!c.tr && !c.wfp && !c.m3p && !c.est) return false;
+        carryQ = c; return true;
+      }
+      if (!orig || !orig.length) return false;
+      if (m === "demo" && !demoOK(orig)) return false;   // (the demo can't walk through it: a fresh demo instead)
+      carryQ = { orig: JSON.parse(JSON.stringify(orig)) }; return true;
+    } catch (e) { carryQ = null; return false; }
+  }
+  function carryPut() {   // (pqStart: the round's first problem becomes the carried one)
+    var c = carryQ; carryQ = null; if (!c || !QZ) return;
+    if (c.order != null && QZ.order) QZ.order[0] = c.order;
+    if (c.tr && QZ.tr) QZ.tr[0] = c.tr; if (c.wfp && QZ.wfp) QZ.wfp[0] = c.wfp; if (c.m3p && QZ.m3p) QZ.m3p[0] = c.m3p; if (c.est && QZ.est) QZ.est[0] = c.est;
+  }
   function setMode0(m) {
-    var sig0 = m !== mode && mode !== "create" ? probSig() : null;   // (Create's own problem may carry into the next mode on purpose)
+    var down = m !== mode && carryTake(m);
+    var sig0 = m !== mode && mode !== "create" && !down ? probSig() : null;   // (Create's own problem may carry into the next mode on purpose)
     msSave();   // the work in the mode being left is kept, to come back to (see "Switching modes keeps the work")
     syncPane();
     if (!BUILT[act].solver) $("nxHard").hidden = true;   // Level Up belongs to Play Solve alone; nothing is left over from the activity we came from
     if (quiz()) { $("next").hidden = true; $("again").hidden = true; $("show").style.visibility = ""; }
     else { $("qzNext").hidden = true; $("qzAgain").hidden = true; }
-    if (quiz()) { mode = m; theme(); saveMode(); $("modeSel").value = m; $("modeSel").style.color = ""; if (!msLoad() || (sig0 && probSig() === sig0)) { qzStart(); for (var tq = 0; tq < 12 && sig0 && probSig() === sig0; tq++) qzStart(); } msMark(); return; }   // (a kept problem that is the very one just left is replaced too)
+    if (quiz()) { mode = m; theme(); saveMode(); $("modeSel").value = m; $("modeSel").style.color = ""; if (down) { delete MS.box[msKey()]; qzStart(); carryQ = null; msMark(); return; } if (!msLoad() || (sig0 && probSig() === sig0)) { qzStart(); for (var tq = 0; tq < 12 && sig0 && probSig() === sig0; tq++) qzStart(); } msMark(); return; }   // (a kept problem that is the very one just left is replaced too)
     var sel = $("modeSel"), crMsg = "";
     // equations typed in Create carry over to the mode the student picks.  A student can always switch modes: when the typed equations
     // cannot be used in that mode, the mode opens with its own problem (the typed equations stay in Create) and a note says why
@@ -5967,6 +5995,7 @@
       if (m === "demo" && !demoOK(orig)) crMsg = "The demo can't walk through your equations: a coefficient is zero or not a whole number, so here is another one. Yours are still in Create mode; try them in Calculate or Sequence.";
       else useCustom = JSON.parse(JSON.stringify(orig));
     }
+    if (down && carryQ && carryQ.orig) { useCustom = carryQ.orig; carryQ = null; }   // (the equation pane: the same equations, like a problem typed in Create)
     dm4Reset(); mode = m; theme(); saveMode();
     sel.value = m; sel.style.color = "";
     if (!msLoad() || (sig0 && !useCustom && !BUILT[act].solver && probSig() === sig0)) { newProblem(); for (var tn = 0; tn < 12 && sig0 && !useCustom && !BUILT[act].solver && probSig() === sig0; tn++) newProblem(); }   // (Play Solve carries its problem from mode to mode on purpose)
@@ -10129,6 +10158,7 @@ var ESPIC = {
     if (m3() && act === "2.2" && [1, 2, 3, 4, 5, 12].indexOf(+lesson) >= 0 && o.length > 1) { o = [0]; QZ.order = o; if (QZ.m3p && QZ.m3p.length > 1) QZ.m3p = QZ.m3p.slice(0, 1); }   // 2.2A and 2.2C: one problem per round (Write still needs three rounds for full Progress)
     if (c2Cu()) QZ.custom = true; if (vcr()) QZ.pick = false;
     if (m3()) { QZ.tr = []; QZ.m3p = m3Set(o.length); }
+    if (carryQ) carryPut();   // (going down a mode: the same question)
     if (mode !== "demo") explainOn = false;
     logEl.innerHTML = "";
     $("hint").hidden = soloish(); $("hint").textContent = hintLbl(); $("hint").classList.toggle("on", explainOn);
