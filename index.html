@@ -5593,6 +5593,9 @@
       ml.forEach(function (m, k) { out.push([i, m, pc[k], nm[m] + " Mode"]); });
       out.push([i, "solo", pc[ml.length], "Write Mode, 2nd round", 2], [i, "solo", pc[ml.length + 1], "Write Mode, 3rd round", 3]);
     });
+    // in a review, one round of Write is enough, however many the original activity asks for: its last level is 100%
+    out = out.filter(function (l) { return !(l[4] > 1); });
+    out.forEach(function (l, j) { if (!out[j + 1] || out[j + 1][0] !== l[0]) out[j] = [l[0], l[1], 100, l[3]]; });
     return out;
   }
   function levelsNow() {
