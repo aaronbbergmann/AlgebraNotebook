@@ -620,6 +620,8 @@
   .m3FigW{flex:0 1 22rem;min-width:15rem}
   .m3FigC{flex:0 1 22rem;min-width:15rem}.m3FigC .m3FigW{min-width:0}
   .glTools{display:flex;gap:.5rem;justify-content:center;margin-top:.3rem}.glTools .btn{min-width:5.5rem}
+  .cmpG{border-collapse:collapse;margin:.4rem 0 .6rem;font:600 1rem system-ui,sans-serif;color:#1B2433}.cmpG th,.cmpG td{border:1px solid #9AA0A8;padding:.45rem .7rem;text-align:center}.cmpG thead th{background:#D3D5D8}.cmpG tbody th{background:#E4E5E7;text-align:right;font-weight:700}.cmpG td{background:#fff;min-width:7.5rem}.cmpG .m3In{width:5.5rem}.cmpG .cmpU{font-weight:400;color:#4B5563;margin-left:.25rem}
+  .cmpR{width:1.9rem;height:1.9rem;border-radius:50%;border:2px solid #1B2433;background:#fff;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center}.cmpR i{display:block;width:.95rem;height:.95rem;border-radius:50%;background:transparent}.cmpR.sel i{background:#1B2433}.cmpR.bad{border-color:#C0301E}.cmpR.ok{border-color:#2E9E4F;cursor:default}.cmpR.ok.sel i{background:#2E9E4F}.cmpG .m3In.bad{border-color:#C0301E}
   .wfSteps .m3wStep{margin-bottom:.35rem}.wfSteps .wfBtn.sel{background:var(--ink);color:var(--bg)}.wfSteps .m3wBad{color:#C0301E;font:600 .9rem system-ui,sans-serif}
   .estT{margin-top:.6rem}
   .m3Lab.on{cursor:pointer;text-decoration:underline;fill:#2D70B3}
@@ -12475,7 +12477,14 @@ var ESPIC = {
   //   ans (a number, or a function of the problem), tol, a & b (an equation), opts (pick), wrong(v) -> message, hint:[two hints], line (for Show work), nums (extra wrong choices)}
   var M3ACT = ["dsm", "gpt", "yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab", "geq", "grow"];   // the steps that are answered on the graph
   function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.csteps && mode === "calculate" ? pb.csteps : pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine : !s.so; }) : []; }
-  function m3Step() { if (!QZ || QZ.m3done) return null; return m3L()[QZ.m3i] || null; }
+  // Circle Back (pb.cb, not Write): questions one at a time; a wrong answer shows the right one, moves on, and that question comes back after all the others
+  // until it is answered right once (misses cost no Progress)
+  function m3CB() { var pb = m3Cur(); return !!(pb && pb.cb && mode !== "solo"); }
+  function m3Ord() { if (!QZ.m3ord || QZ.m3ordK !== QZ.pi + ":" + mode) { QZ.m3ord = m3L().map(function (s, i) { return i; }); QZ.m3ordK = QZ.pi + ":" + mode; } return QZ.m3ord; }
+  function m3Ix() { return m3CB() ? m3Ord()[QZ.m3i] : QZ.m3i; }
+  function m3Len() { return m3CB() ? m3Ord().length : m3L().length; }
+  function m3Miss(st, msg) { pqMsg(m3Plain(ansAdd(msg || "Not quite.", m3AnsTx(st)) + " It comes back at the end.")); m3Ord().push(m3Ix()); QZ.m3i++; QZ.hn = 0; QZ.m3o = null; drawPlay(); pqPanel(); }
+  function m3Step() { if (!QZ || QZ.m3done) return null; return m3L()[m3Ix()] || null; }
   function m3V(v) { return typeof v === "function" ? v(m3Cur(), QZ.m3x || {}) : v; }
   function m3Ok(st, raw) {
     var t = st.type || "num", ans = m3V(st.ans);
@@ -12493,10 +12502,10 @@ var ESPIC = {
     var pb = m3Cur(), line = typeof st.line === "function" ? st.line(pb, QZ.m3x || {}, show) : (st.line || ((st.pre ? st.pre.replace(/<[^>]+>/g, "") + " " : "") + show));
     if (st.after) st.after(QZ.m3x);
     QZ.m3l.push(line); if (QZ.ww) QZ.ww.steps.push({ eqs: [line], cls: "cg" });
-    QZ.m3i++; if (QZ.m3i >= m3L().length) QZ.m3done = true;
+    QZ.m3i++; if (QZ.m3i >= m3Len()) QZ.m3done = true;
     QZ.hn = 0; pqMsg(""); drawPlay(); pqPanel();
   }
-  function m3Bad(el, msg) { QZ.wrong++; if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } pqMsg(m3Plain(ansAdd(msg || "Not quite. Try again.", el ? m3AnsTx(m3Step()) : ""))); }
+  function m3Bad(el, msg) { if (m3CB() && m3Step() && !m3Step().fine) { if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } m3Miss(m3Step(), msg); return; } QZ.wrong++; if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } pqMsg(m3Plain(ansAdd(msg || "Not quite. Try again.", el ? m3AnsTx(m3Step()) : ""))); }
   function m3Try(el, enter) {
     var st = m3Step(); if (!st || st.type === "pick" || st.type === "pts" || st.type === "btn" || M3ACT.indexOf(st.type) >= 0) return;
     if (st.type === "sent") {   // Calculate: the amount of the change is typed
@@ -12527,7 +12536,7 @@ var ESPIC = {
     var st = m3Step(); if (!st) return; var k = b.dataset.m3;
     if (k === "go") { if (st.type === "btn") { QZ.m3x.reg = true; m3Accept(st, ""); } return; }
     var list = st.type === "pick" ? st.opts : m3Opts(st), o = list[+b.dataset.v]; if (!o) return;
-    if (o.ok) m3Accept(st, o.t); else { b.classList.remove("bad"); void b.offsetWidth; b.classList.add("bad"); QZ.wrong++; pqMsg(m3Plain(ansAdd((o.why) || "Not quite. Try again.", m3AnsTx(st)))); }
+    if (o.ok) m3Accept(st, o.t); else if (m3CB()) m3Miss(st, o.why); else { b.classList.remove("bad"); void b.offsetWidth; b.classList.add("bad"); QZ.wrong++; pqMsg(m3Plain(ansAdd((o.why) || "Not quite. Try again.", m3AnsTx(st)))); }
   }
   // Line of Fit: two dots on the line are clicked
   function m3Dot(i) {
@@ -12545,10 +12554,10 @@ var ESPIC = {
     var done = QZ.m3l.map(function (l) { return "<div><span class=\"cueOk\">✓</span> " + l + "</div>"; }).join("");
     var fig = pb.fig(QZ.m3x || {}), tb = typeof pb.tbl === "function" ? pb.tbl(QZ.m3x || {}) : pb.tbl || "";
     if (fig && fhGraph()) fig = "<button type=\"button\" class=\"btn fhBtn\" data-fh title=\"Show the graph: a Free Hint costs nothing\">Free Hint</button>";
-    return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div>" + tb + "<div class=\"m3Body\">" + (fig ? "<div class=\"m3FigC\"><div class=\"m3FigW\">" + fig + "</div>" + (m3wOn() && pb.kind === 5 ? "<div class=\"glTools\"><button type=\"button\" class=\"btn\" data-glw=\"line\" title=\"Draw a line through the points you have plotted (2 points)\">Line</button><button type=\"button\" class=\"btn\" data-glw=\"clear\" title=\"Remove your lines and the points you clicked\">Clear</button></div>" : "") + "</div>" : "") + (done ? "<div class=\"m3Done\">" + done + "</div>" : "") + "</div>";
+    return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div>" + tb + "<div class=\"m3Body\">" + (fig ? "<div class=\"m3FigC\"><div class=\"m3FigW\">" + fig + "</div>" + (m3wOn() && pb.kind === 5 ? "<div class=\"glTools\"><button type=\"button\" class=\"btn\" data-glw=\"line\" title=\"Draw a line through the points you have plotted (2 points)\">Line</button><button type=\"button\" class=\"btn\" data-glw=\"clear\" title=\"Remove your lines and the points you clicked\">Clear</button></div>" : "") + "</div>" : "") + (done && !(pb.grid && mode === "solo") ? "<div class=\"m3Done\">" + done + "</div>" : "") + "</div>";
   }
   function m3PG() {
-    QZ.m3i = 0; QZ.m3l = []; QZ.m3x = {}; QZ.m3done = false; QZ.m3o = null; QZ.hn = 0; QZ.arrowAt = -1; QZ.m3w = { v: {}, ok: {}, bad: {} }; m3wKey = "";
+    QZ.m3i = 0; QZ.m3ord = null; QZ.m3l = []; QZ.m3x = {}; QZ.m3done = false; QZ.m3o = null; QZ.hn = 0; QZ.arrowAt = -1; QZ.m3w = { v: {}, ok: {}, bad: {} }; m3wKey = "";
     for (var wi = works.length - 1; wi >= 0; wi--) if (works[wi].wf && works[wi].steps.length < 2) works.splice(wi, 1);
     var pb = m3Cur(); QZ.ww = null;
     if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); }
@@ -12557,6 +12566,7 @@ var ESPIC = {
   function m3Steps() {
     var el = $("wfSteps"); if (!el) return;
     if (grN() || vfN() || ivN() || csN()) { el.hidden = true; el.innerHTML = ""; return; }
+    if (mode === "solo" && m3Cur() && m3Cur().grid && QZ.m3w && QZ.m3x) { m3wGrid(); return; }   // (Compare, Write: the grid stays on the screen, finished too)
     if (m3wOn() && m3Cur()) { m3wSteps(); return; }
     m3wKey = "";
     var pb = m3Cur(), st = m3Step();
@@ -12580,7 +12590,22 @@ var ESPIC = {
   function m3wOn() { return m3() && wsub() && !!QZ.m3w && !!QZ.m3x; }
   function m3wLab(st) { var l = String(st.lab || "the answer").replace(/<[^>]+>/g, ""); return /^[A-Z][a-z]/.test(l) ? l.charAt(0).toLowerCase() + l.slice(1) : l; }
   function m3wQ(v) { return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+  // Compare, Write: one static grid (1st | 2nd), boxes for the distances and heights, a radio button in each column for "which"
+  function m3wGrid() {
+    var el = $("wfSteps"), pb = m3Cur(), G = pb.grid, L = m3L(), W = QZ.m3w, by = {}, sig = [QZ.pi, "grid"]; $("undo").hidden = true;
+    L.forEach(function (st) { by[st.id] = st; sig.push(st.id + (W.ok[st.id] ? "+" : "") + (W.bad[st.id] ? "!" : "") + ":" + (st.type === "pick" ? W.v[st.id] : "")); });
+    var key = sig.join("|"); if (key === m3wKey && !el.hidden && el.querySelector(".cmpG")) return;
+    var box = function (id) { var st = by[id]; if (!st) return "<td></td>"; if (W.ok[id]) return "<td><span class=\"vfnV\">" + m3wQ(W.v[id]) + "</span><span class=\"cmpU\">" + G.u + "</span> <span class=\"cueOk\">✓</span></td>"; return "<td><input class=\"m3In" + (W.bad[id] ? " bad" : "") + "\" data-sid=\"" + id + "\" value=\"" + m3wQ(W.v[id]) + "\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"" + m3wQ(st.lab) + "\"><span class=\"cmpU\">" + G.u + "</span></td>"; };
+    var rad = function (id, col) { var st = by[id]; if (!st) return "<td></td>"; var w = col ? "second" : "first", i = -1; st.opts.forEach(function (o, k) { if (String(o.t).indexOf(" " + w + " ") >= 0) i = k; }); var on = W.v[id] === i, ok = !!W.ok[id];
+      return "<td><button type=\"button\" role=\"radio\" class=\"cmpR" + (on ? " sel" : "") + (ok ? " ok" : on && W.bad[id] ? " bad" : "") + "\" data-m3w=\"pick\" data-sid=\"" + id + "\" data-v=\"" + i + "\" aria-checked=\"" + on + "\" aria-label=\"The " + w + " " + G.it + "\"" + (ok ? " disabled" : "") + "><i></i></button></td>"; };
+    var row = function (q, a, b) { return "<tr><th scope=\"row\">" + q + "</th>" + a + b + "</tr>"; };
+    el.innerHTML = "<table class=\"cmpG\"><thead><tr><th></th><th>1st " + G.it + "</th><th>2nd " + G.it + "</th></tr></thead><tbody>" +
+      row("How far does each travel before it lands?", box("d1"), box("d2")) + row("Which travels farther?", rad("far", 0), rad("far", 1)) +
+      row("What is each " + G.it + "\u2019s maximum height?", box("h1"), box("h2")) + row("Which " + G.it + " travels higher?", rad("hi", 0), rad("hi", 1)) + "</tbody></table>";
+    m3wKey = key; el.hidden = false; askArrow(false);
+  }
   function m3wSteps() {
+    if (m3Cur() && m3Cur().grid) { m3wGrid(); return; }
     var el = $("wfSteps"), L = m3L(), W = QZ.m3w, h = "", sig = [QZ.pi];
     $("undo").hidden = true;
     L.forEach(function (st) {
@@ -12599,7 +12624,7 @@ var ESPIC = {
   }
   function m3wClick(b) {
     var L = m3L(), st = L.filter(function (q) { return q.id === b.dataset.sid; })[0]; if (!st || QZ.m3w.ok[st.id]) return;
-    if (b.dataset.m3w === "pick") { var v = +b.dataset.v; QZ.m3w.v[st.id] = QZ.m3w.v[st.id] === v ? undefined : v; m3wSteps(); return; }   // chosen, not checked
+    if (b.dataset.m3w === "pick") { var v = +b.dataset.v; QZ.m3w.v[st.id] = QZ.m3w.v[st.id] === v && !m3Cur().grid ? undefined : v; QZ.m3w.bad[st.id] = false; m3wSteps(); return; }   // (the grid's circles are radio buttons: a click picks that column)   // chosen, not checked
     if (b.dataset.m3w === "go") { QZ.m3x.reg = true; m3wAccept(st, ""); m3Redraw(); }   // a calculator button is a tool: it simply does its job
   }
   function m3wAccept(st, show) {
@@ -13014,6 +13039,8 @@ var ESPIC = {
   });
   function m3Cue() {
     var pb = m3Cur(), L = m3L(), pn = QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : "", all = QZ.step >= 4 || QZ.m3done;
+    if (mode === "solo" && pb && pb.grid) return pn + (all ? " <span class=\"cueOk\">✓</span>" : "");   // (Compare, Write: the grid says it all)
+    if (m3CB()) return (pn ? pn + " · " : "") + "Question " + Math.min(QZ.m3l.length + 1, L.length) + " of " + L.length + (all ? " <span class=\"cueOk\">✓</span>" : "");
     if (mode === "solo") return (pn ? pn + ": " : "") + L.map(function (s, i) { return s.lab + (all || (QZ.m3w ? QZ.m3w.ok[s.id] : i < QZ.m3i) ? " <span class=\"cueOk\">✓</span>" : "?"); }).join(" &nbsp; ");
     return (pn ? pn + " · " : "") + "Step " + Math.min(QZ.m3i + 1, L.length) + " of " + L.length + (all ? " <span class=\"cueOk\">✓</span>" : "");
   }
@@ -13658,11 +13685,13 @@ var ESPIC = {
       var f1 = c2Vf(a1, D1 / 2, H1, "x", c2Y)[0], f2 = c2Y + " = −" + c2F(a) + c2X + "(" + c2X + " − " + D2 + ")", pb = { kind: 20, sc: sc };
       pb.dsm = { F1: F1, F2: F2, D1: D1, D2: D2, xmax: Math.max(D1, D2) * 1.12, ymax: Math.max(H1, H2) * 1.35, l1: "y=" + c2T(a1, 6) + "\\left(x-" + D1 / 2 + "\\right)^{2}+" + H1, l2: "y=-" + c2T(a, 6) + "x\\left(x-" + D2 + "\\right)" };
       pb.head = sc.s + " Path 1: " + f1.replace(/<[^>]+>/g, "") + "  Path 2: " + f2.replace(/<[^>]+>/g, ""); pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + " In each path, " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + ").<br>Path of the first " + it + ": <span class=\"lm cf\">" + f1 + "</span><br>Path of the second " + it + ": <span class=\"lm cg\">" + f2 + "</span><br>Graph both in Desmos. <b>Which " + it + " travels farther before landing? Which travels higher?</b>";
+      var st0 = sc.s + " In each path, " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + ").<br>Path of the first " + it + ": <span class=\"lm cf\">" + f1 + "</span><br>Path of the second " + it + ": <span class=\"lm cg\">" + f2 + "</span>";
+      Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () { return st0 + (mode === "solo" ? "<br><b>Graph both in Desmos, then fill in the table and press Submit.</b>" : ""); } });
+      pb.cb = 1; pb.grid = { it: it, u: u };   // (Circle Back in Demo, Sequence and Calculate; one static grid in Write)
       pb.fig = function () { return ""; };
       var far = D1 > D2 ? "first" : "second", hi = H1 > H2 ? "first" : "second";
       pb.steps = [
-        { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph both paths in Desmos: type each equation into the expression list.", line: "graphed both paths in Desmos" },
+        { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph each on Desmos.", line: "graphed both paths in Desmos" },
         { id: "d1", lab: "Distance 1", ask: "How far does the first " + it + " travel before it lands? Click its path in Desmos to see the " + c2X + "-intercepts.", post: u, ans: D1, hint: ["It starts at (0, 0) and lands at the other " + c2X + "-intercept.", "The other " + c2X + "-intercept is (" + D1 + ", 0)."], line: "first " + it + ": " + D1 + " " + u },
         { id: "h1", lab: "Height 1", ask: "What is the maximum height of the first " + it + "? Click its path to see the maximum.", post: u, ans: H1, hint: ["The maximum is the vertex: the top of the path.", "The vertex is (" + D1 / 2 + ", " + H1 + ")."], line: "first " + it + " height: " + H1 + " " + u },
         { id: "d2", lab: "Distance 2", ask: "How far does the second " + it + " travel before it lands?", post: u, ans: D2, hint: ["Read the " + c2X + "-intercept where it lands.", "It lands at (" + D2 + ", 0)."], line: "second " + it + ": " + D2 + " " + u },
