@@ -8217,6 +8217,12 @@ var ESPIC = {
     var S = $("vfnSvg"), out = ""; if (!S) return "";
     var g = S.cloneNode(true); g.removeAttribute("id"); g.setAttribute("width", "300"); g.setAttribute("height", "300"); g.setAttribute("style", "font:12px system-ui,sans-serif;border:1px solid #9AA0A8;background:#fff");
     out += "<div class=\"wgr\">" + g.outerHTML + "</div>";
+    if (vfnWr() && vfnStd()) {   // Write (Standard and Intercept Form): the table is made from the points the student plotted, with the work for each
+      var sp = vfnSt().pts.slice().sort(function (u, v) { return u[0] - v[0]; }), cs = "border:1px solid #B8BCC2;padding:.2em .55em;text-align:center;min-width:1.8em";
+      if (sp.length) out += "<div class=\"wtb\"><table style=\"border-collapse:collapse;font:1rem LM,Georgia,serif\"><tr><th style=\"" + cs + ";background:#F7F8FA\"><i>x</i></th><th style=\"" + cs + ";background:#F7F8FA\"><i>f</i>(<i>x</i>)</th><th style=\"" + cs + ";background:#F7F8FA\"><i>y</i></th></tr>" +
+        sp.map(function (q) { return "<tr><td style=\"" + cs + "\">" + nf(q[0]) + "</td><td style=\"" + cs + "\">" + vfnExpr(q[0]) + "</td><td style=\"" + cs + "\">" + nf(q[1]) + "</td></tr>"; }).join("") + "</table></div>";
+      return out;
+    }
     var tb = $("vfnTb"); if (tb) [].forEach.call(tb.querySelectorAll("input"), function (e) { e.setAttribute("value", e.value); });
     if (tb && !tb.hidden) [].forEach.call(tb.querySelectorAll("table"), function (t0) {
       var t = t0.cloneNode(true); t.removeAttribute("id"); t.removeAttribute("style");
@@ -13710,7 +13716,7 @@ var ESPIC = {
       var F = function (x) { return a * (x - h) * (x - h) + k; }, x1 = h + s * d[0], x2 = h + s * d[1], y1 = F(x1), y2 = F(x2);
       if ([x1, x2, 2 * h - x1, 2 * h - x2].some(function (v) { return Math.abs(v) > 9; }) || [y1, y2].some(function (v) { return Math.abs(v) > 9; })) continue;
       var fS = c2Vf(a, h, k, "x", "<i>f</i>(" + c2X + ")"), pb = { kind: 20, vf: { a: a, h: h, k: k } };
-      pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
+      pb.head = fS[0];   /* (c2Make turns it into plain text, fractions as a/b) */ pb.pic = "";
       pb.story = "Graph <span class=\"lm cf\">" + fS[0] + "</span>. Label the vertex and the axis of symmetry.";
       pb.fig = function (x) { x = x || {}; var o = c2Plane(-9, 9), ex = { alt: "Coordinate plane" }; ex.vl = x.ax ? [{ x: h, col: C2G, lab: c2X + " = " + c2F(h) }] : []; ex.curves = x.cv ? [{ fn: F, col: C2P }] : []; return c2Pl(o, x, ex); };
       pb.steps = [
@@ -13737,7 +13743,7 @@ var ESPIC = {
       if (Math.abs(c) > 9 || Math.abs(2 * h) > 9 || Math.abs(y3) > 9 || Math.abs(2 * h - x3) > 9 || Math.abs(k) > 9) continue;
       if (!c) continue; var nvp = 0; for (var dd = 1; dd <= 9; dd++) if (Math.abs(h + dd) <= 10 && Math.abs(h - dd) <= 10 && Math.abs(F(h + dd)) <= 9.5) nvp++; if (nvp < 2) continue;   // (c is clicked in the equation, and two pairs of mirror points must be on the graph)
       var fS = c2Sf(a, b, c, "<i>f</i>(" + c2X + ")"), pb = { kind: 20, vf: { std: 1, a: a, b: b, c: c, h: h, k: k } };
-      pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
+      pb.head = fS[0];   /* (c2Make turns it into plain text, fractions as a/b) */ pb.pic = "";
       pb.story = "Graph <span class=\"lm cf\">" + fS[0] + "</span>. Label the vertex and the axis of symmetry.";
       pb.fig = function (x) { x = x || {}; var ex = { alt: "Coordinate plane" }; ex.vl = x.ax ? [{ x: h, col: C2G, lab: c2X + " = " + c2F(h) }] : []; ex.curves = x.cv ? [{ fn: F, col: C2P }] : []; return c2Pl(c2Plane(-9, 9), x, ex); };
       pb.steps = [
@@ -13765,7 +13771,7 @@ var ESPIC = {
       if (!Number.isInteger(b) || !Number.isInteger(c) || !h || !c) continue;
       var F = function (x) { return a * x * x + b * x + c; }, up = a > 0, mm = up ? "minimum" : "maximum";
       var fS = c2Sf(a, b, c, "<i>f</i>(" + c2X + ")"), pb = { kind: 20, cb: 1, ta: 1, qc: 1, mx: { a: a, b: b, c: c, h: h, k: k } };
-      pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
+      pb.head = fS[0];   /* (c2Make turns it into plain text, fractions as a/b) */ pb.pic = "";
       // the equation, with a, b and c each a part that can be clicked (Demo, Sequence)
       var eqC = function () {
         var st = m3Step(), live = st && st.type === "eqc" && QZ.step < 4, co = c2Co(a)[0], cb = c2Q(Math.abs(b))[0];
@@ -13816,7 +13822,7 @@ var ESPIC = {
       if (!h || h === k || h === -k) continue;   // (so no wrong choice repeats the right one)
       var std = rnd(2) && Number.isInteger(b) && Number.isInteger(c), up = a > 0, F = function (x) { return a * (x - h) * (x - h) + k; };
       var fS = std ? c2Sf(a, b, c, "<i>f</i>(" + c2X + ")") : c2Vf(a, h, k, "x", "<i>f</i>(" + c2X + ")"), pb = { kind: 20, cb: 1, ta: 1, ivk: 1, qc: 1, wb: 1 };
-      pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
+      pb.head = fS[0];   /* (c2Make turns it into plain text, fractions as a/b) */ pb.pic = "";
       pb.story = "The graph of <span class=\"lm cf\">" + fS[0] + "</span> is shown, with its vertex labelled. Find the axis of symmetry, the domain and range, and where the function is increasing and decreasing.";
       pb.fig = function (x) { return c2Pl(c2Plane(k - 2, k + 2), x || {}, { alt: "Graph of f with its vertex", curves: [{ fn: F, col: C2P }], pts: [{ x: h, y: k, col: C2P, lab: true, dy: up ? 18 : -8 }] }); };
       var L = { v: -IVI }, Rr = { v: IVI }, K = { v: k, cl: true }, H = { v: h, cl: true }, I = function (p, q) { return ivStr([ivPc(p, q)]); };
@@ -13854,7 +13860,7 @@ var ESPIC = {
       if (gp < 5) continue;   // (Write: at least 5 grid points on the parabola, inside the graph)
       var sw = rnd(2), p1 = sw ? q : p, q1 = sw ? p : q, fS = c2If(a, p1, q1, "<i>f</i>(" + c2X + ")");
       var pb = { kind: 20, vf: { std: 1, ip: 1, a: a, p1: p1, q1: q1, h: h, k: k, ts: ts } };
-      pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = ""; pb.story = "Graph <span class=\"lm cf\">" + fS[0] + "</span>.";
+      pb.head = fS[0];   /* (c2Make turns it into plain text, fractions as a/b) */ pb.pic = ""; pb.story = "Graph <span class=\"lm cf\">" + fS[0] + "</span>.";
       pb.fig = function () { return ""; }; pb.steps = [{ id: "v" }];
       pb.ex = "In " + fS[0] + ", <i>a</i> = " + c2F(a) + ", <i>p</i> = " + c2F(p1) + " and <i>q</i> = " + c2F(q1) + ", so the " + c2X + "-intercepts are " + c2F(p) + " and " + c2F(q) + ". Put them in rows 2 and 4 of the table, fill in the other " + c2X + "-values, work out each <i>f</i>(" + c2X + "), and graph the points: the parabola opens " + (a > 0 ? "up." : "down.");
       return pb;
