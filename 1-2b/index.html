@@ -5534,15 +5534,15 @@
   ] };
   // RevQ2 works the same way (items run the originals' own code, progress of its own). Questions refer to the Algebra 2 Chapter 2.1-2.2 Quiz.
   BUILT["RevQ2"] = { review: true, key: "algebraProgress:RevQ2", levels: [], top: 0, items: [
-    { q: "Q1 Standard Form", full: "Question 1: a height function in standard form: what the y-intercept means, and x = \u2212b/(2a)", act: "2.2", lesson: 2 },
-    { q: "Q1 Max or Min", full: "Question 1: the sign of a tells whether the parabola opens down (a maximum) or up (a minimum), at x = \u2212b/(2a)", act: "2.2", lesson: 3 },
-    { q: "Q2 Vertex Form", full: "Question 2: graph a(x \u2212 h)\u00b2 + k with a table, and identify the vertex", act: "2.2", lesson: 1 },
+    { q: "Q1 Standard Form", full: "Question 1: graph a standard-form quadratic: a, b and c, x = \u2212b/(2a) in a table, then the graph, the vertex and the axis of symmetry", act: "2.2", lesson: 2 },
+    { q: "Q1 Max or Min", full: "Question 1: a, b and c, whether the parabola opens up (a minimum) or down (a maximum), x = \u2212b/(2a), and the vertex's y-value", act: "2.2", lesson: 3 },
+    { q: "Q2 Vertex Form", full: "Question 2: graph a(x \u2212 h)\u00b2 + k with a table, and identify the vertex and the axis of symmetry", act: "2.2", lesson: 1 },
     { q: "Q2 Domain", full: "Question 2: state the domain in interval notation", act: "2.2", lesson: 7 },
     { q: "Q2 Range", full: "Question 2: state the range in interval notation", act: "2.2", lesson: 8 },
     { q: "Q2 Reflect & Stretch", full: "Question 2: describe the transformation a makes to f(x) = x\u00b2 (reflection, stretch or shrink)", act: "2.1", lesson: 2 },
     { q: "Q2 Translations", full: "Question 2: describe the translations h and k make to f(x) = x\u00b2", act: "2.1", lesson: 1 },
     { q: "Q3 Intercept Form", full: "Question 3: a(x \u2212 p)(x \u2212 q): a, p and q, the table and the graph", act: "2.2", lesson: 4 },
-    { q: "Q3 Golf Paths", full: "Question 3: golf paths in intercept form: where the ball lands and how high it goes", act: "2.2", lesson: 5 }
+    { q: "Q3 Golf Paths", full: "Question 3: graph two paths in Desmos: how far each travels before it lands and how high it goes", act: "2.2", lesson: 5 }
   ] };
   var rev = null, revI = 0;
   var act = "1.4D";
@@ -5586,7 +5586,12 @@
   function revLevels() {
     var out = [], nm = { demo: "Demo", sequence: "Sequence", calculate: "Calculate", solo: "Write" };
     BUILT[rev].items.forEach(function (it, i) {
-      var B = BUILT[it.act], ml = (B.modesFor ? B.modesFor(it.lesson) : B.modes || []).filter(function (m) { return m !== "create"; }), pc = ml.indexOf("calculate") >= 0 ? [10, 25, 40, 55, 80, 100] : [10, 25, 40, 70, 100];
+      var B = BUILT[it.act];
+      if (rev === "RevQ2") {   // (RevQ2 follows its originals' own levels: the same modes, values and number of Write rounds, kept up to date with them)
+        var OL = (B.levels || []).filter(function (l) { return String(l[0]) === String(it.lesson); });
+        if (OL.length) { OL.forEach(function (l) { out.push(l[4] ? [i, l[1], l[2], l[3], l[4]] : [i, l[1], l[2], l[3]]); }); return; }
+      }
+      var ml = (B.modesFor ? B.modesFor(it.lesson) : B.modes || []).filter(function (m) { return m !== "create"; }), pc = ml.indexOf("calculate") >= 0 ? [10, 25, 40, 55, 80, 100] : [10, 25, 40, 70, 100];
       ml.forEach(function (m, k) { out.push([i, m, pc[k], nm[m] + " Mode"]); });
       out.push([i, "solo", pc[ml.length], "Write Mode, 2nd round", 2], [i, "solo", pc[ml.length + 1], "Write Mode, 3rd round", 3]);
     });
@@ -8210,7 +8215,7 @@ var ESPIC = {
   function vfnBad(msg, f) { QZ.wrong++; var t = f ? ansAdd(msg, typeof f === "string" && f.charAt(0) === "=" ? f.slice(1) : vfnAnsTx(f)) : msg; if (vfnTA()) { t += " Press Try another for a new problem."; vfnTaSet(); } pqMsg(t); }
   // "Try Another" questioning (2.2C Intercept Form, Calculate): a wrong box, once the student moves away from it (or presses Return), shows the right answer,
   // and a plum-red Try another button where Next sits gives a new problem
-  function vfnTA() { return vfN() && vfnIp() && (mode === "calculate" || mode === "sequence"); }   // (Intercept Form: Sequence and Calculate)
+  function vfnTA() { return vfN() && (vfnIp() ? mode === "calculate" || mode === "sequence" : mode === "calculate"); }   // (Intercept Form: Sequence and Calculate; 2.2A Vertex Form and Standard Form: Calculate)
   function vfnTaFail() { return vfnTA() && !!QZ.vf && QZ.vf.pi === QZ.pi && !!QZ.vf.taFail && QZ.step < 4; }
   function vfnTaSet() { var s = vfnSt(); s.taFail = true; setTimeout(function () { var nx = $("qzNext"); if (!vfnTaFail()) return; nx.hidden = false; nx.disabled = false; nx.textContent = "Try another"; }, 0); }
   // Show work (2.2A, both exercises): a picture of the graph and the table as they are, kept with the problem's work (taken when it is finished, and again
@@ -8942,6 +8947,7 @@ var ESPIC = {
     $("vfnTb").addEventListener("keydown", function (e) { if (e.key !== "Enter" || !vfN()) return; var d = e.target.dataset; if (d.vfy != null) { e.preventDefault(); vfnYTyped(d.vfy, true); return; } if (!d.vtb) return; e.preventDefault(); vfnTbTyped(d.vtb, true); });
     $("vfnOut").addEventListener("input", function (e) { var f = e.target.dataset && e.target.dataset.vff; if (!f || !vfN()) return; if (e.isTrusted) pgUser(); var s = vfnSt(); s.w[f] = e.target.value; if (!vfnWr()) vfnTyped(f, false); else { s.wbad[f] = false; e.target.classList.remove("bad"); if (typeof wsReadyUpd === "function") wsReadyUpd(); } });
     $("vfnOut").addEventListener("focusout", function (e) { var f = e.target.dataset && e.target.dataset.vff; if (!f || !vfnTA() || !String(e.target.value).trim() || e.target.dataset.chk === e.target.value || vfnSt().wok[f]) return; e.target.dataset.chk = e.target.value; vfnTyped(f, true); });
+    $("vfnTb").addEventListener("focusout", function (e) { var d = e.target.dataset; if (!d || !d.vtb || !vfnTA() || !String(e.target.value).trim() || d.chk === e.target.value || vfnSt().tbok[d.vtb]) return; d.chk = e.target.value; vfnTbTyped(d.vtb, true); });   // (Vertex Form's parent table: leaving a cell checks it)
     $("vfnTb").addEventListener("focusout", function (e) { var d = e.target.dataset; if (!d || d.vfy == null || !vfnTA() || !String(e.target.value).trim() || d.chk === e.target.value || vfnSt().gy[d.vfy]) return; d.chk = e.target.value; vfnYTyped(d.vfy, true); });
     $("vfnOut").addEventListener("keydown", function (e) { if (e.key !== "Enter") return; var f = e.target.dataset && e.target.dataset.vff; if (!f || !vfN()) return; e.preventDefault(); if (vfnWr()) { var L = vfnFs(), nx = L[L.indexOf(f) + 1]; if (nx) $("vfnF_" + nx).focus(); else if (!vfnMissing().length) vfnSubmit(); return; } vfnTyped(f, true); });
   })();
@@ -14143,7 +14149,7 @@ var ESPIC = {
 
   // ==== 2.2C: a wrong answer shows the right answer (all modes) ====
   function c2cOn() { return pq() && act === "2.2" && (lesson === 3 || lesson === 4 || lesson === 5 || lesson === 12); }
-  function ansAdd(msg, a) { msg = msg || "Not quite."; if (!(c2cOn() || (pq() && ivL())) || a == null || a === "") return msg; return msg.replace(/\s*Try again\.?\s*$/, "") + " The answer is " + String(a).replace(/\.\s*$/, "") + "."; }
+  function ansAdd(msg, a) { msg = msg || "Not quite."; if (!(c2cOn() || (pq() && ivL()) || vfnTA()) || a == null || a === "") return msg; return msg.replace(/\s*Try again\.?\s*$/, "") + " The answer is " + String(a).replace(/\.\s*$/, "") + "."; }
   function m3AnsTx(st) {
     if (!st) return ""; var t = st.type || "num";
     try {
