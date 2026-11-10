@@ -622,7 +622,7 @@
   .m3FigC{flex:0 1 22rem;min-width:15rem}.m3FigC .m3FigW{min-width:0}
   .glTools{display:flex;gap:.5rem;justify-content:center;margin-top:.3rem}.glTools .btn{min-width:5.5rem}
   #vfnOut .vfnDg{cursor:grab;border-radius:5px;padding:0 .2em;background:color-mix(in srgb,#2D70B3 10%,transparent);touch-action:none}#vfnOut .vfnDg:hover{background:color-mix(in srgb,#2D70B3 22%,transparent)}
-  .m3Row{margin:.6rem 0}.m3Row td{min-width:4rem}.m3taK{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.3rem}.m3taK .m3taKb{min-width:2.4rem;padding:.25rem .55rem;font:600 1.05rem system-ui,sans-serif}
+  .m3Row{margin:.6rem 0}.m3Row td.m3tc.live{cursor:pointer;background:color-mix(in srgb,#2D70B3 10%,#fff)}.m3Row td.m3tc.live:hover{background:color-mix(in srgb,#2D70B3 22%,#fff)}.m3Row td{min-width:4rem}.m3taK{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.3rem}.m3taK .m3taKb{min-width:2.4rem;padding:.25rem .55rem;font:600 1.05rem system-ui,sans-serif}
   .m3ta{display:flex;flex-direction:column;gap:.55rem;margin:.2rem 1.5rem .6rem 0;font:500 1.05rem system-ui,sans-serif;color:var(--ink)}.m3ta .m3taR{display:flex;align-items:center;gap:.6rem}.m3ta .m3taL{min-width:15.5rem}.m3ta .m3taIn{font:500 1.1rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:10px;padding:.3em .5em}.m3ta .m3taIn.bad{border-color:#C0301E;animation:shake .3s}
   .cmpG{border-collapse:collapse;margin:.4rem 0 .6rem;font:600 1rem system-ui,sans-serif;color:#1B2433}.cmpG th,.cmpG td{border:1px solid #9AA0A8;padding:.45rem .7rem;text-align:center}.cmpG thead th{background:#D3D5D8}.cmpG tbody th{background:#E4E5E7;text-align:right;font-weight:700}.cmpG td{background:#fff;min-width:7.5rem}.cmpG .m3In{width:5.5rem}.cmpG .cmpU{font-weight:400;color:#4B5563;margin-left:.25rem}
   .cmpR{width:1.9rem;height:1.9rem;border-radius:50%;border:2px solid #1B2433;background:#fff;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center}.cmpR i{display:block;width:.95rem;height:.95rem;border-radius:50%;background:transparent}.cmpR.sel i{background:#1B2433}.cmpR.bad{border-color:#C0301E}.cmpR.ok{border-color:#2E9E4F;cursor:default}.cmpR.ok.sel i{background:#2E9E4F}.cmpG .m3In.bad{border-color:#C0301E}
@@ -12527,7 +12527,7 @@ var ESPIC = {
   }
   // ---- steps.  A step: {id, lab (Solo's short name), fine (only in Demo, Sequence and Calculate), ask, pre (before the box), post (after it), type: num | eq | pick | pts | btn,
   //   ans (a number, or a function of the problem), tol, a & b (an equation), opts (pick), wrong(v) -> message, hint:[two hints], line (for Show work), nums (extra wrong choices)}
-  var M3ACT = ["eqc", "dsm", "gpt", "yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab", "geq", "grow"];   // the steps that are answered on the graph
+  var M3ACT = ["eqc", "tclick", "dsm", "gpt", "yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab", "geq", "grow"];   // the steps that are answered on the graph
   function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.csteps && mode === "calculate" ? pb.csteps : pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine : !s.so && !(s.noseq && mode === "sequence"); }) : []; }   // (noseq: a step left out of Sequence)
   // Circle Back (pb.cb, not Write): questions one at a time; a wrong answer shows the right one, moves on, and that question comes back after all the others
   // until it is answered right once (misses cost no Progress)
@@ -12876,6 +12876,13 @@ var ESPIC = {
     var b = e.target.closest && e.target.closest("button[data-m3]"); if (!b || !m3()) return; if (e.isTrusted) pgUser(); m3Click(b);
   });
   $("pgQt").addEventListener("click", function (e) { var d = e.target.closest && e.target.closest("[data-m3pt]"); if (!d || !m3()) return; if (e.isTrusted) pgUser(); m3Dot(+d.dataset.m3pt); });
+  // the work in the table clicked: one operation per click, the last puts the value in the y column (2.2C Min & Max, Demo and Sequence)
+  function m3TClick() {
+    var st = m3Step(); if (!st || st.type !== "tclick" || QZ.step >= 4) return; var x = QZ.m3x;
+    x.ts = (x.ts || 0) + 1; if (x.ts >= st.n) { m3Accept(st, c2F(st.ans)); return; }
+    pqMsg(""); $("pgQt").innerHTML = m3Q();
+  }
+  $("pgQt").addEventListener("click", function (e) { var d = e.target.closest && e.target.closest("[data-m3tc]"); if (!d || !m3()) return; if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused && e.isTrusted) return; m3TClick(); });
   // a, b or c clicked in the equation (2.2C Min & Max, Demo and Sequence)
   function m3EqC(k0) {
     var st = m3Step(); if (!st || st.type !== "eqc" || QZ.step >= 4) return;
@@ -13793,9 +13800,17 @@ var ESPIC = {
       pb.fig = function (x) { x = x || {}; if (!x.vv && mode !== "calculate") return ""; return c2Pl(c2Plane(k - 2, k + 2), x, { alt: "Graph of f", curves: [{ fn: F, col: C2P }], vl: [{ x: h, col: C2G, lab: c2X + " = " + c2F(h) }], pts: [{ x: h, y: k, col: C2P, lab: true, dy: up ? 18 : -8 }] }); };
       // the one-row table for the y-value of the vertex: x and the work are filled in (Demo, Sequence, once x = −b/(2a) is found)
       var work = (a === 1 ? "" : a === -1 ? "−" : c2F(a)) + "(" + c2F(h) + ")² " + (b < 0 ? "− " : "+ ") + c2F(Math.abs(b)) + "(" + c2F(h) + ") " + (c < 0 ? "− " : "+ ") + c2F(Math.abs(c));
+      // the work, one operation per click: the square, a times it (unless a = ±1), b times h, then adding left to right
+      var WS = (function () {
+        var L = [work], sq = h * h, t1 = a * sq, t2 = b * h, row = function (A) { return A.map(function (v, i) { return i === 0 ? c2F(v) : (v < 0 ? "− " : "+ ") + c2F(Math.abs(v)); }).join(" "); };
+        var bS = (b < 0 ? "− " : "+ ") + c2F(Math.abs(b)) + "(" + c2F(h) + ")", cS = (c < 0 ? "− " : "+ ") + c2F(Math.abs(c));
+        if (Math.abs(a) !== 1) L.push(c2F(a) + "(" + c2F(sq) + ") " + bS + " " + cS);
+        L.push(c2F(t1) + " " + bS + " " + cS); L.push(row([t1, t2, c])); L.push(row([t1 + t2, c])); L.push(c2F(k));
+        return L;
+      })();
       pb.tbl = function (x) {
         x = x || {}; var cs = m3Step(); if (!(mode === "demo" || mode === "sequence") || !(x.xh || x.vv || (cs && cs.id === "val"))) return "";   // (also when x = −b/(2a) was missed and comes back later: the y-value question always has its table)
-        return "<table class=\"cmpG m3Row\"><thead><tr><th class=\"lm\"><i>x</i></th><th class=\"lm\"><i>f</i>(<i>x</i>)</th><th class=\"lm\"><i>y</i></th></tr></thead><tbody><tr><td class=\"lm\">" + c2F(h) + "</td><td class=\"lm\">" + work + "</td><td class=\"lm\">" + (x.vv ? c2F(k) + " <span class=\"cueOk\">✓</span>" : "?") + "</td></tr></tbody></table>";
+        return "<table class=\"cmpG m3Row\"><thead><tr><th class=\"lm\"><i>x</i></th><th class=\"lm\"><i>f</i>(<i>x</i>)</th><th class=\"lm\"><i>y</i></th></tr></thead><tbody><tr><td class=\"lm\">" + c2F(h) + "</td><td class=\"lm" + (cs && cs.type === "tclick" && QZ.step < 4 ? " m3tc live" : "") + "\"" + (cs && cs.type === "tclick" ? " data-m3tc=\"1\" title=\"Click to work it out, one step at a time\"" : "") + ">" + (x.vv ? work : WS[Math.min(x.ts || 0, WS.length - 1)]) + "</td><td class=\"lm\">" + (x.vv ? c2F(k) + " <span class=\"cueOk\">✓</span>" : "?") + "</td></tr></tbody></table>";
       };
       var sayA = a === 1 ? "No number in front of " + c2X + "² means a = 1." : "a is the number in front of " + c2X + "².";
       pb.steps = [
@@ -13807,6 +13822,8 @@ var ESPIC = {
         { id: "xv", fine: 1, noseq: 1, lab: "x of vertex", ask: "The " + mm + " is at the vertex, where " + c2X + " = −<i>b</i>/(2<i>a</i>). Find " + c2X + ".", pre: c2X + " =", ans: h, after: function (x) { x.xh = true; }, wrong: function (v) { return v === -h ? "Remember the negative sign: " + c2X + " = −b/(2a)." : ""; }, hint: ["<i>a</i> = " + c2Q(a)[0] + " and <i>b</i> = " + c2F(b) + ".", "−(" + c2F(b) + ")/(2 · " + c2Q(a)[0] + ") = " + c2F(h) + "."], line: c2X + " = −<i>b</i>/(2<i>a</i>) = " + c2F(h) },
         { id: "val", lab: "Value", ask: c2S("Find the <i>y</i>-value of the vertex: work out <i>f</i>(" + c2F(h) + ") in the table. That is the " + mm + " value.", "Find the minimum or maximum value: the <i>y</i>-value of the vertex."), pre: c2Y + " =", ans: k, after: function (x) { x.vv = true; }, hint: ["Work out " + work + ".", "<i>f</i>(" + c2F(h) + ") = " + c2F(k) + "."], line: "the " + mm + " value is " + c2F(k) }
       ];
+      // Demo, Sequence: the y-value is found by clicking the work in the table (one operation per click)
+      pb.isteps = pb.steps.map(function (st) { return st.id !== "val" ? st : { id: "val", lab: "Value", type: "tclick", n: WS.length - 1, ans: k, ask: "Click the work in the middle of the table to find the <i>y</i>-value, one step at a time. That is the " + mm + " value.", after: st.after, hint: st.hint, line: st.line }; });
       // Calculate ("Try Another"): every box at once
       var W1 = function (L) { return function (v) { return L.indexOf(String(v).trim().toLowerCase().replace(/\.$/, "")) >= 0; }; };
       pb.tsteps = [
@@ -15346,6 +15363,7 @@ var ESPIC = {
           return;
         }
         if (t === "dsm" && P1.dsm && P1.dsm.reg) { pgWait(1400, function () { dsmDemoReg(run, n, cap); }); return; }   // 2.4: the hand types the table, the regression, f(x) and the value asked for into Desmos
+        if (t === "tclick") { pgWait(1400, function () { (function one() { if (pgRun !== run) return; var s0 = m3Step(); if (!s0 || s0.id !== st.id) { pgWait(700, n); return; } m3Tap(document.querySelector("#pgQt [data-m3tc]"), m3TClick, one); })(); }); return; }   // 2.2C Min & Max: the hand clicks the work until the value is found
         if (t === "eqc") { pgWait(1500, function () { m3Tap(document.querySelector("#pgQt [data-m3c=\"" + st.k + "\"]"), function () { m3EqC(st.k); }, n); }); return; }   // 2.2C Min & Max: a, b, c clicked in the equation
         if (t === "dsm") { pgWait(1400, function () { dsmDemoType(run, n); }); return; }   // 2.2C Compare: the hand types both equations into Desmos
         if (t === "gpt") {   // Chapter 2: click each point (for "any points on the curve", the demo picks points that work)
