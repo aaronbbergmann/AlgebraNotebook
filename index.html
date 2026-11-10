@@ -98,8 +98,9 @@
   .card h3{margin:1rem 0 .3rem;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
   .bar{height:.7rem;border-radius:99px;background:color-mix(in srgb,var(--ink) 15%,transparent);overflow:hidden}
   .bar i{display:block;height:100%;background:var(--plus);border-radius:99px;transition:width .5s}
-  .lv{display:flex;gap:.7rem;align-items:baseline;padding:.3rem 0;list-style:none;opacity:.65}
-  .lv.done{opacity:1}
+  .lv{display:flex;gap:.7rem;align-items:baseline;padding:.3rem 0;list-style:none}
+  /* Progress window: a finished level is grey, 1pt smaller and struck through (its plum check is not); a level still to do is plain, full size, in the normal text colour */
+  .lv.done>:not(.ck){color:#8A8F98;font-size:calc(1em - 1pt);text-decoration:line-through}
   .lv .ck{width:1.3em;text-align:center;font-weight:800;color:var(--plus)}
   .lv .pc{min-width:2.8em;text-align:right;font-weight:700}
   .card ul{margin:0;padding:0}
