@@ -5497,7 +5497,7 @@
       [4, "solo", 80, "Write Mode, 2nd round", 2], [4, "solo", 100, "Write Mode, 3rd round", 3]
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
-    "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics of a Parabola"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics"], function (l) { return l === 11 || l === 12 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
+    "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics of a Parabola"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics"], function (l) { return l === 11 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression"], ["Vertex & Point", "Intercepts", "Three Points", "Regression"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -5514,7 +5514,7 @@
       ["g", "solo", 80, "Write Mode, 2nd round", 2], ["g", "solo", 100, "Write Mode, 3rd round", 3]
     ] }
   };
-  BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return l[0] < 6; }).concat([[11, "demo", 20, "Demo Mode"], [11, "sequence", 50, "Sequence Mode"], [11, "calculate", 100, "Calculate Mode"], [12, "demo", 20, "Demo Mode"], [12, "sequence", 50, "Sequence Mode"], [12, "calculate", 100, "Calculate Mode"]]);   // (2.2C Characteristics: Demo, Sequence, Calculate)   // (2.2C Memorize: a card sort in Demo and Sequence; Calculate is a quiz)
+  BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return l[0] < 6; }).concat([[11, "demo", 20, "Demo Mode"], [11, "sequence", 50, "Sequence Mode"], [11, "calculate", 100, "Calculate Mode"], [12, "demo", 10, "Demo Mode"], [12, "sequence", 25, "Sequence Mode"], [12, "calculate", 40, "Calculate Mode"], [12, "solo", 55, "Write Mode"], [12, "solo", 80, "Write Mode, 2nd problem", 2], [12, "solo", 100, "Write Mode, 3rd problem", 3]]);   // (2.2C Characteristics: Write has the Calculate boxes, checked on Submit)   // (2.2C Memorize: a card sort in Demo and Sequence; Calculate is a quiz)
   [6, 7, 8, 9, 10].forEach(function (n) { BUILT["2.2"].levels.push([n, "demo", 10, "Demo Mode"], [n, "sequence", 40, "Sequence Mode, 3 problems"], [n, "calculate", 70, "Calculate Mode, 3 problems"], [n, "solo", 100, "Write Mode, 3 problems"]); });   // 2.2B Interval Notation: each mode needs a whole round of three
   // RevT1 holds no exercises of its own: each item runs one of the original exercises (the same code), so a change to an original shows up here too.
   // Its progress is the original's progress.  Questions refer to Algebra 2 Chapter 1 Test 1.
@@ -8346,7 +8346,7 @@ var ESPIC = {
         if (id !== f || done) return row(f, null, false);
         return "<div class=\"vfnR cur\"><span class=\"vfnL\">" + VFN_LAB[f] + "</span> " + vfnIvIn(f) + "</div>" + vfnKeysHTML(f);
       };
-      var pqv = function (k) { var v = nf(p[k + "1"]); return id === "drag" && !(s.dx && s.dx[v === nf(Math.min(p.p1, p.q1)) ? 1 : 3]) ? "<span class=\"vfnDg\" data-vfo=\"" + k + "\" title=\"Drag into the x column\">" + v + "</span>" : v; };   // (Intercept Form: at the drag step, p and q found here can be dragged into the table too)
+      var pqv = function (k) { var v = nf(p[k + "1"]), inT = s.dx && [1, 3].filter(function (r) { return s.dx[r] && s.rx && s.rx[r] === p[k + "1"]; }).length > (k === "q" && p.p1 === p.q1 && s.dx[1] && s.dx[3] ? 1 : 0); return id === "drag" && !inT ? "<span class=\"vfnDg\" data-vfo=\"" + k + "\" title=\"Drag into the x column\">" + v + "</span>" : v; };   // (Intercept Form: at the drag step, p and q found here can be dragged into the table too)
       var top = vfnIp() ? row("a", P("a") ? nf(p.a) : null, id === "a") + row("p", P("p") ? pqv("p") : null, id === "p") + row("q", P("q") ? pqv("q") : null, id === "q") : vfnStd() ? row("a", P("a") ? nf(p.a) : null, id === "a") + row("b", P("b") ? nf(p.b) : null, id === "b") + row("c", P("c") ? nf(p.c) : null, id === "c") + row("xv", P("drag") ? nf(p.h) : null, id === "drag")
         : row("h", P("h") ? nf(p.h) : null, id === "h") + row("k", P("k") ? nf(p.k) : null, id === "k");
       var sig = el.innerHTML ? null : null; if (el.dataset.sig !== top + "|" + (vfnIp() ? VFN_IV.map(ivr).join("") : "") + "|" + id + "|" + (P("m2") ? 1 : 0) + "|" + JSON.stringify(s.pairs)) {
@@ -12588,7 +12588,7 @@ var ESPIC = {
     var done = QZ.m3l.map(function (l) { return "<div><span class=\"cueOk\">✓</span> " + l + "</div>"; }).join("");
     var fig = pb.fig(QZ.m3x || {}), tb = typeof pb.tbl === "function" ? pb.tbl(QZ.m3x || {}) : pb.tbl || "";
     if (fig && fhGraph()) fig = "<button type=\"button\" class=\"btn fhBtn\" data-fh title=\"Show the graph: a Free Hint costs nothing\">Free Hint</button>";
-    if (m3TA()) return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div><div class=\"m3Body\">" + m3taList() + (fig ? "<div class=\"m3FigC\"><div class=\"m3FigW\">" + fig + "</div></div>" : "") + "</div>";   // ("Try Another": a screen of boxes, the graph a Free Hint beside them)
+    if (m3TA() || m3WB()) return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div><div class=\"m3Body\">" + m3taList() + (fig ? "<div class=\"m3FigC\"><div class=\"m3FigW\">" + fig + "</div></div>" : "") + "</div>";   // ("Try Another": a screen of boxes, the graph a Free Hint beside them)
     if (m3QC()) {   // (Demo, Sequence: the question in hand and its buttons sit in the centre pane, alone; once answered, the next takes its place)
       var qh = m3QCHtml();
       return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div>" + tb + "<div class=\"m3Body\">" + (fig ? "<div class=\"m3FigC\"><div class=\"m3FigW\">" + fig + "</div></div>" : "") + "<div class=\"m3QCol\">" + qh + (done ? "<div class=\"m3Done\">" + done + "</div>" : "") + "</div></div>";
@@ -12605,6 +12605,7 @@ var ESPIC = {
   // ==== "Try Another" questioning (pb.ta, Calculate): every box is on the screen; a box is accepted the moment it is right.  A wrong box, once the student
   // moves away from it, shows the right answer, and a plum-red Try another button (where Next sits) gives a new problem ====
   function m3TA() { var pb = m3Cur(); return !!(pb && pb.ta && pb.tsteps && mode === "calculate"); }
+  function m3WB() { var pb = m3Cur(); return !!(pb && pb.wb && pb.tsteps && mode === "solo"); }   // (Write: the Calculate boxes, checked only on Submit)
   function m3taSt() { var pb = m3Cur(); if (!QZ.ta || QZ.ta.ex !== pb.ex || QZ.ta.pi !== QZ.pi) QZ.ta = { ex: pb.ex, pi: QZ.pi, v: {}, ok: {}, bad: {}, fail: false }; return QZ.ta; }
   function m3taFail() { return m3TA() && !!QZ.ta && QZ.ta.ex === m3Cur().ex && QZ.ta.fail && QZ.step < 4; }
   function m3taOk(st, v) { if (st.word) return st.word(v); var n = m3Num(v); return !isNaN(n) && Math.abs(n - st.ans) < 1e-9; }
@@ -12613,7 +12614,8 @@ var ESPIC = {
     var pb = m3Cur(), T = m3taSt(), done = QZ.step >= 4, h = "<div class=\"m3ta\" id=\"m3taBox\">";
     pb.tsteps.forEach(function (st) {
       h += "<div class=\"m3taR\"><span class=\"m3taL\">" + st.pre + "</span><span>";
-      if (T.ok[st.id]) h += "<span class=\"vfnV\">" + m3taShow(st) + "</span> <span class=\"cueOk\">✓</span>";
+      if (T.ok[st.id] && (!m3WB() || done)) h += "<span class=\"vfnV\">" + m3taShow(st) + "</span> <span class=\"cueOk\">✓</span>";
+      else if (T.ok[st.id]) h += "<span class=\"vfnV\">" + m3wQ(T.v[st.id]) + "</span> <span class=\"cueOk\">✓</span>";
       else h += "<input class=\"m3taIn" + (T.bad[st.id] ? " bad" : "") + "\" data-ta=\"" + st.id + "\" value=\"" + m3wQ(T.v[st.id]) + "\" style=\"width:" + (st.w || 5.5) + "rem\" inputmode=\"" + (st.word ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"" + m3wQ(String(st.pre).replace(/<[^>]+>/g, "")) + "\"" + (done || (pgRun && !pgPaused) ? " readonly" : "") + ">";
       h += "</span></div>";
     });
@@ -12623,7 +12625,7 @@ var ESPIC = {
   var m3taLast = null;   // the box the interval keys type into
   document.addEventListener("mousedown", function (e) { if (e.target.closest && e.target.closest("[data-tak]")) e.preventDefault(); });   // (a key press keeps the box's focus, so leaving it is not checked)
   document.addEventListener("click", function (e) {
-    var k0 = e.target.closest && e.target.closest("[data-tak]"); if (!k0 || !m3TA()) return; if (e.isTrusted) pgUser();
+    var k0 = e.target.closest && e.target.closest("[data-tak]"); if (!k0 || !(m3TA() || m3WB())) return; if (e.isTrusted) pgUser();
     var el = (document.activeElement && document.activeElement.dataset && document.activeElement.dataset.ta) ? document.activeElement : m3taLast && document.body.contains(m3taLast) ? m3taLast : document.querySelector("#pgQt .m3taIn"); if (!el || el.readOnly) return;
     var ins = k0.dataset.tak === "ℝ" ? "(−∞, ∞)" : k0.dataset.tak === "," ? ", " : k0.dataset.tak, a0 = el.selectionStart == null ? el.value.length : el.selectionStart, b0 = el.selectionEnd == null ? a0 : el.selectionEnd;
     if (k0.dataset.tak === "ℝ") { el.value = ins; a0 = 0; b0 = 0; } else el.value = el.value.slice(0, a0) + ins + el.value.slice(b0);
@@ -12634,6 +12636,7 @@ var ESPIC = {
   function m3taInput(el) {
     var pb = m3Cur(), T = m3taSt(), st = pb.tsteps.filter(function (q) { return q.id === el.dataset.ta; })[0]; if (!st || T.ok[st.id] || QZ.step >= 4) return;
     T.v[st.id] = el.value; T.bad[st.id] = false; el.classList.remove("bad");
+    if (m3WB()) return;   // (Write: kept as typed; Submit checks it)
     if (!m3taOk(st, el.value)) return;
     T.ok[st.id] = true; if (st.after) st.after(QZ.m3x); var line = st.line; QZ.m3l.push(line); if (QZ.ww) QZ.ww.steps.push({ eqs: [line], cls: "cg" });
     var all = pb.tsteps.every(function (q) { return T.ok[q.id]; });
@@ -12642,15 +12645,15 @@ var ESPIC = {
     var nx = [].filter.call(document.querySelectorAll("#pgQt .m3taIn"), function (e) { return !String(e.value).trim(); })[0] || document.querySelector("#pgQt .m3taIn"); if (nx && !pgRun) nx.focus();
   }
   function m3taLeave(el) {   // moved away from a box that is filled in but not right
-    var pb = m3Cur(), T = m3taSt(), st = pb.tsteps.filter(function (q) { return q.id === el.dataset.ta; })[0]; if (!st || T.ok[st.id] || QZ.step >= 4 || !String(el.value).trim() || m3taOk(st, el.value)) return;
+    if (m3WB()) return; var pb = m3Cur(), T = m3taSt(), st = pb.tsteps.filter(function (q) { return q.id === el.dataset.ta; })[0]; if (!st || T.ok[st.id] || QZ.step >= 4 || !String(el.value).trim() || m3taOk(st, el.value)) return;
     T.bad[st.id] = true; el.classList.add("bad"); QZ.wrong++; T.fail = true;
     pqMsg("Not quite. " + String(st.pre).replace(/<[^>]+>/g, "").replace(/[=?]\s*$/, "").trim() + ": the answer is " + m3taShow(st) + ". Press Try another for a new problem.");
     var nx = $("qzNext"); nx.hidden = false; nx.disabled = false; nx.textContent = "Try another";   // (the boxes stay as they are: the student's place is kept)
   }
-  $("pgQt").addEventListener("input", function (e) { if (e.target.dataset && e.target.dataset.ta && m3TA()) { if (e.isTrusted) pgUser(); m3taInput(e.target); } });
+  $("pgQt").addEventListener("input", function (e) { if (e.target.dataset && e.target.dataset.ta && (m3TA() || m3WB())) { if (e.isTrusted) pgUser(); m3taInput(e.target); } });
   $("pgQt").addEventListener("focusin", function (e) { if (e.target.dataset && e.target.dataset.ta) m3taLast = e.target; });
   $("pgQt").addEventListener("focusout", function (e) { if (e.target.dataset && e.target.dataset.ta && m3TA()) m3taLeave(e.target); });
-  $("pgQt").addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.dataset && e.target.dataset.ta && m3TA()) { e.preventDefault(); var A = [].slice.call(document.querySelectorAll("#pgQt .m3taIn")), n = A[A.indexOf(e.target) + 1]; if (n) n.focus(); else m3taLeave(e.target); } });
+  $("pgQt").addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.dataset && e.target.dataset.ta && (m3TA() || m3WB())) { e.preventDefault(); var A = [].slice.call(document.querySelectorAll("#pgQt .m3taIn")), n = A[A.indexOf(e.target) + 1]; if (n) n.focus(); else m3taLeave(e.target); } });
   // ==== Questions in the centre pane (pb.qc, Demo and Sequence): one question at a time, asked only there; the default for new exercises with a list of questions ====
   function m3QC() { var pb = m3Cur(); return !!(pb && pb.qc && (mode === "demo" || mode === "sequence")); }
   function m3QCHtml() {
@@ -12665,7 +12668,7 @@ var ESPIC = {
   function m3Steps() {
     var el = $("wfSteps"); if (!el) return;
     if (m3QC()) { el.hidden = true; el.innerHTML = ""; askArrow(false); $("undo").hidden = true; m3wKey = ""; return; }
-    if (m3TA() && m3Cur()) { m3taSteps(); return; }
+    if ((m3TA() || m3WB()) && m3Cur()) { m3taSteps(); return; }
     if (grN() || vfN() || ivN() || csN()) { el.hidden = true; el.innerHTML = ""; return; }
     if (mode === "solo" && m3Cur() && m3Cur().grid && QZ.m3w && QZ.m3x) { m3wGrid(); return; }   // (Compare, Write: the grid stays on the screen, finished too)
     if (m3wOn() && m3Cur()) { m3wSteps(); return; }
@@ -12776,6 +12779,7 @@ var ESPIC = {
     pqMsg(""); m3wFig();
   }
   function m3wMissing() {
+    if (m3WB()) { var T0 = m3taSt(); return m3Cur().tsteps.filter(function (q) { return !T0.ok[q.id] && !String(T0.v[q.id] || "").trim(); }).map(function (q) { return String(q.pre).replace(/<[^>]+>/g, "").replace(/\s*(:\s*x\s*=|[:=?])\s*$/, "").trim().toLowerCase(); }); }
     var L = m3L(), W = QZ.m3w, x = QZ.m3x, miss = [], gl = [], need = 0;
     L.forEach(function (st) {
       if (W.ok[st.id]) return; var t = st.type || "num";
@@ -12808,7 +12812,14 @@ var ESPIC = {
     if (pool.length && gs.length) res[gs[gs.length - 1].id] = null;   // (points plotted that are none of these)
     return res;
   }
+  function m3wbSubmit() {   // Write with boxes: every box checked at once; the right ones keep their check marks
+    var pb = m3Cur(), T = m3taSt(), bad = [];
+    pb.tsteps.forEach(function (st) { if (T.ok[st.id]) return; if (m3taOk(st, T.v[st.id] || "")) { T.ok[st.id] = true; T.bad[st.id] = false; QZ.m3l.push(st.line); if (QZ.ww) QZ.ww.steps.push({ eqs: [st.line], cls: "cg" }); } else { T.bad[st.id] = true; bad.push(st); } });
+    if (bad.length) { QZ.wrong++; drawPlay(); pqPanel(); pqMsg(m3Plain("Not quite. Check " + wsList(bad.map(function (q) { return String(q.pre).replace(/<[^>]+>/g, "").replace(/\s*(:\s*x\s*=|[:=?])\s*$/, "").trim().toLowerCase(); })) + ", then press Submit again." + (c2cOn() ? " The answers: " + bad.map(function (q) { return String(q.pre).replace(/<[^>]+>/g, "").replace(/[:?]\s*$/, "").trim() + " " + m3taShow(q); }).join("; ") + "." : ""))); return; }
+    QZ.m3i = m3L().length; QZ.m3done = true; pqMsg(""); drawPlay(); pqEval();
+  }
   function m3wSubmit() {
+    if (m3WB()) { m3wbSubmit(); return; }
     var pb = m3Cur(), L = m3L(), W = QZ.m3w, x = QZ.m3x, bad = [], G = m3wGpt(L); W.bad = {};
     L.forEach(function (st) {
       if (W.ok[st.id]) return; var t = st.type || "num", ok = false, show = "";
@@ -13749,7 +13760,7 @@ var ESPIC = {
       var a = c2Pick(tier === 0 ? [1, -1, 2, -2] : tier === 1 ? [2, -2, 3, -3, 0.5] : [3, -3, 4, -4, 0.5, -0.5]), h = c2Rng(-5, 5), k = c2Rng(-8, 8), b = -2 * a * h, c = a * h * h + k;
       if (!Number.isInteger(b) || !Number.isInteger(c) || !h || !c) continue;
       var F = function (x) { return a * x * x + b * x + c; }, up = a > 0, mm = up ? "minimum" : "maximum";
-      var fS = c2Sf(a, b, c, "<i>f</i>(" + c2X + ")"), pb = { kind: 20, cb: 1, ta: 1, mx: { a: a, b: b, c: c, h: h, k: k } };
+      var fS = c2Sf(a, b, c, "<i>f</i>(" + c2X + ")"), pb = { kind: 20, cb: 1, ta: 1, qc: 1, mx: { a: a, b: b, c: c, h: h, k: k } };
       pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
       // the equation, with a, b and c each a part that can be clicked (Demo, Sequence)
       var eqC = function () {
@@ -13800,7 +13811,7 @@ var ESPIC = {
       var a = c2Pick(tier === 0 ? [1, -1, 2, -2] : [1, -1, 2, -2, 0.5, -0.5, 3, -3]), h = c2Rng(-6, 6), k = c2Rng(-7, 7), b = -2 * a * h, c = a * h * h + k;
       if (!h || h === k || h === -k) continue;   // (so no wrong choice repeats the right one)
       var std = rnd(2) && Number.isInteger(b) && Number.isInteger(c), up = a > 0, F = function (x) { return a * (x - h) * (x - h) + k; };
-      var fS = std ? c2Sf(a, b, c, "<i>f</i>(" + c2X + ")") : c2Vf(a, h, k, "x", "<i>f</i>(" + c2X + ")"), pb = { kind: 20, cb: 1, ta: 1, ivk: 1, qc: 1 };
+      var fS = std ? c2Sf(a, b, c, "<i>f</i>(" + c2X + ")") : c2Vf(a, h, k, "x", "<i>f</i>(" + c2X + ")"), pb = { kind: 20, cb: 1, ta: 1, ivk: 1, qc: 1, wb: 1 };
       pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
       pb.story = "The graph of <span class=\"lm cf\">" + fS[0] + "</span> is shown, with its vertex labelled. Find the axis of symmetry, the domain and range, and where the function is increasing and decreasing.";
       pb.fig = function (x) { return c2Pl(c2Plane(k - 2, k + 2), x || {}, { alt: "Graph of f with its vertex", curves: [{ fn: F, col: C2P }], pts: [{ x: h, y: k, col: C2P, lab: true, dy: up ? 18 : -8 }] }); };
@@ -13865,7 +13876,7 @@ var ESPIC = {
       pb.head = sc.s + " Path 1: " + f1.replace(/<[^>]+>/g, "") + "  Path 2: " + f2.replace(/<[^>]+>/g, ""); pb.pic = c2Pic(sc.pic);
       var st0 = sc.s + " In each path, " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + ").<br>Path of the first " + it + ": <span class=\"lm cf\">" + f1 + "</span><br>Path of the second " + it + ": <span class=\"lm cg\">" + f2 + "</span>";
       Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () { return st0 + (mode === "solo" ? "<br><b>Graph both in Desmos, then fill in the table and press Submit.</b>" : ""); } });
-      pb.cb = 1; pb.grid = { it: it, u: u };   // (Circle Back in Demo, Sequence and Calculate; one static grid in Write)
+      pb.cb = 1; pb.qc = 1; pb.grid = { it: it, u: u };   // (Circle Back in Demo, Sequence and Calculate; one static grid in Write)
       pb.fig = function () { return ""; };
       var far = D1 > D2 ? "first" : "second", hi = H1 > H2 ? "first" : "second";
       pb.steps = [
