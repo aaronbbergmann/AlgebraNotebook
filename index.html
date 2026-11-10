@@ -8208,7 +8208,7 @@ var ESPIC = {
   function vfnBad(msg, f) { QZ.wrong++; var t = f ? ansAdd(msg, typeof f === "string" && f.charAt(0) === "=" ? f.slice(1) : vfnAnsTx(f)) : msg; if (vfnTA()) { t += " Press Try another for a new problem."; vfnTaSet(); } pqMsg(t); }
   // "Try Another" questioning (2.2C Intercept Form, Calculate): a wrong box, once the student moves away from it (or presses Return), shows the right answer,
   // and a plum-red Try another button where Next sits gives a new problem
-  function vfnTA() { return vfN() && vfnIp() && mode === "calculate"; }
+  function vfnTA() { return vfN() && vfnIp() && (mode === "calculate" || mode === "sequence"); }   // (Intercept Form: Sequence and Calculate)
   function vfnTaFail() { return vfnTA() && !!QZ.vf && QZ.vf.pi === QZ.pi && !!QZ.vf.taFail && QZ.step < 4; }
   function vfnTaSet() { var s = vfnSt(); s.taFail = true; setTimeout(function () { var nx = $("qzNext"); if (!vfnTaFail()) return; nx.hidden = false; nx.disabled = false; nx.textContent = "Try another"; }, 0); }
   // Show work (2.2A, both exercises): a picture of the graph and the table as they are, kept with the problem's work (taken when it is finished, and again
@@ -8249,8 +8249,8 @@ var ESPIC = {
       if (vfnIp()) {   // Intercept Form: one instruction at a time, for the first thing not yet done
         var ok = function (r) { return s.xok[r] || (s.dx && s.dx[r]); };
         if (!s.wok.a) return vfnP().a === 1 ? "Type the <i>a</i> value. With no number in front of the parentheses, <i>a</i> = 1." : "Type the <i>a</i> value: the number in front of the parentheses.";
-        if (!s.wok.p) return "Type the <i>p</i> value: the number subtracted from <i>x</i> in the first factor.";
-        if (!s.wok.q) return "Type the <i>q</i> value: the number subtracted from <i>x</i> in the second factor.";
+        if (!s.wok.p) return "Type the <i>p</i> value: the number subtracted from <i>x</i> in one of the factors.";
+        if (!s.wok.q) return "Type the <i>q</i> value: the number subtracted from <i>x</i> in the other factor.";
         if (!s.gx && !(ok(1) && ok(3))) return "Type <i>p</i> and <i>q</i> in rows 2 and 4 of the <i>x</i> column.";
         if (!s.gx && !ok(2)) return "Type the <i>x</i>-value halfway between <i>p</i> and <i>q</i> in row 3.";
         if (!s.gx) return "Type any <i>x</i> outside the intercepts in rows 1 and 5.";
@@ -8429,7 +8429,11 @@ var ESPIC = {
   function vfnIvSay(f, s) { return f === "mm" ? (s.w.mmk === "min" ? "minimum" : "maximum") + " value y = " + nf(vfnP().k) : VFN_SAY[f] + ivStr(vfnIvAns(f)); }
   function vfnCheckF(f, v) {   // a box's value: true when right (pairs are checked together)
     var p = vfnP(), n = m3Num(v);
-    if (f === "p" || f === "q") return n === p[f + "1"];
+    if (f === "p" || f === "q") {
+      if (!(p.ip && mode === "calculate")) return n === p[f + "1"];
+      var s0 = vfnSt(), o = f === "p" ? "q" : "p", ov = s0.wok[o] ? m3Num(s0.w[o]) : null;   // (Calculate: p and q may be given in either order, as long as they differ)
+      return (n === p.p1 || n === p.q1) && (ov === null || n !== ov || p.p1 === p.q1);
+    }
     if (f === "mm") return vfnMMok(vfnSt());
     if (VFN_IV.indexOf(f) >= 0) return vfnIvOk(f, v);
     if (f === "a" || f === "b" || f === "c") return n === p[f];
@@ -8441,7 +8445,7 @@ var ESPIC = {
   }
   function vfnPairBox(n, s) { var a = vfnPt(s.w["m" + n + "a"]), b = vfnPt(s.w["m" + n + "b"]), o = s.wok["m" + (3 - n)] ? [vfnPt(s.w["m" + (3 - n) + "a"]), vfnPt(s.w["m" + (3 - n) + "b"])] : null; return vfnPair(a, b, o); }
   var VFN_SAY = { p: "p = ", q: "q = ", dom: "domain ", rng: "range ", inc: "increasing ", dec: "decreasing ", a: "a = ", b: "b = ", c: "c = ", xv: "x = −b/(2a) = ", h: "h = ", k: "k = ", v: "vertex ", ax: "axis of symmetry x = " };
-  var VFN_WRONG = { p: "Not quite. p is the number subtracted from x in the first factor.", q: "Not quite. q is the number subtracted from x in the second factor.", dom: "Not quite. A parabola goes on forever to the left and to the right.", a: "Not quite. a is the number in front of x².", b: "Not quite. b is the number in front of x, with its sign.", c: "Not quite. c is the constant term, with its sign.", xv: "Not quite. Put a and b into −b/(2a).", v: "Not quite. The vertex is (h, k).", ax: "Not quite. The axis of symmetry is the vertical line through the vertex." };
+  var VFN_WRONG = { p: "Not quite. p and q are the numbers subtracted from x in the two factors.", q: "Not quite. p and q are the numbers subtracted from x in the two factors.", dom: "Not quite. A parabola goes on forever to the left and to the right.", a: "Not quite. a is the number in front of x².", b: "Not quite. b is the number in front of x, with its sign.", c: "Not quite. c is the constant term, with its sign.", xv: "Not quite. Put a and b into −b/(2a).", v: "Not quite. The vertex is (h, k).", ax: "Not quite. The axis of symmetry is the vertical line through the vertex." };
   function vfnTyped(f, enter) {   // Calculate: a box is marked right the moment it is
     var s = vfnSt(); if (QZ.step >= 4 || vfnWr()) return;
     s.wbad[f] = false;
@@ -8773,7 +8777,7 @@ var ESPIC = {
     if (st === "a" || st === "b" || st === "c" || st === "p" || st === "q") {
       var nm = p.ip ? { a: "a, the number in front of the parentheses", p: "the first factor (x − p)", q: "the second factor (x − q)" } : { a: "a, the number in front of x²", b: "b, the number in front of x (with its sign)", c: "c, the constant term (with its sign)" };
       if (what === "e:" + st) ok(st + " = " + nf(st === "p" || st === "q" ? p[st + "1"] : p[st]));
-      else if (/^e:/.test(what || "")) vfnBad("That is " + what.slice(2) + ". Click " + nm[st] + ".");
+      else if (/^e:/.test(what || "")) vfnBad("That is " + what.slice(2) + ". Click " + nm[st] + ".", st);
       else pqMsg("Click " + nm[st] + " in the equation.", "note");
       return;
     }
@@ -14144,7 +14148,7 @@ var ESPIC = {
   }
   function vfnAnsTx(f) {
     var p = vfnP();
-    if (f === "p" || f === "q") return nf(p[f + "1"]);
+    if (f === "p" || f === "q") { if (p.ip && mode === "calculate") { var s1 = vfnSt(), o1 = f === "p" ? "q" : "p"; if (s1.wok[o1]) { var ov1 = m3Num(s1.w[o1]); return nf(ov1 === p.p1 ? p.q1 : p.p1); } return nf(p.p1) + " or " + nf(p.q1); } return nf(p[f + "1"]); }
     if (f === "a" || f === "b" || f === "c") return nf(p[f]);
     if (f === "h" || f === "xv") return nf(p.h);
     if (f === "k") return nf(p.k);
