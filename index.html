@@ -12696,12 +12696,12 @@ var ESPIC = {
     var pb = m3Cur(), T = m3taSt(), done = QZ.step >= 4, h = "<div class=\"m3ta\" id=\"m3taBox\">";
     pb.tsteps.forEach(function (st) {
       h += "<div class=\"m3taR\"><span class=\"m3taL\">" + st.pre + "</span><span>";
-      if (T.ok[st.id] && (!m3WB() || done)) h += "<span class=\"vfnV\">" + m3taShow(st) + "</span> <span class=\"cueOk\">✓</span>";
+      if (T.ok[st.id] && (!m3WB() || done)) h += "<span class=\"vfnV\">" + (st.own && T.v[st.id] ? m3wQ(T.v[st.id]) : m3taShow(st)) + "</span> <span class=\"cueOk\">✓</span>";
       else if (T.ok[st.id]) h += "<span class=\"vfnV\">" + m3wQ(T.v[st.id]) + "</span> <span class=\"cueOk\">✓</span>";
       else h += "<input class=\"m3taIn" + (T.bad[st.id] ? " bad" : "") + "\" data-ta=\"" + st.id + "\" value=\"" + m3wQ(T.v[st.id]) + "\" style=\"width:" + (st.w || 5.5) + "rem\" inputmode=\"" + (st.word ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"" + m3wQ(String(st.pre).replace(/<[^>]+>/g, "")) + "\"" + (done || (pgRun && !pgPaused) ? " readonly" : "") + ">";
       h += "</span></div>";
     });
-    if (pb.ivk && !done) h += "<div class=\"m3taK\" aria-label=\"Interval keys\">" + ["(", ")", "[", "]", ",", "∞", "−∞", "ℝ"].map(function (k0) { return "<button type=\"button\" class=\"btn m3taKb\" data-tak=\"" + k0 + "\">" + k0 + "</button>"; }).join("") + "</div>";
+    if (pb.ivk && !done) h += "<div class=\"m3taK\" aria-label=\"Interval and inequality keys\">" + ["(", ")", "[", "]", ",", "∞", "−∞", "ℝ", "≥", "≤", "<", ">", "x", "y"].map(function (k0) { return "<button type=\"button\" class=\"btn m3taKb\" data-tak=\"" + k0 + "\">" + k0 + "</button>"; }).join("") + "</div>";
     return h + "</div>";
   }
   var m3taLast = null;   // the box the interval keys type into
@@ -13926,26 +13926,38 @@ var ESPIC = {
       pb.story = "The graph of <span class=\"lm cf\">" + fS[0] + "</span> is shown, with its vertex labelled. Find the axis of symmetry, the domain and range, and where the function is increasing and decreasing.";
       pb.fig = function (x) { return c2Pl(c2Plane(k - 2, k + 2), x || {}, { alt: "Graph of f with its vertex", curves: [{ fn: F, col: C2P }], pts: [{ x: h, y: k, col: C2P, lab: true, dy: up ? 18 : -8 }] }); };
       var L = { v: -IVI }, Rr = { v: IVI }, K = { v: k, cl: true }, H = { v: h, cl: true }, I = function (p, q) { return ivStr([ivPc(p, q)]); };
-      var D = I(L, Rr), Rg = up ? I(K, Rr) : I(L, K), Inc = up ? I(H, Rr) : I(L, H), Dec = up ? I(L, H) : I(H, Rr), Kh = { v: h, cl: true }, Hk = { v: k, cl: true };
+      var D = I(L, Rr), Rg = up ? I(K, Rr) : I(L, K), Inc = up ? I(H, Rr) : I(L, H), Dec = up ? I(L, H) : I(H, Rr);
+      // inequalities are the default way an answer is shown (x for increasing and decreasing, y for the range); the domain of a parabola is all real numbers
+      var Q = function (v, op, n, html) { return (html ? (v === "y" ? c2Y : c2X) : v) + " " + op + " " + c2F(n); }, ge = "≥", le = "≤";
+      var allR = "all real numbers", rgQ = function (H0) { return Q("y", up ? ge : le, k, H0); }, incQ = function (H0) { return Q("x", up ? ge : le, h, H0); }, decQ = function (H0) { return Q("x", up ? le : ge, h, H0); };
       var ax = c2X + " = " + c2F(h);
       pb.steps = [
         { id: "ax", lab: "Axis", type: "pick", ask: "What is the axis of symmetry?", opts: c2Pk(ax, [[c2X + " = " + c2F(k), "The axis is the vertical line through the vertex: use its x-coordinate, " + c2F(h) + "."], [c2Y + " = " + c2F(h), "The axis is a vertical line, so its equation is x = …"], [c2X + " = " + c2F(-h), "Check the sign: the vertex is at x = " + c2F(h) + "."]]), hint: ["The axis of symmetry is the vertical line through the vertex.", "The vertex is (" + c2F(h) + ", " + c2F(k) + "), so " + ax + "."], line: "axis of symmetry " + ax },
-        { id: "dom", lab: "Domain", type: "pick", ask: "What is the domain?", opts: c2Pk(D, [[up ? I(K, Rr) : I(L, K), "That describes the outputs (the range). Every x can go in."], [up ? I(Kh, Rr) : I(L, Kh), "The parabola goes on forever to the left and right: every x can go in."]]), hint: ["The domain is every x you can put in.", "A parabola's domain is all real numbers: " + D + "."], line: "domain " + D },
-        { id: "rng", lab: "Range", type: "pick", ask: "What is the range?", opts: c2Pk(Rg, [[up ? I(L, K) : I(K, Rr), "It opens " + (up ? "upward, so the outputs go up from " : "downward, so the outputs go down from ") + c2F(k) + "."], [D, "The outputs never go " + (up ? "below " : "above ") + "the vertex's y-value, " + c2F(k) + "."], [up ? I(Kh, Rr) : I(L, Kh), "Use the vertex's y-value, " + c2F(k) + ", not its x-value."]]), hint: ["The range starts at the vertex's y-value.", "It opens " + (up ? "upward from " : "downward from ") + c2F(k) + ": " + Rg + "."], line: "range " + Rg },
-        { id: "inc", lab: "Increasing", type: "pick", ask: "Where is the function increasing?", opts: c2Pk(Inc, [[Dec, "That is where it decreases. Read the graph from left to right."], [up ? I(Hk, Rr) : I(L, Hk), "Use the vertex's x-value, " + c2F(h) + ", not its y-value."]]), hint: ["Move left to right along the graph: where does it go up?", "It goes up " + (up ? "after x = " : "until x = ") + c2F(h) + ": " + Inc + "."], line: "increasing on " + Inc },
-        { id: "dec", lab: "Decreasing", type: "pick", ask: "Where is the function decreasing?", opts: c2Pk(Dec, [[Inc, "That is where it increases. Read the graph from left to right."], [up ? I(L, Hk) : I(Hk, Rr), "Use the vertex's x-value, " + c2F(h) + ", not its y-value."]]), hint: ["Move left to right along the graph: where does it go down?", "It goes down " + (up ? "until x = " : "after x = ") + c2F(h) + ": " + Dec + "."], line: "decreasing on " + Dec }
+        { id: "dom", lab: "Domain", type: "pick", ask: "What is the domain?", opts: c2Pk(allR, [[Q("y", up ? ge : le, k, 1), "That describes the outputs (the range). Every x can go in."], [Q("x", up ? ge : le, h, 1), "The parabola goes on forever to the left and right: every x can go in."]]), hint: ["The domain is every x you can put in.", "A parabola's domain is all real numbers, (−∞, ∞)."], line: "domain: " + allR },
+        { id: "rng", lab: "Range", type: "pick", ask: "What is the range?", opts: c2Pk(rgQ(1), [[Q("y", up ? le : ge, k, 1), "It opens " + (up ? "upward, so the outputs go up from " : "downward, so the outputs go down from ") + c2F(k) + "."], [allR, "The outputs never go " + (up ? "below " : "above ") + "the vertex's y-value, " + c2F(k) + "."], [Q("y", up ? ge : le, h, 1), "Use the vertex's y-value, " + c2F(k) + ", not its x-value."]]), hint: ["The range starts at the vertex's y-value.", "It opens " + (up ? "upward from " : "downward from ") + c2F(k) + ": " + rgQ(1) + "."], line: "range: " + rgQ(1) },
+        { id: "inc", lab: "Increasing", type: "pick", ask: "Where is the function increasing?", opts: c2Pk(incQ(1), [[decQ(1), "That is where it decreases. Read the graph from left to right."], [Q("x", up ? ge : le, k, 1), "Use the vertex's x-value, " + c2F(h) + ", not its y-value."]]), hint: ["Move left to right along the graph: where does it go up?", "It goes up " + (up ? "after x = " : "until x = ") + c2F(h) + ": " + incQ(1) + "."], line: "increasing: " + incQ(1) },
+        { id: "dec", lab: "Decreasing", type: "pick", ask: "Where is the function decreasing?", opts: c2Pk(decQ(1), [[incQ(1), "That is where it increases. Read the graph from left to right."], [Q("x", up ? le : ge, k, 1), "Use the vertex's x-value, " + c2F(h) + ", not its y-value."]]), hint: ["Move left to right along the graph: where does it go down?", "It goes down " + (up ? "until x = " : "after x = ") + c2F(h) + ": " + decQ(1) + "."], line: "decreasing: " + decQ(1) }
       ];
-      // Calculate: boxes; intervals typed (the ends at the vertex may be open or closed)
+      // Calculate and Write: boxes; each answer may be typed in interval notation or as an inequality (increasing/decreasing in x, the range in y; the ends at the
+      // vertex may be open or closed for increasing and decreasing); the domain is all real numbers, typed as (−∞, ∞), ℝ or in words
       var ivOk = function (want, alt) { return function (v) { var t0 = String(v || "").trim(); if (/^(ℝ|R|all real numbers)$/i.test(t0)) t0 = "(−∞, ∞)"; var r = ivParse(t0); if (!r.pcs) return false; var got = ivStr(r.pcs); return got === want || (alt && got === alt); }; };
       var op = function (iv) { return iv.replace("[" + ivNum(h) + ",", "(" + ivNum(h) + ",").replace(", " + ivNum(h) + "]", ", " + ivNum(h) + ")"); };
+      var inq = function (t0) {   // "x ≥ 3", "x>=3", "3 <= x", "y≤−2" → { v, op, n } with the variable on the left
+        t0 = String(t0 || "").replace(/\s+/g, "").replace(/[−–]/g, "-").replace(/>=|=>/g, "≥").replace(/<=|=</g, "≤").toLowerCase();
+        var num = "(-?\\d+(?:\\.\\d+)?(?:/\\d+)?)", m = t0.match(new RegExp("^([xy])([≥≤<>])" + num + "$")), fl = { "≥": "≤", "≤": "≥", "<": ">", ">": "<" };
+        if (!m) { var m2 = t0.match(new RegExp("^" + num + "([≥≤<>])([xy])$")); if (!m2) return null; m = [0, m2[3], fl[m2[2]], m2[1]]; }
+        var n = m[3].indexOf("/") > 0 ? +m[3].split("/")[0] / +m[3].split("/")[1] : +m[3]; return isFinite(n) ? { v: m[1], op: m[2], n: n } : null;
+      };
+      var inqOk = function (v0, ops, n) { return function (v) { var q = inq(v); return !!q && q.v === v0 && ops.indexOf(q.op) >= 0 && Math.abs(q.n - n) < 1e-9; }; };
+      var either = function (f1, f2) { return function (v) { return f1(v) || f2(v); }; };
       pb.tsteps = [
         { id: "ax", pre: "Axis of symmetry: " + c2X + " =", ans: h, line: "axis of symmetry " + ax },
-        { id: "dom", pre: "Domain:", w: 8, iv: 1, word: ivOk(D), show: D, line: "domain " + D },
-        { id: "rng", pre: "Range:", w: 8, iv: 1, word: ivOk(Rg), show: Rg, line: "range " + Rg },
-        { id: "inc", pre: "Increasing:", w: 8, iv: 1, word: ivOk(Inc, op(Inc)), show: Inc, line: "increasing on " + Inc },
-        { id: "dec", pre: "Decreasing:", w: 8, iv: 1, word: ivOk(Dec, op(Dec)), show: Dec, line: "decreasing on " + Dec }
+        { id: "dom", pre: "Domain:", w: 8, iv: 1, own: 1, word: ivOk(D), show: allR + ", (−∞, ∞)", line: "domain: " + allR },
+        { id: "rng", pre: "Range:", w: 8, iv: 1, own: 1, word: either(ivOk(Rg), inqOk("y", [up ? ge : le], k)), show: rgQ() + " or " + Rg, line: "range: " + rgQ(1) },
+        { id: "inc", pre: "Increasing:", w: 8, iv: 1, own: 1, word: either(ivOk(Inc, op(Inc)), inqOk("x", up ? [ge, ">"] : [le, "<"], h)), show: incQ() + " or " + Inc, line: "increasing: " + incQ(1) },
+        { id: "dec", pre: "Decreasing:", w: 8, iv: 1, own: 1, word: either(ivOk(Dec, op(Dec)), inqOk("x", up ? [le, "<"] : [ge, ">"], h)), show: decQ() + " or " + Dec, line: "decreasing: " + decQ(1) }
       ];
-      pb.ex = "The vertex is (" + c2F(h) + ", " + c2F(k) + "), so the axis of symmetry is " + ax + ". Every x can go in, so the domain is " + D + ". The parabola opens " + (up ? "upward" : "downward") + " from " + c2F(k) + ", so the range is " + Rg + ". Reading left to right, it " + (up ? "decreases on " + Dec + " and increases on " + Inc : "increases on " + Inc + " and decreases on " + Dec) + ".";
+      pb.ex = "The vertex is (" + c2F(h) + ", " + c2F(k) + "), so the axis of symmetry is " + ax + ". Every x can go in, so the domain is all real numbers. The parabola opens " + (up ? "upward" : "downward") + " from " + c2F(k) + ", so the range is " + rgQ(1) + ". Reading left to right, it " + (up ? "decreases for " + decQ(1) + " and increases for " + incQ(1) : "increases for " + incQ(1) + " and decreases for " + decQ(1)) + ".";
       return pb;
     }
   }
