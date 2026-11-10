@@ -13963,7 +13963,7 @@ var ESPIC = {
       var inqOk = function (v0, ops, n) { return function (v) { var q = inq(v); return !!q && q.v === v0 && ops.indexOf(q.op) >= 0 && Math.abs(q.n - n) < 1e-9; }; };
       var either = function (f1, f2) { return function (v) { return f1(v) || f2(v); }; };
       pb.tsteps = [
-        { id: "ax", pre: "Axis of symmetry: " + c2X + " =", ans: h, line: "axis of symmetry " + ax },
+        { id: "ax", pre: "Axis of Symmetry:", w: 6.5, own: 1, word: function (v) { var m = String(v || "").replace(/\s+/g, "").replace(/[−–]/g, "-").toLowerCase().match(/^x=(-?\d+(?:\.\d+)?)$/); return !!m && Math.abs(+m[1] - h) < 1e-9; }, show: "x = " + c2F(h), line: "axis of symmetry " + ax },   // (the whole equation, like x = 2)
         { id: "dom", pre: "Domain:", w: 8, iv: 1, own: 1, word: ivOk(D), show: allR + ", (−∞, ∞)", line: "domain: " + allR },
         { id: "rng", pre: "Range:", w: 8, iv: 1, own: 1, word: either(ivOk(Rg), inqOk("y", [up ? ge : le], k)), show: rgQ() + " or " + Rg, line: "range: " + rgQ(1) },
         { id: "inc", pre: "Increasing:", w: 8, iv: 1, own: 1, word: either(ivOk(Inc, op(Inc)), inqOk("x", up ? [ge, ">"] : [le, "<"], h)), show: incQ() + " or " + Inc, line: "increasing: " + incQ(1) },
