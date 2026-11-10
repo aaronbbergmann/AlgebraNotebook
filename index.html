@@ -8245,7 +8245,18 @@ var ESPIC = {
     if (mode === "calculate") {
       if (!vfnStd()) return !vfnParOK(s) ? VFN_ASK.graph : vfnCols().some(function (c) { return !(s.tadd || {})[c]; }) ? "Fill in the boxes, and grow the parent table: click the + on the left for a new x, on the right for a new y, one column for each change." : "Fill in the parent table and the boxes.";
       if (s.wok.xv && !s.gx) return VFN_ASK.drag;
-      if (vfnIp() && !s.gx) return "Type the <i>x</i>-values: <i>p</i> and <i>q</i> in rows 2 and 4, halfway between them in row 3, and any <i>x</i> outside the intercepts in rows 1 and 5.";
+      if (vfnIp()) {   // Intercept Form: one instruction at a time, for the first thing not yet done
+        var ok = function (r) { return s.xok[r] || (s.dx && s.dx[r]); };
+        if (!s.wok.a) return vfnP().a === 1 ? "Type the <i>a</i> value. With no number in front of the parentheses, <i>a</i> = 1." : "Type the <i>a</i> value: the number in front of the parentheses.";
+        if (!s.wok.p) return "Type the <i>p</i> value: the number subtracted from <i>x</i> in the first factor.";
+        if (!s.wok.q) return "Type the <i>q</i> value: the number subtracted from <i>x</i> in the second factor.";
+        if (!s.gx && !(ok(1) && ok(3))) return "Type <i>p</i> and <i>q</i> in rows 2 and 4 of the <i>x</i> column.";
+        if (!s.gx && !ok(2)) return "Type the <i>x</i>-value halfway between <i>p</i> and <i>q</i> in row 3.";
+        if (!s.gx) return "Type any <i>x</i> outside the intercepts in rows 1 and 5.";
+        if (!vfnTbDone()) return "Work out <i>f</i>(<i>x</i>) for each row and type it in the <i>y</i> column.";
+        if (!vfnParOK(s)) return "Graph the parabola with the parabola button.";
+        return "";
+      }
       return "Fill in the boxes and the table, and graph the parabola with the parabola button.";
     }
     var id = vfnSid();
@@ -8691,7 +8702,7 @@ var ESPIC = {
         if (mode === "calculate") { vfnLine(line); vfnSync(); var e0 = document.querySelector("[data-vfy=\"0\"]"); if (e0 && !pgRun) e0.focus(); return; }
         vfnNext(line); return;
       }
-      vfnTb(); var nx = [0, 1, 2, 3, 4].filter(function (k) { return !s.xok[k] && !(s.dx && s.dx[k]); })[0], e = document.querySelector("#vfnTb [data-vfxi=\"" + nx + "\"]"); if (e && !pgRun) e.focus(); return;
+      vfnTb(); if ($("vfnAsk")) $("vfnAsk").innerHTML = vfnAsk(); var nx = [0, 1, 2, 3, 4].filter(function (k) { return !s.xok[k] && !(s.dx && s.dx[k]); })[0], e = document.querySelector("#vfnTb [data-vfxi=\"" + nx + "\"]"); if (e && !pgRun) e.focus(); return;
     }
     if (enter && String(s.xt[r] || "").trim()) { s.wbad["x" + r] = true; vfnBad(why, r === 1 || r === 3 ? "=" + nf(lo) + " or " + nf(hi) : r === 2 ? "=" + nf(p0.h) : "=any x less than " + nf(lo) + " or greater than " + nf(hi) + ", like " + nf(r === 0 === (s.rx && s.rx[1] > s.rx[3]) ? hi + 1 : lo - 1)); vfnTb(); }
   }
@@ -8804,7 +8815,7 @@ var ESPIC = {
     var s = vfnSt(), done = QZ.step >= 4, wr = vfnWr();
     $("wfSteps").hidden = true; askArrow(false);
     [].forEach.call(document.querySelectorAll("#vfnTools button"), function (b) {
-      var t = b.dataset.vft; b.hidden = wr ? t === "U" || (t === "dl" && vfnIp()) : t !== "U" && t !== "clear";   // (Intercept Form, Write: no dotted line, as there is no axis of symmetry to draw) b.classList.toggle("on", s.tool === t);
+      var t = b.dataset.vft; b.hidden = wr ? t === "U" || (t === "dl" && vfnIp()) : t !== "U" && t !== "clear"; /* (Intercept Form, Write: no dotted line, as there is no axis of symmetry to draw) */ b.classList.toggle("on", s.tool === t);
       b.disabled = done || (t === "U" && !wr && !vfnParNow()) || (t === "clear" && (wr ? !s.pts.length && !s.dls.length && !s.dlp : !s.par || vfnParOK(s)));
     });
     $("vfnAsk").innerHTML = vfnAsk();
@@ -8817,7 +8828,7 @@ var ESPIC = {
     var pb = m3Cur(), p = pb.vf;
     if (p.ip) {
       var X0 = "<i>x</i>", fc = function (r, k) { return "<span class=\"vfnE\" data-vfe=\"" + k + "\">" + (r ? "(" + X0 + (r < 0 ? " + " + nf(-r) : " − " + nf(r)) + ")" : X0) + "</span>"; };
-      return "<div class=\"m3Top\"><div class=\"estP w5\">Graph <span class=\"lm vfnEq\" id=\"vfnEq\"><i>f</i>(" + X0 + ") = <span class=\"vfnE" + (p.a === 1 ? " vfnE1" : "") + "\" data-vfe=\"a\"" + (p.a === 1 ? " title=\"No number here means a = 1\" aria-label=\"a, the space in front of the parentheses\"" : "") + ">" + (p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a)) + "</span>" + fc(p.p1, "p") + fc(p.q1, "q") + "</span>" + (vfnWr() ? "." : ". Find <i>a</i>, <i>p</i> and <i>q</i>, fill in the table and graph the parabola.") + "</div></div>";
+      return "<div class=\"m3Top\"><div class=\"estP w5\">Graph <span class=\"lm vfnEq\" id=\"vfnEq\"><i>f</i>(" + X0 + ") = <span class=\"vfnE" + (p.a === 1 ? " vfnE1" : "") + "\" data-vfe=\"a\"" + (p.a === 1 ? " title=\"No number here means a = 1\" aria-label=\"a, the space in front of the parentheses\"" : "") + ">" + (p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a)) + "</span>" + fc(p.p1, "p") + fc(p.q1, "q") + "</span>.</div></div>";   // (the instructions come one at a time, above the graph)
     }
     if (!p.std) return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story.replace(/lm cf/g, "lm") + "</div>" + pb.pic + "</div>";
     var X = "<i>x</i>", t = "<span class=\"vfnE\" data-vfe=\"a\">" + (p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a)) + X + "²</span>";
