@@ -1072,7 +1072,7 @@
     s = s.trim().replace("−", "-");
     var m = s.match(/^(-?\d+)\s*\/\s*(\d+)$/);
     if (m && +m[2]) return mk(+m[1], +m[2]);
-    if (/^-?\d+(\.\d+)?$/.test(s)) return mk(Math.round(parseFloat(s) * 1000), 1000);
+    if (/^-?(\d+\.?\d*|\.\d+)$/.test(s)) return mk(Math.round(parseFloat(s) * 1000), 1000);   // (a leading 0 is not needed: .25 = 0.25)
     return null;
   }
 
@@ -7169,14 +7169,14 @@
     G.tool = null; G.clk = []; gRef();
   }
   (function () {
-    var S = $("pgSvg"), dragH = null;
+    var S = $("pgSvg"), dragH = null;   // (gDragH mirrors it: a graph is not checked while one of its points is still held)
     S.addEventListener("pointerdown", function (e) {
       var G = G_(); if (G === PG) { pgUser(); if (PG.tm) { tmMove(qAt(e)); tmClick(); e.preventDefault(); return; } } else if (!quiz() || QZ.step < 2 || QZ.step > 3 || (busy && e.isTrusted)) return;
       var kp = G === PG && !G.tool && e.target.closest("[data-kp]");   // 2.1 Write: a kept graph pressed becomes the one being edited
       if (kp) { var kj = +kp.dataset.kp, ko = PG.keep[kj]; if (ko) { gSnap(); PG.keep.splice(kj, 1); if (PG.shape) PG.keep.push(PG.shape); PG.shape = ko; drawPlay(); } e.preventDefault(); return; }
       var h = e.target.closest("[data-qh]");
       // with a tool chosen, a click places with that tool (even on top of a plotted point); with no tool, points and handles can be dragged
-      if (h && (!G.tool || h.dataset.qh === "c0")) { gSnap(); dragH = h.dataset.qh; S.setPointerCapture(e.pointerId); e.preventDefault(); return; }
+      if (h && (!G.tool || h.dataset.qh === "c0")) { gSnap(); dragH = h.dataset.qh; gDragH = true; S.setPointerCapture(e.pointerId); e.preventDefault(); return; }
       if (G.tool) { var p = qAt(e); qzPlace(G.tool, p[0], p[1]); }
     });
     S.addEventListener("pointerleave", function () { var G = G_(); if (G.hv) { G.hv = null; gDraw(); } });
@@ -7191,7 +7191,7 @@
       else { var a = Math.round((p[1] - sh.k) * 4) / 4; sh.a = a || (p[1] < sh.k ? -.25 : .25); }
       gDraw();
     });
-    function end() { if (dragH) { dragH = null; var G = G_(); if (G === QZ && mode === "demo") setTimeout(qzAuto, 0); if (G.shape && G.shape.t === "line" && G.shape.p1[0] === G.shape.p2[0] && G.shape.p1[1] === G.shape.p2[1]) G.shape.p2 = [G.shape.p1[0] + snapStep(), G.shape.p1[1] + snapStep(1)]; gDraw(); } }
+    function end() { gDragH = false; if (dragH) { dragH = null; var G = G_(); if (G === QZ && mode === "demo") setTimeout(qzAuto, 0); if (G.shape && G.shape.t === "line" && G.shape.p1[0] === G.shape.p2[0] && G.shape.p1[1] === G.shape.p2[1]) G.shape.p2 = [G.shape.p1[0] + snapStep(), G.shape.p1[1] + snapStep(1)]; gDraw(); } }
     S.addEventListener("pointerup", end); S.addEventListener("pointercancel", end);
     // tool buttons: a click picks the tool; a drag drops it onto the graph
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) {
@@ -10037,8 +10037,10 @@ var ESPIC = {
   function gdWords0(t) { var w = []; if (t.h) w.push((t.h > 0 ? "right " : "left ") + Math.abs(t.h)); if (t.k) w.push((t.k > 0 ? "up " : "down ") + Math.abs(t.k)); return w.join(" and "); }
   function shapeIs(sh, fn) { for (var x = -6; x <= 6; x += .5) if (!(Math.abs(shapeY(sh, x) - fn(x)) < 1e-6)) return false; return true; }
   // a right shape for the parent turns dotted; a right shape for g turns red; a right description earns a check
+  var gDragH = false;
   function gdWatch() {
     if (!gd() || !QZ.order) return;
+    if (gDragH) return;   // (the graph is checked once the point is let go, not while it is being dragged)
     if (wsub()) { pqCue(); return; }   // 2.1 Write: everything waits for Submit
     var sh = PG.shape;
     if (sh && !PG.pdone && shapeIs(sh, pf)) {
