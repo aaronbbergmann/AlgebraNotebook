@@ -5918,13 +5918,21 @@
     $("dmCtl").hidden = !(own && mode === "demo");
     dmTitle(own && BUILT[act] && BUILT[act].title || ""); dmHead();
   }
+  // the problem on screen, as a signature: a new mode never opens on the same problem the student just left (a fresh variant is dealt instead)
+  function probSig() {
+    try {
+      if (quiz()) { var Q = QZ || {}, p0 = (Q.m3p && Q.m3p[0]) || null; return JSON.stringify({ tr: Q.tr && Q.tr[0], wf: Q.wfp && Q.wfp[0], m3: p0 ? (p0.head || "") + "|" + (typeof p0.story === "string" ? p0.story : "") + "|" + JSON.stringify(p0.vf || p0.mx || p0.dsm && [p0.dsm.D1, p0.dsm.D2] || null) : null }); }
+      return JSON.stringify(orig || null);
+    } catch (e) { return ""; }
+  }
   function setMode0(m) {
+    var sig0 = m !== mode && mode !== "create" ? probSig() : null;   // (Create's own problem may carry into the next mode on purpose)
     msSave();   // the work in the mode being left is kept, to come back to (see "Switching modes keeps the work")
     syncPane();
     if (!BUILT[act].solver) $("nxHard").hidden = true;   // Level Up belongs to Play Solve alone; nothing is left over from the activity we came from
     if (quiz()) { $("next").hidden = true; $("again").hidden = true; $("show").style.visibility = ""; }
     else { $("qzNext").hidden = true; $("qzAgain").hidden = true; }
-    if (quiz()) { mode = m; theme(); saveMode(); $("modeSel").value = m; $("modeSel").style.color = ""; if (!msLoad()) qzStart(); msMark(); return; }
+    if (quiz()) { mode = m; theme(); saveMode(); $("modeSel").value = m; $("modeSel").style.color = ""; if (!msLoad() || (sig0 && probSig() === sig0)) { qzStart(); for (var tq = 0; tq < 12 && sig0 && probSig() === sig0; tq++) qzStart(); } msMark(); return; }   // (a kept problem that is the very one just left is replaced too)
     var sel = $("modeSel"), crMsg = "";
     // equations typed in Create carry over to the mode the student picks.  A student can always switch modes: when the typed equations
     // cannot be used in that mode, the mode opens with its own problem (the typed equations stay in Create) and a note says why
@@ -5935,7 +5943,7 @@
     }
     dm4Reset(); mode = m; theme(); saveMode();
     sel.value = m; sel.style.color = "";
-    if (!msLoad()) newProblem();
+    if (!msLoad() || (sig0 && !useCustom && !BUILT[act].solver && probSig() === sig0)) { newProblem(); for (var tn = 0; tn < 12 && sig0 && !useCustom && !BUILT[act].solver && probSig() === sig0; tn++) newProblem(); }   // (Play Solve carries its problem from mode to mode on purpose)
     msMark();
     if (crMsg) note(crMsg);
   }
