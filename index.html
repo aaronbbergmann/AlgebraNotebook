@@ -14895,7 +14895,7 @@ var ESPIC = {
         })(1);
       });
     }
-    function spDemo(then) {
+    function spDemo(then, noDrop) {   // (noDrop: skip dragging a plain point onto the shape, as in the 2.1 demos)
       var G = G_(), sh = G.shape, useShape = !!(sh && (!PG.show.graph || gd())), p = { k: useShape ? "s" : "c", fam: PG.fam, sh: useShape ? sh : null };
       if (!useShape && !PG.show.graph) { then(); return; }
       function yAt(x) { if (!useShape) return g(x); if (sh.t === "line") return sh.p1[1] + (sh.p2[1] - sh.p1[1]) / (sh.p2[0] - sh.p1[0]) * (x - sh.p1[0]); return shapeY(sh, x); }
@@ -14914,7 +14914,7 @@ var ESPIC = {
               pgWait(600, function () {
                 if (!useShape) { if (!pq()) { PG.h = PG.h + (shifts() ? 2 : 0); PG.k = PG.k + (shifts() ? 0 : 1); PG.pa = [PG.h + 1, PG.k + PG.a]; } }
                 else if (sh.t === "line") sh.p2 = [sh.p2[0], sh.p2[1] + 2]; else { sh.h += 2; sh.k += 1; }
-                gDraw(); pgWait(1800, function () { dropDemo(then); });
+                gDraw(); pgWait(1800, function () { if (noDrop) then(); else dropDemo(then); });
               });
             });
             return;
@@ -15259,7 +15259,7 @@ var ESPIC = {
         g: function (n) { cap("Graph g(x) with the same button: click its vertex, (" + nf(H()) + ", " + nf(K()) + ")."); clickTool("U", [H(), K()], null, function () { if (A() === 1) { watch(n)(); return; } cap("Drag the side point to set the stretch of " + ptFr(A()) + "."); stretch(A(), watch(n), 1); }); },
         red: function (n) { cap("A correct graph of g(x) turns red, through every point from the table."); pgWait(2000, n); }
       };
-      steps = [PTS.rule, PTS.desc, PTS.tog, PTS.labels, PTS.fill, PTS.xs, PTS.ys, PTS.copy, PTS.plot, PTS.par, PTS.g, PTS.red, function (n) { spDemo(n); }, GDS[GDS.length - 1]];   // (no zoom in the 2.1 demos)
+      steps = [PTS.rule, PTS.desc, PTS.tog, PTS.labels, PTS.fill, PTS.xs, PTS.ys, PTS.copy, PTS.plot, PTS.par, PTS.g, PTS.red, function (n) { spDemo(n, true); }, GDS[GDS.length - 1]];   // (no zoom in the 2.1 demos)
     }
     if (PQ && wf()) {   // Writing Translations: the hand drags the red graph, drags f onto g, and taps Simplify
       var wp = wfCur(), wax = 0, way = 0;
