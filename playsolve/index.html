@@ -645,6 +645,7 @@
   .m3Sent .m3Slot{min-width:0;font-style:normal;padding:.05em .4em}
   .m3Dot{cursor:pointer}
   .m3Dot circle:last-child{transition:r .1s}
+  .m3QCol{flex:1 1 16rem;display:flex;flex-direction:column;gap:.7rem}.m3QC{display:flex;flex-direction:column;gap:.55rem}.m3QC .m3QCq{font:700 1.12rem system-ui,sans-serif;color:var(--ink)}.m3QC .m3Opts{display:flex;flex-wrap:wrap;gap:.5rem}.m3QC .wfBtn{min-width:7rem}
   .m3Done{flex:1 1 13rem;margin-top:.3rem;font:400 1.05rem/1.5 system-ui,sans-serif;color:var(--ink)}
   .m3Done div{padding:.15rem 0}
   .glTbls{display:flex;gap:1.2rem;flex-wrap:wrap;margin-top:.6rem}
@@ -12588,6 +12589,10 @@ var ESPIC = {
     var fig = pb.fig(QZ.m3x || {}), tb = typeof pb.tbl === "function" ? pb.tbl(QZ.m3x || {}) : pb.tbl || "";
     if (fig && fhGraph()) fig = "<button type=\"button\" class=\"btn fhBtn\" data-fh title=\"Show the graph: a Free Hint costs nothing\">Free Hint</button>";
     if (m3TA()) return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div><div class=\"m3Body\">" + m3taList() + (fig ? "<div class=\"m3FigC\"><div class=\"m3FigW\">" + fig + "</div></div>" : "") + "</div>";   // ("Try Another": a screen of boxes, the graph a Free Hint beside them)
+    if (m3QC()) {   // (Demo, Sequence: the question in hand and its buttons sit in the centre pane, alone; once answered, the next takes its place)
+      var qh = m3QCHtml();
+      return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div>" + tb + "<div class=\"m3Body\">" + (fig ? "<div class=\"m3FigC\"><div class=\"m3FigW\">" + fig + "</div></div>" : "") + "<div class=\"m3QCol\">" + qh + (done ? "<div class=\"m3Done\">" + done + "</div>" : "") + "</div></div>";
+    }
     return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div>" + tb + "<div class=\"m3Body\">" + (fig ? "<div class=\"m3FigC\"><div class=\"m3FigW\">" + fig + "</div>" + (m3wOn() && pb.kind === 5 ? "<div class=\"glTools\"><button type=\"button\" class=\"btn\" data-glw=\"line\" title=\"Draw a line through the points you have plotted (2 points)\">Line</button><button type=\"button\" class=\"btn\" data-glw=\"clear\" title=\"Remove your lines and the points you clicked\">Clear</button></div>" : "") + "</div>" : "") + (done && !(pb.grid && mode === "solo") ? "<div class=\"m3Done\">" + done + "</div>" : "") + "</div>";
   }
   function m3PG() {
@@ -12646,8 +12651,20 @@ var ESPIC = {
   $("pgQt").addEventListener("focusin", function (e) { if (e.target.dataset && e.target.dataset.ta) m3taLast = e.target; });
   $("pgQt").addEventListener("focusout", function (e) { if (e.target.dataset && e.target.dataset.ta && m3TA()) m3taLeave(e.target); });
   $("pgQt").addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.dataset && e.target.dataset.ta && m3TA()) { e.preventDefault(); var A = [].slice.call(document.querySelectorAll("#pgQt .m3taIn")), n = A[A.indexOf(e.target) + 1]; if (n) n.focus(); else m3taLeave(e.target); } });
+  // ==== Questions in the centre pane (pb.qc, Demo and Sequence): one question at a time, asked only there; the default for new exercises with a list of questions ====
+  function m3QC() { var pb = m3Cur(); return !!(pb && pb.qc && (mode === "demo" || mode === "sequence")); }
+  function m3QCHtml() {
+    var st = m3Step(); if (!st || QZ.step >= 4 || (mode === "demo" && !pgRun && !QZ.m3l.length)) return "";
+    var t = st.type || "num", h = "<div class=\"m3QC\"><div class=\"m3QCq\">" + m3V(st.ask) + "</div>";
+    if (t === "pick") h += "<div class=\"m3Opts\">" + st.opts.map(function (o, i) { return "<button type=\"button\" class=\"btn wfBtn\" data-m3=\"pick\" data-v=\"" + i + "\">" + o.t + "</button>"; }).join("") + "</div>";
+    else if (t === "btn") h += "<div><button type=\"button\" class=\"btn wfBtn\" data-m3=\"go\">" + st.btn + "</button></div>";
+    else if (M3ACT.indexOf(t) < 0) h += "<div class=\"m3Opts\">" + m3Opts(st).map(function (o, i) { return "<button type=\"button\" class=\"btn wfBtn lm\" data-m3=\"opt\" data-v=\"" + i + "\">" + o.t + "</button>"; }).join("") + "</div>";
+    return h + "</div>";
+  }
+  $("pgQt").addEventListener("click", function (e) { var b = e.target.closest && e.target.closest(".m3QC button[data-m3]"); if (!b || !m3() || !m3QC()) return; if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused && e.isTrusted) return; m3Click(b); });
   function m3Steps() {
     var el = $("wfSteps"); if (!el) return;
+    if (m3QC()) { el.hidden = true; el.innerHTML = ""; askArrow(false); $("undo").hidden = true; m3wKey = ""; return; }
     if (m3TA() && m3Cur()) { m3taSteps(); return; }
     if (grN() || vfN() || ivN() || csN()) { el.hidden = true; el.innerHTML = ""; return; }
     if (mode === "solo" && m3Cur() && m3Cur().grid && QZ.m3w && QZ.m3x) { m3wGrid(); return; }   // (Compare, Write: the grid stays on the screen, finished too)
@@ -13783,7 +13800,7 @@ var ESPIC = {
       var a = c2Pick(tier === 0 ? [1, -1, 2, -2] : [1, -1, 2, -2, 0.5, -0.5, 3, -3]), h = c2Rng(-6, 6), k = c2Rng(-7, 7), b = -2 * a * h, c = a * h * h + k;
       if (!h || h === k || h === -k) continue;   // (so no wrong choice repeats the right one)
       var std = rnd(2) && Number.isInteger(b) && Number.isInteger(c), up = a > 0, F = function (x) { return a * (x - h) * (x - h) + k; };
-      var fS = std ? c2Sf(a, b, c, "<i>f</i>(" + c2X + ")") : c2Vf(a, h, k, "x", "<i>f</i>(" + c2X + ")"), pb = { kind: 20, cb: 1, ta: 1, ivk: 1 };
+      var fS = std ? c2Sf(a, b, c, "<i>f</i>(" + c2X + ")") : c2Vf(a, h, k, "x", "<i>f</i>(" + c2X + ")"), pb = { kind: 20, cb: 1, ta: 1, ivk: 1, qc: 1 };
       pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
       pb.story = "The graph of <span class=\"lm cf\">" + fS[0] + "</span> is shown, with its vertex labelled. Find the axis of symmetry, the domain and range, and where the function is increasing and decreasing.";
       pb.fig = function (x) { return c2Pl(c2Plane(k - 2, k + 2), x || {}, { alt: "Graph of f with its vertex", curves: [{ fn: F, col: C2P }], pts: [{ x: h, y: k, col: C2P, lab: true, dy: up ? 18 : -8 }] }); };
@@ -15277,7 +15294,7 @@ var ESPIC = {
       var m3Tap = function (el, f, then) { if (!el) { then(); return; } handGo(ctr(el), 650); pgWait(850, function () { handTap(); f(); pgWait(800, then); }); };
       var m3Do = function (n) {
         var st = m3Step(); if (!st) { n(); return; }
-        var t = st.type || "num"; cap(m3Say(st.ask));
+        var t = st.type || "num"; cap(m3QC() ? "" : m3Say(st.ask)); if (m3QC() && !document.querySelector("#pgQt .m3QC")) $("pgQt").innerHTML = m3Q();   // (questions in the centre pane are asked only there)
         var P1 = m3Cur();
         if (t === "plotT") { pgWait(1600, function () { (function nx(i) { if (i >= P1.rows.length) { n(); return; } m3HClick(m3Scr(P1.rows[i], P1.tys[i]), function () { nx(i + 1); }); })(0); }); return; }
         if (t === "lineT") { pgWait(1600, function () { m3HClick(m3Scr(P1.rows[0], P1.tys[0]), function () { m3HClick(m3Scr(P1.rows[1], P1.tys[1]), n); }); }); return; }
@@ -15325,7 +15342,7 @@ var ESPIC = {
         var inp = $("m3In");
         if (inp) { var txt = (t === "fn" ? st.typed : t === "eq" ? m3Eq(m3V(st.a), m3V(st.b)) : c2T(m3V(st.ans), 6)).replace(/−/g, "-"); pgWait(1400, function () { typeBox("m3In", txt, function () { pgWait(600, n); }); }); return; }
         var list = t === "pick" ? st.opts : t === "btn" ? [] : m3Opts(st), vi = -1; list.forEach(function (o, i) { if (o.ok) vi = i; });
-        var b = t === "btn" ? document.querySelector("#wfSteps [data-m3=go]") : document.querySelector("#wfSteps [data-v=\"" + vi + "\"]");
+        var b = t === "btn" ? document.querySelector("#wfSteps [data-m3=go]") : document.querySelector("#wfSteps [data-v=\"" + vi + "\"], #pgQt .m3QC [data-v=\"" + vi + "\"]");
         if (!b) { n(); return; } pgWait(1800, function () { tap(b, function () { pgWait(600, n); }); });
       };
       m3Steps();
