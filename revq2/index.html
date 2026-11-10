@@ -622,7 +622,8 @@
   .m3FigC{flex:0 1 22rem;min-width:15rem}.m3FigC .m3FigW{min-width:0}
   .glTools{display:flex;gap:.5rem;justify-content:center;margin-top:.3rem}.glTools .btn{min-width:5.5rem}
   #vfnOut .vfnDg{cursor:grab;border-radius:5px;padding:0 .2em;background:color-mix(in srgb,#2D70B3 10%,transparent);touch-action:none}#vfnOut .vfnDg:hover{background:color-mix(in srgb,#2D70B3 22%,transparent)}
-  .m3Row{margin:.6rem 0}.m3Row td{min-width:4rem}.m3ta{display:flex;flex-direction:column;gap:.55rem;margin:.2rem 1.5rem .6rem 0;font:500 1.05rem system-ui,sans-serif;color:var(--ink)}.m3ta .m3taR{display:flex;align-items:center;gap:.6rem}.m3ta .m3taL{min-width:15.5rem}.m3ta .m3taIn{font:500 1.1rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:10px;padding:.3em .5em}.m3ta .m3taIn.bad{border-color:#C0301E;animation:shake .3s}
+  .m3Row{margin:.6rem 0}.m3Row td{min-width:4rem}.m3taK{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.3rem}.m3taK .m3taKb{min-width:2.4rem;padding:.25rem .55rem;font:600 1.05rem system-ui,sans-serif}
+  .m3ta{display:flex;flex-direction:column;gap:.55rem;margin:.2rem 1.5rem .6rem 0;font:500 1.05rem system-ui,sans-serif;color:var(--ink)}.m3ta .m3taR{display:flex;align-items:center;gap:.6rem}.m3ta .m3taL{min-width:15.5rem}.m3ta .m3taIn{font:500 1.1rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:10px;padding:.3em .5em}.m3ta .m3taIn.bad{border-color:#C0301E;animation:shake .3s}
   .cmpG{border-collapse:collapse;margin:.4rem 0 .6rem;font:600 1rem system-ui,sans-serif;color:#1B2433}.cmpG th,.cmpG td{border:1px solid #9AA0A8;padding:.45rem .7rem;text-align:center}.cmpG thead th{background:#D3D5D8}.cmpG tbody th{background:#E4E5E7;text-align:right;font-weight:700}.cmpG td{background:#fff;min-width:7.5rem}.cmpG .m3In{width:5.5rem}.cmpG .cmpU{font-weight:400;color:#4B5563;margin-left:.25rem}
   .cmpR{width:1.9rem;height:1.9rem;border-radius:50%;border:2px solid #1B2433;background:#fff;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center}.cmpR i{display:block;width:.95rem;height:.95rem;border-radius:50%;background:transparent}.cmpR.sel i{background:#1B2433}.cmpR.bad{border-color:#C0301E}.cmpR.ok{border-color:#2E9E4F;cursor:default}.cmpR.ok.sel i{background:#2E9E4F}.cmpG .m3In.bad{border-color:#C0301E}
   .wfSteps .m3wStep{margin-bottom:.35rem}.wfSteps .wfBtn.sel{background:var(--ink);color:var(--bg)}.wfSteps .m3wBad{color:#C0301E;font:600 .9rem system-ui,sans-serif}
@@ -5441,7 +5442,7 @@
     ["2.1B", "2.1", ["3", "4"], "Transformations of Quadratic Functions: Trans to Func"],
     ["2.2A", "2.2", ["1", "2"], "Characteristics of Quadratic Functions"],
     ["2.2B", "2.2", ["6", "7", "8", "9", "10"], "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing"],
-    ["2.2C", "2.2", ["11", "3", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
+    ["2.2C", "2.2", ["11", "3", "12", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
     ["2.4A", "2.4", ["1", "2"], "Modeling with Quadratic Functions"],
     ["2.4B", "2.4", ["4"], "Modeling with Quadratic Functions (Day 2)"]   // (exercise 3, Three Points with first and second differences, was taken out)
   ];
@@ -5495,7 +5496,7 @@
       [4, "solo", 80, "Write Mode, 2nd round", 2], [4, "solo", 100, "Write Mode, 3rd round", 3]
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
-    "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize"], function (l) { return l === 11 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
+    "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics of a Parabola"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics"], function (l) { return l === 11 || l === 12 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression"], ["Vertex & Point", "Intercepts", "Three Points", "Regression"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -5512,7 +5513,7 @@
       ["g", "solo", 80, "Write Mode, 2nd round", 2], ["g", "solo", 100, "Write Mode, 3rd round", 3]
     ] }
   };
-  BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return l[0] < 6; }).concat([[11, "demo", 20, "Demo Mode"], [11, "sequence", 50, "Sequence Mode"], [11, "calculate", 100, "Calculate Mode"]]);   // (2.2C Memorize: a card sort in Demo and Sequence; Calculate is a quiz)
+  BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return l[0] < 6; }).concat([[11, "demo", 20, "Demo Mode"], [11, "sequence", 50, "Sequence Mode"], [11, "calculate", 100, "Calculate Mode"], [12, "demo", 20, "Demo Mode"], [12, "sequence", 50, "Sequence Mode"], [12, "calculate", 100, "Calculate Mode"]]);   // (2.2C Characteristics: Demo, Sequence, Calculate)   // (2.2C Memorize: a card sort in Demo and Sequence; Calculate is a quiz)
   [6, 7, 8, 9, 10].forEach(function (n) { BUILT["2.2"].levels.push([n, "demo", 10, "Demo Mode"], [n, "sequence", 40, "Sequence Mode, 3 problems"], [n, "calculate", 70, "Calculate Mode, 3 problems"], [n, "solo", 100, "Write Mode, 3 problems"]); });   // 2.2B Interval Notation: each mode needs a whole round of three
   // RevT1 holds no exercises of its own: each item runs one of the original exercises (the same code), so a change to an original shows up here too.
   // Its progress is the original's progress.  Questions refer to Algebra 2 Chapter 1 Test 1.
@@ -9012,10 +9013,10 @@ var ESPIC = {
     }
     function dragPQ(n) {   // Intercept Form: the hand drags p, then q, from the equation into rows 2 and 4 of the x column
       var L = [["p", p.p1], ["q", p.q1]].filter(function (z) { var r = z[1] === Math.min(p.p1, p.q1) ? 1 : 3; return !(s.dx || {})[r]; });
-      cap("The x-intercepts are p = " + nf(p.p1) + " and q = " + nf(p.q1) + ". Drag them into the x column, from the equation or from the values you found: the smaller in row 2, the larger in row 4.");
+      cap("The x-intercepts are p = " + nf(p.p1) + " and q = " + nf(p.q1) + ". Drag the values you found below the graph into the x column: the smaller in row 2, the larger in row 4.");
       (function one() {
         if (pgRun !== run) return; var z = L.shift(); if (!z) { pgWait(900, n); return; }
-        var fromOut = z[0] === "q" && document.querySelector("#vfnOut [data-vfo=q]"); if (fromOut) cap("Or drag the value you found below the graph: q = " + nf(p.q1) + ".");
+        var fromOut = document.querySelector("#vfnOut [data-vfo=" + z[0] + "]");   // (the Demo drags both from the values found below the graph, never from the equation)
         var src = fromOut || document.querySelector("#pgQt [data-vfe=" + z[0] + "]"), r = z[1] === Math.min(p.p1, p.q1) ? 1 : 3, dst = document.querySelector("#vfnTb [data-vfdx=\"" + r + "\"]"); if (!src || !dst) { one(); return; }
         var a = ctr(src);
         go(a, function () {
@@ -10019,7 +10020,7 @@ var ESPIC = {
     QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : gd2() ? o.map(function (f, i) { return gdMake21(i); }) : o.map(gdMake), est: est() ? estSet(o.length) : null, cr: false, custom: !!cu }; updProg();
     if (wf()) { QZ.custom = !!cuw; QZ.tr = []; QZ.wfp = cuw ? [wfCustom] : mode === "create" ? [null] : wfSet(o.length); QZ.cs = "f"; QZ.wd = {}; QZ.wl = []; if (mode === "create") wfCustom = null; }
     if (m3() && csL()) { o = [0]; QZ.order = o; }   // (2.2C Memorize: one sort)
-    if (m3() && act === "2.2" && [1, 2, 3, 4, 5].indexOf(+lesson) >= 0 && o.length > 1) { o = [0]; QZ.order = o; if (QZ.m3p && QZ.m3p.length > 1) QZ.m3p = QZ.m3p.slice(0, 1); }   // 2.2A and 2.2C: one problem per round (Write still needs three rounds for full Progress)
+    if (m3() && act === "2.2" && [1, 2, 3, 4, 5, 12].indexOf(+lesson) >= 0 && o.length > 1) { o = [0]; QZ.order = o; if (QZ.m3p && QZ.m3p.length > 1) QZ.m3p = QZ.m3p.slice(0, 1); }   // 2.2A and 2.2C: one problem per round (Write still needs three rounds for full Progress)
     if (c2Cu()) QZ.custom = true; if (vcr()) QZ.pick = false;
     if (m3()) { QZ.tr = []; QZ.m3p = m3Set(o.length); }
     if (mode !== "demo") explainOn = false;
@@ -12590,8 +12591,19 @@ var ESPIC = {
       else h += "<input class=\"m3taIn" + (T.bad[st.id] ? " bad" : "") + "\" data-ta=\"" + st.id + "\" value=\"" + m3wQ(T.v[st.id]) + "\" style=\"width:" + (st.w || 5.5) + "rem\" inputmode=\"" + (st.word ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"" + m3wQ(String(st.pre).replace(/<[^>]+>/g, "")) + "\"" + (done || (pgRun && !pgPaused) ? " readonly" : "") + ">";
       h += "</span></div>";
     });
+    if (pb.ivk && !done) h += "<div class=\"m3taK\" aria-label=\"Interval keys\">" + ["(", ")", "[", "]", ",", "∞", "−∞", "ℝ"].map(function (k0) { return "<button type=\"button\" class=\"btn m3taKb\" data-tak=\"" + k0 + "\">" + k0 + "</button>"; }).join("") + "</div>";
     return h + "</div>";
   }
+  var m3taLast = null;   // the box the interval keys type into
+  document.addEventListener("mousedown", function (e) { if (e.target.closest && e.target.closest("[data-tak]")) e.preventDefault(); });   // (a key press keeps the box's focus, so leaving it is not checked)
+  document.addEventListener("click", function (e) {
+    var k0 = e.target.closest && e.target.closest("[data-tak]"); if (!k0 || !m3TA()) return; if (e.isTrusted) pgUser();
+    var el = (document.activeElement && document.activeElement.dataset && document.activeElement.dataset.ta) ? document.activeElement : m3taLast && document.body.contains(m3taLast) ? m3taLast : document.querySelector("#pgQt .m3taIn"); if (!el || el.readOnly) return;
+    var ins = k0.dataset.tak === "ℝ" ? "(−∞, ∞)" : k0.dataset.tak === "," ? ", " : k0.dataset.tak, a0 = el.selectionStart == null ? el.value.length : el.selectionStart, b0 = el.selectionEnd == null ? a0 : el.selectionEnd;
+    if (k0.dataset.tak === "ℝ") { el.value = ins; a0 = 0; b0 = 0; } else el.value = el.value.slice(0, a0) + ins + el.value.slice(b0);
+    el.focus(); var c0 = k0.dataset.tak === "ℝ" ? ins.length : a0 + ins.length; try { el.setSelectionRange(c0, c0); } catch (er) { }
+    m3taInput(el);
+  });
   function m3taSteps() { var el = $("wfSteps"); el.hidden = true; el.innerHTML = ""; askArrow(false); $("undo").hidden = true; m3wKey = ""; }
   function m3taInput(el) {
     var pb = m3Cur(), T = m3taSt(), st = pb.tsteps.filter(function (q) { return q.id === el.dataset.ta; })[0]; if (!st || T.ok[st.id] || QZ.step >= 4) return;
@@ -12610,6 +12622,7 @@ var ESPIC = {
     var nx = $("qzNext"); nx.hidden = false; nx.disabled = false; nx.textContent = "Try another";   // (the boxes stay as they are: the student's place is kept)
   }
   $("pgQt").addEventListener("input", function (e) { if (e.target.dataset && e.target.dataset.ta && m3TA()) { if (e.isTrusted) pgUser(); m3taInput(e.target); } });
+  $("pgQt").addEventListener("focusin", function (e) { if (e.target.dataset && e.target.dataset.ta) m3taLast = e.target; });
   $("pgQt").addEventListener("focusout", function (e) { if (e.target.dataset && e.target.dataset.ta && m3TA()) m3taLeave(e.target); });
   $("pgQt").addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.dataset && e.target.dataset.ta && m3TA()) { e.preventDefault(); var A = [].slice.call(document.querySelectorAll("#pgQt .m3taIn")), n = A[A.indexOf(e.target) + 1]; if (n) n.focus(); else m3taLeave(e.target); } });
   function m3Steps() {
@@ -13742,6 +13755,41 @@ var ESPIC = {
       return pb;
     }
   }
+  // 2.2C Characteristics of a Parabola: the equation and its graph, vertex labelled, are given; report the axis of symmetry, domain, range, increasing and
+  // decreasing.  Demo, Sequence: Circle Back, multiple-choice buttons.  Calculate: a list of boxes, "Try Another" questioning (interval keys below them).
+  function c2M2212(tier) {
+    for (var t = 0; t < 2000; t++) {
+      var a = c2Pick(tier === 0 ? [1, -1, 2, -2] : [1, -1, 2, -2, 0.5, -0.5, 3, -3]), h = c2Rng(-6, 6), k = c2Rng(-7, 7), b = -2 * a * h, c = a * h * h + k;
+      if (!h || h === k || h === -k) continue;   // (so no wrong choice repeats the right one)
+      var std = rnd(2) && Number.isInteger(b) && Number.isInteger(c), up = a > 0, F = function (x) { return a * (x - h) * (x - h) + k; };
+      var fS = std ? c2Sf(a, b, c, "<i>f</i>(" + c2X + ")") : c2Vf(a, h, k, "x", "<i>f</i>(" + c2X + ")"), pb = { kind: 20, cb: 1, ta: 1, ivk: 1 };
+      pb.head = fS[0].replace(/<[^>]+>/g, ""); pb.pic = "";
+      pb.story = "The graph of <span class=\"lm cf\">" + fS[0] + "</span> is shown, with its vertex labelled. Find the axis of symmetry, the domain and range, and where the function is increasing and decreasing.";
+      pb.fig = function (x) { return c2Pl(c2Plane(k - 2, k + 2), x || {}, { alt: "Graph of f with its vertex", curves: [{ fn: F, col: C2P }], pts: [{ x: h, y: k, col: C2P, lab: true, dy: up ? 18 : -8 }] }); };
+      var L = { v: -IVI }, Rr = { v: IVI }, K = { v: k, cl: true }, H = { v: h, cl: true }, I = function (p, q) { return ivStr([ivPc(p, q)]); };
+      var D = I(L, Rr), Rg = up ? I(K, Rr) : I(L, K), Inc = up ? I(H, Rr) : I(L, H), Dec = up ? I(L, H) : I(H, Rr), Kh = { v: h, cl: true }, Hk = { v: k, cl: true };
+      var ax = c2X + " = " + c2F(h);
+      pb.steps = [
+        { id: "ax", lab: "Axis", type: "pick", ask: "What is the axis of symmetry?", opts: c2Pk(ax, [[c2X + " = " + c2F(k), "The axis is the vertical line through the vertex: use its x-coordinate, " + c2F(h) + "."], [c2Y + " = " + c2F(h), "The axis is a vertical line, so its equation is x = …"], [c2X + " = " + c2F(-h), "Check the sign: the vertex is at x = " + c2F(h) + "."]]), hint: ["The axis of symmetry is the vertical line through the vertex.", "The vertex is (" + c2F(h) + ", " + c2F(k) + "), so " + ax + "."], line: "axis of symmetry " + ax },
+        { id: "dom", lab: "Domain", type: "pick", ask: "What is the domain?", opts: c2Pk(D, [[up ? I(K, Rr) : I(L, K), "That describes the outputs (the range). Every x can go in."], [up ? I(Kh, Rr) : I(L, Kh), "The parabola goes on forever to the left and right: every x can go in."]]), hint: ["The domain is every x you can put in.", "A parabola's domain is all real numbers: " + D + "."], line: "domain " + D },
+        { id: "rng", lab: "Range", type: "pick", ask: "What is the range?", opts: c2Pk(Rg, [[up ? I(L, K) : I(K, Rr), "It opens " + (up ? "upward, so the outputs go up from " : "downward, so the outputs go down from ") + c2F(k) + "."], [D, "The outputs never go " + (up ? "below " : "above ") + "the vertex's y-value, " + c2F(k) + "."], [up ? I(Kh, Rr) : I(L, Kh), "Use the vertex's y-value, " + c2F(k) + ", not its x-value."]]), hint: ["The range starts at the vertex's y-value.", "It opens " + (up ? "upward from " : "downward from ") + c2F(k) + ": " + Rg + "."], line: "range " + Rg },
+        { id: "inc", lab: "Increasing", type: "pick", ask: "Where is the function increasing?", opts: c2Pk(Inc, [[Dec, "That is where it decreases. Read the graph from left to right."], [up ? I(Hk, Rr) : I(L, Hk), "Use the vertex's x-value, " + c2F(h) + ", not its y-value."]]), hint: ["Move left to right along the graph: where does it go up?", "It goes up " + (up ? "after x = " : "until x = ") + c2F(h) + ": " + Inc + "."], line: "increasing on " + Inc },
+        { id: "dec", lab: "Decreasing", type: "pick", ask: "Where is the function decreasing?", opts: c2Pk(Dec, [[Inc, "That is where it increases. Read the graph from left to right."], [up ? I(L, Hk) : I(Hk, Rr), "Use the vertex's x-value, " + c2F(h) + ", not its y-value."]]), hint: ["Move left to right along the graph: where does it go down?", "It goes down " + (up ? "until x = " : "after x = ") + c2F(h) + ": " + Dec + "."], line: "decreasing on " + Dec }
+      ];
+      // Calculate: boxes; intervals typed (the ends at the vertex may be open or closed)
+      var ivOk = function (want, alt) { return function (v) { var t0 = String(v || "").trim(); if (/^(ℝ|R|all real numbers)$/i.test(t0)) t0 = "(−∞, ∞)"; var r = ivParse(t0); if (!r.pcs) return false; var got = ivStr(r.pcs); return got === want || (alt && got === alt); }; };
+      var op = function (iv) { return iv.replace("[" + ivNum(h) + ",", "(" + ivNum(h) + ",").replace(", " + ivNum(h) + "]", ", " + ivNum(h) + ")"); };
+      pb.tsteps = [
+        { id: "ax", pre: "Axis of symmetry: " + c2X + " =", ans: h, line: "axis of symmetry " + ax },
+        { id: "dom", pre: "Domain:", w: 8, iv: 1, word: ivOk(D), show: D, line: "domain " + D },
+        { id: "rng", pre: "Range:", w: 8, iv: 1, word: ivOk(Rg), show: Rg, line: "range " + Rg },
+        { id: "inc", pre: "Increasing:", w: 8, iv: 1, word: ivOk(Inc, op(Inc)), show: Inc, line: "increasing on " + Inc },
+        { id: "dec", pre: "Decreasing:", w: 8, iv: 1, word: ivOk(Dec, op(Dec)), show: Dec, line: "decreasing on " + Dec }
+      ];
+      pb.ex = "The vertex is (" + c2F(h) + ", " + c2F(k) + "), so the axis of symmetry is " + ax + ". Every x can go in, so the domain is " + D + ". The parabola opens " + (up ? "upward" : "downward") + " from " + c2F(k) + ", so the range is " + Rg + ". Reading left to right, it " + (up ? "decreases on " + Dec + " and increases on " + Inc : "increases on " + Inc + " and decreases on " + Dec) + ".";
+      return pb;
+    }
+  }
   // Example 4: Graphing a Quadratic Function in Intercept Form
   function c2M224(tier) {   // 2.2C Graphing Intercept Form: f(x) = a(x − p)(x − q) on the 2.2A Standard Form engine (table rows ts apart, p and q on rows 2 and 4)
     for (var t = 0; t < 4000; t++) {
@@ -14033,7 +14081,7 @@ var ESPIC = {
   function wyoSync() { var on = wyoPgOn(); document.body.classList.toggle("wyoPg", on); var w = $("wyoPg"); if (on && w && !w.innerHTML) w.innerHTML = wyoGraphing(act === "2.1" ? "<i>g</i>(<i>x</i>)" : " "); }
 
   // ==== 2.2C: a wrong answer shows the right answer (all modes) ====
-  function c2cOn() { return pq() && act === "2.2" && (lesson === 3 || lesson === 4 || lesson === 5); }
+  function c2cOn() { return pq() && act === "2.2" && (lesson === 3 || lesson === 4 || lesson === 5 || lesson === 12); }
   function ansAdd(msg, a) { msg = msg || "Not quite."; if (!(c2cOn() || (pq() && ivL())) || a == null || a === "") return msg; return msg.replace(/\s*Try again\.?\s*$/, "") + " The answer is " + String(a).replace(/\.\s*$/, "") + "."; }
   function m3AnsTx(st) {
     if (!st) return ""; var t = st.type || "num";
@@ -14123,7 +14171,7 @@ var ESPIC = {
   // which exercise makes the problem
   function c2Make(tier) {
     c2Dec = act === "2.1" || act === "2.4" || (act === "2.2" && lesson === 5);
-    var pb = act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211][lesson - 1](tier)
+    var pb = act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211, c2M2212][lesson - 1](tier)
       : ([c2M241, c2M242, null, c2M244][lesson - 1] || c2M244)(tier);   // (2.4 exercise 3, Three Points with first and second differences, was taken out)
     pb.head = m3Plain(pb.head);   // (Show work's first line is plain text)
     return pb;
