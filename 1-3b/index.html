@@ -620,6 +620,7 @@
   .m3FigW{flex:0 1 22rem;min-width:15rem}
   .m3FigC{flex:0 1 22rem;min-width:15rem}.m3FigC .m3FigW{min-width:0}
   .glTools{display:flex;gap:.5rem;justify-content:center;margin-top:.3rem}.glTools .btn{min-width:5.5rem}
+  #vfnOut .vfnDg{cursor:grab;border-radius:5px;padding:0 .2em;background:color-mix(in srgb,#2D70B3 10%,transparent);touch-action:none}#vfnOut .vfnDg:hover{background:color-mix(in srgb,#2D70B3 22%,transparent)}
   .cmpG{border-collapse:collapse;margin:.4rem 0 .6rem;font:600 1rem system-ui,sans-serif;color:#1B2433}.cmpG th,.cmpG td{border:1px solid #9AA0A8;padding:.45rem .7rem;text-align:center}.cmpG thead th{background:#D3D5D8}.cmpG tbody th{background:#E4E5E7;text-align:right;font-weight:700}.cmpG td{background:#fff;min-width:7.5rem}.cmpG .m3In{width:5.5rem}.cmpG .cmpU{font-weight:400;color:#4B5563;margin-left:.25rem}
   .cmpR{width:1.9rem;height:1.9rem;border-radius:50%;border:2px solid #1B2433;background:#fff;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center}.cmpR i{display:block;width:.95rem;height:.95rem;border-radius:50%;background:transparent}.cmpR.sel i{background:#1B2433}.cmpR.bad{border-color:#C0301E}.cmpR.ok{border-color:#2E9E4F;cursor:default}.cmpR.ok.sel i{background:#2E9E4F}.cmpG .m3In.bad{border-color:#C0301E}
   .wfSteps .m3wStep{margin-bottom:.35rem}.wfSteps .wfBtn.sel{background:var(--ink);color:var(--bg)}.wfSteps .m3wBad{color:#C0301E;font:600 .9rem system-ui,sans-serif}
@@ -8238,7 +8239,7 @@ var ESPIC = {
       return "Fill in the boxes and the table, and graph the parabola with the parabola button.";
     }
     var id = vfnSid();
-    if (id === "drag" && vfnIp()) return VFN_ASK.ipdrag;
+    if (id === "drag" && vfnIp()) return "Drag <i>p</i> and <i>q</i> from the equation, or from the values below the graph, into the <i>x</i> column: the smaller in row 2, the larger in row 4.";
     if (id === "xs") return VFN_ASK.ipxs;
     if (id === "a" && vfnIp() && vfnP().a === 1) return VFN_ASK.ip1;
     if ((id === "m1" || id === "m2") && s.sel) return "Now click its mirror point.";
@@ -8323,7 +8324,8 @@ var ESPIC = {
         if (id !== f || done) return row(f, null, false);
         return "<div class=\"vfnR cur\"><span class=\"vfnL\">" + VFN_LAB[f] + "</span> " + vfnIvIn(f) + "</div>" + vfnKeysHTML(f);
       };
-      var top = vfnIp() ? row("a", P("a") ? nf(p.a) : null, id === "a") + row("p", P("p") ? nf(p.p1) : null, id === "p") + row("q", P("q") ? nf(p.q1) : null, id === "q") : vfnStd() ? row("a", P("a") ? nf(p.a) : null, id === "a") + row("b", P("b") ? nf(p.b) : null, id === "b") + row("c", P("c") ? nf(p.c) : null, id === "c") + row("xv", P("drag") ? nf(p.h) : null, id === "drag")
+      var pqv = function (k) { var v = nf(p[k + "1"]); return id === "drag" && !(s.dx && s.dx[v === nf(Math.min(p.p1, p.q1)) ? 1 : 3]) ? "<span class=\"vfnDg\" data-vfo=\"" + k + "\" title=\"Drag into the x column\">" + v + "</span>" : v; };   // (Intercept Form: at the drag step, p and q found here can be dragged into the table too)
+      var top = vfnIp() ? row("a", P("a") ? nf(p.a) : null, id === "a") + row("p", P("p") ? pqv("p") : null, id === "p") + row("q", P("q") ? pqv("q") : null, id === "q") : vfnStd() ? row("a", P("a") ? nf(p.a) : null, id === "a") + row("b", P("b") ? nf(p.b) : null, id === "b") + row("c", P("c") ? nf(p.c) : null, id === "c") + row("xv", P("drag") ? nf(p.h) : null, id === "drag")
         : row("h", P("h") ? nf(p.h) : null, id === "h") + row("k", P("k") ? nf(p.k) : null, id === "k");
       var sig = el.innerHTML ? null : null; if (el.dataset.sig !== top + "|" + (vfnIp() ? VFN_IV.map(ivr).join("") : "") + "|" + id + "|" + (P("m2") ? 1 : 0) + "|" + JSON.stringify(s.pairs)) {
         el.dataset.sig = top + "|" + (vfnIp() ? VFN_IV.map(ivr).join("") : "") + "|" + id + "|" + (P("m2") ? 1 : 0) + "|" + JSON.stringify(s.pairs);
@@ -8695,9 +8697,9 @@ var ESPIC = {
   }
   (function () {
     document.addEventListener("pointerdown", function (e) {
-      if (!vfN() || !e.target.closest || !vfnIpCan()) return; var t = e.target.closest("#pgQt [data-vfe=p],#pgQt [data-vfe=q]"); if (!t) return;
+      if (!vfN() || !e.target.closest || !vfnIpCan()) return; var t = e.target.closest("#pgQt [data-vfe=p],#pgQt [data-vfe=q],#vfnOut [data-vfo=p],#vfnOut [data-vfo=q]"); if (!t) return;
       if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused) return;
-      e.preventDefault(); var k = t.dataset.vfe, v = vfnP()[k + "1"], x0 = e.clientX, y0 = e.clientY, g = null, s = vfnSt();
+      e.preventDefault(); var k = t.dataset.vfe || t.dataset.vfo, v = vfnP()[k + "1"], x0 = e.clientX, y0 = e.clientY, g = null, s = vfnSt();
       function mv(ev) { if (!g) { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) < 5) return; g = document.createElement("span"); g.className = "vfnChip vfnGhost"; g.innerHTML = "<i>x</i> = " + nf(v); document.body.appendChild(g); s.chipDrag = true; vfnTb(); } g.style.left = ev.clientX + "px"; g.style.top = ev.clientY + "px"; }
       function up(ev) {
         document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); document.removeEventListener("pointercancel", up);
@@ -9002,10 +9004,11 @@ var ESPIC = {
     }
     function dragPQ(n) {   // Intercept Form: the hand drags p, then q, from the equation into rows 2 and 4 of the x column
       var L = [["p", p.p1], ["q", p.q1]].filter(function (z) { var r = z[1] === Math.min(p.p1, p.q1) ? 1 : 3; return !(s.dx || {})[r]; });
-      cap("The x-intercepts are p = " + nf(p.p1) + " and q = " + nf(p.q1) + ". Drag them into the x column: the smaller in row 2, the larger in row 4.");
+      cap("The x-intercepts are p = " + nf(p.p1) + " and q = " + nf(p.q1) + ". Drag them into the x column, from the equation or from the values you found: the smaller in row 2, the larger in row 4.");
       (function one() {
         if (pgRun !== run) return; var z = L.shift(); if (!z) { pgWait(900, n); return; }
-        var src = document.querySelector("#pgQt [data-vfe=" + z[0] + "]"), r = z[1] === Math.min(p.p1, p.q1) ? 1 : 3, dst = document.querySelector("#vfnTb [data-vfdx=\"" + r + "\"]"); if (!src || !dst) { one(); return; }
+        var fromOut = z[0] === "q" && document.querySelector("#vfnOut [data-vfo=q]"); if (fromOut) cap("Or drag the value you found below the graph: q = " + nf(p.q1) + ".");
+        var src = fromOut || document.querySelector("#pgQt [data-vfe=" + z[0] + "]"), r = z[1] === Math.min(p.p1, p.q1) ? 1 : 3, dst = document.querySelector("#vfnTb [data-vfdx=\"" + r + "\"]"); if (!src || !dst) { one(); return; }
         var a = ctr(src);
         go(a, function () {
           var g = document.createElement("span"); g.className = "vfnChip vfnGhost"; g.innerHTML = "<i>x</i> = " + nf(z[1]); document.body.appendChild(g); s.chipDrag = true; vfnTb();
