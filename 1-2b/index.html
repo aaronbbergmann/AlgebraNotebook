@@ -8876,7 +8876,7 @@ var ESPIC = {
     }
     if (p.vx) {   // Vertex Form: h (inside the parentheses, with its sign) and k (at the end) can be clicked
       var Xv = "<i>x</i>", hs = p.h ? (p.h < 0 ? " + " + nf(-p.h) : " − " + nf(p.h)) : "", co0 = p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a);
-      var tv = co0 + "(" + Xv + "<span class=\"vfnE" + (p.h ? "" : " vfnE1") + "\" data-vfe=\"h\"" + (p.h ? "" : " title=\"Nothing subtracted means h = 0\"") + ">" + hs + "</span>)²" + "<span class=\"vfnE" + (p.k ? "" : " vfnE1") + "\" data-vfe=\"k\"" + (p.k ? "" : " title=\"Nothing added means k = 0\"") + ">" + (p.k ? (p.k < 0 ? " − " : " + ") + nf(Math.abs(p.k)) : "") + "</span>";
+      var tv = co0 + (p.h ? "(" : "") + Xv + "<span class=\"vfnE" + (p.h ? "" : " vfnE1") + "\" data-vfe=\"h\"" + (p.h ? "" : " title=\"Nothing subtracted means h = 0\"") + ">" + hs + "</span>" + (p.h ? ")" : "") + "²" + "<span class=\"vfnE" + (p.k ? "" : " vfnE1") + "\" data-vfe=\"k\"" + (p.k ? "" : " title=\"Nothing added means k = 0\"") + ">" + (p.k ? (p.k < 0 ? " − " : " + ") + nf(Math.abs(p.k)) : "") + "</span>";
       return "<div class=\"m3Top\"><div class=\"estP w5\">Graph <span class=\"lm vfnEq\" id=\"vfnEq\"><i>f</i>(" + Xv + ") = " + tv + "</span>. Label the vertex and the axis of symmetry.</div></div>";
     }
     if (!p.std) return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story.replace(/lm cf/g, "lm") + "</div>" + pb.pic + "</div>";
@@ -13771,6 +13771,7 @@ var ESPIC = {
     for (var t = 0; t < 2000; t++) {
       var a = c2Pick(tier === 0 ? [1, -1] : tier === 1 ? [2, -2, 1, -1] : [2, -2, 0.5, -0.5]), h = c2Rng(-5, 5), k = c2Rng(-6, 6), s = rnd(2) ? 1 : -1, d = Math.abs(a) === 0.5 ? [2, 4] : [1, 2];
       if (tier === 0 && rnd(3) === 0) h = 0;
+      if (a === 1 && !h && !k) continue;   // (never the parent x² itself: at least one transformation)
       if (c2Cu()) { a = c2Custom.a; h = c2Custom.h; k = c2Custom.k; d = Math.abs(a) === 0.5 ? [2, 4] : [1, 2]; }   // (Create: the student's own function)
       var F = function (x) { return a * (x - h) * (x - h) + k; }, x1 = h + s * d[0], x2 = h + s * d[1], y1 = F(x1), y2 = F(x2);
       if ([x1, x2, 2 * h - x1, 2 * h - x2].some(function (v) { return Math.abs(v) > 9; }) || [y1, y2].some(function (v) { return Math.abs(v) > 9; })) continue;
