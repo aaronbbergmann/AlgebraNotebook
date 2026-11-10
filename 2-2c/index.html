@@ -15670,7 +15670,20 @@ var ESPIC = {
   function ladder() { var B = BUILT[act], ms = B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"]; return ms.filter(function (m) { return MORD.indexOf(m) >= 0; }); }
   function modeFin(m) { return lvDone([LK(), m, 0, "", 1]); }
   function isTeacher() { try { return !!(window.AN && AN.user && AN.user.teacher); } catch (e) { return false; } }
-  function modeLock(m) { if (!ladOn() || isTeacher()) return null; var L = ladder(), i = L.indexOf(m); for (var k = 0; k < i; k++) if (!modeFin(L[k])) return L[k]; return null; }
+  // A review question whose exercise was already finished (100%) in its original activity is open in every mode; the review still keeps its own progress
+  function origDone(it) {
+    try {
+      var A = it.act, B = BUILT[A]; if (!B) return false;
+      var vk = it.subx ? "s" : String(it.lesson), k = A === "1.4D" ? (it.subx ? 4 : it.lesson === 4 ? "g" : it.lesson) : it.lesson, vw = vwOf(A, vk), L;
+      if (vw && A === "1.4D") L = [["demo", 10], ["sequence", 25], ["calculate", 40], ["solo", 55], ["solo", 80, "", 2], ["solo", 100, "", 3]].map(function (x) { return [k, x[0], x[1], "", x[3]]; });
+      else L = (B.levels || []).filter(function (l) { return String(l[0]) === String(k); });
+      if (!L.length) return false;
+      var P = JSON.parse(localStorage.getItem(vw ? vwKey(vw) : B.key) || "{}") || {}, keep = prog, top = 0, got = 0;
+      prog = P; try { L.forEach(function (l) { if (l[2] > top) top = l[2]; if (lvDone(l) && l[2] > got) got = l[2]; }); } finally { prog = keep; }
+      return top > 0 && got >= top;
+    } catch (e) { return false; }
+  }
+  function modeLock(m) { if (!ladOn() || isTeacher()) return null; if (rev && origDone(BUILT[rev].items[revI])) return null; var L = ladder(), i = L.indexOf(m); for (var k = 0; k < i; k++) if (!modeFin(L[k])) return L[k]; return null; }
   function lockFix(m) { var lk = modeLock(m); if (!lk) return m; lockTip(lk); return lk; }
   function lockTip(lk) {
     var T = $("lockTip"); if (!T) { T = document.createElement("div"); T.id = "lockTip"; T.setAttribute("role", "status"); document.body.appendChild(T); }
