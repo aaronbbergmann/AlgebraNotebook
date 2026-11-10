@@ -5376,7 +5376,7 @@
     if (!list.length) list = [{ steps: steps, label: "" }];
     var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
-      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + workHTML(w.steps) + (w.pic ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + w.pic + "</section>" : "") + "</div>"; }).join("");
+      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + (w.gonly ? "" : workHTML(w.steps)) + (w.pic ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + w.pic + "</section>" : "") + "</div>"; }).join("");
     var css = ".wpic svg{max-width:100%;height:auto}.wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
     body = svHTML(body);
     var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;min-width:min(34rem,90vw);width:fit-content;max-width:none;margin:2rem auto;padding:0 1rem}.r>span,.r td{white-space:nowrap}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#7A3FB5}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
@@ -12617,7 +12617,7 @@ var ESPIC = {
     QZ.m3i = 0; QZ.m3ord = null; QZ.ta = null; QZ.m3l = []; QZ.m3x = {}; QZ.m3done = false; QZ.m3o = null; QZ.hn = 0; QZ.arrowAt = -1; QZ.m3w = { v: {}, ok: {}, bad: {} }; m3wKey = "";
     for (var wi = works.length - 1; wi >= 0; wi--) if (works[wi].wf && works[wi].steps.length < 2) works.splice(wi, 1);
     var pb = m3Cur(); QZ.ww = null;
-    if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); }
+    if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); if (pb.grid && pb.dsm) { QZ.ww.gonly = true; QZ.ww.pic = c2CmpPic(pb); } }   // (2.2C Compare: Show work is the graph alone)
     PG.show = { eq: false, table: false, graph: false, desc: false, parent: false };
   }
   // ==== "Try Another" questioning (pb.ta, Calculate): every box is on the screen; a box is accepted the moment it is right.  A wrong box, once the student
@@ -12683,6 +12683,16 @@ var ESPIC = {
     return h + "</div>";
   }
   $("pgQt").addEventListener("click", function (e) { var b = e.target.closest && e.target.closest(".m3QC button[data-m3]"); if (!b || !m3() || !m3QC()) return; if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused && e.isTrusted) return; m3Click(b); });
+  // 2.2C Compare, Show work: both paths on one graph, each vertex and x-intercept labelled with its coordinates
+  function c2CmpPic(pb) {
+    var P = pb.dsm, H1 = P.F1(P.D1 / 2), H2 = P.F2(P.D2 / 2), xa = c2Axis(0, Math.max(P.D1, P.D2) * 1.18), ya = c2Axis(0, Math.max(H1, H2) * 1.18), r = function (v) { return Math.round(v * 100) / 100; };
+    var svg = c2Fig({ H: 300, xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Horizontal distance (" + pb.grid.u + ")", yl: "Height (" + pb.grid.u + ")", alt: "Both paths",
+      curves: [{ fn: P.F1, col: C2B, lo: 0, hi: P.D1 }, { fn: P.F2, col: C2P, lo: 0, hi: P.D2 }],
+      pts: [{ x: 0, y: 0, col: "#1B2433", lab: "(0, 0)", an: "start", dy: -8 },
+        { x: P.D1, y: 0, col: C2B, tc: C2B, lab: "(" + r(P.D1) + ", 0)", an: P.D1 > P.D2 ? "start" : "end", dy: -8 }, { x: P.D1 / 2, y: H1, col: C2B, tc: C2B, lab: "(" + r(P.D1 / 2) + ", " + r(H1) + ")", dy: -8 },
+        { x: P.D2, y: 0, col: C2P, tc: C2P, lab: "(" + r(P.D2) + ", 0)", an: P.D2 > P.D1 ? "start" : "end", dy: -8 }, { x: P.D2 / 2, y: H2, col: C2P, tc: C2P, lab: "(" + r(P.D2 / 2) + ", " + r(H2) + ")", dy: -8 }] });
+    return "<div class=\"wgr\" style=\"color:#1B2433;--bg:#fff\">" + svg.replace("<svg ", "<svg width=\"560\" ") + "</div>";
+  }
   function m3Steps() {
     var el = $("wfSteps"); if (!el) return;
     if (m3QC()) { el.hidden = true; el.innerHTML = ""; askArrow(false); $("undo").hidden = true; m3wKey = ""; return; }
