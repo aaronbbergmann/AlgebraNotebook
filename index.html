@@ -8175,9 +8175,9 @@ var ESPIC = {
   // the steps of Demo and Sequence, in order
   var VFN_IV = [];   // (Intercept Form once also asked the domain, range, increasing, decreasing and min/max: ["dom", "rng", "inc", "dec", "mm"]; removed 2026-11-10 at the teacher's request)
   function vfnStg() { return vfnIp() ? ["a", "p", "q", "drag", "xs", "tbl", "graph"] :   // (Intercept Form: a, p, q, the table and the graph only: no vertex or axis)
-     vfnStd() ? ["a", "b", "c", "drag", "tbl", "graph", "v", "ax", "m1", "m2"] : ["graph", "h", "k", "v", "ax", "m1", "m2"]; }
+     vfnStd() ? ["a", "b", "c", "drag", "tbl", "graph", "v", "ax"] : ["graph", "h", "k", "v", "ax"]; }   // (2.2A: no mirror points, at the teacher's request)
   // the boxes of Calculate and Write
-  function vfnFs() { var std = vfnStd(), w = vfnWr(); if (vfnIp()) return w ? [] : ["a", "p", "q"]; /* (Write: only the graph is checked) */ return (std ? (w ? ["xv"] : ["a", "b", "c", "xv"]) : ["h", "k"]).concat(["v", "ax", "m1a", "m1b", "m2a", "m2b"]); }
+  function vfnFs() { var std = vfnStd(), w = vfnWr(); if (vfnIp()) return w ? [] : ["a", "p", "q"]; /* (Write: only the graph is checked) */ return (std ? (w ? ["xv"] : ["a", "b", "c", "xv"]) : ["h", "k"]).concat(["v", "ax"]); }
   function vfnSt() {
     if (!QZ.vf || QZ.vf.pi !== QZ.pi) { QZ.vf = { pi: QZ.pi, par: null, tool: null, stage: 0, mp: [], sel: null, pairs: [], pts: [], dls: [], dlp: null, hov: null, drag: null, w: { a: "", b: "", c: "", xv: "", h: "", k: "", v: "", ax: "", m1a: "", m1b: "", m2a: "", m2b: "" }, wok: {}, wbad: {}, tb: {}, tbok: {}, tbl: {}, tadd: {}, wtx: {}, wty: {}, gx: false, gy: {}, gt: {}, gs: {}, gok: false, aok: false, ok: false, hist: [] };
       if (vfnIp()) { var P0 = vfnP(), Q = QZ.vf; Q.dx = {}; Q.xt = {}; Q.xok = {}; ["dom", "rng", "inc", "dec", "mm", "p", "q"].forEach(function (f) { Q.w[f] = ""; }); Q.w.mmk = ""; } }
@@ -8364,7 +8364,7 @@ var ESPIC = {
         : row("h", P("h") ? nf(p.h) : null, id === "h") + row("k", P("k") ? nf(p.k) : null, id === "k");
       var sig = el.innerHTML ? null : null; if (el.dataset.sig !== top + "|" + (vfnIp() ? VFN_IV.map(ivr).join("") : "") + "|" + id + "|" + (P("m2") ? 1 : 0) + "|" + JSON.stringify(s.pairs)) {
         el.dataset.sig = top + "|" + (vfnIp() ? VFN_IV.map(ivr).join("") : "") + "|" + id + "|" + (P("m2") ? 1 : 0) + "|" + JSON.stringify(s.pairs);
-        el.innerHTML = top + (vfnIp() ? "" : row("v", P("v") ? "(" + nf(p.h) + ", " + nf(p.k) + ")" : null, id === "v") + row("ax", P("ax") ? nf(p.h) : null, id === "ax")) + (vfnIp() ? VFN_IV.map(ivr).join("") : row("m1", pr(0), id === "m1") + row("m2", pr(1), id === "m2"));
+        el.innerHTML = top + (vfnIp() ? "" : row("v", P("v") ? "(" + nf(p.h) + ", " + nf(p.k) + ")" : null, id === "v") + row("ax", P("ax") ? nf(p.h) : null, id === "ax")) + (vfnIp() ? VFN_IV.map(ivr).join("") : "" + "");
       }
       vfnIvSync(); vfnKey = ""; return;
     }
@@ -8375,8 +8375,6 @@ var ESPIC = {
       var inp = function (f, ph, wd) { return "<input class=\"vfnIn\" id=\"vfnF_" + f + "\" data-vff=\"" + f + "\" autocomplete=\"off\" spellcheck=\"false\" inputmode=\"" + (/^m|^v|^ax/.test(f) ? "text" : "decimal") + "\" placeholder=\"" + (ph || "") + "\" style=\"width:" + (wd || 4) + "rem\" aria-label=\"" + f + "\">"; };
       var Fs = vfnFs(), one = function (f, ph, wd) { return Fs.indexOf(f) < 0 ? "" : "<div class=\"vfnR\"><span class=\"vfnL\">" + (f === "ax" && vfnWr() ? "Axis of Symmetry:" : VFN_LAB[f]) + "</span> " + inp(f, f === "ax" && vfnWr() ? "x = …" : ph, f === "ax" && vfnWr() ? 6.5 : wd) + (f === "xv" && mode === "calculate" ? "<span class=\"vfnChipW\" id=\"vfnChipC\"></span>" : "") + "</div>"; };
       el.innerHTML = one("a") + one("b") + one("c") + one("p") + one("q") + one("xv") + one("h") + one("k") + one("v", "Ex (3, −2)", 6.5) + one("ax") +
-        (vfnIp() ? "" : "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB.m1 + "</span> " + inp("m1a", "(x, y)", 5.5) + " and " + inp("m1b", "(x, y)", 5.5) + "</div>" +
-        "<div class=\"vfnR\"><span class=\"vfnL\">" + VFN_LAB.m2 + "</span> " + inp("m2a", "(x, y)", 5.5) + " and " + inp("m2b", "(x, y)", 5.5) + "</div>") +
         "";
     }
     vfnFs().forEach(function (f) {
@@ -8865,7 +8863,6 @@ var ESPIC = {
     if (!s.dls.length && !vfnIp()) m.push("the axis of symmetry");
     var nm = { a: "a", p: "p", q: "q", xv: "−b/(2a)", h: "h", k: "k", v: "the vertex", ax: "the axis of symmetry's equation", dom: "the domain", rng: "the range", inc: "where it increases", dec: "where it decreases" };
     vfnFs().forEach(function (f) { if (nm[f] && !String(s.w[f]).trim()) m.push(nm[f]); });
-    if (!vfnIp() && ["m1a", "m1b", "m2a", "m2b"].some(function (f) { return !String(s.w[f]).trim(); })) m.push("the mirror points");
     return m;
   }
   function vfnSubmit() {
@@ -8879,13 +8876,8 @@ var ESPIC = {
     var nm2 = { dom: "the domain", rng: "the range", inc: "where it increases", dec: "where it decreases" };
     vfnFs().filter(function (f) { return !/^m/.test(f); }).forEach(function (f) { s.wok[f] = vfnCheckF(f, s.w[f]); s.wbad[f] = !s.wok[f]; if (!s.wok[f]) bad.push(nm[f] || nm2[f] || f); });
     s.wok.m1 = false; s.wok.m2 = false;
-    if (!vfnIp()) {
-      s.wok.m1 = vfnPairBox(1, s) === true; s.wok.m2 = vfnPairBox(2, s) === true;
-      ["m1", "m2"].forEach(function (k) { s.wbad[k + "a"] = s.wbad[k + "b"] = !s.wok[k]; });
-      if (!s.wok.m1 || !s.wok.m2) bad.push("the mirror points");
-    }
     if (bad.length) { QZ.wrong++; var ansW = c2cOn() ? vfnFs().filter(function (f) { return !/^m/.test(f) && !s.wok[f]; }).map(function (f) { return (VFN_SAY[f] || (f === "mm" ? "" : f + " ")) + (f === "ax" ? nf(p.h) : vfnAnsTx(f)); }) : []; pqMsg("Not quite. Check " + wsList(bad) + ", then press Submit again." + (ansW.length ? " The answers: " + ansW.join("; ") + "." : "")); vfnSync(); return; }
-    if (!vfnIp()) vfnLine("vertex (" + nf(p.h) + ", " + nf(p.k) + "), axis of symmetry x = " + nf(p.h)); if (!vfnIp()) vfnLine("mirror points " + s.w.m1a + " and " + s.w.m1b + "; " + s.w.m2a + " and " + s.w.m2b);
+    if (!vfnIp()) vfnLine("vertex (" + nf(p.h) + ", " + nf(p.k) + "), axis of symmetry x = " + nf(p.h)); 
     s.tool = null; vfnDone();
   }
   // dragging −b/(2a) into the table: a copy of the chip follows the pointer, and letting go over the table drops it there
@@ -9093,7 +9085,6 @@ var ESPIC = {
         fld("h", String(p.h), "h is the x-coordinate of the vertex."); fld("k", String(p.k), "k is the y-coordinate of the vertex.");
       }
       if (!p.ip) { fld("v", vt, "The vertex is (" + nf(p.h) + ", " + nf(p.k) + ")."); fld("ax", String(p.h), "The axis of symmetry is the vertical line through the vertex."); }
-      if (!p.ip) fld("m1a", pt(m1[0]), "A point on the parabola…"); if (!p.ip) fld("m1b", pt(m1[1]), "…and its mirror image across the axis."); if (!p.ip) fld("m2a", pt(m2[0]), "Another pair of mirror points."); if (!p.ip) fld("m2b", pt(m2[1]), "Same height, same distance from the axis.");
       if (p.ip) VFN_IV.forEach(function (f) { I.push({ done: okF(f), run: ivType(f) }); });
     } else {
       vfnStg().forEach(function (id) {
