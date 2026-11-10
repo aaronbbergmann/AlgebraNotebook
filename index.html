@@ -10422,10 +10422,11 @@ var ESPIC = {
     var m = PG.tbl && !Array.isArray(PG.tbl) ? PG.tbl : (PG.tbl = {});
     return [-2, -1, 0, 1, 2].map(function (k) { var w = k + (PG.off || 0); var r = m[w] || (m[w] = { u: w, sub: false, idx: 0, done: false });
       // once the equation has been dropped, every row that scrolls into view already shows its substituted expression (the y-value is still the student's job)
-      if ((PG.subd || PG.mfill) && TB.hasX(r) && !r.sub && !r.done) { r.sub = true; r.idx = 0; }
+      if ((PG.subd || PG.mfill || (tbAuto() && r.xv !== undefined)) && TB.hasX(r) && !r.sub && !r.done) { r.sub = true; r.idx = 0; }
       return r; });
   };
   TB.newRow = function () { return { u: 0, sub: false, idx: 0, done: false }; };
+  function tbAuto() { return TB.mode() === "play" && gd2() && !wsub(); }   // 2.1 graphing table: once a row's x is in, its centre cell shows the work at once (no dragging g(x) onto it), ready to click and simplify
   TB.par = function () { return TB.mode() === "quiz" ? { f: FAMS[qFam()], a: 1, h: 0, k: 0 } : { f: FAMS[PG.fam], a: A(), h: H(), k: K() }; };
   TB.x = function (r) { return r.xv !== undefined ? r.xv : r.u; };
   TB.hasX = function (r) { return TB.mode() !== "play" || r.xv !== undefined || !!PG.subd; };
@@ -10468,7 +10469,7 @@ var ESPIC = {
     if (v === old && (v !== undefined || r.xv === undefined)) return false;
     if (isDataAct()) { r.xv = v; r.done = v !== undefined && r.yv !== undefined; return true; }
     r.xv = v; r.done = false; r.fl = false; r.idx = 0; r.tv = "";
-    r.sub = v !== undefined && !!(PG.subd || PG.mfill);
+    r.sub = v !== undefined && !!(PG.subd || PG.mfill || tbAuto());
     return true;
   };
   // the student can type the y-value instead of simplifying: a right answer completes the row
@@ -15544,7 +15545,7 @@ var ESPIC = {
         if (gdW() && !PG.show.eq) return gwOn() ? one(function (n) { gwDemo(n, true); }) : [PTS.rule];
         if (!PG.dOK) return [PTS.desc];
         if (!pqParts().table) {
-          if (!PG.ptOn && (PG.subd || R.some(function (q) { return q.done; }))) { if (!PG.subd) return one(function (n) { cap("Drag g(x) onto any center cell."); dragEq(0, n); }); if (row >= 0) return one(tableStep); }
+          if (!PG.ptOn && (PG.subd || R.some(function (q) { return q.done || q.sub; }))) { if (!PG.subd && !tbAuto()) return one(function (n) { cap("Drag g(x) onto any center cell."); dragEq(0, n); }); if (row >= 0) return one(tableStep); }
           if (!PG.ptOn) return [PTS.tog];
           if (!ptLabelsDone()) return [PTS.labels];
           var PR = ptRows();
