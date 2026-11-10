@@ -5537,8 +5537,6 @@
     { q: "Q1 Standard Form", full: "Question 1: graph a standard-form quadratic: a, b and c, x = \u2212b/(2a) in a table, then the graph, the vertex and the axis of symmetry", act: "2.2", lesson: 2 },
     { q: "Q1 Max or Min", full: "Question 1: a, b and c, whether the parabola opens up (a minimum) or down (a maximum), x = \u2212b/(2a), and the vertex's y-value", act: "2.2", lesson: 3 },
     { q: "Q2 Vertex Form", full: "Question 2: graph a(x \u2212 h)\u00b2 + k with a table, and identify the vertex and the axis of symmetry", act: "2.2", lesson: 1 },
-    { q: "Q2 Domain", full: "Question 2: state the domain in interval notation", act: "2.2", lesson: 7 },
-    { q: "Q2 Range", full: "Question 2: state the range in interval notation", act: "2.2", lesson: 8 },
     { q: "Q2 Reflect & Stretch", full: "Question 2: describe the transformation a makes to f(x) = x\u00b2 (reflection, stretch or shrink)", act: "2.1", lesson: 2 },
     { q: "Q2 Translations", full: "Question 2: describe the translations h and k make to f(x) = x\u00b2", act: "2.1", lesson: 1 },
     { q: "Q3 Intercept Form", full: "Question 3: a(x \u2212 p)(x \u2212 q): a, p and q, the table and the graph", act: "2.2", lesson: 4 },
@@ -5589,6 +5587,7 @@
       var B = BUILT[it.act];
       if (rev === "RevQ2") {   // (RevQ2 follows its originals' own levels: the same modes, values and number of Write rounds, kept up to date with them)
         var OL = (B.levels || []).filter(function (l) { return String(l[0]) === String(it.lesson); });
+        if (it.act === "2.1") { [["demo", 10, "Demo Mode"], ["sequence", 25, "Sequence Mode"], ["calculate", 40, "Calculate Mode"], ["solo", 100, "Write Mode"]].forEach(function (l) { out.push([i, l[0], l[1], l[2]]); }); return; }   // (RevQ2's 2.1 questions: one problem in each mode)
         if (OL.length) { OL.forEach(function (l) { out.push(l[4] ? [i, l[1], l[2], l[3], l[4]] : [i, l[1], l[2], l[3]]); }); return; }
       }
       var ml = (B.modesFor ? B.modesFor(it.lesson) : B.modes || []).filter(function (m) { return m !== "create"; }), pc = ml.indexOf("calculate") >= 0 ? [10, 25, 40, 55, 80, 100] : [10, 25, 40, 70, 100];
@@ -7603,11 +7602,16 @@ var ESPIC = {
     var key = function (q) { return q[0] + "," + q[1]; }, shapes = [PG.shape].concat(PG.keep || []).filter(Boolean), used = shapes.reduce(function (a, q) { return a.concat(q.src || []); }, []);
     var all = PG.pts || [], P = all.filter(function (q) { return used.indexOf(key(q)) < 0; }), Old = all.filter(function (q) { return used.indexOf(key(q)) >= 0; });
     var few = "Graph " + need + " points and click";
-    if (!P.length || P.length + Math.min(maxSh, Old.length) < need) { QZ.wrong++; pqMsg(few); return; }
+    if (!P.length || (P.length + Math.min(maxSh, Old.length) < need && P.length < (t === "line" ? 2 : 3))) { QZ.wrong++; pqMsg(few); return; }
     var best = null, side = false, subs = function (arr, k, from, cur, out) { if (cur.length === k) { out.push(cur.slice()); return out; } for (var i = from; i < arr.length; i++) { cur.push(arr[i]); subs(arr, k, i + 1, cur, out); cur.pop(); } return out; };
     for (var c = Math.min(maxSh, Old.length); c >= 0 && !best; c--) subs(Old, c, 0, [], []).forEach(function (sub) {
       if (best || P.length + sub.length < need) return; var f = wsFit(t, P.concat(sub)); if (f && f.sh) best = { sh: f.sh, sub: sub }; else if (f && f.side) side = true;
     });
+    if (!best && t !== "line" && P.length >= 3) {   // a point the new graph shares with a graph already drawn counts too, even when it was not plotted again (the vertex of f and g, say)
+      var fN = wsFit(t, P);
+      if (fN && fN.sh) { var shared = 0; for (var gx = -10; gx <= 10; gx++) { var gy = shapeY(fN.sh, gx); if (Math.abs(gy) > 10 || P.some(function (q) { return Math.abs(q[0] - gx) < 1e-9; })) continue; if (shapes.some(function (o) { return Math.abs(shapeY(o, gx) - gy) < 1e-9; })) shared++; }
+        if (P.length + Math.min(shared, maxSh) >= need) best = { sh: fN.sh, sub: [] }; }
+    }
     if (!best) {
       QZ.wrong++;
       var fP = P.length >= need ? wsFit(t, P) : null;
@@ -10083,7 +10087,7 @@ var ESPIC = {
     if (wf()) o = mode === "demo" || mode === "create" || cuw ? [0] : [0, 1, 2];   // Writing Translations: a round is three problems
     document.body.classList.toggle("m3", m3()); if (m3()) o = mode === "demo" ? [0] : [0, 1, 2];   // 1.3: a round is three problems
     if (vcr()) c2Custom = null; if (m3() && (c2Cu() || vcr())) o = [0];   // (2.2A Vertex Form Create: one problem, the student's own)
-    if (gd2()) o = mode === "demo" || mode === "create" ? [3] : [3, 3, 3];   // 2.1: always the parabola, a round of three that get harder
+    if (gd2()) o = mode === "demo" || mode === "create" || rev === "RevQ2" ? [3] : [3, 3, 3];   // 2.1: always the parabola, a round of three that get harder (RevQ2's copies: one problem)
     var cu = gd() && mode !== "create" && gdCustom;
     if (gd() && mode === "create") { o = [0]; gdCustom = null; }   // Create: the student types the function, so there is one problem and no family yet
     else if (cu) o = [cu.fam];   // the student's own function runs in whichever mode they pick
