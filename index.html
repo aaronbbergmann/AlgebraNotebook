@@ -8393,7 +8393,7 @@ var ESPIC = {
       vfnIvSync(); vfnKey = ""; return;
     }
     el.dataset.sig = "";
-    var key = QZ.pi + ":" + mode + ":" + vfnStd() + ":" + vfnIp();
+    var key = QZ.pi + ":" + mode + ":" + act + ":" + LK() + ":" + vfnStd() + ":" + vfnVx() + ":" + vfnIp();   // (Vertex Form is marked std too: vfnVx keeps its own boxes, h and k, never x = −b/(2a))
     if (vfnKey !== key) {
       vfnKey = key;
       var inp = function (f, ph, wd) { return "<input class=\"vfnIn\" id=\"vfnF_" + f + "\" data-vff=\"" + f + "\" autocomplete=\"off\" spellcheck=\"false\" inputmode=\"" + (/^m|^v|^ax/.test(f) ? "text" : "decimal") + "\" placeholder=\"" + (ph || "") + "\" style=\"width:" + (wd || 4) + "rem\" aria-label=\"" + f + "\">"; };
