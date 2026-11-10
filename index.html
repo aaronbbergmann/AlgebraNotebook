@@ -13794,7 +13794,7 @@ var ESPIC = {
       // the one-row table for the y-value of the vertex: x and the work are filled in (Demo, Sequence, once x = −b/(2a) is found)
       var work = (a === 1 ? "" : a === -1 ? "−" : c2F(a)) + "(" + c2F(h) + ")² " + (b < 0 ? "− " : "+ ") + c2F(Math.abs(b)) + "(" + c2F(h) + ") " + (c < 0 ? "− " : "+ ") + c2F(Math.abs(c));
       pb.tbl = function (x) {
-        x = x || {}; if (!(mode === "demo" || mode === "sequence") || !x.xh) return "";
+        x = x || {}; var cs = m3Step(); if (!(mode === "demo" || mode === "sequence") || !(x.xh || x.vv || (cs && cs.id === "val"))) return "";   // (also when x = −b/(2a) was missed and comes back later: the y-value question always has its table)
         return "<table class=\"cmpG m3Row\"><thead><tr><th class=\"lm\"><i>x</i></th><th class=\"lm\"><i>f</i>(<i>x</i>)</th><th class=\"lm\"><i>y</i></th></tr></thead><tbody><tr><td class=\"lm\">" + c2F(h) + "</td><td class=\"lm\">" + work + "</td><td class=\"lm\">" + (x.vv ? c2F(k) + " <span class=\"cueOk\">✓</span>" : "?") + "</td></tr></tbody></table>";
       };
       var sayA = a === 1 ? "No number in front of " + c2X + "² means a = 1." : "a is the number in front of " + c2X + "².";
