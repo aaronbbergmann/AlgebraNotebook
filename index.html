@@ -7293,7 +7293,8 @@
   $("qzGo").addEventListener("click", function () { if (!busy) qzCheck(); });
   $("qzNext").addEventListener("click", function () {
     if (busy) return;
-    if (pq() && m3() && m3taFail()) { up = null; QZ.ta = null; pqRegen(); return; }   // ("Try Another" questioning: a new problem)
+    if (pq() && m3() && m3taFail()) { up = null; QZ.ta = null; pqRegen(); return; }
+    if (pq() && vfnTaFail()) { up = null; QZ.vf = null; pqRegen(); return; }   // ("Try Another" questioning: a new problem)
     if (QZ.locked) { if (up) { var u = up; up = null; u.go(); } else qzStart(); return; }
     if (pq() && mode === "demo" && QZ.step >= 4 && up) { var u2 = up; up = null; u2.go(); return; }
     if (pq() && QZ.step >= 4 && up && !QZ.custom && mode !== "create") { var u3 = up; up = null; u3.go(); return; }
@@ -8203,7 +8204,12 @@ var ESPIC = {
     Object.keys(c).forEach(function (k) { s[k] = c[k]; }); s.hist = h; s.drag = null; s.hov = null; if (s.tool !== "pt") s.tool = null; vfnKey = ""; vfnTbKey = ""; pqMsg(""); vfnSync();
   }
   function vfnLine(t) { if (QZ.ww) QZ.ww.steps.push({ eqs: [t], cls: "cg" }); }
-  function vfnBad(msg, f) { QZ.wrong++; pqMsg(f ? ansAdd(msg, typeof f === "string" && f.charAt(0) === "=" ? f.slice(1) : vfnAnsTx(f)) : msg); }
+  function vfnBad(msg, f) { QZ.wrong++; var t = f ? ansAdd(msg, typeof f === "string" && f.charAt(0) === "=" ? f.slice(1) : vfnAnsTx(f)) : msg; if (vfnTA()) { t += " Press Try another for a new problem."; vfnTaSet(); } pqMsg(t); }
+  // "Try Another" questioning (2.2C Intercept Form, Calculate): a wrong box, once the student moves away from it (or presses Return), shows the right answer,
+  // and a plum-red Try another button where Next sits gives a new problem
+  function vfnTA() { return vfN() && vfnIp() && mode === "calculate"; }
+  function vfnTaFail() { return vfnTA() && !!QZ.vf && QZ.vf.pi === QZ.pi && !!QZ.vf.taFail && QZ.step < 4; }
+  function vfnTaSet() { var s = vfnSt(); s.taFail = true; setTimeout(function () { var nx = $("qzNext"); if (!vfnTaFail()) return; nx.hidden = false; nx.disabled = false; nx.textContent = "Try another"; }, 0); }
   // Show work (2.2A, both exercises): a picture of the graph and the table as they are, kept with the problem's work (taken when it is finished, and again
   // whenever Show work is opened while it is still going)
   function vfnPic() {
@@ -8473,10 +8479,12 @@ var ESPIC = {
   }
   function vfnTbPts() { var o = []; if (vfnWr()) return o; VFN_XS.forEach(function (x, r) { var q = vfnRowPt(r); if (q) o.push(q); }); return o; }
   // a row's expression: f with x replaced by the row's x
-  function vfnIpE(x, st) {   // 0: a((x) − p)((x) − q)   1: a(x − p)(x − q) as numbers   2: the value
-    var p = vfnP(), co = p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a), f = function (r) { return "(" + nf(x) + (r < 0 ? " + " + nf(-r) : r ? " − " + nf(r) : "") + ")"; };
-    if (st >= 2) return nf(vfnF(x));
-    if (st === 1) return co + "(" + nf(x - p.p1) + ")(" + nf(x - p.q1) + ")";
+  function vfnIpE(x, st) {   // one click per operation: 0 a((x) − p)((x) − q), 1 the first subtraction, 2 the second, 3 a times the first factor (not when a = 1), then the value
+    var p = vfnP(), co = p.a === 1 ? "" : p.a === -1 ? "−" : nf(p.a), f = function (r) { return "(" + nf(x) + (r < 0 ? " + " + nf(-r) : r ? " − " + nf(r) : "") + ")"; }, d1 = x - p.p1, d2 = x - p.q1;
+    if (st >= vfnNSt()) return nf(vfnF(x));
+    if (st === 3) return "(" + nf(p.a * d1) + ")(" + nf(d2) + ")";
+    if (st === 2) return co + "(" + nf(d1) + ")(" + nf(d2) + ")";
+    if (st === 1) return co + "(" + nf(d1) + ")" + f(p.q1);
     return co + f(p.p1) + f(p.q1);
   }
   function vfnExpr(x) {
@@ -8489,7 +8497,7 @@ var ESPIC = {
   // Demo and Sequence: each click on a row's expression simplifies it one step, by the order of operations (Calculate: the student works it out and types y):
   //   0 a(x)² + b(x) + c  →  1 the exponent  →  2 both multiplications  →  3 the first two added  →  4 one value (it goes into the y column).  With no c, 3 is the value.
   var VFN_STEPS = 5;
-  function vfnNSt() { return vfnIp() ? 2 : vfnP().c ? 4 : 3; }
+  function vfnNSt() { return vfnIp() ? (vfnP().a === 1 ? 3 : 4) : vfnP().c ? 4 : 3; }   // (Intercept Form: two subtractions and two multiplications, one fewer when a = 1)
   function vfnSqStep(x, st) { if (vfnIp()) return vfnIpE(x, st); return vfnExprStep(x, (vfnP().c ? [0, 1, 3, 4, 5] : [0, 1, 3, 5])[Math.min(st, vfnNSt())]); }
   function vfnExprStep(x, st) {
     var p = vfnP(), X = "(" + nf(x) + ")", L = [], sgn = function (v, first) { return first ? nf(v) : (v < 0 ? " − " : " + ") + nf(Math.abs(v)); };
@@ -8909,6 +8917,8 @@ var ESPIC = {
     $("vfnTb").addEventListener("input", function (e) { if (!vfN()) return; if (e.isTrusted) pgUser(); var s = vfnSt(), d = e.target.dataset; if (d.vtl != null) { s.tbl[d.vtl] = e.target.value; return; } if (d.vfy != null) { s.gt[d.vfy] = e.target.value; vfnYTyped(d.vfy, false); return; } if (!d.vtb) return; s.tb[d.vtb] = e.target.value; vfnTbTyped(d.vtb, false); });
     $("vfnTb").addEventListener("keydown", function (e) { if (e.key !== "Enter" || !vfN()) return; var d = e.target.dataset; if (d.vfy != null) { e.preventDefault(); vfnYTyped(d.vfy, true); return; } if (!d.vtb) return; e.preventDefault(); vfnTbTyped(d.vtb, true); });
     $("vfnOut").addEventListener("input", function (e) { var f = e.target.dataset && e.target.dataset.vff; if (!f || !vfN()) return; if (e.isTrusted) pgUser(); var s = vfnSt(); s.w[f] = e.target.value; if (!vfnWr()) vfnTyped(f, false); else { s.wbad[f] = false; e.target.classList.remove("bad"); if (typeof wsReadyUpd === "function") wsReadyUpd(); } });
+    $("vfnOut").addEventListener("focusout", function (e) { var f = e.target.dataset && e.target.dataset.vff; if (!f || !vfnTA() || !String(e.target.value).trim() || e.target.dataset.chk === e.target.value || vfnSt().wok[f]) return; e.target.dataset.chk = e.target.value; vfnTyped(f, true); });
+    $("vfnTb").addEventListener("focusout", function (e) { var d = e.target.dataset; if (!d || d.vfy == null || !vfnTA() || !String(e.target.value).trim() || d.chk === e.target.value || vfnSt().gy[d.vfy]) return; d.chk = e.target.value; vfnYTyped(d.vfy, true); });
     $("vfnOut").addEventListener("keydown", function (e) { if (e.key !== "Enter") return; var f = e.target.dataset && e.target.dataset.vff; if (!f || !vfN()) return; e.preventDefault(); if (vfnWr()) { var L = vfnFs(), nx = L[L.indexOf(f) + 1]; if (nx) $("vfnF_" + nx).focus(); else if (!vfnMissing().length) vfnSubmit(); return; } vfnTyped(f, true); });
   })();
   // a drag in progress: the vertex carries the whole parabola; the dilation point sets the stretch (grid x, half-unit y); Write's points and dotted-line points snap to the grid
@@ -10077,7 +10087,7 @@ var ESPIC = {
     var go = $("qzGo"), nx = $("qzNext");
     go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || (m3() && !wsubAct()) || (wf() && (mode === "sequence" || mode === "calculate")); go.textContent = wsubAct() ? "Submit" : "Check"; document.body.classList.toggle("wsub", wsubAct());
     // the one Next (see nxShow): in Demo the demo button carries it; otherwise it sits here in the side panel
-    var taF = m3() && m3taFail();
+    var taF = (m3() && m3taFail()) || vfnTaFail();
     nx.hidden = !(done || taF) || demo; nx.disabled = false; nx.textContent = taF ? "Try another" : (gd() || wf()) && mode === "create" ? "Create another" : up ? up.label : "Next";
     $("qzAgain").hidden = demo || !(done && !QZ.custom && up && up.stayText); $("qzAgain").textContent = !QZ.custom && up && up.stayText || "";
     $("pgDemo").style.display = demo ? "" : "none"; $("pgCtl").classList.toggle("empty", !demo && !est());
