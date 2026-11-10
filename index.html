@@ -5615,7 +5615,31 @@
   function lvMark() { var nw = []; LEVELS.forEach(function (l) { var id = lvId(l); if (!lvSeen[id] && lvDone(l)) { lvSeen[id] = 1; nw.push(l); } }); return nw; }
   function loadProg() { try { prog = JSON.parse(localStorage.getItem(progKey()) || "{}") || {}; } catch (e) { prog = {}; } lvMark(); }   // (what is already earned is never celebrated)
   loadProg();
-  function saveProg() { try { var k = progKey(), v = JSON.stringify(prog); if (localStorage.getItem(k) !== v) { var T = JSON.parse(localStorage.getItem("algebraProgress:time") || "{}") || {}; T[rev || view || act] = Date.now(); localStorage.setItem("algebraProgress:time", JSON.stringify(T)); } localStorage.setItem(k, v); var id0 = rev || view || act, D = JSON.parse(localStorage.getItem("algebraProgress:done") || "{}") || {}; if (!D[id0] && stars10() >= 50) { D[id0] = Date.now(); localStorage.setItem("algebraProgress:done", JSON.stringify(D)); } } catch (e) {} }   // (and when each activity first reached 5 stars, for due dates)   // (and when each activity last changed, for the teacher's "Recent")
+  // ---- Reviews (RevT1, RevQ2): each question runs an exercise of an original activity.  origCtx finds where that exercise's own progress is saved
+  function origCtx(it) {
+    var A = it.act, B = BUILT[A]; if (!B || B.review) return null;
+    var vk = it.subx ? "s" : String(it.lesson), k = A === "1.4D" ? (it.subx ? 4 : it.lesson === 4 ? "g" : it.lesson) : it.lesson, vw = vwOf(A, vk);
+    return { A: A, vw: vw, k: k, key: vw ? vwKey(vw) : B.key, id: vw || A };
+  }
+  function origProg(c) { try { return JSON.parse(localStorage.getItem(c.key) || "{}") || {}; } catch (e) { return {}; } }
+  // a mode finished in the original activity counts as finished in the review question too (it opens there, and is not locked)
+  function origModeFin(m) { if (!rev) return false; var c = origCtx(BUILT[rev].items[revI]); if (!c) return false; var keep = prog; prog = origProg(c); try { return lvDone([c.k, m, 0, "", 1]); } catch (e) { return false; } finally { prog = keep; } }
+  // progress earned on a review question also counts in the original activity: each of the question's saved counts is copied over (the larger of the two kept)
+  function origMirror() {
+    if (!rev) return;
+    var it = BUILT[rev].items[revI], c = origCtx(it); if (!c) return;
+    var P = origProg(c), pre = revI + ":", ch = false;
+    Object.keys(prog).forEach(function (key) { if (key.indexOf(pre) !== 0) return; var nk = c.k + ":" + key.slice(pre.length), v = prog[key]; if (typeof v !== "number") return; if (!(P[nk] >= v)) { P[nk] = v; ch = true; } });
+    if (!ch) return;
+    var sv = { rev: rev, act: act, view: view, LEVELS: LEVELS, prog: prog };
+    try {
+      localStorage.setItem(c.key, JSON.stringify(P));
+      var T = JSON.parse(localStorage.getItem("algebraProgress:time") || "{}") || {}; T[c.id] = Date.now(); localStorage.setItem("algebraProgress:time", JSON.stringify(T));
+      rev = null; act = c.A; view = c.vw; LEVELS = levelsNow(); prog = P;   // (the original activity's stars, for the first time it reaches 5.0)
+      var D = JSON.parse(localStorage.getItem("algebraProgress:done") || "{}") || {}; if (!D[c.id] && stars10() >= 50) { D[c.id] = Date.now(); localStorage.setItem("algebraProgress:done", JSON.stringify(D)); }
+    } catch (e) { } finally { rev = sv.rev; act = sv.act; view = sv.view; LEVELS = sv.LEVELS; prog = sv.prog; }
+  }
+  function saveProg() { origMirror(); try { var k = progKey(), v = JSON.stringify(prog); if (localStorage.getItem(k) !== v) { var T = JSON.parse(localStorage.getItem("algebraProgress:time") || "{}") || {}; T[rev || view || act] = Date.now(); localStorage.setItem("algebraProgress:time", JSON.stringify(T)); } localStorage.setItem(k, v); var id0 = rev || view || act, D = JSON.parse(localStorage.getItem("algebraProgress:done") || "{}") || {}; if (!D[id0] && stars10() >= 50) { D[id0] = Date.now(); localStorage.setItem("algebraProgress:done", JSON.stringify(D)); } } catch (e) {} }   // (and when each activity first reached 5 stars, for due dates)   // (and when each activity last changed, for the teacher's "Recent")
   function lvDone(l) {
     // a problem finished in a mode (1.1, 1.2) earns that mode's first level and every level below it at once; the later rounds need whole rounds
     if (!(l[4] > 1)) for (var m0 = MORD.indexOf(l[1]); m0 < 4; m0++) if (prog[l[0] + ":" + MORD[m0] + ":p"]) return true;
@@ -15672,7 +15696,7 @@ var ESPIC = {
   // problem finished in Sequence, then one in Calculate), read from the saved Progress, so it survives a reload.  Going down is always allowed; Create is not on the ladder ====
   function ladOn() { var B = BUILT[act]; return !welcome && !!B && !B.play && !B.solver && !!LEVELS.length; }
   function ladder() { var B = BUILT[act], ms = B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"]; return ms.filter(function (m) { return MORD.indexOf(m) >= 0; }); }
-  function modeFin(m) { return lvDone([LK(), m, 0, "", 1]); }
+  function modeFin(m) { return lvDone([LK(), m, 0, "", 1]) || origModeFin(m); }   // (a review question: finished in its original activity counts too)
   function isTeacher() { try { return !!(window.AN && AN.user && AN.user.teacher); } catch (e) { return false; } }
   // A review question whose exercise was already finished (100%) in its original activity is open in every mode; the review still keeps its own progress
   function origDone(it) {
