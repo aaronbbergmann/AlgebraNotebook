@@ -7141,9 +7141,12 @@
   function zk() { return 10 / ZM.cur; }
   function zky() { return 10 / ZM.curY; }
   function qAt(e) { var S = $("pgSvg"), m = S.getScreenCTM().inverse(), p = S.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; p = p.matrixTransform(m); return [ZM.ox + p.x * ZM.cur / 10, ZM.oy - p.y * ZM.curY / 10]; }
+  // 2.1 (transformed parabolas): when g(x) = a(x − h)² + k gives y-values like −1.5 or 2.25 at whole x, the y-snap is that fine (0.5, 0.25, 0.2 or 0.1) so those points can be graphed
+  function pgYs() { try { if (!pq() || !gd2() || !QZ || !QZ.tr || !QZ.tr[QZ.pi]) return 1; var t = QZ.tr[QZ.pi], a = t.a == null ? 1 : t.a; return ysFor(function (x) { return a * (x - t.h) * (x - t.h) + t.k; }); } catch (e) { return 1; } }
+  function ysFor(f) { var st = [1, 0.5, 0.25, 0.2, 0.1]; for (var i = 0; i < st.length; i++) { var ok = true; for (var x = -10; x <= 10 && ok; x++) { var y = f(x); if (Math.abs(y) <= 10 && Math.abs(y / st[i] - Math.round(y / st[i])) > 1e-9) ok = false; } if (ok) return st[i]; } return 1; }   // (thirds fit none: whole-number points are still there)
   function snap(v, ay) {
     if (typeof v !== "number") { hist.push([JSON.stringify([ws, vals, sys, sysV, elim]), steps.length, ops]); updUndo(); return; }
-    var st = snapStep(ay), W = ay ? ZM.toY : ZM.to, c = ay ? ZM.toy : ZM.tox; return Math.max(c - W, Math.min(c + W, +(Math.round(v / st) * st).toFixed(8)));
+    var st = snapStep(ay), W = ay ? ZM.toY : ZM.to; if (ay) st = Math.min(st, pgYs()), c = ay ? ZM.toy : ZM.tox; return Math.max(c - W, Math.min(c + W, +(Math.round(v / st) * st).toFixed(8)));
   }
   function G_() { return document.body.classList.contains("play") ? PG : QZ; }
   function gRef() { if (G_() === PG) drawPlay(); else qzRender(); }
@@ -8239,6 +8242,8 @@ var ESPIC = {
   function vfnG(e) { var S = $("vfnSvg"), m = S.getScreenCTM(); if (!m) return { x: 0, y: 0, px: 0, py: 0 }; var q = S.createSVGPoint(); q.x = e.clientX; q.y = e.clientY; q = q.matrixTransform(m.inverse()); return { x: (q.x - VFB.L) / (VFB.W - VFB.L - VFB.R) * 20 - 10, y: (VFB.H - VFB.B - q.y) / (VFB.H - VFB.T - VFB.B) * 20 - 10, px: q.x, py: q.y }; }
   function vfnScr(x, y) { var S = $("vfnSvg"), m = S.getScreenCTM(), q = S.createSVGPoint(); q.x = vfnX(x); q.y = vfnY(y); q = q.matrixTransform(m); return { x: q.x, y: q.y }; }
   function vfnCl(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  // the finest y-step the problem needs: f at every whole x on the graph is a multiple of it (1, 0.5, 0.25, 0.2 or 0.1), so a point like (1, −1.5) can be graphed
+  function vfnYs() { try { var p = vfnP(); return p ? ysFor(vfnF) : 1; } catch (e) { return 1; } }
   function vfnSn(v, st) { var r = Math.round(v / st) * st; return Object.is(r, -0) ? 0 : r; }
   function vfnA(par) { var dx = par.dx - par.h; return dx ? (par.dy - par.k) / (dx * dx) : 0; }
   function vfnParOK(s) { var p = vfnP(), q = s.par; return !!q && q.h === p.h && q.k === p.k && Math.abs(vfnA(q) - p.a) < 1e-9; }
@@ -8953,13 +8958,13 @@ var ESPIC = {
     $("vfnTools").addEventListener("click", function (e) { var b = e.target.closest("button[data-vft]"); if (!b || !vfN()) return; if (e.isTrusted) pgUser(); vfnTool(b.dataset.vft); });
     S.addEventListener("pointermove", function (e) {
       if (!vfN()) return; var s = vfnSt(); if (s.drag || !(s.tool === "U" || s.tool === "pt" || s.dlp)) return;
-      var g = vfnG(e), hv = { x: vfnCl(vfnSn(g.x, 1), -10, 10), y: vfnCl(vfnSn(g.y, 1), -10, 10) };
+      var g = vfnG(e), hv = { x: vfnCl(vfnSn(g.x, 1), -10, 10), y: vfnCl(vfnSn(g.y, vfnYs()), -10, 10) };
       if (!s.hov || s.hov.x !== hv.x || s.hov.y !== hv.y) { s.hov = hv; vfnDraw(); }
     });
     S.addEventListener("pointerleave", function () { if (!vfN()) return; var s = vfnSt(); if (s.hov && !s.drag) { s.hov = null; vfnDraw(); } });
     S.addEventListener("pointerdown", function (e) {
       if (!e.target.closest || e.button > 0 || !vfN() || QZ.step >= 4) return;
-      var s = vfnSt(), g = vfnG(e), gx = vfnCl(vfnSn(g.x, 1), -10, 10), gy = vfnCl(vfnSn(g.y, 1), -10, 10), hd = e.target.closest("[data-vfh]"), ck = e.target.closest("[data-vfc]");
+      var s = vfnSt(), g = vfnG(e), gx = vfnCl(vfnSn(g.x, 1), -10, 10), gy = vfnCl(vfnSn(g.y, vfnYs()), -10, 10), hd = e.target.closest("[data-vfh]"), ck = e.target.closest("[data-vfc]");
       if (e.isTrusted) pgUser();
       if (vfnWr()) {
         if (hd) { vfnDrag(e, hd.dataset.vfh); return; }
@@ -9006,9 +9011,9 @@ var ESPIC = {
   })();
   // a drag in progress: the vertex carries the whole parabola; the dilation point sets the stretch (grid x, half-unit y); Write's points and dotted-line points snap to the grid
   function vfnMove(which, x, y) {
-    var s = vfnSt(), gx = vfnCl(vfnSn(x, 1), -10, 10), gy = vfnCl(vfnSn(y, 1), -10, 10);
+    var s = vfnSt(), gx = vfnCl(vfnSn(x, 1), -10, 10), gy = vfnCl(vfnSn(y, vfnYs()), -10, 10);
     if (which === "v") { var q = s.par, dx = q.dx - q.h, dy = q.dy - q.k; q.h = gx; q.k = gy; q.dx = q.h + dx; q.dy = q.k + dy; }
-    else if (which === "d") { var r = s.par, nx = gx, ny = vfnCl(vfnSn(y, 0.5), -14, 14); if (nx === r.h) nx = r.h + (r.dx >= r.h ? 1 : -1); if (ny === r.k) ny = r.k + (r.dy >= r.k ? 0.5 : -0.5); r.dx = nx; r.dy = ny; }
+    else if (which === "d") { var r = s.par, nx = gx, ys2 = Math.min(0.5, vfnYs()), ny = vfnCl(vfnSn(y, ys2), -14, 14); if (nx === r.h) nx = r.h + (r.dx >= r.h ? 1 : -1); if (ny === r.k) ny = r.k + (r.dy >= r.k ? ys2 : -ys2); r.dx = nx; r.dy = ny; }
     else if (which.charAt(0) === "p") { var i = +which.slice(2); if (!s.pts.some(function (q, j) { return j !== i && q[0] === gx && q[1] === gy; })) s.pts[i] = [gx, gy]; }
     else if (which.charAt(0) === "l") { var w = which.split(":"); s.dls[+w[1]].p[+w[2]] = [gx, gy]; }
     vfnDraw();
@@ -12704,6 +12709,13 @@ var ESPIC = {
     if (pb.ivk && !done) h += "<div class=\"m3taK\" aria-label=\"Interval and inequality keys\">" + ["(", ")", "[", "]", ",", "∞", "−∞", "ℝ", "≥", "≤", "<", ">", "x", "y"].map(function (k0) { return "<button type=\"button\" class=\"btn m3taKb\" data-tak=\"" + k0 + "\">" + k0 + "</button>"; }).join("") + "</div>";
     return h + "</div>";
   }
+  // typing "<=" or ">=" in any answer box turns it into ≤ or ≥ at once (the cursor stays where it was); runs before the box's own checking
+  document.addEventListener("input", function (e) {
+    var el = e.target; if (!el || (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA") || /^(number|range|checkbox|radio)$/.test(el.type)) return;
+    var v = el.value; if (v.indexOf("<=") < 0 && v.indexOf(">=") < 0) return;
+    var c = el.selectionStart, before = v.slice(0, c == null ? v.length : c), nb = before.replace(/<=/g, "≤").replace(/>=/g, "≥");
+    el.value = v.replace(/<=/g, "≤").replace(/>=/g, "≥"); if (c != null) { try { el.setSelectionRange(nb.length, nb.length); } catch (er) { } }
+  }, true);
   var m3taLast = null;   // the box the interval keys type into
   document.addEventListener("mousedown", function (e) { if (e.target.closest && e.target.closest("[data-tak]")) e.preventDefault(); });   // (a key press keeps the box's focus, so leaving it is not checked)
   document.addEventListener("click", function (e) {
