@@ -5376,6 +5376,25 @@
       return "<section>" + (w.box ? wkBoxHTML(w.box) : "") + w.eqs.map(function (e, j) { return "<div class=\"r" + (w.cls ? " " + w.cls : "") + "\"><span class=\"m\">" + ((w.ms && w.ms[j]) || "") + "</span><span>" + wkMath(e) + "</span></div>"; }).join("") + "</section>";
     }).join("");
   }
+  // ==== Show work in the GUESS format (word problems that use a formula and solve an equation: 1.3 Equation from a Graph, Comparing Linear Equations,
+  // Line of Fit; 2.4A Vertex and a Point, Point and x-Intercepts; and every such word problem built from now on).  G Given (each value with its symbol and unit),
+  // U Unknown, E Equation, S Substitute, S Solve (ending with the answer, its unit and a sentence saying what it means).  pb.guess = { G, U, E, S1, S2, A }:
+  // each a list of [line (HTML, or function of the problem's work), when (null: always; a list of step ids, shown once one is done; or a function (x, done))].
+  // Show work reveals the work as it is done; a finished problem shows it all ====
+  function gqM(t) { return String(t).replace(/\bmx\b/g, "m\u2063x").replace(/(^|[^A-Za-z&#;<\/])([a-z])(?![A-Za-z;])/g, "$1<i>$2</i>").replace(/\^2/g, "²"); }   // single letters in italics
+  function guessHTML(w) {
+    var g = w.guess, d = w.done || {}, x = w.gx || {}, all = !!w.fin;
+    var on = function (it) { var c = it[1]; return all || c == null || (typeof c === "function" ? !!c(x, d) : c.some(function (id) { return d[id]; })); };
+    var txt = function (it) { return typeof it[0] === "function" ? it[0](x) : it[0]; };
+    var row = function (L, name, items, last) {
+      var sh = (items || []).filter(on).map(txt).filter(Boolean);
+      return "<div style=\"display:grid;grid-template-columns:5.6em 1fr;column-gap:1em;padding:.45rem 0;border-bottom:" + (last ? "0" : "1px solid #ccd") + "\"><div style=\"font:700 1rem system-ui,sans-serif;color:#1B2433\"><span style=\"font-size:1.6em\">" + L + "</span><br><span style=\"font-weight:600;font-size:.85em;color:#4B5563\">" + name + "</span></div><div>" +
+        (sh.length ? sh.map(function (t) { return "<div style=\"padding:.1rem 0;white-space:nowrap\">" + t + "</div>"; }).join("") : "<div style=\"color:#9AA0A8\">…</div>") + "</div></div>";
+    };
+    var ans = (g.A || []).filter(on).map(txt).filter(Boolean);
+    return "<section style=\"padding:.2rem 0 .6rem\">" + row("G", "Given", g.G) + row("U", "Unknown", g.U) + row("E", "Equation", g.E) + row("S", "Substitute", g.S1) + row("S", "Solve", g.S2, true) +
+      (ans.length ? "<div style=\"margin:.4rem 0 0 6.6em;padding:.35rem .7rem;border:2px solid #1B2433;border-radius:8px;font:600 1.05rem system-ui,sans-serif;display:inline-block\">" + ans.join("<br>") + "</div>" : "") + "</section>";
+  }
   // every problem worked in the session is kept, so Show work can page back and forward through them
   function workAny() { return steps.length >= 2 || works.some(function (w) { return w.steps.length >= 2; }); }
   function workBegin() { works.push({ steps: steps, label: MODES[mode] + " mode, " + (subx ? "Substitution" : lessonName(lesson)) }); if (works.length > 300) works.shift(); }
@@ -5399,7 +5418,7 @@
     if (!list.length) list = [{ steps: steps, label: "" }];
     var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
-      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + (w.gonly ? "" : workHTML(w.steps)) + (w.pic ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + w.pic + "</section>" : "") + "</div>"; }).join("");
+      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + (w.guess ? guessHTML(w) : w.gonly ? "" : workHTML(w.steps)) + (w.pic ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + w.pic + "</section>" : "") + "</div>"; }).join("");
     var css = ".wpic svg{max-width:100%;height:auto}.wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
     body = svHTML(body);
     var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;min-width:min(34rem,90vw);width:fit-content;max-width:none;margin:2rem auto;padding:0 1rem}.r>span,.r td{white-space:nowrap}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#7A3FB5}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
@@ -10288,7 +10307,7 @@ var ESPIC = {
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { pqMsg(""); }
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
-        QZ.step = 4; var last = QZ.pi === QZ.order.length - 1; if (act === "2.1") c21Save();
+        QZ.step = 4; if (QZ.ww && QZ.ww.guess) QZ.ww.fin = true; var last = QZ.pi === QZ.order.length - 1; if (act === "2.1") c21Save();
         var c2Err = QZ.wrong > 0;   // any error message in this round (in Demo, this problem) means no Progress for it
         if (!QZ.custom && mode !== "create" && mode !== "demo" && !c2Err && !ivL()) { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
         pqMsg(mode === "solo" ? cheer() : est() || wf() || m3() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last && QZ.order.length > 1 ? (QZ.order.length === 3 ? "You have finished all three!" : "You have finished all four!") : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
@@ -12700,9 +12719,10 @@ var ESPIC = {
   function m3Accept(st, show) {
     var pb = m3Cur(), line = typeof st.line === "function" ? st.line(pb, QZ.m3x || {}, show) : (st.line || ((st.pre ? st.pre.replace(/<[^>]+>/g, "") + " " : "") + show));
     if (st.after) st.after(QZ.m3x);
+    if (QZ.ww && QZ.ww.done) QZ.ww.done[st.id] = 1;   // (GUESS Show work)
     if (st.nol) { QZ.m3l.push(""); if (QZ.ww && st.wl) QZ.ww.steps.push({ eqs: [m3Plain(st.wl)], cls: "cg" }); }   // (2.4A: the workspace is the record; Show work gets the equation)
     else { QZ.m3l.push(line); if (QZ.ww) QZ.ww.steps.push({ eqs: [m3Plain(line)], cls: "cg" }); }
-    QZ.m3i++; if (QZ.m3i >= m3Len()) QZ.m3done = true;
+    QZ.m3i++; if (QZ.m3i >= m3Len()) { QZ.m3done = true; if (QZ.ww) QZ.ww.fin = true; }
     QZ.hn = 0; pqMsg(""); drawPlay(); pqPanel();
   }
   function m3Bad(el, msg) { if (m3CB() && m3Step() && !m3Step().fine) { if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } m3Miss(m3Step(), msg); return; } QZ.wrong++; if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } pqMsg(m3Plain(ansAdd(msg || "Not quite. Try again.", el ? m3AnsTx(m3Step()) : ""))); }
@@ -12766,7 +12786,7 @@ var ESPIC = {
     QZ.m3i = 0; QZ.m3ord = null; QZ.ta = null; QZ.m3l = []; QZ.m3x = {}; QZ.m3done = false; QZ.m3o = null; QZ.hn = 0; QZ.arrowAt = -1; QZ.m3w = { v: {}, ok: {}, bad: {} }; m3wKey = "";
     for (var wi = works.length - 1; wi >= 0; wi--) if (works[wi].wf && works[wi].steps.length < 2) works.splice(wi, 1);
     var pb = m3Cur(); QZ.ww = null;
-    if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); if (pb.grid && pb.dsm) { QZ.ww.gonly = true; QZ.ww.pic = c2CmpPic(pb); } }   // (2.2C Compare: Show work is the graph alone)
+    if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); if (pb.guess) { QZ.ww.guess = pb.guess; QZ.ww.done = {}; QZ.ww.gx = QZ.m3x; } if (pb.grid && pb.dsm) { QZ.ww.gonly = true; QZ.ww.pic = c2CmpPic(pb); } }   // (2.2C Compare: Show work is the graph alone)
     PG.show = { eq: false, table: false, graph: false, desc: false, parent: false };
   }
   // ==== "Try Another" questioning (pb.ta, Calculate): every box is on the screen; a box is accepted the moment it is right.  A wrong box, once the student
@@ -12812,7 +12832,7 @@ var ESPIC = {
     T.v[st.id] = el.value; T.bad[st.id] = false; el.classList.remove("bad");
     if (m3WB()) return;   // (Write: kept as typed; Submit checks it)
     if (!m3taOk(st, el.value)) return;
-    T.ok[st.id] = true; if (st.after) st.after(QZ.m3x); var line = st.line; QZ.m3l.push(line); if (QZ.ww) QZ.ww.steps.push({ eqs: [m3Plain(line)], cls: "cg" });
+    T.ok[st.id] = true; if (st.after) st.after(QZ.m3x); if (QZ.ww && QZ.ww.done) QZ.ww.done[st.id] = 1; var line = st.line; QZ.m3l.push(line); if (QZ.ww) QZ.ww.steps.push({ eqs: [m3Plain(line)], cls: "cg" });
     var all = pb.tsteps.every(function (q) { return T.ok[q.id]; });
     if (all) { QZ.m3i = m3L().length; QZ.m3done = true; if (!T.fail) pqMsg(""); drawPlay(); pqEval(); pqPanel(); return; }
     if (!T.fail) pqMsg(""); var bx = $("m3taBox"); if (bx) bx.outerHTML = m3taList();
@@ -12917,6 +12937,7 @@ var ESPIC = {
   }
   function m3wAccept(st, show) {
     var pb = m3Cur(), line = typeof st.line === "function" ? st.line(pb, QZ.m3x || {}, show) : (st.line || ((st.pre ? st.pre.replace(/<[^>]+>/g, "") + " " : "") + show));
+    if (QZ.ww && QZ.ww.done) QZ.ww.done[st.id] = 1;
     if (st.after) st.after(QZ.m3x);
     var L = m3L(), at = L.indexOf(st), W = QZ.m3w, j = 0; W.at = W.at || [];   // (the finished steps are listed in the order of the steps)
     while (j < W.at.length && W.at[j] < at) j++; W.at.splice(j, 0, at); QZ.m3l.splice(j, 0, line);
@@ -13449,6 +13470,13 @@ var ESPIC = {
         pb.isteps[6], pb.steps[6], pb.steps[7]
       ];
       pb.ex = "The line crosses the <i>y</i>-axis at " + b + ", so <i>b</i> = " + b + ". From (0, " + b + ") to (" + x2 + ", " + y2 + ") the rise is " + m3F(y2 - b) + " and the run is " + x2 + ", so the slope is " + m3F(m) + ". The equation is " + m3Eq(m, b) + ". " + mean + " To find <i>x</i> when <i>y</i> = " + T + ", solve " + T + " = " + m3Co(m) + "x + " + b + ": <i>x</i> = " + k + ".";
+      var mc1 = m3Co(m);
+      pb.guess = { G: [[gqM("(0, " + b + ")") + " the <i>y</i>-intercept, from the graph (" + sc.yu + ")"], [gqM("(" + x2 + ", " + y2 + ")") + " another point on the line"], [gqM("y = " + T) + " " + sc.yu]],
+        U: [[gqM("m = ?") + " the slope"], [gqM("x = ?") + " " + sc.xu + ", when " + gqM("y = " + T)]],
+        E: [[gqM("m = (y₂ − y₁) ÷ (x₂ − x₁)")], [gqM("y = mx + b")]],
+        S1: [[gqM("m = (" + y2 + " − " + b + ") ÷ (" + x2 + " − 0)"), ["rise", "riseT", "rr"]], [gqM(T + " = " + mc1 + "x + " + b), ["sub", "x"]]],
+        S2: [[gqM("m = " + m3F(y2 - b) + " ÷ " + x2 + " = " + m3F(m)), ["m"]], [gqM(m3Eq(m, b)), ["eq", "eqd"]], [gqM(T + " − " + b + " = " + mc1 + "x"), ["sub"]], [gqM(m3F(T - b) + " = " + mc1 + "x"), ["sub"]], [gqM("x = " + m3F(T - b) + " ÷ " + (m < 0 ? "(" + m3F(m) + ")" : m3F(m)) + " = " + k) + " " + sc.xu, ["x"]]],
+        A: [[gqM("x = " + k) + " " + sc.xu + ": when the " + sc.yn.toLowerCase() + " is " + T + " " + sc.yu + ", " + sc.xn.toLowerCase() + " is " + k + " " + sc.xu + ".", ["x"]]] };
       return pb;
     }
   }
@@ -13511,6 +13539,12 @@ var ESPIC = {
       ];
       pb.csteps = pb.isteps;
       pb.ex = nT + "'s rate is " + (y1 - y0) + " ÷ " + (r1 - r0) + " = " + mT + ", and its table starts at <i>b</i> = " + bT + ", so " + m3Eq(mT, bT) + ". " + (mT > mQ ? nT : nQ) + " has the greater rate. The plans are equal when " + m3Co(mh) + "x + " + bh + " = " + m3Co(ml) + "x + " + bl + ", so " + d + "x = " + e + " and <i>x</i> = " + xs + " " + sc.xu + ", when each costs $" + ystar + ".";
+      pb.guess = { G: [["Table for " + nT + ": " + gqM("(" + r0 + ", " + y0 + ")") + " and " + gqM("(" + r1 + ", " + y1 + ")") + " (" + sc.xu + ", dollars)"], [nQ + ": " + gqM(m3Eq(mQ, bQ))]],
+        U: [[nT + ": " + gqM("m = ?") + ", " + gqM("b = ?")], [gqM("x = ?") + " " + sc.xu + " and " + gqM("y = ?") + " dollars, when the plans cost the same"]],
+        E: [[gqM("m = (y₂ − y₁) ÷ (x₂ − x₁)")], [gqM("y = mx + b")], ["same cost: " + gqM("y") + " of " + nT + " = " + gqM("y") + " of " + nQ]],
+        S1: [[gqM("m = (" + y1 + " − " + y0 + ") ÷ (" + r1 + " − " + r0 + ")"), ["rise", "run", "m"]], [gqM(y0 + " = " + mT + "(" + r0 + ") + b"), ["b"]], [gqM(m3Co(mh) + "x + " + bh + " = " + m3Co(ml) + "x + " + bl), ["e"]], [gqM("y = " + mh + "(" + xs + ") + " + bh), ["y"]]],
+        S2: [[gqM("m = " + (y1 - y0) + " ÷ " + (r1 - r0) + " = " + mT), ["m"]], [gqM("b = " + y0 + " − " + (mT * r0) + " = " + bT), ["b"]], [nT + ": " + gqM(m3Eq(mT, bT)), ["eq"]], [gqM(m3Co(d) + "x = " + e), ["d"]], [gqM("x = " + e + " ÷ " + d + " = " + xs) + " " + sc.xu, ["x"]], [gqM("y = " + ystar) + " dollars", ["y"]]],
+        A: [["After " + xs + " " + sc.xu + " both plans cost $" + ystar + ".", ["y"]]] };
       return pb;
     }
   }
@@ -13555,6 +13589,13 @@ var ESPIC = {
       { id: "est", lab: "Estimate", ask: "Use your equation to estimate the " + sc.yn.toLowerCase() + " when " + sc.xn.toLowerCase() + " is " + X + ".", pre: "<i>y</i> =", ans: est, hint: ["Put <i>x</i> = " + X + " into your equation.", m3Co(m) + "(" + X + ") + " + b + " = " + m3F(est) + "."], line: "<i>y</i> = " + m3Co(m) + "(" + X + ") " + (b < 0 ? "− " : "+ ") + Math.abs(b) + " = " + m3F(est) }
     ];
     pb.ex = "The points go " + (pos ? "up" : "down") + ", a " + (pos ? "positive" : "negative") + " correlation. Two points on the line give rise ÷ run = " + m3F(m) + ", and the line crosses the <i>y</i>-axis at " + b + ", so " + m3Eq(m, b) + ". At <i>x</i> = " + X + ", <i>y</i> = " + m3F(est) + ".";
+    var gP = function (x) { return x.p || null; };
+    pb.guess = { G: [[function (x) { var q = gP(x); return q ? "two points on the line of fit: " + gqM("(" + q[0].x + ", " + q[0].y + ")") + " and " + gqM("(" + q[1].x + ", " + q[1].y + ")") : "two points on the line of fit (you choose them)"; }], [gqM("x = " + X) + " (" + sc.xn.toLowerCase() + ")"]],
+      U: [[gqM("m = ?") + ", " + gqM("b = ?")], [gqM("y = ?") + " (" + sc.yn.toLowerCase() + ") when " + gqM("x = " + X)]],
+      E: [[gqM("m = (y₂ − y₁) ÷ (x₂ − x₁)")], [gqM("y = mx + b")]],
+      S1: [[function (x) { var q = gP(x); return q ? gqM("m = (" + q[1].y + " − " + q[0].y + ") ÷ (" + q[1].x + " − " + q[0].x + ")") : ""; }, ["rise", "m"]], [function (x) { var q = gP(x); return q ? gqM(q[0].y + " = " + m3F(m) + "(" + q[0].x + ") + b") : ""; }, ["b"]], [gqM("y = " + m3Co(m) + "(" + X + ") " + (b < 0 ? "− " : "+ ") + Math.abs(b)), ["est"]]],
+      S2: [[gqM("m = " + m3F(m)), ["m"]], [gqM("b = " + b), ["b"]], [gqM(m3Eq(m, b)), ["eq"]], [gqM("y = " + m3F(est)), ["est"]]],
+      A: [["When " + sc.xn.toLowerCase() + " is " + X + ", the estimate of " + sc.yn.toLowerCase() + " is " + m3F(est) + ".", ["est"]]] };
     return pb;
   }
   function m3Make4(tier) {
@@ -14214,6 +14255,15 @@ var ESPIC = {
     pb.csteps = [frm].concat(S2, [o1, c1, o2, c2, mv, o3, c3, dv, o4, c4, gr, ans]);
     pb.steps = [ans];   // (Write: the answer alone, with Desmos)
     pb.ex = "The vertex is " + c2Pt(h, k) + ", so h = " + c2F(h) + " and k = " + c2F(k) + ". The path passes through " + c2Pt(V.X0, V.Y0) + ", so " + sub0 + ". Then " + c2F(V.Y0) + " = " + V.D + "a + " + k + ", so " + c2F(R) + " = " + V.D + "a and a = " + c2F(R) + "/" + V.D + " " + aTx + ". In Desmos, " + Ftx + (V.qt === "y" ? " has height " + c2F(V.ans) + " feet at x = " + c2F(V.Xq) : V.qt === "xt" ? " reaches a height of " + c2F(V.Yq) + " feet, on its way down, at x = " + c2F(V.ans) : " crosses the x-axis at x = " + c2F(V.ans)) + ".";
+    var gV = function (n) { return function (x) { return (x.vs || 0) >= n && !(x.pend && (x.vs || 0) === n - 1); }; }, gD = Number.isInteger(V.ans) ? "= " : "≈ ";
+    var gAsk = V.qt === "y" ? [gqM("x = " + c2F(V.Xq)) + " feet, the point asked about"] : V.qt === "xt" ? [gqM("y = " + c2F(V.Yq)) + " feet, on the way down"] : [gqM("y = 0") + ", the ground"];
+    pb.guess = { G: [["vertex " + gqM("(h, k) = (" + c2F(h) + ", " + c2F(k) + ")") + " feet"], ["point " + gqM("(x, y) = (" + c2F(V.X0) + ", " + c2F(V.Y0) + ")") + " feet"], gAsk],
+      U: [[gqM("a = ?")], [V.qt === "y" ? gqM("y = ?") + " feet, when " + gqM("x = " + c2F(V.Xq)) : gqM("x = ?") + " feet, when " + gqM("y = " + c2F(V.Yq))]],
+      E: [[gqM("y = a(x − h)^2 + k"), function (x, dn) { return dn.frm || dn.sh || (x.sb && (x.sb.h || x.sb.k || x.sb.x || x.sb.y)); }]],
+      S1: [[gqM(sub0), function (x) { var b = x.sb || {}; return b.h && b.k && b.x && b.y; }], [gqM((V.qt === "y" ? "y" : c2F(V.Yq)) + " = " + c2F(ar) + "(" + (V.qt === "y" ? c2F(V.Xq) : "x") + " − " + h + ")^2 + " + k), ["ans"]]],
+      S2: [[gqM(c2F(V.Y0) + " = a(" + dTx + ")^2 + " + k), gV(1)], [gqM(c2F(V.Y0) + " = " + V.D + "a + " + k), gV(2)], [gqM(c2F(V.Y0) + " − " + k + " = " + V.D + "a"), gV(3)], [gqM(c2F(R) + " = " + V.D + "a"), gV(4)], [gqM("a = " + c2F(R) + " ÷ " + V.D), gV(5)], [gqM("a " + aTx), gV(6)], [Ftx.replace(/\b([a-z])\b/g, "<i>$1</i>"), gV(6)],
+        [gqM((V.qt === "y" ? "y " : "x ") + gD + c2F(V.ans)) + " feet (from the graph in Desmos)", ["ans"]]],
+      A: [[V.qt === "y" ? "At " + c2F(V.Xq) + " feet from the start, the height is " + c2F(V.ans) + " feet." : V.qt === "xt" ? "The path is " + c2F(V.Yq) + " feet high, on its way down, " + c2F(V.ans) + " feet from the start." : "The path would reach the ground " + c2F(V.ans) + " feet from the start.", ["ans"]]] };
     return pb;
   }
   // the formula, typed in Calculate: y = a(x − h)² + k in any of its usual shapes
@@ -14403,6 +14453,13 @@ var ESPIC = {
         { id: "ex", lab: sc.up ? "Coldest" : "Highest", ask: c2S("Find <i>f</i>(" + m + "). In Desmos, type <span class=\"lm\"><i>f</i>(<i>x</i>) = <i>a</i>" + facH(p).replace(/₁/g, "") + facH(q).replace(/₁/g, "") + "</span> on a new line, then <i>f</i>(" + m + ").", "What is the " + sc.ext + "?"), pre: sc.ext + " =", post: u, ans: ex, tol: 0.011, after: function (x) { x.ev = true; }, hint: ["Put " + c2X + " = " + m + " into your function.", c2F(a) + "(" + m + " − " + p + ")(" + m + " − " + q + ") = " + c2F(ex) + "."], line: "the " + sc.ext + " is " + c2F(ex) + " " + u }
       ];
       pb.ex = "The " + c2X + "-intercepts are " + p + " and " + q + ", and the parabola passes through " + c2Pt(x0, y0) + ", so <i>a</i> = " + c2F(a) + " and " + E[0] + ". The vertex is halfway between the intercepts, at " + c2X + " = " + m + ", so the " + sc.ext + " is <i>f</i>(" + m + ") = " + c2F(ex) + " " + u + ".";
+      var pr = (x0 - p) * (x0 - q);
+      pb.guess = { G: [[gqM("x") + "-intercepts " + gqM("p = " + p) + " and " + gqM("q = " + q) + " " + u], ["point " + gqM("(x, y) = " + "(" + c2F(x0) + ", " + c2F(y0) + ")")]],
+        U: [[gqM("a = ?")], ["the " + sc.ext + " " + gqM("f(x) = ?") + " " + u + ", at the vertex"]],
+        E: [[gqM("y = a(x − p)(x − q)")], [gqM("x = (p + q) ÷ 2") + " at the vertex"]],
+        S1: [[gqM(c2F(y0) + " = a(" + c2F(x0) + " − " + p + ")(" + c2F(x0) + " − " + q + ")"), ["p", "q", "a"]], [gqM("x = (" + p + " + " + q + ") ÷ 2"), ["m", "ex"]], [gqM("f(" + m + ") = " + c2F(a) + "(" + m + " − " + p + ")(" + m + " − " + q + ")"), ["ex"]]],
+        S2: [[gqM(c2F(y0) + " = " + c2F(pr) + "a"), ["a"]], [gqM("a = " + c2F(y0) + " ÷ " + (pr < 0 ? "(" + c2F(pr) + ")" : c2F(pr)) + " = " + c2F(a)), ["a"]], [gqM(E[0].replace(/<[^>]+>/g, "")), ["eq"]], [gqM("x = " + m), ["m", "ex"]], [gqM("f(" + m + ") = " + c2F(ex)) + " " + u, ["ex"]]],
+        A: [["The " + sc.ext + " is " + c2F(ex) + " " + u + ".", ["ex"]]] };
       return pb;
     }
   }
