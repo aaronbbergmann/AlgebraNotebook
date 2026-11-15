@@ -880,7 +880,7 @@
   input:focus::placeholder,textarea:focus::placeholder{color:transparent!important;opacity:0!important}
   [contenteditable]:focus:empty::before{content:none!important}
   /* 2.4A Vertex and a Point: the formula set out like Play Solve, the sketch with draggable numbers */
-  .vpWs{margin:.6rem 0 .2rem 1rem;text-align:left}.vpCap{font:600 .95rem system-ui,sans-serif;color:#4B5563;margin:.1rem 0}
+  .vpWs{margin:.6rem 0 .2rem;text-align:center}.vpCap{font:600 .95rem system-ui,sans-serif;color:#4B5563;margin:.1rem 0}
   #pgQt .vpEq{display:inline-flex;align-items:center;gap:.3em;padding:.2rem .5rem;font:400 2.3rem/1.3 "LM","Latin Modern Roman","CMU Serif",Georgia,serif;color:#1B2433;user-select:none;-webkit-user-select:none}
   .vpBlank{min-width:12rem;border-bottom:2px dashed #9AA0A8}
   .vpSide{display:inline-block;white-space:nowrap;border-radius:10px;padding:0 .15em;transition:background .15s}.vpSide.hot{background:rgba(122,63,181,.13)}
@@ -892,9 +892,13 @@
   .vpN{border-radius:4px;padding:0 .08em}body.vpDrag .vpN{cursor:grab;background:rgba(122,63,181,.08)}body.vpDrag .vpN:hover{background:rgba(122,63,181,.2)}
   .vpGhost{background:var(--bg);border-radius:6px;box-shadow:0 .2em .8em rgba(0,0,0,.35);padding:0 .15em;color:#1B2433;white-space:nowrap}
   .vpSkW{position:relative;width:360px;max-width:100%;color:#1B2433}.vpSk{width:100%;display:block}
-  .vpLab{position:absolute;font:700 .98rem system-ui,sans-serif;white-space:nowrap;transform:translate(-50%,-175%)}.vpLab.rt{transform:translate(12px,0)}.vpLab.lt{transform:translate(-100%,35%)}.vpLab.lu{transform:translate(calc(-100% - 8px),-115%)}
+  .vpLab{position:absolute;font:700 .98rem system-ui,sans-serif;white-space:nowrap;transform:translate(-50%,-175%)}.vpLab.rt{transform:translate(12px,0)}.vpLab.upr{transform:translate(-12%,-175%)}.vpLab.lt{transform:translate(-100%,35%)}.vpLab.lu{transform:translate(calc(-100% - 8px),-115%)}
   .vpW{font-weight:500;color:#4B5563;margin-right:.15em}.vpHow{font-weight:400;color:#4B5563;font-size:.9em}
   .vpOwn{width:300px;max-width:100%;text-align:center}.vpOwn svg{width:100%;display:block}.vpOwnT{font:700 1.15rem system-ui,sans-serif;color:#4B5563;margin-top:-.2rem}
+  /* Unify Progress activities, Sequence and Calculate: the prompts (the step and its answer box, 1.4's calculation box) sit in the centre pane, not the right panel */
+  .ctrSteps{display:none}body.ctrOn .ctrSteps{display:flex;justify-content:center;width:100%}
+  body.ctrOn .ctrSteps #wfSteps{max-width:46rem;padding:.3rem 0 .5rem}body.ctrOn .ctrSteps #wfSteps .wfAsk{font:700 1.15rem/1.4 system-ui,sans-serif;margin:.2rem 0 .45rem}body.ctrOn .ctrSteps #wfSteps .wfRow{justify-content:center}
+  .ctrAsk{display:flex;flex-direction:column;align-items:center;gap:.5rem}.ctrAsk .composer{position:static!important;width:min(30rem,90%);margin:.8rem auto;border:2px solid var(--ink);border-radius:16px;padding:.8rem 1rem;background:var(--bg)}.ctrAsk .composer .row{justify-content:center}.ctrAsk .composer{font:400 1.05rem/1.4 system-ui,sans-serif;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -904,6 +908,7 @@
     <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
       <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQcue" id="pgQcue">(Equation, Table, Graph)</div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div>
+      <div class="ctrSteps" id="ctrSteps"></div>
       <div class="dsmSteps" id="dsmSteps"></div>
       <div class="dsmWrap" id="dsmWrap"><div class="dsmNote" id="dsmNote" aria-live="polite"></div><div class="dsmCalc" id="dsmCalc"></div></div><div class="dsmSteps dsmAfter" id="dsmAfter"></div>
       <div class="qzTools" id="qzTools" hidden aria-label="Graph tools"><button type="button" data-tool="clear" title="Clear the graph">✕</button><button type="button" data-tool="undo" title="Undo the last change to the graph" aria-label="Undo"><svg viewBox="0 0 40 40" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 9L7 15L13 21"/><path d="M7 15H22A10 10 0 1 1 12 33"/></svg></button><button type="button" data-tool="pt" title="Point: click the graph to plot a point (click it again to remove it), or drag onto the graph">●</button><button type="button" data-tool="line" title="Line: click, then click a point on the line, then click again to set its slope. Or drag it onto the graph" aria-label="Line"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 32L32 8" marker-start="url(#mk1)" marker-end="url(#mk1)"/></svg></button><button type="button" data-tool="V" title="V: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Absolute value"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M8 9L20 33L32 9" marker-start="url(#mk2)" marker-end="url(#mk2)"/></svg></button><button type="button" data-tool="U" title="U: click, then click the vertex. Or drag it onto the graph. Adjust the stretch with its side points" aria-label="Parabola"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><marker id="mk3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs><path d="M9 8Q20 56 31 8" marker-start="url(#mk3)" marker-end="url(#mk3)"/></svg></button><button type="button" data-tool="tr" hidden title="Transformation: show how each point of the parent moves to the transformed graph" aria-label="Transformation"><svg viewBox="0 0 40 40" width="30" height="30" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8Q18 52 28 8" stroke="currentColor" stroke-width="2.4" stroke-dasharray="0.1 4.6"/><path d="M13 5Q24 42 35 5" stroke="#C74440" stroke-width="3"/></svg></button></div>
@@ -958,7 +963,7 @@
     <div class="center">
     <div class="top" id="top"><section class="eqs orig" id="origEl" aria-label="Original equations"></section><section class="eqs orig" id="sysEl" aria-label="Two-variable equations"></section><section class="vals" id="vals" aria-label="Solved values"></section></div>
     <div class="wrap">
-      <main class="eqs work" id="wsEl"></main>
+      <main class="eqs work" id="wsEl"></main><div class="ctrAsk" id="ctrAsk"></div>
       <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="zpWrap" id="zpA" hidden></div><div class="exRow" id="exRow"></div><div class="zpWrap" id="zpB" hidden></div>
         <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
       <section class="nlBox" id="nlBox" hidden aria-label="The solutions on a number line"></section>
@@ -4761,7 +4766,7 @@
     }
     if (lesson === 3 && sys.length < 2) {
       var n = allV().filter(function (v) { return s[CK[v]].n; }).length;
-      if (n === 0 && !s.c.n) { EQW++; bad(f); bad(t); note("Every variable disappeared, so those two equations don't tell you anything new. Try a different pair."); return; }
+      if (n === 0 && !s.c.n) { EQW++; eqwTa(); bad(f); bad(t); note("Every variable disappeared, so those two equations don't tell you anything new. Try a different pair."); return; }
       if (n === 2 && !s.ks.length) { found(s, f, t); return; }
     }
     snap(); ws[t] = s; ws.splice(f, 1);
@@ -4771,9 +4776,9 @@
   function found(s, f, t) {
     var miss = allV().filter(function (v) { return !s[CK[v]].n; })[0];
     if (sys.length === 1) {
-      if (miss !== elim) { EQW++; bad(f); bad(t); note("Make " + elim + " disappear again, so both new equations have the same two variables."); return; }
+      if (miss !== elim) { EQW++; eqwTa(); bad(f); bad(t); note("Make " + elim + " disappear again, so both new equations have the same two variables."); return; }
       var p = sys[0], u = sysV[0], w = sysV[1];
-      if (!(p[CK[u]].n * s[CK[w]].n - p[CK[w]].n * s[CK[u]].n) && classify(orig) === "one") { EQW++; bad(f); bad(t); note("That is the same equation as your first one. Try a different pair of equations."); return; }
+      if (!(p[CK[u]].n * s[CK[w]].n - p[CK[w]].n * s[CK[u]].n) && classify(orig) === "one") { EQW++; eqwTa(); bad(f); bad(t); note("That is the same equation as your first one. Try a different pair of equations."); return; }
     }
     snap();
     var a = rows[t].getBoundingClientRect(), o0 = $("origEl").getBoundingClientRect().left;
@@ -4842,7 +4847,7 @@
     if (lesson === 3) {
       var solve = sys.length === 2 && !sysDone();
       if ((set === "o" && solve) || (set === "s" && !(solve && sysV.indexOf(name) >= 0))) {
-        EQW++; note(set === "s" ? "The new equations aren't ready for that value yet." : "Use the two new equations first."); return;
+        EQW++; eqwTa(); note(set === "s" ? "The new equations aren't ready for that value yet." : "Use the two new equations first."); return;
       }
     }
     var src = set === "o" ? orig[j] : set === "s" ? sys[j] : ws[j];
@@ -4906,7 +4911,7 @@
     var h = hist.pop(), st = JSON.parse(h[0]); ws = st[0]; vals = st[1]; sys = st[2]; sysV = st[3]; elim = st[4]; steps.length = h[1]; ops = h[2];
     locked = false; result = null; mulNote = null; closeAsk(false); clearLog(); lastExp = "";
     nx.hidden = true;
-    render(-1); updUndo();
+    render(-1); updUndo(); eqwTa();   // (an error message still stands: Try another stays)
     if (mode === "demo") peekNext();
   }
 
@@ -4925,6 +4930,7 @@
   }
   // the prompt sits in the right-hand panel, level with the equations (but below the controls)
   function placeAsk() {
+    ctrSync(); if (!$("ask").closest("aside.chat")) return;   // (Sequence and Calculate: it sits in the centre pane, under the equations)
     var a = $("ask"), chat = a.parentNode, c = chat.getBoundingClientRect(), w = $("wsEl").getBoundingClientRect(), box = chat.querySelector(".ctlbox").getBoundingClientRect();
     if (getComputedStyle(a).position !== "absolute") return;
     var t = Math.max(w.top - c.top, box.bottom - c.top + 10), mx = c.height - a.offsetHeight - 10;
@@ -4940,7 +4946,7 @@
   function askArrow(on, el) {
     var A = $("askArrow"); if (!A) { A = document.createElement("div"); A.id = "askArrow"; A.innerHTML = "<svg viewBox=\"0 0 100 60\" aria-hidden=\"true\"><path d=\"M2 22h58V4l38 26-38 26V38H2z\"/></svg>"; document.body.appendChild(A); }
     A.hidden = true; A.classList.remove("grow"); if (!on || mode !== "calculate") return;
-    var r = (el || $("ask")).getBoundingClientRect(), side = r.left > innerWidth * 0.45, w = 84;
+    var r = (el || $("ask")).getBoundingClientRect(), side = r.left > innerWidth * 0.45 || !!(el || $("ask")).closest("#ctrSteps,#ctrAsk"), w = 84;   // (a prompt in the centre pane: the arrow comes from its left)
     A.style.left = (side ? Math.max(4, r.left - w - 6) : Math.max(4, r.left + r.width / 2 - w / 2)) + "px";
     A.style.top = (side ? r.top + Math.min(r.height, 120) / 2 - 25 : Math.max(4, r.top - 56)) + "px";
     A.style.transformOrigin = side ? "100% 50%" : "50% 100%"; A.dataset.dir = side ? "r" : "d"; A.hidden = false; void A.offsetWidth; A.classList.add("grow");
@@ -4962,14 +4968,14 @@
   var KQ = null;
   function kindAsk(kind, line, ok) {
     KQ = { kind: kind, line: line, ok: ok }; locked = true; closeAsk(false);
-    $("kindT").textContent = "We are left with " + line + ". What does that tell us?"; $("kindErr").textContent = ""; $("kindAsk").hidden = false;
+    $("kindT").textContent = "We are left with " + line + ". What does that tell us?"; $("kindErr").textContent = ""; $("kindAsk").hidden = false; ctrSync();
     if (mode === "demo") kindDemo();
   }
   function hideKind() { KQ = null; var k = $("kindAsk"); if (k) k.hidden = true; }
   function kindPick(pick) {
     if (!KQ) return;
     if (pick !== KQ.kind) {
-      EQW++; $("kindErr").textContent = "Not quite. " + KQ.line + " is " + (KQ.kind === "none" ? "never true, whatever the variable is." : "always true, whatever the variable is.");
+      EQW++; eqwTa(); $("kindErr").textContent = "Not quite. " + KQ.line + " is " + (KQ.kind === "none" ? "never true, whatever the variable is." : "always true, whatever the variable is.");
       var b = document.querySelector('#kindAsk [data-k="' + pick + '"]'); if (b) { b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); } return;
     }
     var q = KQ; hideKind(); locked = false; q.ok();
@@ -5000,7 +5006,7 @@
     rows.forEach(function (r) { r.classList.remove("asking"); });
   }
   function confirmAsk() {
-    var i = askIdx, txt = $("askIn").value, err = function (t) { EQW++; $("askErr").textContent = t; };   // (every error message counts: no Progress for this problem)
+    var i = askIdx, txt = $("askIn").value, err = function (t) { EQW++; eqwTa(); $("askErr").textContent = t; };   // (every error message counts: no Progress for this problem)
     if (askKind === "ex") { exAskOK(); return; }
     if (askKind === "subfn") { var cr = subCb.check(txt); if (cr !== true) { err(cr); $("askIn").select(); return; } closeAsk(false); subCb.ok(); return; }
     if (askKind === "mul" || askKind === "add" || askKind === "sub" || askKind === "div") {
@@ -5531,6 +5537,7 @@
       ["g", "solo", 80, "Write Mode, 2nd round", 2], ["g", "solo", 100, "Write Mode, 3rd round", 3]
     ] }
   };
+  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 1 && l[4] > 1); }).map(function (l) { return l[0] === 1 && l[1] === "solo" ? [1, "solo", 100, "Write Mode"] : l; });   // 2.4A Vertex and a Point: one round of Write
   BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return l[0] < 6; }).concat([[11, "demo", 20, "Demo Mode"], [11, "sequence", 50, "Sequence Mode"], [11, "calculate", 100, "Calculate Mode"], [12, "demo", 10, "Demo Mode"], [12, "sequence", 25, "Sequence Mode"], [12, "calculate", 40, "Calculate Mode"], [12, "solo", 70, "Write Mode"], [12, "solo", 100, "Write Mode, 2nd round", 2]]);   // (2.2C Characteristics: Write has the Calculate boxes, checked on Submit)   // (2.2C Memorize: a card sort in Demo and Sequence; Calculate is a quiz)
   // 2.2C (Min & Max, Intercept Form, Compare): two rounds of Write, not three (Write 70, Write 2nd round 100)
   BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return !([3, 4, 5].indexOf(l[0]) >= 0 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return [3, 4, 5].indexOf(l[0]) >= 0 && l[1] === "solo" ? (l[4] === 2 ? [l[0], "solo", 100, "Write Mode, 2nd round", 2] : [l[0], "solo", 70, "Write Mode"]) : l; });
@@ -5797,7 +5804,7 @@
         if (busy) { setTimeout(wait, 120); return; }
         setTimeout(function () {
           if (g0 !== MS.gen) return;   // the student switched modes meanwhile: the step was already taken back (msSave)
-          handHide(); mode = m0; while (hist.length > h0) undo(); DNX = false; $("hint").disabled = false; peekNext(); hideKind(); closeAsk(false); clearLog();
+          handHide(); mode = m0; while (hist.length > h0) undo(); DNX = false; $("hint").disabled = false; eqwTa(); peekNext(); hideKind(); closeAsk(false); clearLog();
           if (mode === "demo") peekNext();
         }, 1300);
       })();
@@ -5949,7 +5956,18 @@
   }
   // ONE place decides the colours: the page's theme follows the current mode in every activity (new ones included).
   // Demo = the Welcome cream, Solo = white, Sequence / Create / Calculate = pale tints. Play (no modes) is white, cream while its demo runs.
+  // ---- the prompts in the centre pane (Sequence and Calculate of every Progress activity; Write, Create, Demo and the Playgrounds keep the right panel) ----
+  function ctrWant() { var B = BUILT[act]; return !welcome && !!B && !B.play && !B.solver && (mode === "sequence" || mode === "calculate"); }
+  function ctrSync() {
+    var A = document.querySelector("aside.chat"), on = ctrWant(), W = $("wfSteps"), K = $("ask"), Q = $("kindAsk"); if (!A || !W) return;
+    document.body.classList.toggle("ctrOn", on);
+    if (!(typeof dsmOn === "function" && dsmOn())) { if (on) { if (W.parentNode !== $("ctrSteps")) $("ctrSteps").appendChild(W); } else if (W.parentNode !== A) A.insertBefore(W, $("qz")); }   // (Desmos places it itself: dsmSync)
+    var ce = on && !quiz();   // the equation pane (1.4): the calculation box and the No Solutions / Infinite Solutions choice
+    if (ce) { if (K.parentNode !== $("ctrAsk")) $("ctrAsk").appendChild(K); if (Q.parentNode !== $("ctrAsk")) $("ctrAsk").appendChild(Q); }
+    else { if (Q.parentNode !== A) A.insertBefore(Q, $("eqSubRow")); if (K.parentNode !== A) A.insertBefore(K, Q); }
+  }
   function theme() {
+    try { ctrSync(); } catch (e) { }
     var b = document.body, r = document.documentElement, t;
     if (welcome) t = "welcome";
     else if (b.classList.contains("quiz")) t = mode;
@@ -6387,6 +6405,15 @@
   }
   // ---- Write mode on the equation pane (1.4 One Variable, Substitution, 2×2 and 3×3): the answer is checked only when Submit (in the right panel) is pressed ----
   var EQW = 0;   // the error messages shown while working on this problem
+  // Unify Progress activities (Sequence and Calculate): the moment an error message appears, a plum-red "Try another" takes Next's place (a new problem; this one
+  // can no longer earn Progress).  The equation pane (1.4) here; the other activities in taAny / taSync
+  function eqwTa() {
+    setTimeout(function () {
+      if (quiz() || !BUILT[act] || !BUILT[act].sub || BUILT[act].solver || !(mode === "sequence" || mode === "calculate") || EQW <= 0 || DNX) return;
+      if (!up || up.label !== "Try another") up = { label: "Try another", go: function () { newProblem(); } };
+      var nx = $("next"); nx.textContent = "Try another"; nx.hidden = false; nx.disabled = false; $("again").hidden = true;
+    }, 0);
+  }
   function eqWsAct() { return !quiz() && !!BUILT[act] && !!BUILT[act].sub && !BUILT[act].solver && mode === "solo"; }
   function eqSubSync() { var on = eqWsAct() && !locked && !$("answer").hidden && !$("ansFields").parentNode.hidden && !$("ansT").hidden; $("eqSubRow").hidden = !on; eqSubReady(); }
   function eqMissing() {
@@ -6407,7 +6434,7 @@
       var sol = solveSys(orig);
       allV().forEach(function (v, j) { var el = $("ans_" + v), Lv = {}; Lv[v] = mk(1); var t = numOrEq(el.value, Lv), ok = !!t && same(t, sol[j]); mark(el, ok); if (!ok) bad.push(v); });
     }
-    if (bad.length) { EQW++; m.className = "bad"; m.textContent = "Not quite. Check " + wsList(bad) + ", then press Submit again."; return; }
+    if (bad.length) { EQW++; eqwTa(); m.className = "bad"; m.textContent = "Not quite. Check " + wsList(bad) + ", then press Submit again."; return; }
     checkAnswer();
   }
   function checkAnswer() {
@@ -6423,7 +6450,7 @@
       allV().forEach(function (v, j) { var Lv = {}; Lv[v] = mk(1); var t = numOrEq($("ans_" + v).value, Lv); if (!t) miss = true; else if (!same(t, sol[j])) ok = false; });
     }
     if (miss) { m.className = "bad"; m.textContent = lesson === 1 && isIneq(orig[0]) ? "Type your answer like x < 3 or x ≥ 1/2." : "Enter a number for each variable, like 3, -2 or 1/2."; return; }
-    if (!ok) { EQW++; m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
+    if (!ok) { EQW++; eqwTa(); m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
     m.className = "ok"; m.textContent = mode === "solo" ? cheer() : "Correct!";
     // the answer fields and buttons give way to the correct solution
     var sl = cl === "one" ? solveSys(orig).map(function (t, j) { return "<span class=\"chip\"><i class=\"var\">" + allV()[j] + "</i> " + (lesson === 1 && isIneq(orig[0]) ? relGlyph(orig[0].a.n < 0 ? relRev(qRel(orig[0])) : qRel(orig[0])) : "=") + " " + sg(t) + "</span>"; }).join("") : "<span class=\"chip\">" + (cl === "inf" ? "Infinitely many solutions" : "No solution") + "</span>";
@@ -7388,6 +7415,7 @@
     if (busy) return;
     if (pq() && m3() && m3taFail()) { up = null; QZ.ta = null; pqRegen(); return; }
     if (pq() && vfnTaFail()) { up = null; QZ.vf = null; pqRegen(); return; }   // ("Try Another" questioning: a new problem)
+    if (pq() && taAny()) { taGo(); return; }   // (an error message in Sequence or Calculate: Try another)
     if (QZ.locked) { if (up) { var u = up; up = null; u.go(); } else qzStart(); return; }
     if (pq() && mode === "demo" && QZ.step >= 4 && up) { var u2 = up; up = null; u2.go(); return; }
     if (pq() && QZ.step >= 4 && up && !QZ.custom && mode !== "create") { var u3 = up; up = null; u3.go(); return; }
@@ -7476,7 +7504,7 @@
   });
   $("pgDescTx").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); gdDescSubmit(); } });
   $("pgDescTx").addEventListener("input", function () { if (ptOn()) ptDraw(); if (this.value.trim() && !PG.dOK && !wsub() && gdDescRight(gdParse(this.value))) gdDescSubmit(); });
-  function pqMsg(t, cls) { if (cls === "ok" && t && act === "2.1") { partyShow(wf() ? wfNm(t) : t); t = ""; cls = ""; } var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = (wf() ? wfNm(t) : t) || ""; }
+  function pqMsg(t, cls) { if (cls === "ok" && t && act === "2.1") { partyShow(wf() ? wfNm(t) : t); t = ""; cls = ""; } var e = $("pgQmsg"); e.className = "pgQmsg" + (cls ? " " + cls : ""); e.textContent = (wf() ? wfNm(t) : t) || ""; if (t && cls !== "ok") setTimeout(taSync, 0); }
   // ---- 1.1, third exercise: Estimating a Value from a Graph.  The data come from a table in the question; the student enters them in the Data table, graphs the model
   // (a U for a quadratic) through the points, then estimates a height from the graph.  The centre pane is the Play Data pane. ----
   function est() { return pq() && act === "1.1" && lesson === 3; }
@@ -9955,7 +9983,7 @@ var ESPIC = {
       return;
     }
     var g = dsmGraphed(), one = !!m3Cur().dsm.one;
-    if (n && !DSM.fail) n.innerHTML = one ? (st && st.type === "dsm" ? "Parabola " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : QZ.m3done || QZ.step >= 4 ? "" : mode === "solo" ? "Find the equation of the path, graph it here in Desmos, and use the graph to answer." : "Zoom out or drag the graph to see the whole parabola. Click the parabola to see its points.")
+    if (n && !DSM.fail) n.innerHTML = one ? (st && st.type === "dsm" ? "Parabola " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : QZ.m3done || QZ.step >= 4 ? "" : mode === "solo" ? "" : "Zoom out or drag the graph to see the whole parabola. Click the parabola to see its points.")
       : st && st.type === "dsm" ? "Path 1 " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") + " &nbsp; Path 2 " + (g[1] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : "Zoom out or drag the graph to see the whole paths. Click a path to see its intercepts and its maximum.";
     if (st && st.type === "dsm" && g[0] && g[1]) m3Accept(st, "");
   }
@@ -9965,7 +9993,7 @@ var ESPIC = {
     if (!dsmHome) dsmHome = { p: W.parentNode, n: W.nextSibling };
     var below = on && mode === "solo" && m3Cur() && m3Cur().grid, box = $(below ? "dsmAfter" : "dsmSteps");   // (Compare, Write: the table of answers sits below the graph)
     if (on && W.parentNode !== box) box.appendChild(W);   // Compare: the questions and their answer boxes sit in the centre pane, under the question
-    else if (!on && W.parentNode !== dsmHome.p) dsmHome.p.insertBefore(W, dsmHome.n);
+    else if (!on) ctrSync();
     if (!on) return;
     if (act === "2.2") $("show").hidden = mode !== "solo";   // (2.2C Compare's Show work: Write mode only)
     dsmLoad(); if (!DSM.calc) { dsmCheck(); return; }
@@ -10232,7 +10260,7 @@ var ESPIC = {
     var go = $("qzGo"), nx = $("qzNext");
     go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || (m3() && !wsubAct()) || (wf() && (mode === "sequence" || mode === "calculate")); go.textContent = wsubAct() ? "Submit" : "Check"; document.body.classList.toggle("wsub", wsubAct());
     // the one Next (see nxShow): in Demo the demo button carries it; otherwise it sits here in the side panel
-    var taF = (m3() && m3taFail()) || vfnTaFail();
+    var taF = (m3() && m3taFail()) || vfnTaFail() || taAny();
     nx.hidden = !(done || taF) || demo; nx.disabled = false; nx.textContent = taF ? "Try another" : (gd() || wf()) && mode === "create" ? "Create another" : up ? up.label : "Next";
     $("qzAgain").hidden = demo || !(done && !QZ.custom && up && up.stayText); $("qzAgain").textContent = !QZ.custom && up && up.stayText || "";
     $("pgDemo").style.display = demo ? "" : "none"; $("pgCtl").classList.toggle("empty", !demo && !est());
@@ -13322,6 +13350,7 @@ var ESPIC = {
     if (e.isTrusted) pgUser(); m3Plot(m3Pos(svg, e.clientX, e.clientY));
   });
   function m3Cue() {
+    if (m3Cur() && m3Cur().vp) return "";   // (2.4A Vertex and a Point: no problem or step count)
     var pb = m3Cur(), L = m3L(), pn = QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : "", all = QZ.step >= 4 || QZ.m3done;
     if (mode === "solo" && pb && pb.grid) return pn + (all ? " <span class=\"cueOk\">✓</span>" : "");   // (Compare, Write: the grid says it all)
     if (m3TA() || m3WB()) return pn + (all ? " <span class=\"cueOk\">✓</span>" : "");
@@ -13592,7 +13621,7 @@ var ESPIC = {
     TB.sync(); ptSync(); $("qzTools").hidden = wf() || m3(); posDial();
     [].forEach.call(document.querySelectorAll(".qzTools button"), function (b) { b.classList.toggle("on", b.dataset.tool === PG.tool); });
     { var tb = document.querySelector(".qzTools [data-tool=tr]"); tb.hidden = pq() && !(gd() && !gdTyped()); tb.classList.toggle("on", !!PG.tm); }
-    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd(); gwnSync(); grnSync(); vfnSync(); ivnSync(); csnSync(); dsmSync(); c21Sync();
+    eqKeysUpd(); pqCue(); pqEval(); eqShrink(); if (typeof wsReadyUpd === "function") wsReadyUpd(); gwnSync(); grnSync(); vfnSync(); ivnSync(); csnSync(); dsmSync(); c21Sync(); ctrSync();
   }
   // ---- Chapter 2 (Quadratic Functions).  2.1 Using a Transformed Quadratic and every exercise of 2.2, 2.3 and 2.4 run on the 1.3 engine: a problem is a story or a function,
   // a figure, and steps (Demo, Sequence and Calculate take every small step; Solo takes only the big ones).  The figure here is a whole coordinate plane that can draw
@@ -14088,39 +14117,60 @@ var ESPIC = {
   // for its value (with the red arrow).  Write: one static screen, the question, a blank Desmos graph and one answer box; a "Sketch your own pic" picture
   // stands where the sketch was ====
   var C2S241 = [
-    { pic: "human", s: "A performer is shot out of a cannon and flies into a net.", st: "leaves the cannon", en: "drops into the net", qE: function (X) { return "The net is " + X + " feet from the cannon, horizontally. How high is the net?"; }, qS: "At what height does the performer leave the cannon (where " + c2X + " = 0)?" },
-    { pic: "ramp", s: "A stunt rider jumps off one ramp and lands on a second ramp.", st: "leaves the first ramp", en: "touches down on the second ramp", qE: function (X) { return "The rider touches down " + X + " feet from the first ramp. How high is the second ramp there?"; }, qS: "How high is the end of the first ramp (where " + c2X + " = 0)?" },
-    { pic: "ball", s: "A ball is thrown from a balcony to a friend.", st: "leaves the thrower's hand", en: "is caught", qE: function (X) { return "The friend catches it " + X + " feet away, horizontally. How high is the friend's glove?"; }, qS: "How high is the thrower's hand (where " + c2X + " = 0)?" },
-    { pic: "skier", s: "A water skier goes off a jump and lands on a floating platform.", st: "leaves the jump", en: "lands on the platform", qE: function (X) { return "The platform is " + X + " feet from the jump. How high is the platform?"; }, qS: "How high is the top of the jump (where " + c2X + " = 0)?" },
-    { pic: "cannon", s: "A water cannon at a splash park shoots a stream of water into a bucket.", st: "leaves the nozzle", en: "pours into the bucket", qE: function (X) { return "The bucket is " + X + " feet from the cannon. How high is the bucket's rim?"; }, qS: "How high is the nozzle (where " + c2X + " = 0)?" }
+    { pic: "human", s: "A performer is shot out of a cannon and flies into a net.", st: "leaves the cannon", en: "drops into the net", qE: function (X) { return "The net is " + X + " feet from the cannon, horizontally. How high is the net?"; }, qS: "At what height does the performer leave the cannon (where " + c2X + " = 0)?", qT: function (Y) { return "The net is " + Y + " feet off the ground. How far from the cannon is the net, horizontally?"; }, qG: "If the net were not there, how far from the cannon would the performer reach the ground (where " + c2Y + " = 0)?" },
+    { pic: "ramp", s: "A stunt rider jumps off one ramp and lands on a second ramp.", st: "leaves the first ramp", en: "touches down on the second ramp", qE: function (X) { return "The rider touches down " + X + " feet from the first ramp. How high is the second ramp there?"; }, qS: "How high is the end of the first ramp (where " + c2X + " = 0)?", qT: function (Y) { return "The rider touches down on the second ramp at a height of " + Y + " feet. How far is that from the first ramp, horizontally?"; }, qG: "If the second ramp were not there, how far from the first ramp would the rider reach the ground (where " + c2Y + " = 0)?" },
+    { pic: "ball", s: "A ball is thrown from a balcony to a friend.", st: "leaves the thrower's hand", en: "is caught", qE: function (X) { return "The friend catches it " + X + " feet away, horizontally. How high is the friend's glove?"; }, qS: "How high is the thrower's hand (where " + c2X + " = 0)?", qT: function (Y) { return "The friend catches it " + Y + " feet above the ground, on its way down. How far away is the friend, horizontally?"; }, qG: "If nobody caught it, how far away would it hit the ground (where " + c2Y + " = 0)?" },
+    { pic: "skier", s: "A water skier goes off a jump and lands on a floating platform.", st: "leaves the jump", en: "lands on the platform", qE: function (X) { return "The platform is " + X + " feet from the jump. How high is the platform?"; }, qS: "How high is the top of the jump (where " + c2X + " = 0)?", qT: function (Y) { return "The platform is " + Y + " feet high. How far from the jump is the platform, horizontally?"; }, qG: "If the platform were not there, how far from the jump would the skier reach the water (where " + c2Y + " = 0)?" },
+    { pic: "cannon", s: "A water cannon at a splash park shoots a stream of water into a bucket.", st: "leaves the nozzle", en: "pours into the bucket", qE: function (X) { return "The bucket is " + X + " feet from the cannon. How high is the bucket's rim?"; }, qS: "How high is the nozzle (where " + c2X + " = 0)?", qT: function (Y) { return "The bucket's rim is " + Y + " feet high. How far from the cannon is the bucket, horizontally?"; }, qG: "If the bucket were not there, how far from the cannon would the water hit the ground (where " + c2Y + " = 0)?" }
   ];
   function vpN(v, src) { return "<span class=\"vpN\" data-vpsrc=\"" + src + "\" data-vpv=\"" + c2T(v, 6) + "\">" + c2F(v) + "</span>"; }   // a number that can be dragged onto the formula
   function vpPt(x, y, s) { return "(" + vpN(x, s + "x") + ", " + vpN(y, s + "y") + ")"; }
+  // the known point is the start (x = 0), a point partway, or where the path ends; the question asks for a height at an x (y), how far the path
+  // goes to reach a height on its way down (xt), or where it would reach the ground, its x-intercept (xi)
   function c2M241(tier) {
-    for (var t = 0; t < 8000; t++) {
-      var h = c2Pick([10, 15, 20, 25, 30, 40, 50]), k = c2Rng(15, 60), ap = tier >= 2 && rnd(2), a, X0, Y0, Xq;
-      var back = tier >= 1 && rnd(2);   // the known point is where the path ends, and the question asks about x = 0
-      if (!back) { X0 = 0; Xq = h + c2Pick([10, 15, 20, 25, 30, 40]); }
-      else { X0 = h + c2Pick([10, 15, 20, 25, 30, 40]); Xq = 0; }
-      var d = X0 - h, D = d * d;
+    var QT = tier === 0 ? ["y", "xt"] : ["y", "xt", "xi"];
+    var qt = c2Pick(QT), kp = c2Pick(tier === 0 ? ["start", "mid"] : ["start", "mid", "end"]);   // (chosen first, so every kind comes up as often)
+    for (var t = 0; t < 30000; t++) {
+      if (t && t % 6000 === 0) { qt = c2Pick(QT); kp = c2Pick(["start", "mid", "end"]); }
+      var h = c2Pick([10, 15, 20, 25, 30, 40, 50]), k = c2Rng(15, 60), ap = tier >= 2 && qt === "y" && rnd(2), a, X0, Y0, Xq, Yq, ans;
+      if (kp === "start") X0 = 0;
+      else if (kp === "mid") X0 = rnd(2) ? h - c2Pick([5, 10, 15, 20]) : h + c2Pick([5, 10, 15]);
+      else X0 = h + c2Pick([10, 15, 20, 25, 30, 40]);
+      if (X0 <= 0 && kp !== "start") continue;
+      if (a * h * h + k < 1 && !ap) continue;   // (the path starts above the ground at x = 0)
+      var d = X0 - h, D = d * d; if (!D) continue;
       if (ap) { Y0 = c2Rng(Math.max(2, k - 40), k - 3); a = (Y0 - k) / D; if (Number.isInteger(c2R(a * 100, 6))) continue; }   // ≈: a is rounded to the nearest hundredth
       else { a = -c2Pick([0.01, 0.02, 0.04, 0.05, 0.08, 0.1, 0.2, 0.25, 0.5]); Y0 = c2R(a * D + k, 6); if (!Number.isInteger(Y0)) continue; }
-      var ar = c2R(a, 2); if (!ar || Y0 < 2 || k - Y0 < Math.max(6, k / 4)) continue;   // (a path that rises well above its known point)
+      var ar = c2R(a, 2); if (!ar || Y0 < 2 || k - Y0 < Math.max(6, k / 4) || ar * h * h + k < 1) continue;   // (a path that rises well above its known point)
       if (ap && (Math.abs(Math.abs(a * 100 % 1) - 0.5) < 0.02 || Math.abs(ar - a) > Math.abs(a) * 0.12)) continue;   // (no halfway rounding; the rounded a stays close)
-      var Fr = function (x) { return ar * (x - h) * (x - h) + k; }, yq = c2R(Fr(Xq), 4);
-      if (yq < 1.5 || yq >= k - 1 || !Number.isInteger(c2R(yq * 100, 6))) continue;
-      if (tier === 0 && !Number.isInteger(yq)) continue;
-      var V = [h, k, X0, Y0, Xq]; if (V.some(function (v, i) { return V.indexOf(v) !== i; }) || V.indexOf(c2R(yq, 4)) >= 0) continue;
-      return c2M241Pb(c2Pick(C2S241), { h: h, k: k, X0: X0, Y0: Y0, Xq: Xq, d: d, D: D, R: Y0 - k, a: a, ar: ar, ap: !!ap, yq: yq, back: back });
+      var Fr = function (x) { return ar * (x - h) * (x - h) + k; };
+      if (qt === "y") {
+        if (kp === "end") Xq = 0; else Xq = h + c2Pick([10, 15, 20, 25, 30, 40]);
+        if (kp === "mid" && X0 > h && rnd(2)) Xq = 0;
+        Yq = c2R(Fr(Xq), 4); ans = Yq;
+        if (Yq < 1.5 || Yq >= k - 1 || !Number.isInteger(c2R(Yq * 100, 6))) continue;
+        if (tier === 0 && !Number.isInteger(Yq)) continue;
+      } else if (qt === "xt") {   // a height on the way down: x = h + Δ
+        var dl = c2Pick([5, 10, 15, 20, 25, 30, 40]); Yq = c2R(k + ar * dl * dl, 6); Xq = h + dl; ans = Xq;
+        if (!Number.isInteger(Yq) || Yq < 2 || k - Yq < 4) continue;
+      } else {   // the ground: k + aΔ² = 0
+        var dg = c2R(Math.sqrt(-k / ar), 6); Xq = c2R(h + dg, 6); Yq = 0; ans = Xq;
+        if (!Number.isInteger(c2R(dg * 10, 6)) || dg < 5) continue;
+      }
+      if (X0 >= Xq && qt !== "y") continue;   // (the known point comes before the point asked about)
+      if (Xq === X0) continue;
+      var V = [h, k, X0, Y0, Xq]; if (V.some(function (v, i) { return V.indexOf(v) !== i; }) || (qt !== "xi" && (Yq === Y0 || Yq === k))) continue;
+      return c2M241Pb(c2Pick(C2S241), { h: h, k: k, X0: X0, Y0: Y0, Xq: Xq, Yq: Yq, qt: qt, ans: ans, kp: kp, d: d, D: D, R: Y0 - k, a: a, ar: ar, ap: !!ap });
     }
   }
   function c2M241Pb(sc, V) {
     var pb = { kind: 20, sc: sc, vp: V }, h = V.h, k = V.k, ar = V.ar, Fr = function (x) { return ar * (x - h) * (x - h) + k; };
-    var q = V.back ? sc.qS : sc.qE(V.Xq), qPlain = m3Plain(q), E = c2Vf(ar, h, k, "x", c2Y), u = "feet";
-    var known = V.back ? "It " + sc.en + " at " + vpPt(V.X0, V.Y0, "s") + "." : "It " + sc.st + " at " + vpPt(V.X0, V.Y0, "s") + ".";
+    var q = V.qt === "xt" ? sc.qT(V.Yq) : V.qt === "xi" ? sc.qG : V.Xq === 0 ? sc.qS : sc.qE(V.Xq), qPlain = m3Plain(q), E = c2Vf(ar, h, k, "x", c2Y), u = "feet";
+    V.qv = V.qt === "y" ? V.Xq : V.qt === "xt" ? V.Yq : null;   // (the number in the question: it may be dragged, but it is not h, k, x or y)
+    var P0 = vpPt(V.X0, V.Y0, "s"), known = V.X0 === 0 ? "It " + sc.st + " at " + P0 + "." : V.X0 > h && V.qt === "y" && V.Xq === 0 ? "It " + sc.en + " at " + P0 + "." : "On its way " + (V.X0 < h ? "up" : "down") + ", it passes through " + P0 + ".";
     pb.head = sc.s + " Vertex " + c2Pt(h, k) + ", point " + c2Pt(V.X0, V.Y0) + ". " + qPlain;
     pb.pic = c2Pic(sc.pic);
-    pb.story = sc.s + " Here " + c2X + " is the horizontal distance and " + c2Y + " is the height, both in feet. The highest point of the path, its vertex, is " + vpPt(h, k, "s") + ". " + known + " " + (V.back ? q : q.replace(/(\d+)( feet)/, function (m0, n0, f0) { return vpN(+n0, "sq") + f0; }));
+    pb.story = sc.s + " Here " + c2X + " is the horizontal distance from where it starts and " + c2Y + " is the height, both in feet. The highest point of the path, its vertex, is " + vpPt(h, k, "s") + ". " + known + " " + (V.qv == null ? q : q.replace(/(\d+)( feet)/, function (m0, n0, f0) { return vpN(+n0, "sq") + f0; }));
     pb.qc = 1;   // (Demo and Sequence: each question in the centre pane)
     pb.ws = function () { return vpWs(pb); };
     pb.fig = function () { return mode === "solo" ? vpOwnPic() : vpSketch(pb); };
@@ -14133,10 +14183,10 @@ var ESPIC = {
     var opA = function (id, n) { return function (x) { if (mode === "calculate") x.pend = id; else { x.vs = n; x.pend = ""; } }; };
     var subA = function (key) { return function (x) { x.sb = x.sb || {}; x.sb[key] = 1; }; };
     var SUB = [
-      ws("sh", "vsub", "Drag <i>h</i>, the <i>x</i>-coordinate of the vertex, onto <i>h</i> in the formula. It is in the sketch and in the story.", { k: "h", v: h, after: subA("h"), wl: "", hint: ["The vertex is (" + c2F(h) + ", " + c2F(k) + ").", "Drag " + c2F(h) + " onto h."] }),
-      ws("sk", "vsub", "Drag <i>k</i>, the <i>y</i>-coordinate of the vertex, onto <i>k</i>.", { k: "k", v: k, after: subA("k"), wl: "", hint: ["The vertex is (" + c2F(h) + ", " + c2F(k) + ").", "Drag " + c2F(k) + " onto k."] }),
-      ws("sx", "vsub", "Now the other point you know, " + c2Pt(V.X0, V.Y0) + ". Drag its <i>x</i>-coordinate onto <i>x</i>.", { k: "x", v: V.X0, after: subA("x"), wl: "", hint: ["The point you know (not the vertex) is " + c2Pt(V.X0, V.Y0) + ".", "Drag " + c2F(V.X0) + " onto x."] }),
-      ws("sy", "vsub", "Drag its <i>y</i>-coordinate onto <i>y</i>. Then only <i>a</i> is left to find.", { k: "y", v: V.Y0, after: subA("y"), wl: sub0, hint: ["The point you know is " + c2Pt(V.X0, V.Y0) + ".", "Drag " + c2F(V.Y0) + " onto y."] })
+      ws("sh", "vsub", "Drag the numbers you know onto <i>h</i>, <i>k</i>, <i>x</i> and <i>y</i>, in any order: (<i>h</i>, <i>k</i>) is the vertex and (<i>x</i>, <i>y</i>) is the other point you know, " + c2Pt(V.X0, V.Y0) + ". They are in the sketch and in the story.", { k: "h", v: h, after: subA("h"), wl: "", hint: ["The vertex is (" + c2F(h) + ", " + c2F(k) + ").", "Drag " + c2F(h) + " onto h."] }),
+      ws("sk", "vsub", "Drag the numbers you know onto <i>h</i>, <i>k</i>, <i>x</i> and <i>y</i>, in any order: (<i>h</i>, <i>k</i>) is the vertex and (<i>x</i>, <i>y</i>) is the other point you know, " + c2Pt(V.X0, V.Y0) + ". They are in the sketch and in the story.", { k: "k", v: k, after: subA("k"), wl: "", hint: ["The vertex is (" + c2F(h) + ", " + c2F(k) + ").", "Drag " + c2F(k) + " onto k."] }),
+      ws("sx", "vsub", "Drag the numbers you know onto <i>h</i>, <i>k</i>, <i>x</i> and <i>y</i>, in any order: (<i>h</i>, <i>k</i>) is the vertex and (<i>x</i>, <i>y</i>) is the other point you know, " + c2Pt(V.X0, V.Y0) + ". They are in the sketch and in the story.", { k: "x", v: V.X0, after: subA("x"), wl: "", hint: ["The point you know (not the vertex) is " + c2Pt(V.X0, V.Y0) + ".", "Drag " + c2F(V.X0) + " onto x."] }),
+      ws("sy", "vsub", "Drag the numbers you know onto <i>h</i>, <i>k</i>, <i>x</i> and <i>y</i>, in any order: (<i>h</i>, <i>k</i>) is the vertex and (<i>x</i>, <i>y</i>) is the other point you know, " + c2Pt(V.X0, V.Y0) + ". They are in the sketch and in the story.", { k: "y", v: V.Y0, after: subA("y"), wl: sub0, hint: ["The point you know is " + c2Pt(V.X0, V.Y0) + ".", "Drag " + c2F(V.Y0) + " onto y."] })
     ];
     var o1 = ws("o1", "vop", "Simplify inside the parentheses: click the subtraction.", { op: "o1", after: opA("o1", 1), wl: c2F(V.Y0) + " = a(" + dTx + ")² + " + k, hint: ["Work inside the parentheses first.", "Click the − between " + c2F(V.X0) + " and " + h + "."] });
     var c1 = ws("c1", "num", "Work it out.", { pre: c2F(V.X0) + " − " + h + " =", ans: V.d, after: setS(1), wl: "", hint: ["Subtract.", c2F(V.X0) + " − " + h + " = " + dTx + "."] });
@@ -14149,8 +14199,13 @@ var ESPIC = {
     var o4 = ws("o4", "vop", "Click the fraction bar to divide." + (V.ap ? " Round to the nearest hundredth." : ""), { op: "o4", after: opA("o4", 6), wl: "a " + aTx, hint: ["A fraction bar means divide.", "Click the bar between " + c2F(R) + " and " + V.D + "."] });
     var c4 = ws("c4", "num", "Work it out.", { pre: c2F(R) + " ÷ " + V.D + " =", post: V.ap ? "(to the nearest hundredth)" : "", ans: V.a, tol: V.ap ? 0.005 + 1e-9 : 1e-9, after: setS(6), wl: "", hint: ["Divide." + (V.ap ? " Round to the nearest hundredth." : ""), c2F(R) + " ÷ " + V.D + " " + aTx + "."] });
     var gr = { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph " + E[0] + " in Desmos.", line: "graphed " + Ftx + " in Desmos", hint: ["Type the equation on the first line of Desmos.", "Type " + E[1] + "."] };
-    var ansA = function () { return mode === "solo" ? q : "Use the parabola in Desmos. " + q + " <span class=\"vpHow\">(Type " + c2X + " = " + c2F(V.Xq) + " on a new line and click where it crosses the parabola.)</span>"; };
-    var ans = { id: "ans", lab: "Height", ask: ansA, pre: c2Y + " =", post: u, ans: V.yq, tol: 0.051, nums: [k, V.Y0, c2R(V.a * (V.Xq - h) * (V.Xq - h) + k, 1)], line: "at " + c2X + " = " + c2F(V.Xq) + ", the height is " + c2F(V.yq) + " feet", hint: ["Find the point of the parabola where " + c2X + " = " + c2F(V.Xq) + ".", "Its height is " + c2F(V.yq) + " feet."],
+    var how = V.qt === "y" ? "Type " + c2X + " = " + c2F(V.Xq) + " on a new line and click where it crosses the parabola." : V.qt === "xt" ? "Type " + c2Y + " = " + c2F(V.Yq) + " on a new line and click where it crosses the parabola on the way down." : "Click the parabola: Desmos shows where it crosses the " + c2X + "-axis.";
+    var ansA = function () { return mode === "solo" ? q : "Use the parabola in Desmos. " + q + " <span class=\"vpHow\">(" + how + ")</span>"; };
+    var isY = V.qt === "y", aTx2 = (V.qt === "xi" && !Number.isInteger(V.ans) ? "about " : "") + c2F(V.ans);
+    var ans = { id: "ans", lab: isY ? "Height" : "Distance", ask: ansA, pre: (isY ? c2Y : c2X) + " =", post: u, ans: V.ans, tol: 0.051,
+      nums: isY ? [k, V.Y0, c2R(V.a * (V.Xq - h) * (V.Xq - h) + k, 1)] : [h, c2R(2 * h - V.Xq, 4), V.X0, k],
+      line: isY ? "at " + c2X + " = " + c2F(V.Xq) + ", the height is " + c2F(V.ans) + " feet" : V.qt === "xt" ? "the height is " + c2F(V.Yq) + " feet at " + c2X + " = " + c2F(V.ans) : "it reaches the ground at " + c2X + " = " + c2F(V.ans),
+      hint: isY ? ["Find the point of the parabola where " + c2X + " = " + c2F(V.Xq) + ".", "Its height is " + c2F(V.ans) + " feet."] : V.qt === "xt" ? ["Find where the parabola has height " + c2F(V.Yq) + " on its way down (right of the vertex).", c2X + " = " + c2F(V.ans) + "."] : ["Find where the parabola crosses the " + c2X + "-axis on the right.", c2X + " = " + c2F(V.ans) + "."],
       dpre: function (run, then) { vpDsmAns(pb, run, then); } };
     var frm = ws("frm", "vfrm", "Type the vertex form of a parabola.", { typed: "y=a(x-h)^2+k", after: function (x) { x.frm = 1; }, wl: "y = a(x − h)² + k", chk: vpFrmOk, hint: ["Vertex form shows the vertex (h, k).", "y = a(x − h)² + k"] });
     SUB[0].wl = "y = a(x − h)² + k";
@@ -14158,7 +14213,7 @@ var ESPIC = {
     var S2 = SUB.map(function (s) { var c = {}; for (var kk in s) c[kk] = s[kk]; return c; }); S2[0].wl = "";
     pb.csteps = [frm].concat(S2, [o1, c1, o2, c2, mv, o3, c3, dv, o4, c4, gr, ans]);
     pb.steps = [ans];   // (Write: the answer alone, with Desmos)
-    pb.ex = "The vertex is " + c2Pt(h, k) + ", so h = " + c2F(h) + " and k = " + c2F(k) + ". The path passes through " + c2Pt(V.X0, V.Y0) + ", so " + sub0 + ". Then " + c2F(V.Y0) + " = " + V.D + "a + " + k + ", so " + c2F(R) + " = " + V.D + "a and a = " + c2F(R) + "/" + V.D + " " + aTx + ". In Desmos, " + Ftx + " has height " + c2F(V.yq) + " feet at x = " + c2F(V.Xq) + ".";
+    pb.ex = "The vertex is " + c2Pt(h, k) + ", so h = " + c2F(h) + " and k = " + c2F(k) + ". The path passes through " + c2Pt(V.X0, V.Y0) + ", so " + sub0 + ". Then " + c2F(V.Y0) + " = " + V.D + "a + " + k + ", so " + c2F(R) + " = " + V.D + "a and a = " + c2F(R) + "/" + V.D + " " + aTx + ". In Desmos, " + Ftx + (V.qt === "y" ? " has height " + c2F(V.ans) + " feet at x = " + c2F(V.Xq) : V.qt === "xt" ? " reaches a height of " + c2F(V.Yq) + " feet, on its way down, at x = " + c2F(V.ans) : " crosses the x-axis at x = " + c2F(V.ans)) + ".";
     return pb;
   }
   // the formula, typed in Calculate: y = a(x − h)² + k in any of its usual shapes
@@ -14179,17 +14234,17 @@ var ESPIC = {
     s += "<path d=\"M" + L + " " + (T - 4) + "V" + (T + ph) + "H" + (W - 6) + "\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"/>";
     s += "<path d=\"M" + (L - 5) + " " + (T + 4) + "L" + L + " " + (T - 6) + "L" + (L + 5) + " " + (T + 4) + "M" + (W - 14) + " " + (T + ph - 5) + "L" + (W - 4) + " " + (T + ph) + "L" + (W - 14) + " " + (T + ph + 5) + "\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"/>";
     s += "<text x=\"" + (W - 8) + "\" y=\"" + (T + ph + 20) + "\" text-anchor=\"end\" font-style=\"italic\" font-family=\"Georgia,serif\" font-size=\"16\">x</text><text x=\"" + (L - 10) + "\" y=\"" + (T + 8) + "\" text-anchor=\"end\" font-style=\"italic\" font-family=\"Georgia,serif\" font-size=\"16\">y</text>";
-    var lo = Math.min(V.X0, V.Xq), hi = Math.max(V.X0, V.Xq), d = "";
+    var lo = 0, hi = Math.max(V.X0, V.Xq, h), d = "";   // (the whole path from its start at x = 0)
     for (var i = 0; i <= 60; i++) { var xx = lo + (hi - lo) * i / 60; d += (i ? "L" : "M") + X(xx).toFixed(1) + " " + Y(F(xx)).toFixed(1); }
     s += "<path d=\"" + d + "\" fill=\"none\" stroke=\"" + C2B + "\" stroke-width=\"2.6\" stroke-linecap=\"round\"/>";
     s += "<circle cx=\"" + X(h) + "\" cy=\"" + Y(k) + "\" r=\"5.5\" fill=\"" + C2B + "\"/><circle cx=\"" + X(V.X0) + "\" cy=\"" + Y(V.Y0) + "\" r=\"5.5\" fill=\"" + C2B + "\"/>";
-    s += "<circle cx=\"" + X(V.Xq) + "\" cy=\"" + Y(F(V.Xq)) + "\" r=\"6\" fill=\"var(--bg)\" stroke=\"" + C2P + "\" stroke-width=\"2.4\"/></svg>";
+    s += "<circle cx=\"" + X(V.Xq) + "\" cy=\"" + Y(V.Yq) + "\" r=\"6\" fill=\"var(--bg)\" stroke=\"" + C2P + "\" stroke-width=\"2.4\"/></svg>";
     var lab = function (x, y, html, cls, dx) { return "<div class=\"vpLab " + (cls || "") + "\" style=\"left:" + (X(x) / W * 100).toFixed(2) + "%;top:" + (Y(y) / H * 100).toFixed(2) + "%;--dx:" + (dx || 0) + "\">" + html + "</div>"; };
     var side = function (x) { return x < h ? -1 : 1; };
-    var hl = lab(h, k, "<span class=\"vpW\">vertex</span> " + vpPt(h, k, "g"), "up");
+    var hl = lab(h, k, "<span class=\"vpW\">vertex</span> " + vpPt(h, k, "g"), h < x1 * 0.25 ? "upr" : "up");   // (near the y-axis: to the right, clear of it)
     var cl = function (xv, yv) { return xv === 0 ? "rt" : yv < y1 * 0.3 ? "lu" : "lt"; };   // (beside the y-axis, or left of the point: above it when it is low)
     var pl = lab(V.X0, V.Y0, vpPt(V.X0, V.Y0, "g"), cl(V.X0, V.Y0), side(V.X0));
-    var ql = lab(V.Xq, F(V.Xq), "(" + vpN(V.Xq, "gq") + ", ?)", cl(V.Xq, F(V.Xq)), side(V.Xq));
+    var ql = lab(V.Xq, V.Yq, V.qt === "y" ? "(" + vpN(V.Xq, "gq") + ", ?)" : "(?, " + vpN(V.Yq, "gq") + ")", V.qt === "xi" ? "lu" : cl(V.Xq, V.Yq), side(V.Xq));
     return "<div class=\"vpSkW\">" + s + hl + pl + ql + "</div>";
   }
   // Write: no sketch, only a picture asking for the student's own
@@ -14201,7 +14256,7 @@ var ESPIC = {
   function vpWs(pb) {
     if (mode === "solo") return "";
     var V = pb.vp, x = QZ.m3x || {}, sb = x.sb || {}, st = m3Step(), vs = x.vs || 0, cur = st && st.type;
-    if (mode === "calculate" && !x.frm) return "<div class=\"vpWs\"><div class=\"vpCap\">Type the vertex form of a parabola (in the panel).</div><div class=\"vpEq lm vpBlank\">&nbsp;</div></div>";
+    if (mode === "calculate" && !x.frm) return "";   // (the formula is typed in the box just below)
     var N = function (v) { return c2F(v); }, op = function (id, ch) { return "<span class=\"vpOp" + (cur === "vop" && st.op === id ? " live" : "") + (x.pend === id ? " vpPend" : "") + "\" data-vpop=\"" + id + "\">" + ch + "</span>"; };
     var slot = function (kk, letter) { return sb[kk] ? "<span class=\"vpV\">" + N(kk === "h" ? V.h : kk === "k" ? V.k : kk === "x" ? V.X0 : V.Y0) + "</span>" : "<span class=\"vpS" + (cur === "vsub" && st.k === kk ? " next" : "") + "\" data-vps=\"" + kk + "\"><i>" + letter + "</i></span>"; };
     var A = "<i>a</i>", L, Rt;
@@ -14220,13 +14275,18 @@ var ESPIC = {
     return "<div class=\"vpWs\">" + (cap ? "<div class=\"vpCap\">" + cap + "</div>" : "") + row + fin + "</div>";
   }
   // a number dropped on a letter of the formula
-  function vpSub(key, v) {
+  function vpSub(key, v) {   // (the letters may be filled in any order; the steps move on as their letters fill)
     var st = m3Step(), pb = m3Cur(); if (!st || st.type !== "vsub" || QZ.step >= 4 || !pb || !pb.vp) return;
-    if (key !== st.k) { var sb = QZ.m3x.sb || {}; if (!sb[key]) pqMsg("Fill in " + st.k + " first: the letters go in the order h, k, x, y."); return; }
-    if (Math.abs(v - st.v) < 1e-9) { m3Accept(st, c2F(v)); return; }
-    var V = pb.vp, why = { h: "h is the x-coordinate of the vertex " + c2Pt(V.h, V.k) + ".", k: "k is the y-coordinate of the vertex " + c2Pt(V.h, V.k) + ".", x: "x comes from the other point you know, " + c2Pt(V.X0, V.Y0) + ".", y: "y comes from the other point you know, " + c2Pt(V.X0, V.Y0) + "." }[key];
-    if (Math.abs(v - V.Xq) < 1e-9) why = c2F(V.Xq) + " is the x you are asked about. Use the point you know, " + c2Pt(V.X0, V.Y0) + ".";
-    m3Bad(null, "Not quite: " + why);
+    var x = QZ.m3x, sb = x.sb = x.sb || {}, V = pb.vp; if (sb[key]) return;
+    var want = { h: V.h, k: V.k, x: V.X0, y: V.Y0 }[key];
+    if (Math.abs(v - want) > 1e-9) {
+      var why = { h: "h is the x-coordinate of the vertex " + c2Pt(V.h, V.k) + ".", k: "k is the y-coordinate of the vertex " + c2Pt(V.h, V.k) + ".", x: "x comes from the other point you know, " + c2Pt(V.X0, V.Y0) + ".", y: "y comes from the other point you know, " + c2Pt(V.X0, V.Y0) + "." }[key];
+      if (V.qv != null && Math.abs(v - V.qv) < 1e-9) why = c2F(V.qv) + " belongs to the point you are asked about. Use the point you know, " + c2Pt(V.X0, V.Y0) + ".";
+      m3Bad(null, "Not quite: " + why); return;
+    }
+    sb[key] = 1;
+    for (var s0 = m3Step(); s0 && s0.type === "vsub" && sb[s0.k]; s0 = m3Step()) m3Accept(s0, c2F(s0.v));
+    if (key !== st.k) { pqMsg(""); drawPlay(); pqPanel(); }   // (a later letter: the step in hand waits for its own)
   }
   function vpOp(id) {
     var st = m3Step(); if (!st || QZ.step >= 4) return;
@@ -14290,14 +14350,15 @@ var ESPIC = {
   // the demo, before the last answer: a vertical line at the x asked about, and the point where it crosses the parabola, labelled
   function vpDsmAns(pb, run, then) {
     var V = pb.vp, box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { then(); return; }
-    var r = box.getBoundingClientRect(), at = { x: r.left + Math.min(150, r.width * 0.2), y: r.top + 90 }, lt = "x=" + c2T(V.Xq, 6), c = 0;
+    var r = box.getBoundingClientRect(), at = { x: r.left + Math.min(150, r.width * 0.2), y: r.top + 90 }, lt = V.qt === "y" ? "x=" + c2T(V.Xq, 6) : "y=" + c2T(V.Yq, 6), c = 0;
+    if (V.qt === "xi") { pt(); return; }   // (the x-intercept: Desmos shows it when the parabola is clicked)
     handGo(at, 600);
     pgWait(750, function () {
       if (pgRun !== run) return; handTap();
       (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 2); DSM.calc.setExpression({ id: "vq", latex: lt.slice(0, c), color: "#7A3FB5" }); if (c < lt.length) pgWait(120, ch); else pgWait(900, pt); })();
     });
     function pt() {
-      if (pgRun !== run) return; var y = c2T(V.yq, 4);
+      if (pgRun !== run) return; var y = c2T(V.Yq, 4);
       handGo({ x: r.left + r.width * 0.7, y: r.top + r.height * 0.5 }, 700);
       pgWait(850, function () { if (pgRun !== run) return; handTap(); try { DSM.calc.setExpression({ id: "vqp", latex: "\\left(" + c2T(V.Xq, 6) + "," + y + "\\right)", color: "#7A3FB5", showLabel: true }); } catch (er) { } pgWait(1400, then); });
     }
@@ -14531,6 +14592,11 @@ var ESPIC = {
   document.addEventListener("click", function (e) { var b = e.target.closest("[data-fh]"); if (!b || !pq() || !QZ) return; QZ.fh = QZ.fh || {}; QZ.fh[QZ.pi] = true; pqPanel(); });
   // ==== "Retry" questioning: when a round has several problems and one of them has an error message, that problem comes back (a new one like it)
   // until it is done with none; the problems already done stay done.  (3 problems, #2 wrong five times and #3 once: 1 2 2 2 2 2 2 3 3) ====
+  function taAny() {   // an error message in Sequence or Calculate (not where a miss just comes back later: Circle Back)
+    return pq() && (mode === "sequence" || mode === "calculate") && !!QZ && !!QZ.order && QZ.wrong > 0 && QZ.step < 4 && !QZ.custom && !pgRun && !ivL() && !csN() && !(m3() && m3CB());
+  }
+  function taSync() { if (!taAny()) return; var nx = $("qzNext"); nx.hidden = false; nx.disabled = false; nx.textContent = "Try another"; $("qzAgain").hidden = true; }
+  function taGo() { up = null; QZ.ta = null; QZ.vf = null; if (retryOn()) pqRetry(); else pqRegen(); }   // (a new problem like it, in its place; the round's others stay done)
   function retryOn() { return mode !== "demo" && mode !== "create" && !QZ.custom && QZ.order && QZ.order.length > 1; }
   function pqRetry() {
     up = null; var i = QZ.pi, t = Math.min(i, 2);
