@@ -1850,7 +1850,7 @@
     if (rs.m === 1) return { terms: [{ k: "c", n: add(base, c2) }], f: f };
     return { terms: (base.n ? [{ k: "c", n: base }] : []).concat([{ k: "r", n: c2, r: mk(rs.m) }]), f: f };
   }
-  function radDone(t) { return t.k === "r" && !t.f && t.r.d === 1 && radSq(t.r.n).s === 1 && t.r.n > 1; }   // already in simplest form
+  function radDone(t) { return t.k === "r" && !t.f && !t.mf && t.r.d === 1 && radSq(t.r.n).s === 1 && t.r.n > 1; }   // already in simplest form
   function radF(t) { return t.k === "r" ? t.n.n / t.n.d * Math.sqrt(t.r.n / t.r.d) : t.n.n / t.n.d; }
   function numVal(str) {   // a typed answer like 5 + 3√2, -1/2, 5 ± 3sqrt(2), 7/2: its values, or null
     var t = String(str).toLowerCase().replace(/\s+/g, "").replace(/−/g, "-").replace(/sqrt/g, "√").replace(/\+\/-|\+-/g, "±"); if (!t || /[^0-9+\-*\/().√±]/.test(t)) return null;
@@ -1863,15 +1863,16 @@
   }
   function exPmRad(t) {   // a square root (k "r": the number in front t.n, under the root t.r) or a number with a ± in front of it
     var pm = t.pm ? "<span class=\"exPm\" title=\"Click \u00b1 to split it into two equations\">\u00b1</span>" : "";
-    if (t.k !== "r") return pm + exFr(mk(Math.abs(t.n.n), t.n.d));
+    var mfH = t.mf ? "<span class=\"exMfG\">" + t.mf.map(function (q) { return exFr(q); }).join("<span class=\"exMf\" title=\"Click to multiply\"> \u00b7 </span>") + "</span>" : "";   // 3 · 10 (a product still to be worked out)
+    if (t.k !== "r") return pm + (t.mf ? mfH : exFr(mk(Math.abs(t.n.n), t.n.d)));
     var a = Math.abs(t.n.n), d = t.n.d, root = t.f ? t.f.map(function (f, k) { return "<span class=\"exRad\" data-rf=\"" + k + "\" title=\"Click to simplify this square root\"><span class=\"rsg\">\u221a</span><span class=\"rbar\">" + f + "</span></span>"; }).join("<span class=\"exRfDot\"> \u00b7 </span>") : "<span class=\"exRad\" title=\"Click to simplify the square root\"><span class=\"rsg\">\u221a</span><span class=\"rbar\">" + exFr(t.r) + "</span></span>";   // (split: √100 · √2)
-    var top = (a === 1 ? "" : a) + root; return pm + (d > 1 ? "<span class=\"fr\"><span>" + top + "</span><span>" + d + "</span></span>" : top);
+    var top = (t.mf ? mfH + "<span class=\"exRfDot\"> \u00b7 </span>" : a === 1 ? "" : a) + root; return pm + (d > 1 && !t.mf ? "<span class=\"fr\"><span>" + top + "</span><span>" + d + "</span></span>" : top);
   }
   function exTerm(t, inner) {   // the term without its sign
     if (t.u && t.k === "c") return Math.abs(t.u.n) + "/" + t.u.d;   // a fraction that has not been simplified yet: 6/4
     if (t.k === "g" && t.abs) { var am = mk(Math.abs(t.m.n), t.m.d); return (am.n === 1 && am.d === 1 ? "" : "<span class=\"exM\">" + exFr(am) + "</span>") + "<span class=\"exG exAbs\"><span class=\"avBar\" title=\"Tap a bar to open the absolute value\">|</span>" + exHtml(t.items) + "<span class=\"avBar\" title=\"Tap a bar to open the absolute value\">|</span></span>"; }   // |2x − 3|
     if (t.k === "g" && t.pm) return "<span class=\"exPm\" title=\"Click \u00b1 to split it into two equations\">\u00b1</span><span class=\"exG\">" + (t.items.length === 1 ? exHtml(t.items) : parW(exHtml(t.items))) + "</span>";   // ±(2x − 3), after a bar was tapped
-    if (t.k === "r" || t.pm) return exPmRad(t);
+    if (t.k === "r" || t.pm || t.mf) return exPmRad(t);
     if (t.ov && t.k === "x" && !hasS(t) && !t.u && fdD(t) > 1) {   // x/2 written with x on top: 3x/4, and 3x/6 once multiplied by 3/3
       var on = t.w ? Math.abs(t.w.n) : Math.abs(t.n.n), od = fdD(t);
       return "<span class=\"fr\"><span>" + (on === 1 ? "" : on) + exVarHtml(t.v || "x") + "</span><span>" + od + "</span></span>" + (t.lc ? "<span class=\"exLc\" title=\"Click to multiply\">\u22c5</span>" + t.lc + "/" + t.lc : "");
@@ -1936,7 +1937,7 @@
     [].forEach.call(R.querySelectorAll(".exOpc"), function (el) { el.addEventListener("click", function () { var k = +el.dataset.op; exDrop(k, k - 1, { ta: R.querySelector('.exT[data-i="' + (k - 1) + '"]'), tb: R.querySelector('.exT[data-i="' + k + '"]'), op: el, res: k - 1 }); }); });
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
       var i = +el.dataset.i, mEl = el.querySelector(":scope > .exM") || exSignOf(el), gEl = el.querySelector(":scope > .exG"), lcEl = el.querySelector(".exLc");
-      if (its[i].k === "r") el.addEventListener("pointerdown", function (e) { var rr = e.target.closest && e.target.closest(".exRad[data-rf]"); EXP.rfHit = rr ? +rr.dataset.rf : null; }, true);   // (a split square root: which root was clicked)
+      if (its[i].k === "r" || its[i].mf) el.addEventListener("pointerdown", function (e) { var rr = e.target.closest && e.target.closest(".exRad[data-rf]"); EXP.rfHit = rr ? +rr.dataset.rf : null; EXP.mfHit = !!(e.target.closest && e.target.closest(".exMf")); }, true);   // (a split square root: which root was clicked)
       if (lcEl) { lcEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); lcEl.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; fdMul(null, i); }); }
       if (mEl && gEl) {   // the number in front of the parentheses is dragged onto them to distribute
         gEl.dataset.drop = "exg:" + i; exNegMark(mEl, String(i));
@@ -1953,7 +1954,7 @@
       var pwE = el.querySelector(".exPw"); if (pwE) { pwE.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); pwE.addEventListener("click", function (e) { e.stopPropagation(); if (!EXP.ask) exPw(i, false); }); }
       var kEl = el.querySelector(":scope > .exK");
       if (kEl && !EXP.grp) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, kEl, null, function (t) { exFactor(i, +t.dataset.drop.slice(3)); }, "ex:"); });
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : its[i].k === "r" ? function () { exRadSimp(i, 0, EXP.rfHit); } : null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else if (dd.indexOf("gb:") === 0) grPlace(+dd.slice(3), i); else exDrop(i, +dd.slice(3)); }, EXP.grp ? ["ex:", "gb:", "fm:"] : ["ex:", "fm:"], function (dx, dy) { if (fmUp(null, i, dx, dy)) return; if (EXP.grp && !FM) grShow(); }, function (t, ev) { if (!t && fmAbove(null, i, ev)) return; if (EXP.grp) grEnd(t, ev); }); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : its[i].k === "r" || its[i].mf ? function () { if (EXP.mfHit || (its[i].mf && its[i].k !== "r")) exMfDo(i); else exRadSimp(i, 0, EXP.rfHit); } : null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else if (dd.indexOf("gb:") === 0) grPlace(+dd.slice(3), i); else exDrop(i, +dd.slice(3)); }, EXP.grp ? ["ex:", "gb:", "fm:"] : ["ex:", "fm:"], function (dx, dy) { if (fmUp(null, i, dx, dy)) return; if (EXP.grp && !FM) grShow(); }, function (t, ev) { if (!t && fmAbove(null, i, ev)) return; if (EXP.grp) grEnd(t, ev); }); });
     });
   }
   function exPush() { grHide(); hist.push(JSON.stringify(EXP.items)); updUndo(); }
@@ -2271,7 +2272,8 @@
       DM4.t = setTimeout(function () {
         if (!EXP || !DM4.run || DM4.paused || locked) return;
         var i = -1; EXP.items.forEach(function (t, j) { if (i < 0 && rdLeft(t)) i = j; }); if (i < 0) return;
-        var t = EXP.items[i], k = t.f ? Math.max(0, rfNext(t.f)) : 0, f = t.f ? t.f[k] : t.r.n; exRender();
+        var t = EXP.items[i]; if (t.mf) { exRender(); dmCap("Click the \u00b7 to multiply: " + t.mf.map(function (q) { return exFr(q); }).join(" \u00b7 ") + "."); exTapDemo('.exT[data-i="' + i + '"] .exMf', function () { exMfDo(i); }, function () { if (!locked) exDemoStep(900); }); return; }
+        var k = t.f ? Math.max(0, rfNext(t.f)) : 0, f = t.f ? t.f[k] : t.r.n; exRender();
         dmCap(isSq(f) ? "\u221a" + f + " = " + Math.round(Math.sqrt(f)) + ". Click it." : "The biggest perfect square that divides " + f + " is " + rfBig(f) + ". Click \u221a" + f + " to split it: \u221a" + f + " = \u221a(" + rfPair(f, rfBig(f)).join(" \u00b7 ") + ").");
         exTapDemo('.exT[data-i="' + i + '"] .exRad' + (t.f ? '[data-rf="' + k + '"]' : ""), function () { exRadSimp(i, 0, k); }, function () { if (!locked) exDemoStep(900); });
       }, ms);
@@ -2322,7 +2324,7 @@
     if (n < 2) return "Type a whole number bigger than 1 under the square root, like √200.";
     return { c: c, n: n };
   }
-  function rdLeft(t) { return t.k === "r" && (!!t.f || (t.r.d === 1 && t.r.n > 1 && (isSq(t.r.n) || radSq(t.r.n).s > 1))); }   // a square root that can still be simplified
+  function rdLeft(t) { return !!t.mf || t.k === "r" && (!!t.f || (t.r.d === 1 && t.r.n > 1 && (isSq(t.r.n) || radSq(t.r.n).s > 1))); }   // a square root that can still be simplified
   function rdCreate() {
     var q = rdIn($("crIn").value), err = $("crErr");
     if (typeof q === "string") { err.textContent = q; return; }
@@ -2509,7 +2511,7 @@
       if (Q.b < 0 && !Q.nbD) o.push("nb");
       if (!Q.dD) o.push("den");
       if (!Q.dfD) { if (!Q.sqD) o.push("sq"); if (!Q.p1D) o.push("p1"); else if (!Q.p2D) o.push("p2"); if (Q.sqD && Q.p2D) o.push("df"); }
-      else if (!Q.rtD) { if (Q.rf) { var nk = rfNext(Q.rf); if (nk >= 0) o.push("f" + nk); Q.rf.forEach(function (f, k) { if (k !== nk && (isSq(f) || radSq(f).s > 1)) o.push("f" + k); }); } else o.push("rt"); }   // (split: each root that can still be simplified)
+      else if (!Q.rtD) { if (Q.mfp) o.push("mf"); if (Q.rf) { var nk = rfNext(Q.rf); if (nk >= 0) o.push("f" + nk); Q.rf.forEach(function (f, k) { if (k !== nk && (isSq(f) || radSq(f).s > 1)) o.push("f" + k); }); } else if (!(Q.mfp && radSq(Q.rm).s === 1)) o.push("rt"); }   // (split: each root that can still be simplified; 2 · 5 · √2: only the product is left)
       if (Q.dfD && Q.rtD && Q.D >= 0 && (Q.b >= 0 || Q.nbD) && Q.dD) { if (Q.r !== null) o.push("pm"); else if (Q.g > 1 && !Q.gD) o.push("bar"); }
     } else Q.ans.forEach(function (an, j) { if (an.st === 0) o.push("a" + j); else if (an.st === 1 && quRed(an.n)) o.push("r" + j); });
     return o;
@@ -2524,6 +2526,7 @@
     if (op === "p2") return { label: quPn(4 * Q.a) + "(" + quNs(Q.c) + ") =", want: [4 * Q.a * Q.c], msg: quPn(4 * Q.a) + "(" + quNs(Q.c) + ") = " + quNs(4 * Q.a * Q.c) + "." };
     if (op === "df") return { label: Q.b * Q.b + " − " + quPn(4 * Q.a * Q.c) + " =", want: [Q.D], msg: Q.b * Q.b + " − " + quPn(4 * Q.a * Q.c) + " = " + quNs(Q.D) + (Q.D < 0 ? ": negative under the square root." : ".") };
     if (op === "rt" && Q.D > 0 && Q.r === null) { var p0 = rfPair(Q.rm, rfBig(Q.rm)); return { cap: "The biggest perfect square that divides " + Q.rm + " is " + rfBig(Q.rm) + ". Click \u221a" + Q.rm + " to split it.", msg: "Product Property of Square Roots: \u221a" + Q.rm + " = \u221a(" + p0[0] + " \u00b7 " + p0[1] + ") = \u221a" + p0[0] + " \u00b7 \u221a" + p0[1] + "." }; }
+    if (op === "mf") { var pm0 = Q.mfp.reduce(function (a, b) { return a * b; }, 1); return { label: Q.mfp.join(" \u00b7 ") + " =", want: [pm0], cap: "Click the product to multiply: " + Q.mfp.join(" \u00b7 ") + ".", msg: Q.mfp.join(" \u00b7 ") + " = " + pm0 + "." }; }
     if (/^f\d+$/.test(op)) { var fv = Q.rf[+op.slice(1)]; if (isSq(fv)) return { label: "\u221a" + fv + " =", want: [Math.sqrt(fv)], cap: "\u221a" + fv + " = " + Math.sqrt(fv) + ". Click it.", msg: "\u221a" + fv + " = " + Math.sqrt(fv) + "." }; var p1 = rfPair(fv, rfBig(fv)); return { cap: "The biggest perfect square that divides " + fv + " is " + rfBig(fv) + ". Click \u221a" + fv + " to split it.", msg: "Product Property of Square Roots: \u221a" + fv + " = \u221a(" + p1[0] + " \u00b7 " + p1[1] + ") = \u221a" + p1[0] + " \u00b7 \u221a" + p1[1] + "." }; }
     if (op === "rt") return { label: "√" + Q.D + " =", want: [Math.sqrt(Math.max(Q.D, 0))], msg: Q.D < 0 ? "No real number squares to " + quNs(Q.D) + "." : "√" + Q.D + " = " + (Q.r !== null ? Q.r : (Q.co === 1 ? "" : Q.co) + "√" + Q.m) + "." };
     if (op === "pm") return { msg: Q.r === 0 ? "± 0 changes nothing, so there is one answer." : "± gives two answers: one with +, one with −." };
@@ -2539,9 +2542,10 @@
     else if (op === "rt") { if (Q.D > 0 && Q.r === null) Q.rf = rfPair(Q.rm, arg || rfBig(Q.rm)); else Q.rtD = true; }   // √200 becomes √100 · √2
     else if (/^f\d+$/.test(op)) {   // a root of the product: a perfect square becomes a number in front; one with a perfect square in it is split too
       var fk = +op.slice(1), ff = Q.rf[fk];
-      if (isSq(ff)) { Q.rc *= Math.round(Math.sqrt(ff)); Q.rm /= ff; Q.rf.splice(fk, 1); } else Q.rf.splice.apply(Q.rf, [fk, 1].concat(rfPair(ff, arg || rfBig(ff))));
-      if (Q.rf.length === 1) { Q.rf = null; if (radSq(Q.rm).s === 1) Q.rtD = true; }
+      if (isSq(ff)) { var rt0 = Math.round(Math.sqrt(ff)); if (Q.rc > 1 || Q.mfp) Q.mfp = (Q.mfp || [Q.rc]).concat([rt0]); Q.rc *= rt0; Q.rm /= ff; Q.rf.splice(fk, 1); } else Q.rf.splice.apply(Q.rf, [fk, 1].concat(rfPair(ff, arg || rfBig(ff))));
+      if (Q.rf.length === 1) { Q.rf = null; if (radSq(Q.rm).s === 1 && !Q.mfp) Q.rtD = true; }
     }
+    else if (op === "mf") { Q.mfp = null; if (!Q.rf && radSq(Q.rm).s === 1) Q.rtD = true; }   // 2 · 5 becomes 10
     else if (op === "bar") Q.gD = true;
     else if (op === "pm") { Q.split = true; Q.ans = Q.r === 0 ? [{ st: 1, n: Q.B, say: quNs(Q.B) }] : [{ st: 0, n: Q.B + Q.r, say: quNs(Q.B) + " + " + Q.r }, { st: 0, n: Q.B - Q.r, say: quNs(Q.B) + " − " + Q.r }]; }
     else if (op.charAt(0) === "a") Q.ans[j].st = 1; else Q.ans[j].st = 2;
@@ -2557,7 +2561,7 @@
     var nb = Q.b === 0 ? "" : Q.b < 0 && !Q.nbD ? H("nb", "−(" + quNs(Q.b) + ")") : quNs(-Q.b), den = Q.dD ? quNs(Q.Q) : H("den", "2(" + quNs(Q.a) + ")"), root;
     if (!Q.dfD && Q.sqD && Q.p2D) root = rad(H("df", String(Q.b * Q.b) + " \u2212 " + quPn(4 * Q.a * Q.c)));   // both parts worked out: click to subtract
     else if (!Q.dfD) root = rad(H("sq", Q.sqD ? String(Q.b * Q.b) : quPn(Q.b) + (tx ? "²" : "<sup>2</sup>")) + " − " + (Q.p2D ? quPn(4 * Q.a * Q.c) : Q.p1D ? H("p2", quPn(4 * Q.a) + "(" + quNs(Q.c) + ")") : H("p1", "4(" + quNs(Q.a) + ")") + "(" + quNs(Q.c) + ")"));
-    else if (!Q.rtD) root = (Q.rc > 1 ? Q.rc : "") + (Q.rf ? Q.rf.map(function (f, k) { return H("f" + k, rad(String(f))); }).join(" \u00b7 ") : H("rt", rad(quNs(Q.rm))));
+    else if (!Q.rtD) root = (Q.mfp ? H("mf", Q.mfp.join(" \u00b7 ")) + " \u00b7 " : Q.rc > 1 ? Q.rc : "") + (Q.rf ? Q.rf.map(function (f, k) { return H("f" + k, rad(String(f))); }).join(" \u00b7 ") : H("rt", rad(quNs(Q.rm))));
     else if (Q.D < 0) root = rad(quNs(Q.D));
     else root = Q.r !== null ? String(Q.r) : (Q.co === 1 ? "" : Q.co) + rad(String(Q.m));
     var pm = H("pm", "±");
@@ -3292,6 +3296,7 @@
   function eqKind() {   // "one" (x = 4 or 4 = x), "none", "inf", or "" while there is more to do
     if (EXP.c3) return "";
     if (EXP.qf || EXP.qu) return "";
+    if (EXP.L.concat(EXP.R).some(function (t) { return t.mf; })) return "";   // (3 · 10 · √2: the multiplication is still to do)
     if (EXP.lit) return litAlone(EXP.L, EXP.R) || litAlone(EXP.R, EXP.L) ? "one" : "";
     for (var q0 = 0; q0 < 2; q0++) { var A0 = q0 ? EXP.R : EXP.L, B0 = q0 ? EXP.L : EXP.R; if (A0.length === 1 && A0[0].k === "x" && (A0[0].v || "x") === "x" && same(A0[0].n, mk(1)) && !hasS(A0[0]) && B0.length > 1 && B0.some(function (t) { return t.k === "r"; }) && B0.every(function (t) { return (t.k === "c" || radDone(t)) && !t.pm && !t.u && !hasS(t); }) && exFin(B0)) return "one"; }   // x = 5 + 3√2
     if (EXP.L.length !== 1 || EXP.R.length !== 1) return "";
@@ -3393,7 +3398,8 @@
     if (f == null) return;
     if (isSq(f)) {   // a perfect square: its root becomes a number in front
       var rt = Math.round(Math.sqrt(f)), nf = fs.slice(); nf.splice(k, 1); var u = rfMk(t, mul(t.n, mk(rt)), nf);
-      var go = function () { apply(u, "√" + f + " = " + rt + (fs.length > 1 || !same(t.n, mk(1)) ? ", so " + exSay([t]).replace(/^±/, "") + " = " + exSay([u]).replace(/^±/, "") : "") + "." + (rdLeft(u) ? " Now click " + (u.f && isSq(u.f[rfNext(u.f)]) ? "the perfect square." : "the square root: a perfect square still divides " + (u.f ? u.f[rfNext(u.f)] : u.r.n) + ".") : "")); };
+      if (t.mf || !same(mk(Math.abs(t.n.n), t.n.d), mk(1))) u.mf = (t.mf ? t.mf.slice() : [mk(Math.abs(t.n.n), t.n.d)]).concat([mk(rt)]);   // 3√100 · √2 becomes 3 · 10 · √2: the multiplying is its own step
+      var go = function () { apply(u, "√" + f + " = " + rt + (fs.length > 1 || !same(t.n, mk(1)) ? ", so " + exSay([t]).replace(/^±/, "") + " = " + exSay([u]).replace(/^±/, "") : "") + "." + (u.mf ? " Now click the \u00b7 to multiply." : rdLeft(u) ? " Now click " + (u.f && isSq(u.f[rfNext(u.f)]) ? "the perfect square." : "the square root: a perfect square still divides " + (u.f ? u.f[rfNext(u.f)] : u.r.n) + ".") : "")); };
       if (mode === "calculate" && !pick && !SIM) { eqAsk({ kind: "rsv", want: rt, go: go }, "√" + f + " ="); $("askIn").placeholder = "e.g. 3"; return; }
       go(); return;
     }
@@ -3403,13 +3409,22 @@
     if (pick) { take(pick); return; }
     rfChoose(f, elOf(), take);
   }
+  function mfDo(t, apply) {   // the product in front worked out: 3 · 10 · √2 becomes 30√2
+    if (!t || !t.mf) return; var u = JSON.parse(JSON.stringify(t)); delete u.mf; var pr = t.mf.reduce(function (a, b) { return mul(a, b); }, mk(1)), lab = t.mf.map(function (q) { return exFr(q); }).join(" \u00b7 ");
+    var go = function () { apply(u, lab + " = " + exFr(pr) + ", so " + exSay([t]).replace(/^\u00b1/, "") + " = " + exSay([u]).replace(/^\u00b1/, "") + "." + (rdLeft(u) ? " Now click the square root: a perfect square still divides " + (u.f ? u.f[rfNext(u.f)] : u.r.n) + "." : "")); };
+    if (mode === "calculate" && !SIM) { eqAsk({ kind: "cq", want: { k: "c", n: pr }, go: go }, lab + " ="); $("askT").textContent = lab + " ="; $("askIn").placeholder = "e.g. 30"; return; }
+    go();
+  }
   function rfDemo(S, i) {   // the equation's next square root step, for the demo
+    var t0 = EXP[S][i]; if (t0.mf) return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"] .exMf', cap: "Click the \u00b7 to multiply: " + t0.mf.map(function (q) { return exFr(q); }).join(" \u00b7 ") + ".", run: function () { eqMfDo(S, i); } };
     var t = EXP[S][i], k = t.f ? Math.max(0, rfNext(t.f)) : 0, f = t.f ? t.f[k] : t.r.n;
     return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"] .exRad' + (t.f ? '[data-rf="' + k + '"]' : ""), cap: t.r.d !== 1 ? "Find the square root of " + exFr(t.r) + "." : isSq(f) ? "√" + f + " = " + Math.round(Math.sqrt(f)) + ". Click it." : "The biggest perfect square that divides " + f + " is " + rfBig(f) + ". Click √" + f + " to split it.", run: function () { eqSimp(S, i, null, k); } };
   }
   function radParse(v, n) {   // a typed pair, "4*50", "4·50", "4 50" or "4, 50": [a, b] with a·b = n
     var m = String(v).replace(/[\u221a()]/g, " ").match(/(\d+)\s*(?:[*\u00b7x\u00d7,]|\s)\s*(\d+)/); if (!m) return null; var a = +m[1], b = +m[2]; return a * b === n ? [a, b] : null;
   }
+  function eqMfDo(S, i) { if (locked || busy || EXP.ask) return; mfDo(EXP[S][i], function (u, msg) { var N = eqClone(); N[S][i] = u; eqSet(N, msg); }); }
+  function exMfDo(i) { if (locked || busy || !EXP || EXP.ask) return; mfDo(EXP.items[i], function (u, msg) { var it = EXP.items.slice(); it[i] = u; exSet(it, msg); }); }
   function eqSimp(S, i, pick, k) {   // click a square root: simplify it (√9 = 3; √12 = √4 · √3 = 2√3, a step at a time; √(49/4) = 7/2)
     if (locked || busy || EXP.ask) return;
     var t = EXP[S][i]; if (!t || t.k !== "r") return;
@@ -3710,7 +3725,7 @@
   }
   function eqRenderRow(R, hot, idx, fin) {   // one equation in a row; idx is its place in a split (the zero product property), -1 when not split
     if (idx >= 0) R.dataset.zrow = idx; else R.removeAttribute("data-zrow");
-    var live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked && !fin, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !!zpOf(EXP.L, EXP.R), gq = EXP.grq && !EXP.zpq && grSq(), rad = EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.u; });
+    var live = (mode === "sequence" || mode === "calculate" || mode === "demo") && !locked && !fin, dv = live || (mode === "demo" && !locked) ? eqDivReady() : null, wrap = function (S) { var h = eqSideHtml(S, hot, live, dv); return EXP.zpq ? "<span class=\"zpS zp" + S + "\">" + h + "</span>" : h; }, un = EXP.zpq && !!zpOf(EXP.L, EXP.R), gq = EXP.grq && !EXP.zpq && grSq(), rad = EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.u || t.mf; });
     R.innerHTML = wrap("L") + "<span class=\"exEq" + (live && !un ? " grab" : "") + "\" data-drop=\"eq=\">" + relGlyph(EXP.rel) + "</span>" + wrap("R");
     grMark();
     if (ABS && ABS.side && R.id === "exRow") absorbNow(R, '.exT[data-s="' + ABS.side + '"][data-i="' + ABS.idx + '"]');
@@ -3734,6 +3749,7 @@
         var pe = el.querySelector(".exPm"), re = el.querySelector(".exRad");
         if (t.u) { el.classList.add("grab", "exU"); el.title = "Click the fraction to simplify"; el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqFrSimp(S, i); }); }
         if (pe) { pe.classList.add("grab"); pe.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqPm(); }); }
+        [].forEach.call(el.querySelectorAll(".exMf"), function (m1) { m1.classList.add("grab"); m1.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqMfDo(S, i); }); });   // (3 · 10 · √2: the · multiplies)
         if (re) [].forEach.call(el.querySelectorAll(".exRad"), function (re1) { re1.classList.add("grab"); re1.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqSimp(S, i, null, re1.dataset.rf ? +re1.dataset.rf : 0); }); });   // (split: each root clicked on its own)
         return;
       }
@@ -4195,7 +4211,7 @@
     var sides = ["L", "R"], q, i, j, S;
     var sg0 = !EXP.zp ? sqgOf(EXP.L, EXP.R) : null;
     if (sg0 && sg0.g.pw) return { mv: ['#exRow .exT[data-s="' + sg0.S + '"][data-i="0"] .exPw', "#exRow .exEq"], cap: "Drag the exponent across the =: it turns into \u00b1\u221a.", run: function () { eqRootG(sg0.S, 0); } };
-    if (!EXP.zp && EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" && !radDone(t); })) { for (var q9 = 0; q9 < 2; q9++) { var S9 = q9 ? "R" : "L"; for (var i9 = 0; i9 < EXP[S9].length; i9++) if (EXP[S9][i9].k === "r" && !radDone(EXP[S9][i9])) return rfDemo(S9, i9); } }
+    if (!EXP.zp && EXP.L.concat(EXP.R).some(function (t) { return t.mf || (t.k === "r" && !radDone(t)); })) { for (var q9 = 0; q9 < 2; q9++) { var S9 = q9 ? "R" : "L"; for (var i9 = 0; i9 < EXP[S9].length; i9++) if (EXP[S9][i9].mf || (EXP[S9][i9].k === "r" && !radDone(EXP[S9][i9]))) return rfDemo(S9, i9); } }
     if (!EXP.zp && EXP.L.concat(EXP.R).some(function (t) { return t.pm; })) return { tap: ".exPm", cap: "\u00b1 means two equations. Click it to split them.", run: function () { eqPm(); } };
     if (!EXP.zp) for (var uq = 0; uq < 2; uq++) { var Su = uq ? "R" : "L"; for (var ui = 0; ui < EXP[Su].length; ui++) if (EXP[Su][ui].u) return { tap: '.exT[data-s="' + Su + '"][data-i="' + ui + '"]', cap: "Click the fraction to simplify.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(Su, ui) }; }   // fractions from dividing every term are simplified first
     if ((EXP.sf || EXP.quq) && !EXP.zp && !EXP.grq) { var sfs = sfStep(); if (sfs) return sfs; }
@@ -4238,7 +4254,7 @@
     var sq = sqSides();
     if (sq) return { mv: ['.exT[data-s="' + sq.S + '"][data-i="0"] sup', ".exEq"], cap: "Drag the exponent across the =: it turns into a square root.", run: function () { eqRoot(); } };
     if (!EXP.zp && EXP.L.concat(EXP.R).some(function (t) { return t.pm; })) return { tap: ".exPm", cap: "\u00b1 means two answers. Click it to split into two equations.", run: function () { eqPm(); } };
-    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "r" && !radDone(EXP[S][i])) return rfDemo(S, i); }
+    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].mf || (EXP[S][i].k === "r" && !radDone(EXP[S][i]))) return rfDemo(S, i); }
     return null;
   }
   // a variant: x on both sides, with an integer answer
