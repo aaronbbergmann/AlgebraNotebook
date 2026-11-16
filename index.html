@@ -5767,7 +5767,11 @@
   function showWork() {
     vfnPicNow();   // 2.2A: the graph and the table as they are now
     var c21 = c21On() && (!c2On() || grN());   // 2.1: its own record of the work (every exercise and mode)
-    var list = c21 ? c21Show() : wf() || m3() ? works.filter(function (w) { return w.wf; }) : works.filter(function (w) { return w.steps.length >= 2; }), cur = c21 ? list[list.length - 1] : works[works.length - 1];
+    if (m3() && QZ && QZ.ww) {   // the problem on the screen: its own work (a question kept from another mode may have had its record dropped), all of it once it is finished
+      if (works.indexOf(QZ.ww) < 0) works.push(QZ.ww);
+      if (QZ.ww.guess) { QZ.ww.gx = QZ.m3x; if (QZ.step >= 4 || QZ.m3done) QZ.ww.fin = true; }
+    }
+    var list = c21 ? c21Show() : wf() || m3() ? works.filter(function (w) { return w.wf; }) : works.filter(function (w) { return w.steps.length >= 2; }), cur = c21 ? list[list.length - 1] : m3() && QZ && QZ.ww && list.indexOf(QZ.ww) >= 0 ? QZ.ww : works[works.length - 1];
     if (!list.length) list = [{ steps: steps, label: "" }];
     var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
