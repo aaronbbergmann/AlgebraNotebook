@@ -4912,6 +4912,7 @@
     }); else openAsk(i, "mul");
   }
   // add or subtract the same number on both sides: the number is written next to the other terms, and the right side takes it too
+  function cqPane() { return !!(BUILT[act] && (BUILT[act].solver || (BUILT[act].sub && lesson === 1 && !subx))); }   // Calculate asks the arithmetic, not the new equation: Play Solve and 1.4 One Variable
   function addEqAll(i, k, ready) {
     if (locked) return; var q = ws[i];
     if (!k.n) { bad(i); return; }
@@ -4920,7 +4921,7 @@
     // the pane shows one number before and one after the variable: use a free place, and the two numbers join when both are taken
     var sIdx = nq.ks.findIndex(function (z) { return z.v === "s"; }), pIdx = nq.ks.findIndex(function (z) { return z.v === "p"; });
     if (sIdx < 0) nq.ks.push({ v: "s", k: k }); else if (pIdx < 0) nq.ks.push({ v: "p", k: k }); else { nq.ks[sIdx].k = add(nq.ks[sIdx].k, k); if (!nq.ks[sIdx].k.n) nq.ks.splice(sIdx, 1); }
-    if (mode === "calculate" && !ready && !BUILT[act].solver) {   // (Play Solve: nothing to work out yet; the numbers are combined next, each asked as it is)
+    if (mode === "calculate" && !ready && !cqPane()) {   // (Play Solve and 1.4 One Variable: nothing to work out yet; the numbers are combined next, each asked as it is)
       var want = { a: nq.a, b: nq.b, e: nq.e, c: nq.c, rel: nq.rel }; nq.ks.forEach(function (z) { want.c = add(want.c, neg(z.k)); });
       runCalc([{ q: (k.n > 0 ? "Add " + sg(k) : "Subtract " + sg(neg(k))) + (k.n > 0 ? " to" : " from") + " both sides of the " + eqName(i, ws.length) + ". Type the new equation:", eq: want }], [i], function () { addEqAll(i, k, true); });
       return;
@@ -4935,7 +4936,7 @@
     if (q.flip) nq.flip = true;
     if (q.rel) nq.rel = k.n < 0 ? relRev(q.rel) : q.rel;   // multiplying or dividing by a negative number turns the sign around
     if (q.rel && k.n < 0) relTurned = true;
-    if (mode === "calculate" && !ready && BUILT[act].solver) {   // Play Solve: each number times k, one at a time ("3 \u00b7 2 =", "10 \u00b7 2 =")
+    if (mode === "calculate" && !ready && cqPane()) {   // Play Solve and 1.4 One Variable: each number times k, one at a time ("3 \u00b7 2 =", "10 \u00b7 2 =")
       var sym = dv ? " \u00f7 " + wrap(dv) + " =" : " \u00b7 " + wrap(k) + " =", its = [];
       [q.a, q.b, q.e].forEach(function (v) { if (v && v.n && !(Math.abs(v.n) === 1 && v.d === 1)) its.push({ q: wrap(v) + sym, num: mul(v, k) }); });   // (x alone needs no question)
       q.ks.map(function (z) { return z.k; }).concat([q.c]).forEach(function (v) { if (v && v.n) its.push({ q: wrap(v) + sym, num: mul(v, k) }); });
