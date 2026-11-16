@@ -10437,13 +10437,26 @@ var ESPIC = {
   }
   // 2.4, the demo: the data go into a Desmos table a row at a time, the window moves to show them, then the regression is typed (the step is checked as soon
   // as it works), then f(x) with the regression's numbers and the value the questions ask for (Desmos shows it at the right of the line)
+  function dsmRegEl() {   // Desmos's Add Regression button (its label shows on hover)
+    var box = $("dsmCalc"), all = box.querySelectorAll("[aria-label],[title],[tooltip],[data-tooltip],[class*='egression']"), best = null;
+    for (var i = 0; i < all.length; i++) { var e = all[i], t = [e.getAttribute("aria-label"), e.getAttribute("title"), e.getAttribute("tooltip"), e.getAttribute("data-tooltip"), typeof e.className === "string" ? e.className : ""].join(" ");
+      if (/regression/i.test(t) && e.getBoundingClientRect().width) { best = e; if (/add/i.test(t)) break; } }
+    return best;
+  }
+  function dsmTap(el, at) {   // a real click on a Desmos control (Desmos listens for pointer and mouse events)
+    var r = el.getBoundingClientRect(), x = at ? at.x : r.left + r.width / 2, y = at ? at.y : r.top + r.height / 2, o = { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0, pointerId: 1, pointerType: "mouse", isPrimary: true };
+    ["pointerdown", "mousedown", "pointerup", "mouseup", "click"].forEach(function (t) { try { el.dispatchEvent(t.indexOf("pointer") === 0 && window.PointerEvent ? new PointerEvent(t, o) : new MouseEvent(t, o)); } catch (e) { } });
+  }
+  function dsmMenuItem(rx) {   // a menu item that has just opened (anywhere on the page), by its words
+    var best = null; [].forEach.call(document.querySelectorAll("div,span,li,button,a"), function (e) { var t = (e.textContent || "").trim(); if (rx.test(t) && t.length < 40 && e.getBoundingClientRect().width && (!best || best.contains(e))) best = e; }); return best;
+  }
   function dsmRegBtn() {   // where Desmos's Add Regression button is: the button itself, or the left margin of the table (where it shows)
     var box = $("dsmCalc"), r = box.getBoundingClientRect(), b = null;
     try {
       var it = box.querySelector(".dcg-expressionitem"); if (it) it.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
-      b = box.querySelector('[aria-label="Add Regression"],[aria-label*="egression"],[title*="egression"],.dcg-add-regression,.dcg-regression-button');
-      if (b && b.getBoundingClientRect().width) { var bb = b.getBoundingClientRect(); return { x: bb.left + bb.width / 2, y: bb.top + bb.height / 2 }; }
-      if (it) { var ir = it.getBoundingClientRect(); return { x: ir.left + 22, y: ir.top + 30 }; }
+      b = dsmRegEl();
+      if (b) { var bb = b.getBoundingClientRect(); return { x: bb.left + bb.width / 2, y: bb.top + bb.height / 2, el: b }; }
+      if (it) { var ir = it.getBoundingClientRect(); return { x: ir.left + 22, y: ir.top + 24 }; }   // (the icon at the top of the table's left margin)
     } catch (e) { }
     return { x: r.left + 22, y: r.top + 88 };
   }
@@ -10463,8 +10476,16 @@ var ESPIC = {
     });
     var k0 = P.xs.length + 1;
     function step2() {   // the table's Add Regression button (in the table's left margin), then the quadratic regression appears
-      cap("Click Add Regression (the table's regression button) and choose a quadratic regression"); var b0 = dsmRegBtn(); handGo(b0, 600);
-      pgWait(850, function () { if (pgRun !== run) return; handTap(); pgWait(350, function () { if (pgRun !== run) return; DSM.calc.setExpression({ id: "r", latex: "y_{1}\\sim " + P.rg }); dsmCheck(); pgWait(1600, step3); }); });
+      cap("Click Add Regression (the button in the table's left margin)"); var b0 = dsmRegBtn(); handGo(b0, 600);
+      var hasReg = function () { try { return DSM.calc.getExpressions().some(function (x) { return /\\sim/.test(x.latex || ""); }); } catch (e) { return false; } };
+      var put = function () { if (!hasReg()) DSM.calc.setExpression({ id: "r", latex: "y_{1}\\sim " + P.rg }); };   // (only if Desmos's own button did not add it)
+      pgWait(850, function () { if (pgRun !== run) return; handTap(); var bt = b0.el || dsmRegEl() || document.elementFromPoint(b0.x, b0.y); if (bt) dsmTap(bt, b0);
+        pgWait(700, function () { if (pgRun !== run) return; var q = dsmMenuItem(/^quadratic( regression)?$/i);
+          if (q) { cap("Choose Quadratic Regression"); var qr = q.getBoundingClientRect(); handGo({ x: qr.left + Math.min(qr.width / 2, 60), y: qr.top + qr.height / 2 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); dsmTap(q); pgWait(700, function () { if (pgRun !== run) return; put(); go(); }); }); }
+          else { put(); go(); }
+        });
+      });
+      function go() { pgWait(350, function () { if (pgRun !== run) return; dsmCheck(); pgWait(1600, step3); }); }
     }
     function step3() { cap("Name the model f(x), with the regression's numbers"); handGo(at(Math.min(k0 + 1, 7)), 500); pgWait(700, function () { if (pgRun !== run) return; handTap(); typeL("f", "f\\left(x\\right)=" + P.fx, function () { pgWait(800, function () { ev(0); }); }); }); }
     function ev(i) {
