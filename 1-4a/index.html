@@ -5744,6 +5744,8 @@
       return "<section>" + (w.box ? wkBoxHTML(w.box) : "") + w.eqs.map(function (e, j) { return "<div class=\"r" + (w.cls ? " " + w.cls : "") + "\"><span class=\"m\">" + ((w.ms && w.ms[j]) || "") + "</span><span>" + wkMath(e) + "</span></div>"; }).join("") + "</section>";
     }).join("");
   }
+  // ==== Show work comes in two formats (see CLAUDE.md): GUESS for problems solved with a formula and an equation, QWA (Question, Work, Answer: qwaHTML,
+  // pb.qwa) for problems answered from a graph.  Every new word problem uses one of them.
   // ==== Show work in the GUESS format (word problems that use a formula and solve an equation: 1.3 Equation from a Graph, Comparing Linear Equations,
   // Line of Fit; 2.4A Vertex and a Point, Point and x-Intercepts; and every such word problem built from now on).  G Given (each value with its symbol and unit),
   // U Unknown, E Equation, S Substitute, S Solve (ending with the answer, its unit and a sentence saying what it means).  pb.guess = { G, U, E, S1, S2, A }:
