@@ -7435,7 +7435,7 @@
     if (pq() && m3() && m3taFail()) { up = null; QZ.ta = null; pqRegen(); return; }
     if (pq() && vfnTaFail()) { up = null; QZ.vf = null; pqRegen(); return; }   // ("Try Another" questioning: a new problem)
     if (pq() && taAny()) { taGo(); return; }   // (an error message in Sequence or Calculate: Try another)
-    if (vpWrTa()) { taGo(); return; }   // (2.4A Point and x-Intercepts, Write: a new problem)
+    if (vpWrTa()) { taGo(); return; }   // (2.4A Vertex and a Point, Point and x-Intercepts, Write: a new problem)
     if (QZ.locked) { if (up) { var u = up; up = null; u.go(); } else qzStart(); return; }
     if (pq() && mode === "demo" && QZ.step >= 4 && up) { var u2 = up; up = null; u2.go(); return; }
     if (pq() && QZ.step >= 4 && up && !QZ.custom && mode !== "create") { var u3 = up; up = null; u3.go(); return; }
@@ -14762,9 +14762,9 @@ var ESPIC = {
   function taAny() {   // an error message in Sequence or Calculate (not where a miss just comes back later: Circle Back)
     return pq() && (mode === "sequence" || mode === "calculate") && !!QZ && !!QZ.order && QZ.wrong > 0 && QZ.step < 4 && !QZ.custom && !pgRun && !ivL() && !csN() && !(m3() && m3CB());
   }
-  // 2.4A Point and x-Intercepts, Write: an error message on Submit puts a plum-red Try Another where Next sits (a new problem), and Show work then shows
-  // every step of the GUESS work, so the student is never stuck
-  function vpWrTa() { var pb = pq() && m3() && mode === "solo" && !!QZ && !!QZ.order && QZ.step < 4 && QZ.wrong > 0 && !QZ.custom ? m3Cur() : null; return !!(pb && pb.vp && pb.vp.form === "i"); }
+  // 2.4A Vertex and a Point, Point and x-Intercepts, Write: an error message on Submit puts a plum-red Try Another where Next sits (a new problem), and
+  // Show work then shows every step of the GUESS work, so the student is never stuck
+  function vpWrTa() { var pb = pq() && m3() && mode === "solo" && !!QZ && !!QZ.order && QZ.step < 4 && QZ.wrong > 0 && !QZ.custom ? m3Cur() : null; return !!(pb && pb.vp && pb.guess); }
   function taSync() { if (!taAny()) return; var nx = $("qzNext"); nx.hidden = false; nx.disabled = false; nx.textContent = "Try another"; $("qzAgain").hidden = true; }
   function taGo() { up = null; QZ.ta = null; QZ.vf = null; if (retryOn()) pqRetry(); else pqRegen(); }   // (a new problem like it, in its place; the round's others stay done)
   function retryOn() { return mode !== "demo" && mode !== "create" && !QZ.custom && QZ.order && QZ.order.length > 1; }
