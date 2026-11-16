@@ -831,6 +831,8 @@
   #distBox .bxSlot.drop{box-shadow:0 0 0 3px var(--plus)}
   #distBox.bxReady .bxCell{cursor:pointer}
   #distBox.bxReady .bxCell:hover{background:color-mix(in srgb,var(--plus) 18%,var(--bg))}
+  #dsmFakeMenu{position:fixed;z-index:120;background:#fff;border:1px solid #ccc;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:4px 0;font:14px system-ui,sans-serif;color:#222;min-width:190px;pointer-events:none}
+  #dsmFakeMenu .dfmI{padding:7px 14px;white-space:nowrap}#dsmFakeMenu .dfmI.on{background:#e8f0fe}
   .bxFly{position:fixed;z-index:102;pointer-events:none;font-family:"LM",Georgia,serif;transition:left .7s ease-in-out,top .7s ease-in-out,opacity .7s}
   #opPop.amt{gap:.55rem;padding:.55rem .8rem}#opPop .sym{font:700 1.7rem/1 system-ui,sans-serif;color:var(--ink)}#opPop input{width:7rem;font:600 1.25rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:10px;padding:.3em .5em}#opPop .opErr{flex:0 0 100%;width:0;min-width:100%;font:600 .85rem system-ui,sans-serif;color:#b00020}#opPop .opErr:empty{display:none}#opPop.shake{animation:shake .3s}
   #opPop .btn{width:2.6rem;height:2.6rem;padding:0;border-radius:50%;font-size:1.35rem;line-height:1;display:flex;align-items:center;justify-content:center}
@@ -10447,6 +10449,12 @@ var ESPIC = {
     var r = el.getBoundingClientRect(), x = at ? at.x : r.left + r.width / 2, y = at ? at.y : r.top + r.height / 2, o = { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0, pointerId: 1, pointerType: "mouse", isPrimary: true };
     ["pointerdown", "mousedown", "pointerup", "mouseup", "click"].forEach(function (t) { try { el.dispatchEvent(t.indexOf("pointer") === 0 && window.PointerEvent ? new PointerEvent(t, o) : new MouseEvent(t, o)); } catch (e) { } });
   }
+  function dsmFakeMenu(at) {   // the demo's copy of Desmos's regression menu, opened at the Add Regression button: returns its Quadratic Regression item
+    var old = $("dsmFakeMenu"); if (old) old.remove(); var m = document.createElement("div"); m.id = "dsmFakeMenu";
+    m.innerHTML = ["Linear Regression", "Quadratic Regression", "Exponential Regression"].map(function (t) { return "<div class=\"dfmI\">" + t + "</div>"; }).join("");
+    m.style.left = Math.round(at.x - 6) + "px"; m.style.top = Math.round(at.y + 16) + "px"; document.body.appendChild(m);
+    return m.children[1];
+  }
   function dsmMenuItem(rx) {   // a menu item that has just opened (anywhere on the page), by its words
     var best = null; [].forEach.call(document.querySelectorAll("div,span,li,button,a"), function (e) { var t = (e.textContent || "").trim(); if (rx.test(t) && t.length < 40 && e.getBoundingClientRect().width && (!best || best.contains(e))) best = e; }); return best;
   }
@@ -10480,8 +10488,8 @@ var ESPIC = {
       var hasReg = function () { try { return DSM.calc.getExpressions().some(function (x) { return /\\sim/.test(x.latex || ""); }); } catch (e) { return false; } };
       var put = function () { if (!hasReg()) DSM.calc.setExpression({ id: "r", latex: "y_{1}\\sim " + P.rg }); };   // (only if Desmos's own button did not add it)
       pgWait(850, function () { if (pgRun !== run) return; handTap(); var bt = b0.el || dsmRegEl() || document.elementFromPoint(b0.x, b0.y); if (bt) dsmTap(bt, b0);
-        pgWait(700, function () { if (pgRun !== run) return; var q = dsmMenuItem(/^quadratic( regression)?$/i);
-          if (q) { cap("Choose Quadratic Regression"); var qr = q.getBoundingClientRect(); handGo({ x: qr.left + Math.min(qr.width / 2, 60), y: qr.top + qr.height / 2 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); dsmTap(q); pgWait(700, function () { if (pgRun !== run) return; put(); go(); }); }); }
+        pgWait(700, function () { if (pgRun !== run) return; var q = dsmMenuItem(/^quadratic( regression)?$/i) || dsmFakeMenu(b0);   // (Desmos does not open its menu for the demo's click: the demo shows one like it)
+          if (q) { cap("Choose Quadratic Regression"); var qr = q.getBoundingClientRect(); handGo({ x: qr.left + Math.min(qr.width / 2, 60), y: qr.top + qr.height / 2 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); q.classList.add("on"); dsmTap(q); pgWait(450, function () { var fm = $("dsmFakeMenu"); if (fm) fm.remove(); if (pgRun !== run) return; put(); go(); }); }); }
           else { put(); go(); }
         });
       });
