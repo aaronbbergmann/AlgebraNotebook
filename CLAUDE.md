@@ -9,8 +9,8 @@ Every word problem's **Show work** uses one of two formats. Pick the one that fi
   - Set `pb.guess = { G, U, E, S1, S2, A }`. Each part is a list of `[line, when]`. The renderer is `guessHTML(w)`.
 - **QWA** (Question, Work, Answer): problems answered from a graph.
   - Question: the question, the data and the unknown.
-  - Work: the graph, such as the regression and its curve.
-  - Answer: the point plotted on the graph, and what it means.
+  - Work: the graph, such as the regression and its curve. Once the question is answered, the answer's point is plotted on this same graph.
+  - Answer: the point, and what it means. Don't draw the graph a second time.
   - Example: 2.4B Quadratic Regression.
   - Set `pb.qwa = { Q, W, A }`. Each part is a list of `[line, when]`. The renderer is `qwaHTML(w)`.
 

@@ -15150,8 +15150,8 @@ var ESPIC = {
       var unk = qt === "vx" ? gqM("x = ?") + " " + sc.xu + ", where the " + sc.yw + " is " + hi + " (the vertex)" : qt === "vy" ? gqM("y = ?") + " " + sc.u + ", the " + (sc.up ? "lowest" : "greatest") + " " + sc.yw + " (the vertex)" : qt === "yi" ? gqM("y = ?") + " " + sc.u + ", when " + gqM("x = 0") : qt === "xi" ? gqM("x = ?") + " " + sc.xu + ", when " + gqM("y = 0") : gqM("y = ?") + " " + sc.u + ", when " + gqM("x = " + X);
       var said = Q[4].charAt(0).toUpperCase() + Q[4].slice(1) + ".";
       pb.qwa = { Q: [[Q[0]], [dataT], [unk]],
-        W: [["Quadratic regression in Desmos: " + E[0] + " (rounded)", ["dsm"]], [gq(false), ["dsm"]]],
-        A: [[gq(true), ["ans"]], ["The point " + ptLab + ". " + said, ["ans"]]] };
+        W: [["Quadratic regression in Desmos: " + E[0] + " (rounded)", ["dsm"]], [function (x) { return gq(!!(x && x.av)); }, ["dsm"]]],   // (one graph: the answer's point joins it once the question is answered)
+        A: [["The point " + ptLab + " on the graph. " + said, ["ans"]]] };
       return pb;
     }
   }
