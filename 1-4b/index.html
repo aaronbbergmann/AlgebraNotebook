@@ -970,7 +970,7 @@
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
         <div class="row" style="flex-wrap:nowrap"><input id="crIn" autocomplete="off" aria-label="Equation"></div>
-        <div class="crKeys" id="crKeys" role="group" aria-label="Equation keys"><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="x²" aria-label="Insert x squared"><i>x</i>²</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" data-ins="√" aria-label="Insert a square root">√</button><button type="button" class="eqGo" id="crAdd">Submit</button></div>
+        <div class="crKeys" id="crKeys" role="group" aria-label="Equation keys"><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="x²" aria-label="Insert x squared"><i>x</i>²</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" data-ins="√" aria-label="Insert a square root">√</button><button type="button" data-ins="()" data-back="1" aria-label="Insert parentheses">(&nbsp;&nbsp;)</button><button type="button" data-ins="/" aria-label="Insert / (a fraction bar: (x-2)/3)">/</button><button type="button" class="eqGo" id="crAdd">Submit</button></div>
         <div class="err" id="crErr"></div>
       </section>
       <section class="panel modePick" id="modePick" hidden aria-label="Choose a mode"></section>
@@ -1486,6 +1486,7 @@
           if (s.slice(i, i + 2) === "^2" && s[i - 1] === ")") { i += 2; t.b = JSON.parse(JSON.stringify(g)); t.pw = true; }   // (x + 2)^2
           if (s[i] === "(") { i++; var g2 = sum(true); if (!g2 || !g2.length || s[i] !== ")") return null; i++; t.b = g2; }   // two sets of parentheses: (3x - 4)(x - 6)
           if (t.b && s[i] === "(") { i++; var g3 = sum(true); if (!g3 || !g3.length || s[i] !== ")") return null; i++; t.c = g3; }   // three sets: (x + 1)(x + 2)(x + 3)
+          if (!t.b && !t.pw && s[i] === "/" && /\d/.test(s[i + 1] || "")) { i++; var dg = s.slice(i).match(/^\d+/); if (!dg || +dg[0] < 2) return null; i += dg[0].length; t.m = mul(t.m, mk(1, +dg[0])); t.ov = true; }   // (x - 2)/3: written over its number
         } else if (s[i] === "|" && exAbsOK && !inner) {   // |2x - 3|: an absolute value (the number in front of it multiplies it)
           i++; var ga = sum("abs"); if (!ga || !ga.length || s[i] !== "|") return null; i++;
           t = { k: "g", m: mul(n || mk(1), mk(sg1)), items: ga, abs: true };
@@ -1865,6 +1866,7 @@
     if ((t.lc || t.w) && fdOK(t)) { var fv = t.k === "x" ? exVarHtml(t.v || "x") : ""; return (t.w ? Math.abs(t.w.n) + "/" + t.w.d : exFr(mk(Math.abs(t.n.n), t.n.d))) + fv + (t.lc ? "<span class=\"exLc\" title=\"Click to multiply\">\u22c5</span>" + t.lc + "/" + t.lc : ""); }   // 1/2 ⋅ 3/3, then 3/6
     if (t.k === "q") return "<span class=\"fr\"><span>" + exHtml(t.num) + "</span><span>" + exHtml(t.den) + "</span></span>";
     if (t.k === "g" && zpSquare(t) && t.pw) return "<span class=\"exG\">" + parW(exHtml(t.items)) + "<sup class=\"exPw\" title=\"Click to write it as a product; in an equation, drag it across the = to take the square root\">2</sup></span>";   // (2x + 3)(2x + 3) in an expression reads (2x + 3)²
+    if (t.k === "g" && t.ov && !t.b && !t.abs && !t.pm && Math.abs(t.m.n) === 1 && t.m.d > 1) return "<span class=\"fr exOvF\"><span><span class=\"exG exOvG\">" + exHtml(t.items) + "</span></span><span><span class=\"exM exOvD\" title=\"Drag me across the = to multiply both sides by " + t.m.d + "\">" + t.m.d + "</span></span></span>";   // (x − 2)/3
     if (t.k === "g") { var m = mk(Math.abs(t.m.n), t.m.d), ms = t.m.s && sSig(t.m.s); return (m.n === 1 && m.d === 1 && !ms ? "" : "<span class=\"exM\">" + (ms ? litHtml({ k: "c", n: m, s: t.m.s }, false) : exFr(m)) + "</span>") + "<span class=\"exG\">" + exPar(t, t.items) + "</span>" + (t.b ? "<span class=\"exH\">" + exPar(t, t.b) + "</span>" : "") + (t.c ? "<span class=\"exH exJ\">" + exPar(t, t.c) + "</span>" : ""); }
     if (hasS(t)) return litHtml(t, false);
     var a = mk(Math.abs(t.n.n), t.n.d); if (t.u && t.k === "x") return Math.abs(t.u.n) + "/" + t.u.d + exVarHtml(t.v || "x");   // 6/4x
@@ -1875,7 +1877,7 @@
   }
   function exSay(its) {   // plain text, for the log and the prompts
     if (its.length === 1 && its[0].k !== "g" && its[0].n.n === 0) return "0";
-    var d = document.createElement("div"); d.innerHTML = exHtml(its).replace(/<sup[^>]*>(\d+)<\/sup>/g, "^$1").replace(/<span class="fr"><span>([\s\S]*?)<\/span><span>([\s\S]*?)<\/span><\/span>/g, function (_, a, b) { var A = a.replace(/<[^>]*>/g, ""), B = b.replace(/<[^>]*>/g, ""); return (A.length > 1 && /[+\u2212]/.test(A) ? "(" + A + ")" : A) + "/" + (B.length > 1 ? "(" + B + ")" : B); }); return d.textContent.replace(/([+−])/g, " $1 ").replace(/^ − /, "−").replace(/\( − /g, "(−").replace(/\| − /g, "|−").replace(/^\|\s+/, "|").trim();
+    var d = document.createElement("div"); d.innerHTML = exHtml(its).replace(/<sup[^>]*>(\d+)<\/sup>/g, "^$1").replace(/<span class="fr exOvF"><span><span class="exG exOvG">([\s\S]*?)<\/span><\/span><span><span class="exM exOvD"[^>]*>(\d+)<\/span><\/span><\/span>/g, function (_, a, b) { return "(" + a.replace(/<[^>]*>/g, "") + ")/" + b; }).replace(/<span class="fr"><span>([\s\S]*?)<\/span><span>([\s\S]*?)<\/span><\/span>/g, function (_, a, b) { var A = a.replace(/<[^>]*>/g, ""), B = b.replace(/<[^>]*>/g, ""); return (A.length > 1 && /[+\u2212]/.test(A) ? "(" + A + ")" : A) + "/" + (B.length > 1 ? "(" + B + ")" : B); }); return d.textContent.replace(/([+−])/g, " $1 ").replace(/^ − /, "−").replace(/\( − /g, "(−").replace(/\| − /g, "|−").replace(/^\|\s+/, "|").trim();
   }
   function exPair(i, j) { var its = EXP.items; return i < j ? [its[i], its[j]] : [its[j], its[i]]; }
   // a minus sign in front of parentheses is the drag handle that distributes it (it means -1): -(x + 1) becomes -x - 1
@@ -3623,7 +3625,7 @@
       sp.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, sp, function () { note("Drag the 2 across the = and it becomes a square root."); }, function () { eqRoot(); }, ["et:", "eq="]); });
     });
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
-      var S = el.dataset.s, i = +el.dataset.i, t = EXP[S][i], mEl = el.querySelector(":scope > .exM") || exSignOf(el), gEl = el.querySelector(":scope > .exG"), lcEl = el.querySelector(".exLc");
+      var S = el.dataset.s, i = +el.dataset.i, t = EXP[S][i], mEl = el.querySelector(":scope > .exM") || el.querySelector(".exOvD") || exSignOf(el), gEl = el.querySelector(":scope > .exG") || el.querySelector(".exOvG"), lcEl = el.querySelector(".exLc");
       if (lcEl) { lcEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); lcEl.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); fdMul(S, i); }); }
       if (rad) {   // ± and square roots are clicked, nothing is dragged
         var pe = el.querySelector(".exPm"), re = el.querySelector(".exRad");
@@ -3649,7 +3651,7 @@
       if (mEl && gEl) {
         gEl.dataset.drop = "exg:" + S + ":" + i; exNegMark(mEl, S + ":" + i);
         if (!EXP.lit && !t.m.s) {   // dragging the number in front across the = divides every term on both sides by it: a ÷ appears in front of it as it crosses
-          var m0 = mEl.textContent, mD = "\u00f7" + (t.m.n < 0 ? "(\u2212" + exFr(mk(Math.abs(t.m.n), t.m.d)) + ")" : exFr(t.m));
+          var m0 = mEl.textContent, mD = t.ov ? "\u00b7" + t.m.d : "\u00f7" + (t.m.n < 0 ? "(\u2212" + exFr(mk(Math.abs(t.m.n), t.m.d)) + ")" : exFr(t.m));
           mEl._eqEl = R.querySelector(".exEq"); mEl._cross = function (on) { if (on) { var w0 = mEl.getBoundingClientRect().width; mEl.style.display = "inline-block"; mEl.style.width = w0 + "px"; mEl.style.whiteSpace = "nowrap"; } else { mEl.style.display = mEl.style.width = mEl.style.whiteSpace = ""; } mEl.textContent = on ? mD : m0; };   // the row must not shift under the pointer while the \u00f7 is added mEl._flyText = mD;
           mEl._hotAll = function (on, t2) { var dd = on && t2 ? t2.dataset.drop || "" : "", far = dd === "eq=" || ((dd.indexOf("et:") === 0 || dd.indexOf("exg:") === 0) && dd.split(":")[1] !== S); [].forEach.call(R.querySelectorAll(".exT, .exEq, .exOp"), function (x) { if (x !== mEl) x.classList.toggle("drop", far); }); };
         }
@@ -3721,6 +3723,15 @@
   function eqDivGroup(S, i) {   // the number in front of the parentheses dragged to the other side: every term on both sides is divided by it
     if (locked || busy || EXP.ask) return;
     var g = EXP[S][i]; if (!g || g.k !== "g" || g.pm || zpOf(EXP.L, EXP.R)) return;
+    if (g.ov && !g.b && !EXP.lit && !litAny(EXP.L.concat(EXP.R))) {   // (x − 2)/3: the 3 crosses the = and multiplies both sides by 3
+      var f = inv(g.m), N0 = eqClone(), others = EXP.L.length + EXP.R.length > 2, gs = exSay([g]).replace(/^\u2212/, "");
+      [N0.L, N0.R].forEach(function (its) { its.forEach(function (u) { if (u.k === "g") { u.m = mul(u.m, f); if (same(u.m, mk(1)) || same(u.m, mk(-1))) delete u.ov; } else { u.n = mul(u.n, f); delete u.u; delete u.ov; } }); });
+      var at0 = N0[S][i]; if (same(at0.m, mk(1))) N0[S].splice.apply(N0[S], [i, 1].concat(at0.items));
+      N0.L = eqNorm(N0.L); N0.R = eqNorm(N0.R); var fl0 = f.n < 0 && N0.rel !== "="; if (fl0) N0.rel = relRev(N0.rel);
+      var msg0 = "Multiply both sides by " + sg(f) + ": " + gs + " \u00b7 " + sg(f) + " = " + exSay(at0.items) + (others ? ", and every other term is multiplied by " + sg(f) : "") + "." + (fl0 ? " Multiplying by a negative number turns the sign around." : "");
+      if (mode === "calculate") { eqAsk({ kind: "mulq", b: { N: N0, msg: msg0 } }, "Multiply both sides by " + sg(f) + ". Type the new " + ((EXP.rel || "=") !== "=" ? "inequality:" : "equation:")); $("askIn").placeholder = "e.g. x - 2 = 24"; return; }
+      eqSet(N0, msg0); return;
+    }
     if (!EXP.lit && !litAny(EXP.L.concat(EXP.R)) && !same(g.m, mk(1)) && (g.abs || g.b || !dvOK(EXP.L, EXP.R))) { eqDivAll(S, i, g.m); return; }   // 2|3w + 9| + 2 = 8 becomes |3w + 9| + 2/2 = 8/2   // (a row of a split, like −(2u − 2) ≥ 6, can be divided by −1)
     if (EXP.lit || litAny(EXP.L.concat(EXP.R))) { note("Dividing both sides by a number in front of parentheses works without letters for now."); return; }
     var a = g.m; if (!a.n || same(a, mk(1))) return;
@@ -3737,6 +3748,12 @@
     var gs = []; [["L", L], ["R", R]].forEach(function (p) { p[1].forEach(function (t, i) { if (t.k === "g") gs.push({ S: p[0], i: i, t: t }); }); });
     if (gs.length !== 1 || gs[0].t.b || gs[0].t.m.d !== 1 || gs[0].t.m.n < 2) return null;
     var m = gs[0].t.m.n; return L.concat(R).every(function (t) { return t.k === "g" || (t.n.d === 1 && t.n.n % m === 0); }) ? { S: gs[0].S, i: gs[0].i } : null;
+  }
+  function eqOv() {   // a fraction over a whole number: (x − 2)/3 + 2 = 10 (x − 2 = 24, x = 26); sometimes the number first, or the sides swapped
+    var a = 2 + rnd(4), y = nz(9), b = nz(9), c = nz(12), x = a * y - b, d = y + c;
+    if (!x || !d) return eqOv();
+    var g = { k: "g", m: mk(1, a), ov: true, items: [{ k: "x", v: "x", n: mk(1) }, { k: "c", n: mk(b) }] }, L = rnd(4) ? [g, { k: "c", n: mk(c) }] : [{ k: "c", n: mk(c) }, g], R = [{ k: "c", n: mk(d) }];
+    return rnd(5) ? { L: L, R: R } : { L: R, R: L };
   }
   function eqDv() {   // a variant to divide through: 8 + 4(x + 3) = 36, 5(x - 2) - 10 = 25
     var X = function () { return { k: "x", v: "x", n: mk(1) }; }, C = function (k) { return { k: "c", n: mk(k) }; };
@@ -4060,6 +4077,12 @@
       if (!same(avs.t.m, mk(1))) return { mv: [same(avs.t.m, mk(-1)) ? '.exOp.exNeg[data-for="' + aS + ":" + avs.i + '"]' : aT(aS, avs.i) + " > .exM", ".exEq"], cap: "Drag the " + exFr(avs.t.m) + " to the other side: it divides both sides by " + exFr(avs.t.m) + ".", run: function () { eqDivGroup(aS, avs.i); } };
       return { tap: aT(aS, avs.i) + " .avBar", cap: "Tap a bar of the absolute value.", run: function () { eqAvOpen(aS, avs.i); } };
     }
+    var ovg = null; if (!EXP.zp && !EXP.lit) ["L", "R"].forEach(function (S1) { EXP[S1].forEach(function (t1, i1) { if (!ovg && t1.k === "g" && t1.ov && !t1.b) ovg = { S: S1, i: i1, t: t1 }; }); });
+    if (ovg) {   // (x − 2)/3 + 2 = 10: move the 2 first, then multiply both sides by 3
+      var oS = ovg.S, oO = eqOther(oS), oT = function (S1, i1) { return '.exT[data-s="' + S1 + '"][data-i="' + i1 + '"]'; }, oc = EXP[oS].findIndex(function (t1, i1) { return i1 !== ovg.i; });
+      if (oc >= 0) { var otj = EXP[oO].findIndex(function (t1) { return t1.k === EXP[oS][oc].k && exLike(t1, EXP[oS][oc]); }); if (otj >= 0 && fdNeed(EXP[oS][oc], EXP[oO][otj])) otj = -1; return { mv: [oT(oS, oc), otj >= 0 ? oT(oO, otj) : ".exEq"], cap: "Drag " + exSay([EXP[oS][oc]]) + " to the other side, so the fraction is by itself.", run: function () { var b = eqBuild(oS, oc, oO, otj); eqSet(b.N, b.msg); } }; }
+      return { mv: [oT(oS, ovg.i) + " .exOvD", ".exEq"], cap: "Drag the " + ovg.t.m.d + " across the =: it multiplies both sides by " + ovg.t.m.d + ".", run: function () { eqDivGroup(oS, ovg.i); } };
+    }
     var dvk = EXP.dvq && !EXP.zpq && EXP.rel === "=" ? dvOK(EXP.L, EXP.R) : null;
     if (dvk) { var dg = EXP[dvk.S][dvk.i]; return { mv: ['.exT[data-s="' + dvk.S + '"][data-i="' + dvk.i + '"] > .exM', ".exEq"], cap: "Drag the " + dg.m.n + " to the other side: it divides every term by " + dg.m.n + ".", run: function () { eqDivGroup(dvk.S, dvk.i); } }; }
     for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].u) return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"]', cap: "Click the fraction to simplify.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(S, i) }; }
@@ -4317,7 +4340,7 @@
     { e: "pane", one: 1 }, { e: "eq", fd: 1 }, { e: "eq", fd: 2 },                                                                             // 1.1 simple (one-step) equations, with fractions
     { e: "pane", lv: 0 }, { e: "pane", lv: 1 }, { e: "pane", lv: 2 }, { e: "pane", lv: 3 }, { e: "pane", lv: 4 }, { e: "pane", lv: 5 }, { e: "pane", lv: 6 },
     { e: "eq", dv: 1 }, { e: "eq", fd: 3 },                                                                                                     // 1.2 multi-step equations (two steps, parentheses, fractions)
-    { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 }, { e: "eq", lv: 5 }, { e: "eq", lv: 6 },
+    { e: "eq", lv: 0 }, { e: "eq", lv: 1 }, { e: "eq", lv: 2 }, { e: "eq", lv: 3 }, { e: "eq", lv: 4 }, { e: "eq", lv: 5 }, { e: "eq", lv: 6 }, { e: "eq", ov: 1 },
     { e: "eq", special: true },                                                                                                                 // 1.5 variables on both sides, no solution / infinitely many
     { e: "eq", av: 1 }, { e: "eq", av: 2 }, { e: "eq", av: 3 }, { e: "eq", av: 4 },                                                             // 1.6 absolute value equations
     { e: "eq", lit: 1 }, { e: "eq", lit: 2 }, { e: "eq", lit: 3 }, { e: "eq", lit: 4 }, { e: "eq", lit: 5 }, { e: "eq", lit: 6 }, { e: "eq", lit: 7 }, { e: "eq", lit: 8 },   // 1.7 rewriting equations and formulas
@@ -4343,6 +4366,7 @@
   }
   function ladderPane(q) { if (!q.ks.length || (q.a.n === 1 && q.a.d === 1 && q.ks.length === 1)) return rung("pane", function (r) { return r.one && !r.ineq === !isIneq(q); }); if (!isIneq(q) && paneUnred(q)) return rung("pane", function (r) { return r.lv === 6; }); if (isIneq(q)) { var n = Math.min(4, eqLevel(q)); if (q.a.n < 0 && n < 2) n = 2; return rung("pane", function (r) { return r.ineq && !r.one && r.lv === n; }); } return rung("pane", function (r) { return !r.ineq && !r.one && r.lv === eqLevel(q); }); }
   function ladderEq(L, R, rel) {
+    if (L.concat(R).some(function (t) { return t.k === "g" && t.ov; })) return rung("eq", function (r) { return r.ov === 1 && !r.ineq; });   // (x − 2)/3 + 2 = 10
     if (rel === "=" && !zpOf(L, R) && !sqgOf(L, R) && L.concat(R).some(function (t) { return t.k === "g" && t.b && !t.c; })) { var sfa = L.concat(R).filter(function (t) { return t.k === "g" && t.b; })[0]; return rung("eq", function (r) { return r.sf === (sfa.pw || zpSquare(sfa) ? 3 : sfa.items.length === 1 ? 1 : 2); }); }
     if (sqgOf(L, R)) return rung("eq", function (r) { return r.sqg === 1; });
     if (qdOf(L, R) && !grAny(L) && !fmFits(L)) { var x2a = exTot(L.concat(R))["x^2"] || mk(1); return rung("eq", function (r) { return r.cs === (!same(x2a, mk(1)) ? 3 : R.length === 1 && R[0].k === "c" && !R[0].n.n ? 2 : 1); }); }
@@ -4504,7 +4528,7 @@
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
       if (st.e === "eq") {
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
-        EXP.cmp = null; EXP.c3 = null; EXP.qf = null; EXP.qu = null; EXP.grUser = false; EXP.quq = !!st.qu; EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp || !!st.fm; EXP.qd = !!st.cs || !!st.sf || !!st.qu; EXP.sf = !!st.sf; EXP.zp = null; var g2 = st.qu ? quGen(st.qu) : st.sf ? sfGen(st.sf) : st.cs ? qdGen(st.cs) : st.sqg ? eqSqgGen() : st.fm ? { L: fmGen(st.fm), R: [{ k: "c", n: mk(0) }] } : st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: st.grp > 2 ? grTriGen(st.grp) : grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
+        EXP.cmp = null; EXP.c3 = null; EXP.qf = null; EXP.qu = null; EXP.grUser = false; EXP.quq = !!st.qu; EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp || !!st.fm; EXP.qd = !!st.cs || !!st.sf || !!st.qu; EXP.sf = !!st.sf; EXP.zp = null; var g2 = st.ov ? eqOv() : st.qu ? quGen(st.qu) : st.sf ? sfGen(st.sf) : st.cs ? qdGen(st.cs) : st.sqg ? eqSqgGen() : st.fm ? { L: fmGen(st.fm), R: [{ k: "c", n: mk(0) }] } : st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: st.grp > 2 ? grTriGen(st.grp) : grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
         EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)), rel: EXP.rel }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; EXP.vk = "x";
         if (st.cmp) cmpSetup(eqCmp(st.cmp));
         if (st.qf) { qfSetup(); SV = "x"; }
@@ -6699,7 +6723,7 @@
   $("crKeys").addEventListener("click", function (e) {   // x, ^2 and | type into the Create box, where the cursor is
     var b = e.target.closest("button[data-ins]"), el = $("crIn"); if (!b) return;
     var i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd;
-    el.focus(); el.setRangeText(b.dataset.ins, i, j, "end"); el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.focus(); el.setRangeText(b.dataset.ins, i, j, "end"); if (b.dataset.back) { var c0 = el.selectionEnd - +b.dataset.back; el.setSelectionRange(c0, c0); } el.dispatchEvent(new Event("input", { bubbles: true }));   // (parentheses: the cursor lands between them)
   });
   $("exSoloRt").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the box
   $("exSoloRt").addEventListener("click", function () { var el = $("exSoloIn"), i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd; el.focus(); el.setRangeText("\u221a", i, j, "end"); });
