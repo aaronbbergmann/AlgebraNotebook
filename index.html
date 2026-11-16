@@ -5943,6 +5943,8 @@
       ["g", "solo", 80, "Write Mode, 2nd round", 2], ["g", "solo", 100, "Write Mode, 3rd round", 3]
     ] }
   };
+  BUILT["2.4"].modesFor = function (l) { return l === 4 ? ["demo", "sequence", "solo"] : ["demo", "sequence", "calculate", "solo"]; };   // (2.4B Regression: no Calculate mode)
+  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "calculate"); });
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[0] === 4 && l[1] === "solo" ? (l[4] === 2 ? [4, "solo", 100, "Write Mode, 2nd round", 2] : [4, "solo", 70, "Write Mode"]) : l; });   // (2.4B Regression: two rounds of Write, not three)
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !((l[0] <= 2 || l[0] >= 5) && l[4] > 1); }).map(function (l) { return (l[0] <= 2 || l[0] >= 5) && l[1] === "solo" ? [l[0], "solo", 100, "Write Mode"] : l; });   // (exercises 5 to 7, in the format of Play Solve: one round of Write too)
   // 2.4A exercises 5 to 7 run on Play Solve's pane (3-step linear equations, multiplying binomials with the box, simplifying square roots): while one of them is open
