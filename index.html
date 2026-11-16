@@ -4290,7 +4290,10 @@
   var SOLMODES = ["demo", "sequence", "calculate", "solo"];
   function solverFinish() { var m = nextMode(); dmFinish(nextLabel(), function () { solverGo(0, m); }, "Try another", function () { solverGo(0, "demo"); }); }
   function nextMode() { if (svL()) return SOLMODES[Math.min(SOLMODES.indexOf(mode) + 1, SOLMODES.length - 1)]; return SOLMODES[(SOLMODES.indexOf(mode) + 1) % SOLMODES.length]; }
-  function nextLabel() { if (svL() && nextMode() === mode) return "Next"; return MODES[nextMode()] + " Mode"; }
+  function svNext() {   // 2.4A exercises 5 to 7, Write: the exercise after this one on the page (none after the last)
+    if (!svL() || mode !== "solo") return null; var L = exList(), j = L.findIndex(function (e) { return e[0] === String(lesson); }); return j >= 0 && L[j + 1] ? L[j + 1][0] : null;
+  }
+  function nextLabel() { if (svL() && nextMode() === mode) { var nl = svNext(); return nl ? BUILT[act].short[+nl - 1] : "Next"; } return MODES[nextMode()] + " Mode"; }
   function hardLabel() { return "Level Up"; }
   function eqPickRel() { return ["<", ">", "\u2264", "\u2265"][rnd(4)]; }
   function eqSpecial() {   // no solution or infinitely many (they take turns): 2x + 3 = 2x + 5, 3(x + 2) = 3x + 6
@@ -6833,6 +6836,7 @@
   $("next").addEventListener("click", function () {
     if (up) { var u = up; up = null; u.go(); return; }
     if (svL() && EQW > 0 && mode !== "demo") { solverGo(0, mode); return; }   // (2.4A: an error message along the way: another problem in this mode)
+    if (svL() && locked && svNext()) { var ls = $("lesson"); ls.value = svNext(); ls.dispatchEvent(new Event("change", { bubbles: true })); return; }   // (2.4A, Write finished: on to the next exercise)
     if (BUILT[act].solver && mode !== "create") { solverGo(0, nextMode()); return; }
     newProblem();
   });
