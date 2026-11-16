@@ -1923,7 +1923,7 @@
   }
   function exRender(hot) { exRender0(hot); if (BX && !BX.done && EXP && !EXP.eq) bxRow(); exWork(); }
   function exRender0(hot) {
-    $("exBox").classList.toggle("solved", !!locked); if ($("exSoloRt")) $("exSoloRt").hidden = !(EXP && EXP.rad && !EXP.eq); var bxk = svL() && lesson === 6; $("exSoloX2").hidden = !(bxk && mode === "solo"); $("askX2").hidden = !(bxk && mode === "calculate");   // (2.4A Box Method: an x² key wherever an answer is typed)   // (a square root to simplify: a √ key beside the Write box)
+    $("exBox").classList.toggle("solved", !!locked); if ($("exSoloRt")) $("exSoloRt").hidden = !(EXP && EXP.rad && !EXP.eq); var bxk = !!(BUILT[act] && BUILT[act].solver && EXP && !EXP.rad && (svL() ? lesson === 6 : JSON.stringify(EXP).indexOf('"b":') >= 0 || /x\^2/.test(JSON.stringify(EXP)))); $("exSoloX2").hidden = !(bxk && mode === "solo"); $("askX2").hidden = !(bxk && mode === "calculate");   // (2.4A Box Method: an x² key wherever an answer is typed)   // (a square root to simplify: a √ key beside the Write box)
     if (!EXP) return;
     if (EXP.eq) { eqRender(hot); return; }
     zpPaint();
@@ -1950,7 +1950,7 @@
         fs3.forEach(function (pe, fi) { pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, pe, function () { exMul3(i, 0, 1); }, function (t) { var mm = /^exf:(\d+):(\d)$/.exec(t.dataset.drop || ""); if (mm && +mm[1] === i && +mm[2] !== fi) exMul3(i, fi, +mm[2]); }, "exf:"); }); });
       } else if (hEl && gEl) {   // (A)(B): drag one set of parentheses onto the other to multiply them (two equal ones become a square instead; a click still multiplies)
         hEl.dataset.drop = "exg:" + i; gEl.dataset.drop = "exg:" + i; var eqF = zpSquare(its[i]);
-        [gEl, hEl].forEach(function (pe) { pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask || BX) return; drag(e, pe, function () { if (bxOn(i)) bxOpen(i); else exDistribute(i); }, function (t) { if (t.dataset.drop === "exg:" + i) { if (eqF && t !== pe) exPw(i, true); else if (bxOn(i)) { if (t !== pe) bxOpen(i); } else exDistribute(i); } }, "exg:"); }); });   // (2.4A Box Method: the box opens, to be filled in)
+        [gEl, hEl].forEach(function (pe) { pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask || BX) return; drag(e, pe, function () { if (bxOn(i)) bxOpen(i); else exDistribute(i); }, function (t) { if (t.dataset.drop === "exg:" + i) { if (eqF && t !== pe) exPw(i, true); else if (bxOn(i)) { if (t !== pe) bxOpen(i); } else exDistribute(i); } }, "exg:"); }); });   // (Play Solve: the box opens, to be filled in)
       }
       var pwE = el.querySelector(".exPw"); if (pwE) { pwE.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); pwE.addEventListener("click", function (e) { e.stopPropagation(); if (!EXP.ask) exPw(i, false); }); }
       var kEl = el.querySelector(":scope > .exK");
@@ -1987,53 +1987,67 @@
   // since (A + B)(C + D) = (C + D)(B + A).  Then each box inside is clicked to show its product (Calculate: each product is asked), and the four products go
   // up into the expression ----
   var BX = null;
-  function bxOn(i) { var g = EXP && !EXP.eq && EXP.items[i]; return !!(svL() && lesson === 6 && mode !== "solo" && g && g.k === "g" && g.b && !g.c && !g.pw && g.items.length === 2 && g.b.length === 2 && same(g.m, mk(1))); }
-  function bxT(t) { return "<span>" + (t.n.n < 0 ? "\u2212" : "") + exTerm(t) + "</span>"; }
-  function bxBin(b) { return exSay([{ k: "g", m: mk(1), items: BX.bins[b] }]); }
-  function bxOpen(i) {
+  // (Play Solve too: every product to multiply out, in an expression or an equation, goes through the box: (x − 2)(x + 5), 3(x − 1) as a 1 × 2 box, bigger ones too)
+  function bxFac(g) {   // the two factors whose terms label the box: [left, top]
+    if (!g || g.k !== "g" || g.c || g.pw || g.abs || g.pm || g.ov || (g.m.s && sSig(g.m.s))) return null;
+    var F = g.b ? (same(g.m, mk(1)) ? [g.items, g.b] : null) : same(g.m, mk(1)) ? null : [[{ k: "c", n: g.m }], g.items];
+    if (!F || F[0].length * F[1].length > 16 || F.some(function (f) { return f.some(function (t) { return (t.k !== "c" && t.k !== "x") || hasS(t) || t.co || t.u || t.ov; }); })) return null;
+    return F;
+  }
+  function bxOnT(g) { return !!(EXP && !SIM && BUILT[act] && BUILT[act].solver && mode !== "solo" && mode !== "create" && !EXP.lit && !(EXP.eq && EXP.zp) && bxFac(g)); }
+  function bxOn(i) { return !!(EXP && !EXP.eq && bxOnT(EXP.items[i])); }
+  function bxT(t) { return "<span>" + (t.n.n < 0 ? "−" : "") + exTerm(t) + "</span>"; }
+  function bxBin(b) { var f = BX.bins[b]; return f.length === 1 ? exSay(f) : exSay([{ k: "g", m: mk(1), items: f }]); }
+  function bxTerm() { return BX.eq ? EXP[BX.S][BX.i] : EXP.items[BX.i]; }
+  function bxEl() { return $("exRow").querySelector(BX.eq ? '.exT[data-s="' + BX.S + '"][data-i="' + BX.i + '"]' : '.exT[data-i="' + BX.i + '"]'); }
+  function bxOpen(i, S) {   // S: the side of the equation (none in an expression)
     if (locked || busy || !EXP || EXP.ask || BX) return;
-    distHide(); var g = EXP.items[i], bins = [g.items, g.b];
-    BX = { i: i, g: g, bins: bins, slot: {}, cell: [null, null, null, null], ready: false };
+    var g = S ? EXP[S][i] : EXP.items[i], F = bxFac(g); if (!F) return;
+    distHide(); BX = { eq: !!S, S: S, i: i, g: g, bins: F, nL: F[0].length, nT: F[1].length, slot: {}, cell: [], ready: false }; for (var c = 0; c < BX.nL * BX.nT; c++) BX.cell.push(null);
     var slot = function (id, cls) { return "<span class=\"" + cls + " bxSlot\" data-drop=\"bx:" + id + "\" data-slot=\"" + id + "\"></span>"; }, cell = function (n) { return "<span class=\"dcell bxCell\" data-c=\"" + n + "\"><span class=\"dp\"></span></span>"; };
-    var el = document.createElement("div"); el.id = "distBox"; el.className = "bx"; el.setAttribute("aria-label", "The box for " + exSay([g]));
-    el.innerHTML = "<div class=\"bxMsg\">Drag each term of the expression to a spot outside the box: one binomial down the left, the other across the top.</div>" +
-      "<div class=\"dgrid\" style=\"grid-template-columns:auto repeat(2,auto);justify-content:center\"><span class=\"dcorner\"></span>" + slot("T0", "dtop") + slot("T1", "dtop") + slot("L0", "dleft") + cell(0) + cell(1) + slot("L1", "dleft") + cell(2) + cell(3) + "</div>";
+    var h = "<div class=\"bxMsg\">" + bxHow() + "</div><div class=\"dgrid\" style=\"grid-template-columns:auto repeat(" + BX.nT + ",auto);justify-content:center\"><span class=\"dcorner\"></span>";
+    for (var t0 = 0; t0 < BX.nT; t0++) h += slot("T" + t0, "dtop");
+    for (var r = 0; r < BX.nL; r++) { h += slot("L" + r, "dleft"); for (var c2 = 0; c2 < BX.nT; c2++) h += cell(r * BX.nT + c2); }
+    var el = document.createElement("div"); el.id = "distBox"; el.className = "bx"; el.setAttribute("aria-label", "The box for " + exSay([g])); el.innerHTML = h + "</div>";
     document.body.appendChild(el);
     var st = document.querySelector(".stage").getBoundingClientRect(); el.style.left = (st.left + st.width / 2) + "px"; el.style.bottom = Math.max(10, innerHeight - st.bottom + 14) + "px";
+    if (BX.nL * BX.nT > 4) { var base = Math.min(33.6, Math.max(20.8, innerWidth * 0.032)), fitH = st.height * 0.5 / ((BX.nL + 1) * 2.1), fitW = st.width * 0.92 / ((BX.nT + 1) * 3.8); el.style.fontSize = Math.max(11, Math.min(base, fitH, fitW)) + "px"; }
     distT.push(setTimeout(function () { el.classList.add("on"); }, 20));
     bxRow();
-    [].forEach.call(el.querySelectorAll(".bxCell"), function (c) { c.addEventListener("click", function () { if (BX && BX.ready && mode !== "calculate") bxReveal(+c.dataset.c); }); });
-    note("Multiply " + exSay([g]) + " with the box. Drag the terms of one binomial down the left side and the terms of the other across the top.");
+    [].forEach.call(el.querySelectorAll(".bxCell"), function (c3) { c3.addEventListener("click", function () { if (BX && BX.ready && mode !== "calculate") bxReveal(+c3.dataset.c); }); });
+    note("Multiply " + exSay([g]) + " with the box. " + bxHow());
   }
-  function bxRow() {   // while the box is open, each term of the two binomials in the expression is picked up on its own
-    if (!BX || BX.done) return; var te = $("exRow").querySelector('.exT[data-i="' + BX.i + '"]'); if (!te) return;
+  function bxHow() { return BX.nL === 1 ? "Drag " + bxBin(0) + " to the spot on the left of the box, and the terms of " + bxBin(1) + " across the top." : BX.nL === BX.nT ? "Drag the terms of one factor down the left side of the box and the terms of the other across the top." : "Drag the " + BX.nL + " terms of " + bxBin(0) + " down the left side and the " + BX.nT + " terms of " + bxBin(1) + " across the top."; }
+  function bxRow() {   // while the box is open, each term of the factors in the expression is picked up on its own
+    if (!BX || BX.done) return; var te = bxEl(); if (!te) return;
     var used = {}; Object.keys(BX.slot).forEach(function (q) { used[BX.slot[q].b + ":" + BX.slot[q].k] = 1; });
-    var chip = function (b, k) { var t = BX.bins[b][k]; return "<span class=\"bxChip" + (used[b + ":" + k] ? " used" : "") + "\" data-b=\"" + b + "\" data-k=\"" + k + "\" title=\"Drag me to a spot outside the box\">" + (k ? "<span class=\"exOp\">" + (t.n.n < 0 ? "\u2212" : "+") + "</span>" + exTerm(t) : bxT(t)) + "</span>"; };
-    te.innerHTML = [0, 1].map(function (b) { return "<span class=\"exG\">(" + chip(b, 0) + chip(b, 1) + ")</span>"; }).join(""); te.classList.remove("grab");
+    var chip = function (b, k) { var t = BX.bins[b][k], one = BX.bins[b].length === 1 && !BX.g.b; return "<span class=\"bxChip" + (used[b + ":" + k] ? " used" : "") + "\" data-b=\"" + b + "\" data-k=\"" + k + "\" title=\"Drag me to a spot outside the box\">" + (one ? exFr(mk(Math.abs(t.n.n), t.n.d)) : k ? "<span class=\"exOp\">" + (t.n.n < 0 ? "−" : "+") + "</span>" + exTerm(t) : bxT(t)) + "</span>"; };
+    var par = function (b) { var h = ""; for (var k = 0; k < BX.bins[b].length; k++) h += chip(b, k); return "<span class=\"exG\">(" + h + ")</span>"; };
+    te.innerHTML = BX.g.b ? par(0) + par(1) : chip(0, 0) + par(1); te.classList.remove("grab");   // (a number in front: its sign stays where it is, outside)
     [].forEach.call(te.querySelectorAll(".bxChip"), function (c) { c.addEventListener("pointerdown", function (e) { e.stopPropagation(); if ((EXP && EXP.ask) || c.classList.contains("used")) return; drag(e, c, null, function (t) { bxDrop(+c.dataset.b, +c.dataset.k, t.dataset.slot); }, "bx:"); }); });
   }
+  function bxSides() { var o = {}; Object.keys(BX.slot).forEach(function (q) { o[BX.slot[q].b] = q.charAt(0); }); return o; }
   function bxDrop(b, k, sid) {
     if (!BX || !sid || BX.slot[sid] || BX.ready) return;
-    var side = sid.charAt(0), other = side === "L" ? "T" : "L", mine = [0, 1].map(function (p) { return BX.slot[side + p]; }).filter(Boolean), theirs = [0, 1].map(function (p) { return BX.slot[other + p]; }).filter(Boolean);
-    if (mine.some(function (z) { return z.b !== b; }) || theirs.some(function (z) { return z.b === b; })) {
-      note("Not quite. The two terms of " + bxBin(b) + " go together on one side of the box, and the two terms of " + bxBin(1 - b) + " on the other.");
-      if (mode === "sequence" || mode === "calculate") { EQW++; eqwTa(); } return;
-    }
+    var side = sid.charAt(0), n = side === "L" ? BX.nL : BX.nT, sd = bxSides(), bad = "";
+    if (BX.bins[b].length !== n) bad = bxBin(b) + (BX.bins[b].length === 1 ? " is one term: it goes" : " has " + BX.bins[b].length + " terms: they go") + " on the side with " + BX.bins[b].length + (BX.bins[b].length === 1 ? " spot." : " spots.");
+    else if ((sd[b] && sd[b] !== side) || sd[1 - b] === side) bad = "The terms of " + bxBin(b) + " go together on one side of the box, and the terms of " + bxBin(1 - b) + " on the other.";
+    if (bad) { note("Not quite. " + bad); if (mode === "sequence" || mode === "calculate") { EQW++; eqwTa(); } return; }
     BX.slot[sid] = { b: b, k: k }; var el = $("distBox"); if (!el) return;
     el.querySelector('[data-slot="' + sid + '"]').innerHTML = bxT(BX.bins[b][k]); var ch = $("exRow").querySelector('.bxChip[data-b="' + b + '"][data-k="' + k + '"]'); if (ch) ch.classList.add("used");
-    if (["L0", "L1", "T0", "T1"].every(function (q) { return BX.slot[q]; })) {
+    if (Object.keys(BX.slot).length === BX.nL + BX.nT) {
       BX.ready = true; el.classList.add("bxReady"); var m = el.querySelector(".bxMsg");
       if (mode === "calculate") { m.textContent = "Multiply each row by each column."; note("Now each box inside: multiply its row by its column."); bxAsk(); }
       else { m.textContent = "Click each box inside to multiply its row by its column."; note("Now click each box inside: it shows its row times its column."); }
     } else note("");
   }
-  function bxRC(n) { var r = BX.slot["L" + Math.floor(n / 2)], c = BX.slot["T" + n % 2]; return [BX.bins[r.b][r.k], BX.bins[c.b][c.k]]; }
+  function bxRC(n) { var r = BX.slot["L" + Math.floor(n / BX.nT)], c = BX.slot["T" + n % BX.nT]; return [BX.bins[r.b][r.k], BX.bins[c.b][c.k]]; }
   function bxProd(n) { var rc = bxRC(n); return exDist({ k: "g", m: mk(1), items: [rc[0]], b: [rc[1]] })[0]; }
-  function bxSay(n) { var rc = bxRC(n), c = exSay([rc[1]]); return exSay([rc[0]]) + " \u00b7 " + (rc[1].n.n < 0 ? "(" + c + ")" : c); }
+  function bxSay(n) { var rc = bxRC(n), c = exSay([rc[1]]); return exSay([rc[0]]) + " · " + (rc[1].n.n < 0 ? "(" + c + ")" : c); }
   function bxReveal(n) {
     if (!BX || !BX.ready || BX.cell[n]) return; var el = $("distBox"); if (!el) return;
     var p = bxProd(n); BX.cell[n] = p; var dp = el.querySelector('.bxCell[data-c="' + n + '"] .dp'); dp.innerHTML = bxT(p); dp.classList.add("show");
-    var tl = el.querySelector('[data-slot="T' + n % 2 + '"]'), lf = el.querySelector('[data-slot="L' + Math.floor(n / 2) + '"]'); [tl, lf].forEach(function (x) { x.classList.add("hl"); }); distT.push(setTimeout(function () { [tl, lf].forEach(function (x) { x.classList.remove("hl"); }); }, 700));
+    var tl = el.querySelector('[data-slot="T' + n % BX.nT + '"]'), lf = el.querySelector('[data-slot="L' + Math.floor(n / BX.nT) + '"]'); [tl, lf].forEach(function (x) { x.classList.add("hl"); }); distT.push(setTimeout(function () { [tl, lf].forEach(function (x) { x.classList.remove("hl"); }); }, 700));
     note(bxSay(n) + " = " + exSay([p]) + ".");
     if (BX.cell.every(Boolean)) bxPush();
   }
@@ -2042,16 +2056,20 @@
     [].forEach.call(el.querySelectorAll(".bxCell"), function (c) { c.classList.toggle("hl", +c.dataset.c === n); });
     var lab = bxSay(n) + " =", w = bxProd(n); eqAsk({ kind: "cq", want: w, go: function () { var c = el.querySelector(".bxCell.hl"); if (c) c.classList.remove("hl"); bxReveal(n); bxAsk(); } }, lab); $("askT").textContent = lab; $("askIn").placeholder = w.k === "x" ? "e.g. 3" + exSay([{ k: "x", v: w.v, n: mk(1) }]) : "e.g. 6";
   }
-  function bxPush() {   // the four products go up into the expression, in place of the two binomials
-    var deg = function (t) { return t.k === "x" ? (/\^2$/.test(t.v || "") ? 2 : 1) : 0; }, B = BX, el = $("distBox"), g = B.g, i = B.i; B.done = true;
-    var d = [0, 1, 2, 3].map(function (n) { return { t: B.cell[n], n: n }; }).sort(function (a, b) { return deg(b.t) - deg(a.t) || a.n - b.n; }).map(function (o) { return o.t; });   // (highest power first, so the answer ends in standard form)
-    var msg = "Multiply with the box: " + exSay([g]) + " = " + exSay(d) + ". Every term in one binomial times every term in the other.", row = $("exRow").querySelector('.exT[data-i="' + i + '"]') || $("exRow"), rr = row.getBoundingClientRect(), fl = [];
+  function bxPush() {   // the products go up into the expression, in place of the product
+    var deg = function (t) { if (t.k !== "x") return 0; var m = /\^(\d+)$/.exec(t.v || ""); return m ? +m[1] : 1; }, B = BX, el = $("distBox"), g = B.g, i = B.i; B.done = true;
+    var d = B.cell.map(function (t, n) { return { t: t, n: n }; }).sort(function (a, b) { return deg(b.t) - deg(a.t) || a.n - b.n; }).map(function (o) { return o.t; });   // (highest power first)
+    var msg = "Multiply with the box: " + exSay([g]) + " = " + exSay(d) + ". Every term in one factor times every term in the other.", row = bxEl() || $("exRow"), rr = row.getBoundingClientRect(), fl = [];
     distT.push(setTimeout(function () {
-      if (!el || !el.isConnected) return;
+      if (!el || !el.isConnected) return; var N = el.querySelectorAll(".bxCell .dp").length;
       [].forEach.call(el.querySelectorAll(".bxCell .dp"), function (dp, j) { var r = dp.getBoundingClientRect(), f = document.createElement("div"); f.className = "bxFly"; f.innerHTML = dp.innerHTML; f.style.fontSize = getComputedStyle(dp).fontSize; f.style.left = r.left + "px"; f.style.top = r.top + "px"; document.body.appendChild(f); fl.push(f);
-        requestAnimationFrame(function () { requestAnimationFrame(function () { f.style.left = (rr.left + rr.width * (j + 0.5) / 4 - r.width / 2) + "px"; f.style.top = (rr.top + rr.height / 2 - r.height / 2) + "px"; }); }); });
+        requestAnimationFrame(function () { requestAnimationFrame(function () { f.style.left = (rr.left + rr.width * (j + 0.5) / N - r.width / 2) + "px"; f.style.top = (rr.top + rr.height / 2 - r.height / 2) + "px"; }); }); });
       el.classList.remove("on");
-      setTimeout(function () { fl.forEach(function (f) { f.remove(); }); if (BX !== B) return; distHide(); var n = EXP.items.slice(); n.splice.apply(n, [i, 1].concat(d)); exSet(n, msg); }, 800);
+      setTimeout(function () {
+        fl.forEach(function (f) { f.remove(); }); if (BX !== B) return; distHide();
+        if (B.eq) { var Nq = eqClone(); Nq[B.S].splice.apply(Nq[B.S], [i, 1].concat(d)); Nq.L = eqNorm(Nq.L); Nq.R = eqNorm(Nq.R); eqSet(Nq, msg); }
+        else { var n2 = EXP.items.slice(); n2.splice.apply(n2, [i, 1].concat(d)); exSet(n2, msg); }
+      }, 800);
     }, 700));
   }
   function bxMoveDemo(srcSel, dstSel, run, after) {   // the demo hand drags a term to its spot
@@ -2060,12 +2078,16 @@
     DM4.t = setTimeout(function () { if (!alive()) return; handGo(ctr(src), 600);
       DM4.t = setTimeout(function () { if (!alive()) return; handTap(); handGo(ctr(dst), 1000); fly(src, dst, function () { if (!alive()) return; run(); after(); }, true); }, 750); }, 300);
   }
+  function bxDemoTick(ms) { clearTimeout(DM4.t); DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused || locked) return; if (!BX) { exDemoStep(300); return; } bxDemoStep(); }, ms); }
   function bxDemoStep() {
-    var next = function () { if (!locked) exDemoStep(700); };
-    var order = [[0, 0, "L0"], [0, 1, "L1"], [1, 0, "T0"], [1, 1, "T1"]].filter(function (o) { return !BX.slot[o[2]]; })[0];
-    if (order) { dmCap(order[0] === 0 ? "Drag the terms of " + bxBin(0) + " down the left side of the box." : "Drag the terms of " + bxBin(1) + " across the top."); bxMoveDemo('#exRow .bxChip[data-b="' + order[0] + '"][data-k="' + order[1] + '"]', '#distBox [data-slot="' + order[2] + '"]', function () { bxDrop(order[0], order[1], order[2]); }, next); return; }
-    var n = BX.cell.findIndex(function (c) { return !c; });
-    if (n >= 0 && !BX.done) { dmCap("Click the box: " + bxSay(n) + "."); exTapDemo('#distBox .bxCell[data-c="' + n + '"]', function () { bxReveal(n); }, next); return; }
+    var next = function () { if (!locked) exDemoStep(700); }, sd = bxSides(), order = null;
+    for (var b = 0; b < 2 && !order; b++) for (var k = 0; k < BX.bins[b].length && !order; k++) {
+      if (Object.keys(BX.slot).some(function (q) { return BX.slot[q].b === b && BX.slot[q].k === k; })) continue;
+      var side = sd[b] || (b === 0 ? "L" : "T"), n = side === "L" ? BX.nL : BX.nT; for (var p = 0; p < n; p++) if (!BX.slot[side + p]) { order = [b, k, side + p]; break; }
+    }
+    if (order) { dmCap(order[0] === 0 ? "Drag the " + (BX.nL === 1 ? "number " + bxBin(0) : "terms of " + bxBin(0)) + " to the left side of the box." : "Drag the terms of " + bxBin(1) + " across the top."); bxMoveDemo('#exRow .bxChip[data-b="' + order[0] + '"][data-k="' + order[1] + '"]', '#distBox [data-slot="' + order[2] + '"]', function () { bxDrop(order[0], order[1], order[2]); }, next); return; }
+    var c = BX.cell.findIndex(function (x) { return !x; });
+    if (c >= 0 && !BX.done) { dmCap("Click the box: " + bxSay(c) + "."); exTapDemo('#distBox .bxCell[data-c="' + c + '"]', function () { bxReveal(c); }, next); return; }
     DM4.t = setTimeout(next, 900);   // (the products are on their way up)
   }
   function distShow(g) {
@@ -2158,6 +2180,7 @@
   function exDistribute(i) {
     if (EXP.items[i] && EXP.items[i].c) { exMul3(i, 0, 1); return; }
     if (locked || busy || EXP.ask) return; var g = EXP.items[i], d = exDist(g);
+    if (bxOn(i)) { bxOpen(i); return; }   // (Play Solve: the box)
     if (mode === "calculate") { exAsk("dist", i, -1, exSay([g]) + " ="); return; }
     var n = EXP.items.slice(); n.splice.apply(n, [i, 1].concat(d)); exSet(n, distMsg(g, d), g);
   }
@@ -2265,9 +2288,9 @@
   }
   function exDragDemo(sel, run, after, key) { var has = $("exRow").querySelector(sel + " > .exM"); exMoveDemo(has ? sel + " > .exM" : '.exNeg[data-for="' + key + '"]', sel + " > .exG", run, after); }   // the number in front of the parentheses onto them
   function exDemoStep(ms) {
+    if (BX) { bxDemoTick(ms); return; }   // (the box being filled in)
     if (EXP && EXP.eq) { eqDemoStep(ms); return; }
     if (EXP && EXP.grp) { grDemoStep(ms); return; }
-    if (BX) { clearTimeout(DM4.t); DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused || locked || !BX) { if (EXP && DM4.run && !DM4.paused && !locked && !BX) exDemoStep(300); return; } bxDemoStep(); }, ms); return; }   // (2.4A Box Method: the box being filled in)
     if (EXP && EXP.rad) {   // a square root: click it and take out the biggest perfect square factor
       clearTimeout(DM4.t);
       DM4.t = setTimeout(function () {
@@ -2305,7 +2328,7 @@
         if (g.b && bxOn(gi)) { dmCap("Drag one binomial onto the other: the box opens."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { bxOpen(gi); }, function () { if (!locked) exDemoStep(700); }); return; }
         if (g.b) { dmCap("Drag one set of parentheses onto the other to multiply them."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, distMsg(g, exDist(g)), g); }, function () { if (!locked) exDemoStep(900); }); return; }
         dmCap("Drag " + (dgWord(g.m) === "the number" ? exSay([{ k: "c", n: g.m }]) : dgWord(g.m)) + " onto the parentheses to distribute it.");
-        exDragDemo('.exT[data-i="' + gi + '"]', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, distMsg(g, exDist(g)), g); }, function () { if (!locked) exDemoStep(900); }, String(gi));
+        exDragDemo('.exT[data-i="' + gi + '"]', function () { if (bxOn(gi)) { bxOpen(gi); return; } var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, distMsg(g, exDist(g)), g); }, function () { if (!locked) exDemoStep(900); }, String(gi));   // (Play Solve: the box opens)
         return;
       }
       var fdS = fdDemo(null, its); if (fdS) { exRender(); dmCap(fdS.cap); exTapDemo(fdS.tap, fdS.run, function () { if (!locked) exDemoStep(900); }); return; }
@@ -3710,7 +3733,7 @@
   }
   function eqRender(hot) {
     if (EXP && EXP.eq) { fdClean(EXP.L); fdClean(EXP.R); uClean(EXP.L || []); uClean(EXP.R || []); if (EXP.zp) EXP.zp.eqs.forEach(function (q) { uClean(q.L || []); uClean(q.R || []); }); }
-    eqRender0(hot); exWork();
+    eqRender0(hot); if (BX && !BX.done && BX.eq) bxRow(); exWork();
     var g = EXP && EXP.eq && !EXP.zp ? EXP.rel : null;
     if (g && EXP.relPrev && EXP.relPrevO === EXP.orig && relRev(EXP.relPrev) === g && g !== EXP.relPrev) EXP.relAt = Date.now();   // the inequality sign turns over
     if (g && EXP.relAt && Date.now() - EXP.relAt < 850) relTurn($("exRow").querySelector(".exEq"), Date.now() - EXP.relAt);
@@ -3763,6 +3786,10 @@
         pwS.classList.add("exExp"); pwS._eqEl = R.querySelector(".exEq");
         pwS._cross = function (on) { if (on) pwS.style.width = pwS.getBoundingClientRect().width + "px"; else pwS.style.width = ""; pwS.textContent = on ? "\u00b1\u221a" : "2"; pwS.classList.toggle("exSqrt", on); };
         pwS.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, pwS, function () { eqPw(S, i, false); }, function () { eqRootG(S, i); }, ["et:", "eq="]); });
+      }
+      var hE2 = el.querySelector(":scope > .exH"), gE2 = el.querySelector(":scope > .exG");
+      if (t.k === "g" && t.b && !t.c && gE2 && hE2 && !EXP.zpq && !zpSquare(t)) {   // (A)(B): drag one set of parentheses onto the other to multiply them (Play Solve: the box opens)
+        [gE2, hE2].forEach(function (pe) { pe.dataset.drop = "eqp:" + S + ":" + i; pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask || BX) return; zdr(idx, e, pe, function () { eqDistribute(S, i); }, function (t2) { if (t2 !== pe && t2.dataset.drop === "eqp:" + S + ":" + i) eqDistribute(S, i); }, "eqp:"); }); });
       }
       if (t.k === "g" && zpSquare(t) && !t.pw && !EXP.zpq) {   // two equal sets of parentheses: drag one onto the other to write them as a square
         var gF = el.querySelector(":scope > .exG"), hF = el.querySelector(":scope > .exH");
@@ -3894,6 +3921,7 @@
   }
   function eqDistribute(S, i) {
     if (locked || busy || EXP.ask) return;
+    if (BX) return; if (bxOnT(EXP[S][i])) { bxOpen(i, S); return; }   // (Play Solve: the box)
     if (EXP[S][i] && EXP[S][i].abs) { note("A number can't be distributed into an absolute value. Get the absolute value by itself (move the numbers, divide by the number in front), then tap one of its bars."); return; }
     var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R);
     var msg = distMsg(g, d);
@@ -4191,6 +4219,7 @@
     eqEnd(want.kind); $("exSolo").hidden = true;
   }
   function eqDemoStep(ms) {
+    if (BX) { bxDemoTick(ms); return; }   // (the box being filled in)
     if (EXP.grq && !EXP.zpq && grSq()) { grDemoStep(ms); return; }
     clearTimeout(DM4.t);
     DM4.t = setTimeout(function () {
@@ -4240,7 +4269,7 @@
     if (dvk) { var dg = EXP[dvk.S][dvk.i]; return { mv: ['.exT[data-s="' + dvk.S + '"][data-i="' + dvk.i + '"] > .exM', ".exEq"], cap: "Drag the " + dg.m.n + " to the other side: it divides every term by " + dg.m.n + ".", run: function () { eqDivGroup(dvk.S, dvk.i); } }; }
     for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].u) return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"]', cap: "Click the fraction to simplify.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(S, i) }; }
     if (EXP.zpq && zpOf(EXP.L, EXP.R)) return { cap: "If two numbers multiply to make 0, one of them must be 0. Drag a factor up.", mv: ['#exRow .exT[data-s="L"][data-i="0"] > .exG', zpAnchor(true)], run: function () { var a = $("zpAnchor"); if (a) a.remove(); zpSplit(0, true); } };
-    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return { hot: [S + i], cap: "Drag " + dgWord(EXP[S][i].m) + " onto the parentheses.", key: S + ":" + i, anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, distMsg(g, d), g); }; })(S, i) }; }
+    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return EXP[S][i].b && !EXP[S][i].c && bxOnT(EXP[S][i]) ? { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"] > .exG', '.exT[data-s="' + S + '"][data-i="' + i + '"] > .exH'], cap: "Drag one set of parentheses onto the other: the box opens.", run: (function (S, i) { return function () { bxOpen(i, S); }; })(S, i) } : { hot: [S + i], cap: "Drag " + dgWord(EXP[S][i].m) + " onto the parentheses." + (bxOnT(EXP[S][i]) ? " The box opens." : ""), key: S + ":" + i, anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { if (bxOnT(EXP[S][i])) { bxOpen(i, S); return; } var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, distMsg(g, d), g); }; })(S, i) }; }
     for (q = 0; q < 2; q++) { var fdq = fdDemo(sides[q], EXP[sides[q]]); if (fdq) return fdq; }
     for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"]', '.exT[data-s="' + S + '"][data-i="' + j + '"]'], cap: "Drag a term onto its like term.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
     var xi = function (S) { return EXP[S].findIndex(function (t) { return t.k === "x"; }); }, ci = function (S) { return EXP[S].findIndex(function (t) { return t.k === "c"; }); };
@@ -6119,7 +6148,7 @@
   function dnOn() { return mode !== "demo" && mode !== "solo" && mode !== "create" && !!BUILT[act] && (!!BUILT[act].sub || (quiz() && !est()) || exDn()); }
   function exDnUpd() { if (!exDn()) return; var h = $("hint"); h.hidden = !!locked; h.textContent = "Demo next step"; h.disabled = DNX; }
   function exDemoNext() {   // play the student's next step, let it sit a moment, then put the work back
-    if (locked || busy || EXP.ask || DNX) return; var st = null; try { st = eqNextStep(); } catch (e) {}
+    if (locked || busy || EXP.ask || DNX) return; if (BX) { note("Your turn: " + (BX.ready ? "work out each box inside." : bxHow())); return; } var st = null; try { st = eqNextStep(); } catch (e) {}
     if (!st) { note("Nothing more to demonstrate here."); return; }
     if (!st.run) { note("Next: " + (st.cap || "keep going.")); return; }
     var h0 = hist.length, m0 = mode, g0 = MS.gen; DNX = true; $("hint").disabled = true; if (mode === "calculate") mode = "sequence";
