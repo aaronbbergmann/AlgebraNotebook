@@ -5859,7 +5859,7 @@
     ["2.2B", "2.2", ["6", "7", "8", "9", "10"], "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing"],
     ["2.2C", "2.2", ["11", "3", "12", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
     ["2.4A", "2.4", ["1", "2", "5", "6", "7"], "Modeling with Quadratic Functions"],
-    ["2.4B", "2.4", ["4"], "Modeling with Quadratic Functions (Day 2)"]   // (exercise 3, Three Points with first and second differences, was taken out)
+    ["2.4B", "2.4", ["4", "5", "7"], "Modeling with Quadratic Functions (Day 2)"]   // (exercise 3, Three Points with first and second differences, was taken out)
   ];
   var VW = {}, VBASE = {};
   VIEWS.forEach(function (v, i) { VW[v[0]] = { id: v[0], base: v[1], ls: v[2], title: v[3], i: i }; VBASE[v[1]] = 1; });
@@ -5928,6 +5928,7 @@
       ["g", "solo", 80, "Write Mode, 2nd round", 2], ["g", "solo", 100, "Write Mode, 3rd round", 3]
     ] }
   };
+  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[0] === 4 && l[1] === "solo" ? (l[4] === 2 ? [4, "solo", 100, "Write Mode, 2nd round", 2] : [4, "solo", 70, "Write Mode"]) : l; });   // (2.4B Regression: two rounds of Write, not three)
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !((l[0] <= 2 || l[0] >= 5) && l[4] > 1); }).map(function (l) { return (l[0] <= 2 || l[0] >= 5) && l[1] === "solo" ? [l[0], "solo", 100, "Write Mode"] : l; });   // (exercises 5 to 7, in the format of Play Solve: one round of Write too)
   // 2.4A exercises 5 to 7 run on Play Solve's pane (3-step linear equations, multiplying binomials with the box, simplifying square roots): while one of them is open
   // the activity is a solver, not a quiz, so everything that asks BUILT[act].solver or .quiz follows the exercise
@@ -10477,15 +10478,19 @@ var ESPIC = {
     var P = m3Cur().dsm, box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { pgWait(800, n); return; }
     var r = box.getBoundingClientRect(), at = function (i) { return { x: r.left + Math.min(150, r.width * 0.2), y: r.top + 40 + i * 50 }; }, X = [], Y = [];
     function typeL(id, lt, then) { var c = 0; (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else pgWait(700, then); })(); }
-    cap("Type the data in a Desmos table"); handGo(at(0), 650);
+    cap("Type table on the first line: Desmos makes a table"); handGo(at(0), 650);
     pgWait(900, function () {
       if (pgRun !== run) return; handTap();
-      (function row(i) {
+      typeL("t", "table", function () {   // (in Desmos, typing table on a line turns it into a table)
+        if (pgRun !== run) return; try { DSM.calc.removeExpression({ id: "t" }); } catch (er) { }
+        DSM.calc.setExpression({ id: "t", type: "table", columns: [{ latex: "x_{1}", values: [""] }, { latex: "y_{1}", values: [""] }] }); cap("Fill in the table with the data"); pgWait(700, function () { row(0); });
+      });
+      function row(i) {
         if (pgRun !== run) return;
         if (i >= P.xs.length) { dsmCheck(); cap("Zoom out to see the points"); handGo({ x: r.right - 30, y: r.top + 70 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); dsmZoomOut(run, step2); }); return; }
         X.push(c2T(P.xs[i], 6)); Y.push(c2T(P.ys[i], 6));
         DSM.calc.setExpression({ id: "t", type: "table", columns: [{ latex: "x_{1}", values: X.slice() }, { latex: "y_{1}", values: Y.slice() }] }); pgWait(380, function () { row(i + 1); });
-      })(0);
+      }
     });
     var k0 = P.xs.length + 1;
     function step2() {   // the table's Add Regression button (in the table's left margin), then the quadratic regression appears
@@ -10510,7 +10515,8 @@ var ESPIC = {
                 pgWait(900, function () { var fm = $("dsmFakeMenu"); if (fm) fm.remove(); if (pgRun !== run) return; put(); go(); }); }); }); }); });
       }
     }
-    function step3() { cap("Name the model f(x), with the regression's numbers"); handGo(at(Math.min(k0 + 1, 7)), 500); pgWait(700, function () { if (pgRun !== run) return; handTap(); typeL("f", "f\\left(x\\right)=" + P.fx, function () { pgWait(800, function () { ev(0); }); }); }); }
+    function step3() { if (!P.fx) { n(); return; }   // (2.4B: the graph answers the question; nothing more to type)
+      cap("Name the model f(x), with the regression's numbers"); handGo(at(Math.min(k0 + 1, 7)), 500); pgWait(700, function () { if (pgRun !== run) return; handTap(); typeL("f", "f\\left(x\\right)=" + P.fx, function () { pgWait(800, function () { ev(0); }); }); }); }
     function ev(i) {
       if (pgRun !== run) return; if (i >= (P.ev || []).length) { pgWait(900, n); return; }
       cap("Desmos works out the value"); handGo(at(Math.min(k0 + 2 + i, 8)), 500); pgWait(700, function () { if (pgRun !== run) return; handTap(); typeL("v" + i, P.ev[i], function () { pgWait(900, function () { ev(i + 1); }); }); });
@@ -15054,11 +15060,11 @@ var ESPIC = {
   }
   // Example 4: Using Quadratic Regression (inputs not equally spaced)
   var C2S244 = [
-    { pic: "car", s: "The table shows the fuel efficiency " + c2Y + " (in miles per gallon) of a car at different speeds " + c2X + " (in miles per hour).", xn: "Speed (mi/h)", yn: "Fuel efficiency (mi/gal)", xs: [20, 24, 30, 36, 40, 45, 50, 56, 60, 70], up: false, vx: [46, 52], vy: [24, 32], wide: 0.012, ask: "max", what: "best gas mileage", u: "miles per gallon" },
-    { pic: "leaf", s: "The table shows how efficiently a plant turns light into energy, " + c2Y + " (percent), at temperatures " + c2X + " (in °C).", xn: "Temperature (°C)", yn: "Efficiency (%)", xs: [2, 5, 8, 11, 15, 18, 22, 26, 30], up: false, vx: [12, 16], vy: [85, 95], wide: 0.25, ask: "max", what: "greatest efficiency", u: "percent" },
-    { pic: "ice", s: "The table shows the greatest weight " + c2Y + " (in tons) that ice " + c2X + " inches thick can hold.", xn: "Ice thickness (in.)", yn: "Weight (tons)", xs: [12, 14, 15, 18, 20, 24, 27], up: true, vx: [2, 6], vy: [-4, 0], wide: 0.09, ask: "est", X: 22, what: "weight ice 22 inches thick can hold", u: "tons" },
-    { pic: "brake", s: "The table shows the stopping distance " + c2Y + " (in feet) of a car at different speeds " + c2X + " (in miles per hour).", xn: "Speed (mi/h)", yn: "Stopping distance (ft)", xs: [20, 30, 40, 55, 65, 70], up: true, vx: [-30, -20], vy: [-10, 0], wide: 0.045, ask: "est", X: 45, what: "stopping distance at 45 miles per hour", u: "feet" },
-    { pic: "scooter", s: "The table shows the number " + c2Y + " (in thousands) of people using shared scooters " + c2X + " weeks after they arrived in a city.", xn: "Weeks", yn: "Users (thousands)", xs: [1, 4, 6, 10, 12, 15, 20, 24, 25], up: true, vx: [0, 2], vy: [1, 2], wide: 0.026, ask: "est", X: 30, what: "number of users after 30 weeks", u: "thousand" }
+    { pic: "car", s: "The table shows the fuel efficiency " + c2Y + " (in miles per gallon) of a car at different speeds " + c2X + " (in miles per hour).", xn: "Speed (mi/h)", yn: "Fuel efficiency (mi/gal)", xs: [20, 24, 30, 36, 40, 45, 50, 56, 60, 70], up: false, vx: [46, 52], vy: [24, 32], wide: 0.012, ask: "max", what: "best gas mileage", u: "miles per gallon", xw: "speed", xu: "miles per hour", yw: "fuel efficiency", q: ["vx", "vy"] },
+    { pic: "leaf", s: "The table shows how efficiently a plant turns light into energy, " + c2Y + " (percent), at temperatures " + c2X + " (in °C).", xn: "Temperature (°C)", yn: "Efficiency (%)", xs: [2, 5, 8, 11, 15, 18, 22, 26, 30], up: false, vx: [12, 16], vy: [85, 95], wide: 0.25, ask: "max", what: "greatest efficiency", u: "percent", xw: "temperature", xu: "°C", yw: "efficiency", q: ["vx", "vy", "yi", "xi"] },
+    { pic: "ice", s: "The table shows the greatest weight " + c2Y + " (in tons) that ice " + c2X + " inches thick can hold.", xn: "Ice thickness (in.)", yn: "Weight (tons)", xs: [12, 14, 15, 18, 20, 24, 27], up: true, vx: [2, 6], vy: [-4, 0], wide: 0.09, ask: "est", X: 22, what: "weight ice 22 inches thick can hold", u: "tons", xw: "thickness", xu: "inches", yw: "weight it can hold", q: ["y"] },
+    { pic: "brake", s: "The table shows the stopping distance " + c2Y + " (in feet) of a car at different speeds " + c2X + " (in miles per hour).", xn: "Speed (mi/h)", yn: "Stopping distance (ft)", xs: [20, 30, 40, 55, 65, 70], up: true, vx: [-30, -20], vy: [-10, 0], wide: 0.045, ask: "est", X: 45, what: "stopping distance at 45 miles per hour", u: "feet", xw: "speed", xu: "miles per hour", yw: "stopping distance", q: ["y", "yi"] },
+    { pic: "scooter", s: "The table shows the number " + c2Y + " (in thousands) of people using shared scooters " + c2X + " weeks after they arrived in a city.", xn: "Weeks", yn: "Users (thousands)", xs: [1, 4, 6, 10, 12, 15, 20, 24, 25], up: true, vx: [0, 2], vy: [1, 2], wide: 0.026, ask: "est", X: 30, what: "number of users after 30 weeks", u: "thousand", xw: "number of weeks", xu: "weeks", yw: "number of users", q: ["y", "yi"] }
   ];
   function c2Reg(xs, ys) {   // least squares a, b, c and R²
     var S = [0, 0, 0, 0, 0], T = [0, 0, 0], n = xs.length, my = 0;
@@ -15071,44 +15077,53 @@ var ESPIC = {
   }
   function c24Sg(v) { return v ? (v < 0 ? "-" : "+") + c2T(Math.abs(v), 6) : ""; }   // a signed number for Desmos LaTeX (+28, -20; nothing for 0)
   function c2Sig(v, n) { if (!v) return 0; var d = Math.ceil(Math.log10(Math.abs(v))), p = n - d; return c2R(Math.round(v * Math.pow(10, p)) / Math.pow(10, p), 8); }
+  // 2.4B Quadratic Regression: the data go into a Desmos table and the quadratic regression runs; then the graph answers one question: the vertex, an intercept,
+  // or the value at a given x (clicking the parabola shows the point).  Answers accept the rounded model's values and the full regression's alike
   function c2M244(tier) {
-    for (var t = 0; t < 400; t++) {
-      var sc = c2Pick(C2S244), h = sc.vx[0] + rnd(sc.vx[1] - sc.vx[0] + 1), k = sc.vy[0] + rnd(sc.vy[1] - sc.vy[0] + 1), a0 = (sc.up ? 1 : -1) * sc.wide * (0.85 + rnd(31) / 100);
-      var noise = Math.abs(a0) * 6 + 0.15, xs = sc.xs.slice(), ys = xs.map(function (x) { var y = a0 * (x - h) * (x - h) + k + (rnd(21) - 10) / 10 * noise; return c2R(y, 1); });
+    for (var t = 0; t < 600; t++) {
+      var sc = c2Pick(C2S244), qt = c2Pick(sc.q), h = sc.vx[0] + rnd(sc.vx[1] - sc.vx[0] + 1), k = sc.vy[0] + rnd(sc.vy[1] - sc.vy[0] + 1), a0 = (sc.up ? 1 : -1) * sc.wide * (0.85 + rnd(31) / 100);
+      var y0 = sc.xs.map(function (x) { return a0 * (x - h) * (x - h) + k; }), spread = Math.max.apply(null, y0) - Math.min.apply(null, y0);
+      var noise = Math.max(Math.abs(a0) * 6 + 0.15, spread * 0.012), xs = sc.xs.slice(), ys = xs.map(function (x, j) { return c2R(y0[j] + (rnd(21) - 10) / 10 * noise, 1); });   // (scatter in proportion to the data: stopping distances in the hundreds of feet scatter more)
       if (ys.some(function (y) { return y <= 0; })) continue;
       var R = c2Reg(xs, ys); if (R.r2 < 0.97 || R.r2 > 0.99995) continue;
-      var a = c2Sig(R.a, 3), b = c2Sig(R.b, 3), c = c2Sig(R.c, 3), r2 = c2R(R.r2, 4), F = function (x) { return a * x * x + b * x + c; };
-      var xv = c2R(-b / (2 * a), 2), val = c2R(F(-b / (2 * a)), 2), X = sc.X, yX = X != null ? c2R(F(X), 2) : null;
-      // (Desmos's regression keeps every digit: the answers accept the rounded model's values and the full regression's alike)
-      var Ff = function (x) { return R.a * x * x + R.b * x + R.c; }, xvF = -R.b / (2 * R.a), valF = Ff(xvF), yXF = X != null ? Ff(X) : null, u3 = function (v) { return v ? Math.pow(10, Math.floor(Math.log10(Math.abs(v))) - 2) * 1.01 : 1e-9; };
-      var E = c2Sf(a, b, c, c2Y), pb = { kind: 20, sc: sc };
+      var a = c2Sig(R.a, 3), b = c2Sig(R.b, 3), c = c2Sig(R.c, 3), F = function (x) { return a * x * x + b * x + c; }, Ff = function (x) { return R.a * x * x + R.b * x + R.c; };
+      var X = null, Y = null, Xr = null, Yr = null;   // the point the question is about: from the full regression (Desmos), and from the rounded model
+      if (qt === "vx" || qt === "vy") { X = -R.b / (2 * R.a); Y = Ff(X); Xr = -b / (2 * a); Yr = F(Xr); }
+      else if (qt === "yi") { X = 0; Y = R.c; Xr = 0; Yr = c; if (Y <= 0.05) continue; }
+      else if (qt === "xi") { var dF = R.b * R.b - 4 * R.a * R.c, dr = b * b - 4 * a * c; if (dF <= 0 || dr <= 0) continue; X = Math.max((-R.b + Math.sqrt(dF)) / (2 * R.a), (-R.b - Math.sqrt(dF)) / (2 * R.a)); Xr = Math.max((-b + Math.sqrt(dr)) / (2 * a), (-b - Math.sqrt(dr)) / (2 * a)); Y = 0; Yr = 0; if (X < xs[xs.length - 1] || X > xs[xs.length - 1] * 2.5) continue; }
+      else { X = sc.X; Y = Ff(X); Xr = X; Yr = F(X); }
+      var isX = qt === "vx" || qt === "xi", ans = c2R(isX ? X : Y, 1), alt = isX ? Xr : Yr, tol = Math.max(0.06, Math.abs(alt - (isX ? X : Y)) + 0.06, Math.abs(ans) * 0.005);
+      var E = c2Sf(a, b, c, c2Y), pb = { kind: 20, sc: sc }, hi = sc.up ? "lowest" : "highest";
+      var Q = qt === "vx" ? ["At what " + sc.xw + " is the " + sc.yw + " " + hi + "?", "Click the parabola: Desmos shows its " + hi + " point, the vertex. Read its " + c2X + "-coordinate.", c2X + " ≈", sc.xu, "the " + sc.yw + " is " + hi + " at " + c2X + " ≈ " + c2F(ans) + " " + sc.xu]
+        : qt === "vy" ? ["What is the " + (sc.up ? "lowest " : "greatest ") + sc.yw + "?", "Click the parabola: Desmos shows its " + hi + " point, the vertex. Read its " + c2Y + "-coordinate.", c2Y + " ≈", sc.u, "the " + (sc.up ? "lowest " : "greatest ") + sc.yw + " is about " + c2F(ans) + " " + sc.u]
+        : qt === "yi" ? ["What does the model give for the " + sc.yw + " when the " + sc.xw + " is 0?", "Click the parabola: Desmos shows where it crosses the " + c2Y + "-axis, the " + c2Y + "-intercept.", c2Y + " ≈", sc.u, "the " + c2Y + "-intercept is about " + c2F(ans) + " " + sc.u]
+        : qt === "xi" ? ["At what " + sc.xw + " does the " + sc.yw + " fall to 0?", "Click the parabola: Desmos shows where it crosses the " + c2X + "-axis, the " + c2X + "-intercepts. Use the one to the right of the data.", c2X + " ≈", sc.xu, "the " + sc.yw + " falls to 0 at " + c2X + " ≈ " + c2F(ans) + " " + sc.xu]
+        : ["Estimate the " + sc.what + ".", "On the parabola, find the point where " + c2X + " = " + X + " (click the parabola and drag along it: Desmos shows the point's coordinates).", c2Y + " ≈", sc.u, "at " + c2X + " = " + X + ", " + c2Y + " ≈ " + c2F(ans) + " " + sc.u];
       pb.head = sc.s; pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + " Write a function that models the data. Then " + (sc.ask === "max" ? "approximate the " + sc.what + "." : "estimate the " + sc.what + ".") + "<br>Use Desmos: type the data in a table and run a quadratic regression.";
-      pb.dsm = { reg: 1, xs: xs.slice(), ys: ys.slice(), rg: "ax_{1}^{2}+bx_{1}+c", fx: "ax^{2}+bx+c", ev: sc.ask === "max" ? ["\\frac{-b}{2a}", "f\\left(\\frac{-b}{2a}\\right)"] : ["f\\left(" + X + "\\right)"] };
+      pb.story = sc.s + " " + Q[0] + "<br>Use Desmos: type the data in a table, run a quadratic regression, then use the graph.";
+      pb.dsm = { reg: 1, xs: xs.slice(), ys: ys.slice(), rg: "ax_{1}^{2}+bx_{1}+c" };
       pb.tbl = m3Tbl(sc.xn.replace(/ \(.*/, ""), sc.yn.replace(/ \(.*/, ""), xs, ys.map(function (v) { return c2F(v); }));
-      var xa = c2Axis(0, Math.max(xs[xs.length - 1], X || 0) + 1), ya = c2Axis(0, Math.max.apply(null, ys.concat([yX || 0, sc.ask === "max" ? val : 0])) * 1.12);
+      var xa = c2Axis(0, Math.max(xs[xs.length - 1], X) + 1), ya = c2Axis(0, Math.max.apply(null, ys.concat([Y])) * 1.12);
       pb.dsm.xmax = xa.max; pb.dsm.ymax = ya.max;
       pb.fig = function (x) { return DSM.fail ? fig0(x) : ""; };   // (a blank Desmos graph takes the place of the scatter plot; it comes back only if Desmos cannot load)
       var fig0 = function (x) {
         x = x || {}; var o = { xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: sc.xn, yl: sc.yn, alt: "Scatter plot", scat: xs.map(function (v, j) { return [v, ys[j]]; }) };
         if (x.reg) o.curves = [{ fn: F, col: C2P }];
-        if (x.av) o.pts = [sc.ask === "max" ? { x: xv, y: val, col: C2P, lab: "(" + c2F(xv) + ", " + c2F(val) + ")", tc: C2P } : { x: X, y: yX, col: C2P, lab: "(" + X + ", " + c2F(yX) + ")", tc: C2P, an: "end" }];
+        if (x.av) o.pts = [{ x: Xr, y: Yr, col: C2P, lab: "(" + c2F(c2R(Xr, 1)) + ", " + c2F(c2R(Yr, 1)) + ")", tc: C2P }];
         return c2Fig(o);
       };
-      var steps = [
-        { id: "dsm", fine: 1, lab: "Desmos", type: "dsm", ask: "In Desmos, type the data in a table (columns <i>x</i>₁ and <i>y</i>₁). On a new line, type the quadratic regression <span class=\"lm\"><i>y</i>₁ ~ <i>ax</i>₁² + <i>bx</i>₁ + <i>c</i></span>: Desmos finds the parabola that fits the data best.", after: function (x) { x.reg = true; }, hint: ["Press + in Desmos and choose table, then type the " + xs.length + " data pairs.", "On a new line type y₁ ~ ax₁^2 + bx₁ + c (type ~ for the regression)."], line: "Desmos: the data in a table and the regression <i>y</i>₁ ~ <i>ax</i>₁² + <i>bx</i>₁ + <i>c</i>" },
-        { id: "ra", lab: "a", ask: "What is <i>a</i> in the regression? Round to three significant figures.", pre: "<i>a</i> ≈", ans: a, tol: u3(a), nums: [-a, c2Sig(a * 10, 3), c2Sig(a / 10, 3)], after: function (x) { x.reg = true; }, hint: ["Desmos lists <i>a</i>, <i>b</i> and <i>c</i> under the regression.", "<i>a</i> ≈ " + c2F(a, 8) + "."], line: "<i>a</i> ≈ " + c2F(a, 8) },
-        { id: "rb", lab: "b", ask: "What is <i>b</i>? Round to three significant figures.", pre: "<i>b</i> ≈", ans: b, tol: u3(b), nums: [-b, c2Sig(b * 10, 3), c2Sig(b / 10, 3)], hint: ["Desmos lists <i>b</i> under the regression.", "<i>b</i> ≈ " + c2F(b, 8) + "."], line: "<i>b</i> ≈ " + c2F(b, 8) },
-        { id: "rc", lab: "c", ask: "What is <i>c</i>? Round to three significant figures.", pre: "<i>c</i> ≈", ans: c, tol: u3(c), nums: [-c, c2Sig(c * 10, 3), c2Sig(c / 10, 3)], hint: ["Desmos lists <i>c</i> under the regression.", "<i>c</i> ≈ " + c2F(c, 8) + "."], line: "<i>c</i> ≈ " + c2F(c, 8) + ": " + E[0] + ", <i>R</i>² = " + r2 },
-        { id: "r2", fine: 1, lab: "R²", type: "pick", ask: "Desmos shows <i>R</i>² = " + r2 + " (the model, rounded: " + E[0] + "). What does <i>R</i>² tell you?", opts: c2Pk("It is close to 1, so the parabola fits the data well.", [["It is close to 1, so a line would fit better.", "R² describes how well this parabola fits: close to 1 is a good fit."], ["It is the maximum value of the function.", "R² measures the fit, not a value of the function."]]), hint: ["<i>R</i>² is between 0 and 1. Close to 1 means the model is close to the data.", "<i>R</i>² = " + r2 + " is close to 1: a good fit."], line: "<i>R</i>² = " + r2 + ": a good fit" }
+      var ptX = X, ptY = Y;
+      pb.steps = [
+        { id: "dsm", fine: 1, lab: "Desmos", type: "dsm", ask: "In Desmos, type <b>table</b> on the first line to make a table, and fill it in with the data (columns <i>x</i>₁ and <i>y</i>₁). Then run a quadratic regression: click Add Regression beside the table and choose Quadratic Regression (or type <span class=\"lm\"><i>y</i>₁ ~ <i>ax</i>₁² + <i>bx</i>₁ + <i>c</i></span>). Desmos graphs the parabola that fits the data best.", after: function (x) { x.reg = true; }, line: "quadratic regression in Desmos: " + E[0] + " (rounded)", hint: ["Type each pair on a row of the table, then add a quadratic regression.", "The regression is about " + E[0] + "."] },
+        { id: "ans", lab: "Answer", ask: "Use the graph. " + Q[0] + " <span class=\"vpHow\">(" + Q[1] + " Round to the nearest tenth.)</span>", pre: Q[2], post: Q[3], ans: ans, tol: tol, nums: [c2R(isX ? Y : X, 1), c2R(ans * 1.1 + (ans ? 0 : 1), 1), c2R(ans * 0.9 - (ans ? 0 : 1), 1)].filter(function (v, j, A) { return Math.abs(v - ans) > tol && A.indexOf(v) === j; }), after: function (x) { x.av = true; }, line: Q[4],   // (Sequence: the other coordinate, and 10% either way, as the wrong choices)
+          hint: [Q[1], "The point is about (" + c2F(c2R(X, 1)) + ", " + c2F(c2R(Y, 1)) + ")."],
+          dpre: function (run, then) {   // the demo: the hand clicks the parabola at the point, and Desmos labels it
+            var box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { then(); return; } try { box.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (er) { }
+            pgWait(450, function () { if (pgRun !== run) return; var rb = box.getBoundingClientRect(); handGo(vpDsmPx(ptX, ptY) || { x: rb.left + rb.width * 0.7, y: rb.top + rb.height * 0.45 }, 700); });
+            pgWait(1300, function () { if (pgRun !== run) return; handTap(); try { DSM.calc.setExpression({ id: "rqp", latex: "\\left(" + c2T(c2R(ptX, 2), 6) + "," + c2T(c2R(ptY, 2), 6) + "\\right)", color: "#7A3FB5", showLabel: true }); } catch (er) { } pgWait(1400, then); });
+          } }
       ];
-      if (sc.ask === "max") steps.push(
-        { id: "xv", fine: 1, lab: "x of vertex", ask: "The " + sc.what + " is the maximum value, at the vertex: " + c2X + " = −<i>b</i> ÷ (2<i>a</i>). In Desmos, type −b/(2a) on a new line (or click the vertex of the parabola). Round to the nearest hundredth.", pre: c2X + " ≈", ans: xv, tol: Math.max(0.06, Math.abs(xv) * 0.004) + Math.abs(xv - xvF), hint: ["<i>a</i> = " + c2F(a) + " and <i>b</i> = " + c2F(b) + ".", "−(" + c2F(b) + ") ÷ (2 × " + c2F(a) + ") ≈ " + c2F(xv) + "."], line: c2X + " ≈ " + c2F(xv) },
-        { id: "val", lab: "Maximum", ask: c2S("Find the maximum value: put " + c2X + " ≈ " + c2F(xv) + " into the model. In Desmos, type <span class=\"lm\"><i>f</i>(<i>x</i>) = <i>ax</i>² + <i>bx</i> + <i>c</i></span> on a new line, then <i>f</i>(−<i>b</i>/(2<i>a</i>)).", "Approximate the " + sc.what + "."), pre: "≈", post: sc.u, ans: val, tol: Math.max(0.15, Math.abs(val) * 0.01) + Math.abs(val - valF), after: function (x) { x.av = true; }, hint: ["Evaluate " + E[0] + " at " + c2X + " ≈ " + c2F(xv) + ".", "About " + c2F(val) + " " + sc.u + "."], line: "the " + sc.what + " is about " + c2F(val) + " " + sc.u });
-      else steps.push(
-        { id: "est", lab: "Estimate", ask: c2S("Put " + c2X + " = " + X + " into the model to estimate the " + sc.what + ". In Desmos, type <span class=\"lm\"><i>f</i>(<i>x</i>) = <i>ax</i>² + <i>bx</i> + <i>c</i></span> on a new line, then <i>f</i>(" + X + ").", "Estimate the " + sc.what + "."), pre: c2Y + " ≈", post: sc.u, ans: yX, tol: Math.max(0.15, Math.abs(yX) * 0.01) + Math.abs(yX - yXF), after: function (x) { x.av = true; }, hint: ["Evaluate " + E[0] + " at " + c2X + " = " + X + ".", "About " + c2F(yX) + " " + sc.u + "."], line: "estimate: about " + c2F(yX) + " " + sc.u });
-      pb.steps = steps;
-      pb.ex = "In Desmos, the quadratic regression of the table gives " + E[0] + " (rounded) with <i>R</i>² = " + r2 + ", a close fit. " + (sc.ask === "max" ? "The maximum is at " + c2X + " ≈ " + c2F(xv) + ", where " + c2Y + " ≈ " + c2F(val) + " " + sc.u + "." : "At " + c2X + " = " + X + ", " + c2Y + " ≈ " + c2F(yX) + " " + sc.u + ".");
+      pb.ex = "In Desmos, the quadratic regression of the table gives about " + E[0] + ". On its graph, " + Q[4] + ".";
       return pb;
     }
   }
