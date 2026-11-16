@@ -15114,7 +15114,7 @@ var ESPIC = {
       };
       var ptX = X, ptY = Y;
       pb.steps = [
-        { id: "dsm", fine: 1, lab: "Desmos", type: "dsm", ask: "In Desmos, type <b>table</b> on the first line to make a table, and fill it in with the data (columns <i>x</i>₁ and <i>y</i>₁). Then run a quadratic regression: click Add Regression beside the table and choose Quadratic Regression (or type <span class=\"lm\"><i>y</i>₁ ~ <i>ax</i>₁² + <i>bx</i>₁ + <i>c</i></span>). Desmos graphs the parabola that fits the data best.", after: function (x) { x.reg = true; }, line: "quadratic regression in Desmos: " + E[0] + " (rounded)", hint: ["Type each pair on a row of the table, then add a quadratic regression.", "The regression is about " + E[0] + "."] },
+        { id: "dsm", fine: 1, lab: "Desmos", type: "dsm", ask: "", after: function (x) { x.reg = true; }, line: "quadratic regression in Desmos: " + E[0] + " (rounded)", hint: ["Type each pair on a row of the table, then add a quadratic regression.", "The regression is about " + E[0] + "."] },
         { id: "ans", lab: "Answer", ask: "Use the graph. " + Q[0] + " <span class=\"vpHow\">(" + Q[1] + " Round to the nearest tenth.)</span>", pre: Q[2], post: Q[3], ans: ans, tol: tol, nums: [c2R(isX ? Y : X, 1), c2R(ans * 1.1 + (ans ? 0 : 1), 1), c2R(ans * 0.9 - (ans ? 0 : 1), 1)].filter(function (v, j, A) { return Math.abs(v - ans) > tol && A.indexOf(v) === j; }), after: function (x) { x.av = true; }, line: Q[4],   // (Sequence: the other coordinate, and 10% either way, as the wrong choices)
           hint: [Q[1], "The point is about (" + c2F(c2R(X, 1)) + ", " + c2F(c2R(Y, 1)) + ")."],
           dpre: function (run, then) {   // the demo: the hand clicks the parabola at the point, and Desmos labels it
