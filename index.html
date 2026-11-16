@@ -10437,6 +10437,16 @@ var ESPIC = {
   }
   // 2.4, the demo: the data go into a Desmos table a row at a time, the window moves to show them, then the regression is typed (the step is checked as soon
   // as it works), then f(x) with the regression's numbers and the value the questions ask for (Desmos shows it at the right of the line)
+  function dsmRegBtn() {   // where Desmos's Add Regression button is: the button itself, or the left margin of the table (where it shows)
+    var box = $("dsmCalc"), r = box.getBoundingClientRect(), b = null;
+    try {
+      var it = box.querySelector(".dcg-expressionitem"); if (it) it.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      b = box.querySelector('[aria-label="Add Regression"],[aria-label*="egression"],[title*="egression"],.dcg-add-regression,.dcg-regression-button');
+      if (b && b.getBoundingClientRect().width) { var bb = b.getBoundingClientRect(); return { x: bb.left + bb.width / 2, y: bb.top + bb.height / 2 }; }
+      if (it) { var ir = it.getBoundingClientRect(); return { x: ir.left + 22, y: ir.top + 30 }; }
+    } catch (e) { }
+    return { x: r.left + 22, y: r.top + 88 };
+  }
   function dsmDemoReg(run, n, cap) {
     var P = m3Cur().dsm, box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { pgWait(800, n); return; }
     var r = box.getBoundingClientRect(), at = function (i) { return { x: r.left + Math.min(150, r.width * 0.2), y: r.top + 40 + i * 50 }; }, X = [], Y = [];
@@ -10452,7 +10462,10 @@ var ESPIC = {
       })(0);
     });
     var k0 = P.xs.length + 1;
-    function step2() { cap("Type the regression: y₁ ~ …"); handGo(at(Math.min(k0, 6)), 500); pgWait(700, function () { if (pgRun !== run) return; handTap(); typeL("r", "y_{1}\\sim " + P.rg, function () { dsmCheck(); pgWait(1500, step3); }); }); }
+    function step2() {   // the table's Add Regression button (in the table's left margin), then the quadratic regression appears
+      cap("Click Add Regression (the table's regression button) and choose a quadratic regression"); var b0 = dsmRegBtn(); handGo(b0, 600);
+      pgWait(850, function () { if (pgRun !== run) return; handTap(); pgWait(350, function () { if (pgRun !== run) return; DSM.calc.setExpression({ id: "r", latex: "y_{1}\\sim " + P.rg }); dsmCheck(); pgWait(1600, step3); }); });
+    }
     function step3() { cap("Name the model f(x), with the regression's numbers"); handGo(at(Math.min(k0 + 1, 7)), 500); pgWait(700, function () { if (pgRun !== run) return; handTap(); typeL("f", "f\\left(x\\right)=" + P.fx, function () { pgWait(800, function () { ev(0); }); }); }); }
     function ev(i) {
       if (pgRun !== run) return; if (i >= (P.ev || []).length) { pgWait(900, n); return; }
