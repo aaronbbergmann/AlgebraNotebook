@@ -14705,9 +14705,15 @@ var ESPIC = {
     return "<div class=\"vpWs\">" + (cap ? "<div class=\"vpCap\">" + cap + "</div>" : "") + row + fin + "</div>";
   }
   // a number dropped on a letter of the formula
+  function vpSwapPQ() {   // Point and x-Intercepts: the other intercept was put on p, so the work goes on with p and q swapped (the story stays as it was)
+    var pb = m3Cur(), V = pb.vp, V2 = JSON.parse(JSON.stringify(V));
+    V2.p0 = V.p0 != null ? V.p0 : V.p; V2.q0 = V.q0 != null ? V.q0 : V.q; V2.p = V.q; V2.q = V.p; V2.d1 = V.X0 - V2.p; V2.d2 = V.X0 - V2.q;
+    var pb2 = c2M242Pb(pb.sc, V2); pb2.head = m3Plain(pb2.head); QZ.m3p[QZ.pi] = pb2; if (QZ.ww && QZ.ww.guess) QZ.ww.guess = pb2.guess;
+  }
   function vpSub(key, v) {   // (the letters may be filled in any order; the steps move on as their letters fill)
     var st = m3Step(), pb = m3Cur(); if (!st || st.type !== "vsub" || QZ.step >= 4 || !pb || !pb.vp) return;
     var x = QZ.m3x, sb = x.sb = x.sb || {}, V = pb.vp; if (sb[key]) return;
+    if (V.form === "i" && (key === "p" || key === "q") && V.p !== V.q && !sb.p && !sb.q && Math.abs(v - V.want[key === "p" ? "q" : "p"]) < 1e-9) { vpSwapPQ(); pb = m3Cur(); V = pb.vp; }   // (p and q are interchangeable: either intercept may go first)
     var want = (V.want || { h: V.h, k: V.k, x: V.X0, y: V.Y0 })[key];
     if (Math.abs(v - want) > 1e-9) {
       var why = V.why ? V.why[key] : { h: "h is the x-coordinate of the vertex " + c2Pt(V.h, V.k) + ".", k: "k is the y-coordinate of the vertex " + c2Pt(V.h, V.k) + ".", x: "x comes from the other point you know, " + c2Pt(V.X0, V.Y0) + ".", y: "y comes from the other point you know, " + c2Pt(V.X0, V.Y0) + "." }[key];
@@ -14778,11 +14784,18 @@ var ESPIC = {
     then();
   }
   // the demo, before the last answer: a vertical line at the x asked about, and the point where it crosses the parabola, labelled
+  function vpDsmPx(x, y) {   // the point (x, y) of the Desmos graph, on the screen (null if Desmos cannot say)
+    try { var g = DSM.calc.graphpaperBounds.pixelCoordinates, m = DSM.calc.mathToPixels({ x: x, y: y }), box = $("dsmCalc"), rb = box.getBoundingClientRect(); if (!g || !m || !isFinite(m.x) || !isFinite(m.y)) return null;
+      var ge = box.querySelector(".dcg-graph-outer"), gr = ge ? ge.getBoundingClientRect() : null;   // (mathToPixels counts from the graph's top left corner; the graph sits to the right of the expression list)
+      var gl = gr && gr.width ? gr.left : rb.right - (g.width || g.right - g.left), gt = gr && gr.height ? gr.top : rb.bottom - (g.height || g.bottom - g.top);
+      var px = gl + m.x, py = gt + m.y; if (px < 0 || py < 0 || px > innerWidth || py > innerHeight) return null; return { x: px, y: py }; } catch (e) { return null; }
+  }
   function vpDsmAns(pb, run, then) {
     var V = pb.vp, box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { then(); return; }
     if (V.form === "i") {   // (intercept form: the vertex, as Desmos shows it when the parabola is clicked)
-      var rb = box.getBoundingClientRect(); handGo({ x: rb.left + rb.width * 0.7, y: rb.top + rb.height * 0.4 }, 700);
-      pgWait(850, function () { if (pgRun !== run) return; handTap(); try { DSM.calc.setExpression({ id: "vqp", latex: "\\left(" + c2T(V.h, 6) + "," + c2T(V.k, 4) + "\\right)", color: "#7A3FB5", showLabel: true }); } catch (er) { } pgWait(1400, then); });
+      try { box.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (er) { }
+      pgWait(450, function () { if (pgRun !== run) return; var rb = box.getBoundingClientRect(), at = vpDsmPx(V.h, V.k) || { x: rb.left + rb.width * 0.7, y: rb.top + rb.height * 0.4 }; handGo(at, 700); });
+      pgWait(1300, function () { if (pgRun !== run) return; handTap(); try { DSM.calc.setExpression({ id: "vqp", latex: "\\left(" + c2T(V.h, 6) + "," + c2T(V.k, 4) + "\\right)", color: "#7A3FB5", showLabel: true }); } catch (er) { } pgWait(1400, then); });
       return;
     }
     var r = box.getBoundingClientRect(), at = { x: r.left + Math.min(150, r.width * 0.2), y: r.top + 90 }, lt = V.qt === "y" ? "x=" + c2T(V.Xq, 6) : "y=" + c2T(V.Yq, 6), c = 0;
@@ -14794,7 +14807,8 @@ var ESPIC = {
     });
     function pt() {
       if (pgRun !== run) return; var y = c2T(V.Yq, 4);
-      handGo({ x: r.left + r.width * 0.7, y: r.top + r.height * 0.5 }, 700);
+      try { box.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (er) { } r = box.getBoundingClientRect();
+      handGo(vpDsmPx(V.Xq, V.Yq) || { x: r.left + r.width * 0.7, y: r.top + r.height * 0.5 }, 700);   // (the point asked about, where Desmos draws it)
       pgWait(850, function () { if (pgRun !== run) return; handTap(); try { DSM.calc.setExpression({ id: "vqp", latex: "\\left(" + c2T(V.Xq, 6) + "," + y + "\\right)", color: "#7A3FB5", showLabel: true }); } catch (er) { } pgWait(1400, then); });
     }
   }
@@ -14850,9 +14864,10 @@ var ESPIC = {
     V.qv = null;
     var qtx = V.qt === "h" ? sc.qh : sc.qk, E = c2If(ar, p, q, c2Y), Ftx = E[0].replace(/<[^>]+>/g, "");
     var P0 = { pt: vpPt(V.X0, V.Y0, "s"), y: c2F(V.Y0) };
-    pb.head = sc.s + " Intercepts " + c2Pt(p, 0) + " and " + c2Pt(q, 0) + ", point " + c2Pt(V.X0, V.Y0) + ". " + qtx;
+    var p0 = V.p0 != null ? V.p0 : p, q0 = V.q0 != null ? V.q0 : q;   // (the story keeps its own order when p and q are swapped)
+    pb.head = sc.s + " Intercepts " + c2Pt(p0, 0) + " and " + c2Pt(q0, 0) + ", point " + c2Pt(V.X0, V.Y0) + ". " + qtx;
     pb.pic = c2Pic(sc.pic);
-    pb.story = sc.s + " " + sc.ic(vpPt(p, 0, "s"), vpPt(q, 0, "s")) + " " + sc.kn(V.X0, P0) + " " + qtx;
+    pb.story = sc.s + " " + sc.ic(vpPt(p0, 0, "s"), vpPt(q0, 0, "s")) + " " + sc.kn(V.X0, P0) + " " + qtx;
     pb.qc = 1;
     pb.ws = function () { return vpWs(pb); };
     pb.fig = function () { return mode === "solo" ? vpOwnPic() : vpSketch(pb); };
