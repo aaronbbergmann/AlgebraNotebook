@@ -248,7 +248,7 @@
   .exAsk input{font:600 1.1rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:12px;padding:.35em .6em;width:9em}
   .exAsk>div{flex-basis:100%;text-align:center;min-height:1.2em}
   #crIn::placeholder{color:color-mix(in srgb,var(--ink) 38%,transparent);opacity:1;font-weight:500}
-  body.solver #lesson,body.solver #progBtn{display:none}
+  body.solver:not(.svEx) #lesson,body.solver:not(.svEx) #progBtn{display:none}   /* (2.4A exercises 5 to 7, on Play Solve's pane, keep the exercise menu and Progress) */
   .panel{display:flex;flex-direction:column;align-items:center;gap:.8rem;margin:1rem auto;font-family:system-ui,sans-serif}
   .panel[hidden]{display:none}
   #ansFields[hidden],#ansT[hidden],#ansKind[hidden],#ansGo[hidden]{display:none}
@@ -797,7 +797,7 @@
   body.solver #dmCtl{min-height:13rem;justify-content:flex-start}   /* Level Up, Try another and End demo share this space, so Hint, Undo and Show work never move */
   #nxHard[hidden],#dmHard[hidden]{display:none!important}
   /* Play Solve: the Level Up button and the Try another link are always on screen (Create has no generated problem; Demo keeps them in its own button column) */
-  html:not([data-mode=demo]):not([data-mode=create]) body.solver #nxHard,html:not([data-mode=demo]):not([data-mode=create]) body.solver #again{display:block!important}
+  html:not([data-mode=demo]):not([data-mode=create]) body.solver:not(.svEx) #nxHard,html:not([data-mode=demo]):not([data-mode=create]) body.solver:not(.svEx) #again{display:block!important}
   html:not([data-mode=demo]):not([data-mode=create]) body.solver #next[hidden]{display:block!important;visibility:hidden}   /* Next's place stays reserved until the problem is solved */
   html:not([data-mode=demo]):not([data-mode=create]) body.solver .nxRow{padding:.9rem 1rem 0}
   .nxRow:has(>:not([hidden])){padding:.9rem 1rem 0}
@@ -858,7 +858,7 @@
   body:not(.wel) .ctlbox .ctl-sel select{padding-left:0;padding-right:0;margin-left:-.1em;margin-right:-.3em}
   body:not(.wel) .ctl-sel .actBtn span{white-space:nowrap}
   body:not(.wel) .ctlbox .ctl-sel select:hover,body:not(.wel) .ctlbox .ctl-sel .actBtn:hover,body:not(.wel) .ctlbox .ctl-sel .ctlLink:hover{text-decoration-color:currentColor;background:color-mix(in srgb,var(--plus) 14%,transparent)}
-  body.solver #progLnk,.play:not(.pq) #progLnk,body.wel #progLnk{display:none!important}
+  body.solver:not(.svEx) #progLnk,.play:not(.pq) #progLnk,body.wel #progLnk{display:none!important}
   #progBtn{display:none!important}
   body.vcr #pgQ .m3Body,body.vcr .vfnPane,body.vcr #pgTable,body.vcr #show,body.vcr #wfSteps,body.vcr #m3In,body.vcr #undo{display:none!important}
   .vcrBox{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:.6rem 0 0;font-size:1.15rem}
@@ -4254,8 +4254,8 @@
   function easyUpd() { var on = !!(SOL.ups && BUILT[act] && BUILT[act].solver); if ($("dmEasy")) $("dmEasy").hidden = !(on && !$("dmLink").hidden); if ($("nxEasy")) $("nxEasy").hidden = !(on && mode !== "demo" && mode !== "create"); }   // lvl: how hard the variants are; fresh: the first Demo still shows 3x=9
   var SOLMODES = ["demo", "sequence", "calculate", "solo"];
   function solverFinish() { var m = nextMode(); dmFinish(nextLabel(), function () { solverGo(0, m); }, "Try another", function () { solverGo(0, "demo"); }); }
-  function nextMode() { return SOLMODES[(SOLMODES.indexOf(mode) + 1) % SOLMODES.length]; }
-  function nextLabel() { return MODES[nextMode()] + " Mode"; }
+  function nextMode() { if (svL()) return SOLMODES[Math.min(SOLMODES.indexOf(mode) + 1, SOLMODES.length - 1)]; return SOLMODES[(SOLMODES.indexOf(mode) + 1) % SOLMODES.length]; }
+  function nextLabel() { if (svL() && nextMode() === mode) return "Next"; return MODES[nextMode()] + " Mode"; }
   function hardLabel() { return "Level Up"; }
   function eqPickRel() { return ["<", ">", "\u2264", "\u2265"][rnd(4)]; }
   function eqSpecial() {   // no solution or infinitely many (they take turns): 2x + 3 = 2x + 5, 3(x + 2) = 3x + 6
@@ -4520,7 +4520,27 @@
     if (!g && exFin(its) && facAll(its) >= 2) return 5;
     return Math.max(0, Math.min(4, g ? (fr ? 4 : ng ? 3 : 2) : ng ? 1 : 0));
   }
+  // ---- 2.4A exercises 5 to 7, in the format of Play Solve: one kind of problem each, no Level Up ----
+  function svL() { return act === "2.4" && lesson >= 5; }
+  function svMake() {
+    var X = function (a) { return { k: "x", v: "x", n: mk(a) }; }, C = function (c) { return { k: "c", n: mk(c) }; }, cl = function (o) { return JSON.parse(JSON.stringify(o)); }; SV = "x"; distHide(); fmHide(); grHide();
+    if (lesson === 5) {   // 3-step linear equations: 5(x + 2) − 13 = 7, or (x − 2)/3 + 2 = 10
+      var g = rnd(2) ? eqOv() : (function () { var a = 2 + rnd(5), b = nz(9), c = nz(15), x = nz(9), d = a * (x + b) + c; if (!d || x + b === 0) return null; return { L: [{ k: "g", m: mk(a), items: [X(1), C(b)] }, C(c)], R: [C(d)] }; })();
+      if (!g) { svMake(); return; }
+      EXP = { eq: true, ask: null, vk: "x", L: g.L, R: g.R, rel: "=", cmp: null, c3: null, qf: null, qu: null, grUser: false, quq: false, lit: false, quad: false, av: false, sq: false, dvq: false, zpq: false, grq: false, qd: false, sf: false, zp: null, src: "", svk: 5 };
+      EXP.orig = { L: cl(g.L), R: cl(g.R), rel: "=" }; return;
+    }
+    var its;
+    if (lesson === 6) {   // two binomials multiplied with the box: (x − 2)(x + 5) = x² + 3x − 10
+      var a1 = rnd(10) < 7 ? 1 : 2 + rnd(2), p = nz(9), q = nz(9); if (gcd(a1, Math.abs(p)) > 1) { svMake(); return; } its = [{ k: "g", m: mk(1), items: [X(a1), C(p)], b: [X(1), C(q)] }];
+    } else {   // a square root with a perfect square factor: √200 = 10√2
+      var M = [2, 3, 5, 6, 7, 10, 11], sq, m1, n; do { sq = 2 + rnd(9); m1 = M[rnd(M.length)]; n = sq * sq * m1; } while (n > 300);
+      its = [{ k: "r", n: mk(rnd(5) ? 1 : 2 + rnd(2)), r: mk(n) }];
+    }
+    EXP = { src: "", orig: cl(its), items: its, ask: null, fac: false, lit: false, grp: false, rad: lesson === 7, svk: lesson };
+  }
   function solverGo(dl, m) {
+    if (svL()) { SOL.fresh = false; svMake(); $("modePick").hidden = true; if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); } return; }   // (2.4A exercises 5 to 7: a new problem of the same kind)
     SOL.fresh = false; SOL.keep = true;
     if (EXP && !EXP.eq) { SV = "x"; var ep = EXLAD.indexOf(SOL.lvl); if (ep < 0) ep = 0; SOL.lvl = EXLAD[Math.max(0, Math.min(EXLAD.length - 1, ep + dl))]; var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10 || SOL.lvl >= 13; fmHide(); }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
     else {
@@ -5621,7 +5641,7 @@
     ["2.2A", "2.2", ["1", "2"], "Characteristics of Quadratic Functions"],
     ["2.2B", "2.2", ["6", "7", "8", "9", "10"], "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing"],
     ["2.2C", "2.2", ["11", "3", "12", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
-    ["2.4A", "2.4", ["1", "2"], "Modeling with Quadratic Functions"],
+    ["2.4A", "2.4", ["1", "2", "5", "6", "7"], "Modeling with Quadratic Functions"],
     ["2.4B", "2.4", ["4"], "Modeling with Quadratic Functions (Day 2)"]   // (exercise 3, Three Points with first and second differences, was taken out)
   ];
   var VW = {}, VBASE = {};
@@ -5675,7 +5695,7 @@
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
     "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics of a Parabola"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics"], function (l) { return l === 11 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
-    "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression"], ["Vertex & Point", "Intercepts", "Three Points", "Regression"]),
+    "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression", "3-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots"], ["Vertex & Point", "Intercepts", "Three Points", "Regression", "3-Step Equations", "Box Method", "Square Roots"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
     "Play Data": { play: true, data: true, top: 1, key: "algebraProgress:PlayData", levels: [] },   // a Data Activity (a kind of Graphing activity); for now an exact copy of Play Graph
@@ -5691,7 +5711,11 @@
       ["g", "solo", 80, "Write Mode, 2nd round", 2], ["g", "solo", 100, "Write Mode, 3rd round", 3]
     ] }
   };
-  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] <= 2 && l[4] > 1); }).map(function (l) { return l[0] <= 2 && l[1] === "solo" ? [l[0], "solo", 100, "Write Mode"] : l; });   // 2.4A (Vertex and a Point, Point and x-Intercepts): one round of Write
+  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !((l[0] <= 2 || l[0] >= 5) && l[4] > 1); }).map(function (l) { return (l[0] <= 2 || l[0] >= 5) && l[1] === "solo" ? [l[0], "solo", 100, "Write Mode"] : l; });   // (exercises 5 to 7, in the format of Play Solve: one round of Write too)
+  // 2.4A exercises 5 to 7 run on Play Solve's pane (3-step linear equations, multiplying binomials with the box, simplifying square roots): while one of them is open
+  // the activity is a solver, not a quiz, so everything that asks BUILT[act].solver or .quiz follows the exercise
+  Object.defineProperty(BUILT["2.4"], "quiz", { get: function () { return !svL(); }, configurable: true });
+  Object.defineProperty(BUILT["2.4"], "solver", { get: function () { return svL(); }, configurable: true });   // 2.4A (Vertex and a Point, Point and x-Intercepts): one round of Write
   BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return l[0] < 6; }).concat([[11, "demo", 20, "Demo Mode"], [11, "sequence", 50, "Sequence Mode"], [11, "calculate", 100, "Calculate Mode"], [12, "demo", 10, "Demo Mode"], [12, "sequence", 25, "Sequence Mode"], [12, "calculate", 40, "Calculate Mode"], [12, "solo", 70, "Write Mode"], [12, "solo", 100, "Write Mode, 2nd round", 2]]);   // (2.2C Characteristics: Write has the Calculate boxes, checked on Submit)   // (2.2C Memorize: a card sort in Demo and Sequence; Calculate is a quiz)
   // 2.2C (Min & Max, Intercept Form, Compare): two rounds of Write, not three (Write 70, Write 2nd round 100)
   BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return !([3, 4, 5].indexOf(l[0]) >= 0 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return [3, 4, 5].indexOf(l[0]) >= 0 && l[1] === "solo" ? (l[4] === 2 ? [l[0], "solo", 100, "Write Mode, 2nd round", 2] : [l[0], "solo", 70, "Write Mode"]) : l; });
@@ -5896,7 +5920,7 @@
   // while paused earns nothing (1.4: the demo is still running when the problem is solved; 1.1: the whole demo script has played out)
   function demoCredit() { return quiz() ? !!PG.demoFin : !!(DM4.run && !DM4.paused) || locked; }   // a finished demo, or the student took over a paused demo and solved it correctly alone
   function tally(quiet) {
-    if (!quiz() && BUILT[act] && BUILT[act].sub && !BUILT[act].solver && mode !== "create" && EQW > 0) {   // the equation pane: any error message along the way means no Progress for this problem
+    if (!quiz() && BUILT[act] && ((BUILT[act].sub && !BUILT[act].solver) || svL()) && mode !== "create" && mode !== "demo" && EQW > 0) {   // the equation pane: any error message along the way means no Progress for this problem
       if (!counted) { counted = true; note(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : "No Progress for this problem: there were error messages along the way. Try another with none."); }
       up = mode === "demo" ? null : { label: "Try another", go: function () { newProblem(); } }; return;
     }
@@ -5915,7 +5939,7 @@
     if (mode === "demo" && BUILT[act].solver && locked && (!DM4.run || DM4.paused)) { DM4.run = DM4.paused = false; clearTimeout(DM4.t); dmUI("idle"); dmCap("Solved!"); solverFinish(); }
     if (mode === "demo") { nx.hidden = true; ag.hidden = true; return; }   // the demo button carries it
     if (BUILT[act].solver) {   // Next, then Harder, then the small Try another link
-      nx.textContent = nextLabel(); nx.hidden = false; nx.disabled = false; $("nxHard").hidden = false; $("nxHard").textContent = hardLabel(); ag.textContent = "Try another"; ag.hidden = false; easyUpd(); return;
+      nx.textContent = svL() && EQW > 0 ? "Try another" : nextLabel(); nx.hidden = false; nx.disabled = false; $("nxHard").hidden = svL(); $("nxHard").textContent = hardLabel(); ag.textContent = "Try another"; ag.hidden = svL() && EQW > 0; easyUpd(); if (svL()) $("nxEasy").hidden = true; return;   // (2.4A: no Level Up; an error message means another problem in this mode)
     }
     nx.textContent = up ? up.label : EXP ? "Another expression" : BUILT[act].solver ? "Another equation" : "Next"; nx.hidden = false; nx.disabled = false;
     ag.textContent = stay; ag.hidden = !stay;
@@ -6083,7 +6107,7 @@
       var b = $(p[0]), l = $(p[2]); b.textContent = label; b.classList.remove("on", "paused", "ready"); b.classList.add("next"); b.setAttribute("aria-pressed", "false");
       $(p[1]).hidden = true; l.textContent = stay || ""; l.hidden = !stay;
     });
-    $("dmHard").hidden = !BUILT[act].solver; $("dmHard").textContent = hardLabel(); easyUpd();
+    $("dmHard").hidden = !BUILT[act].solver || svL(); $("dmHard").textContent = hardLabel(); easyUpd();   // (2.4A exercises 5 to 7: no Level Up)
   }
   function dmClickFinish() { var d = DMX; if (!d) return false; dmUI("idle"); d.go(); return true; }
   function dmUI(st) {
@@ -6095,7 +6119,7 @@
       b.classList.toggle("on", st === "playing"); b.classList.toggle("paused", st === "paused"); b.classList.toggle("ready", st === "idle"); b.setAttribute("aria-pressed", st === "playing");
       e.hidden = st !== "paused" || progAct();   // Progress activities have no End demo button
     });
-    if (BUILT[act] && BUILT[act].solver) { $("dmHard").hidden = false; $("dmHard").textContent = hardLabel(); $("dmLink").textContent = "Try another"; $("dmLink").hidden = false; }   // Level Up and Try another are always there
+    if (BUILT[act] && BUILT[act].solver) { $("dmHard").hidden = svL(); $("dmHard").textContent = hardLabel(); $("dmLink").textContent = "Try another"; $("dmLink").hidden = false; }   // Level Up and Try another are always there
     easyUpd();
     if (st === "idle") { dmCap(""); if (typeof DG !== "undefined" && DG) DG.go = false; }   // a new demo waits for its button again
   }
@@ -6313,6 +6337,7 @@
     if (quiz()) { $("next").hidden = true; $("nxHard").hidden = true; $("again").hidden = true; qzStart(); return; }   // (nothing left over from the activity we came from)
     $("qzNext").hidden = true; $("qzAgain").hidden = true;
     exHide();
+    if (svL()) { document.body.classList.add("svEx"); if (!EXP || EXP.svk !== lesson || locked) svMake(); exBegin(); EQW = 0; return; }   // 2.4A exercises 5 to 7: the problem in hand (a new one once it is finished)
     if (EXP && BUILT[act].solver && lesson === 1 && mode !== "create") { exBegin(); return; }
     EXP = null;
     $("modePick").hidden = true; calc = null; hinted = false; mulNote = null; pend = null; stopParty(); stopDemo(); closeAsk(false); busy = false;
@@ -6563,8 +6588,8 @@
   // can no longer earn Progress).  The equation pane (1.4) here; the other activities in taAny / taSync
   function eqwTa() {
     setTimeout(function () {
-      if (quiz() || !BUILT[act] || !BUILT[act].sub || BUILT[act].solver || !(mode === "sequence" || mode === "calculate") || EQW <= 0 || DNX) return;
-      if (!up || up.label !== "Try another") up = { label: "Try another", go: function () { newProblem(); } };
+      if (quiz() || !BUILT[act] || (!svL() && (!BUILT[act].sub || BUILT[act].solver)) || !(mode === "sequence" || mode === "calculate") || EQW <= 0 || DNX) return;
+      if (!up || up.label !== "Try another") up = { label: "Try another", go: function () { if (svL()) solverGo(0, mode); else newProblem(); } };
       var nx = $("next"); nx.textContent = "Try another"; nx.hidden = false; nx.disabled = false; $("again").hidden = true;
     }, 0);
   }
@@ -6716,7 +6741,7 @@
     return "Substitute " + s[1];
   }
 
-  $("lesson").addEventListener("change", function () { msSave(); if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; lesson = subx ? 2 : +this.value; gdCustom = null; wfCustom = null; c2Custom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode(resumeMode()); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
+  $("lesson").addEventListener("change", function () { msSave(); if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; var sv0 = svL(); lesson = subx ? 2 : +this.value; if (act === "2.4" && sv0 !== svL()) { EXP = null; up = null; if (svL()) { leaveQuiz(); document.body.classList.remove("vpDrag"); document.body.classList.add("solver", "svEx"); } else { exHide(); document.body.classList.remove("solver", "svEx"); qzShow(); } } gdCustom = null; wfCustom = null; c2Custom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode(resumeMode()); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
   $("crAdd").addEventListener("click", crAdd);
   ["askT", "askErr", "exMsg", "pgQmsg", "crErr", "stCap"].forEach(function (id) { var a = $(id); if (!a) return; new MutationObserver(function () { if (a.children.length) return; var t = a.textContent, u = sqTxt(t); if (u !== t) a.textContent = u; }).observe(a, { childList: true, characterData: true, subtree: true }); });   // prompts and messages write x², not x^2
   $("crKeys").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the box
@@ -6759,6 +6784,7 @@
   $("sheetX").addEventListener("click", function () { $("sheet").hidden = true; });
   $("next").addEventListener("click", function () {
     if (up) { var u = up; up = null; u.go(); return; }
+    if (svL() && EQW > 0 && mode !== "demo") { solverGo(0, mode); return; }   // (2.4A: an error message along the way: another problem in this mode)
     if (BUILT[act].solver && mode !== "create") { solverGo(0, nextMode()); return; }
     newProblem();
   });
@@ -10599,7 +10625,7 @@ var ESPIC = {
   function buildLessons() {
     if (rev) {   // a review: the menu lists its items
       $("lesson").innerHTML = BUILT[rev].items.map(function (o, i) { var src = vwOf(o.act, o.subx ? "s" : o.act === "1.4D" && o.lesson === 4 ? "4" : o.lesson); var kk = o.subx ? "s" : String(o.lesson), B0 = BUILT[o.act], nm = o.act === "1.4D" || !B0.lessons ? exShort(o.act, kk) : B0.lessons[+kk - 1] || exShort(o.act, kk); return "<option value=\"" + i + "\" title=\"" + o.full + (src ? " (from " + src + " > " + exShort(o.act, kk) + ")" : "") + "\" data-short=\"" + revAbbr(rev, i) + "\" data-full=\"" + nm + "\">" + revAbbr(rev, i) + "</option>"; }).join("");   // (the open menu lists each question by its exercise's name in the original activity; Q1, Q2, ... is its abbreviation) $("lesson").value = String(revI);
-      document.body.classList.toggle("solver", !!BUILT[act].solver); valsPlace(); buildModes(); return;
+      document.body.classList.toggle("solver", !!BUILT[act].solver); document.body.classList.toggle("svEx", svL()); valsPlace(); buildModes(); return;
     }
     if (lesson > topLesson()) lesson = topLesson();
     var h = "", sh = BUILT[act].short; for (var l = 1; l <= topLesson(); l++) h += "<option value=\"" + l + "\" title=\"" + lessonName(l) + "\"" + (sh && sh[l - 1] ? " data-short=\"" + sh[l - 1] + "\" data-full=\"" + lessonName(l) + "\"" : "") + ">" + (sh && sh[l - 1] || lessonName(l)) + "</option>";
@@ -10607,7 +10633,7 @@ var ESPIC = {
     if (BUILT[act].sub) { var k4 = h.lastIndexOf("<option value=\"4\""); if (k4 > 0) h = h.slice(k4) + h.slice(0, k4); }   // 1.4: Graphing comes first in the menu
     if (view) { vwFix(); var opt = {}; h.replace(/<option value="([^"]*)"[^>]*>[^<]*<\/option>/g, function (o, v) { opt[v] = o; return o; }); h = VW[view].ls.map(function (k) { return opt[k] || ""; }).join(""); }
     $("lesson").innerHTML = h; $("lesson").value = subx ? "s" : String(lesson);
-    document.body.classList.toggle("solver", !!BUILT[act].solver); valsPlace();
+    document.body.classList.toggle("solver", !!BUILT[act].solver); document.body.classList.toggle("svEx", svL()); valsPlace();
     buildModes();
   }
   function buildModes() {
@@ -16332,7 +16358,7 @@ var ESPIC = {
   function exSlug(s) { return String(s || "").replace(/×|&times;/g, "x").toLowerCase().replace(/&amp;|&/g, " ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
   function exList(all) {
     if (rev) return BUILT[rev].items.map(function (o, i) { return [String(i), exSlug(o.q)]; });
-    var B = BUILT[act]; if (!B || B.play || B.solver) return [];
+    var B = BUILT[act]; if (!B || B.play || (B.solver && !B.lessons)) return [];   // (2.4A exercises 5 to 7 are Play Solve problems inside 2.4)
     var out = []; if (B.sub) out = [["4", "graphing"], ["1", "one-variable"], ["s", "substitution"], ["2", "2x2-systems"], ["3", "3x3-systems"]];
     else for (var l = 1; l <= (B.top || 0); l++) out.push([String(l), exSlug((B.short && B.short[l - 1]) || (B.lessons && B.lessons[l - 1]) || "")]);
     if (all || !view) return out;
