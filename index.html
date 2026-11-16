@@ -2191,8 +2191,8 @@
       if (!v || v.length !== 1) { m0.className = "bad"; m0.textContent = "Type the simplified square root, like 10\u221a2."; return; }
       if (Math.abs(v[0] - want) > 1e-9 * Math.max(1, Math.abs(want))) { m0.className = "bad"; m0.textContent = "Not quite. Take out the biggest perfect square factor and try again."; return; }
       if (typeof q !== "string" && radSq(q.n).s > 1) { m0.className = "bad"; m0.textContent = "That is the same value, but a perfect square still divides " + q.n + ". Simplify it more."; return; }
-      var fin = EXP.items.map(function (t) { if (!rdLeft(t)) return t; var b = radSq(t.r.n).s, c1 = mul(t.n, mk(b)), m1 = t.r.n / (b * b); return m1 === 1 ? { k: "c", n: c1 } : { k: "r", n: c1, r: mk(m1) }; });
-      EXP.items = fin; exEnd(); return;
+      for (var gw = 0; gw < 30 && !locked && EXP.items.some(rdLeft); gw++) { var iw = EXP.items.findIndex(rdLeft), tw = EXP.items[iw]; if (tw.mf) exMfDo(iw); else exRadSimp(iw, 0, tw.f ? Math.max(0, rfNext(tw.f)) : 0); }   // (worked through step by step, for Show work: √54, √9 · √6, 3√6)
+      if (!locked) exEnd(); return;
     }
     var r = EXP.lit ? litTerms($("exSoloIn").value, "x", true) : exParse($("exSoloIn").value), m = $("exMsg"); ansTouched = true;
     if (typeof r === "string") { m.className = "bad"; m.textContent = r; return; }
