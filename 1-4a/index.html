@@ -5418,7 +5418,7 @@
     if (!list.length) list = [{ steps: steps, label: "" }];
     var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
-      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + (w.guess ? guessHTML(w) : w.gonly ? "" : workHTML(w.steps)) + (w.pic ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + w.pic + "</section>" : "") + "</div>"; }).join("");
+      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + (w.guess ? guessHTML(w) : w.gonly ? "" : workHTML(w.steps)) + (function (pc) { return pc ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + pc + "</section>" : ""; })(typeof w.pic === "function" ? w.pic(w) : w.pic) + "</div>"; }).join("");
     var css = ".wpic svg{max-width:100%;height:auto}.wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
     body = svHTML(body);
     var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;min-width:min(34rem,90vw);width:fit-content;max-width:none;margin:2rem auto;padding:0 1rem}.r>span,.r td{white-space:nowrap}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#7A3FB5}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
@@ -12798,7 +12798,7 @@ var ESPIC = {
     QZ.m3i = 0; QZ.m3ord = null; QZ.ta = null; QZ.m3l = []; QZ.m3x = {}; QZ.m3done = false; QZ.m3o = null; QZ.hn = 0; QZ.arrowAt = -1; QZ.m3w = { v: {}, ok: {}, bad: {} }; m3wKey = "";
     for (var wi = works.length - 1; wi >= 0; wi--) if (works[wi].wf && works[wi].steps.length < 2) works.splice(wi, 1);
     var pb = m3Cur(); QZ.ww = null;
-    if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); if (pb.guess) { QZ.ww.guess = pb.guess; QZ.ww.done = {}; QZ.ww.gx = QZ.m3x; } if (pb.grid && pb.dsm) { QZ.ww.gonly = true; QZ.ww.pic = c2CmpPic(pb); } }   // (2.2C Compare: Show work is the graph alone)
+    if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); if (pb.guess) { QZ.ww.guess = pb.guess; QZ.ww.done = {}; QZ.ww.gx = QZ.m3x; if (pb.vp && pb.dsm) QZ.ww.pic = function (w) { var d = w.done || {}; return w.fin || d.gr || d.ans ? vpWorkPic(pb) : ""; }; } if (pb.grid && pb.dsm) { QZ.ww.gonly = true; QZ.ww.pic = c2CmpPic(pb); } }   // (2.2C Compare: Show work is the graph alone)
     PG.show = { eq: false, table: false, graph: false, desc: false, parent: false };
   }
   // ==== "Try Another" questioning (pb.ta, Calculate): every box is on the screen; a box is accepted the moment it is right.  A wrong box, once the student
@@ -14440,7 +14440,7 @@ var ESPIC = {
   var C2S242 = [
     { pic: "temp", up: true, u: "°C", xu: "hours", s: "A meteorologist models tomorrow's temperature with a parabola. Here " + c2X + " is the number of hours after midnight and " + c2Y + " is the temperature in degrees Celsius.",
       ic: function (P, Q) { return "The temperature is 0 °C at " + P + " and again at " + Q + "."; }, kn: function (X0, P0) { return X0 === 0 ? "At midnight it is " + P0.y + " °C: " + P0.pt + " is the " + c2Y + "-intercept." : "At " + c2X + " = " + X0 + " hours the temperature is " + P0.y + " °C, the point " + P0.pt + "."; },
-      qh: "How many hours after midnight is it coldest?", qk: "What is the coldest temperature?", ah: "It is coldest", ak: "The coldest temperature is", ps: [2, 3, 4, 5, 6], ws: [10, 12, 14, 16, 18], as: [0.05, 0.1, 0.2, 0.25, 0.5], km: -15 },
+      qh: "How many hours after midnight is it coldest?", qk: "What is the coldest temperature?", ah: "It is coldest", ak: "The coldest temperature is", ps: [1, 2, 3], ws: [4, 6, 8], as: [0.25, 0.5, 1, 1.5, 2], km: -15, hmax: 5.5 },   // (hmax: the coldest time is in the night, before 6 am)
     { pic: "kick", u: "yards", xu: "yards", s: "A football is kicked downfield. Here " + c2X + " is the distance from the goal line and " + c2Y + " is the height of the ball, both in yards.",
       ic: function (P, Q) { return "It leaves the ground at " + P + " and lands at " + Q + "."; }, kn: function (X0, P0) { return "It passes through " + P0.pt + "."; },
       qh: "How far from the goal line is the ball when it is highest?", qk: "What is the greatest height of the ball?", ah: "The ball is highest", ak: "The greatest height is", ps: [10, 15, 20, 25, 30], ws: [40, 50, 60], as: [0.01, 0.02], km: 20 },
@@ -14468,6 +14468,7 @@ var ESPIC = {
       var ar = c2R(a, 2); if (!ar || (up ? ar <= 0 : ar >= 0)) continue;
       if (ap && (Math.abs(Math.abs(a * 100 % 1) - 0.5) < 0.02 || Math.abs(ar - a) > Math.abs(a) * 0.12)) continue;
       var h = (p + q) / 2, k = c2R(ar * (h - p) * (h - q), 4);
+      if (sc.hmax != null && h > sc.hmax) continue;
       if (!Number.isInteger(c2R(k * 100, 6)) || (up ? k < sc.km || k > -1 : k > sc.km || k < 2)) continue;
       if (up && (Y0 < 1 || Y0 > 30)) continue;
       if (!up && (Y0 < 1 || Y0 >= k)) continue;
@@ -14564,6 +14565,21 @@ var ESPIC = {
     return "<div class=\"vpWs\">" + (cap ? "<div class=\"vpCap\">" + cap + "</div>" : "") + row + (vs >= 6 ? "<div class=\"vpFin lm\">" + c2If(V.ar, V.p, V.q, c2Y)[0] + "</div>" : "") + "</div>";
   }
   // the sketch for intercept form: the x-intercepts and the known point labelled (numbers draggable), the vertex hollow and unknown.  No numbers on the axes
+  // 2.4A Show work: a sketch of the graph in Desmos, the vertex labelled, with the points the story gives (and the point asked about)
+  function vpWorkPic(pb) {
+    var V = pb.vp, F = pb.dsm.F1, N = c2F, u = pb.sc.u || "feet", xu = pb.sc.xu || u, P = [];   // (Vertex and a Point: every story is in feet)
+    P.push({ x: V.h, y: V.k, col: "#6042A6", tc: "#6042A6", lab: "vertex (" + N(V.h) + ", " + N(V.k) + ")", dy: V.ar < 0 ? -10 : 18 });
+    if (V.form === "i") { P.push({ x: V.p, y: 0, lab: "(" + N(V.p) + ", 0)" }); P.push({ x: V.q, y: 0, lab: "(" + N(V.q) + ", 0)" }); }
+    P.push({ x: V.X0, y: V.Y0, lab: "(" + N(V.X0) + ", " + N(V.Y0) + ")" });
+    if (V.Xq != null && V.Yq != null && !P.some(function (q) { return Math.abs(q.x - V.Xq) < 1e-9 && Math.abs(q.y - V.Yq) < 1e-9; })) P.push({ x: V.Xq, y: V.Yq, lab: "(" + N(c2R(V.Xq, 2)) + ", " + N(c2R(V.Yq, 2)) + ")" });
+    var xs = P.map(function (q) { return q.x; }), ys = P.map(function (q) { return q.y; }), x0 = Math.min.apply(null, xs.concat([0])), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys.concat([0])), y1 = Math.max.apply(null, ys.concat([0]));
+    var dx = (x1 - x0) || 1, dy = (y1 - y0) || 1; x1 += dx * 0.15; if (x0 < 0) x0 -= dx * 0.08; y1 += dy * 0.18; if (y0 < 0) y0 -= dy * 0.18;
+    var xa = c2Axis(x0, x1), ya = c2Axis(y0, y1);
+    P.forEach(function (q) { if (!q.col) { q.col = "#2D70B3"; q.tc = "#1B2433"; q.an = q.x > (xa.min + xa.max) / 2 ? "end" : "start"; q.dy = q.y === 0 ? (V.ar < 0 ? -8 : 16) : -8; } });
+    var svg = c2Fig({ H: 320, xmin: xa.min, xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "x (" + xu + ")", yl: "y (" + u + ")", alt: "The graph in Desmos, its vertex labelled",
+      curves: [{ fn: F, col: "#2D70B3" }], pts: P });
+    return "<div class=\"wgr\" style=\"color:#1B2433;--bg:#fff\"><div style=\"font:600 1rem system-ui,sans-serif;margin-bottom:.3rem\">The graph in Desmos</div>" + svg.replace("<svg ", "<svg width=\"560\" ") + "</div>";
+  }
   function vpSketchI(pb) {
     var V = pb.vp, F = function (x) { return V.ar * (x - V.p) * (x - V.q); };
     var x0 = 0, x1 = Math.max(V.q, V.X0) * 1.1 + 0.5, ylo = Math.min(0, V.k, V.Y0), yhi = Math.max(0, V.k, V.Y0), pad = (yhi - ylo) * 0.22 || 1;
