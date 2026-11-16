@@ -2065,7 +2065,8 @@
     askKind = "ex"; $("askT").textContent = label.replace(/ =$/, ":"); showInput(); $("askIn").placeholder = "e.g. 5x or −2"; EXP.ask = { kind: kind, i: i, j: j };
   }
   function exAskOK() {
-    if (EXP && EXP.ask && (EXP.ask.kind === "rsq" || EXP.ask.kind === "rsv")) { rfAskOK(EXP.ask); return; }   // (square roots, a step at a time)
+    if (EXP && EXP.ask && (EXP.ask.kind === "rsq" || EXP.ask.kind === "rsv")) { rfAskOK(EXP.ask); return; }
+    if (EXP && EXP.ask && EXP.ask.kind === "cq") { cqOK(EXP.ask); return; }   // (Calculate: the arithmetic of a step, one term at a time)   // (square roots, a step at a time)
     if (EXP && EXP.ask && EXP.ask.kind === "fd") { fdAskOK(EXP.ask); return; }
     if (EXP && EXP.eq) { eqAskOK(); return; }
     var k = EXP && EXP.ask; if (!k) return; var r = EXP.lit ? litTerms($("askIn").value, "x", true) : exParse($("askIn").value), its = EXP.items, ok = false, m = $("askErr");
@@ -3272,6 +3273,7 @@
     eqAsk({ kind: "rsq", n: n, take: take }, "Perfect Square Factor of " + n + ":"); $("askIn").placeholder = "a perfect square";
   }
   function rfAskOK(k) {   // Calculate: the perfect square factor typed (rsq), or the value of a perfect square root (rsv)
+    if (!$("askIn").value.trim()) return;   // (Return in an empty box: nothing yet)
     var v = numVal($("askIn").value), x = v && v.length === 1 ? v[0] : NaN, bad = function (t) { EQW++; eqwTa(); $("askErr").textContent = t; $("askIn").select(); };
     if (k.kind === "rsv") { if (Math.abs(x - k.want) < 1e-9) { closeAsk(false); EXP.ask = null; k.go(); } else bad("Not quite. What number times itself makes " + k.want * k.want + "?"); return; }
     if (isNaN(x) || !Number.isInteger(x) || x < 1) { bad("Type a perfect square that divides " + k.n + "."); return; }
@@ -3717,7 +3719,7 @@
     ["L", "R"].forEach(function (Sd) { for (var j = N[Sd].length - 1; j >= 0; j--) { var g = N[Sd][j]; if (g.k === "g" && same(g.m, mk(1)) && !g.b && !g.abs && !g.pm) N[Sd].splice.apply(N[Sd], [j, 1].concat(g.items)); } });
     N.L = eqNorm(N.L); N.R = eqNorm(N.R); if (flip) N.rel = relRev(N.rel);
     var msg = "Divide both sides by " + sg(a) + ": every term on both sides is divided by " + sg(a) + "." + (whole ? " Click a fraction to simplify it." : "") + (flip ? " Dividing by a negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "." : "");
-    if (mode === "calculate" && !ready) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, "Divide both sides by " + sg(a) + ". Type the new " + ((EXP.rel || "=") !== "=" ? "inequality:" : "equation:")); $("askIn").placeholder = "e.g. x + 2/3 = 8/3"; return; }
+    if (mode === "calculate" && !ready && !whole) { cqRun(cqScale(ia, "\u00f7 " + cqN(a)), N, msg); return; }   // (a whole number: 8/2 is left to click and simplify)
     eqSet(N, msg);
   }
   function eqDivGroup(S, i) {   // the number in front of the parentheses dragged to the other side: every term on both sides is divided by it
@@ -3729,7 +3731,7 @@
       var at0 = N0[S][i]; if (same(at0.m, mk(1))) N0[S].splice.apply(N0[S], [i, 1].concat(at0.items));
       N0.L = eqNorm(N0.L); N0.R = eqNorm(N0.R); var fl0 = f.n < 0 && N0.rel !== "="; if (fl0) N0.rel = relRev(N0.rel);
       var msg0 = "Multiply both sides by " + sg(f) + ": " + gs + " \u00b7 " + sg(f) + " = " + exSay(at0.items) + (others ? ", and every other term is multiplied by " + sg(f) : "") + "." + (fl0 ? " Multiplying by a negative number turns the sign around." : "");
-      if (mode === "calculate") { eqAsk({ kind: "mulq", b: { N: N0, msg: msg0 } }, "Multiply both sides by " + sg(f) + ". Type the new " + ((EXP.rel || "=") !== "=" ? "inequality:" : "equation:")); $("askIn").placeholder = "e.g. x - 2 = 24"; return; }
+      if (mode === "calculate") { cqRun(cqScale(f, "\u00b7 " + cqN(f)), N0, msg0); return; }
       eqSet(N0, msg0); return;
     }
     if (!EXP.lit && !litAny(EXP.L.concat(EXP.R)) && !same(g.m, mk(1)) && (g.abs || g.b || !dvOK(EXP.L, EXP.R))) { eqDivAll(S, i, g.m); return; }   // 2|3w + 9| + 2 = 8 becomes |3w + 9| + 2/2 = 8/2   // (a row of a split, like −(2u − 2) ≥ 6, can be divided by −1)
@@ -3740,7 +3742,7 @@
     var at = N[S][i], gone = same(at.m, mk(1)) && !at.b && !at.abs; if (gone) N[S].splice.apply(N[S], [i, 1].concat(at.items));
     N.L = eqNorm(N.L); N.R = eqNorm(N.R); if (flip) N.rel = relRev(N.rel);
     var msg = "Divide both sides by " + sg(a) + ": every term on both sides is divided by " + sg(a) + "." + (flip ? " Dividing by a negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "." : "") + (gone ? " Nothing is left in front of the parentheses, so they can go." : "");
-    if (mode === "calculate") { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, "Divide both sides by " + sg(a) + ". Type the new " + ((EXP.rel || "=") !== "=" ? "inequality:" : "equation:")); $("askIn").placeholder = "e.g. 2 + x + 3 = 9"; return; }
+    if (mode === "calculate") { cqRun(cqScale(ia, "\u00f7 " + cqN(a)), N, msg); return; }
     eqSet(N, msg);
   }
   function dvOK(L, R) {   // one set of parentheses with a whole number in front, and every other term divides evenly by it: 8 + 4(x + 3) = 36 -> { S, i }
@@ -3822,22 +3824,25 @@
     var N = eqClone(), mkT = function () { return terms.map(function (t) { var c = JSON.parse(JSON.stringify(t)); if (sg < 0) c.n = mk(-c.n.n, c.n.d); return c; }); };
     N.L = N.L.concat(mkT()); N.R = N.R.concat(mkT());
     var say = exSay(terms), msg = (sg > 0 ? "Add " : "Subtract ") + (terms.length > 1 ? "(" + say + ")" : say) + (sg > 0 ? " to" : " from") + " both sides.";
-    if (mode === "calculate" && !ready) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 3x + 2 = x + 6"; return; }
+    if (mode === "calculate" && !ready && cqLit()) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 3x + 2 = x + 6"; return; }
     eqSet(N, msg);
   }
   function eqMulTerm(u, ready) {   // multiply both sides by one term that has the variable in it, like -4x: every number becomes an x term, every x term an x^2 term
-    var N = eqClone(), bad = false;
+    var N = eqClone(), bad = false, qsT = [];
     [N.L, N.R].forEach(function (side) { side.forEach(function (t, i) {
       if (t.k === "g" || t.k === "q") { bad = true; return; }
+      var t0 = JSON.parse(JSON.stringify(t));
       var r = { k: t.k === "x" || u.k === "x" ? "x" : "c", n: mul(t.n, u.n) };
       if (r.k === "x") r.v = t.k === "x" && u.k === "x" ? vMul(t.v || "x", u.v || "x") : (t.k === "x" ? t.v || "x" : u.v || "x");
       if (t.co) r.co = t.co.map(function (c) { return { n: c.n, s: sMul(c.s || {}, u.s || {}, 1) }; });
       else { var ns = sMul(t.s || {}, u.s || {}, 1); if (sSig(ns)) r.s = ns; }
+      if (!t0.co && !hasS(t0) && !hasS(r)) qsT.push({ label: exSay([t0]) + " \u00b7 " + (u.n.n < 0 ? "(" + exSay([u]) + ")" : exSay([u])) + " =", want: r });
       side[i] = r;
     }); });
     if (bad) { note("Multiply out the parentheses first, then multiply both sides by " + exSay([u]) + "."); return; }
     N.L = eqNorm(N.L); N.R = eqNorm(N.R);
     var msg = "Multiply both sides by " + exSay([u]) + ".";
+    if (mode === "calculate" && !ready && !cqLit()) { cqRun(qsT, N, msg); return; }
     if (mode === "calculate" && !ready) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 6x = 3x + 12"; return; }
     eqSet(N, msg);
   }
@@ -3854,6 +3859,35 @@
       });
     });
   }
+  // ---- Calculate (Play Solve): a step on the whole equation is made as in Sequence, then the arithmetic it needs is asked one term at a time ("8 \u00b7 3 =",
+  // "6x \u00f7 2 ="), and the equation changes once every answer is in.  Dividing by a whole number leaves 8/2 to click and simplify; adding to both sides leaves
+  // the like terms to combine (each asked as it is combined).  Letters as coefficients still have the new equation typed ----
+  function cqLit() { return !!(EXP.lit || litAny(EXP.L.concat(EXP.R))); }
+  function cqN(q) { var t = exSay([{ k: "c", n: q }]); return q.n < 0 ? "(" + t + ")" : t; }
+  function cqScale(fac, sym) {   // the questions for every term on both sides multiplied by fac; sym says the step after each term ("\u00b7 3", "\u00f7 2")
+    var qs = [];
+    EXP.L.concat(EXP.R).forEach(function (t) {
+      if (t.k === "g") { if (t.ov || t.abs || t.pm || t.b || (t.m.s && sSig(t.m.s)) || same(t.m, mk(1)) || same(t.m, mk(-1))) return; var nm = mul(t.m, fac); if (same(nm, mk(1)) || same(nm, mk(-1))) return; qs.push({ label: cqN(t.m) + " " + sym + " =", want: { k: "c", n: nm } }); return; }
+      if ((t.k !== "c" && t.k !== "x") || hasS(t) || t.co || t.pm) return;
+      var w = { k: t.k, n: mul(t.n, fac) }; if (t.k === "x") w.v = t.v || "x"; if (same(w.n, t.n)) return;
+      qs.push({ label: exSay([t]) + " " + sym + " =", want: w });
+    });
+    return qs;
+  }
+  function cqRun(qs, N, msg) {   // ask each question, then make the step
+    if (!qs.length || SIM) { eqSet(N, msg); return; }
+    note(msg + " Work out each term.");
+    var go = function (i) { if (i >= qs.length) { closeAsk(false); EXP.ask = null; eqSet(N, msg); return; } var q = qs[i]; eqAsk({ kind: "cq", want: q.want, go: function () { go(i + 1); } }, q.label); $("askT").textContent = q.label; $("askIn").placeholder = q.want.k === "x" ? "e.g. 6" + exSay([{ k: "x", v: q.want.v, n: mk(1) }]) : "e.g. 6"; };
+    go(0);
+  }
+  function cqOK(k) {
+    var raw = $("askIn").value, w = k.want, r = exParse(raw), ok = false, fm = /(\d+)\/(\d+)/.exec(raw); if (!raw.trim()) return;   // (Return in an empty box: nothing yet)
+    if (typeof r !== "string" && r.length === 1 && r[0].k !== "g") ok = w.n.n === 0 ? r[0].n.n === 0 : exKey(r[0]) === exKey(w) && same(r[0].n, w.n);
+    if (!ok && w.k === "c") { var v = numVal(raw); ok = !!(v && v.length === 1 && Math.abs(v[0] - w.n.n / w.n.d) < 1e-9); }
+    if (ok && fm && gcd(+fm[1], +fm[2]) > 1) { $("askErr").textContent = "That fraction can still be simplified."; $("askIn").select(); return; }
+    if (!ok) { EQW++; eqwTa(); $("askErr").textContent = typeof r === "string" && !numVal(raw) ? (w.k === "x" ? "Type a term, like 6x." : "Type a number, like 6 or 3/2.") : "Not quite. Try again."; $("askIn").select(); return; }
+    closeAsk(false); EXP.ask = null; k.go();
+  }
   function eqMul(k, ready, dv) {
     var N = eqClone();
     [N.L, N.R].forEach(function (side) { side.forEach(function (t) {
@@ -3863,13 +3897,14 @@
     N.L = eqNorm(N.L); N.R = eqNorm(N.R);
     var msg = dv ? "Divide both sides by " + kSay(dv) + "." : "Multiply both sides by " + kSay(k) + ".";
     if (k.n < 0 && N.rel !== "=") { N.rel = relRev(N.rel); msg += " A negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "."; }
+    if (mode === "calculate" && !ready && !cqLit() && !k.s) { cqRun(cqScale(k, dv ? "\u00f7 " + cqN(dv) : "\u00b7 " + cqN(k)), N, msg); return; }
     if (mode === "calculate" && !ready) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 6x = 3x + 12"; return; }
     eqSet(N, msg);
   }
   function eqAddAll(k, ready) {   // the same number on both sides (it joins the terms already there)
     var N = eqClone(), ta = function () { var t = { k: "c", n: mk(k.n, k.d) }; if (k.s) t.s = k.s; return t; }; N.L.push(ta()); N.R.push(ta());
     var msg = (k.n > 0 ? "Add " + kSay(k) + " to" : "Subtract " + kSay(kNeg(k)) + " from") + " both sides.";
-    if (mode === "calculate" && !ready) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 3x + 2 = x + 6"; return; }
+    if (mode === "calculate" && !ready && (cqLit() || k.s)) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 3x + 2 = x + 6"; return; }
     eqSet(N, msg);
   }
   function eqAsk(info, label) {
@@ -4885,7 +4920,7 @@
     // the pane shows one number before and one after the variable: use a free place, and the two numbers join when both are taken
     var sIdx = nq.ks.findIndex(function (z) { return z.v === "s"; }), pIdx = nq.ks.findIndex(function (z) { return z.v === "p"; });
     if (sIdx < 0) nq.ks.push({ v: "s", k: k }); else if (pIdx < 0) nq.ks.push({ v: "p", k: k }); else { nq.ks[sIdx].k = add(nq.ks[sIdx].k, k); if (!nq.ks[sIdx].k.n) nq.ks.splice(sIdx, 1); }
-    if (mode === "calculate" && !ready) {
+    if (mode === "calculate" && !ready && !BUILT[act].solver) {   // (Play Solve: nothing to work out yet; the numbers are combined next, each asked as it is)
       var want = { a: nq.a, b: nq.b, e: nq.e, c: nq.c, rel: nq.rel }; nq.ks.forEach(function (z) { want.c = add(want.c, neg(z.k)); });
       runCalc([{ q: (k.n > 0 ? "Add " + sg(k) : "Subtract " + sg(neg(k))) + (k.n > 0 ? " to" : " from") + " both sides of the " + eqName(i, ws.length) + ". Type the new equation:", eq: want }], [i], function () { addEqAll(i, k, true); });
       return;
@@ -4900,6 +4935,12 @@
     if (q.flip) nq.flip = true;
     if (q.rel) nq.rel = k.n < 0 ? relRev(q.rel) : q.rel;   // multiplying or dividing by a negative number turns the sign around
     if (q.rel && k.n < 0) relTurned = true;
+    if (mode === "calculate" && !ready && BUILT[act].solver) {   // Play Solve: each number times k, one at a time ("3 \u00b7 2 =", "10 \u00b7 2 =")
+      var sym = dv ? " \u00f7 " + wrap(dv) + " =" : " \u00b7 " + wrap(k) + " =", its = [];
+      [q.a, q.b, q.e].forEach(function (v) { if (v && v.n && !(Math.abs(v.n) === 1 && v.d === 1)) its.push({ q: wrap(v) + sym, num: mul(v, k) }); });   // (x alone needs no question)
+      q.ks.map(function (z) { return z.k; }).concat([q.c]).forEach(function (v) { if (v && v.n) its.push({ q: wrap(v) + sym, num: mul(v, k) }); });
+      if (its.length) { runCalc(its, [i], function () { mulEq(i, k, true, dv); }); return; }
+    }
     if (mode === "calculate" && !ready) {
       var want = { a: nq.a, b: nq.b, e: nq.e, c: nq.c, rel: nq.rel };   // the typed equation is compared with its numbers gathered on one side
       nq.ks.forEach(function (z) { want.c = add(want.c, neg(z.k)); });
@@ -5078,7 +5119,7 @@
   function nextCalc() {
     var c = calc, it = c.items[c.i];
     if (!it) { var f = c.finish; calc = null; closeAsk(false); f(); return; }
-    askKind = "calc"; $("askT").textContent = it.q;
+    askKind = "calc"; $("askT").textContent = it.q; if (it.num) setTimeout(function () { $("askIn").placeholder = "e.g. 6"; }, 0);
     rows.forEach(function (r) { r.classList.remove("asking"); });
     c.marks.forEach(function (r) { if (rows[r]) rows[r].classList.add("asking"); });
     showInput();
@@ -5190,6 +5231,12 @@
       closeAsk(false);
       if (kk) { simpSub(i, askK, true); return; }
       delete q1.raw; delete q1.rawS; done(i); return;
+    }
+    var it0 = calc && calc.items[calc.i];
+    if (it0 && it0.num) {   // (Play Solve: one number of the step)
+      if (!String(txt).trim()) return; var nn = parse(txt); if (!nn) { err("Type a number, like 6 or 3/2."); return; }
+      if (!same(nn, it0.num)) { err("Not quite. Try again."); $("askIn").select(); return; }
+      calc.i++; nextCalc(); return;
     }
     var got = parseEq(txt) || (lesson === 1 ? parseEqN(txt) : null);
     if (!got) { err("Type the whole equation, like " + (lesson === 3 ? "2x+3y-z=12." : "2x+3y=12.")); return; }
