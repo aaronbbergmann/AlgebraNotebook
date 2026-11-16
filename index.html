@@ -3502,7 +3502,8 @@
     var mulAsk = function () { if (EXP.ask || locked) return; if (idx >= 0 && EXP.zp && idx !== EXP.zp.act) { zpFocus(idx); eqRender(); } eqMulAsk(); };
     if (!locked && !un && !fin && !rad) { R.querySelector(".exEq").addEventListener("click", mulAsk); R.onclick = function (e) { if (e.target === R) mulAsk(); }; } else R.onclick = null;
     if (live && un) { eqOpWire(R, idx); zpWire(R, idx); return; }
-    if (live && gq) { grWire(R); return; }
+    var uWire = function () { [].forEach.call(R.querySelectorAll(".exT"), function (el) { var S = el.dataset.s, i = +el.dataset.i, t = EXP[S] && EXP[S][i]; if (!t || !t.u || el.classList.contains("exU")) return; el.classList.add("grab", "exU"); el.title = "Click the fraction to simplify"; el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqFrSimp(S, i); }); }); };   // a fraction not yet simplified (8/2 after dividing both sides by 2) is clicked to simplify it, whatever else the equation is doing
+    if (live && gq) { grWire(R); uWire(); return; }
     if (!live) return;
     var dropOf = function (S, i) { return function (t) { if (t.dataset.drop === "eq=") eqDrop(S, i, eqOther(S), -1); else { var p = t.dataset.drop.split(":"); eqDrop(S, i, p[1], +p[2]); } }; };
     eqOpWire(R, idx);
