@@ -1994,6 +1994,11 @@
     if (!F || F[0].length * F[1].length > 16 || F.some(function (f) { return f.some(function (t) { return (t.k !== "c" && t.k !== "x") || hasS(t) || t.co || t.u || t.ov; }); })) return null;
     return F;
   }
+  function bxWk(g, rows, cols) {   // Show work: the box, drawn above the step it makes (rows and columns: the student's own layout, when there is one)
+    var F = bxFac(g); if (!F) return; var R = rows || F[0], C = cols || F[1], cells = [];
+    R.forEach(function (r) { C.forEach(function (c) { cells.push(exSay(exDist({ k: "g", m: mk(1), items: [r], b: [c] }))); }); });
+    wkBox = { rf: R.map(function (t) { return exSay([t]); }), cf: C.map(function (t) { return exSay([t]); }), cells: cells };
+  }
   function bxOnT(g) { return !!(EXP && !SIM && BUILT[act] && BUILT[act].solver && mode !== "solo" && mode !== "create" && !EXP.lit && !(EXP.eq && EXP.zp) && bxFac(g)); }
   function bxOn(i) { return !!(EXP && !EXP.eq && bxOnT(EXP.items[i])); }
   function bxT(t) { return "<span>" + (t.n.n < 0 ? "−" : "") + exTerm(t) + "</span>"; }
@@ -2067,6 +2072,7 @@
       el.classList.remove("on");
       setTimeout(function () {
         fl.forEach(function (f) { f.remove(); }); if (BX !== B) return; distHide();
+        var RR = [], CC = []; for (var r0 = 0; r0 < B.nL; r0++) { var sl = B.slot["L" + r0]; RR.push(B.bins[sl.b][sl.k]); } for (var c0 = 0; c0 < B.nT; c0++) { var sc0 = B.slot["T" + c0]; CC.push(B.bins[sc0.b][sc0.k]); } bxWk(g, RR, CC);
         if (B.eq) { var Nq = eqClone(); Nq[B.S].splice.apply(Nq[B.S], [i, 1].concat(d)); Nq.L = eqNorm(Nq.L); Nq.R = eqNorm(Nq.R); eqSet(Nq, msg); }
         else { var n2 = EXP.items.slice(); n2.splice.apply(n2, [i, 1].concat(d)); exSet(n2, msg); }
       }, 800);
@@ -2120,6 +2126,7 @@
     var end = (quick ? 0 : 700 + n * 800) + 2200; at(end, function () { el.classList.remove("on"); }); at(end + 450, distHide);
   }
   function exSet(items, msg, dg) {
+    if (dg && !wkBox) bxWk(dg);   // (Show work: the box for the product multiplied out)
     exPush(); EXP.items = items; closeAsk(false); exRender(); if (msg) note(msg); if (dg) distShow(dg);
     if (exDone(items)) exEnd(); else if (!msg) clearLog();
   }
@@ -2228,6 +2235,7 @@
     if (EXP.grp && exProd(r)) { if (!grPrim(r[0].items) || !grPrim(r[0].b)) { m.className = "bad"; m.textContent = "That is the same value, but one of the parentheses can still be factored."; return; } EXP.items = r; exEnd(); $("exSolo").hidden = true; return; }
     if (EXP.fac) { if (!facDone(r)) { m.className = "bad"; m.textContent = "That is the same value, but it is not fully factored yet."; return; } EXP.items = r; exEnd(); $("exSolo").hidden = true; return; }
     if (!exFin(r)) { m.className = "bad"; m.textContent = "That is the same value, but it is not fully simplified yet."; return; }
+    var gi0 = EXP.items.findIndex(function (t) { return t.k === "g" && bxFac(t); }); if (gi0 >= 0) { var g0 = EXP.items[gi0], it0 = EXP.items.slice(); it0.splice.apply(it0, [gi0, 1].concat(exDist(g0))); bxWk(g0); EXP.items = it0; exRender(); }   // (Show work: the box, then the answer)
     EXP.items = r; exEnd(); $("exSolo").hidden = true;
   }
   function exUndo() {
@@ -4092,6 +4100,7 @@
     eqGo(k.b.N, k.b.msg, k.b.anim, k.b.g);
   }
   function eqSet(N, msg, dg) {
+    if (dg && !wkBox) bxWk(dg);   // (Show work: the box for the product multiplied out)
     if (dg) distShow(dg);
     hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: EXP.rel || "=", z: EXP.zp || null })); updUndo();
     EXP.L = N.L; EXP.R = N.R; EXP.rel = N.rel || "="; closeAsk(false); eqRender(); if (msg) note(msg);
@@ -5720,8 +5729,9 @@
   function wkBoxHTML(b) {   // the grouping box (row factors on the left, column factors on top) or the formula panel, drawn small in Show work
     var td = "border:1.5px solid #1B2433;padding:.35em .7em;text-align:center;min-width:3.5em", fc = "padding:.35em .7em;text-align:center";
     if (b.fm) return "<div class=\"r\" style=\"padding:.2rem 0\"><span class=\"m\"></span><table style=\"border-collapse:collapse\">" + [["A\u00b2", b.A2], ["A", b.A], ["B\u00b2", b.B2], ["B", b.B]].map(function (r) { return "<tr><td style=\"text-align:right;padding:.1em 0\">" + r[0] + "</td><td style=\"padding:.1em .45em\">=</td><td style=\"padding:.1em 0\">" + wkMath(r[1]) + "</td></tr>"; }).join("") + "</table></div>";   // A² = 16w², A = 4w, B² = 1, B = 1, one under another
-    return "<div class=\"r\" style=\"padding:.4rem 0\"><span class=\"m\"></span><table style=\"border-collapse:collapse;font-size:.85em\"><tr><td></td><td style=\"" + fc + "\">" + wkMath(b.cf[0]) + "</td><td style=\"" + fc + "\">" + wkMath(b.cf[1]) + "</td></tr>" +
-      [0, 1].map(function (r) { return "<tr><td style=\"" + fc + "\">" + wkMath(b.rf[r]) + "</td><td style=\"" + td + "\">" + wkMath(b.cells[2 * r]) + "</td><td style=\"" + td + "\">" + wkMath(b.cells[2 * r + 1]) + "</td></tr>"; }).join("") + "</table></div>";
+    var nT = b.cf.length;   // (any size: 1 x 2 for 3(x - 1), 2 x 2, 2 x 3 ...)
+    return "<div class=\"r\" style=\"padding:.4rem 0\"><span class=\"m\"></span><table style=\"border-collapse:collapse;font-size:.85em\"><tr><td></td>" + b.cf.map(function (c) { return "<td style=\"" + fc + "\">" + wkMath(c) + "</td>"; }).join("") + "</tr>" +
+      b.rf.map(function (rf, r) { var h = "<tr><td style=\"" + fc + "\">" + wkMath(rf) + "</td>"; for (var c = 0; c < nT; c++) h += "<td style=\"" + td + "\">" + wkMath(b.cells[r * nT + c]) + "</td>"; return h + "</tr>"; }).join("") + "</table></div>";
   }
   function workHTML0(st) {
     return st.map(function (w) {
