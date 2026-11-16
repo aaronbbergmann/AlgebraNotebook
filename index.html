@@ -965,12 +965,12 @@
     <div class="wrap">
       <main class="eqs work" id="wsEl"></main><div class="ctrAsk" id="ctrAsk"></div>
       <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="zpWrap" id="zpA" hidden></div><div class="exRow" id="exRow"></div><div class="zpWrap" id="zpB" hidden></div>
-        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
+        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button type="button" class="btn" id="exSoloRt" hidden aria-label="Insert a square root">√</button><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
       <section class="nlBox" id="nlBox" hidden aria-label="The solutions on a number line"></section>
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
         <div class="row" style="flex-wrap:nowrap"><input id="crIn" autocomplete="off" aria-label="Equation"></div>
-        <div class="crKeys" id="crKeys" role="group" aria-label="Equation keys"><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="x²" aria-label="Insert x squared"><i>x</i>²</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" class="eqGo" id="crAdd">Submit</button></div>
+        <div class="crKeys" id="crKeys" role="group" aria-label="Equation keys"><button type="button" data-ins="x" aria-label="Insert x"><i>x</i></button><button type="button" data-ins="x²" aria-label="Insert x squared"><i>x</i>²</button><button type="button" data-ins="|" aria-label="Insert | (absolute value bar)">|&nbsp;&nbsp;&nbsp;|</button><button type="button" data-ins="√" aria-label="Insert a square root">√</button><button type="button" class="eqGo" id="crAdd">Submit</button></div>
         <div class="err" id="crErr"></div>
       </section>
       <section class="panel modePick" id="modePick" hidden aria-label="Choose a mode"></section>
@@ -1906,7 +1906,7 @@
   }
   function exRender(hot) { exRender0(hot); exWork(); }
   function exRender0(hot) {
-    $("exBox").classList.toggle("solved", !!locked);
+    $("exBox").classList.toggle("solved", !!locked); if ($("exSoloRt")) $("exSoloRt").hidden = !(EXP && EXP.rad && !EXP.eq);   // (a square root to simplify: a √ key beside the Write box)
     if (!EXP) return;
     if (EXP.eq) { eqRender(hot); return; }
     zpPaint();
@@ -1937,7 +1937,7 @@
       var pwE = el.querySelector(".exPw"); if (pwE) { pwE.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); pwE.addEventListener("click", function (e) { e.stopPropagation(); if (!EXP.ask) exPw(i, false); }); }
       var kEl = el.querySelector(":scope > .exK");
       if (kEl && !EXP.grp) kEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, kEl, null, function (t) { exFactor(i, +t.dataset.drop.slice(3)); }, "ex:"); });
-      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else if (dd.indexOf("gb:") === 0) grPlace(+dd.slice(3), i); else exDrop(i, +dd.slice(3)); }, EXP.grp ? ["ex:", "gb:", "fm:"] : ["ex:", "fm:"], function (dx, dy) { if (fmUp(null, i, dx, dy)) return; if (EXP.grp && !FM) grShow(); }, function (t, ev) { if (!t && fmAbove(null, i, ev)) return; if (EXP.grp) grEnd(t, ev); }); });
+      el.addEventListener("pointerdown", function (e) { if (EXP.ask) return; drag(e, el, its[i].k === "g" ? function () { exDistribute(i); } : its[i].k === "r" ? function () { exRadSimp(i); } : null, function (t) { var dd = t.dataset.drop; if (dd.indexOf("fm:") === 0) fmPlace(dd.slice(3), i); else if (dd.indexOf("gb:") === 0) grPlace(+dd.slice(3), i); else exDrop(i, +dd.slice(3)); }, EXP.grp ? ["ex:", "gb:", "fm:"] : ["ex:", "fm:"], function (dx, dy) { if (fmUp(null, i, dx, dy)) return; if (EXP.grp && !FM) grShow(); }, function (t, ev) { if (!t && fmAbove(null, i, ev)) return; if (EXP.grp) grEnd(t, ev); }); });
     });
   }
   function exPush() { grHide(); hist.push(JSON.stringify(EXP.items)); updUndo(); }
@@ -1998,7 +1998,7 @@
     if (exDone(items)) exEnd(); else if (!msg) clearLog();
   }
   function exProd(its) { return its.length === 1 && its[0].k === "g" && !!its[0].b && !its[0].c; }   // a product of two parentheses
-  function exDone(its) { return EXP.grp && exProd(its) ? true : EXP.fac ? facDone(its) : exFin(its); }
+  function exDone(its) { return EXP.rad ? !its.some(rdLeft) : EXP.grp && exProd(its) ? true : EXP.fac ? facDone(its) : exFin(its); }
   function exEnd() {
     locked = true; exRender(); closeAsk(false);
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note((EXP.fac || (EXP.grp && exProd(EXP.items)) ? "Fully factored: " : "Fully simplified: ") + exSay(EXP.items) + ".");
@@ -2063,6 +2063,8 @@
   }
   function exAskOK() {
     if (EXP && EXP.ask && EXP.ask.kind === "fd") { fdAskOK(EXP.ask); return; }
+    if (EXP && !EXP.eq && EXP.ask && EXP.ask.kind === "radp") { var ka = EXP.ask, pp = radParse($("askIn").value, ka.n), sqp = pp ? radPairOK(pp) : 0; if (sqp) { closeAsk(false); EXP.ask = null; ka.take(sqp); } else { EQW++; $("askErr").textContent = pp ? (pp[0] === 1 || pp[1] === 1 ? "1 is a perfect square, but taking it out changes nothing. Try another pair." : "Neither " + pp[0] + " nor " + pp[1] + " is a perfect square. Try another pair.") : "Type two numbers that multiply to " + ka.n + ", like " + radPairs(ka.n)[1].join("\u00b7") + "."; $("askIn").select(); } return; }
+    if (EXP && !EXP.eq && EXP.ask && EXP.ask.kind === "rdv") { var kv = EXP.ask, vv = numVal($("askIn").value); if (vv && vv.length === 1 && Math.abs(vv[0] - kv.want) < 1e-9) { closeAsk(false); EXP.ask = null; exSet(kv.items, kv.msg); } else { EQW++; $("askErr").textContent = "Not quite. What number times itself makes the number under the root?"; $("askIn").select(); } return; }
     if (EXP && EXP.eq) { eqAskOK(); return; }
     var k = EXP && EXP.ask; if (!k) return; var r = EXP.lit ? litTerms($("askIn").value, "x", true) : exParse($("askIn").value), its = EXP.items, ok = false, m = $("askErr");
     if (typeof r === "string") { m.textContent = "Type the result, like 5x or −2."; return; }
@@ -2080,6 +2082,14 @@
   }
   function exCheckSolo() {
     if (EXP.eq) { eqCheckSolo(); return; }
+    if (EXP.rad) {   // a square root: the simplified form typed, like 10√2 (or 7 for √49)
+      var m0 = $("exMsg"), raw = $("exSoloIn").value, want = EXP.items.reduce(function (a, t) { return a + radF(t); }, 0), q = rdIn(raw), v = numVal(raw); ansTouched = true;
+      if (!v || v.length !== 1) { m0.className = "bad"; m0.textContent = "Type the simplified square root, like 10\u221a2."; return; }
+      if (Math.abs(v[0] - want) > 1e-9 * Math.max(1, Math.abs(want))) { m0.className = "bad"; m0.textContent = "Not quite. Take out the biggest perfect square factor and try again."; return; }
+      if (typeof q !== "string" && radSq(q.n).s > 1) { m0.className = "bad"; m0.textContent = "That is the same value, but a perfect square still divides " + q.n + ". Simplify it more."; return; }
+      var fin = EXP.items.map(function (t) { if (!rdLeft(t)) return t; var b = radSq(t.r.n).s, c1 = mul(t.n, mk(b)), m1 = t.r.n / (b * b); return m1 === 1 ? { k: "c", n: c1 } : { k: "r", n: c1, r: mk(m1) }; });
+      EXP.items = fin; exEnd(); return;
+    }
     var r = EXP.lit ? litTerms($("exSoloIn").value, "x", true) : exParse($("exSoloIn").value), m = $("exMsg"); ansTouched = true;
     if (typeof r === "string") { m.className = "bad"; m.textContent = r; return; }
     if (EXP.lit) {
@@ -2119,8 +2129,9 @@
       else note("Drag a term across the " + (eqIneq() ? "sign" : "=") + " to move it to the other side (its sign changes). Drop it on a like term to combine them. Drag the number in front of x across to divide." + (eqIneq() ? " Dividing or multiplying by a negative number turns the sign around." : "") + (EXP.lit ? " The letters are numbers too: dividing by a gives b/a." : "") + (mode === "calculate" ? " You will be asked for each result." : ""));
       return;
     }
-    if (mode === "demo") { dmUI("idle"); dmCap(BUILT[act].solver ? "" : "Press Start Demo to watch this expression " + (EXP.fac ? "factored." : EXP.grp ? "factored by grouping." : "simplified.")); }
-    else if (mode === "solo") note(EXP.fac ? "Factor it on your own, then type your answer, like 3(x + 2)." : EXP.grp ? "Simplify it or factor it on your own, then type your answer, like (x + 3)(x + 5)." : "Simplify it on your own, then type your answer.");
+    if (mode === "demo") { dmUI("idle"); dmCap(BUILT[act].solver ? "" : "Press Start Demo to watch this expression " + (EXP.rad ? "simplified." : EXP.fac ? "factored." : EXP.grp ? "factored by grouping." : "simplified.")); }
+    else if (mode === "solo") note(EXP.rad ? "Simplify the square root on your own, then type your answer, like 10\u221a2 (use the \u221a key, or type sqrt)." : EXP.fac ? "Factor it on your own, then type your answer, like 3(x + 2)." : EXP.grp ? "Simplify it or factor it on your own, then type your answer, like (x + 3)(x + 5)." : "Simplify it on your own, then type your answer.");
+    else if (EXP.rad) note("Click the square root to take out a perfect square factor. Product Property of Square Roots: \u221a(a \u00b7 b) = \u221aa \u00b7 \u221ab." + (mode === "calculate" ? " You will be asked for the factor pair." : ""));
     else if (EXP.grp) note("Drag a term down into the square to factor by grouping, or drop it on a like term to combine them." + (mode === "calculate" ? " You will be asked for each result." : ""));
     else if (EXP.fac) note("Drag the number in front of x onto another term to factor out the biggest number they share." + (mode === "calculate" ? " You will be asked for each result." : ""));
     else note("Drag a term onto a like term to combine them. Drag any other term to move it, and its sign goes with it. Click parentheses to distribute." + (mode === "calculate" ? " You will be asked for each result." : ""));
@@ -2152,6 +2163,17 @@
   function exDemoStep(ms) {
     if (EXP && EXP.eq) { eqDemoStep(ms); return; }
     if (EXP && EXP.grp) { grDemoStep(ms); return; }
+    if (EXP && EXP.rad) {   // a square root: click it and take out the biggest perfect square factor
+      clearTimeout(DM4.t);
+      DM4.t = setTimeout(function () {
+        if (!EXP || !DM4.run || DM4.paused || locked) return;
+        var i = -1; EXP.items.forEach(function (t, j) { if (i < 0 && rdLeft(t)) i = j; }); if (i < 0) return;
+        var n = EXP.items[i].r.n, b = radSq(n).s; exRender();
+        dmCap(isSq(n) ? "Click the square root: " + n + " is a perfect square." : "Click the square root. The biggest perfect square that divides " + n + " is " + b * b + ", so \u221a" + n + " = \u221a(" + b * b + " \u00b7 " + n / (b * b) + ").");
+        exTapDemo('.exT[data-i="' + i + '"] .exRad', function () { exRadSimp(i, isSq(n) ? 0 : b * b); }, function () { if (!locked) exDemoStep(900); });
+      }, ms);
+      return;
+    }
     clearTimeout(DM4.t);
     DM4.t = setTimeout(function () {
       if (!EXP || !DM4.run || DM4.paused || locked) return;
@@ -2186,7 +2208,47 @@
       exMoveDemo('.exT[data-i="' + b + '"]', '.exT[data-i="' + a + '"]', function () { exSet(exCombineTo(b, a), exSay([its[a], its[b]]) + " = " + exSay([exSum(its[a], its[b])])); }, function () { if (!locked) exDemoStep(900); });
     }, ms);
   }
+  // ---- Create: a square root to simplify (√200, √(72), 3√12, sqrt(50)), with the Product Property of Square Roots: √(a·b) = √a · √b.  Each click on the root
+  // takes out a perfect square factor: Sequence, a wheel of factor pairs; Calculate, a typed pair; Demo, the biggest perfect square; Write, the answer typed ----
+  function rdIn(str) {   // the typed square root: { c: the number in front, n: under the root } or an error message
+    var t = String(str).toLowerCase().replace(/\s+/g, "").replace(/[−–]/g, "-").replace(/sqrt/g, "√").replace(/[*·⋅]/g, ""), m = /^([+-]?)(\d*)√(?:\((\d+)\)|(\d+))$/.exec(t);
+    if (!m) return "Type one square root, like √200, √(72) or 3√12.";
+    var c = (m[1] === "-" ? -1 : 1) * (m[2] ? +m[2] : 1), n = +(m[3] || m[4]);
+    if (!c) return "The number in front of the square root cannot be 0.";
+    if (n < 2) return "Type a whole number bigger than 1 under the square root, like √200.";
+    return { c: c, n: n };
+  }
+  function rdLeft(t) { return t.k === "r" && t.r.d === 1 && t.r.n > 1 && (isSq(t.r.n) || radSq(t.r.n).s > 1); }   // a square root that can still be simplified
+  function rdCreate() {
+    var q = rdIn($("crIn").value), err = $("crErr");
+    if (typeof q === "string") { err.textContent = q; return; }
+    if (!isSq(q.n) && radSq(q.n).s === 1) { err.textContent = "\u221a" + q.n + " is already simplified: no perfect square (other than 1) divides " + q.n + ". Try one like \u221a200, \u221a72 or 3\u221a12."; return; }
+    var r = [{ k: "r", n: mk(q.c), r: mk(q.n) }];
+    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, rad: true }; SOL.fresh = false;
+    $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your square root is in. Choose how you want to work on it.");
+  }
+  function exRadSimp(i, pick) {   // click the square root in the expression: take out a perfect square factor
+    if (locked || busy || !EXP || EXP.ask) return;
+    var t = EXP.items[i]; if (!t || t.k !== "r") return;
+    var n = t.r.n, c = t.n, cS = Math.abs(c.n) === 1 && c.d === 1 ? (c.n < 0 ? "\u2212" : "") : exFr(c) + " \u00b7 ";
+    if (!rdLeft(t)) { note("\u221a" + n + " is already as simple as it gets: no perfect square (other than 1) divides " + n + "."); return; }
+    if (isSq(n)) {   // a perfect square: √49 = 7
+      var r0 = Math.round(Math.sqrt(n)), u0 = { k: "c", n: mul(c, mk(r0)) }, it0 = EXP.items.slice(); it0[i] = u0;
+      var say0 = cS + "\u221a" + n + " = " + cS + r0 + (cS ? " = " + exSay([u0]) : "") + ": " + n + " is a perfect square, " + r0 + " \u00b7 " + r0 + " = " + n + ".";
+      if (mode === "calculate" && !pick) { eqAsk({ kind: "rdv", want: u0.n.n / u0.n.d, items: it0, msg: say0 }, cS + "\u221a" + n + " ="); $("askIn").placeholder = "e.g. 7"; return; }
+      exSet(it0, say0); return;
+    }
+    var take = function (sq) {
+      var rt = Math.round(Math.sqrt(sq)), u = { k: "r", n: mul(c, mk(rt)), r: mk(n / sq) }, it = EXP.items.slice(); if (u.r.n === 1) u = { k: "c", n: u.n }; it[i] = u;
+      exSet(it, "Product Property of Square Roots: " + cS + "\u221a" + n + " = " + cS + "\u221a(" + sq + " \u00b7 " + n / sq + ") = " + cS + "\u221a" + sq + " \u00b7 \u221a" + n / sq + " = " + exSay([u]) + "." + (rdLeft(u) ? " Click the square root again: a perfect square still divides " + n / sq + "." : ""));
+    };
+    if (pick) { take(pick); return; }
+    if (mode === "sequence") { var el = document.querySelector('#exRow .exT[data-i="' + i + '"] .exRad') || $("exRow"); radWheel(n, el, function (sq) { take(sq); }); return; }
+    if (mode === "calculate") { eqAsk({ kind: "radp", n: n, take: take }, "\u221a" + n + ": type a factor pair with a perfect square in it"); $("askIn").placeholder = "e.g. " + (function () { var b = radSq(n).s; return b * b + "\u00b7" + n / (b * b); })(); return; }
+    var bs = radSq(n).s; take(bs * bs);   // Demo: the biggest perfect square
+  }
   function exCreate() {
+    if (/\u221a|sqrt/i.test($("crIn").value)) { rdCreate(); return; }
     var r = exParse($("crIn").value), err = $("crErr");
     if (typeof r === "string") { err.textContent = r; return; }
     var fac = false, lit = false, lr = exFin(r) ? litFacTerms($("crIn").value) : null;   // a sum with letters (ax + ab) is read with the letters as coefficients
@@ -6591,6 +6653,8 @@
     var i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd;
     el.focus(); el.setRangeText(b.dataset.ins, i, j, "end"); el.dispatchEvent(new Event("input", { bubbles: true }));
   });
+  $("exSoloRt").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the box
+  $("exSoloRt").addEventListener("click", function () { var el = $("exSoloIn"), i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd; el.focus(); el.setRangeText("\u221a", i, j, "end"); });
   $("exSoloGo").addEventListener("click", exCheckSolo); $("exSoloIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); });
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
   $("ansGo").addEventListener("click", checkAnswer);
