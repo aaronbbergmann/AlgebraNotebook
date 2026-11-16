@@ -978,7 +978,7 @@
     <div class="wrap">
       <main class="eqs work" id="wsEl"></main><div class="ctrAsk" id="ctrAsk"></div>
       <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="zpWrap" id="zpA" hidden></div><div class="exRow" id="exRow"></div><div class="zpWrap" id="zpB" hidden></div>
-        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button type="button" class="btn" id="exSoloRt" hidden aria-label="Insert a square root">√</button><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
+        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button type="button" class="btn" id="exSoloRt" hidden aria-label="Insert a square root">√</button><button type="button" class="btn" id="exSoloX2" hidden aria-label="Insert x squared"><i>x</i>²</button><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
       <section class="nlBox" id="nlBox" hidden aria-label="The solutions on a number line"></section>
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
@@ -1021,6 +1021,7 @@
       <div class="err" id="askErr"></div>
       <div class="row" style="flex-wrap:nowrap">
         <input id="askIn" autocomplete="off" aria-label="Your answer">
+        <button type="button" class="btn" id="askX2" hidden aria-label="Insert x squared"><i>x</i>²</button>
         <button class="btn" id="askOk">Send</button>
         <button class="btn" id="askNo" aria-label="Cancel">&#10005;</button>
       </div>
@@ -1471,7 +1472,7 @@
   var exDenOK = true;   // in expressions a term may be divided by letters: 3/a, 2x/a (switched off while a typed equation is read)
   var exKeepU = false;   // true while a typed equation is read: a fraction like 6/4 stays as typed (it is simplified by clicking it)
   function exParse(s) {
-    s = String(s).toLowerCase().replace(/−/g, "-").replace(/[\s*·⋅]/g, "");
+    s = String(s).toLowerCase().replace(/−/g, "-").replace(/\u00b2/g, "^2").replace(/[\s*·⋅]/g, "");   // (x² from an x² key is x^2)
     var i = 0, rawN = null, bad = "I couldn't read that. Use numbers, letters (x^2 for a power), + and −, and one set of parentheses at most, like 3(x+2)-4x+5.";
     if (!s || (exAbsOK ? /[^0-9a-z+\-().\/^|]/ : /[^0-9a-z+\-().\/^]/).test(s)) return bad;
     function number() { rawN = null; var m = s.slice(i).match(/^\d+(\.\d+)?(\/\d+)?/); if (!m) return null; i += m[0].length; var fm = /^(\d+)\/(\d+)$/.exec(m[0]); if (exKeepU && fm && +fm[2] > 1 && +fm[1] % +fm[2] && gcd(+fm[1], +fm[2]) > 1) rawN = { n: +fm[1], d: +fm[2] }; return parse(m[0]); }
@@ -1922,7 +1923,7 @@
   }
   function exRender(hot) { exRender0(hot); if (BX && !BX.done && EXP && !EXP.eq) bxRow(); exWork(); }
   function exRender0(hot) {
-    $("exBox").classList.toggle("solved", !!locked); if ($("exSoloRt")) $("exSoloRt").hidden = !(EXP && EXP.rad && !EXP.eq);   // (a square root to simplify: a √ key beside the Write box)
+    $("exBox").classList.toggle("solved", !!locked); if ($("exSoloRt")) $("exSoloRt").hidden = !(EXP && EXP.rad && !EXP.eq); var bxk = svL() && lesson === 6; $("exSoloX2").hidden = !(bxk && mode === "solo"); $("askX2").hidden = !(bxk && mode === "calculate");   // (2.4A Box Method: an x² key wherever an answer is typed)   // (a square root to simplify: a √ key beside the Write box)
     if (!EXP) return;
     if (EXP.eq) { eqRender(hot); return; }
     zpPaint();
@@ -6829,7 +6830,7 @@
     return q;
   }
   function parseAny(s) {
-    s = String(s).toLowerCase().replace(/−/g, "-").replace(/[\s*·⋅]/g, "");
+    s = String(s).toLowerCase().replace(/−/g, "-").replace(/\u00b2/g, "^2").replace(/[\s*·⋅]/g, "");   // (x² from an x² key is x^2)
     if (lesson === 1) return parseOne(s);
     var p = s.split("=");
     if (p.length !== 2 || !p[0] || !p[1]) return "Type an equation with one = sign, like " + (lesson === 3 ? "2x+3y-z=12." : "2x+3y=12.");
@@ -6917,6 +6918,10 @@
     var b = e.target.closest("button[data-ins]"), el = $("crIn"); if (!b) return;
     var i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd;
     el.focus(); el.setRangeText(b.dataset.ins, i, j, "end"); if (b.dataset.back) { var c0 = el.selectionEnd - +b.dataset.back; el.setSelectionRange(c0, c0); } el.dispatchEvent(new Event("input", { bubbles: true }));   // (parentheses: the cursor lands between them)
+  });
+  [["askX2", "askIn"], ["exSoloX2", "exSoloIn"]].forEach(function (p) {   // the x² keys type x² where the cursor is
+    $(p[0]).addEventListener("mousedown", function (e) { e.preventDefault(); });
+    $(p[0]).addEventListener("click", function () { var el = $(p[1]), i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd; el.focus(); el.setRangeText("x\u00b2", i, j, "end"); el.dispatchEvent(new Event("input", { bubbles: true })); });
   });
   $("exSoloRt").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the box
   $("exSoloRt").addEventListener("click", function () { var el = $("exSoloIn"), i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd; el.focus(); el.setRangeText("\u221a", i, j, "end"); });
