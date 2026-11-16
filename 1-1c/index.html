@@ -5750,6 +5750,19 @@
   // each a list of [line (HTML, or function of the problem's work), when (null: always; a list of step ids, shown once one is done; or a function (x, done))].
   // Show work reveals the work as it is done; a finished problem shows it all ====
   function gqM(t) { return String(t).replace(/\bmx\b/g, "m\u2063x").replace(/(^|[^A-Za-z&#;<\/])([a-z])(?![A-Za-z;])/g, "$1<i>$2</i>").replace(/\^2/g, "²"); }   // single letters in italics
+  // QWA: Question (the data and the unknown), Work (the graph), Answer (the point plotted, and what it means), for problems answered from a graph (2.4B
+  // Regression).  pb.qwa = { Q, W, A }: lists of [line, when], as in pb.guess
+  function qwaHTML(w) {
+    var g = w.qwa, d = w.done || {}, x = w.gx || {}, all = !!w.fin;
+    var on = function (it) { var c = it[1]; return all || c == null || (typeof c === "function" ? !!c(x, d) : c.some(function (id) { return d[id]; })); };
+    var txt = function (it) { return typeof it[0] === "function" ? it[0](x) : it[0]; };
+    var row = function (L, name, items, last) {
+      var sh = (items || []).filter(on).map(txt).filter(Boolean);
+      return "<div style=\"display:grid;grid-template-columns:5.6em 1fr;column-gap:1em;padding:.45rem 0;border-bottom:" + (last ? "0" : "1px solid #ccd") + "\"><div style=\"font:700 1rem system-ui,sans-serif;color:#1B2433\"><span style=\"font-size:1.6em\">" + L + "</span><br><span style=\"font-weight:600;font-size:.85em;color:#4B5563\">" + name + "</span></div><div>" +
+        (sh.length ? sh.map(function (t) { return "<div style=\"padding:.15rem 0\">" + t + "</div>"; }).join("") : "<div style=\"color:#9AA0A8\">…</div>") + "</div></div>";
+    };
+    return "<section style=\"padding:.2rem 0 .6rem\">" + row("Q", "Question", g.Q) + row("W", "Work", g.W) + row("A", "Answer", g.A, true) + "</section>";
+  }
   function guessHTML(w) {
     var g = w.guess, d = w.done || {}, x = w.gx || {}, all = !!w.fin;
     var on = function (it) { var c = it[1]; return all || c == null || (typeof c === "function" ? !!c(x, d) : c.some(function (id) { return d[id]; })); };
@@ -5784,13 +5797,13 @@
     var c21 = c21On() && (!c2On() || grN());   // 2.1: its own record of the work (every exercise and mode)
     if (m3() && QZ && QZ.ww) {   // the problem on the screen: its own work (a question kept from another mode may have had its record dropped), all of it once it is finished
       if (works.indexOf(QZ.ww) < 0) works.push(QZ.ww);
-      if (QZ.ww.guess) { QZ.ww.gx = QZ.m3x; if (QZ.step >= 4 || QZ.m3done) QZ.ww.fin = true; }
+      if (QZ.ww.guess || QZ.ww.qwa) { QZ.ww.gx = QZ.m3x; if (QZ.step >= 4 || QZ.m3done) QZ.ww.fin = true; }
     }
     var list = c21 ? c21Show() : wf() || m3() ? works.filter(function (w) { return w.wf; }) : works.filter(function (w) { return w.steps.length >= 2; }), cur = c21 ? list[list.length - 1] : m3() && QZ && QZ.ww && list.indexOf(QZ.ww) >= 0 ? QZ.ww : works[works.length - 1];
     if (!list.length) list = [{ steps: steps, label: "" }];
     var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
-      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + (w.guess ? guessHTML(w) : w.gonly ? "" : workHTML(w.steps)) + (function (pc) { return pc ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + pc + "</section>" : ""; })(typeof w.pic === "function" ? w.pic(w) : w.pic) + "</div>"; }).join("");
+      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + (w.guess ? guessHTML(w) : w.qwa ? qwaHTML(w) : w.gonly ? "" : workHTML(w.steps)) + (function (pc) { return pc ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + pc + "</section>" : ""; })(typeof w.pic === "function" ? w.pic(w) : w.pic) + "</div>"; }).join("");
     var css = ".wpic svg{max-width:100%;height:auto}.wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
     body = svHTML(body);
     var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;min-width:min(34rem,90vw);width:fit-content;max-width:none;margin:2rem auto;padding:0 1rem}.r>span,.r td{white-space:nowrap}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#7A3FB5}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
@@ -10762,7 +10775,7 @@ var ESPIC = {
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { pqMsg(""); }
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
-        QZ.step = 4; if (QZ.ww && QZ.ww.guess) QZ.ww.fin = true; var last = QZ.pi === QZ.order.length - 1; if (act === "2.1") c21Save();
+        QZ.step = 4; if (QZ.ww && (QZ.ww.guess || QZ.ww.qwa)) QZ.ww.fin = true; var last = QZ.pi === QZ.order.length - 1; if (act === "2.1") c21Save();
         var c2Err = QZ.wrong > 0;   // any error message in this round (in Demo, this problem) means no Progress for it
         if (!QZ.custom && mode !== "create" && mode !== "demo" && !c2Err && !ivL()) { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
         pqMsg(mode === "solo" ? cheer() : est() || wf() || m3() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last && QZ.order.length > 1 ? (QZ.order.length === 3 ? "You have finished all three!" : "You have finished all four!") : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
@@ -13241,7 +13254,7 @@ var ESPIC = {
     QZ.m3i = 0; QZ.m3ord = null; QZ.ta = null; QZ.m3l = []; QZ.m3x = {}; QZ.m3done = false; QZ.m3o = null; QZ.hn = 0; QZ.arrowAt = -1; QZ.m3w = { v: {}, ok: {}, bad: {} }; m3wKey = "";
     for (var wi = works.length - 1; wi >= 0; wi--) if (works[wi].wf && works[wi].steps.length < 2) works.splice(wi, 1);
     var pb = m3Cur(); QZ.ww = null;
-    if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); if (pb.guess) { QZ.ww.guess = pb.guess; QZ.ww.done = {}; QZ.ww.gx = QZ.m3x; if (pb.vp && pb.dsm) QZ.ww.pic = function (w) { var d = w.done || {}; return w.fin || d.gr || d.ans ? vpWorkPic(pb) : ""; }; } if (pb.grid && pb.dsm) { QZ.ww.gonly = true; QZ.ww.pic = c2CmpPic(pb); } }   // (2.2C Compare: Show work is the graph alone)
+    if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); if (pb.qwa) { QZ.ww.qwa = pb.qwa; QZ.ww.done = {}; QZ.ww.gx = QZ.m3x; } if (pb.guess) { QZ.ww.guess = pb.guess; QZ.ww.done = {}; QZ.ww.gx = QZ.m3x; if (pb.vp && pb.dsm) QZ.ww.pic = function (w) { var d = w.done || {}; return w.fin || d.gr || d.ans ? vpWorkPic(pb) : ""; }; } if (pb.grid && pb.dsm) { QZ.ww.gonly = true; QZ.ww.pic = c2CmpPic(pb); } }   // (2.2C Compare: Show work is the graph alone)
     PG.show = { eq: false, table: false, graph: false, desc: false, parent: false };
   }
   // ==== "Try Another" questioning (pb.ta, Calculate): every box is on the screen; a box is accepted the moment it is right.  A wrong box, once the student
@@ -15124,6 +15137,19 @@ var ESPIC = {
           } }
       ];
       pb.ex = "In Desmos, the quadratic regression of the table gives about " + E[0] + ". On its graph, " + Q[4] + ".";
+      var ax = function (v, xr) { return c2R(v, 1); }, ptLab = "(" + c2F(c2R(X, 1)) + ", " + c2F(c2R(Y, 1)) + ")";
+      var gq = function (pt) {   // Show work's graph: the data, the parabola, and (for the answer) the point, labelled
+        var o = { H: 300, xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: sc.xn, yl: sc.yn, alt: pt ? "The answer on the graph" : "The regression on the graph", scat: xs.map(function (v, j) { return [v, ys[j]]; }), curves: [{ fn: Ff, col: "#2D70B3" }] };
+        if (pt) o.pts = [{ x: X, y: Y, col: "#6042A6", tc: "#6042A6", lab: ptLab, dy: -10 }];
+        return "<div style=\"color:#1B2433;--bg:#fff\">" + c2Fig(o).replace("<svg ", "<svg width=\"520\" ") + "</div>";
+      };
+      var tdS = "border:1px solid #ccd;padding:.2em .55em;text-align:center;font:.8em system-ui,sans-serif", thS = tdS + ";font-weight:700;text-align:left;background:#f3f4f8";
+      var dataT = "<table style=\"border-collapse:collapse\"><tr><th style=\"" + thS + "\">" + sc.xn + "</th>" + xs.map(function (v) { return "<td style=\"" + tdS + "\">" + c2F(v) + "</td>"; }).join("") + "</tr><tr><th style=\"" + thS + "\">" + sc.yn + "</th>" + ys.map(function (v) { return "<td style=\"" + tdS + "\">" + c2F(v) + "</td>"; }).join("") + "</tr></table>";
+      var unk = qt === "vx" ? gqM("x = ?") + " " + sc.xu + ", where the " + sc.yw + " is " + hi + " (the vertex)" : qt === "vy" ? gqM("y = ?") + " " + sc.u + ", the " + (sc.up ? "lowest" : "greatest") + " " + sc.yw + " (the vertex)" : qt === "yi" ? gqM("y = ?") + " " + sc.u + ", when " + gqM("x = 0") : qt === "xi" ? gqM("x = ?") + " " + sc.xu + ", when " + gqM("y = 0") : gqM("y = ?") + " " + sc.u + ", when " + gqM("x = " + X);
+      var said = Q[4].charAt(0).toUpperCase() + Q[4].slice(1) + ".";
+      pb.qwa = { Q: [[Q[0]], [dataT], [unk]],
+        W: [["Quadratic regression in Desmos: " + E[0] + " (rounded)", ["dsm"]], [gq(false), ["dsm"]]],
+        A: [[gq(true), ["ans"]], ["The point " + ptLab + ". " + said, ["ans"]]] };
       return pb;
     }
   }
