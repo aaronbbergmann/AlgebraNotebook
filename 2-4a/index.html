@@ -7435,6 +7435,7 @@
     if (pq() && m3() && m3taFail()) { up = null; QZ.ta = null; pqRegen(); return; }
     if (pq() && vfnTaFail()) { up = null; QZ.vf = null; pqRegen(); return; }   // ("Try Another" questioning: a new problem)
     if (pq() && taAny()) { taGo(); return; }   // (an error message in Sequence or Calculate: Try another)
+    if (vpWrTa()) { taGo(); return; }   // (2.4A Point and x-Intercepts, Write: a new problem)
     if (QZ.locked) { if (up) { var u = up; up = null; u.go(); } else qzStart(); return; }
     if (pq() && mode === "demo" && QZ.step >= 4 && up) { var u2 = up; up = null; u2.go(); return; }
     if (pq() && QZ.step >= 4 && up && !QZ.custom && mode !== "create") { var u3 = up; up = null; u3.go(); return; }
@@ -10279,8 +10280,8 @@ var ESPIC = {
     var go = $("qzGo"), nx = $("qzNext");
     go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || (m3() && !wsubAct()) || (wf() && (mode === "sequence" || mode === "calculate")); go.textContent = wsubAct() ? "Submit" : "Check"; document.body.classList.toggle("wsub", wsubAct());
     // the one Next (see nxShow): in Demo the demo button carries it; otherwise it sits here in the side panel
-    var taF = (m3() && m3taFail()) || vfnTaFail() || taAny();
-    nx.hidden = !(done || taF) || demo; nx.disabled = false; nx.textContent = taF ? "Try another" : (gd() || wf()) && mode === "create" ? "Create another" : up ? up.label : "Next";
+    var taF = (m3() && m3taFail()) || vfnTaFail() || taAny() || vpWrTa();
+    nx.hidden = !(done || taF) || demo; nx.disabled = false; nx.textContent = vpWrTa() ? "Try Another" : taF ? "Try another" : (gd() || wf()) && mode === "create" ? "Create another" : up ? up.label : "Next";
     $("qzAgain").hidden = demo || !(done && !QZ.custom && up && up.stayText); $("qzAgain").textContent = !QZ.custom && up && up.stayText || "";
     $("pgDemo").style.display = demo ? "" : "none"; $("pgCtl").classList.toggle("empty", !demo && !est());
     if (demo && done) {
@@ -13047,7 +13048,7 @@ var ESPIC = {
     });
     if (L.every(function (st) { return W.ok[st.id]; })) { QZ.m3i = L.length; QZ.m3done = true; }
     m3wKey = "";
-    if (bad.length) { QZ.wrong++; drawPlay(); m3Redraw(); var ansM = c2cOn() ? m3L().filter(function (q) { return !QZ.m3w.ok[q.id] && m3AnsTx(q); }).map(function (q) { return m3wLab(q) + ": " + m3AnsTx(q); }) : []; pqMsg(m3Plain("Not quite. Check " + wsList(bad) + ", then press Submit again." + (ansM.length ? " The answers: " + ansM.join("; ") + "." : ""))); return; }
+    if (bad.length) { QZ.wrong++; if (vpWrTa()) { if (QZ.ww) QZ.ww.fin = true; drawPlay(); m3Redraw(); pqPanel(); pqMsg("Not quite. Press Show work to see every step, or Try Another for a new problem."); return; } drawPlay(); m3Redraw(); var ansM = c2cOn() ? m3L().filter(function (q) { return !QZ.m3w.ok[q.id] && m3AnsTx(q); }).map(function (q) { return m3wLab(q) + ": " + m3AnsTx(q); }) : []; pqMsg(m3Plain("Not quite. Check " + wsList(bad) + ", then press Submit again." + (ansM.length ? " The answers: " + ansM.join("; ") + "." : ""))); return; }
     pqMsg(""); drawPlay(); pqEval();
   }
   $("wfSteps").addEventListener("input", function (e) { if (m3() && e.target.classList.contains("m3In")) { if (m3wOn()) { QZ.m3w.v[e.target.dataset.sid] = e.target.value; return; } m3Try(e.target, false); } });
@@ -14761,6 +14762,9 @@ var ESPIC = {
   function taAny() {   // an error message in Sequence or Calculate (not where a miss just comes back later: Circle Back)
     return pq() && (mode === "sequence" || mode === "calculate") && !!QZ && !!QZ.order && QZ.wrong > 0 && QZ.step < 4 && !QZ.custom && !pgRun && !ivL() && !csN() && !(m3() && m3CB());
   }
+  // 2.4A Point and x-Intercepts, Write: an error message on Submit puts a plum-red Try Another where Next sits (a new problem), and Show work then shows
+  // every step of the GUESS work, so the student is never stuck
+  function vpWrTa() { var pb = pq() && m3() && mode === "solo" && !!QZ && !!QZ.order && QZ.step < 4 && QZ.wrong > 0 && !QZ.custom ? m3Cur() : null; return !!(pb && pb.vp && pb.vp.form === "i"); }
   function taSync() { if (!taAny()) return; var nx = $("qzNext"); nx.hidden = false; nx.disabled = false; nx.textContent = "Try another"; $("qzAgain").hidden = true; }
   function taGo() { up = null; QZ.ta = null; QZ.vf = null; if (retryOn()) pqRetry(); else pqRegen(); }   // (a new problem like it, in its place; the round's others stay done)
   function retryOn() { return mode !== "demo" && mode !== "create" && !QZ.custom && QZ.order && QZ.order.length > 1; }
