@@ -10425,7 +10425,7 @@ var ESPIC = {
         else if (st && st.type === "dsm") n.innerHTML = "Table " + (R[0] ? "<span class=\"cueOk\">✓</span>" : "not entered yet") + " &nbsp; Regression " + (R[1] ? "<span class=\"cueOk\">✓</span>" : DSM.tabReg ? "set to " + DSM.tabReg.charAt(0).toUpperCase() + DSM.tabReg.slice(1) + ": choose Quadratic Regression" : any ? "not working yet" : "not run yet");
         else if (QZ.m3done || QZ.step >= 4) n.textContent = "";
         else if (R[1]) n.innerHTML = "Table <span class=\"cueOk\">✓</span> &nbsp; Regression <span class=\"cueOk\">✓</span> &nbsp; Use them to answer the questions.";
-        else n.textContent = "Type the data in a Desmos table and run a regression to answer the questions.";
+        else n.textContent = mode === "solo" ? "" : "Type the data in a Desmos table and run a regression to answer the questions.";   // (Write: no instructions)
       }
       if (st && st.type === "dsm" && R[0] && R[1]) m3Accept(st, "");
       return;
@@ -15146,7 +15146,7 @@ var ESPIC = {
       var ptX = X, ptY = Y;
       pb.steps = [
         { id: "dsm", fine: 1, lab: "Desmos", type: "dsm", ask: "", after: function (x) { x.reg = true; }, line: "quadratic regression in Desmos: " + E[0] + " (rounded)", hint: ["Type each pair on a row of the table, then add a quadratic regression.", "The regression is about " + E[0] + "."] },
-        { id: "ans", lab: "Answer", ask: "Use the graph. " + Q[0] + " <span class=\"vpHow\">(" + Q[1] + " Round to the nearest tenth.)</span>", pre: Q[2], post: Q[3], ans: ans, tol: tol, nums: [c2R(isX ? Y : X, 1), c2R(ans * 1.1 + (ans ? 0 : 1), 1), c2R(ans * 0.9 - (ans ? 0 : 1), 1)].filter(function (v, j, A) { return Math.abs(v - ans) > tol && A.indexOf(v) === j; }), after: function (x) { x.av = true; }, line: Q[4],   // (Sequence: the other coordinate, and 10% either way, as the wrong choices)
+        { id: "ans", lab: "Answer", ask: function () { return mode === "solo" ? "" : "Use the graph. " + Q[0] + " <span class=\"vpHow\">(" + Q[1] + " Round to the nearest tenth.)</span>"; }, /* (Write: no instructions; the story asks the question) */ pre: Q[2], post: Q[3], ans: ans, tol: tol, nums: [c2R(isX ? Y : X, 1), c2R(ans * 1.1 + (ans ? 0 : 1), 1), c2R(ans * 0.9 - (ans ? 0 : 1), 1)].filter(function (v, j, A) { return Math.abs(v - ans) > tol && A.indexOf(v) === j; }), after: function (x) { x.av = true; }, line: Q[4],   // (Sequence: the other coordinate, and 10% either way, as the wrong choices)
           hint: [Q[1], "The point is about (" + c2F(c2R(X, 1)) + ", " + c2F(c2R(Y, 1)) + ")."],
           dpre: function (run, then) {   // the demo: the hand clicks the parabola at the point, and Desmos labels it
             var box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { then(); return; } try { box.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (er) { }
