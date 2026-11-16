@@ -10366,6 +10366,7 @@ var ESPIC = {
       try {
         DSM.calc = Desmos.GraphingCalculator($("dsmCalc"), { keypad: true, expressions: true, settingsMenu: false, expressionsTopbar: true, zoomButtons: true, border: false, images: false, folders: false, notes: false, sliders: false });
         DSM.state = "ready"; DSM.key = ""; DSM.calc.observeEvent("change", function () { dsmCheck(); e11Check(); }); dsmSync(); e11Sync();
+        setInterval(function () { try { var s1 = m3() && m3Cur() && dsmReg() ? m3Step() : null; if (s1 && s1.type === "dsm") dsmCheck(); } catch (e) { } }, 1000);   // (Desmos's own regression dropdown may change without a "change" event)
       } catch (e) { dsmFail(); }
     };
     sc.onerror = dsmFail; document.head.appendChild(sc);
@@ -10397,7 +10398,20 @@ var ESPIC = {
       if (A[x.id] && A[x.id].isError) continue;
       if (/\^\{?2/.test(rhs) || rhs.split(T.x).length > 2) return [true, true];   // a quadratic: x squared, or x twice (intercept form)
     }
+    DSM.tabReg = dsmTabReg(); if (DSM.tabReg === "quadratic") return [true, true];   // (Desmos's own Add Regression, attached to the table, set to Quadratic Regression)
     return [true, false];
+  }
+  function dsmTabReg() {   // the regression Desmos attaches to a table (its Add Regression button): "quadratic", another kind ("linear" ...), or ""
+    var kinds = /\b(linear|quadratic|cubic|quartic|exponential|logarithmic|logistic|power|sinusoidal)\b/i;
+    try {
+      var L = (DSM.calc.getState().expressions || {}).list || [];
+      for (var i = 0; i < L.length; i++) { if (L[i].type !== "table") continue; var js = JSON.stringify(L[i]); if (!/regress/i.test(js)) continue; var m = /"(?:regression(?:Type)?|type|model)"\s*:\s*"([a-z]+)"/i.exec(js.replace(/"type"\s*:\s*"table"/g, "")); if (m && kinds.test(m[1])) return m[1].toLowerCase(); if (/quadratic/i.test(js)) return "quadratic"; }
+    } catch (e) { }
+    var box = $("dsmCalc"); if (!box) return ""; var tx = box.innerText || "";
+    if (!/EQUATION/i.test(tx) || !/regression/i.test(tx)) return "";
+    var pick = "", els = box.querySelectorAll("div,span,button");   // the dropdown shows the kind chosen (the closed menu's list is not on the page)
+    for (var j = 0; j < els.length && !pick; j++) { var e = els[j], t = (e.textContent || "").trim(); if (/^[A-Za-z]+ Regression$/.test(t) && e.getClientRects().length && !e.querySelector("div,span")) { var m2 = kinds.exec(t); if (m2) pick = m2[1].toLowerCase(); } }
+    return pick;
   }
   function dsmCheck() {
     if (!dsmOn()) return; var st = m3Step(), n = $("dsmNote");
@@ -10406,7 +10420,7 @@ var ESPIC = {
       if (n) {
         if (DSM.fail) n.textContent = "Desmos could not load here. Open desmos.com in another tab to make the table and the regression, then answer the questions.";
         else if (!DSM.calc) n.textContent = "Loading Desmos…";
-        else if (st && st.type === "dsm") n.innerHTML = "Table " + (R[0] ? "<span class=\"cueOk\">✓</span>" : "not entered yet") + " &nbsp; Regression " + (R[1] ? "<span class=\"cueOk\">✓</span>" : any ? "not working yet" : "not run yet");
+        else if (st && st.type === "dsm") n.innerHTML = "Table " + (R[0] ? "<span class=\"cueOk\">✓</span>" : "not entered yet") + " &nbsp; Regression " + (R[1] ? "<span class=\"cueOk\">✓</span>" : DSM.tabReg ? "set to " + DSM.tabReg.charAt(0).toUpperCase() + DSM.tabReg.slice(1) + ": choose Quadratic Regression" : any ? "not working yet" : "not run yet");
         else if (QZ.m3done || QZ.step >= 4) n.textContent = "";
         else if (R[1]) n.innerHTML = "Table <span class=\"cueOk\">✓</span> &nbsp; Regression <span class=\"cueOk\">✓</span> &nbsp; Use them to answer the questions.";
         else n.textContent = "Type the data in a Desmos table and run a regression to answer the questions.";
