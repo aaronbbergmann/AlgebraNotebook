@@ -7687,6 +7687,17 @@ var ESPIC = {
   // Submit in the right panel; Submit checks every part at once, marks the right ones and names the rest
   function wsubAct() { return pq() && mode === "solo" && !!QZ && !!QZ.order && !!BUILT[act] && !BUILT[act].play && !wfCr(); }
   function wsub() { return wsubAct() && QZ.step < 4; }
+  // Write mode, every activity: with the cursor in a text box and every text box on the page filled in, Return presses Submit (as the Submit button does).
+  // Otherwise Return does what it did before (usually moving to the next box).  Desmos's own boxes are left alone
+  function wsTxt(el) { return !!el && ((el.tagName === "INPUT" && /^(text|search|number|tel|)$/i.test(el.getAttribute("type") || "")) || el.tagName === "TEXTAREA") && !(el.closest && el.closest(".dcg-container")); }
+  function wsVis(el) { return !!el && !el.hidden && !el.disabled && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden"; }
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey || e.isComposing || !wsTxt(e.target)) return;
+    var btn = wsub() ? $("qzGo") : eqWsAct() && !locked ? $("eqSub") : null; if (!btn || !wsVis(btn) || (btn.id === "eqSub" && $("eqSubRow").hidden)) return;
+    var all = [].slice.call(document.querySelectorAll("input, textarea")).filter(function (el) { return wsTxt(el) && wsVis(el) && !el.readOnly && !(el.closest && el.closest("#sheet")); });
+    if (all.indexOf(e.target) < 0 || all.some(function (el) { return !String(el.value || "").trim(); })) return;
+    e.preventDefault(); e.stopImmediatePropagation(); btn.click();
+  }, true);
   function ws21() { return gd2() && wsub(); }   // 2.1 Write only: every value is typed, copied from a typed number by dragging, or autofilled down the x column
   function wsTools() { return wsub() && !wf() && !m3(); }   // the graph pane with its tools (1.1 and 2.1 exercises 1 to 3): each graph is made from plotted points
   // several graphs can be on the plane at once (the parent and g): placing a new one keeps the old one, which a press brings back to edit
