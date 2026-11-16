@@ -819,6 +819,19 @@
   #distBox .dh{opacity:0;transform:scale(.5);transition:opacity .35s,transform .35s}#distBox .dh.show{opacity:1;transform:none}
   #distBox .hl{background:color-mix(in srgb,var(--plus) 38%,var(--bg));box-shadow:0 0 0 3px var(--plus)}
   @media (prefers-reduced-motion:reduce){#distBox,#distBox .dp,#distBox .dh{transition:none}}
+  /* 2.4A Box Method: the box filled in by the student */
+  #distBox.bx{pointer-events:auto}
+  #distBox .bxMsg{font:600 max(.5em,13px) system-ui,sans-serif;text-align:center;margin:0 auto .45em;max-width:24em;line-height:1.3}
+  #distBox .bxTray{display:flex;justify-content:center;gap:1.1em;margin-bottom:.55em;white-space:nowrap}
+  #distBox .bxChip{display:inline-block;padding:0 .28em;margin:0 .08em;border-radius:.35em;background:color-mix(in srgb,var(--ink) 9%,var(--bg));box-shadow:0 0 0 1.5px color-mix(in srgb,var(--ink) 35%,transparent);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+  #distBox .bxChip.used{visibility:hidden}
+  #distBox .bxChip.drag{position:relative;z-index:5;cursor:grabbing}
+  #distBox .bxSlot{min-width:2.3em;min-height:1.75em}
+  #distBox .bxSlot:empty{background:none;outline:2px dashed color-mix(in srgb,var(--ink) 40%,transparent);outline-offset:-5px}
+  #distBox .bxSlot.drop{box-shadow:0 0 0 3px var(--plus)}
+  #distBox.bxReady .bxCell{cursor:pointer}
+  #distBox.bxReady .bxCell:hover{background:color-mix(in srgb,var(--plus) 18%,var(--bg))}
+  .bxFly{position:fixed;z-index:102;pointer-events:none;font-family:"LM",Georgia,serif;transition:left .7s ease-in-out,top .7s ease-in-out,opacity .7s}
   #opPop.amt{gap:.55rem;padding:.55rem .8rem}#opPop .sym{font:700 1.7rem/1 system-ui,sans-serif;color:var(--ink)}#opPop input{width:7rem;font:600 1.25rem system-ui,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:10px;padding:.3em .5em}#opPop .opErr{flex:0 0 100%;width:0;min-width:100%;font:600 .85rem system-ui,sans-serif;color:#b00020}#opPop .opErr:empty{display:none}#opPop.shake{animation:shake .3s}
   #opPop .btn{width:2.6rem;height:2.6rem;padding:0;border-radius:50%;font-size:1.35rem;line-height:1;display:flex;align-items:center;justify-content:center}
   #dmEnd[hidden]{display:none}
@@ -1935,7 +1948,7 @@
         fs3.forEach(function (pe, fi) { pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, pe, function () { exMul3(i, 0, 1); }, function (t) { var mm = /^exf:(\d+):(\d)$/.exec(t.dataset.drop || ""); if (mm && +mm[1] === i && +mm[2] !== fi) exMul3(i, fi, +mm[2]); }, "exf:"); }); });
       } else if (hEl && gEl) {   // (A)(B): drag one set of parentheses onto the other to multiply them (two equal ones become a square instead; a click still multiplies)
         hEl.dataset.drop = "exg:" + i; gEl.dataset.drop = "exg:" + i; var eqF = zpSquare(its[i]);
-        [gEl, hEl].forEach(function (pe) { pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; drag(e, pe, function () { exDistribute(i); }, function (t) { if (t.dataset.drop === "exg:" + i) { if (eqF && t !== pe) exPw(i, true); else exDistribute(i); } }, "exg:"); }); });
+        [gEl, hEl].forEach(function (pe) { pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask || BX) return; drag(e, pe, function () { if (bxOn(i)) bxOpen(i); else exDistribute(i); }, function (t) { if (t.dataset.drop === "exg:" + i) { if (eqF && t !== pe) exPw(i, true); else if (bxOn(i)) { if (t !== pe) bxOpen(i); } else exDistribute(i); } }, "exg:"); }); });   // (2.4A Box Method: the box opens, to be filled in)
       }
       var pwE = el.querySelector(".exPw"); if (pwE) { pwE.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); pwE.addEventListener("click", function (e) { e.stopPropagation(); if (!EXP.ask) exPw(i, false); }); }
       var kEl = el.querySelector(":scope > .exK");
@@ -1947,7 +1960,7 @@
   // distributing: a box slides up at the bottom of the screen (the area model): the number outside on the left, the terms in the parentheses on top,
   // and each product inside, in the box where its row and column meet
   var distT = [];
-  function distHide() { distT.forEach(clearTimeout); distT = []; var d = $("distBox"); if (d) d.remove(); grHide(); }
+  function distHide() { distT.forEach(clearTimeout); distT = []; var d = $("distBox"); if (d) d.remove(); grHide(); BX = null; }
   function distShow2(g) {   // (A)(B): the area model as a 2 x 2 square: one expression down the left, one across the top, the four products in the boxes
     var A = g.items, B = g.b, nb = B.length, d = exDist(g), term = function (t) { return "<span>" + (t.n.n < 0 ? "\u2212" : "") + exTerm(t) + "</span>"; };
     var corner = g.m.n === 1 && g.m.d === 1 ? "" : (g.m.n < 0 ? "\u2212" : "") + exFr(mk(Math.abs(g.m.n), g.m.d));
@@ -1966,6 +1979,86 @@
       at(t0 + (quick ? 0 : Math.round(per * 0.94)), function () { top.classList.remove("hl"); left.classList.remove("hl"); });
     });
     var end = (quick ? 0 : 700 + d.length * per) + 2200; at(end, function () { el.classList.remove("on"); }); at(end + 450, distHide);
+  }
+  // ---- 2.4A Box Method (Demo, Sequence, Calculate): one binomial is dragged onto the other and an empty 2 x 2 box opens.  The terms of the binomials are
+  // dragged to the spots just outside the box: one binomial's two terms down the left, the other's across the top, in either order and either way round,
+  // since (A + B)(C + D) = (C + D)(B + A).  Then each box inside is clicked to show its product (Calculate: each product is asked), and the four products go
+  // up into the expression ----
+  var BX = null;
+  function bxOn(i) { var g = EXP && !EXP.eq && EXP.items[i]; return !!(svL() && lesson === 6 && mode !== "solo" && g && g.k === "g" && g.b && !g.c && !g.pw && g.items.length === 2 && g.b.length === 2 && same(g.m, mk(1))); }
+  function bxT(t) { return "<span>" + (t.n.n < 0 ? "\u2212" : "") + exTerm(t) + "</span>"; }
+  function bxBin(b) { return exSay([{ k: "g", m: mk(1), items: BX.bins[b] }]); }
+  function bxOpen(i) {
+    if (locked || busy || !EXP || EXP.ask || BX) return;
+    distHide(); var g = EXP.items[i], bins = [g.items, g.b];
+    BX = { i: i, g: g, bins: bins, slot: {}, cell: [null, null, null, null], ready: false };
+    var chip = function (b, k) { var t = bins[b][k]; return "<span class=\"bxChip\" data-b=\"" + b + "\" data-k=\"" + k + "\" title=\"Drag me to a spot outside the box\">" + (k && t.n.n > 0 ? "+" : "") + bxT(t) + "</span>"; };
+    var slot = function (id, cls) { return "<span class=\"" + cls + " bxSlot\" data-drop=\"bx:" + id + "\" data-slot=\"" + id + "\"></span>"; }, cell = function (n) { return "<span class=\"dcell bxCell\" data-c=\"" + n + "\"><span class=\"dp\"></span></span>"; };
+    var el = document.createElement("div"); el.id = "distBox"; el.className = "bx"; el.setAttribute("aria-label", "The box for " + exSay([g]));
+    el.innerHTML = "<div class=\"bxMsg\">Drag each term to a spot outside the box: one binomial down the left, the other across the top.</div><div class=\"bxTray\">" + [0, 1].map(function (b) { return "<span>(" + chip(b, 0) + chip(b, 1) + ")</span>"; }).join("") + "</div>" +
+      "<div class=\"dgrid\" style=\"grid-template-columns:auto repeat(2,auto);justify-content:center\"><span class=\"dcorner\"></span>" + slot("T0", "dtop") + slot("T1", "dtop") + slot("L0", "dleft") + cell(0) + cell(1) + slot("L1", "dleft") + cell(2) + cell(3) + "</div>";
+    document.body.appendChild(el);
+    var st = document.querySelector(".stage").getBoundingClientRect(); el.style.left = (st.left + st.width / 2) + "px"; el.style.bottom = Math.max(10, innerHeight - st.bottom + 14) + "px";
+    distT.push(setTimeout(function () { el.classList.add("on"); }, 20));
+    [].forEach.call(el.querySelectorAll(".bxChip"), function (c) { c.addEventListener("pointerdown", function (e) { if (EXP && EXP.ask) return; drag(e, c, null, function (t) { bxDrop(+c.dataset.b, +c.dataset.k, t.dataset.slot); }, "bx:"); }); });
+    [].forEach.call(el.querySelectorAll(".bxCell"), function (c) { c.addEventListener("click", function () { if (BX && BX.ready && mode !== "calculate") bxReveal(+c.dataset.c); }); });
+    note("Multiply " + exSay([g]) + " with the box. Drag the terms of one binomial down the left side and the terms of the other across the top.");
+  }
+  function bxDrop(b, k, sid) {
+    if (!BX || !sid || BX.slot[sid] || BX.ready) return;
+    var side = sid.charAt(0), other = side === "L" ? "T" : "L", mine = [0, 1].map(function (p) { return BX.slot[side + p]; }).filter(Boolean), theirs = [0, 1].map(function (p) { return BX.slot[other + p]; }).filter(Boolean);
+    if (mine.some(function (z) { return z.b !== b; }) || theirs.some(function (z) { return z.b === b; })) {
+      note("Not quite. The two terms of " + bxBin(b) + " go together on one side of the box, and the two terms of " + bxBin(1 - b) + " on the other.");
+      if (mode === "sequence" || mode === "calculate") { EQW++; eqwTa(); } return;
+    }
+    BX.slot[sid] = { b: b, k: k }; var el = $("distBox"); if (!el) return;
+    el.querySelector('[data-slot="' + sid + '"]').innerHTML = bxT(BX.bins[b][k]); el.querySelector('.bxChip[data-b="' + b + '"][data-k="' + k + '"]').classList.add("used");
+    if (["L0", "L1", "T0", "T1"].every(function (q) { return BX.slot[q]; })) {
+      BX.ready = true; el.classList.add("bxReady"); el.querySelector(".bxTray").hidden = true; var m = el.querySelector(".bxMsg");
+      if (mode === "calculate") { m.textContent = "Multiply each row by each column."; note("Now each box inside: multiply its row by its column."); bxAsk(); }
+      else { m.textContent = "Click each box inside to multiply its row by its column."; note("Now click each box inside: it shows its row times its column."); }
+    } else note("");
+  }
+  function bxRC(n) { var r = BX.slot["L" + Math.floor(n / 2)], c = BX.slot["T" + n % 2]; return [BX.bins[r.b][r.k], BX.bins[c.b][c.k]]; }
+  function bxProd(n) { var rc = bxRC(n); return exDist({ k: "g", m: mk(1), items: [rc[0]], b: [rc[1]] })[0]; }
+  function bxSay(n) { var rc = bxRC(n), c = exSay([rc[1]]); return exSay([rc[0]]) + " \u00b7 " + (rc[1].n.n < 0 ? "(" + c + ")" : c); }
+  function bxReveal(n) {
+    if (!BX || !BX.ready || BX.cell[n]) return; var el = $("distBox"); if (!el) return;
+    var p = bxProd(n); BX.cell[n] = p; var dp = el.querySelector('.bxCell[data-c="' + n + '"] .dp'); dp.innerHTML = bxT(p); dp.classList.add("show");
+    var tl = el.querySelector('[data-slot="T' + n % 2 + '"]'), lf = el.querySelector('[data-slot="L' + Math.floor(n / 2) + '"]'); [tl, lf].forEach(function (x) { x.classList.add("hl"); }); distT.push(setTimeout(function () { [tl, lf].forEach(function (x) { x.classList.remove("hl"); }); }, 700));
+    note(bxSay(n) + " = " + exSay([p]) + ".");
+    if (BX.cell.every(Boolean)) bxPush();
+  }
+  function bxAsk() {   // Calculate: the product of each box, one at a time
+    if (!BX) return; var n = BX.cell.findIndex(function (c) { return !c; }); if (n < 0) return; var el = $("distBox");
+    [].forEach.call(el.querySelectorAll(".bxCell"), function (c) { c.classList.toggle("hl", +c.dataset.c === n); });
+    var lab = bxSay(n) + " =", w = bxProd(n); eqAsk({ kind: "cq", want: w, go: function () { var c = el.querySelector(".bxCell.hl"); if (c) c.classList.remove("hl"); bxReveal(n); bxAsk(); } }, lab); $("askT").textContent = lab; $("askIn").placeholder = w.k === "x" ? "e.g. 3" + exSay([{ k: "x", v: w.v, n: mk(1) }]) : "e.g. 6";
+  }
+  function bxPush() {   // the four products go up into the expression, in place of the two binomials
+    var deg = function (t) { return t.k === "x" ? (/\^2$/.test(t.v || "") ? 2 : 1) : 0; }, B = BX, el = $("distBox"), g = B.g, i = B.i; B.done = true;
+    var d = [0, 1, 2, 3].map(function (n) { return { t: B.cell[n], n: n }; }).sort(function (a, b) { return deg(b.t) - deg(a.t) || a.n - b.n; }).map(function (o) { return o.t; });   // (highest power first, so the answer ends in standard form)
+    var msg = "Multiply with the box: " + exSay([g]) + " = " + exSay(d) + ". Every term in one binomial times every term in the other.", row = $("exRow").querySelector('.exT[data-i="' + i + '"]') || $("exRow"), rr = row.getBoundingClientRect(), fl = [];
+    distT.push(setTimeout(function () {
+      if (!el || !el.isConnected) return;
+      [].forEach.call(el.querySelectorAll(".bxCell .dp"), function (dp, j) { var r = dp.getBoundingClientRect(), f = document.createElement("div"); f.className = "bxFly"; f.innerHTML = dp.innerHTML; f.style.fontSize = getComputedStyle(dp).fontSize; f.style.left = r.left + "px"; f.style.top = r.top + "px"; document.body.appendChild(f); fl.push(f);
+        requestAnimationFrame(function () { requestAnimationFrame(function () { f.style.left = (rr.left + rr.width * (j + 0.5) / 4 - r.width / 2) + "px"; f.style.top = (rr.top + rr.height / 2 - r.height / 2) + "px"; }); }); });
+      el.classList.remove("on");
+      setTimeout(function () { fl.forEach(function (f) { f.remove(); }); if (BX !== B) return; distHide(); var n = EXP.items.slice(); n.splice.apply(n, [i, 1].concat(d)); exSet(n, msg); }, 800);
+    }, 700));
+  }
+  function bxMoveDemo(srcSel, dstSel, run, after) {   // the demo hand drags a term to its spot
+    var src = document.querySelector(srcSel), dst = document.querySelector(dstSel), alive = function () { return EXP && DM4.run && !DM4.paused && BX; };
+    if (!src || !dst) { DM4.t = setTimeout(function () { if (!alive()) return; run(); after(); }, 900); return; }
+    DM4.t = setTimeout(function () { if (!alive()) return; handGo(ctr(src), 600);
+      DM4.t = setTimeout(function () { if (!alive()) return; handTap(); handGo(ctr(dst), 1000); fly(src, dst, function () { if (!alive()) return; run(); after(); }, true); }, 750); }, 300);
+  }
+  function bxDemoStep() {
+    var next = function () { if (!locked) exDemoStep(700); };
+    var order = [[0, 0, "L0"], [0, 1, "L1"], [1, 0, "T0"], [1, 1, "T1"]].filter(function (o) { return !BX.slot[o[2]]; })[0];
+    if (order) { dmCap(order[0] === 0 ? "Drag the terms of " + bxBin(0) + " down the left side of the box." : "Drag the terms of " + bxBin(1) + " across the top."); bxMoveDemo('#distBox .bxChip[data-b="' + order[0] + '"][data-k="' + order[1] + '"]', '#distBox [data-slot="' + order[2] + '"]', function () { bxDrop(order[0], order[1], order[2]); }, next); return; }
+    var n = BX.cell.findIndex(function (c) { return !c; });
+    if (n >= 0 && !BX.done) { dmCap("Click the box: " + bxSay(n) + "."); exTapDemo('#distBox .bxCell[data-c="' + n + '"]', function () { bxReveal(n); }, next); return; }
+    DM4.t = setTimeout(next, 900);   // (the products are on their way up)
   }
   function distShow(g) {
     distHide(); if (!g || g.k !== "g" || g.items.some(function (t) { return t.k === "g"; })) return;
@@ -2166,6 +2259,7 @@
   function exDemoStep(ms) {
     if (EXP && EXP.eq) { eqDemoStep(ms); return; }
     if (EXP && EXP.grp) { grDemoStep(ms); return; }
+    if (BX) { clearTimeout(DM4.t); DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused || locked || !BX) { if (EXP && DM4.run && !DM4.paused && !locked && !BX) exDemoStep(300); return; } bxDemoStep(); }, ms); return; }   // (2.4A Box Method: the box being filled in)
     if (EXP && EXP.rad) {   // a square root: click it and take out the biggest perfect square factor
       clearTimeout(DM4.t);
       DM4.t = setTimeout(function () {
@@ -2199,6 +2293,7 @@
       if (gi >= 0) {
         var g = its[gi]; exRender();
         if (g.c) { dmCap("Drag one set of parentheses onto another to multiply them."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { exMulApply(gi, 0, 1); }, function () { if (!locked) exDemoStep(900); }); return; }
+        if (g.b && bxOn(gi)) { dmCap("Drag one binomial onto the other: the box opens."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { bxOpen(gi); }, function () { if (!locked) exDemoStep(700); }); return; }
         if (g.b) { dmCap("Drag one set of parentheses onto the other to multiply them."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, distMsg(g, exDist(g)), g); }, function () { if (!locked) exDemoStep(900); }); return; }
         dmCap("Drag " + (dgWord(g.m) === "the number" ? exSay([{ k: "c", n: g.m }]) : dgWord(g.m)) + " onto the parentheses to distribute it.");
         exDragDemo('.exT[data-i="' + gi + '"]', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, distMsg(g, exDist(g)), g); }, function () { if (!locked) exDemoStep(900); }, String(gi));
