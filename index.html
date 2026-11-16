@@ -10707,6 +10707,7 @@ var ESPIC = {
     QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : gd2() ? o.map(function (f, i) { return gdMake21(i); }) : o.map(gdMake), est: est() ? estSet(o.length) : null, cr: false, custom: !!cu }; updProg();
     if (wf()) { QZ.custom = !!cuw; QZ.tr = []; QZ.wfp = cuw ? [wfCustom] : mode === "create" ? [null] : wfSet(o.length); QZ.cs = "f"; QZ.wd = {}; QZ.wl = []; if (mode === "create") wfCustom = null; }
     if (m3() && csL()) { o = [0]; QZ.order = o; }   // (2.2C Memorize: one sort)
+    if (m3() && act === "2.4" && +lesson === 4 && o.length > 1) { o = [0]; QZ.order = o; if (QZ.m3p && QZ.m3p.length > 1) QZ.m3p = QZ.m3p.slice(0, 1); }   // 2.4B Regression: one problem per round (Write: two rounds, so two problems)
     if (m3() && act === "2.2" && [1, 2, 3, 4, 5, 12].indexOf(+lesson) >= 0 && o.length > 1) { o = [0]; QZ.order = o; if (QZ.m3p && QZ.m3p.length > 1) QZ.m3p = QZ.m3p.slice(0, 1); }   // 2.2A and 2.2C: one problem per round (Write still needs three rounds for full Progress)
     if (c2Cu()) QZ.custom = true; if (vcr()) QZ.pick = false;
     if (m3()) { QZ.tr = []; QZ.m3p = m3Set(o.length); }
