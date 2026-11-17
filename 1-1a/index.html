@@ -1,4 +1,5 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.regP { display: block; margin-top: 0.7em; } .regQ { display: block; margin-top: 0.7em; font-weight: 700; font-size: 1.15em; }
+</style></head><body>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15142,7 +15143,7 @@ var ESPIC = {
         : qt === "xi" ? ["At what " + sc.xw + " does the " + sc.yw + " fall to 0?", "Click the parabola: Desmos shows where it crosses the " + c2X + "-axis, the " + c2X + "-intercepts. Use the one to the right of the data.", c2X + " ≈", sc.xu, "the " + sc.yw + " falls to 0 at " + c2X + " ≈ " + c2F(ans) + " " + sc.xu]
         : ["Estimate the " + sc.what + ".", "On the parabola, find the point where " + c2X + " = " + X + " (click the parabola and drag along it: Desmos shows the point's coordinates).", c2Y + " ≈", sc.u, "at " + c2X + " = " + X + ", " + c2Y + " ≈ " + c2F(ans) + " " + sc.u];
       pb.head = sc.s; pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + " " + Q[0] + "<br>Use Desmos: type the data in a table, run a quadratic regression, then use the graph.";
+      pb.story = sc.s + "<span class=\"regP\">Type the data into a table on Desmos and run a quadratic regression. Then use the graph to answer:</span><span class=\"regQ\">" + Q[0] + "</span>";   // (the setting, what to do, then the question itself, bold and larger)
       pb.dsm = { reg: 1, xs: xs.slice(), ys: ys.slice(), rg: "ax_{1}^{2}+bx_{1}+c" };
       pb.tbl = m3Tbl(sc.xn.replace(/ \(.*/, ""), sc.yn.replace(/ \(.*/, ""), xs, ys.map(function (v) { return c2F(v); }));
       var xa = c2Axis(0, Math.max(xs[xs.length - 1], X) + 1), ya = c2Axis(0, Math.max.apply(null, ys.concat([Y])) * 1.12);
@@ -15157,7 +15158,7 @@ var ESPIC = {
       var ptX = X, ptY = Y;
       pb.steps = [
         { id: "dsm", fine: 1, lab: "Desmos", type: "dsm", ask: "", after: function (x) { x.reg = true; }, line: "quadratic regression in Desmos: " + E[0] + " (rounded)", hint: ["Type each pair on a row of the table, then add a quadratic regression.", "The regression is about " + E[0] + "."] },
-        { id: "ans", lab: "Answer", ask: function () { return mode === "solo" ? "" : "Use the graph. " + Q[0] + " <span class=\"vpHow\">(" + Q[1] + " Round to the nearest tenth.)</span>"; }, /* (Write: no instructions; the story asks the question) */ pre: Q[2], post: Q[3], ans: ans, tol: tol, nums: [c2R(isX ? Y : X, 1), c2R(ans * 1.1 + (ans ? 0 : 1), 1), c2R(ans * 0.9 - (ans ? 0 : 1), 1)].filter(function (v, j, A) { return Math.abs(v - ans) > tol && A.indexOf(v) === j; }), after: function (x) { x.av = true; }, line: Q[4],   // (Sequence: the other coordinate, and 10% either way, as the wrong choices)
+        { id: "ans", lab: "Answer", ask: function () { return mode === "solo" ? "" : "Use the graph. " + Q[0]; }, /* (Write: no instructions; the story asks the question) */ pre: Q[2], post: Q[3], ans: ans, tol: tol, nums: [c2R(isX ? Y : X, 1), c2R(ans * 1.1 + (ans ? 0 : 1), 1), c2R(ans * 0.9 - (ans ? 0 : 1), 1)].filter(function (v, j, A) { return Math.abs(v - ans) > tol && A.indexOf(v) === j; }), after: function (x) { x.av = true; }, line: Q[4],   // (Sequence: the other coordinate, and 10% either way, as the wrong choices)
           hint: [Q[1], "The point is about (" + c2F(c2R(X, 1)) + ", " + c2F(c2R(Y, 1)) + ")."],
           dpre: function (run, then) {   // the demo: the hand clicks the parabola at the point, and Desmos labels it
             var box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { then(); return; } try { box.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (er) { }
