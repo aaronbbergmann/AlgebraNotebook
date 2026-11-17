@@ -10,7 +10,8 @@
  *   Settings  - due dates (due:<activity> = yyyy-mm-ddThh:mm, or yyyy-mm-dd from older saves), the Google Classroom classes last synced, and their teachers
  *
  * Google Classroom sync (the "Sync with Google Classroom" button on the class progress page) needs the Classroom service:
- * in the Apps Script editor, Services (+) > Google Classroom API > Add, then run "setup" once to approve the new permissions.
+ * in the Apps Script editor, Services (+) > Google Classroom API > Add, and the permissions in server/appsscript.json (Project Settings >
+ * "Show appsscript.json manifest file in editor", then paste it into appsscript.json), then run "setup" once to approve the new permissions.
  */
 var CLIENT_ID = "160859714217-010cnbk9qdbjo75h6k7uskud60s8cu30.apps.googleusercontent.com";
 var SHEET_ID = "1HryFKwRUEdEqvbsTO52QCFk07JIp1gBzzlBbiFl-7kk";   // the progress Sheet "Algebra Notebook Progress"
@@ -203,7 +204,7 @@ function people(courseId, kind) {
   var out = [], tok;
   do {
     var r = kind === "t" ? Classroom.Courses.Teachers.list(courseId, { pageSize: 100, pageToken: tok }) : Classroom.Courses.Students.list(courseId, { pageSize: 100, pageToken: tok });
-    (r[kind === "t" ? "teachers" : "students"] || []).forEach(function (p) { var pr = p.profile || {}; if (pr.emailAddress) out.push({ email: String(pr.emailAddress).toLowerCase(), name: (pr.name && pr.name.fullName) || pr.emailAddress }); });
+    (r[kind === "t" ? "teachers" : "students"] || []).forEach(function (p) { var pr = p.profile || {}; if (pr.emailAddress) out.push({ email: String(pr.emailAddress).toLowerCase(), name: (pr.name && pr.name.fullName) || pr.emailAddress }); else out.noEmail = (out.noEmail || 0) + 1; });
     tok = r.nextPageToken;
   } while (tok);
   return out;
@@ -213,7 +214,10 @@ function people(courseId, kind) {
 function syncClassroom(ids) {
   if (!ids.length) return { error: "bad", message: "Choose at least one class." };
   var want = {}, teach = {};
-  ids.forEach(function (id) { people(id, "s").forEach(function (p) { want[p.email] = p.name; }); people(id, "t").forEach(function (p) { teach[p.email] = 1; }); });
+  var noEmail = 0;
+  ids.forEach(function (id) { var ss = people(id, "s"); noEmail += ss.noEmail || 0; ss.forEach(function (p) { want[p.email] = p.name; }); people(id, "t").forEach(function (p) { teach[p.email] = 1; }); });
+  // Classroom leaves out email addresses without the classroom.profile.emails permission (appsscript.json): then nothing is changed, rather than every student leaving the list
+  if (noEmail) return { error: "server", message: "Google Classroom didn't share " + noEmail + " students' email addresses, so nothing was changed. The Apps Script needs the classroom.profile.emails permission: see server/SETUP.md." };
   var added = 0, removed = 0, lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var st = students(), n = st.getLastRow(), have = {};

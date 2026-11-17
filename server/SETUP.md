@@ -26,3 +26,14 @@ Sign-in stays off (the site works exactly as before) when either value in `auth.
 - Progress already earned on a device before sign-in is kept and added to the first account that signs in there.
 - The Sheet's **Students** tab shows one column per activity (average of its exercises; each cell's note lists the exercises). The teacher page `teacher/` (link "Class progress" bottom-left, teachers only) shows the same with sorting, search, details per student and a CSV download. Teachers are listed in `TEACHERS` in `Code.gs`.
 - New pages copied from the main index.html keep working: the script tag finds auth.js from any folder. A click guard in the app (Demo mode) exempts `#anGate` and `#anChip`.
+
+## 4. Google Classroom sync (the Sync button on Class progress)
+The Apps Script runs as abergmann@sch.org, so it sees that account's Classroom classes.
+1. Open the Apps Script project **Algebra Notebook Server**. Replace `Code.gs` with `server/Code.gs` from this repo.
+2. Services (+, left side) > **Google Classroom API** > Add (identifier `Classroom`).
+3. Project Settings (gear) > check **Show "appsscript.json" manifest file in editor**. Back in the Editor, open `appsscript.json` and replace it with `server/appsscript.json` from this repo (keep your own `timeZone` line if it differs). This adds the **classroom.profile.emails** permission: without it Classroom leaves out students' email addresses, and the sync stops with a message instead of changing the list.
+4. Choose **setup** in the toolbar > **Run**, and approve the new permissions (Classroom classes, rosters, and students' email addresses).
+5. Deploy > Manage deployments > edit (pencil) > Version: **New version** > Deploy. The /exec address stays the same, so `auth.js` doesn't change.
+6. On the Class progress page, click **Sync**, choose the classes, then **Sync**.
+
+If the classes list says it can't reach Google Classroom, step 2 or 4 is missing. If the sch.org Google Workspace admin has turned off Classroom API access for third-party apps, the admin needs to allow it (Admin console > Apps > Google Workspace > Classroom > Data access).
