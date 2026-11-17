@@ -14225,8 +14225,8 @@ var ESPIC = {
     var s = "<svg class=\"m3Fig c2Fig\" data-gpk=\"" + gpFig(o, "c2") + "\" viewBox=\"0 0 " + W + " " + H + "\" data-g=\"" + [L, T, pw, ph, x1, y1, x0, y0].join(",") + "\" role=\"img\" aria-label=\"" + c2St(o.alt || "Graph").replace(/<[^>]+>/g, "").replace(/"/g, "") + "\" font-family=\"system-ui,sans-serif\" font-size=\"11\" fill=\"currentColor\">";
     s += "<defs><clipPath id=\"" + id + "\"><rect x=\"" + L + "\" y=\"" + T + "\" width=\"" + pw + "\" height=\"" + ph + "\"/></clipPath></defs>";
     var near = function (a, b) { return Math.abs(a - b) < 1e-9; }, onStep = function (val, st) { return near(val / st, Math.round(val / st)); };
-    for (k = Math.ceil(x0 / gx - 1e-9); k * gx <= x1 + 1e-9; k++) { v = k * gx; s += "<path d=\"M" + X(v) + " " + T + "V" + (T + ph) + "\" stroke=\"currentColor\" stroke-opacity=\"" + (onStep(v, tx) ? ".24" : ".1") + "\"/>"; }
-    for (k = Math.ceil(y0 / gy - 1e-9); k * gy <= y1 + 1e-9; k++) { v = k * gy; s += "<path d=\"M" + L + " " + Y(v) + "H" + (L + pw) + "\" stroke=\"currentColor\" stroke-opacity=\"" + (onStep(v, ty) ? ".24" : ".1") + "\"/>"; }
+    if (!o.noGrid) for (k = Math.ceil(x0 / gx - 1e-9); k * gx <= x1 + 1e-9; k++) { v = k * gx; s += "<path d=\"M" + X(v) + " " + T + "V" + (T + ph) + "\" stroke=\"currentColor\" stroke-opacity=\"" + (onStep(v, tx) ? ".24" : ".1") + "\"/>"; }
+    if (!o.noGrid) for (k = Math.ceil(y0 / gy - 1e-9); k * gy <= y1 + 1e-9; k++) { v = k * gy; s += "<path d=\"M" + L + " " + Y(v) + "H" + (L + pw) + "\" stroke=\"currentColor\" stroke-opacity=\"" + (onStep(v, ty) ? ".24" : ".1") + "\"/>"; }
     var ax = x0 <= 0 && x1 >= 0 ? X(0) : L, ay = y0 <= 0 && y1 >= 0 ? Y(0) : T + ph;
     s += "<path d=\"M" + L + " " + ay + "H" + (L + pw) + "M" + ax + " " + T + "V" + (T + ph) + "\" stroke=\"currentColor\" stroke-width=\"1.5\"/>";
     for (k = Math.ceil(x0 / tx - 1e-9); k * tx <= x1 + 1e-9; k++) { v = c2R(k * tx); if (v === 0 && ax !== L) continue; s += "<text x=\"" + X(v) + "\" y=\"" + Math.min(ay + 13, T + ph + 14) + "\" text-anchor=\"middle\"" + halo + ">" + c2F(v) + "</text>"; }
@@ -15173,17 +15173,16 @@ var ESPIC = {
       pb.ex = "In Desmos, the quadratic regression of the table gives about " + E[0] + ". On its graph, " + Q[4] + ".";
       var ax = function (v, xr) { return c2R(v, 1); }, ptLab = "(" + c2F(c2R(X, 1)) + ", " + c2F(c2R(Y, 1)) + ")";
       var gq = function (pt) {   // Show work's graph: the data, the parabola, and (for the answer) the point, labelled
-        var o = { H: 300, xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: sc.xn, yl: sc.yn, alt: pt ? "The answer on the graph" : "The regression on the graph", scat: xs.map(function (v, j) { return [v, ys[j]]; }), curves: [{ fn: Ff, col: "#2D70B3" }] };
+        var o = { H: 300, xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t * 2, ty: ya.t * 2, noGrid: 1, xl: sc.xn, yl: sc.yn, alt: pt ? "The answer on the graph" : "The regression on the graph", scat: xs.map(function (v, j) { return [v, ys[j]]; }), curves: [{ fn: Ff, col: "#2D70B3" }] };
         if (pt) o.pts = [{ x: X, y: Y, col: "#6042A6", tc: "#6042A6", lab: ptLab, dy: -10 }];
         return "<div style=\"color:#1B2433;--bg:#fff\">" + c2Fig(o).replace("<svg ", "<svg width=\"520\" ") + "</div>";
       };
       var tdS = "border:1px solid #ccd;padding:.2em .55em;text-align:center;font:.8em system-ui,sans-serif", thS = tdS + ";font-weight:700;text-align:left;background:#f3f4f8";
       var dataT = "<table style=\"border-collapse:collapse\"><tr><th style=\"" + thS + "\">" + sc.xn + "</th>" + xs.map(function (v) { return "<td style=\"" + tdS + "\">" + c2F(v) + "</td>"; }).join("") + "</tr><tr><th style=\"" + thS + "\">" + sc.yn + "</th>" + ys.map(function (v) { return "<td style=\"" + tdS + "\">" + c2F(v) + "</td>"; }).join("") + "</tr></table>";
-      var unk = qt === "vx" ? gqM("x = ?") + " " + sc.xu + ", where the " + sc.yw + " is " + hi + " (the vertex)" : qt === "vy" ? gqM("y = ?") + " " + sc.u + ", the " + (sc.up ? "lowest" : "greatest") + " " + sc.yw + " (the vertex)" : qt === "yi" ? gqM("y = ?") + " " + sc.u + ", when " + gqM("x = 0") : qt === "xi" ? gqM("x = ?") + " " + sc.xu + ", when " + gqM("y = 0") : gqM("y = ?") + " " + sc.u + ", when " + gqM("x = " + X);
-      var said = Q[4].charAt(0).toUpperCase() + Q[4].slice(1) + ".";
-      pb.qwa = { Q: [[Q[0]], [dataT], [unk]],
+      var qPt = qt === "vx" || qt === "vy" ? "(?, ?)" : qt === "yi" ? "(0, ?)" : qt === "xi" ? "(?, 0)" : "(" + c2F(X) + ", ?)";   // (the point asked for, its unknown a ?)
+      pb.qwa = { Q: [[dataT], [qPt]],   // (Show work, abbreviated: the data and the point asked for; the graph, simplified, with the answer's point; the point)
         W: [["Quadratic regression in Desmos: " + E[0] + " (rounded)", ["dsm"]], [function (x) { return gq(!!(x && x.av)); }, ["dsm"]]],   // (one graph: the answer's point joins it once the question is answered)
-        A: [["The point " + ptLab + " on the graph. " + said, ["ans"]]] };
+        A: [[ptLab, ["ans"]]] };
       return pb;
     }
   }
