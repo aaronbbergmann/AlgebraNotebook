@@ -4452,7 +4452,7 @@
   function solverFinish() { var m = nextMode(); dmFinish(nextLabel(), function () { solverGo(0, m); }, "Try another", function () { solverGo(0, "demo"); }); }
   function nextMode() { if (svL()) return SOLMODES[Math.min(SOLMODES.indexOf(mode) + 1, SOLMODES.length - 1)]; return SOLMODES[(SOLMODES.indexOf(mode) + 1) % SOLMODES.length]; }
   function svNext() {   // 2.4A exercises 5 to 7, Write: the exercise after this one on the page (none after the last)
-    if (!svL() || mode !== "solo") return null; var L = exList(), j = L.findIndex(function (e) { return e[0] === String(lesson); }); return j >= 0 && L[j + 1] ? L[j + 1][0] : null;
+    if (!svL() || mode !== "solo" || !LEVELS.filter(function (l) { return l[0] === lesson && l[1] === "solo"; }).every(lvDone)) return null; var L = exList(), j = L.findIndex(function (e) { return e[0] === String(lesson); }); return j >= 0 && L[j + 1] ? L[j + 1][0] : null;
   }
   function nextLabel() { if (svL() && nextMode() === mode) { var nl = svNext(); return nl ? BUILT[act].short[+nl - 1] : "Next"; } return MODES[nextMode()] + " Mode"; }
   function hardLabel() { return "Level Up"; }
@@ -4730,7 +4730,9 @@
       EXP.orig = { L: cl(g.L), R: cl(g.R), rel: "=" }; return;
     }
     var its;
-    if (lesson === 6) {   // two binomials multiplied with the box: (x − 2)(x + 5) = x² + 3x − 10
+    if (lesson === 8) {   // distributing with the box (1 x 2): 3(x − 2) = 3x − 6
+      var m8 = (rnd(5) ? 1 : -1) * (2 + rnd(8)), k8 = rnd(4) ? 1 : 2 + rnd(3), c8 = nz(9); its = [{ k: "g", m: mk(m8), items: [X(k8), C(c8)] }];
+    } else if (lesson === 6) {   // two binomials multiplied with the box: (x − 2)(x + 5) = x² + 3x − 10
       var a1 = rnd(10) < 7 ? 1 : 2 + rnd(2), p = nz(9), q = nz(9); if (gcd(a1, Math.abs(p)) > 1) { svMake(); return; } its = [{ k: "g", m: mk(1), items: [X(a1), C(p)], b: [X(1), C(q)] }];
     } else {   // a square root with a perfect square factor: √200 = 10√2
       var M = [2, 3, 5, 6, 7, 10, 11], sq, m1, n; do { sq = 2 + rnd(9); m1 = M[rnd(M.length)]; n = sq * sq * m1; } while (n > 300);
@@ -5874,7 +5876,7 @@
     ["2.2B", "2.2", ["6", "7", "8", "9", "10"], "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing"],
     ["2.2C", "2.2", ["11", "3", "12", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
     ["2.4A", "2.4", ["1", "2", "5", "6", "7"], "Modeling with Quadratic Functions"],
-    ["2.4B", "2.4", ["4", "5", "6"], "Modeling with Quadratic Functions (Day 2)"]   // (Regression, 3-Step Equations, Box Method)   // (exercise 3, Three Points with first and second differences, was taken out)
+    ["2.4B", "2.4", ["4", "5", "8"], "Modeling with Quadratic Functions (Day 2)"]   // (Regression, 3-Step Equations, Distributing)   // (exercise 3, Three Points with first and second differences, was taken out)
   ];
   var VW = {}, VBASE = {};
   VIEWS.forEach(function (v, i) { VW[v[0]] = { id: v[0], base: v[1], ls: v[2], title: v[3], i: i }; VBASE[v[1]] = 1; });
@@ -5927,7 +5929,7 @@
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
     "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics of a Parabola"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics"], function (l) { return l === 11 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
-    "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression", "3-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots"], ["Vertex & Point", "Intercepts", "Three Points", "Regression", "3-Step Equations", "Box Method", "Square Roots"]),
+    "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression", "3-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Distributing"], ["Vertex & Point", "Intercepts", "Three Points", "Regression", "3-Step Equations", "Box Method", "Square Roots", "Distributing"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
     "Play Data": { play: true, data: true, top: 1, key: "algebraProgress:PlayData", levels: [] },   // a Data Activity (a kind of Graphing activity); for now an exact copy of Play Graph
@@ -5946,7 +5948,8 @@
   BUILT["2.4"].modesFor = function (l) { return l === 4 ? ["demo", "sequence", "solo"] : ["demo", "sequence", "calculate", "solo"]; };   // (2.4B Regression: no Calculate mode)
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "calculate"); });
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[0] === 4 && l[1] === "solo" ? (l[4] === 2 ? [4, "solo", 100, "Write Mode, 2nd round", 2] : [4, "solo", 70, "Write Mode"]) : l; });   // (2.4B Regression: two rounds of Write, not three)
-  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !((l[0] <= 2 || l[0] >= 5) && l[4] > 1); }).map(function (l) { return (l[0] <= 2 || l[0] >= 5) && l[1] === "solo" ? [l[0], "solo", 100, "Write Mode"] : l; });   // (exercises 5 to 7, in the format of Play Solve: one round of Write too)
+  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 8 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[0] === 8 && l[1] === "solo" ? (l[4] === 2 ? [8, "solo", 100, "Write Mode, 2nd round", 2] : [8, "solo", 70, "Write Mode"]) : l; });   // (2.4B Distributing: two rounds of Write)
+  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !((l[0] <= 2 || (l[0] >= 5 && l[0] <= 7)) && l[4] > 1); }).map(function (l) { return (l[0] <= 2 || (l[0] >= 5 && l[0] <= 7)) && l[1] === "solo" ? [l[0], "solo", 100, "Write Mode"] : l; });   // (exercises 5 to 7, in the format of Play Solve: one round of Write too)
   // 2.4A exercises 5 to 7 run on Play Solve's pane (3-step linear equations, multiplying binomials with the box, simplifying square roots): while one of them is open
   // the activity is a solver, not a quiz, so everything that asks BUILT[act].solver or .quiz follows the exercise
   Object.defineProperty(BUILT["2.4"], "quiz", { get: function () { return !svL(); }, configurable: true });
@@ -10466,7 +10469,7 @@ var ESPIC = {
     var r = box.getBoundingClientRect(), L = [P.l1, P.l2].filter(Boolean), i = 0;
     (function one() {
       if (pgRun !== run) return; if (i >= L.length) { pgWait(900, n); return; }
-      var lt = L[i], id = "p" + (i + 1), c = 0, at = { x: r.left + Math.min(150, r.width * 0.2), y: r.top + 40 + i * 50 };
+      var lt = L[i], id = "p" + (i + 1), c = 0, at = dsmLineAt(box, i);
       handGo(at, 650);
       pgWait(800, function () { handTap(); (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else { i++; if (i >= L.length && P.one) { DSM.calc.setMathBounds({ left: -P.xmax * 0.06, right: P.xmax, bottom: P.ymin != null ? P.ymin : -P.ymax * 0.12, top: P.ymax }); dsmCheck(); pgWait(900, one); return; }   // (2.4A: the window simply shows the parabola; new demos do not show zooming)
  if (i >= L.length) { pgCapDsm(P.one ? "The parabola goes off the screen. Zoom out to see it whole." : "The paths go off the screen. Zoom out to see them whole."); handGo({ x: r.right - 30, y: r.top + 70 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); dsmZoomOut(run, function () { dsmCheck(); pgWait(500, one); }); }); return; } dsmCheck(); pgWait(700, one); } })(); });
@@ -10505,9 +10508,16 @@ var ESPIC = {
     } catch (e) { }
     return { x: r.left + 22, y: r.top + 88 };
   }
+  function dsmLineAt(box, i) {   // where to click on line i of the Desmos expression list (inside the box of that line, not the toolbar)
+    var its = box.querySelectorAll(".dcg-expressionitem:not(.dcg-new-expression)"), it = its[i];
+    if (it) { var ir = it.getBoundingClientRect(); if (ir.height > 4) return { x: ir.left + Math.min(150, ir.width * 0.4), y: ir.top + Math.min(24, ir.height / 2) }; }
+    var bar = box.querySelector(".dcg-expression-top-bar, .dcg-expressions-header"), r = box.getBoundingClientRect(), top = bar ? bar.getBoundingClientRect().bottom : r.top + 46;
+    if (its.length) { var lr = its[its.length - 1].getBoundingClientRect(); top = lr.bottom; i -= its.length; }
+    return { x: r.left + Math.min(150, r.width * 0.2), y: top + 24 + i * 48 };
+  }
   function dsmDemoReg(run, n, cap) {
     var P = m3Cur().dsm, box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { pgWait(800, n); return; }
-    var r = box.getBoundingClientRect(), at = function (i) { return { x: r.left + Math.min(150, r.width * 0.2), y: r.top + 40 + i * 50 }; }, X = [], Y = [];
+    var r = box.getBoundingClientRect(), at = function (i) { return dsmLineAt(box, i); }, X = [], Y = [];
     function typeL(id, lt, then) { var c = 0; (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else pgWait(700, then); })(); }
     cap("Type table on the first line: Desmos makes a table"); handGo(at(0), 650);
     pgWait(900, function () {
@@ -15236,7 +15246,7 @@ var ESPIC = {
   // the demo: the hand types the data into a Desmos table, then the regression, then evaluates it at the question's x
   function e11Demo(run, n, EP, cap) {
     if (!DSM.calc) { pgWait(800, function () { if (pgRun === run) e11Demo(run, n, EP, cap); }); return; }
-    var box = $("dsmCalc"), r = box.getBoundingClientRect(), at = function (i) { return { x: r.left + Math.min(150, r.width * 0.2), y: r.top + 40 + i * 50 }; };
+    var box = $("dsmCalc"), r = box.getBoundingClientRect(), at = function (i) { return dsmLineAt(box, i); };
     var RG = EP.fam === 1 ? ["mx_{1}+b", "mx+b"] : EP.fam === 2 ? ["a\\left|x_{1}-h\\right|+k", "a\\left|x-h\\right|+k"] : ["ax_{1}^{2}+bx_{1}+c", "ax^{2}+bx+c"];
     var ev = EP.kind === "when" ? (EP.fam === 1 ? "\\frac{-b}{m}" : "f\\left(0\\right)") : "f\\left(" + EP.tx + "\\right)";
     function typeL(id, lt, then) { var c = 0; (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else pgWait(700, then); })(); }
