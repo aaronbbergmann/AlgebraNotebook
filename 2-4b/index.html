@@ -6146,9 +6146,12 @@
     else if (mode === "solo" && !subx && (act === "1.4D" ? lesson < 3 : lesson < topLesson())) { var nl = lesson + 1; up = { label: LNAME[nl], stayText: "Try another in " + MODES[mode] + " mode", go: function () { lesson = nl; $("lesson").value = String(lesson); useCustom = null; setMode(resumeMode()); } }; }   // 1.4: Graphing is first in the menu, so it leads to One Variable and 3×3 is the last
   }
   function exShort(b, k) { var B = BUILT[b]; if (b === "1.4D") return k === "s" ? "Substitution" : LNAME[k === "4" ? 4 : +k]; return (B.short && B.short[+k - 1]) || B.lessons[+k - 1]; }
+  // 2.4: moving between a word problem (the quiz engine, Desmos) and an equation or expression exercise (the solver) swaps the whole screen over;
+  // both the exercise menu and the Next exercise button come through here
+  function svSwap(sv0) { if (act === "2.4" && sv0 !== svL()) { EXP = null; up = null; if (svL()) { leaveQuiz(); document.body.classList.remove("vpDrag"); document.body.classList.add("solver", "svEx"); } else { exHide(); document.body.classList.remove("solver", "svEx"); qzShow(); } } }
   function vwNext() {
     var ls = VW[view].ls, i = ls.indexOf(vwK()); if (i < 0) return null;
-    if (i < ls.length - 1) { var k = ls[i + 1]; return { name: exShort(act, k), go: function () { msSave(); vwSet(k); $("lesson").value = k; gdCustom = null; wfCustom = null; c2Custom = null; useCustom = null; buildModes(); setMode(resumeMode()); } }; }
+    if (i < ls.length - 1) { var k = ls[i + 1]; return { name: exShort(act, k), go: function () { msSave(); var sv0 = svL(); vwSet(k); $("lesson").value = k; svSwap(sv0); gdCustom = null; wfCustom = null; c2Custom = null; useCustom = null; buildModes(); setMode(resumeMode()); } }; }
     for (var j = VW[view].i + 1; j < VIEWS.length; j++) {
       var v = VIEWS[j]; if (v[1] !== act) return null; if (!v[2].length) continue;
       return { name: v[0] + " " + exShort(v[1], v[2][0]), go: (function (id) { return function () { setActivity(id); }; })(v[0]) };
@@ -6980,7 +6983,7 @@
     return "Substitute " + s[1];
   }
 
-  $("lesson").addEventListener("change", function () { msSave(); if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; var sv0 = svL(); lesson = subx ? 2 : +this.value; if (act === "2.4" && sv0 !== svL()) { EXP = null; up = null; if (svL()) { leaveQuiz(); document.body.classList.remove("vpDrag"); document.body.classList.add("solver", "svEx"); } else { exHide(); document.body.classList.remove("solver", "svEx"); qzShow(); } } gdCustom = null; wfCustom = null; c2Custom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode(resumeMode()); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
+  $("lesson").addEventListener("change", function () { msSave(); if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; var sv0 = svL(); lesson = subx ? 2 : +this.value; svSwap(sv0); gdCustom = null; wfCustom = null; c2Custom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode(resumeMode()); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
   $("crAdd").addEventListener("click", crAdd);
   ["askT", "askErr", "exMsg", "pgQmsg", "crErr", "stCap"].forEach(function (id) { var a = $(id); if (!a) return; new MutationObserver(function () { if (a.children.length) return; var t = a.textContent, u = sqTxt(t); if (u !== t) a.textContent = u; }).observe(a, { childList: true, characterData: true, subtree: true }); });   // prompts and messages write x², not x^2
   $("crKeys").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the box
