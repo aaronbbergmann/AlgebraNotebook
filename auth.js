@@ -175,11 +175,21 @@
     });
   }
 
+  // ---- due dates: the home page (no activity in the address) opens the activity due next; the dates are kept in "an:due" and the page is told when they arrive ----
+  var DUE = "an:due";
+  function fetchDue() {
+    api("due").then(function (j) {
+      var v = JSON.stringify(j.due || {}), was = get(DUE); put(DUE, v);
+      if (v !== was) { try { window.dispatchEvent(new CustomEvent("an:due", { detail: j.due || {} })); } catch (e) { } }
+    }).catch(function () { });   // (an older server without "due": the welcome page stays as it was)
+  }
+
   // ---- start ----
   var a = auth();
   window.AN = { enabled: true, user: a, api: api, signOut: signOut, base: BASE };
   if (!a) { if (isPlay) signInLink(); else showGate(); return; }
   chip(a);
+  if (seg === "" || seg === "algebranotebook" || seg === "index.html") fetchDue();
   var pulled = false; try { pulled = ss.getItem(PULLED) === "1"; } catch (e) { }
   if (!pulled) {
     if (!isPlay) showGate("Loading your work…");

@@ -17069,6 +17069,23 @@ var ESPIC = {
   if (BUILT[act].play) { var bm = takeBoot(); setMode(bm); bootMode = bm; enterPlay(); bootMode = null; } else if (BUILT[act].quiz) enterQuiz(); else setMode(takeBoot());
   if (soon) $("welcome").innerHTML = "<div class=\"wsmall\">" + soon + "</div><div class=\"wsoonT\">" + VW[soon].title + "</div><div class=\"wsoon\">Coming soon</div><p class=\"wsoonP\">The exercises for this activity are being built. Choose another activity from the menu.</p>";
   if (welcome) { document.body.classList.add("wel"); theme(); $("welcome").hidden = false; }
+  // the home page opens the activity due next (the due dates set on Class progress, sent by auth.js when a student is signed in): the earliest one still ahead
+  function dueNext(D) {
+    var now = Date.now(), best = null, bt = Infinity;
+    Object.keys(D || {}).forEach(function (id) {
+      var m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/.exec(D[id] || ""); if (!m || !(VW[id] || BUILT[id])) return;
+      var t = m[4] == null ? new Date(+m[1], m[2] - 1, +m[3], 23, 59, 59).getTime() : new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]).getTime();   // (a date alone: the end of that day)
+      if (t >= now && t < bt) { bt = t; best = id; }
+    });
+    return best;
+  }
+  function dueOpen(D) {
+    if (!welcome || fixedAct || soon || /[?&]ex=/.test(location.search)) return;   // (only the home page itself)
+    var id = dueNext(D); if (!id) return;
+    if (hub) location.replace(slugOf(id) + "/"); else setActivity(id);   // (replace: Back does not return to the home page, which would open it again)
+  }
+  try { dueOpen(JSON.parse(localStorage.getItem("an:due") || "{}")); } catch (e) { }
+  window.addEventListener("an:due", function (e) { dueOpen(e.detail); });
   // for the sign-in sync (auth.js): every built activity's exercises and the percent each has earned, from what this browser has saved
   window.AN_summary = function () {
     var out = {}, keep = prog, r0 = rev, N14 = { "4": "Graphing", "1": "One Variable", s: "Substitution", "2": "2x2", "3": "3x3" };

@@ -30,6 +30,7 @@ function doPost(e) {
     if (req.action === "load") return out(load(who));
     if (req.action === "save") return out(save(who, req.data, req.summary));
     if (req.action === "signout") { endSession(req.session); return out({ ok: true }); }
+    if (req.action === "due") return out({ due: dueDates() });   // (any signed-in student: the welcome page opens the activity due next)
     if (["roster", "setDue", "courses", "syncClassroom"].indexOf(req.action) >= 0 && !isTeacher(who.email)) return out({ error: "forbidden", message: "Teachers only." });
     if (req.action === "roster") return out(roster());
     if (req.action === "setDue") return out(setDue(req.act, req.date));
