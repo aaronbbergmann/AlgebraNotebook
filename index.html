@@ -16732,7 +16732,7 @@ var ESPIC = {
     var hit = exList(!rev).filter(function (e) { return e[1] === want; })[0]; if (!hit) return;
     if (!rev) {   // an exercise that now lives in another subsection: go there (old links such as …/1-4d/?ex=graphing)
       var to = vwOf(act, hit[0]); if (!to && (view || soon)) return;   // (an exercise that was taken out, such as 2.4 Three Points: the activity opens as usual)
-      if (to && to !== (view || soon)) { location.replace("../" + slugOf(to) + "/" + location.search + location.hash); return; }
+      if (to && to !== (view || soon) && !(view && VW[view].ls.indexOf(hit[0]) >= 0)) { location.replace("../" + slugOf(to) + "/" + location.search + location.hash); return; }
     }
     if (rev) { revI = +hit[0]; var it = BUILT[rev].items[revI]; act = it.act; lesson = it.lesson; subx = !!it.subx; return; }
     if (hit[0] === "s") { subx = true; lesson = 2; } else { subx = false; lesson = +hit[0]; }
