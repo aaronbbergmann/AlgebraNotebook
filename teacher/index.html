@@ -119,7 +119,10 @@
     if (p >= 50) { var t = +d["_d:" + a] || +d["_t:" + a] || Date.parse(r.saved) || 0; return t > end; }
     return Date.now() > end;
   }
-  function val(r, k) { if (k === "name") return lastFirst(r); if (k === "saved") return r.saved || ""; var a = stars((r.detail || {})[k]); return a == null ? -1 : a; }
+  // the grade: the stars earned, less 0.5 when it is late (never below 0), so a late 5.0 is 4.5L
+  var LATE_OFF = 5;   // (in tenths of a star)
+  function grade(r, a) { var p = stars((r.detail || {})[a]), L = late(r, a); if (p == null && !L) return null; p = p || 0; return L ? Math.max(0, p - LATE_OFF) : p; }
+  function val(r, k) { if (k === "name") return lastFirst(r); if (k === "saved") return r.saved || ""; var a = grade(r, k); return a == null ? -1 : a; }
   // which activities to show: the checked chapters (none checked: all), and with Recent the 3 whose progress changed most recently across the class
   function chap(a) { var m = /^(\d+)\./.exec(a) || /^Rev[TQ](\d+)/i.exec(a); return m ? m[1] : ""; }
   function changed(a) {   // when the class last changed this activity (saved with each student's progress; older saves: the student's last save, if they have progress in it)
@@ -147,7 +150,7 @@
       acts.forEach(function (a) {
         var ex = (r.detail || {})[a], p = stars(ex), es = exStars(ex);
         var tip = ex ? Object.keys(es).map(function (n) { return n + ": " + st1(es[n][0]) + " of " + st1(es[n][1]) + " stars"; }).join("\n") : "";
-        if (late(r, a)) { h += "<td class=\"p late\" title=\"Late: " + esc(p == null ? "0.0" : st1(p)) + " of 5 stars" + (tip ? "\n" + esc(tip) : "") + "\" aria-label=\"Late, " + (p == null ? "0.0" : st1(p)) + " of 5 stars\"><span class=\"pc\">L</span></td>"; return; }
+        if (late(r, a)) { var g = grade(r, a); h += "<td class=\"p late\" title=\"Late: " + esc(p == null ? "0.0" : st1(p)) + " of 5 stars, less 0.5 for being late = " + st1(g) + (tip ? "\n" + esc(tip) : "") + "\" aria-label=\"" + st1(g) + ", late (" + (p == null ? "0.0" : st1(p)) + " of 5 stars, less 0.5)\"><span class=\"pc\">" + st1(g) + "L</span></td>"; return; }
         h += p == null || p === 0 && !Object.keys(ex || {}).some(function (n) { return ex[n] > 0; })
           ? "<td class=\"p none\" title=\"" + esc(tip) + "\">–</td>"
           : "<td class=\"p" + (p === 50 ? " full" : "") + "\" title=\"" + esc(tip) + "\" aria-label=\"" + st1(p) + " of 5 stars\"><span class=\"pc\">" + st1(p) + "</span></td>";
