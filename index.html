@@ -4738,13 +4738,22 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     8: { eq: [function (r) { return r.fm === 1; }, function (r) { return r.fm === 2; }] },  // 3.1F a² − b² and a² ± 2ab + b²
     9: { eq: [function (r) { return r.grp === 4; }] },                                       // 3.1G factor ax² + bx + c ("ac")
     10: { eq: [function (r) { return r.cs === 1; }, function (r) { return r.cs === 2; }, function (r) { return r.cs === 3; }] },   // 3.3A complete the square
-    12: { eq: [function (r) { return r.qu === 1; }, function (r) { return r.qu === 2; }, function (r) { return r.qu === 3; }] }    // 3.4A the quadratic formula
+    12: { eq: [function (r) { return r.qu === 1; }, function (r) { return r.qu === 2; }, function (r) { return r.qu === 3; }] },
+    14: { lin4: 1 },                                                                          // 3.1A 4-step linear equations: 3(x − 2) + 4 = x + 10
+    15: { bin: 1 }                                                                            // 3.1A two binomials with the 2 x 2 box, to the simplified expression    // 3.4A the quadratic formula
   };
   function svL() { return (act === "2.4" && lesson >= 5) || (act === "3.1" && !!C3SV[lesson]); }
   function svAct() { return act === "2.4" || act === "3.1"; }   // (a section whose exercises switch between the quiz engine and the Play Solve engine)
   function c3Make() {   // a Chapter 3 problem: the Demo opens on the first (simplest) kind, every other mode on any kind
     var c = C3SV[lesson], cl = function (o) { return JSON.parse(JSON.stringify(o)); };
-    if (c.rad || c.box) return false;   // (made like 2.4's Square Roots and Box Method)
+    if (c.rad || c.box || c.bin) return false;   // (made like 2.4's Square Roots and Box Method)
+    if (c.lin4) {
+      var X4 = function (q) { return { k: "x", v: "x", n: mk(q) }; }, C4 = function (q) { return { k: "c", n: mk(q) }; }, a4, b4, c4, d4, e4, x4;
+      do { a4 = 2 + rnd(5); b4 = nz(8); c4 = nz(12); d4 = 1 + rnd(5); x4 = nz(9); e4 = a4 * (x4 + b4) + c4 - d4 * x4; } while (d4 === a4 || !e4 || x4 + b4 === 0);
+      SV = "x"; var L4 = [{ k: "g", m: mk(a4), items: [X4(1), C4(b4)] }, C4(c4)], R4 = [X4(d4), C4(e4)];
+      EXP = { eq: true, ask: null, vk: "x", L: L4, R: R4, rel: "=", cmp: null, c3: null, qf: null, qu: null, grUser: false, quq: false, lit: false, quad: false, av: false, sq: false, dvq: false, zpq: false, grq: false, qd: false, sf: false, zp: null, src: "", svk: lesson };
+      EXP.orig = { L: cl(L4), R: cl(R4), rel: "=" }; return true;
+    }
     if (c.ex) { var lv = mode === "demo" ? c.ex[0] : c.ex[rnd(c.ex.length)], it = exGen(lv); SV = "x"; EXP = { src: "", orig: cl(it), items: it, ask: null, fac: lv === 5 || lv === 6, lit: lv === 6, grp: lv === 10 || lv >= 13, rad: false, svk: lesson }; return true; }
     var f = mode === "demo" ? c.eq[0] : c.eq[rnd(c.eq.length)], st = LADDER[rung("eq", f)]; SV = svRand();
     EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=", cmp: null, c3: null, qf: null, qu: null, grUser: false, quq: !!st.qu, lit: false, quad: false, av: false, sq: !!st.sq, dvq: false, zpq: !!st.zp, grq: !!st.grp || !!st.fm, qd: !!st.cs || !!st.sf || !!st.qu, sf: !!st.sf, zp: null, svk: lesson };
@@ -4754,7 +4763,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
   }
   function svMake() {
     var X = function (a) { return { k: "x", v: "x", n: mk(a) }; }, C = function (c) { return { k: "c", n: mk(c) }; }, cl = function (o) { return JSON.parse(JSON.stringify(o)); }; SV = "x"; distHide(); fmHide(); grHide();
-    var lesson0 = lesson; if (act === "3.1") { if (c3Make()) return; act = "2.4"; lesson = C3SV[lesson0].rad ? 7 : rnd(3) ? 6 : 8; try { svMake(); } finally { act = "3.1"; lesson = lesson0; } if (EXP) EXP.svk = lesson; return; }   // (Chapter 3; 3.1B's square roots and 3.1D's box made as 2.4's)
+    var lesson0 = lesson; if (act === "3.1") { if (c3Make()) return; act = "2.4"; lesson = C3SV[lesson0].rad ? 7 : C3SV[lesson0].bin ? 6 : rnd(3) ? 6 : 8; try { svMake(); } finally { act = "3.1"; lesson = lesson0; } if (EXP) EXP.svk = lesson; return; }   // (Chapter 3; 3.1B's square roots and 3.1D's box made as 2.4's)
     if (lesson === 5) {   // 3-step linear equations: 5(x + 2) − 13 = 7, or (x − 2)/3 + 2 = 10
       var g = rnd(2) ? eqOv() : (function () { var a = 2 + rnd(5), b = nz(9), c = nz(15), x = nz(9), d = a * (x + b) + c; if (!d || x + b === 0) return null; return { L: [{ k: "g", m: mk(a), items: [X(1), C(b)] }, C(c)], R: [C(d)] }; })();
       if (!g) { svMake(); return; }
@@ -5911,7 +5920,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     ["2.2C", "2.2", ["11", "3", "12", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
     ["2.4A", "2.4", ["1", "2", "5", "6", "7"], "Modeling with Quadratic Functions"],
     ["2.4B", "2.4", ["4", "5", "8"], "Modeling with Quadratic Functions (Day 2)"],   // (Regression, 3-Step Equations, Distributing)   // (exercise 3, Three Points with first and second differences, was taken out)
-    ["3.1A", "3.1", ["1"], "Solving Quadratic Equations: Graphing"],
+    ["3.1A", "3.1", ["1", "14", "15"], "Solving Quadratic Equations: Graphing"],
     ["3.1B", "3.1", ["2", "3"], "Solving Quadratic Equations: Square Roots"],
     ["3.1C", "3.1", ["4"], "Solving Quadratic Equations: Real Life"],
     ["3.1D", "3.1", ["5", "6"], "Solving Quadratic Equations: Factoring"],
@@ -5974,8 +5983,8 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
     "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics of a Parabola"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics"], function (l) { return l === 11 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
-    "3.1": c2Built("3.1", ["Solving by Graphing", "Simplifying Square Roots", "Solving with Square Roots", "Real Life", "Multiplying (Box Method)", "Factoring", "Solving by Factoring", "Special Products", "Factoring ax\u00b2 + bx + c", "Completing the Square", "Vertex Form by Completing the Square", "The Quadratic Formula", "The Discriminant"],
-      ["Graphing", "Simplify Roots", "Square Roots", "Real Life", "Box Method", "Factoring", "Solve by Factoring", "Special Products", "Factor ax\u00b2 + bx + c", "Complete the Square", "Vertex Form", "Quadratic Formula", "Discriminant"]),
+    "3.1": c2Built("3.1", ["Solving by Graphing", "Simplifying Square Roots", "Solving with Square Roots", "Real Life", "Multiplying (Box Method)", "Factoring", "Solving by Factoring", "Special Products", "Factoring ax\u00b2 + bx + c", "Completing the Square", "Vertex Form by Completing the Square", "The Quadratic Formula", "The Discriminant", "4-Step Linear Equations", "Multiplying Binomials (Box Method)"],
+      ["Graphing", "Simplify Roots", "Square Roots", "Real Life", "Box Method", "Factoring", "Solve by Factoring", "Special Products", "Factor ax\u00b2 + bx + c", "Complete the Square", "Vertex Form", "Quadratic Formula", "Discriminant", "4-Step Equations", "Binomials"]),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression", "3-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Distributing"], ["Vertex & Point", "Intercepts", "Three Points", "Regression", "3-Step Equations", "Box Method", "Square Roots", "Distributing"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -5992,7 +6001,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
       ["g", "solo", 80, "Write Mode, 2nd round", 2], ["g", "solo", 100, "Write Mode, 3rd round", 3]
     ] }
   };
-  BUILT["3.1"].levels = BUILT["3.1"].levels.filter(function (l) { return !(l[1] === "solo" && (l[4] === 3 || (l[4] === 2 && !C3SV[l[0]]))); }).map(function (l) { return l[1] === "solo" && !C3SV[l[0]] ? [l[0], "solo", 100, "Write Mode"] : l; }).map(function (l) { return l[1] === "solo" ? (l[4] === 2 ? [l[0], "solo", 100, "Write Mode, 2nd round", 2] : [l[0], "solo", 70, "Write Mode"]) : l; });   // (Chapter 3: two rounds of Write)
+  BUILT["3.1"].levels = BUILT["3.1"].levels.filter(function (l) { return !(l[1] === "solo" && (l[4] === 3 || (l[4] === 2 && !C3SV[l[0]]))); }).map(function (l) { return l[1] === "solo" && !C3SV[l[0]] ? [l[0], "solo", 100, "Write Mode"] : l; }).map(function (l) { return l[1] === "solo" && C3SV[l[0]] ? (l[4] === 2 ? [l[0], "solo", 100, "Write Mode, 2nd round", 2] : [l[0], "solo", 70, "Write Mode"]) : l; });   // (Chapter 3: two rounds of Write)
   BUILT["2.4"].modesFor = function (l) { return l === 4 ? ["demo", "sequence", "solo"] : ["demo", "sequence", "calculate", "solo"]; };   // (2.4B Regression: no Calculate mode)
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "calculate"); });
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[0] === 4 && l[1] === "solo" ? (l[4] === 2 ? [4, "solo", 100, "Write Mode, 2nd round", 2] : [4, "solo", 70, "Write Mode"]) : l; });   // (2.4B Regression: two rounds of Write, not three)
