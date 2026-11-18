@@ -989,7 +989,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     <div class="wrap">
       <main class="eqs work" id="wsEl"></main><div class="ctrAsk" id="ctrAsk"></div>
       <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="zpWrap" id="zpA" hidden></div><div class="exRow" id="exRow"></div><div class="zpWrap" id="zpB" hidden></div>
-        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button type="button" class="btn" id="exSoloRt" hidden aria-label="Insert a square root">√</button><button type="button" class="btn" id="exSoloX2" hidden aria-label="Insert x squared"><i>x</i>²</button><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
+        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button type="button" class="btn" id="exSoloRt" hidden aria-label="Insert a square root">√</button><button type="button" class="btn" id="exSoloX" hidden aria-label="Insert x"><i>x</i></button><button type="button" class="btn" id="exSoloX2" hidden aria-label="Insert x squared"><i>x</i>²</button><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
       <section class="nlBox" id="nlBox" hidden aria-label="The solutions on a number line"></section>
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
@@ -1032,7 +1032,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
       <div class="err" id="askErr"></div>
       <div class="row" style="flex-wrap:nowrap">
         <input id="askIn" autocomplete="off" aria-label="Your answer">
-        <button type="button" class="btn" id="askX2" hidden aria-label="Insert x squared"><i>x</i>²</button>
+        <button type="button" class="btn" id="askX" hidden aria-label="Insert x"><i>x</i></button><button type="button" class="btn" id="askX2" hidden aria-label="Insert x squared"><i>x</i>²</button>
         <button class="btn" id="askOk">Send</button>
         <button class="btn" id="askNo" aria-label="Cancel">&#10005;</button>
       </div>
@@ -1934,7 +1934,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
   }
   function exRender(hot) { exRender0(hot); if (BX && !BX.done && EXP && !EXP.eq) bxRow(); exWork(); exDnUpd(); }
   function exRender0(hot) {
-    $("exBox").classList.toggle("solved", !!locked); if ($("exSoloRt")) $("exSoloRt").hidden = !(EXP && EXP.rad && !EXP.eq); var bxk = !!(BUILT[act] && BUILT[act].solver && EXP && !EXP.rad && (svL() ? lesson === 6 : JSON.stringify(EXP).indexOf('"b":') >= 0 || /x\^2/.test(JSON.stringify(EXP)))); $("exSoloX2").hidden = !(bxk && mode === "solo"); $("askX2").hidden = !(bxk && mode === "calculate");   // (2.4A Box Method: an x² key wherever an answer is typed)   // (a square root to simplify: a √ key beside the Write box)
+    $("exBox").classList.toggle("solved", !!locked); if ($("exSoloRt")) $("exSoloRt").hidden = !(EXP && EXP.rad && !EXP.eq); var bxk = !!(BUILT[act] && BUILT[act].solver && EXP && !EXP.rad && (svL() ? !EXP.eq : JSON.stringify(EXP).indexOf('"b":') >= 0 || /x\^2/.test(JSON.stringify(EXP)))); $("exSoloX2").hidden = $("exSoloX").hidden = !(bxk && mode === "solo"); $("askX2").hidden = $("askX").hidden = !(bxk && mode === "calculate");   /* (x and x² keys) */   // (2.4A Box Method: an x² key wherever an answer is typed)   // (a square root to simplify: a √ key beside the Write box)
     if (!EXP) return;
     if (EXP.eq) { eqRender(hot); return; }
     zpPaint();
@@ -2226,7 +2226,26 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     if (k.kind === "comb") { var res = exCombineTo(k.i, k.j); exGo(res, A + " = " + exSay([exSum(its[k.i], its[k.j])]), k.anim); }
     else { var n = its.slice(); n.splice.apply(n, [k.i, 1].concat(exDist(its[k.i]))); exSet(n, distMsg(its[k.i], exDist(its[k.i])), its[k.i]); }
   }
+  function svWr() { return svL() && mode === "solo"; }
   function exCheckSolo() {
+    var wr = svWr() && !locked; exCheckSolo0();
+    if (wr && !locked && $("exMsg").className === "bad" && /^Not quite/.test($("exMsg").textContent)) svWrong();
+  }
+  function svWrong() {
+    EQW++; if (EXP.eq) wkSim();   // (Show work: the whole solution, worked out from the start)
+    var last = steps.length ? steps[steps.length - 1] : null, ans = EXP.eq && last && last.eqs && last.eqs.length ? plain(String(last.eqs[last.eqs.length - 1])) : "";
+    if (!EXP.eq && !EXP.rad && !EXP.fac && !EXP.grp) {   // (an expression multiplied out: its simplified form, from the totals of its terms: x², then x, then the number)
+      var T = exTot(EXP.items), parts = [];
+      Object.keys(T).sort(function (p, q) { var d = function (k) { var m = /\^(\d+)/.exec(k); return k === "" ? 0 : m ? +m[1] : 1; }; return d(q) - d(p); }).forEach(function (k) { var f = T[k]; if (!f || !f.n) return; parts.push({ k: k === "" ? "c" : "x", v: k.replace(/\^\d+/, ""), n: f, pw: (/\^(\d+)/.exec(k) || [0, 1])[1] }); });
+      try { ans = exSay(parts.map(function (t) { return t.k === "c" ? { k: "c", n: t.n } : { k: "x", v: t.v + (t.pw > 1 ? "^" + t.pw : ""), n: t.n }; })); } catch (e) { ans = ""; }
+    }
+    locked = true; $("exSolo").hidden = true; closeAsk(false);
+    tally(true); up = { label: "Try Another", go: function () { solverGo(0, mode); } }; nxShow();
+    var nx = $("next"); nx.textContent = "Try Another"; nx.hidden = false; nx.disabled = false; $("again").hidden = true;
+    document.body.classList.add("swErr"); $("show").hidden = false;
+    var m = $("exMsg"); m.className = "bad"; m.textContent = "Not quite." + (ans ? " The answer is " + ans + "." : "") + " Show Work has every step; Try Another gives a new problem.";
+  }
+  function exCheckSolo0() {
     if (EXP.eq) { eqCheckSolo(); return; }
     if (EXP.rad) {   // a square root: the simplified form typed, like 10√2 (or 7 for √49)
       var m0 = $("exMsg"), raw = $("exSoloIn").value, want = EXP.items.reduce(function (a, t) { return a + radF(t); }, 0), q = rdIn(raw), v = numVal(raw); ansTouched = true;
@@ -2258,6 +2277,8 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
   }
   function exHide() { $("exBox").hidden = true; $("wsEl").style.display = ""; }
   function exBegin() {
+    document.body.classList.remove("swErr"); var sg = $("exSoloGo"); if (sg) { sg.textContent = svWr() ? "Submit" : "Check"; sg.classList.toggle("next", svWr()); }   // (a Progress exercise's Write: a plum-red Submit)
+    if (svWr()) { up = null; $("next").hidden = true; $("exMsg").className = ""; $("exMsg").textContent = ""; }   // (a new problem: no Try Another or Next until it is answered)
     hideKind(); distHide(); fmHide(); stopDemo(); closeAsk(false); stopParty(); busy = false; calc = null; $("modePick").hidden = true;
     if (BUILT[act].solver) $("stT").textContent = svTitle();
     wkBox = null; orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
@@ -7070,6 +7091,10 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     var i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd;
     el.focus(); el.setRangeText(b.dataset.ins, i, j, "end"); if (b.dataset.back) { var c0 = el.selectionEnd - +b.dataset.back; el.setSelectionRange(c0, c0); } el.dispatchEvent(new Event("input", { bubbles: true }));   // (parentheses: the cursor lands between them)
   });
+  [["askX", "askIn", "x"], ["exSoloX", "exSoloIn", "x"]].forEach(function (p) {   // the x keys type x where the cursor is
+    $(p[0]).addEventListener("mousedown", function (e) { e.preventDefault(); });
+    $(p[0]).addEventListener("click", function () { var el = $(p[1]), i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd; el.focus(); el.setRangeText(p[2], i, j, "end"); el.dispatchEvent(new Event("input", { bubbles: true })); });
+  });
   [["askX2", "askIn"], ["exSoloX2", "exSoloIn"]].forEach(function (p) {   // the x² keys type x² where the cursor is
     $(p[0]).addEventListener("mousedown", function (e) { e.preventDefault(); });
     $(p[0]).addEventListener("click", function () { var el = $(p[1]), i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd; el.focus(); el.setRangeText("x\u00b2", i, j, "end"); el.dispatchEvent(new Event("input", { bubbles: true })); });
@@ -7125,7 +7150,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     autoTry(confirmAsk, function () { return !$("ask").hidden; }, [$("askErr")]);
   });
   $("exSoloIn").addEventListener("input", function () {
-    if ($("exSolo").hidden || !this.value.trim()) return; var at = ansTouched;
+    if ($("exSolo").hidden || !this.value.trim() || svWr()) return; var at = ansTouched;   // (a Progress exercise's Write waits for Submit)
     if (!autoTry(exCheckSolo, function () { return !$("exSolo").hidden; }, [$("exMsg")])) ansTouched = at;
   });
   $("ansFields").addEventListener("input", function (e) {
