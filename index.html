@@ -10508,8 +10508,8 @@ var ESPIC = {
       return;
     }
     var g = dsmGraphed(), one = !!m3Cur().dsm.one;
-    if (n && !DSM.fail) n.innerHTML = one ? (st && st.type === "dsm" ? "Parabola " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : QZ.m3done || QZ.step >= 4 ? "" : mode === "solo" ? "" : "Zoom out or drag the graph to see the whole parabola. Click the parabola to see its points.")
-      : st && st.type === "dsm" ? "Path 1 " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") + " &nbsp; Path 2 " + (g[1] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : "Zoom out or drag the graph to see the whole paths. Click a path to see its intercepts and its maximum.";
+    if (n && !DSM.fail) n.innerHTML = one ? (st && st.type === "dsm" ? "Parabola " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : QZ.m3done || QZ.step >= 4 ? "" : "")   /* (no instructions on how to use Desmos) */
+      : st && st.type === "dsm" ? "Path 1 " + (g[0] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") + " &nbsp; Path 2 " + (g[1] ? "<span class=\"cueOk\">✓</span>" : "not graphed yet") : "";
     if (st && st.type === "dsm" && g[0] && g[1]) m3Accept(st, "");
   }
   var dsmHome = null;   // where the step list (#wfSteps) normally sits, in the side panel
