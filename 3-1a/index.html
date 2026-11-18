@@ -5909,17 +5909,17 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     ["2.2C", "2.2", ["11", "3", "12", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
     ["2.4A", "2.4", ["1", "2", "5", "6", "7"], "Modeling with Quadratic Functions"],
     ["2.4B", "2.4", ["4", "5", "8"], "Modeling with Quadratic Functions (Day 2)"],   // (Regression, 3-Step Equations, Distributing)   // (exercise 3, Three Points with first and second differences, was taken out)
-    ["3.1A", "3.1", [], "Solving Quadratic Equations: Graphing"],
+    ["3.1A", "3.1", ["1"], "Solving Quadratic Equations: Graphing"],
     ["3.1B", "3.1", ["2", "3"], "Solving Quadratic Equations: Square Roots"],
-    ["3.1C", "3.1", [], "Solving Quadratic Equations: Real Life"],
+    ["3.1C", "3.1", ["4"], "Solving Quadratic Equations: Real Life"],
     ["3.1D", "3.1", ["5", "6"], "Solving Quadratic Equations: Factoring"],
     ["3.1E", "3.1", ["7"], "Solving Quadratic Equations: Solving by Factoring"],
     ["3.1F", "3.1", ["8"], "Solving Quadratic Equations: Formulas"],
     ["3.1G", "3.1", ["9"], "Solving Quadratic Equations: Factor ax\u00b2 + bx + c"],
     ["3.3A", "3.1", ["10"], "Complete the Square (Solve)"],
-    ["3.3B", "3.1", [], "Complete the Square (Vertex Form)"],
+    ["3.3B", "3.1", ["11"], "Complete the Square (Vertex Form)"],
     ["3.4A", "3.1", ["12"], "Use the Quadratic Formula and the Discriminant"],
-    ["3.4B", "3.1", [], "Use the Quadratic Formula and the Discriminant: The Discriminant"],
+    ["3.4B", "3.1", ["13"], "Use the Quadratic Formula and the Discriminant: The Discriminant"],
   ];
   var VW = {}, VBASE = {};
   VIEWS.forEach(function (v, i) { VW[v[0]] = { id: v[0], base: v[1], ls: v[2], title: v[3], i: i }; VBASE[v[1]] = 1; });
@@ -5990,7 +5990,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
       ["g", "solo", 80, "Write Mode, 2nd round", 2], ["g", "solo", 100, "Write Mode, 3rd round", 3]
     ] }
   };
-  BUILT["3.1"].levels = BUILT["3.1"].levels.filter(function (l) { return !(l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[1] === "solo" ? (l[4] === 2 ? [l[0], "solo", 100, "Write Mode, 2nd round", 2] : [l[0], "solo", 70, "Write Mode"]) : l; });   // (Chapter 3: two rounds of Write)
+  BUILT["3.1"].levels = BUILT["3.1"].levels.filter(function (l) { return !(l[1] === "solo" && (l[4] === 3 || (l[4] === 2 && !C3SV[l[0]]))); }).map(function (l) { return l[1] === "solo" && !C3SV[l[0]] ? [l[0], "solo", 100, "Write Mode"] : l; }).map(function (l) { return l[1] === "solo" ? (l[4] === 2 ? [l[0], "solo", 100, "Write Mode, 2nd round", 2] : [l[0], "solo", 70, "Write Mode"]) : l; });   // (Chapter 3: two rounds of Write)
   BUILT["2.4"].modesFor = function (l) { return l === 4 ? ["demo", "sequence", "solo"] : ["demo", "sequence", "calculate", "solo"]; };   // (2.4B Regression: no Calculate mode)
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "calculate"); });
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[0] === 4 && l[1] === "solo" ? (l[4] === 2 ? [4, "solo", 100, "Write Mode, 2nd round", 2] : [4, "solo", 70, "Write Mode"]) : l; });   // (2.4B Regression: two rounds of Write, not three)
@@ -10433,7 +10433,7 @@ var ESPIC = {
   // 2.4 Modeling with Quadratic Functions uses the same blank Desmos graph in place of its own graph: the student types the data in a Desmos table
   // and runs a regression (the "dsm" step checks for both), then answers the typed questions from it (problems with dsm.reg)
   var DSM = { calc: null, state: "", key: "", km: "", fail: false, saved: {} };
-  function dsmOn() { return pq() && ((act === "2.2" && lesson === 5) || act === "2.4") && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm && dsmLate(); }
+  function dsmOn() { return pq() && ((act === "2.2" && lesson === 5) || act === "2.4" || (act === "3.1" && lesson === 1)) && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm && dsmLate(); }
   function dsmLate() { var P = m3Cur().dsm; return !P.late || mode === "solo" || !!(QZ.m3x && QZ.m3x.vs >= 6 && !QZ.m3x.pend); }   // (2.4A Vertex and a Point: Desmos comes once a is found)
   function dsmReg() { return dsmOn() && !!m3Cur().dsm.reg; }
   function dsmLoad() {
@@ -10789,7 +10789,7 @@ var ESPIC = {
     QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : gd2() ? o.map(function (f, i) { return gdMake21(i); }) : o.map(gdMake), est: est() ? estSet(o.length) : null, cr: false, custom: !!cu }; updProg();
     if (wf()) { QZ.custom = !!cuw; QZ.tr = []; QZ.wfp = cuw ? [wfCustom] : mode === "create" ? [null] : wfSet(o.length); QZ.cs = "f"; QZ.wd = {}; QZ.wl = []; if (mode === "create") wfCustom = null; }
     if (m3() && csL()) { o = [0]; QZ.order = o; }   // (2.2C Memorize: one sort)
-    if (m3() && act === "2.4" && +lesson === 4 && o.length > 1) { o = [0]; QZ.order = o; if (QZ.m3p && QZ.m3p.length > 1) QZ.m3p = QZ.m3p.slice(0, 1); }   // 2.4B Regression: one problem per round (Write: two rounds, so two problems)
+    if (m3() && ((act === "2.4" && +lesson === 4) || act === "3.1") && o.length > 1) { o = [0]; QZ.order = o; if (QZ.m3p && QZ.m3p.length > 1) QZ.m3p = QZ.m3p.slice(0, 1); }   // 2.4B Regression: one problem per round (Write: two rounds, so two problems)
     if (m3() && act === "2.2" && [1, 2, 3, 4, 5, 12].indexOf(+lesson) >= 0 && o.length > 1) { o = [0]; QZ.order = o; if (QZ.m3p && QZ.m3p.length > 1) QZ.m3p = QZ.m3p.slice(0, 1); }   // 2.2A and 2.2C: one problem per round (Write still needs three rounds for full Progress)
     if (c2Cu()) QZ.custom = true; if (vcr()) QZ.pick = false;
     if (m3()) { QZ.tr = []; QZ.m3p = m3Set(o.length); }
@@ -14240,7 +14240,7 @@ var ESPIC = {
   // a figure, and steps (Demo, Sequence and Calculate take every small step; Solo takes only the big ones).  The figure here is a whole coordinate plane that can draw
   // parabolas (opening up, down, left or right), lines of symmetry, a directrix, points and data; a "gpt" step is answered by clicking points on it, and an "fn" step by
   // typing a function (any equivalent form is accepted: vertex form, standard form or intercept form).  Every problem is a new variant on every visit.
-  function c2On() { return pq() && ((act === "2.1" && lesson === 4) || act === "2.2" || act === "2.4"); }
+  function c2On() { return pq() && ((act === "2.1" && lesson === 4) || act === "2.2" || act === "2.4" || act === "3.1"); }
   var c2X = "<i>x</i>", c2Y = "<i>y</i>", C2B = "#2D70B3", C2P = "#7A3FB5", C2G = "#2E9E4F", C2O = "#C9731B";
   function c2R(v, d) { var m = Math.pow(10, d == null ? 6 : d); v = Math.round(v * m) / m; return Object.is(v, -0) ? 0 : v; }
   function c2F(v, d) { v = c2R(v, d == null ? 4 : d); return (v < 0 ? "−" : "") + Math.abs(v); }
@@ -15449,10 +15449,150 @@ var ESPIC = {
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target && e.target.id === "vcrIn") { e.preventDefault(); vcrSubmit(); } });
   document.addEventListener("input", function (e) { if (e.target && e.target.id === "vcrIn" && $("vcrErr")) $("vcrErr").innerHTML = ""; });
+
+  // ==== Chapter 3 word problems (the step engine) ====
+  function c3T(a, b, c, v) {   // a·v² + b·v + c as text (no zero terms)
+    v = v || c2X; var t = [], add = function (n, s0) { if (!n) return; var A = Math.abs(n), co = s0 && A === 1 ? "" : c2F(A); t.push((t.length ? (n < 0 ? " − " : " + ") : (n < 0 ? "−" : "")) + co + s0); };
+    add(a, v + "²"); add(b, v); add(c, ""); return t.join("") || "0";
+  }
+  function c3P(n) { return n < 0 ? "(" + c2F(n) + ")" : c2F(n); }
+
+  // 3.1A Solving by Graphing: write the equation in standard form, graph the related function y = ax² + bx + c in Desmos, read the x-intercepts (the solutions)
+  function c3Lx(a, b, c) { var t = "y=", f = function (n, v, first) { if (!n) return ""; var A = Math.abs(n), s0 = n < 0 ? "-" : first ? "" : "+"; return s0 + (v && A === 1 ? "" : String(A)) + v; }; t += f(a, "x^{2}", true) + f(b, "x", false) + f(c, "", false); return t; }
+  function c3M1(tier) {
+    for (var t = 0; t < 500; t++) {
+      var a = c2Pick([1, 1, 1, -1, 2, -2]), one = rnd(5) === 0, r1 = c2Rng(-6, 6), r2 = one ? r1 : c2Rng(-6, 6); if (!one && r1 === r2) continue;
+      var b = -a * (r1 + r2), c = a * r1 * r2, lo = Math.min(r1, r2), hi = Math.max(r1, r2), F = function (x) { return a * x * x + b * x + c; }, k = F((r1 + r2) / 2);
+      if (Math.abs(k) > 40 || Math.abs(c) > 40) continue;
+      var moved = rnd(2) && b, eq = moved ? c3T(a, 0, c) + " = " + c3T(0, -b, 0) : c3T(a, b, c) + " = 0", rel = "<i>y</i> = " + c3T(a, b, c), n = one ? 1 : 2, pb = { kind: 20 };
+      pb.head = eq; pb.pic = "";
+      pb.story = "<span class=\"lm cf\">" + eq + "</span>";
+      pb.tq = "<div class=\"regQ\">Solve by graphing.</div>";
+      pb.dsm = { one: 1, F1: F, D1: 6, xmax: 10, ymax: Math.max(10, Math.abs(k) * 1.3), l1: c3Lx(a, b, c) };
+      var pic = function (lab) { var xa = c2Axis(Math.min(lo, 0) - 2, Math.max(hi, 0) + 2, false), ya = c2Axis(Math.min(k, 0) - 2, Math.max(k, c, 0) + 2, false); return c2Fig({ H: 260, xmin: xa.min, xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t * 2, ty: ya.t * 2, noGrid: 1, alt: "The graph of " + rel.replace(/<[^>]+>/g, ""), curves: [{ fn: F, col: C2P }], pts: lab ? (one ? [{ x: r1, y: 0, col: C2P, lab: "(" + r1 + ", 0)", dy: a > 0 ? 16 : -8 }] : [{ x: lo, y: 0, col: C2P, lab: "(" + lo + ", 0)", dy: -8 }, { x: hi, y: 0, col: C2P, lab: "(" + hi + ", 0)", dy: hi - lo <= 4 ? 18 : -8 }]) : [] }); };   /* (close intercepts: the second label below the axis, so they do not overlap) */
+      pb.fig = function (x) { return DSM.fail ? pic(!!(x && x.xi)) : ""; };   // (Desmos is the graph; the drawn one only if Desmos cannot load)
+      var opts = m3Sh([{ t: rel, ok: true }, { t: "<i>y</i> = " + c3T(a, b, 0), ok: false, why: "Keep every term: the related function is <span class=\"lm\">" + rel + "</span>." }, { t: "<i>y</i> = " + c3T(-a, -b, -c), ok: false, why: "Keep each sign: the related function is <span class=\"lm\">" + rel + "</span>." }]);
+      pb.steps = [
+        { id: "rel", lab: "related function", type: "pick", ask: moved ? "Write the equation in standard form. What is the related function?" : "What is the related function?", opts: opts, hint: ["Write it as <span class=\"lm\">" + c3T(a, b, c) + " = 0</span>; the related function is <i>y</i> = the left side.", "<span class=\"lm\">" + rel + "</span>."], line: "related function: <span class=\"lm\">" + rel + "</span>" },
+        { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph the related function.", line: "graphed <span class=\"lm\">" + rel + "</span>", hint: ["Type the related function on the first line of Desmos.", "Type " + c3Lx(a, b, c).replace(/\^\{2\}/g, "^2") + "."] },
+        { id: "x1", lab: one ? "x-intercept" : "smaller x-intercept", ask: one ? "Find the x-intercept." : "Find the smaller x-intercept.", pre: c2X + " =", ans: lo, nums: [-lo, hi, c], after: function (x) { if (one) x.xi = true; }, hint: ["The solutions are where the parabola crosses the " + c2X + "-axis.", "It crosses at (" + lo + ", 0)."], line: c2X + " = " + lo },
+        { id: "x2", lab: "larger x-intercept", ask: "Find the larger x-intercept.", pre: c2X + " =", ans: hi, nums: [-hi, lo, c], after: function (x) { x.xi = true; }, hint: ["Look for the other place the parabola crosses the " + c2X + "-axis.", "It crosses at (" + hi + ", 0)."], line: c2X + " = " + hi },
+        { id: "n", lab: "Solutions", type: "pick", ask: "How many solutions?", opts: [{ t: "0", ok: false, why: "It crosses the " + c2X + "-axis " + (one ? "once" : "twice") + "." }, { t: "1", ok: one, why: "It crosses the " + c2X + "-axis twice." }, { t: "2", ok: !one, why: "It touches the " + c2X + "-axis once, at its vertex." }], hint: ["One solution for each " + c2X + "-intercept.", n + " solution" + (one ? "" : "s") + "."], line: n + " solution" + (one ? " (only one)" : "s") }
+      ];
+      if (one) pb.steps.splice(3, 1);
+      var ansT = one ? c2X + " = " + r1 + " (only one solution)" : c2X + " = " + lo + " and " + c2X + " = " + hi;
+      pb.qwa = { Q: [["<span class=\"lm\">" + eq + "</span>"], [c2X + " = ?"]],
+        W: [["<span class=\"lm\">" + c3T(a, b, c) + " = 0</span>, related function <span class=\"lm\">" + rel + "</span>", ["rel"]], [function (x) { return pic(!!(x && x.xi)); }, ["gr", "x1"]]],
+        A: [[ansT, ["n"]]] };
+      return pb;
+    }
+  }
+  // 3.4B The Discriminant: a, b and c, then b² − 4ac, then how many real solutions (positive: 2, zero: 1, negative: 0)
+  function c3M13(tier) {
+    for (var t = 0; t < 500; t++) {
+      var kind = rnd(3), a, b, c;
+      if (kind === 1) { var p0 = c2Pick([1, 1, 2, 3]), q0 = nz(6); a = p0 * p0; b = 2 * p0 * q0; c = q0 * q0; if (rnd(4) === 0) { a = -a; b = -b; c = -c; } }
+      else { a = c2Pick([1, 1, 2, 3, -1, -2]); b = nz(9); c = nz(12); }
+      var D = b * b - 4 * a * c; if ((kind === 0 && D >= 0) || (kind === 2 && D <= 0) || (kind === 1 && D !== 0)) continue;
+      var pb = { kind: 20, mx: { a: a, b: b, c: c } }, eq = c3T(a, b, c) + " = 0", n = D > 0 ? 2 : D === 0 ? 1 : 0;
+      pb.head = eq; pb.pic = "";
+      pb.story = "<span class=\"lm cf\">" + eq + "</span>";
+      pb.tq = "<div class=\"regQ\">Find the discriminant. How many real solutions does the equation have?</div>";
+      var F = function (x) { return a * x * x + b * x + c; }, h = -b / (2 * a), k = F(h);
+      pb.fig = function (x) { x = x || {}; if (!x.ns) return ""; return c2Pl(c2Plane(Math.min(k, 0) - 3, Math.max(k, 0) + 3), x, { alt: "Graph of y = " + c3T(a, b, c), curves: [{ fn: F, col: C2P }] }); };
+      var wd = D > 0 ? "positive" : D === 0 ? "zero" : "negative", nn = function (v) { return [v, -v, b * b, b * b + 4 * a * c].filter(function (z, j, A) { return z !== D && A.indexOf(z) === j; }).slice(0, 3); };
+      pb.steps = [
+        { id: "a", fine: 1, lab: "a", ask: "Find <i>a</i>.", pre: "<i>a</i> =", ans: a, nums: [b, c, -a].filter(function (z) { return z !== a; }), hint: ["<i>a</i> is the number in front of " + c2X + "².", "<i>a</i> = " + c2F(a) + "."], line: "<i>a</i> = " + c2F(a) },
+        { id: "b", fine: 1, lab: "b", ask: "Find <i>b</i>.", pre: "<i>b</i> =", ans: b, nums: [a, c, -b].filter(function (z) { return z !== b; }), hint: ["<i>b</i> is the number in front of " + c2X + ".", "<i>b</i> = " + c2F(b) + "."], line: "<i>b</i> = " + c2F(b) },
+        { id: "c", fine: 1, lab: "c", ask: "Find <i>c</i>.", pre: "<i>c</i> =", ans: c, nums: [a, b, -c].filter(function (z) { return z !== c; }), hint: ["<i>c</i> is the number on its own.", "<i>c</i> = " + c2F(c) + "."], line: "<i>c</i> = " + c2F(c) },
+        { id: "d", lab: "Discriminant", ask: "Find the discriminant.", pre: "<i>b</i>² − 4<i>ac</i> =", ans: D, nums: nn(D), hint: ["<i>b</i>² − 4<i>ac</i> = " + c3P(b) + "² − 4(" + c2F(a) + ")(" + c2F(c) + ")" + ".", c3P(b) + "² − 4(" + c2F(a) + ")(" + c2F(c) + ")" + " = " + c2F(b * b) + " − " + c3P(4 * a * c) + " = " + c2F(D) + "."], line: "<i>b</i>² − 4<i>ac</i> = " + c3P(b) + "² − 4(" + c2F(a) + ")(" + c2F(c) + ")" + " = " + c2F(D) },
+        { id: "n", lab: "Solutions", type: "pick", ask: "How many real solutions?", opts: [{ t: "2", ok: n === 2, why: "The discriminant is " + wd + "." }, { t: "1", ok: n === 1, why: "The discriminant is " + wd + "." }, { t: "0", ok: n === 0, why: "The discriminant is " + wd + "." }],
+          after: function (x) { x.ns = true; }, hint: ["Positive: 2 solutions. Zero: 1. Negative: 0.", "The discriminant is " + wd + ", so " + n + "."], line: "the discriminant is " + wd + ": " + n + " real solution" + (n === 1 ? "" : "s") }
+      ];
+      pb.qwa = { Q: [["<span class=\"lm\">" + eq + "</span>"], ["<i>b</i>² − 4<i>ac</i> = ?"]],
+        W: [["<i>a</i> = " + c2F(a) + ", <i>b</i> = " + c2F(b) + ", <i>c</i> = " + c2F(c), ["a", "b", "c", "d"]], ["<i>b</i>² − 4<i>ac</i> = " + c3P(b) + "² − 4(" + c2F(a) + ")(" + c2F(c) + ")" + " = " + c2F(D), ["d"]]],
+        A: [[c2F(D) + " is " + wd + ": " + n + " real solution" + (n === 1 ? "" : "s"), ["n"]]] };
+      return pb;
+    }
+  }
+  // 3.1C Real Life: a dropped object, h(t) = −16t² + s₀ (when does it hit the ground?), or the greatest revenue from intercept form (the max is halfway between the zeros)
+  var C3DROP = [
+    ["For a science competition, students design a container that keeps an egg from breaking when it is dropped from " , " feet.", "egg"],
+    ["A window washer drops a squeegee from " , " feet above the sidewalk.", "drop"],
+    ["A climber drops a water bottle from a ledge " , " feet above the ground.", "drop"],
+    ["A drone drops a package from " , " feet above a field.", "drop"]
+  ];
+  function c3M4(tier) {
+    if (rnd(2)) {   // the dropped object
+      var sc = c2Pick(C3DROP), s0 = c2Pick([36, 50, 64, 80, 100, 120, 144, 150, 200]), T = Math.sqrt(s0 / 16), Tr = c2R(T, 1), pb = { kind: 20 };
+      pb.head = sc[0] + s0 + sc[1]; pb.pic = c2Pic("ball");
+      pb.story = sc[0] + s0 + sc[1] + " A dropped object's height is <span class=\"lm\"><i>h</i>(<i>t</i>) = −16<i>t</i>² + <i>s</i><sub>0</sub></span>.";
+      pb.tq = "<div class=\"regQ\">How long does it take to hit the ground?</div><div class=\"supp\"><i>t</i> = seconds, <i>h</i> = height in feet. Round to the nearest tenth.</div>";
+      pb.fig = function (x) { x = x || {}; if (!x.tt) return ""; var xa = c2Axis(0, T + 0.5), ya = c2Axis(0, s0 * 1.1); return c2Fig({ H: 260, xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Time (seconds)", yl: "Height (feet)", alt: "The height over time", curves: [{ fn: function (t0) { return -16 * t0 * t0 + s0; }, col: C2P, lo: 0, hi: T }], pts: [{ x: 0, y: s0, col: C2P, lab: "(0, " + s0 + ")" }, { x: T, y: 0, col: C2P, lab: "(" + c2F(Tr) + ", 0)", dy: -8 }] }); };
+      pb.steps = [
+        { id: "s0", lab: "initial height", ask: "Find the initial height.", pre: "<i>s</i><sub>0</sub> =", post: "ft", ans: s0, nums: [16, s0 / 2, 2 * s0], hint: ["It is dropped from " + s0 + " feet.", "<i>s</i><sub>0</sub> = " + s0 + "."], line: "<i>s</i><sub>0</sub> = " + s0 + " ft" },
+        { id: "t", lab: "Time", ask: "How long does it take to hit the ground?", pre: "<i>t</i> ≈", post: "s", ans: Tr, tol: 0.06, nums: [c2R(s0 / 16, 1), c2R(T * 2, 1), c2R(Math.sqrt(s0) / 4 + 1, 1)].filter(function (v, j, A) { return Math.abs(v - Tr) > 0.06 && A.indexOf(v) === j; }),
+          after: function (x) { x.tt = true; }, hint: ["Set <i>h</i>(<i>t</i>) = 0: 0 = −16<i>t</i>² + " + s0 + ", so 16<i>t</i>² = " + s0 + ".", "<i>t</i>² = " + c2F(c2R(s0 / 16, 4)) + ", so <i>t</i> = √" + c2F(c2R(s0 / 16, 4)) + " ≈ " + c2F(Tr) + " (time is not negative)."], line: "it hits the ground after about " + c2F(Tr) + " seconds" }
+      ];
+      pb.guess = { G: [["<i>s</i><sub>0</sub> = " + s0 + " ft", ["s0"]]], U: [["<i>t</i> when <i>h</i> = 0", null]], E: [["<i>h</i>(<i>t</i>) = −16<i>t</i>² + <i>s</i><sub>0</sub>", null]],
+        S1: [["0 = −16<i>t</i>² + " + s0, ["t"]]], S2: [["16<i>t</i>² = " + s0 + ", <i>t</i>² = " + c2F(c2R(s0 / 16, 4)) + ", <i>t</i> = ±√" + c2F(c2R(s0 / 16, 4)) + " ≈ ±" + c2F(Tr), ["t"]], ["−" + c2F(Tr) + " is not a time", ["t"]]], A: [["<i>t</i> ≈ " + c2F(Tr) + " seconds", ["t"]]] };
+      return pb;
+    }
+    for (var t = 0; t < 500; t++) {   // the revenue: R(x) = (S − d·x)(P + x), x = the price increase in dollars
+      var P = 4 + rnd(9), d = c2Pick([0.5, 1, 1.5, 2]), Z = P + 2 + rnd(12); if ((Z - P) % 2) continue;   // (zeros Z and −P; their average a whole number of dollars)
+      var S = c2R(Z * d, 4), xm = (Z - P) / 2, price = P + xm, R = c2R((S - d * xm) * (P + xm), 4), pb2 = { kind: 20 };
+      var who = c2Pick([["A streaming service charges $", " per month and has ", " million subscribers. For each $1 increase in price, the service loses ", " million subscribers.", "million"], ["A gym charges $", " per class and fills ", " hundred spots each month. For each $1 increase in price, it fills ", " hundred fewer.", "hundred"]]);
+      pb2.head = who[0] + P + who[1] + c2F(S) + who[2] + c2F(d) + who[3]; pb2.pic = "";
+      var dX = (d === 1 ? "" : c2F(d)) + c2X;
+      pb2.story = pb2.head + " The revenue is <span class=\"lm\"><i>R</i>(" + c2X + ") = (" + c2F(S) + " − " + dX + ")(" + P + " + " + c2X + ")</span>, where " + c2X + " is the price increase in dollars.";
+      pb2.tq = "<div class=\"regQ\">What price gives the greatest revenue? What is the greatest revenue?</div><div class=\"supp\">Revenue in " + who[4] + "s of dollars.</div>";
+      var Fr = function (x) { return (S - d * x) * (P + x); };
+      pb2.fig = function (x) { x = x || {}; if (!x.zz) return ""; var xa = c2Axis(-P - 1, Z + 1), ya = c2Axis(0, R * 1.15); return c2Fig({ H: 260, xmin: xa.min, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Price increase ($)", yl: "Revenue", alt: "The revenue", curves: [{ fn: Fr, col: C2P }], pts: [{ x: -P, y: 0, col: C2P, lab: "(" + c2F(-P) + ", 0)" }, { x: Z, y: 0, col: C2P, lab: "(" + Z + ", 0)" }].concat(x.mx ? [{ x: xm, y: R, col: C2P, lab: "(" + c2F(xm) + ", " + c2F(R) + ")", dy: -8 }] : []) }); };
+      pb2.steps = [
+        { id: "z1", lab: "zero", ask: "Find the zero where the subscribers run out.", pre: c2X + " =", ans: Z, nums: [P, -Z, Z / 2], hint: ["Set " + c2F(S) + " − " + dX + " = 0.", c2X + " = " + c2F(S) + " ÷ " + c2F(d) + " = " + Z + "."], after: function (x) { x.zz = true; }, line: "zeros: " + c2X + " = " + Z + " and " + c2X + " = " + c2F(-P) },
+        { id: "z2", fine: 1, lab: "other zero", ask: "Find the other zero.", pre: c2X + " =", ans: -P, nums: [P, Z, -Z], hint: ["Set " + P + " + " + c2X + " = 0.", c2X + " = " + c2F(-P) + "."], line: c2X + " = " + c2F(-P) },
+        { id: "xm", lab: "increase", ask: "Find the price increase halfway between the zeros.", pre: c2X + " =", post: "dollars", ans: xm, nums: [Z - P, (Z + P) / 2, xm + 1].filter(function (v) { return v !== xm; }), after: function (x) { x.mx = true; }, hint: ["The greatest revenue is halfway between the zeros: their average.", "(" + Z + " + " + c3P(-P) + ") ÷ 2 = " + c2F(xm) + "."], line: "halfway: (" + Z + " + " + c3P(-P) + ") ÷ 2 = " + c2F(xm) },
+        { id: "pr", lab: "Price", ask: "What price gives the greatest revenue?", pre: "$", ans: price, nums: [xm, P, price + 1], hint: ["Add the increase to $" + P + ".", "$" + P + " + $" + c2F(xm) + " = $" + c2F(price) + "."], line: "charge $" + c2F(price) },
+        { id: "rv", lab: "Revenue", ask: "What is the greatest revenue?", pre: "<i>R</i> =", post: who[4], ans: R, tol: 0.01, nums: [c2R(S * P, 4), c2R(R + d * 2, 4), c2R(Z * P, 4)].filter(function (v) { return Math.abs(v - R) > 0.01; }), hint: ["Put " + c2X + " = " + c2F(xm) + " into <i>R</i>(" + c2X + ").", "(" + c2F(S) + " − " + c2F(d) + "·" + c2F(xm) + ")(" + P + " + " + c2F(xm) + ") = " + c2F(R) + "."], line: "the greatest revenue is " + c2F(R) + " " + who[4] }
+      ];
+      pb2.guess = { G: [["<i>R</i>(" + c2X + ") = (" + c2F(S) + " − " + dX + ")(" + P + " + " + c2X + ")", null]], U: [["the price and <i>R</i> at the greatest revenue", null]], E: [["zeros: " + c2F(S) + " − " + dX + " = 0, " + P + " + " + c2X + " = 0", ["z1"]]],
+        S1: [[c2X + " = " + Z + ", " + c2X + " = " + c2F(-P) + "; halfway (" + Z + " + " + c3P(-P) + ") ÷ 2 = " + c2F(xm), ["xm"]]], S2: [["<i>R</i>(" + c2F(xm) + ") = (" + c2F(S) + " − " + c2F(d) + "·" + c2F(xm) + ")(" + P + " + " + c2F(xm) + ") = " + c2F(R), ["rv"]]], A: [["charge $" + c2F(price) + "; the greatest revenue is " + c2F(R) + " " + who[4], ["rv"]]] };
+      return pb2;
+    }
+  }
+  // 3.3B Vertex form by completing the square: y = x² + bx + c → y = (x − h)² + k (and with a in front: divide by a first)
+  function c3M11(tier) {
+    var a = rnd(3) ? 1 : c2Pick([2, 3, 5]), hh = nz(8), b = -2 * a * hh, c = nz(12) + a * hh * hh, q = hh * hh, k = c - a * q, pb = { kind: 20 };
+    var eq = "<i>y</i> = " + c3T(a, b, c), vf = "<i>y</i> = " + (a === 1 ? "" : a) + "(" + c2X + (hh > 0 ? " − " + hh : " + " + -hh) + ")²" + (k ? (k < 0 ? " − " + -k : " + " + k) : "");
+    pb.head = eq; pb.pic = "";
+    pb.story = "<span class=\"lm cf\">" + eq + "</span>";
+    pb.tq = "<div class=\"regQ\">Write the function in vertex form by completing the square.</div>";
+    var Fv = function (x0) { return a * (x0 - hh) * (x0 - hh) + k; };
+    pb.fig = function (x) { x = x || {}; if (!x.vf) return ""; return c2Pl(c2Plane(Math.min(k, 0) - 3, Math.max(k, 0) + 3), x, { alt: "Graph of the parabola", curves: [{ fn: Fv, col: C2P }], pts: [{ x: hh, y: k, col: C2P, lab: true, dy: -8 }] }); };   // (once the vertex form is found: the parabola, its vertex labelled)
+    var bb = b / a, half = bb / 2, lhs = a === 1 ? "<i>y</i> − " + c3P(c) : "(<i>y</i> − " + c3P(c) + ")/" + a;
+    pb.steps = [
+      { id: "sq", lab: "(b ÷ 2)²", ask: "Find (<i>b</i> ÷ 2)²" + (a === 1 ? "" : " for " + c2X + "² + " + c3P(bb) + c2X) + ".", pre: "(<i>b</i> ÷ 2)² =", ans: q, nums: [half, bb * bb, q * 2].filter(function (v) { return v !== q; }), hint: ["(" + c3P(bb) + " ÷ 2)² = " + c3P(half) + "².", c3P(half) + "² = " + q + "."], line: "(" + c3P(bb) + " ÷ 2)² = " + q },
+      { id: "h", lab: "h", ask: "Find <i>h</i>.", pre: "<i>h</i> =", ans: hh, nums: [-hh, half, q].filter(function (v) { return v !== hh; }), hint: [c2X + "² " + (bb < 0 ? "− " : "+ ") + Math.abs(bb) + c2X + " + " + q + " = (" + c2X + (half < 0 ? " − " + -half : " + " + half) + ")².", "<i>h</i> = " + hh + "."], line: lhs + " + " + q + " = (" + c2X + (half < 0 ? " − " + -half : " + " + half) + ")²" },
+      { id: "k", lab: "k", ask: "Find <i>k</i>.", pre: "<i>k</i> =", ans: k, nums: [c + a * q, -k, c].filter(function (v) { return v !== k; }), after: function (x) { x.vf = true; }, hint: ["Isolate <i>y</i>: subtract " + q + (a === 1 ? "" : ", multiply by " + a) + ", then add " + c3P(c) + ".", "<i>k</i> = " + c3P(c) + " − " + (a === 1 ? "" : a + "·") + q + " = " + k + "."], line: vf }
+    ];
+    pb.qwa = { Q: [["<span class=\"lm\">" + eq + "</span>"]],
+      W: [[lhs + " = " + c2X + "² " + (bb < 0 ? "− " : "+ ") + Math.abs(bb) + c2X, ["sq"]], ["(" + c3P(bb) + " ÷ 2)² = " + q, ["sq"]], [lhs + " + " + q + " = (" + c2X + (half < 0 ? " − " + -half : " + " + half) + ")²", ["h"]]],
+      A: [["<span class=\"lm\">" + vf + "</span>", ["k"]]] };
+    return pb;
+  }
+  // Sequence's answer choices: three wrong ones, all different (near misses filled in when the generator gave too few)
+  function c3Nums(pb) {
+    (pb.steps || []).forEach(function (st) {
+      if (!st.nums || st.type === "pick") return; var tol = st.tol || 1e-9, out = [];
+      st.nums.concat([st.ans + 1, st.ans - 1, st.ans + 2, st.ans * 2 || 3, -st.ans || -2]).forEach(function (v) { v = c2R(v, 4); if (out.length < 3 && Math.abs(v - st.ans) > tol && out.every(function (w) { return Math.abs(w - v) > 1e-9; })) out.push(v); });
+      st.nums = out;
+    });
+    return pb;
+  }
   // which exercise makes the problem
   function c2Make(tier) {
-    c2Dec = act === "2.1" || act === "2.4" || (act === "2.2" && lesson === 5);
-    var pb = act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211, c2M2212][lesson - 1](tier)
+    c2Dec = act === "2.1" || act === "2.4" || act === "3.1" || (act === "2.2" && lesson === 5);
+    var pb = act === "3.1" ? c3Nums(({ 1: c3M1, 4: c3M4, 11: c3M11, 13: c3M13 }[lesson] || c3M13)(tier)) : act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211, c2M2212][lesson - 1](tier)
       : ([c2M241, c2M242, null, c2M244][lesson - 1] || c2M244)(tier);   // (2.4 exercise 3, Three Points with first and second differences, was taken out)
     pb.head = m3Plain(pb.head);   // (Show work's first line is plain text)
     return pb;
