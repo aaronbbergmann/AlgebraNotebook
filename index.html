@@ -1,6 +1,7 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.regP { display: block; margin-top: 0.7em; } .regQ { margin: 14px 0 2px; font-weight: 700; font-size: 1.25rem; line-height: 1.4; color: var(--ink); max-width: 44rem; } .regR { margin-bottom: 6px; font-weight: 400; font-size: 1.05rem; color: var(--ink); }
 html.swOff #show { display: none !important; }
 .supp { display: block; font-weight: 400; font-size: 1rem; color: #4B5563; margin: 4px 0 6px; }   /* supplemental text: smaller, unbolded, always just below the question */
+body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
 </style></head><body>
 <!DOCTYPE html>
 <html lang="en">
@@ -3423,7 +3424,7 @@ html.swOff #show { display: none !important; }
   function rfAskOK(k) {   // Calculate: the perfect square factor typed (rsq), or the value of a perfect square root (rsv)
     if (!$("askIn").value.trim()) return;   // (Return in an empty box: nothing yet)
     var v = numVal($("askIn").value), x = v && v.length === 1 ? v[0] : NaN, bad = function (t) { EQW++; eqwTa(); $("askErr").textContent = t; $("askIn").select(); };
-    if (k.kind === "rsv") { if (Math.abs(x - k.want) < 1e-9) { closeAsk(false); EXP.ask = null; k.go(); } else bad("Not quite. What number times itself makes " + k.want * k.want + "?"); return; }
+    if (k.kind === "rsv") { if (Math.abs(x - k.want) < 1e-9) { closeAsk(false); EXP.ask = null; k.go(); } else bad("Not quite. The answer is " + k.want + ", since " + k.want + " · " + k.want + " = " + k.want * k.want + "."); return; }
     if (isNaN(x) || !Number.isInteger(x) || x < 1) { bad("Type a perfect square that divides " + k.n + "."); return; }
     if (x === 1) { bad("1 is a perfect square, but taking it out changes nothing. Try a bigger one."); return; }
     if (!isSq(x)) { bad(x + " is not a perfect square: no whole number times itself makes " + x + "."); return; }
@@ -4049,7 +4050,7 @@ html.swOff #show { display: none !important; }
     if (typeof r !== "string" && r.length === 1 && r[0].k !== "g") ok = w.n.n === 0 ? r[0].n.n === 0 : exKey(r[0]) === exKey(w) && same(r[0].n, w.n);
     if (!ok && w.k === "c") { var v = numVal(raw); ok = !!(v && v.length === 1 && Math.abs(v[0] - w.n.n / w.n.d) < 1e-9); }
     if (ok && fm && gcd(+fm[1], +fm[2]) > 1) { $("askErr").textContent = "That fraction can still be simplified."; $("askIn").select(); return; }
-    if (!ok) { EQW++; eqwTa(); $("askErr").textContent = typeof r === "string" && !numVal(raw) ? (w.k === "x" ? "Type a term, like 6x." : "Type a number, like 6 or 3/2.") : "Not quite. Try again."; $("askIn").select(); return; }
+    if (!ok) { EQW++; eqwTa(); $("askErr").textContent = typeof r === "string" && !numVal(raw) ? (w.k === "x" ? "Type a term, like 6x." : "Type a number, like 6 or 3/2.") : "Not quite. The answer is " + exSay([w]) + ".";   /* (the right answer, with Try another) */ $("askIn").select(); return; }
     closeAsk(false); EXP.ask = null; k.go();
   }
   function eqMul(k, ready, dv) {
@@ -5374,7 +5375,7 @@ html.swOff #show { display: none !important; }
     rows.forEach(function (r) { r.classList.remove("asking"); });
   }
   function confirmAsk() {
-    var i = askIdx, txt = $("askIn").value, err = function (t) { EQW++; eqwTa(); $("askErr").textContent = t; };   // (every error message counts: no Progress for this problem)
+    var i = askIdx, txt = $("askIn").value, err = function (t) { EQW++; eqwTa(); $("askErr").textContent = t; }, fT = function (f) { return !f || f.n == null ? "Not quite. Try again." : "Not quite. The answer is " + (f.d === 1 ? fmtN(f.n) : fmtN(f.n) + "/" + f.d) + "."; };   /* fT: a fraction as text, for the right answer shown with an error */   // (every error message counts: no Progress for this problem)
     if (askKind === "ex") { exAskOK(); return; }
     if (askKind === "subfn") { var cr = subCb.check(txt); if (cr !== true) { err(cr); $("askIn").select(); return; } closeAsk(false); subCb.ok(); return; }
     if (askKind === "mul" || askKind === "add" || askKind === "sub" || askKind === "div") {
@@ -5390,7 +5391,7 @@ html.swOff #show { display: none !important; }
       var q2 = ws[i], n2 = parse(txt);
       if (!q2 || !q2.ks[askC[0]] || !q2.ks[askC[1]]) { closeAsk(false); return; }
       if (!n2) { err("Type a number, like 3 or -1."); return; }
-      if (!same(n2, add(q2.ks[askC[0]].k, q2.ks[askC[1]].k))) { err("Not quite. Try again."); $("askIn").select(); return; }
+      if (!same(n2, add(q2.ks[askC[0]].k, q2.ks[askC[1]].k))) { err(fT(add(q2.ks[askC[0]].k, q2.ks[askC[1]].k))); $("askIn").select(); return; }
       closeAsk(false); slideCombine(i, askC[0], askC[1], askC[3], askC[2] ? rows[i].children[askC[2]] : null); return;
     }
     if (askKind === "simp" || askKind === "ksimp") {
@@ -5398,7 +5399,7 @@ html.swOff #show { display: none !important; }
       if (!q1) { closeAsk(false); return; }
       var kk = askKind === "ksimp" ? q1.ks[askK] : null, n1 = kk ? parse(txt) : numOrEq(txt, leftOf(q1));
       if (!n1) { err(kk ? "Type a number, like 6 or 3/2." : "Type a number, like 6, or the equation, like " + plain(fmt(q1)).split("=")[0].trim() + " = 6."); return; }
-      if (!same(n1, kk ? kTarget(q1, kk, curVs()) : q1.c)) { err("Not quite. Try again."); $("askIn").select(); return; }
+      if (!same(n1, kk ? kTarget(q1, kk, curVs()) : q1.c)) { err(fT(kk ? kTarget(q1, kk, curVs()) : q1.c)); $("askIn").select(); return; }
       var fm = q1.rawS ? /(\d+)\/(\d+)\s*$/.exec(txt) : null; if (fm && gcd(+fm[1], +fm[2]) > 1) { err("That fraction can still be simplified."); $("askIn").select(); return; }
       closeAsk(false);
       if (kk) { simpSub(i, askK, true); return; }
@@ -5407,7 +5408,7 @@ html.swOff #show { display: none !important; }
     var it0 = calc && calc.items[calc.i];
     if (it0 && it0.num) {   // (Play Solve: one number of the step)
       if (!String(txt).trim()) return; var nn = parse(txt); if (!nn) { err("Type a number, like 6 or 3/2."); return; }
-      if (!same(nn, it0.num)) { err("Not quite. Try again."); $("askIn").select(); return; }
+      if (!same(nn, it0.num)) { err(fT(it0.num)); $("askIn").select(); return; }
       calc.i++; nextCalc(); return;
     }
     var got = parseEq(txt) || (lesson === 1 ? parseEqN(txt) : null);
@@ -6084,7 +6085,7 @@ html.swOff #show { display: none !important; }
       var D = JSON.parse(localStorage.getItem("algebraProgress:done") || "{}") || {}; if (!D[c.id] && stars10() >= 50) { D[c.id] = Date.now(); localStorage.setItem("algebraProgress:done", JSON.stringify(D)); }
     } catch (e) { } finally { rev = sv.rev; act = sv.act; view = sv.view; LEVELS = sv.LEVELS; prog = sv.prog; }
   }
-  function saveProg() { origMirror(); try { var k = progKey(), v = JSON.stringify(prog); if (localStorage.getItem(k) !== v) { var T = JSON.parse(localStorage.getItem("algebraProgress:time") || "{}") || {}; T[rev || view || act] = Date.now(); localStorage.setItem("algebraProgress:time", JSON.stringify(T)); } localStorage.setItem(k, v); var id0 = rev || view || act, D = JSON.parse(localStorage.getItem("algebraProgress:done") || "{}") || {}; if (!D[id0] && stars10() >= 50) { D[id0] = Date.now(); localStorage.setItem("algebraProgress:done", JSON.stringify(D)); } } catch (e) {} }   // (and when each activity first reached 5 stars, for due dates)   // (and when each activity last changed, for the teacher's "Recent")
+  function saveProg() { try {   /* (stars are not shared between copies: origMirror is no longer called) */ var k = progKey(), v = JSON.stringify(prog); if (localStorage.getItem(k) !== v) { var T = JSON.parse(localStorage.getItem("algebraProgress:time") || "{}") || {}; T[rev || view || act] = Date.now(); localStorage.setItem("algebraProgress:time", JSON.stringify(T)); } localStorage.setItem(k, v); var id0 = rev || view || act, D = JSON.parse(localStorage.getItem("algebraProgress:done") || "{}") || {}; if (!D[id0] && stars10() >= 50) { D[id0] = Date.now(); localStorage.setItem("algebraProgress:done", JSON.stringify(D)); } } catch (e) {} }   // (and when each activity first reached 5 stars, for due dates)   // (and when each activity last changed, for the teacher's "Recent")
   function lvDone(l) {
     // a problem finished in a mode (1.1, 1.2) earns that mode's first level and every level below it at once; the later rounds need whole rounds
     if (!(l[4] > 1)) for (var m0 = MORD.indexOf(l[1]); m0 < 4; m0++) if (prog[l[0] + ":" + MORD[m0] + ":p"]) return true;
@@ -10806,6 +10807,7 @@ var ESPIC = {
     go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || (m3() && !wsubAct()) || (wf() && (mode === "sequence" || mode === "calculate")); go.textContent = wsubAct() ? "Submit" : "Check"; document.body.classList.toggle("wsub", wsubAct());
     // the one Next (see nxShow): in Demo the demo button carries it; otherwise it sits here in the side panel
     var taF = (m3() && m3taFail()) || vfnTaFail() || taAny() || vpWrTa();
+    document.body.classList.toggle("swErr", vpWrTa());   // (after an error in Write, Show work turns plum red: it has every step)
     nx.hidden = !(done || taF) || demo; nx.disabled = false; nx.textContent = vpWrTa() ? "Try Another" : taF ? "Try another" : (gd() || wf()) && mode === "create" ? "Create another" : up ? up.label : "Next";
     $("qzAgain").hidden = demo || !(done && !QZ.custom && up && up.stayText); $("qzAgain").textContent = !QZ.custom && up && up.stayText || "";
     $("pgDemo").style.display = demo ? "" : "none"; $("pgCtl").classList.toggle("empty", !demo && !est());
@@ -13573,7 +13575,7 @@ var ESPIC = {
     });
     if (L.every(function (st) { return W.ok[st.id]; })) { QZ.m3i = L.length; QZ.m3done = true; }
     m3wKey = "";
-    if (bad.length) { QZ.wrong++; if (vpWrTa()) { if (QZ.ww) QZ.ww.fin = true; drawPlay(); m3Redraw(); pqPanel(); pqMsg("Not quite. Press Show work to see every step, or Try Another for a new problem."); return; } drawPlay(); m3Redraw(); var ansM = c2cOn() ? m3L().filter(function (q) { return !QZ.m3w.ok[q.id] && m3AnsTx(q); }).map(function (q) { return m3wLab(q) + ": " + m3AnsTx(q); }) : []; pqMsg(m3Plain("Not quite. Check " + wsList(bad) + ", then press Submit again." + (ansM.length ? " The answers: " + ansM.join("; ") + "." : ""))); return; }
+    if (bad.length) { QZ.wrong++; if (vpWrTa()) { if (QZ.ww) QZ.ww.fin = true; drawPlay(); m3Redraw(); pqPanel(); var ansW = m3L().filter(function (q) { return !QZ.m3w.ok[q.id] && m3AnsTx(q); }).map(function (q) { return m3wLab(q) + ": " + m3AnsTx(q); }); pqMsg(m3Plain("Not quite." + (ansW.length ? " " + ansW.join("; ") + "." : "") + " Show work has every step; Try Another gives a new problem.")); return; } drawPlay(); m3Redraw(); var ansM = c2cOn() ? m3L().filter(function (q) { return !QZ.m3w.ok[q.id] && m3AnsTx(q); }).map(function (q) { return m3wLab(q) + ": " + m3AnsTx(q); }) : []; pqMsg(m3Plain("Not quite. Check " + wsList(bad) + ", then press Submit again." + (ansM.length ? " The answers: " + ansM.join("; ") + "." : ""))); return; }
     pqMsg(""); drawPlay(); pqEval();
   }
   $("wfSteps").addEventListener("input", function (e) { if (m3() && e.target.classList.contains("m3In")) { if (m3wOn()) { QZ.m3w.v[e.target.dataset.sid] = e.target.value; return; } m3Try(e.target, false); } });
@@ -15311,7 +15313,7 @@ var ESPIC = {
 
   // ==== 2.2C: a wrong answer shows the right answer (all modes) ====
   function c2cOn() { return pq() && act === "2.2" && (lesson === 3 || lesson === 4 || lesson === 5 || lesson === 12); }
-  function ansAdd(msg, a) { msg = msg || "Not quite."; if (!(c2cOn() || (pq() && ivL()) || vfnTA()) || a == null || a === "") return msg; return msg.replace(/\s*Try again\.?\s*$/, "") + " The answer is " + String(a).replace(/\.\s*$/, "") + "."; }
+  function ansAdd(msg, a) { msg = msg || "Not quite."; if (!(c2cOn() || (pq() && ivL()) || vfnTA() || (pq() && (mode === "sequence" || mode === "calculate"))) || a == null || a === "") return msg;   /* (an error in Sequence or Calculate shows the right answer with Try another) */ return msg.replace(/\s*Try again\.?\s*$/, "") + " The answer is " + String(a).replace(/\.\s*$/, "") + "."; }
   function m3AnsTx(st) {
     if (!st) return ""; var t = st.type || "num";
     try {
@@ -15344,7 +15346,7 @@ var ESPIC = {
   }
   // 2.4A Vertex and a Point, Point and x-Intercepts, Write: an error message on Submit puts a plum-red Try Another where Next sits (a new problem), and
   // Show work then shows every step of the GUESS work, so the student is never stuck
-  function vpWrTa() { var pb = pq() && m3() && mode === "solo" && !!QZ && !!QZ.order && QZ.step < 4 && QZ.wrong > 0 && !QZ.custom ? m3Cur() : null; return !!(pb && pb.vp && pb.guess); }
+  function vpWrTa() { var pb = pq() && m3() && mode === "solo" && !!QZ && !!QZ.order && QZ.step < 4 && QZ.wrong > 0 && !QZ.custom ? m3Cur() : null; return !!pb; }   /* (every Write problem on the step engine: 1.3, 1.4A Graphing, 2.1B, 2.2, 2.4) */
   function taSync() { if (!taAny()) return; var nx = $("qzNext"); nx.hidden = false; nx.disabled = false; nx.textContent = "Try another"; $("qzAgain").hidden = true; }
   function taGo() { up = null; QZ.ta = null; QZ.vf = null; if (retryOn()) pqRetry(); else pqRegen(); }   // (a new problem like it, in its place; the round's others stay done)
   function retryOn() { return mode !== "demo" && mode !== "create" && !QZ.custom && QZ.order && QZ.order.length > 1; }
@@ -16781,9 +16783,24 @@ var ESPIC = {
 
   // ==== The mode ladder: Demo > Sequence > Calculate > Write.  A mode opens once the mode below it is finished in this exercise (a whole demo watched, then one
   // problem finished in Sequence, then one in Calculate), read from the saved Progress, so it survives a reload.  Going down is always allowed; Create is not on the ladder ====
-  function ladOn() { var B = BUILT[act]; return !welcome && !!B && !B.play && !B.solver && !!LEVELS.length; }
+  function ladOn() { var B = BUILT[act]; return !welcome && !!B && !B.play && (!B.solver || svL()) && !!LEVELS.length; }   // (2.4's equation exercises are Progress exercises on the Play Solve engine: they climb the ladder too)
   function ladder() { var B = BUILT[act], ms = B.modesFor ? B.modesFor(lesson) : B.modes || ["demo", "sequence", "calculate", "solo", "create"]; return ms.filter(function (m) { return MORD.indexOf(m) >= 0; }); }
-  function modeFin(m) { return lvDone([LK(), m, 0, "", 1]) || origModeFin(m); }   // (a review question: finished in its original activity counts too)
+  function modeFin(m) { return lvDone([LK(), m, 0, "", 1]) || copyModeFin(m); }
+  // every copy of the exercise on screen (CLAUDE.md, Copies log): the original in each subsection that has it (3-Step Equations: 2.4A and 2.4B) and every review question made from it
+  function copyCtxs() {
+    var it = rev ? BUILT[rev].items[revI] : null, A = it ? it.act : act, l = it ? it.lesson : lesson, sx = it ? !!it.subx : !!subx, out = [];
+    if (!BUILT[A] || BUILT[A].review) return out;
+    var vk = sx ? "s" : String(l), k = A === "1.4D" ? (sx ? 4 : l === 4 ? "g" : l) : l;
+    VIEWS.forEach(function (v) { if (v[1] === A && v[2].indexOf(vk) >= 0 && (rev || v[0] !== view)) out.push({ key: vwKey(v[0]), k: k }); });
+    Object.keys(BUILT).forEach(function (R) { if (!BUILT[R].review) return; BUILT[R].items.forEach(function (o, i) { if (o.act === A && o.lesson === l && !!o.subx === sx && !(rev === R && revI === i)) out.push({ key: BUILT[R].key, k: i }); }); });
+    return out;
+  }
+  // a mode finished in any copy counts as finished here too, so every copy opens at the same starting mode (stars stay with the copy that earned them)
+  function copyModeFin(m) {
+    var keep = prog;
+    try { return copyCtxs().some(function (c) { try { prog = JSON.parse(localStorage.getItem(c.key) || "{}") || {}; } catch (e) { prog = {}; } return lvDone([c.k, m, 0, "", 1]); }); }
+    catch (e) { return false; } finally { prog = keep; }
+  }   // (a review question: finished in its original activity counts too)
   function isTeacher() { try { return !!(window.AN && AN.user && AN.user.teacher); } catch (e) { return false; } }
   // A review question whose exercise was already finished (100%) in its original activity is open in every mode; the review still keeps its own progress
   function origDone(it) {
