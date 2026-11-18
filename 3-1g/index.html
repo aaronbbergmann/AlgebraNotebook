@@ -3,6 +3,7 @@ html.swOff #show { display: none !important; }
 .supp { display: block; font-weight: 400; font-size: 1rem; color: #4B5563; margin: 4px 0 6px; }   /* supplemental text: smaller, unbolded, always just below the question */
 body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
 .c3Eq { display: flex; justify-content: center; align-items: baseline; gap: .1em; font-size: 2.2rem; margin: 18px 0 8px; } .c3T { cursor: grab; padding: 0 .12em; border-radius: 6px; touch-action: none; user-select: none; } .c3T:hover { background: color-mix(in srgb, #7A3FB5 12%, transparent); } .c3G { font-size: 42px; font-family: "LM", "Latin Modern Roman", Georgia, serif; } .c3Is { padding: 0 .3em; }
+.m3Rads { display: flex; gap: 22px; } .m3Rad { display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; padding: 4px 2px; font: inherit; font-size: 1.15rem; color: inherit; cursor: pointer; } .m3RadC { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #4B5563; box-sizing: border-box; display: inline-block; } .m3Rad.sel .m3RadC { border-color: #7A3FB5; background: radial-gradient(circle, #7A3FB5 0 45%, transparent 50%); } .m3Rad.bad .m3RadC { border-color: #C0262D; }
 </style></head><body>
 <!DOCTYPE html>
 <html lang="en">
@@ -13264,7 +13265,7 @@ var ESPIC = {
   // ---- steps.  A step: {id, lab (Solo's short name), fine (only in Demo, Sequence and Calculate), ask, pre (before the box), post (after it), type: num | eq | pick | pts | btn,
   //   ans (a number, or a function of the problem), tol, a & b (an equation), opts (pick), wrong(v) -> message, hint:[two hints], line (for Show work), nums (extra wrong choices)}
   var M3ACT = ["c3mv", "eqc", "tclick", "dsm", "gpt", "yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab", "geq", "grow", "vsub", "vop", "vmv", "vdv"];   // the steps that are answered on the graph
-  function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.csteps && mode === "calculate" ? pb.csteps : pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine : !s.so && !(s.noseq && mode === "sequence"); }) : []; }   // (noseq: a step left out of Sequence)
+  function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.csteps && mode === "calculate" ? pb.csteps : pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine && !s.wno : !s.so && !(s.noseq && mode === "sequence"); }) : []; }   // (noseq: a step left out of Sequence)
   // Circle Back (pb.cb, not Write): questions one at a time; a wrong answer shows the right one, moves on, and that question comes back after all the others
   // until it is answered right once (misses cost no Progress)
   function m3CB() { var pb = m3Cur(); return !!(pb && pb.cb && mode !== "solo"); }
@@ -13493,7 +13494,8 @@ var ESPIC = {
       var t = st.type || "num", bad = W.bad[st.id] ? " bad" : "";
       sig.push(st.id + bad + (t === "pick" ? ":" + W.v[st.id] : ""));
       h += "<div class=\"m3wStep\"><div class=\"wfAsk\">" + m3V(st.ask) + "</div>";
-      if (t === "pick") h += "<div class=\"wfRow m3Opts\">" + st.opts.map(function (o, i) { var on = W.v[st.id] === i; return "<button type=\"button\" class=\"btn wfBtn" + (on ? " sel" : "") + (on ? bad : "") + "\" data-m3w=\"pick\" data-sid=\"" + st.id + "\" data-v=\"" + i + "\" aria-pressed=\"" + on + "\">" + o.t + "</button>"; }).join("") + "</div>";
+      if (t === "pick" && st.radio) h += "<div class=\"wfRow m3Rads\" role=\"radiogroup\">" + st.opts.map(function (o, i) { var on = W.v[st.id] === i; return "<button type=\"button\" role=\"radio\" class=\"m3Rad" + (on ? " sel" : "") + (on ? bad : "") + "\" data-m3w=\"pick\" data-sid=\"" + st.id + "\" data-v=\"" + i + "\" aria-checked=\"" + on + "\"><span class=\"m3RadC\"></span>" + o.t + "</button>"; }).join("") + "</div>";   // (radio buttons: 3.1A, how many solutions)
+      else if (t === "pick") h += "<div class=\"wfRow m3Opts\">" + st.opts.map(function (o, i) { var on = W.v[st.id] === i; return "<button type=\"button\" class=\"btn wfBtn" + (on ? " sel" : "") + (on ? bad : "") + "\" data-m3w=\"pick\" data-sid=\"" + st.id + "\" data-v=\"" + i + "\" aria-pressed=\"" + on + "\">" + o.t + "</button>"; }).join("") + "</div>";
       else if (t === "btn") h += "<div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn\" data-m3w=\"go\" data-sid=\"" + st.id + "\">" + st.btn + "</button></div>";
       else if (t === "num" || t === "eq" || t === "fn") h += "<div class=\"wfRow cg\">" + (st.pre ? "<span>" + st.pre + "</span>" : "") + "<input class=\"m3In" + bad + "\" data-sid=\"" + st.id + "\" value=\"" + m3wQ(W.v[st.id]) + "\" style=\"width:" + (t === "eq" || t === "fn" ? "13" : "8") + "rem\" inputmode=\"" + (t === "eq" || t === "fn" ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"" + m3wQ(st.lab) + "\">" + (st.post ? "<span>" + st.post + "</span>" : "") + "</div>";
       else if (bad) h += "<div class=\"m3wBad\">Not quite yet.</div>";
@@ -15523,7 +15525,7 @@ var ESPIC = {
       var pic = function (lab) { var xa = c2Axis(Math.min(n ? lo : hv - 3, 0) - 2, Math.max(n ? hi : hv + 3, 0) + 2, false), ya = c2Axis(Math.min(k, 0) - 2, Math.max(k, c, 0) + 2, false); return c2Fig({ H: 260, xmin: xa.min, xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t * 2, ty: ya.t * 2, noGrid: 1, alt: "The graph of " + rel.replace(/<[^>]+>/g, ""), curves: [{ fn: F, col: C2P }], pts: lab ? pts : [] }); };
       pb.fig = function (x) { return DSM.fail ? pic(!!(x && x.xi)) : ""; };   // (Desmos is the graph; the drawn one only if Desmos cannot load)
       var opts = m3Sh([{ t: rel, ok: true }, { t: "<i>y</i> = " + c3T(a, b, 0), ok: false, why: "Keep every term: the related function is <span class=\"lm\">" + rel + "</span>." }, { t: "<i>y</i> = " + c3T(-a, -b, -c), ok: false, why: "Keep each sign: the related function is <span class=\"lm\">" + rel + "</span>." }]);
-      var howMany = function (id, ask, what) { return { id: id, lab: what, type: "pick", ask: ask, opts: [0, 1, 2].map(function (v) { return { t: String(v), ok: v === n, why: n === 0 ? "The parabola never reaches the " + c2X + "-axis." : n === 1 ? "The parabola touches the " + c2X + "-axis once, at its vertex." : "The parabola crosses the " + c2X + "-axis twice." }; }), after: function (x) { x.xi = true; }, hint: ["Count where the parabola meets the " + c2X + "-axis.", n + "."], line: n + " " + what + (n === 1 ? "" : "s").replace(/^/, "") }; };
+      var howMany = function (id, ask, what) { return { id: id, lab: "number of " + what + "s", type: "pick", radio: 1, wno: id === "nx" ? 1 : 0, ask: ask, opts: [0, 1, 2].map(function (v) { return { t: String(v), ok: v === n, why: n === 0 ? "The parabola never reaches the " + c2X + "-axis." : n === 1 ? "The parabola touches the " + c2X + "-axis once, at its vertex." : "The parabola crosses the " + c2X + "-axis twice." }; }), after: function (x) { x.xi = true; }, hint: ["Count where the parabola meets the " + c2X + "-axis.", n + "."], line: n + " " + what + (n === 1 ? "" : "s").replace(/^/, "") }; };
       var boxes = function (pre, ask1, ask2, word, pick) {   // the x = boxes: two (either order), one, or none
         if (n === 0) return [];
         if (n === 1) return [{ id: pre + "1", lab: word, ask: ask1, pre: c2X + " =", ans: r1, nums: [-r1, c, r1 + 2].filter(function (v) { return v !== r1; }), wif: function (v) { return v[pick] === 1; }, hint: ["Where does the parabola touch the " + c2X + "-axis?", c2X + " = " + r1 + "."], line: c2X + " = " + r1 }];
@@ -15538,8 +15540,8 @@ var ESPIC = {
         { id: "rel", lab: "related function", type: "pick", ask: "What is the related function?", opts: opts, hint: ["Write it as <span class=\"lm\">" + std + "</span>; the related function is <i>y</i> = the left side.", "<span class=\"lm\">" + rel + "</span>."], line: "related function: <span class=\"lm\">" + rel + "</span>" },
         { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph the related function.", line: "graphed <span class=\"lm\">" + rel + "</span>", hint: ["Type the related function on the first line of Desmos.", "Type " + c3Lx(a, b, c).replace(/\^\{2\}/g, "^2") + "."] },
         howMany("nx", "How many <i>x</i>-intercepts are there?", "x-intercept")
-      ].concat(boxes("xi", "What is the <i>x</i>-intercept?", "What are the <i>x</i>-intercepts?", "x-intercept", "nx"))
-       .concat([howMany("ns", "How many solutions to <span class=\"lm\">" + eq + "</span> are there?", "solution")])
+      ].concat(boxes("xi", "What is the <i>x</i>-intercept?", "What are the <i>x</i>-intercepts?", "x-intercept", "nx").map(function (q) { q.wno = 1; return q; }))
+       .concat([howMany("ns", function () { return mode === "solo" ? "How many solutions are there?" : "How many solutions to <span class=\"lm\">" + eq + "</span> are there?"; }, "solution")])
        .concat(boxes("so", "What is the solution?", "What are the solutions?", "solution", "ns"));
       var ansT = n === 2 ? c2X + " = " + lo + " and " + c2X + " = " + hi : n === 1 ? c2X + " = " + r1 + " (only one solution)" : "no real solutions";
       pb.qwa = { Q: [["<span class=\"lm\">" + eq + "</span>"], [c2X + " = ?"]],
