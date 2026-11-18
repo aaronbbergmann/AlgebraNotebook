@@ -13951,7 +13951,7 @@ var ESPIC = {
     if (e.isTrusted) pgUser(); m3Plot(m3Pos(svg, e.clientX, e.clientY));
   });
   function m3Cue() {
-    if (m3Cur() && m3Cur().vp) return "";   // (2.4A Vertex and a Point: no problem or step count)
+    if (m3Cur() && (m3Cur().vp || (m3Cur().noCueW && mode === "solo"))) return "";   // (2.4A Vertex and a Point: no problem or step count; 3.1A Write: no list of the parts)
     var pb = m3Cur(), L = m3L(), pn = QZ.order.length > 1 && !QZ.custom ? "Problem " + (QZ.pi + 1) + " of " + QZ.order.length : "", all = QZ.step >= 4 || QZ.m3done;
     if (mode === "solo" && pb && pb.grid) return pn + (all ? " <span class=\"cueOk\">✓</span>" : "");   // (Compare, Write: the grid says it all)
     if (m3TA() || m3WB()) return pn + (all ? " <span class=\"cueOk\">✓</span>" : "");
@@ -15537,7 +15537,7 @@ var ESPIC = {
       var L = [{ c: a, d: 2 }], R = [], parts = [{ c: b, d: 1 }, { c: c, d: 0 }].filter(function (q) { return q.c; });
       parts.forEach(function (q) { if (rnd(2)) R.push({ c: -q.c, d: q.d }); else L.push(q); }); if (!R.length) { var mv0 = L.pop(); R.push({ c: -mv0.c, d: mv0.d }); }
       var eq = c3Side(L) + " = " + c3Side(R), std = c3T(a, b, c) + " = 0", rel = "<i>y</i> = " + c3T(a, b, c), n = kind, pb = { kind: 20 };
-      pb.c3 = { L: L, R: R }; pb.ws = c3Ws;
+      pb.c3 = { L: L, R: R }; pb.ws = c3Ws; pb.noCueW = 1;   // (Write: no list of the parts under the graph, and no related function question)
       pb.head = eq; pb.pic = "";
       Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () { return mode === "solo" ? "<span class=\"lm cf\">" + eq + "</span>" : ""; } });   // (Demo, Sequence, Calculate: the draggable equation takes its place)
       pb.tq = "<div class=\"regQ\">Solve by graphing.</div>";
@@ -15559,7 +15559,7 @@ var ESPIC = {
       };
       pb.steps = [
         { id: "mv", fine: 1, lab: "standard form", type: "c3mv", ask: "Move the terms to one side, so the equation equals 0.", demo: c3MvDemo, after: function (x) { x.std = true; }, hint: ["Drag the terms across the = until one side is 0. Each sign changes as it crosses.", "<span class=\"lm\">" + std + "</span>."], line: function (pp, xx) { return "standard form: <span class=\"lm\">" + stdOf(xx) + "</span>"; } },
-        { id: "rel", lab: "related function", type: "pick", ask: "What is the related function?", opts: opts, hint: ["Write it as <span class=\"lm\">" + std + "</span>; the related function is <i>y</i> = the side that is not 0.", "<span class=\"lm\">" + rel + "</span> (or <span class=\"lm\">" + relN + "</span>)."], line: function (pp, xx) { return "related function: <span class=\"lm\">" + relOf(xx) + "</span>"; } },
+        { id: "rel", lab: "related function", type: "pick", wno: 1, ask: "What is the related function?", opts: opts, hint: ["Write it as <span class=\"lm\">" + std + "</span>; the related function is <i>y</i> = the side that is not 0.", "<span class=\"lm\">" + rel + "</span> (or <span class=\"lm\">" + relN + "</span>)."], line: function (pp, xx) { return "related function: <span class=\"lm\">" + relOf(xx) + "</span>"; } },
         { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph the related function.", line: function (pp, xx) { return "graphed <span class=\"lm\">" + relOf(xx) + "</span>"; }, hint: ["Type the related function on the first line of Desmos.", "Type " + c3Lx(a, b, c).replace(/\^\{2\}/g, "^2") + "."] },
         howMany("nx", "How many <i>x</i>-intercepts are there?", "x-intercept")
       ].concat(boxes("xi", "What is the <i>x</i>-intercept?", "What are the <i>x</i>-intercepts?", "x-intercept", "nx").map(function (q) { q.wno = 1; return q; }))
