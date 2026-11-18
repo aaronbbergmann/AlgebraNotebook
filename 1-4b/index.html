@@ -1928,7 +1928,7 @@ html.swOff #show { display: none !important; }
     }
     $("show").hidden = !workAny();
   }
-  function exRender(hot) { exRender0(hot); if (BX && !BX.done && EXP && !EXP.eq) bxRow(); exWork(); }
+  function exRender(hot) { exRender0(hot); if (BX && !BX.done && EXP && !EXP.eq) bxRow(); exWork(); exDnUpd(); }
   function exRender0(hot) {
     $("exBox").classList.toggle("solved", !!locked); if ($("exSoloRt")) $("exSoloRt").hidden = !(EXP && EXP.rad && !EXP.eq); var bxk = !!(BUILT[act] && BUILT[act].solver && EXP && !EXP.rad && (svL() ? lesson === 6 : JSON.stringify(EXP).indexOf('"b":') >= 0 || /x\^2/.test(JSON.stringify(EXP)))); $("exSoloX2").hidden = !(bxk && mode === "solo"); $("askX2").hidden = !(bxk && mode === "calculate");   // (2.4A Box Method: an x² key wherever an answer is typed)   // (a square root to simplify: a √ key beside the Write box)
     if (!EXP) return;
@@ -2141,6 +2141,7 @@ html.swOff #show { display: none !important; }
   function exDone(its) { return EXP.rad ? !its.some(rdLeft) : EXP.grp && exProd(its) ? true : EXP.fac ? facDone(its) : exFin(its); }
   function exEnd() {
     locked = true; exRender(); closeAsk(false);
+    if (EXONE) { exOneEnd(); return; }   // (Demo next step reached the end: no credit, and the work goes back)
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note((EXP.fac || (EXP.grp && exProd(EXP.items)) ? "Fully factored: " : "Fully simplified: ") + exSay(EXP.items) + ".");
     if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(EXP.fac || (EXP.grp && exProd(EXP.items)) ? "Fully factored!" : "Fully simplified!"); solverFinish(); }
     else { tally(); nxShow(); }
@@ -2303,6 +2304,7 @@ html.swOff #show { display: none !important; }
   }
   function exDragDemo(sel, run, after, key) { var has = $("exRow").querySelector(sel + " > .exM"); exMoveDemo(has ? sel + " > .exM" : '.exNeg[data-for="' + key + '"]', sel + " > .exG", run, after); }   // the number in front of the parentheses onto them
   function exDemoStep(ms) {
+    if (EXONE && EXONE.n++ >= 1) { exOneEnd(); return; }   // (Demo next step: one step only)
     if (BX) { bxDemoTick(ms); return; }   // (the box being filled in)
     if (EXP && EXP.eq) { eqDemoStep(ms); return; }
     if (EXP && EXP.grp) { grDemoStep(ms); return; }
@@ -5950,8 +5952,8 @@ html.swOff #show { display: none !important; }
   BUILT["2.4"].modesFor = function (l) { return l === 4 ? ["demo", "sequence", "solo"] : ["demo", "sequence", "calculate", "solo"]; };   // (2.4B Regression: no Calculate mode)
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "calculate"); });
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[0] === 4 && l[1] === "solo" ? (l[4] === 2 ? [4, "solo", 100, "Write Mode, 2nd round", 2] : [4, "solo", 70, "Write Mode"]) : l; });   // (2.4B Regression: two rounds of Write, not three)
-  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 8 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[0] === 8 && l[1] === "solo" ? (l[4] === 2 ? [8, "solo", 100, "Write Mode, 2nd round", 2] : [8, "solo", 70, "Write Mode"]) : l; });   // (2.4B Distributing: two rounds of Write)
-  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !((l[0] <= 2 || (l[0] >= 5 && l[0] <= 7)) && l[4] > 1); }).map(function (l) { return (l[0] <= 2 || (l[0] >= 5 && l[0] <= 7)) && l[1] === "solo" ? [l[0], "solo", 100, "Write Mode"] : l; });   // (exercises 5 to 7, in the format of Play Solve: one round of Write too)
+  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] >= 5 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[0] >= 5 && l[1] === "solo" ? (l[4] === 2 ? [l[0], "solo", 100, "Write Mode, 2nd round", 2] : [l[0], "solo", 70, "Write Mode"]) : l; });   // (the equation and expression exercises, 3-Step Equations, Box Method, Square Roots, Distributing: two rounds of Write)
+  BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] <= 2 && l[4] > 1); }).map(function (l) { return l[0] <= 2 && l[1] === "solo" ? [l[0], "solo", 100, "Write Mode"] : l; });   // (2.4A Vertex & Point, Intercepts: one round of Write)
   // 2.4A exercises 5 to 7 run on Play Solve's pane (3-step linear equations, multiplying binomials with the box, simplifying square roots): while one of them is open
   // the activity is a solver, not a quiz, so everything that asks BUILT[act].solver or .quiz follows the exercise
   Object.defineProperty(BUILT["2.4"], "quiz", { get: function () { return !svL(); }, configurable: true });
@@ -6046,7 +6048,8 @@ html.swOff #show { display: none !important; }
     var ks = VW[view].ls.map(function (k) { return act === "1.4D" ? (k === "s" ? 4 : k === "4" ? "g" : +k) : +k; });
     if (act !== "1.4D") return BUILT[act].levels.filter(function (l) { return ks.indexOf(l[0]) >= 0; });
     // 1.4 split into four activities: each exercise keeps its modes and earns its own 0-100% (Graphing's levels as they were; the others on the same pattern)
-    var out = []; ks.forEach(function (k) { [["demo", 10, "Demo Mode"], ["sequence", 25, "Sequence Mode"], ["calculate", 40, "Calculate Mode"], ["solo", 55, "Write Mode"], ["solo", 80, "Write Mode, 2nd round", 2], ["solo", 100, "Write Mode, 3rd round", 3]].forEach(function (x) { out.push([k].concat(x)); }); });
+    var out = []; ks.forEach(function (k) { (k === "g" ? [["demo", 10, "Demo Mode"], ["sequence", 25, "Sequence Mode"], ["calculate", 40, "Calculate Mode"], ["solo", 55, "Write Mode"], ["solo", 80, "Write Mode, 2nd round", 2], ["solo", 100, "Write Mode, 3rd round", 3]]
+      : [["demo", 10, "Demo Mode"], ["sequence", 25, "Sequence Mode"], ["calculate", 40, "Calculate Mode"], ["solo", 70, "Write Mode"], ["solo", 100, "Write Mode, 2nd round", 2]]).forEach(function (x) {   /* (the equation exercises, One Variable, Substitution, 2x2 and 3x3: two rounds of Write) */ out.push([k].concat(x)); }); });
     return out;
   }
   function progKey() { return rev ? BUILT[rev].key : view ? vwKey(view) : BUILT[act].key; }
@@ -6189,11 +6192,29 @@ html.swOff #show { display: none !important; }
   }
   // ---- "Demo next step" (Progress activities, in place of Hint): the demo performs only the student's next step, then puts the work back ----
   var DNX = false, pgOne = null, DN = null, DNH = 0;   // DNH: how many steps there were before "Demo next step" played one
-  function exDn() { return !!(BUILT[act] && BUILT[act].solver && EXP && EXP.eq && $("exBox") && !$("exBox").hidden && (mode === "sequence" || mode === "calculate")); }   // Play Solve equations: Demo next step
-  function dnOn() { return mode !== "demo" && mode !== "solo" && mode !== "create" && !!BUILT[act] && (!!BUILT[act].sub || (quiz() && !est()) || exDn()); }
+  function exDn() { return !!(BUILT[act] && BUILT[act].solver && EXP && $("exBox") && !$("exBox").hidden && (mode === "sequence" || mode === "calculate")); }   // Play Solve equations: Demo next step
+  function dnOn() { return mode !== "demo" && mode !== "solo" && mode !== "create" && !!BUILT[act] && (!!BUILT[act].sub || quiz() || exDn() || (!!BUILT[act].solver && $("exBox").hidden)); }   // (Demo next step in place of Hint in every Sequence and Calculate)
   function exDnUpd() { if (!exDn()) return; var h = $("hint"); h.hidden = !!locked; h.textContent = "Demo next step"; h.disabled = DNX; }
+  // Demo next step on an expression (Box Method, Distributing, Square Roots, Play Solve's expressions): the demo itself plays one step with the hand,
+  // which sits a moment, then the work is put back.  EXONE counts the demo's steps; nothing is awarded while it runs
+  var EXONE = null;
+  function exOneStart() {
+    var h = $("hint"); DNX = true; h.disabled = true;
+    EXONE = { n: 0, h0: hist.length, m0: mode, g0: MS.gen, ended: false }; mode = EXP.rad ? "demo" : "sequence";   // (played as the Demo plays it: Calculate would ask for the arithmetic, and a square root in Sequence would open the factor wheel)
+    DM4.run = true; DM4.paused = false; exDemoStep(150);
+  }
+  function exOneEnd() {
+    var o = EXONE; if (!o || o.ended) return; o.ended = true; clearTimeout(DM4.t); DM4.run = false; DM4.paused = false;
+    setTimeout(function () {
+      handHide(); mode = o.m0; EXONE = null; DNX = false; $("hint").disabled = false;
+      if (o.g0 !== MS.gen || !EXP) return;   // (the student moved on meanwhile)
+      if (BX) distHide(); while (hist.length > o.h0) exUndo(); locked = false; closeAsk(false); exRender(); updUndo(); note("Your turn.");
+    }, 1500);
+  }
   function exDemoNext() {   // play the student's next step, let it sit a moment, then put the work back
-    if (locked || busy || EXP.ask || DNX) return; if (BX) { note("Your turn: " + (BX.ready ? "work out each box inside." : bxHow())); return; } var st = null; try { st = eqNextStep(); } catch (e) {}
+    if (locked || busy || EXP.ask || DNX) return; if (BX) { note("Your turn: " + (BX.ready ? "work out each box inside." : bxHow())); return; }
+    if (!EXP.eq) { exOneStart(); return; }
+    var st = null; try { st = eqNextStep(); } catch (e) {}
     if (!st) { note("Nothing more to demonstrate here."); return; }
     if (!st.run) { note("Next: " + (st.cap || "keep going.")); return; }
     var h0 = hist.length, m0 = mode, g0 = MS.gen; DNX = true; $("hint").disabled = true; if (mode === "calculate") mode = "sequence";
@@ -6215,7 +6236,7 @@ html.swOff #show { display: none !important; }
   }
   function demoNext() {
     $("hint").blur(); if (exDn()) { exDemoNext(); return; }
-    if (BUILT[act].sub && !quiz()) {   // the equation pane: play the next step, wait, then undo it
+    if ((BUILT[act].sub || (BUILT[act].solver && $("exBox").hidden)) && !quiz()) {   // the equation pane (1.4, and Play Solve's first levels): play the next step, wait, then undo it
       if (busy || calc || locked || DNX) return;
       peekNext(); if (!pend) return;
       var h0 = hist.length, m0 = mode, g0 = MS.gen; DNX = true; DNH = h0; $("hint").disabled = true; if (mode === "calculate") mode = "sequence";   // (Calculate would ask the student to type the step)
@@ -16633,6 +16654,11 @@ var ESPIC = {
           handGo(ctr(b), 650); pgWait(850, function () { handTap(); pgWait(300, function () { wfSimplify(); n(); }); });
         });
         return [function (n) { cap("Everything is done."); n(); }];
+      }
+      if (est()) {   // 1.1B Estimate: one part at a time: the table, then the regression, then the estimate
+        var tOK = estTableOK(), mOK = estModelOK();
+        if (steps.length < 6) return tOK && mOK ? steps.slice(-1) : steps.slice(0, 1);   // (in Desmos: the table and the regression are one step)
+        return !tOK ? steps.slice(0, 3) : !mOK ? steps.slice(3, 6) : steps.slice(6);
       }
       var R = TB.rows(), sym = pqFam !== 1, row = -1, i;
       for (i = 0; i < R.length; i++) if (!R[i].done) { row = i; break; }
