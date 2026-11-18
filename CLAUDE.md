@@ -26,3 +26,29 @@ Show work fills in as the work is done, and a finished problem shows all of it.
 Every activity page (`1-1a/index.html` … `2-4b/index.html`, `playsolve/`, `playgraph/`, `playdata/`, `revq2/`, `revt1/`) is the same file. The root `index.html` differs from them only in its icon paths (no `../`).
 
 Make a change in one copy, then copy it to the others. Apply the same patch to the root `index.html`.
+
+## Copies log
+
+An exercise that lives in more than one place is listed here. A change to one copy is made to every copy. Starting mode is shared between copies; stars are not.
+
+| Exercise | Original | Copies |
+|---|---|---|
+| Memorizing Parents | 1.1A (act 1.1, lesson 1) | RevT1 Q1 |
+| Graphing and Describing Translations | 1.1A (1.1, lesson 2) | RevT1 Q3; Play Graph |
+| Estimating a Value from a Graph | 1.1B (1.1, lesson 3) | Play Data |
+| Combining Transformations | 1.2C (1.2, lesson 4) | RevT1 Q4 |
+| Equation from a Graph | 1.3B (1.3, lesson 1) | RevT1 Q5 |
+| Graphing (systems; word problem) | 1.4A (1.4D, lesson 4) | RevT1 Q6 Graphing, Q8 Word Problem |
+| One Variable | 1.4B (1.4D, lesson 1) | Play Solve |
+| Substitution | 1.4B (1.4D, lesson 2, subx) | RevT1 Q6 Substitution |
+| 2x2 Systems (solutions, elimination) | 1.4C (1.4D, lesson 2) | RevT1 Q2, Q6 Elimination |
+| 3x3 Systems | 1.4D (1.4D, lesson 3) | RevT1 Q7 |
+| Transformations with a and h, k | 2.1A (2.1) | Play Graph |
+| Graphing Vertex Form | 2.2A (2.2, lesson 1) | RevQ2 Q3 |
+| Graphing Standard Form | 2.2A (2.2, lesson 2) | RevQ2 Q1 |
+| Minimum and Maximum Values | 2.2C (2.2, lesson 3) | RevQ2 Q2 |
+| Characteristics of a Parabola | 2.2C (2.2, lesson 12) | RevQ2 Q4 |
+| Graphing Intercept Form | 2.2C (2.2, lesson 4) | RevQ2 Q5 |
+| Comparing Different Forms | 2.2C (2.2, lesson 5) | RevQ2 Q6 |
+| 3-Step Equations | 2.4A (2.4, lesson 5) | 2.4B; Play Solve |
+| Box Method, Distributing, Square Roots | 2.4A/2.4B (2.4, lessons 6, 8, 7) | Play Solve |
