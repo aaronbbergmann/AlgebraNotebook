@@ -13307,14 +13307,17 @@ var ESPIC = {
       else if (enter && String(el.value).trim()) m3Bad(el, "Not quite. Look at the slope you found.");
       return;
     }
-    var r = m3Ok(st, el.value); if (r.ok) { m3Accept(st, r.show); return; }
-    if (enter && String(el.value).trim()) m3Bad(el, r.msg);
+    var raw = st.pair ? [].map.call(el.parentNode.querySelectorAll(".m3In"), function (q) { return q.value; }).join("|") : el.value;   // (a paired step: both boxes)
+    if (st.pair && !enter && raw.split("|").some(function (v) { return !String(v).trim(); })) return;
+    var r = m3Ok(st, raw); if (r.ok) { m3Accept(st, r.show); return; }
+    if (enter && String(raw).replace(/\|/g, "").trim()) m3Bad(el, r.msg);
   }
   // Sequence: the answer is chosen from buttons
   function m3Opts(st) {
     var key = QZ.pi + ":" + QZ.m3i; if (QZ.m3o && QZ.m3o.key === key) return QZ.m3o.list;
     var L = [];
-    if (st.type === "fn") L = st.fo.map(function (t, i) { return { t: t, ok: !i }; });
+    if (st.pair) { var P = st.pair, sx = function (a, b) { return st.pre + " " + m3F(a) + " and " + st.pre + " " + m3F(b); }; L = [{ t: sx(P[0], P[1]), ok: true }]; [[-P[0], -P[1]], [P[0], -P[1]], [-P[0], P[1]], [P[0] + 1, P[1] + 1]].forEach(function (q) { var t0 = sx(Math.min(q[0], q[1]), Math.max(q[0], q[1])); if (!L.some(function (o) { return o.t === t0; }) && L.length < 4) L.push({ t: t0, ok: false }); }); }
+    else if (st.type === "fn") L = st.fo.map(function (t, i) { return { t: t, ok: !i }; });
     else if (st.type === "eq") {
       var a = m3V(st.a), b = m3V(st.b), c = [m3Eq(a, b), m3Eq(b, a), m3Eq(a, -b), m3Eq(-a, b), m3Eq(a, b + 1)];
       L = [{ t: c[0], ok: true }]; c.slice(1).forEach(function (t) { if (!L.some(function (o) { return o.t === t; }) && L.length < 4) L.push({ t: t, ok: false }); });
@@ -13461,6 +13464,7 @@ var ESPIC = {
     else if (t === "btn") h += "<div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn\" data-m3=\"go\">" + st.btn + "</button></div>";
     else if (t === "pts") h += "";
     else if (mode === "sequence") h += "<div class=\"wfRow m3Opts\">" + m3Opts(st).map(function (o, i) { return "<button type=\"button\" class=\"btn wfBtn lm\" data-m3=\"opt\" data-v=\"" + i + "\">" + o.t + "</button>"; }).join("") + "</div>";
+    else if (st.pair) h += "<div class=\"wfRow cg\">" + (st.pair ? "<span>" + st.pre + "</span><input id=\"m3In\" class=\"m3In\" data-k=\"0\" data-key=\"" + key + "\" style=\"width:6rem\" inputmode=\"decimal\" autocomplete=\"off\" aria-label=\"First answer\"><span style=\"margin-left:1.2em\">" + st.pre + "</span><input id=\"m3In2\" class=\"m3In\" data-k=\"1\" data-key=\"" + key + "\" style=\"width:6rem\" inputmode=\"decimal\" autocomplete=\"off\" aria-label=\"Second answer\">" : "") + "</div>";   // (two boxes at once: 3.1A's two x-intercepts)
     else h += "<div class=\"wfRow cg\">" + (st.pre ? "<span>" + st.pre + "</span>" : "") + "<input id=\"m3In\" class=\"m3In\" data-key=\"" + key + "\" style=\"width:" + (t === "eq" || t === "fn" || t === "vfrm" ? "13" : "8") + "rem\" inputmode=\"" + (t === "eq" || t === "fn" || t === "vfrm" ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Your answer\">" + (st.post ? "<span>" + st.post + "</span>" : "") + "</div>";
     el.innerHTML = h; el.hidden = false; if (gl()) glFocus();
     var inp = el.querySelector(".m3In"); if (inp) { if (kk === key && kv) inp.value = kv; if (mode !== "demo") inp.focus(); if (QZ.arrowAt !== QZ.m3i && !dsmOn()) { QZ.arrowAt = QZ.m3i; askArrow(true, inp.parentNode); } } else askArrow(false);
@@ -13497,6 +13501,7 @@ var ESPIC = {
       if (t === "pick" && st.radio) h += "<div class=\"wfRow m3Rads\" role=\"radiogroup\">" + st.opts.map(function (o, i) { var on = W.v[st.id] === i; return "<button type=\"button\" role=\"radio\" class=\"m3Rad" + (on ? " sel" : "") + (on ? bad : "") + "\" data-m3w=\"pick\" data-sid=\"" + st.id + "\" data-v=\"" + i + "\" aria-checked=\"" + on + "\"><span class=\"m3RadC\"></span>" + o.t + "</button>"; }).join("") + "</div>";   // (radio buttons: 3.1A, how many solutions)
       else if (t === "pick") h += "<div class=\"wfRow m3Opts\">" + st.opts.map(function (o, i) { var on = W.v[st.id] === i; return "<button type=\"button\" class=\"btn wfBtn" + (on ? " sel" : "") + (on ? bad : "") + "\" data-m3w=\"pick\" data-sid=\"" + st.id + "\" data-v=\"" + i + "\" aria-pressed=\"" + on + "\">" + o.t + "</button>"; }).join("") + "</div>";
       else if (t === "btn") h += "<div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn\" data-m3w=\"go\" data-sid=\"" + st.id + "\">" + st.btn + "</button></div>";
+      else if (st.pair) { var pv = String(W.v[st.id] || "|").split("|"); h += "<div class=\"wfRow cg\">" + [0, 1].map(function (k) { return "<span" + (k ? " style=\"margin-left:1.2em\"" : "") + ">" + st.pre + "</span><input class=\"m3In" + bad + "\" data-sid=\"" + st.id + "\" data-k=\"" + k + "\" value=\"" + m3wQ(pv[k] || "") + "\" style=\"width:6rem\" inputmode=\"decimal\" autocomplete=\"off\">"; }).join("") + "</div>"; }
       else if (t === "num" || t === "eq" || t === "fn") h += "<div class=\"wfRow cg\">" + (st.pre ? "<span>" + st.pre + "</span>" : "") + "<input class=\"m3In" + bad + "\" data-sid=\"" + st.id + "\" value=\"" + m3wQ(W.v[st.id]) + "\" style=\"width:" + (t === "eq" || t === "fn" ? "13" : "8") + "rem\" inputmode=\"" + (t === "eq" || t === "fn" ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"" + m3wQ(st.lab) + "\">" + (st.post ? "<span>" + st.post + "</span>" : "") + "</div>";
       else if (bad) h += "<div class=\"m3wBad\">Not quite yet.</div>";
       h += "</div>";
@@ -13625,7 +13630,7 @@ var ESPIC = {
     if (bad.length) { QZ.wrong++; if (vpWrTa()) { if (QZ.ww) QZ.ww.fin = true; drawPlay(); m3Redraw(); pqPanel(); var ansW = m3L().filter(function (q) { return !QZ.m3w.ok[q.id] && m3AnsTx(q); }).map(function (q) { return m3wLab(q) + ": " + m3AnsTx(q); }); pqMsg(m3Plain("Not quite." + (ansW.length ? " " + ansW.join("; ") + "." : "") + " Show work has every step; Try Another gives a new problem.")); return; } drawPlay(); m3Redraw(); var ansM = c2cOn() ? m3L().filter(function (q) { return !QZ.m3w.ok[q.id] && m3AnsTx(q); }).map(function (q) { return m3wLab(q) + ": " + m3AnsTx(q); }) : []; pqMsg(m3Plain("Not quite. Check " + wsList(bad) + ", then press Submit again." + (ansM.length ? " The answers: " + ansM.join("; ") + "." : ""))); return; }
     pqMsg(""); drawPlay(); pqEval();
   }
-  $("wfSteps").addEventListener("input", function (e) { if (m3() && e.target.classList.contains("m3In")) { if (m3wOn()) { QZ.m3w.v[e.target.dataset.sid] = e.target.value; return; } m3Try(e.target, false); } });
+  $("wfSteps").addEventListener("input", function (e) { if (m3() && e.target.classList.contains("m3In")) { if (m3wOn()) { var sid = e.target.dataset.sid; if (e.target.dataset.k != null) { var pv = String(QZ.m3w.v[sid] || "|").split("|"); pv[+e.target.dataset.k] = e.target.value; QZ.m3w.v[sid] = pv.join("|"); } else QZ.m3w.v[sid] = e.target.value; return; } m3Try(e.target, false); } });
   $("wfSteps").addEventListener("keydown", function (e) {
     if (e.key === "Enter" && m3() && e.target.classList.contains("m3In")) {
       e.preventDefault();
@@ -15362,7 +15367,7 @@ var ESPIC = {
   function c2cOn() { return pq() && act === "2.2" && (lesson === 3 || lesson === 4 || lesson === 5 || lesson === 12); }
   function ansAdd(msg, a) { msg = msg || "Not quite."; if (!(c2cOn() || (pq() && ivL()) || vfnTA() || (pq() && (mode === "sequence" || mode === "calculate"))) || a == null || a === "") return msg;   /* (an error in Sequence or Calculate shows the right answer with Try another) */ return msg.replace(/\s*Try again\.?\s*$/, "") + " The answer is " + String(a).replace(/\.\s*$/, "") + "."; }
   function m3AnsTx(st) {
-    if (!st) return ""; var t = st.type || "num";
+    if (!st) return ""; var t = st.type || "num"; if (st.pair) return c2X.replace(/<[^>]+>/g, "") + " = " + m3F(st.pair[0]) + " and " + c2X.replace(/<[^>]+>/g, "") + " = " + m3F(st.pair[1]);
     try {
       if (t === "pick") { var o = (st.opts || []).filter(function (q) { return q.ok; })[0]; return o ? String(o.t).replace(/<\/?[A-Za-z][^>]*>/g, "").replace(/\.\s*$/, "") : ""; }
       if (t === "num") { var v = m3V(st.ans); return v == null || !isFinite(v) ? "" : c2T(v, 6).replace(/-/g, "−") + (st.post ? " " + String(st.post).replace(/<[^>]+>/g, "") : ""); }
@@ -15469,8 +15474,8 @@ var ESPIC = {
   function c3Side(L) { return L.length ? L.map(function (t, i) { return c3Tm(t, !i); }).join("") : "0"; }
   function c3MvSt() { var pb = m3Cur(), x = QZ.m3x || {}; if (!x.c3L) { x.c3L = JSON.parse(JSON.stringify(pb.c3.L)); x.c3R = JSON.parse(JSON.stringify(pb.c3.R)); } return x; }
   function c3Ws() {
-    var st = m3Step(); if (mode === "solo" || !st || st.type !== "c3mv" || QZ.step >= 4) return "";
-    var x = c3MvSt(), sp = function (L, side) { return L.length ? L.map(function (t, i) { return "<span class=\"c3T\" data-c3s=\"" + side + "\" data-c3i=\"" + i + "\">" + c3Tm(t, !i) + "</span>"; }).join("") : "<span class=\"c3Z\">0</span>"; };
+    if (mode === "solo") return "";   // (Demo, Sequence, Calculate: the equation is shown only here, always; its terms can be dragged until it equals 0)
+    var st = m3Step(), live = !!st && st.type === "c3mv" && QZ.step < 4, x = c3MvSt(), sp = function (L, side) { return L.length ? L.map(function (t, i) { return live ? "<span class=\"c3T\" data-c3s=\"" + side + "\" data-c3i=\"" + i + "\">" + c3Tm(t, !i) + "</span>" : "<span>" + c3Tm(t, !i) + "</span>"; }).join("") : "<span class=\"c3Z\">0</span>"; };
     return "<div class=\"c3Eq lm\" id=\"c3Eq\" style=\"font-size:42px\"><span class=\"c3S\" data-c3side=\"L\">" + sp(x.c3L, "L") + "</span><span class=\"c3Is\"> = </span><span class=\"c3S\" data-c3side=\"R\">" + sp(x.c3R, "R") + "</span></div>";
   }
   function c3Move(side, i) {   // the term goes to the other side, its sign changed; the x² side keeps its terms in order (x², x, the number)
@@ -15518,7 +15523,7 @@ var ESPIC = {
       var eq = c3Side(L) + " = " + c3Side(R), std = c3T(a, b, c) + " = 0", rel = "<i>y</i> = " + c3T(a, b, c), n = kind, pb = { kind: 20 };
       pb.c3 = { L: L, R: R }; pb.ws = c3Ws;
       pb.head = eq; pb.pic = "";
-      pb.story = "<span class=\"lm cf\">" + eq + "</span>";
+      Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () { return mode === "solo" ? "<span class=\"lm cf\">" + eq + "</span>" : ""; } });   // (Demo, Sequence, Calculate: the draggable equation takes its place)
       pb.tq = "<div class=\"regQ\">Solve by graphing.</div>";
       pb.dsm = { one: 1, F1: F, D1: 6, xmax: 10, ymax: Math.max(10, Math.abs(k) * 1.3), l1: c3Lx(a, b, c) };
       var pts = n === 2 ? [{ x: lo, y: 0, col: C2P, lab: "(" + lo + ", 0)", dy: -8 }, { x: hi, y: 0, col: C2P, lab: "(" + hi + ", 0)", dy: hi - lo <= 4 ? 18 : -8 }] : n === 1 ? [{ x: r1, y: 0, col: C2P, lab: "(" + r1 + ", 0)", dy: a > 0 ? 16 : -8 }] : [];
@@ -15529,11 +15534,9 @@ var ESPIC = {
       var boxes = function (pre, ask1, ask2, word, pick) {   // the x = boxes: two (either order), one, or none
         if (n === 0) return [];
         if (n === 1) return [{ id: pre + "1", lab: word, ask: ask1, pre: c2X + " =", ans: r1, nums: [-r1, c, r1 + 2].filter(function (v) { return v !== r1; }), wif: function (v) { return v[pick] === 1; }, hint: ["Where does the parabola touch the " + c2X + "-axis?", c2X + " = " + r1 + "."], line: c2X + " = " + r1 }];
-        var st1 = { id: pre + "1", lab: word, ask: ask2, pre: c2X + " =", ans: lo, nums: [-lo, -hi, c].filter(function (v) { return v !== lo && v !== hi; }), wif: function (v) { return v[pick] === 2; },
-          okf: function (raw) { var v = m3Num(raw); if (!isNaN(v) && (Math.abs(v - lo) < 1e-9 || Math.abs(v - hi) < 1e-9)) { QZ.m3x[pre + "f"] = v; return { ok: true, show: c2X + " = " + c2F(v) }; } return null; }, hint: ["The parabola crosses the " + c2X + "-axis twice.", c2X + " = " + lo + " and " + c2X + " = " + hi + "."], line: function (pp, xx) { return c2X + " = " + c2F(xx && xx[pre + "f"] != null ? xx[pre + "f"] : lo); } };
-        var st2 = { id: pre + "2", lab: word, ask: function () { return mode === "solo" ? "" : ask2; }, pre: c2X + " =", ans: function (pp, xx) { return xx && xx[pre + "f"] === hi ? lo : hi; }, nums: [-lo, -hi, c].filter(function (v) { return v !== lo && v !== hi; }), wif: function (v) { return v[pick] === 2; },
-          hint: ["And the other one.", c2X + " = " + lo + " and " + c2X + " = " + hi + "."], line: function (pp, xx) { return c2X + " = " + c2F(xx && xx[pre + "f"] === hi ? lo : hi); } };
-        return [st1, st2];
+        return [{ id: pre + "1", lab: word + "s", ask: ask2, pre: c2X + " =", ans: lo, pair: [lo, hi], wif: function (v) { return v[pick] === 2; },
+          okf: function (raw) { var v = String(raw).split("|").map(m3Num); if (v.length < 2 || v.some(isNaN)) return { ok: false, msg: "Type both values." }; var a0 = Math.min(v[0], v[1]), b0 = Math.max(v[0], v[1]); if (Math.abs(a0 - lo) < 1e-9 && Math.abs(b0 - hi) < 1e-9) return { ok: true, show: c2X + " = " + m3F(v[0]) + " and " + c2X + " = " + m3F(v[1]) }; return { ok: false, msg: "Not quite." }; },
+          hint: ["The parabola crosses the " + c2X + "-axis twice.", c2X + " = " + lo + " and " + c2X + " = " + hi + "."], line: c2X + " = " + lo + " and " + c2X + " = " + hi }];   // (both x = boxes at once, either order)
       };
       pb.steps = [
         { id: "mv", fine: 1, lab: "standard form", type: "c3mv", ask: "Move the terms to one side, so the equation equals 0.", demo: c3MvDemo, after: function (x) { x.std = true; }, hint: ["Drag each term on the right across the =. Its sign changes.", "<span class=\"lm\">" + std + "</span>."], line: "standard form: <span class=\"lm\">" + std + "</span>" },
@@ -16790,6 +16793,7 @@ var ESPIC = {
           if (!d1) { n(); return; } pgWait(1800, function () { m3Svg1(d1, d2n); }); return;
         }
         var inp = $("m3In");
+        if (inp && st.pair && $("m3In2")) { pgWait(1400, function () { typeBox("m3In", String(st.pair[0]).replace(/−/g, "-"), function () { typeBox("m3In2", String(st.pair[1]).replace(/−/g, "-"), function () { pgWait(600, n); }); }); }); return; }   // (both boxes of a paired step)
         if (inp) { var txt = (t === "fn" || t === "vfrm" ? st.typed : t === "eq" ? m3Eq(m3V(st.a), m3V(st.b)) : c2T(m3V(st.ans), 6)).replace(/−/g, "-"); pgWait(1400, function () { typeBox("m3In", txt, function () { pgWait(600, n); }); }); return; }
         var list = t === "pick" ? st.opts : t === "btn" ? [] : m3Opts(st), vi = -1; list.forEach(function (o, i) { if (o.ok) vi = i; });
         var b = t === "btn" ? document.querySelector("#wfSteps [data-m3=go]") : document.querySelector("#wfSteps [data-v=\"" + vi + "\"], #pgQt .m3QC [data-v=\"" + vi + "\"]");
