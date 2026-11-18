@@ -23,7 +23,7 @@ Show work fills in as the work is done, and a finished problem shows all of it.
 
 ## Copies of the page
 
-Every activity page (`1-1a/index.html` … `2-4b/index.html`, `playsolve/`, `playgraph/`, `playdata/`, `revq2/`, `revt1/`) is the same file. The root `index.html` differs from them only in its icon paths (no `../`).
+Every activity page (`1-1a/index.html` … `2-4b/index.html`, `3-1a/` … `3-4b/`, `playsolve/`, `playgraph/`, `playdata/`, `revq2/`, `revt1/`) is the same file. The root `index.html` differs from them only in its icon paths (no `../`).
 
 Make a change in one copy, then copy it to the others. Apply the same patch to the root `index.html`.
 
@@ -51,4 +51,5 @@ An exercise that lives in more than one place is listed here. A change to one co
 | Graphing Intercept Form | 2.2C (2.2, lesson 4) | RevQ2 Q5 |
 | Comparing Different Forms | 2.2C (2.2, lesson 5) | RevQ2 Q6 |
 | 3-Step Equations | 2.4A (2.4, lesson 5) | 2.4B; Play Solve |
-| Box Method, Distributing, Square Roots | 2.4A/2.4B (2.4, lessons 6, 8, 7) | Play Solve |
+| Box Method, Distributing, Square Roots | 2.4A/2.4B (2.4, lessons 6, 8, 7) | Play Solve; 3.1B Simplify Roots and 3.1D Box Method (3.1, lessons 2 and 5) use the same generators |
+| Chapter 3 equation exercises (3.1B, 3.1D–G, 3.3A, 3.4A) | Play Solve levels (sq, sqg, zp, grp, fm, cs, qu; expression levels 5, 13) | C3SV in the page maps each 3.1 lesson to its levels |

@@ -2485,7 +2485,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
   function exPw(i, on) { if (locked || busy || EXP.ask) return; var t = EXP.items[i]; if (!t || !zpSquare(t)) return; var n = JSON.parse(JSON.stringify(EXP.items)); n[i].pw = !!on; var ins = exSay(t.items); exSet(n, on ? "(" + ins + ")(" + ins + ") is (" + ins + ")²: the same factor twice." : "(" + ins + ")² means (" + ins + ")(" + ins + ")."); }
   function eqSqgGen() {   // a variant: (x + 3)^2 = 25, (x - 4)^2 = 9, (2x + 1)^2 = 49
     for (;;) {
-      var a = rnd(3) ? 1 : 2, r = 1 + rnd(7), x1 = nz(6), b = r - a * x1; if (!b) continue;
+      var a = rnd(3) ? 1 : 2, r = 2 + rnd(6), x1 = nz(6), b = r - a * x1; if (!b) continue;   /* (r from 2: √1 is never simplified, so (x + h)² = 1 left the demo stuck at ±√1) */
       var items = [{ k: "x", v: "x", n: mk(a) }, { k: "c", n: mk(b) }], g = { k: "g", m: mk(1), items: items, b: JSON.parse(JSON.stringify(items)), pw: true };
       return rnd(4) ? { L: [g], R: [{ k: "c", n: mk(r * r) }] } : { L: [{ k: "c", n: mk(r * r) }], R: [g] };
     }
@@ -4726,9 +4726,33 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     return Math.max(0, Math.min(4, g ? (fr ? 4 : ng ? 3 : 2) : ng ? 1 : 0));
   }
   // ---- 2.4A exercises 5 to 7, in the format of Play Solve: one kind of problem each, no Level Up ----
-  function svL() { return act === "2.4" && lesson >= 5; }
+  // Chapter 3 exercises on the Play Solve engine: each draws its problems from Play Solve's own levels (ladder rungs for equations, EXLAD levels for expressions)
+  var C3SV = {
+    2: { rad: 1 },                                                                            // 3.1B simplify a square root: √200 = 10√2
+    3: { eq: [function (r) { return r.sq === 1; }, function (r) { return r.sq === 2; }, function (r) { return r.sq === 3; }, function (r) { return r.sqg === 1; }] },   // 3.1B x² = 32, 5x² = 80, z² − 7 = 29, (n − 4)² = 5
+    5: { box: 1 },                                                                            // 3.1D multiply with the box: 4x(x + 2), (x + 1)(x − 5)
+    6: { ex: [5, 13] },                                                                       // 3.1D factor: the GCF, then x² + 7x + 6 with the box
+    7: { eq: [function (r) { return r.zp === 1; }, function (r) { return r.zp === 2; }, function (r) { return r.zp === 5; }, function (r) { return r.grp === 3; }] },   // 3.1E split (Zero Product Property); set equal to zero, factor, split
+    8: { eq: [function (r) { return r.fm === 1; }, function (r) { return r.fm === 2; }] },  // 3.1F a² − b² and a² ± 2ab + b²
+    9: { eq: [function (r) { return r.grp === 4; }] },                                       // 3.1G factor ax² + bx + c ("ac")
+    10: { eq: [function (r) { return r.cs === 1; }, function (r) { return r.cs === 2; }, function (r) { return r.cs === 3; }] },   // 3.3A complete the square
+    12: { eq: [function (r) { return r.qu === 1; }, function (r) { return r.qu === 2; }, function (r) { return r.qu === 3; }] }    // 3.4A the quadratic formula
+  };
+  function svL() { return (act === "2.4" && lesson >= 5) || (act === "3.1" && !!C3SV[lesson]); }
+  function svAct() { return act === "2.4" || act === "3.1"; }   // (a section whose exercises switch between the quiz engine and the Play Solve engine)
+  function c3Make() {   // a Chapter 3 problem: the Demo opens on the first (simplest) kind, every other mode on any kind
+    var c = C3SV[lesson], cl = function (o) { return JSON.parse(JSON.stringify(o)); };
+    if (c.rad || c.box) return false;   // (made like 2.4's Square Roots and Box Method)
+    if (c.ex) { var lv = mode === "demo" ? c.ex[0] : c.ex[rnd(c.ex.length)], it = exGen(lv); SV = "x"; EXP = { src: "", orig: cl(it), items: it, ask: null, fac: lv === 5 || lv === 6, lit: lv === 6, grp: lv === 10 || lv >= 13, rad: false, svk: lesson }; return true; }
+    var f = mode === "demo" ? c.eq[0] : c.eq[rnd(c.eq.length)], st = LADDER[rung("eq", f)]; SV = svRand();
+    EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=", cmp: null, c3: null, qf: null, qu: null, grUser: false, quq: !!st.qu, lit: false, quad: false, av: false, sq: !!st.sq, dvq: false, zpq: !!st.zp, grq: !!st.grp || !!st.fm, qd: !!st.cs || !!st.sf || !!st.qu, sf: !!st.sf, zp: null, svk: lesson };
+    var g = st.qu ? quGen(st.qu) : st.cs ? qdGen(st.cs) : st.sqg ? eqSqgGen() : st.fm ? { L: fmGen(st.fm), R: [{ k: "c", n: mk(0) }] } : null;
+    if (!g) { var keep = SOL.lvl; SOL.lvl = LADDER.indexOf(st); var em = EXP; EXP = null; solverEqBuild(st); SOL.lvl = keep; if (!EXP || !EXP.L || !EXP.L.length) { EXP = em; return c3Make(); } EXP.svk = lesson; return true; }
+    EXP.L = g.L; EXP.R = g.R; EXP.orig = { L: cl(g.L), R: cl(g.R), rel: "=" }; return true;
+  }
   function svMake() {
     var X = function (a) { return { k: "x", v: "x", n: mk(a) }; }, C = function (c) { return { k: "c", n: mk(c) }; }, cl = function (o) { return JSON.parse(JSON.stringify(o)); }; SV = "x"; distHide(); fmHide(); grHide();
+    var lesson0 = lesson; if (act === "3.1") { if (c3Make()) return; act = "2.4"; lesson = C3SV[lesson0].rad ? 7 : rnd(3) ? 6 : 8; try { svMake(); } finally { act = "3.1"; lesson = lesson0; } if (EXP) EXP.svk = lesson; return; }   // (Chapter 3; 3.1B's square roots and 3.1D's box made as 2.4's)
     if (lesson === 5) {   // 3-step linear equations: 5(x + 2) − 13 = 7, or (x − 2)/3 + 2 = 10
       var g = rnd(2) ? eqOv() : (function () { var a = 2 + rnd(5), b = nz(9), c = nz(15), x = nz(9), d = a * (x + b) + c; if (!d || x + b === 0) return null; return { L: [{ k: "g", m: mk(a), items: [X(1), C(b)] }, C(c)], R: [C(d)] }; })();
       if (!g) { svMake(); return; }
@@ -4753,16 +4777,18 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     else {
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
-      if (st.e === "eq") {
+      if (st.e === "eq") solverEqBuild(st);
+      else { EXP = null; useCustom = st.one ? solverOne() : st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); if (st.one && st.ineq) useCustom[0].rel = eqPickRel(); }
+    }
+    $("modePick").hidden = true;
+    if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); }
+  }
+  function solverEqBuild(st) {   // an equation of ladder rung st (Play Solve, and Chapter 3)
         if (!EXP) EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=" };
         EXP.cmp = null; EXP.c3 = null; EXP.qf = null; EXP.qu = null; EXP.grUser = false; EXP.quq = !!st.qu; EXP.lit = !!st.lit; EXP.quad = false; EXP.av = !!st.av; EXP.sq = !!st.sq; EXP.dvq = !!st.dv; EXP.zpq = !!st.zp; EXP.grq = !!st.grp || !!st.fm; EXP.qd = !!st.cs || !!st.sf || !!st.qu; EXP.sf = !!st.sf; EXP.zp = null; var g2 = st.ov ? eqOv() : st.qu ? quGen(st.qu) : st.sf ? sfGen(st.sf) : st.cs ? qdGen(st.cs) : st.sqg ? eqSqgGen() : st.fm ? { L: fmGen(st.fm), R: [{ k: "c", n: mk(0) }] } : st.fd ? eqFd(st.fd) : st.av ? eqAv(st.av, !!st.ineq) : st.grp ? { L: st.grp > 2 ? grTriGen(st.grp) : grGen(st.grp), R: [{ k: "c", n: mk(0) }] } : st.zp ? eqZp(st.zp) : st.sq ? eqSq(st.sq) : st.dv ? eqDv() : st.lit ? eqLit(st.lit) : st.special ? eqSpecial() : st.ineq ? eqGenIneq(st) : eqGen(st.lv); EXP.rel = st.ineq ? eqPickRel() : "=";
         EXP.orig = { L: JSON.parse(JSON.stringify(g2.L)), R: JSON.parse(JSON.stringify(g2.R)), rel: EXP.rel }; EXP.L = g2.L; EXP.R = g2.R; EXP.src = ""; EXP.vk = "x";
         if (st.cmp) cmpSetup(eqCmp(st.cmp));
         if (st.qf) { qfSetup(); SV = "x"; }
-      } else { EXP = null; useCustom = st.one ? solverOne() : st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); if (st.one && st.ineq) useCustom[0].rel = eqPickRel(); }
-    }
-    $("modePick").hidden = true;
-    if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); }
   }
   $("dmHard").addEventListener("click", function () { SOL.ups = true; dmUI("idle"); solverGo(1, "demo"); easyUpd(); });   // a new level starts in Demo
   $("nxHard").addEventListener("click", function () { SOL.ups = true; solverGo(1, "demo"); easyUpd(); });
@@ -5882,7 +5908,18 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     ["2.2B", "2.2", ["6", "7", "8", "9", "10"], "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing"],
     ["2.2C", "2.2", ["11", "3", "12", "4", "5"], "Characteristics of Quadratic Functions: Intercept Form"],
     ["2.4A", "2.4", ["1", "2", "5", "6", "7"], "Modeling with Quadratic Functions"],
-    ["2.4B", "2.4", ["4", "5", "8"], "Modeling with Quadratic Functions (Day 2)"]   // (Regression, 3-Step Equations, Distributing)   // (exercise 3, Three Points with first and second differences, was taken out)
+    ["2.4B", "2.4", ["4", "5", "8"], "Modeling with Quadratic Functions (Day 2)"],   // (Regression, 3-Step Equations, Distributing)   // (exercise 3, Three Points with first and second differences, was taken out)
+    ["3.1A", "3.1", [], "Solving Quadratic Equations: Graphing"],
+    ["3.1B", "3.1", ["2", "3"], "Solving Quadratic Equations: Square Roots"],
+    ["3.1C", "3.1", [], "Solving Quadratic Equations: Real Life"],
+    ["3.1D", "3.1", ["5", "6"], "Solving Quadratic Equations: Factoring"],
+    ["3.1E", "3.1", ["7"], "Solving Quadratic Equations: Solving by Factoring"],
+    ["3.1F", "3.1", ["8"], "Solving Quadratic Equations: Formulas"],
+    ["3.1G", "3.1", ["9"], "Solving Quadratic Equations: Factor ax\u00b2 + bx + c"],
+    ["3.3A", "3.1", ["10"], "Complete the Square (Solve)"],
+    ["3.3B", "3.1", [], "Complete the Square (Vertex Form)"],
+    ["3.4A", "3.1", ["12"], "Use the Quadratic Formula and the Discriminant"],
+    ["3.4B", "3.1", [], "Use the Quadratic Formula and the Discriminant: The Discriminant"],
   ];
   var VW = {}, VBASE = {};
   VIEWS.forEach(function (v, i) { VW[v[0]] = { id: v[0], base: v[1], ls: v[2], title: v[3], i: i }; VBASE[v[1]] = 1; });
@@ -5935,6 +5972,8 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
     "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics of a Parabola"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics"], function (l) { return l === 11 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
+    "3.1": c2Built("3.1", ["Solving by Graphing", "Simplifying Square Roots", "Solving with Square Roots", "Real Life", "Multiplying (Box Method)", "Factoring", "Solving by Factoring", "Special Products", "Factoring ax\u00b2 + bx + c", "Completing the Square", "Vertex Form by Completing the Square", "The Quadratic Formula", "The Discriminant"],
+      ["Graphing", "Simplify Roots", "Square Roots", "Real Life", "Box Method", "Factoring", "Solve by Factoring", "Special Products", "Factor ax\u00b2 + bx + c", "Complete the Square", "Vertex Form", "Quadratic Formula", "Discriminant"]),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression", "3-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Distributing"], ["Vertex & Point", "Intercepts", "Three Points", "Regression", "3-Step Equations", "Box Method", "Square Roots", "Distributing"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -5951,6 +5990,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
       ["g", "solo", 80, "Write Mode, 2nd round", 2], ["g", "solo", 100, "Write Mode, 3rd round", 3]
     ] }
   };
+  BUILT["3.1"].levels = BUILT["3.1"].levels.filter(function (l) { return !(l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[1] === "solo" ? (l[4] === 2 ? [l[0], "solo", 100, "Write Mode, 2nd round", 2] : [l[0], "solo", 70, "Write Mode"]) : l; });   // (Chapter 3: two rounds of Write)
   BUILT["2.4"].modesFor = function (l) { return l === 4 ? ["demo", "sequence", "solo"] : ["demo", "sequence", "calculate", "solo"]; };   // (2.4B Regression: no Calculate mode)
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "calculate"); });
   BUILT["2.4"].levels = BUILT["2.4"].levels.filter(function (l) { return !(l[0] === 4 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return l[0] === 4 && l[1] === "solo" ? (l[4] === 2 ? [4, "solo", 100, "Write Mode, 2nd round", 2] : [4, "solo", 70, "Write Mode"]) : l; });   // (2.4B Regression: two rounds of Write, not three)
@@ -5959,6 +5999,8 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
   // 2.4A exercises 5 to 7 run on Play Solve's pane (3-step linear equations, multiplying binomials with the box, simplifying square roots): while one of them is open
   // the activity is a solver, not a quiz, so everything that asks BUILT[act].solver or .quiz follows the exercise
   Object.defineProperty(BUILT["2.4"], "quiz", { get: function () { return !svL(); }, configurable: true });
+  Object.defineProperty(BUILT["3.1"], "quiz", { get: function () { return !svL(); }, configurable: true });
+  Object.defineProperty(BUILT["3.1"], "solver", { get: function () { return svL(); }, configurable: true });   // (Chapter 3: the equation and expression exercises run on the Play Solve engine)
   Object.defineProperty(BUILT["2.4"], "solver", { get: function () { return svL(); }, configurable: true });   // 2.4A (Vertex and a Point, Point and x-Intercepts): one round of Write
   BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return l[0] < 6; }).concat([[11, "demo", 20, "Demo Mode"], [11, "sequence", 50, "Sequence Mode"], [11, "calculate", 100, "Calculate Mode"], [12, "demo", 10, "Demo Mode"], [12, "sequence", 25, "Sequence Mode"], [12, "calculate", 40, "Calculate Mode"], [12, "solo", 70, "Write Mode"], [12, "solo", 100, "Write Mode, 2nd round", 2]]);   // (2.2C Characteristics: Write has the Calculate boxes, checked on Submit)   // (2.2C Memorize: a card sort in Demo and Sequence; Calculate is a quiz)
   // 2.2C (Min & Max, Intercept Form, Compare): two rounds of Write, not three (Write 70, Write 2nd round 100)
@@ -6154,7 +6196,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
   function exShort(b, k) { var B = BUILT[b]; if (b === "1.4D") return k === "s" ? "Substitution" : LNAME[k === "4" ? 4 : +k]; return (B.short && B.short[+k - 1]) || B.lessons[+k - 1]; }
   // 2.4: moving between a word problem (the quiz engine, Desmos) and an equation or expression exercise (the solver) swaps the whole screen over;
   // both the exercise menu and the Next exercise button come through here
-  function svSwap(sv0) { if (act === "2.4" && sv0 !== svL()) { EXP = null; up = null; if (svL()) { leaveQuiz(); document.body.classList.remove("vpDrag"); document.body.classList.add("solver", "svEx"); } else { exHide(); document.body.classList.remove("solver", "svEx"); qzShow(); } } }
+  function svSwap(sv0) { if (svAct() && sv0 !== svL()) { EXP = null; up = null; if (svL()) { leaveQuiz(); document.body.classList.remove("vpDrag"); document.body.classList.add("solver", "svEx"); } else { exHide(); document.body.classList.remove("solver", "svEx"); qzShow(); } } }
   function vwNext() {
     var ls = VW[view].ls, i = ls.indexOf(vwK()); if (i < 0) return null;
     if (i < ls.length - 1) { var k = ls[i + 1]; return { name: exShort(act, k), go: function () { msSave(); var sv0 = svL(); vwSet(k); $("lesson").value = k; svSwap(sv0); gdCustom = null; wfCustom = null; c2Custom = null; useCustom = null; buildModes(); setMode(resumeMode()); } }; }
