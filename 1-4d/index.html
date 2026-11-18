@@ -1,5 +1,6 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.regP { display: block; margin-top: 0.7em; } .regQ { margin: 14px 0 2px; font-weight: 700; font-size: 1.25rem; line-height: 1.4; color: var(--ink); max-width: 44rem; } .regR { margin-bottom: 6px; font-weight: 400; font-size: 1.05rem; color: var(--ink); }
 html.swOff #show { display: none !important; }
+.supp { display: block; font-weight: 400; font-size: 1rem; color: #4B5563; margin: 4px 0 6px; }   /* supplemental text: smaller, unbolded, always just below the question */
 </style></head><body>
 <!DOCTYPE html>
 <html lang="en">
@@ -7494,10 +7495,10 @@ html.swOff #show { display: none !important; }
     if (pq()) { pqPanel(); return; }
     var fam = qFam(), st = qStep(), demo = mode === "demo", h = "", inp = $("qzIn");
     var T = {
-      eq: "What is the parent function of the " + QFAM[fam] + " family? Type its equation.",
-      table: mode === "sequence" || mode === "demo" ? "Drag the equation (from the top of the table or from under it) onto any center cell to fill them all. Then click the calculation to simplify it step by step, or type the y-value yourself." : "Click each empty y cell in the table and type its y-value.",
-      points: mode === "sequence" || mode === "demo" ? "Drag each row of the table onto the graph to plot its point. The red dots show where they belong." : "Plot the five points from the table. Choose the ● tool, then click the graph at each point.",
-      graph: "Now draw the parent graph. Use the / tool (a line), the V tool or the U tool.",
+      eq: "What is the parent function of the " + QFAM[fam] + " family?",
+      table: "Fill in the table.",
+      points: "Plot the points.",
+      graph: "Draw the parent graph.",
       done: QZ.pi < 3 ? "That's the " + QFAM[fam] + " parent!" : "You have all four parents!"
     };
     $("qzT").textContent = T[st];
@@ -8054,8 +8055,9 @@ var ESPIC = {
   function estHTML() {
     var e = estProb(); if (!e) return "";
     function row(a) { return a.map(function (v) { return "<td>" + v + "</td>"; }).join(""); }
-    return "<div class=\"estWrap\"><div class=\"estMain\"><div class=\"estP\">" + e.s + " The table shows " + e.pr + " " + e.yn.toLowerCase() + " <i>y</i> over " + e.xn.toLowerCase() + " <i>x</i>. " + e.q + "</div>" +
-      "<table class=\"estT\"><tr><th>" + e.xn + " (" + e.xu + "), <i>x</i></th>" + row(e.x) + "</tr><tr><th>" + e.yn + " (" + e.yu + "), <i>y</i></th>" + row(e.y) + "</tr></table></div>" + e.pic + "</div>";
+    return "<div class=\"estWrap\"><div class=\"estMain\"><div class=\"estP\">" + e.s + " The table shows " + e.pr + " " + e.yn.toLowerCase() + " <i>y</i> over " + e.xn.toLowerCase() + " <i>x</i>.</div>" +
+      "<table class=\"estT\"><tr><th>" + e.xn + " (" + e.xu + "), <i>x</i></th>" + row(e.x) + "</tr><tr><th>" + e.yn + " (" + e.yu + "), <i>y</i></th>" + row(e.y) + "</tr></table>" +
+      "<div class=\"regQ\">" + e.q + "</div><div class=\"supp\">" + (e.tol >= 1 ? "Round to the nearest whole number." : "Round to the nearest tenth.") + "</div></div>" + e.pic + "</div>";   // (a data problem: the setting, the table, the question in bold, then the rounding)
   }
   function estRows() { return TB.rows().filter(function (r) { return r.done && isFinite(r.xv) && isFinite(r.yv); }); }
   function estTableOK() { if (e11On()) return !!e11Tab(); var e = estProb(); if (!e) return false; var R = estRows(); return R.length === e.x.length && e.x.every(function (x, i) { return R.some(function (r) { return Math.abs(r.xv - x) < 1e-9 && Math.abs(r.yv - e.y[i]) < 1e-9; }); }); }
@@ -8652,8 +8654,8 @@ var ESPIC = {
     $("undo").hidden = !(mode === "sequence" || mode === "calculate") || done;
   }
   function grnQ() {
-    var pb = m3Cur(), add = mode === "solo" ? "Type <i>h</i>(" + c2X + ") and <i>g</i>(" + c2X + ") in the boxes." : mode === "calculate" ? "Use the <i>c</i> slider to move the purple path." : "Drag the purple path’s <i>y</i>-intercept up or down to move it.";
-    return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story.replace(/lm cf/g, "lm") + " " + add + "</div>" + pb.pic + "</div>";
+    var pb = m3Cur();   // (no instructions on how to move the path: the Demo shows it)
+    return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story.replace(/lm cf/g, "lm") + "</div>" + pb.pic + "</div>";
   }
   function grnPush() { var s = grnSt(); s.hist.push(s.k); if (s.hist.length > 60) s.hist.shift(); }
   function grnUndo() { var s = grnSt(); if (QZ.step >= 4 || !s.hist.length) return; s.k = s.hist.pop(); pqMsg(""); grnSync(); }
@@ -8838,36 +8840,36 @@ var ESPIC = {
   }
   function vfnNext(line) { var s = vfnSt(); s.stage++; pqMsg(""); if (line) vfnLine(line); if (s.stage >= vfnStg().length) vfnDone(); else vfnSync(); }
   // the prompt over the graph, one step at a time
-  var VFN_ASK = { ipxs: "Type the other <i>x</i>-values: row 3 is halfway between <i>p</i> and <i>q</i>, and the rows are evenly spaced.", ip1: "Click on the equation to find the <i>a</i> value. With no number in front of the parentheses, click the space where it would be.", ipdrag: "Drag <i>p</i> and <i>q</i> from the equation into the <i>x</i> column: the smaller in row 2, the larger in row 4.", p: "Click on the equation to find the <i>p</i> value.", q: "Click on the equation to find the <i>q</i> value.", dom: "What is the domain?", rng: "What is the range?", inc: "Where is it increasing?", dec: "Where is it decreasing?", mm: "Is the vertex a minimum or a maximum? What is its value?", graph: "Press the parabola button, then click the graph to place the vertex. Drag the points until it matches <i>f</i>.", h: "Click on the graph to find the <i>h</i> value.", k: "Click on the graph to find the <i>k</i> value.", v: "Click on the graph to find the coordinates of the vertex.", ax: "Click on the graph to find the equation of the axis of symmetry.", m1: "Click on a pair of mirror points.", m2: "Click on another pair of mirror points.",
-    a: "Click on the equation to find the <i>a</i> value.", b: "Click on the equation to find the <i>b</i> value.", c: "Click on the equation to find the <i>c</i> value.", drag: "Drag <i>x</i> = −<i>b</i>/(2<i>a</i>) into the table.", tbl: "Click each expression in the table to simplify it, one step at a time." };
+  var VFN_ASK = { ipxs: "Find the other <i>x</i>-values.", ip1: "Find <i>a</i>.", ipdrag: "Put <i>p</i> and <i>q</i> in the <i>x</i> column.", p: "Find <i>p</i>.", q: "Find <i>q</i>.", dom: "What is the domain?", rng: "What is the range?", inc: "Where is it increasing?", dec: "Where is it decreasing?", mm: "Is the vertex a minimum or a maximum? What is its value?", graph: "Graph the parabola.", h: "Find <i>h</i>.", k: "Find <i>k</i>.", v: "Find the vertex.", ax: "Find the axis of symmetry.", m1: "Find a pair of mirror points.", m2: "Find another pair of mirror points.",
+    a: "Find <i>a</i>.", b: "Find <i>b</i>.", c: "Find <i>c</i>.", drag: "Find <i>x</i> = −<i>b</i>/(2<i>a</i>).", tbl: "Find each <i>y</i>-value." };
   function vfnAsk() {
     var s = vfnSt(); if (QZ.step >= 4 || s.ok) return "";
-    if (vfnWr()) return vfnIp() ? "Graph the parabola: plot 5 points on it, then press Submit." : "Plot 5 points on the parabola and draw its axis of symmetry with the dotted line. Then fill in the boxes and press Submit.";
+    if (vfnWr()) return vfnIp() ? "Graph the parabola." : "Graph the parabola and its axis of symmetry, then fill in the boxes.";
     if (mode === "calculate") {
-      if (!vfnStd()) return !vfnParOK(s) ? VFN_ASK.graph : vfnCols().some(function (c) { return !(s.tadd || {})[c]; }) ? "Fill in the boxes, and grow the parent table: click the + on the left for a new x, on the right for a new y, one column for each change." : "Fill in the parent table and the boxes.";
-      if (vfnVx() && s.wok.h && !s.gx) return "Drag <i>x</i> = <i>h</i> into the middle of the table.";
+      if (!vfnStd()) return !vfnParOK(s) ? VFN_ASK.graph : vfnCols().some(function (c) { return !(s.tadd || {})[c]; }) ? "Fill in the boxes and the parent table." : "Fill in the parent table and the boxes.";
+      if (vfnVx() && s.wok.h && !s.gx) return "Put <i>x</i> = <i>h</i> in the middle of the table.";
       if (s.wok.xv && !s.gx) return VFN_ASK.drag;
       if (vfnIp()) {   // Intercept Form: one instruction at a time, for the first thing not yet done
         var ok = function (r) { return s.xok[r] || (s.dx && s.dx[r]); };
-        if (!s.wok.a) return vfnP().a === 1 ? "Type the <i>a</i> value. With no number in front of the parentheses, <i>a</i> = 1." : "Type the <i>a</i> value: the number in front of the parentheses.";
-        if (!s.wok.p) return "Type the <i>p</i> value: the number subtracted from <i>x</i> in one of the factors.";
-        if (!s.wok.q) return "Type the <i>q</i> value: the number subtracted from <i>x</i> in the other factor.";
-        if (!s.gx && !(ok(1) && ok(3))) return "Type <i>p</i> and <i>q</i> in rows 2 and 4 of the <i>x</i> column.";
-        if (!s.gx && !ok(2)) return "Type the <i>x</i>-value halfway between <i>p</i> and <i>q</i> in row 3.";
-        if (!s.gx) return "Type any <i>x</i> outside the intercepts in rows 1 and 5.";
-        if (!vfnTbDone()) return "Work out <i>f</i>(<i>x</i>) for each row and type it in the <i>y</i> column.";
-        if (!vfnParOK(s)) return "Graph the parabola with the parabola button.";
+        if (!s.wok.a) return "Find <i>a</i>.";
+        if (!s.wok.p) return "Find <i>p</i>.";
+        if (!s.wok.q) return "Find <i>q</i>.";
+        if (!s.gx && !(ok(1) && ok(3))) return "Put <i>p</i> and <i>q</i> in the <i>x</i> column.";
+        if (!s.gx && !ok(2)) return "Find the <i>x</i>-value halfway between <i>p</i> and <i>q</i>.";
+        if (!s.gx) return "Choose two more <i>x</i>-values, outside the intercepts.";
+        if (!vfnTbDone()) return "Find each <i>y</i>-value.";
+        if (!vfnParOK(s)) return "Graph the parabola.";
         return "";
       }
-      return "Fill in the boxes and the table, and graph the parabola with the parabola button.";
+      return "Fill in the boxes and the table, and graph the parabola.";
     }
     var id = vfnSid();
-    if (id === "drag" && vfnIp()) return "Drag <i>p</i> and <i>q</i> from the equation, or from the values below the graph, into the <i>x</i> column: the smaller in row 2, the larger in row 4.";
+    if (id === "drag" && vfnIp()) return "Put <i>p</i> and <i>q</i> in the <i>x</i> column.";
     if (id === "xs") return VFN_ASK.ipxs;
-    if (vfnVx() && (id === "h" || id === "k")) return "Click on the equation to find the <i>" + id + "</i> value." + (id === "h" && !vfnP().h ? " With nothing subtracted from <i>x</i>, click the space where it would be." : id === "k" && !vfnP().k ? " With nothing added at the end, click the space where it would be." : "");
-    if (vfnVx() && id === "drag") return "Drag <i>x</i> = <i>h</i> into the middle of the table.";
+    if (vfnVx() && (id === "h" || id === "k")) return "Find <i>" + id + "</i>.";
+    if (vfnVx() && id === "drag") return "Put <i>x</i> = <i>h</i> in the middle of the table.";
     if (id === "a" && vfnIp() && vfnP().a === 1) return VFN_ASK.ip1;
-    if ((id === "m1" || id === "m2") && s.sel) return "Now click its mirror point.";
+    if ((id === "m1" || id === "m2") && s.sel) return "Find its mirror point.";
     return VFN_ASK[id] || "";
   }
   function vfnDraw() {
@@ -10204,7 +10206,7 @@ var ESPIC = {
     i: { nm: "Intercept", vars: "apqx", fn: function (v) { return v.a * (v.x - v.p) * (v.x - v.q); }, ans: "<i>f</i>(<i>x</i>) = <i>a</i>(<i>x</i> − <i>p</i>)(<i>x</i> − <i>q</i>)", plain: "f(x) = a(x − p)(x − q)" } };
   function csqMake() {
     var L = [], sh = function (a) { for (var i = a.length - 1; i > 0; i--) { var j = rnd(i + 1), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }, nz = function (lo, hi) { return c2Nz(lo, hi); };
-    ["s", "v", "i"].forEach(function (f) { L.push({ k: "type", f: f, ask: "Type the formula for " + CSQ_F[f].nm + " Form." }); });
+    ["s", "v", "i"].forEach(function (f) { L.push({ k: "type", f: f, ask: "Write the formula for " + CSQ_F[f].nm + " Form." }); });
     L.push({ k: "ctr", ask: "In Standard Form, type the formula for the <i>x</i>-value in the centre row of the table." });
     L.push({ k: "mc", a: "s", ask: "This picture is associated with which form?", show: "<img class=\"csqPic\" src=\"../assets/card-standard-table.png\" alt=\"x = −b/(2a), worked out, being dragged into the centre row of a table\">" });
     L.push({ k: "mc", a: "v", ask: "This picture is associated with which form?", show: "<img class=\"csqPic\" src=\"../assets/card-vertex-table.png\" alt=\"A parent table with its centre row filled in\">" });
@@ -13791,17 +13793,17 @@ var ESPIC = {
         return s;
       };
       function term(P, v) { return m3F(P.m) + "(" + m3F(v) + ") + " + P.b; }
-      function eqS(L, P) { return { id: "e" + L, lab: "equation " + L.toUpperCase(), L: L, type: "geq", ask: "Write the equation for <b>" + P.n + "</b> in the box above its table. Use <i>x</i> for the number of " + sc.xu + " and <i>y</i> for the total cost.",
+      function eqS(L, P) { return { id: "e" + L, lab: "equation " + L.toUpperCase(), L: L, type: "geq", ask: "Write the equation for <b>" + P.n + "</b>.<span class=\"supp\"><i>x</i> = number of " + sc.xu + ", <i>y</i> = total cost</span>",
         hint: ["The cost starts at $" + P.b + " and goes up $" + P.m + " for each " + sc.x1 + ". Use <i>y</i> = <i>mx</i> + <i>b</i>.", m3Eq(P.m, P.b) + "."], line: P.n + ": " + m3EqH(P.m, P.b) }; }
       function rowS(L, P, i) { var xv = P.rows[i];
-        return { id: "r" + L + i, fine: 1, lab: "table", L: L, i: i, type: "grow", ask: "Fill in row " + (i + 1) + " of the table for <b>" + P.n + "</b>: type an <i>x</i> from 0 to " + xmax + ", then put it into the equation and type the <i>y</i>.",
+        return { id: "r" + L + i, fine: 1, lab: "table", L: L, i: i, type: "grow", ask: "Fill in row " + (i + 1) + " of the table for <b>" + P.n + "</b>.",
           hint: ["Pick any whole number for <i>x</i>, like " + m3F(xv) + ". Put it in for <i>x</i> in <span class=\"lm\">" + m3EqH(P.m, P.b) + "</span> and calculate.", "For example, <i>x</i> = " + m3F(xv) + " gives " + term(P, xv) + " = " + m3F(P.ys[i]) + "."],
           line: function (pp, xx) { var xr = xx["rx" + L][i]; return P.n + ": <i>x</i> = " + m3F(xr) + " gives <i>y</i> = " + m3F(P.m * xr + P.b); } }; }
-      var drag = { id: "cr", lab: "crossing", type: "gdrag", ask: "The two cost the same where the lines cross. Drag the green point to that crossing.", hint: ["Look for the place where the purple line and the orange line meet.", "They meet at (" + m3F(xs) + ", " + m3F(ystar) + ")."],
+      var drag = { id: "cr", lab: "crossing", type: "gdrag", ask: "Find where the lines cross.", hint: ["Look for the place where the purple line and the orange line meet.", "They meet at (" + m3F(xs) + ", " + m3F(ystar) + ")."],
         line: "The lines cross at (" + m3F(xs) + ", " + m3F(ystar) + "): after " + m3F(xs) + " " + sc.xu + " both cost $" + m3F(ystar) };
       pb.isteps = [eqS("a", A), rowS("a", A, 0), rowS("a", A, 1), rowS("a", A, 2), eqS("b", B), rowS("b", B, 0), rowS("b", B, 1), rowS("b", B, 2), drag];
       pb.csteps = pb.isteps;
-      function tabS(L, P) { return { id: "t" + L, lab: "table " + L.toUpperCase(), type: "gtab", L: L, ask: function () { return mode === "solo" ? "Write your own table for <b>" + P.n + "</b> on paper (three <i>x</i> values from 0 to " + xmax + " and the <i>y</i> for each). Click its points on the graph, then click Line under the graph to draw the line through them." : "Complete the table for <b>" + P.n + "</b>: type three different <i>x</i> values from 0 to " + xmax + " and the <i>y</i> for each. When all three rows are right, the points are joined by a line."; }, hint: ["Pick whole numbers for <i>x</i>, like " + P.rows.map(m3F).join(", ") + ". Put each one into <span class=\"lm\">" + m3EqH(P.m, P.b) + "</span> and calculate.", "For example, <i>x</i> = " + m3F(P.rows[0]) + " gives " + term(P, P.rows[0]) + " = " + m3F(P.ys[0]) + "."], line: P.n + ": the table is done and the line is drawn" }; }
+      function tabS(L, P) { return { id: "t" + L, lab: "table " + L.toUpperCase(), type: "gtab", L: L, ask: function () { return mode === "solo" ? "Graph <b>" + P.n + "</b>." : "Complete the table for <b>" + P.n + "</b>."; }, hint: ["Pick whole numbers for <i>x</i>, like " + P.rows.map(m3F).join(", ") + ". Put each one into <span class=\"lm\">" + m3EqH(P.m, P.b) + "</span> and calculate.", "For example, <i>x</i> = " + m3F(P.rows[0]) + " gives " + term(P, P.rows[0]) + " = " + m3F(P.ys[0]) + "."], line: P.n + ": the table is done and the line is drawn" }; }
       pb.steps = [eqS("a", A), eqS("b", B), tabS("a", A), tabS("b", B), drag];
       pb.ex = A.n + " is " + m3EqH(A.m, A.b) + " and " + B.n + " is " + m3EqH(B.m, B.b) + ". Fill in each table and the points join in a line. The two cost the same where the lines cross, at (" + m3F(xs) + ", " + m3F(ystar) + "): after " + m3F(xs) + " " + sc.xu + " both cost $" + m3F(ystar) + ". Check: " + term(A, xs) + " = " + m3F(ystar) + " and " + term(B, xs) + " = " + m3F(ystar) + ".";
       return pb;
@@ -13972,17 +13974,17 @@ var ESPIC = {
       ];
       var yw = sc.yv.replace(/^The /, ""); sc.yw = yw;
       pb.isteps = [
-        { id: "yint", lab: "y-intercept", type: "yint", ask: "Click the point where the line crosses the <i>y</i>-axis.", hint: ["The <i>y</i>-intercept is where the line meets the vertical axis, at <i>x</i> = 0.", "Click the line right where it touches the vertical axis."], after: function (x) { x.bv = true; }, line: "<i>y</i>-intercept: (0, " + b + "), so <i>b</i> = " + b },
-        { id: "rr", lab: "rise and run", type: "rr", after: function (x) { x.rv = x.nv = true; }, ask: "Click the two marked points on the line. Arrows will show the rise and the run.", hint: ["Click the <i>y</i>-intercept, then the other point.", "The arrows go across (run) and up or down (rise) between the two points."], line: "rise = " + y2 + " − " + b + " = " + m3F(y2 - b) + ", run = " + x2 + " − 0 = " + x2 },
-        { id: "frac", lab: "slope formula", type: "frac", ask: "Slope = rise ÷ run. Drag the rise and the run into the formula.", hint: ["Rise goes on top of the fraction and run on the bottom.", "Drag the rise tile to the top and the run tile to the bottom."], line: "slope = rise ÷ run = " + m3F(y2 - b) + " ÷ " + x2 },
+        { id: "yint", lab: "y-intercept", type: "yint", ask: "Find the <i>y</i>-intercept.", hint: ["The <i>y</i>-intercept is where the line meets the vertical axis, at <i>x</i> = 0.", "Click the line right where it touches the vertical axis."], after: function (x) { x.bv = true; }, line: "<i>y</i>-intercept: (0, " + b + "), so <i>b</i> = " + b },
+        { id: "rr", lab: "rise and run", type: "rr", after: function (x) { x.rv = x.nv = true; }, ask: "Find the rise and the run.", hint: ["Click the <i>y</i>-intercept, then the other point.", "The arrows go across (run) and up or down (rise) between the two points."], line: "rise = " + y2 + " − " + b + " = " + m3F(y2 - b) + ", run = " + x2 + " − 0 = " + x2 },
+        { id: "frac", lab: "slope formula", type: "frac", ask: "Find the slope: rise ÷ run.", hint: ["Rise goes on top of the fraction and run on the bottom.", "Drag the rise tile to the top and the run tile to the bottom."], line: "slope = rise ÷ run = " + m3F(y2 - b) + " ÷ " + x2 },
         pb.steps[3],
         { id: "eqd", lab: "Equation", type: "eqd", ask: "Write the equation: drag the slope and the <i>y</i>-intercept into <i>y</i> = <i>mx</i> + <i>b</i>.", hint: ["The slope <i>m</i> goes in front of <i>x</i>. The <i>y</i>-intercept <i>b</i> goes at the end.", "Drag the <i>m</i> tile and the <i>b</i> tile into the blanks."], line: m3EqH(m, b) },
-        { id: "sent", lab: "Slope", type: "sent", ask: "What does the slope mean in this story? Click the labels on the axes to fill in the sentence.", hint: ["The slope is the change in " + sc.yn.toLowerCase() + " for each 1 " + sc.x1 + ".", "Click " + sc.yn + ", then its unit, then the unit of the <i>x</i>-axis. Choose up or down."], line: "The slope " + m3F(m) + " means: the " + yw + " " + (sc.pl ? "go " : "goes ") + (up ? "up " : "down ") + amt + " " + sc.yu + " for each " + sc.x1 + "." },
+        { id: "sent", lab: "Slope", type: "sent", ask: "What does the slope mean in this story?", hint: ["The slope is the change in " + sc.yn.toLowerCase() + " for each 1 " + sc.x1 + ".", "Click " + sc.yn + ", then its unit, then the unit of the <i>x</i>-axis. Choose up or down."], line: "The slope " + m3F(m) + " means: the " + yw + " " + (sc.pl ? "go " : "goes ") + (up ? "up " : "down ") + amt + " " + sc.yu + " for each " + sc.x1 + "." },
         { id: "pt", lab: "Point", type: "clickpt", ask: sc.tq(T) + " Click the point on the line that helps answer it.", hint: ["The question gives <i>y</i> = " + T + ". Find the point on the line at that height.", "Click the line where <i>y</i> is " + T + "."], line: "The point (" + k + ", " + T + ") is on the line" },
         pb.steps[6], pb.steps[7]
       ];
       pb.csteps = [
-        { id: "yint", lab: "y-intercept", type: "yint", ask: "Click the point where the line crosses the <i>y</i>-axis.", hint: pb.isteps[0].hint, line: "The line crosses the <i>y</i>-axis at the point marked" },
+        { id: "yint", lab: "y-intercept", type: "yint", ask: "Find the <i>y</i>-intercept.", hint: pb.isteps[0].hint, line: "The line crosses the <i>y</i>-axis at the point marked" },
         { id: "bT", lab: "b", ask: "What is the <i>y</i>-intercept? Read <i>b</i> from the graph.", pre: "<i>b</i> =", ans: b, after: function (x) { x.bv = true; }, hint: ["Look at where the marked point is on the vertical axis.", "The line crosses the vertical axis at " + b + "."], line: "<i>b</i> = " + b },
         Object.assign({}, pb.isteps[1], { after: null, line: "The points (0, " + b + ") and (" + x2 + ", " + y2 + ") are marked" }),
         { id: "riseT", lab: "rise", ask: "Find the rise, the change in <i>y</i> from the <i>y</i>-intercept to (" + x2 + ", " + y2 + ").", pre: "rise =", ans: y2 - b, after: function (x) { x.rv = true; }, wrong: function (v) { return v === b - y2 ? "Check the sign: the line goes " + (up ? "up" : "down") + " as you move right." : ""; }, hint: ["Rise is the new <i>y</i> minus the old <i>y</i>.", y2 + " \u2212 " + b + " = " + m3F(y2 - b) + "."], line: "rise = " + y2 + " \u2212 " + b + " = " + m3F(y2 - b) },
@@ -13990,7 +13992,7 @@ var ESPIC = {
         pb.isteps[2],
         Object.assign({}, pb.steps[3], { ask: "Find the slope: rise \u00f7 run." }),
         pb.isteps[4],
-        Object.assign({}, pb.isteps[5], { ask: "What does the slope mean in this story? Click the labels on the axes to fill in the sentence, and type how much it changes." }),
+        Object.assign({}, pb.isteps[5], { ask: "What does the slope mean in this story?" }),
         pb.isteps[6], pb.steps[6], pb.steps[7]
       ];
       pb.ex = "The line crosses the <i>y</i>-axis at " + b + ", so <i>b</i> = " + b + ". From (0, " + b + ") to (" + x2 + ", " + y2 + ") the rise is " + m3F(y2 - b) + " and the run is " + x2 + ", so the slope is " + m3F(m) + ". The equation is " + m3Eq(m, b) + ". " + mean + " To find <i>x</i> when <i>y</i> = " + T + ", solve " + T + " = " + m3Co(m) + "x + " + b + ": <i>x</i> = " + k + ".";
@@ -14055,10 +14057,10 @@ var ESPIC = {
         { id: "plotT", lab: "plot", type: "plotT", ask: "Plot the points from the table for " + nT + ". Click each point on the graph.", hint: ["For each column of the table, find the <i>x</i> on the bottom axis and the <i>y</i> on the side axis.", "Click where they meet."], line: "Plotted the points from the table for " + nT },
         { id: "lineT", lab: "line", type: "lineT", ask: "Draw the line through the points: click two of the points you plotted.", hint: ["The points are in a straight line.", "Click any two of the points."], line: nT + "'s line is drawn (purple)" },
         S2[0], S2[1], S2[2], S2[3], S2[4], S2[5],
-        { id: "plotQ1", lab: "start", type: "plotQ1", ask: "Now graph " + nQ + " (orange): " + m3EqH(mQ, bQ) + ". Click the point where it starts, at <i>x</i> = 0.", hint: ["Put <i>x</i> = 0 into the equation.", "At <i>x</i> = 0 the cost is " + bQ + "."], line: nQ + " starts at (0, " + bQ + ")" },
+        { id: "plotQ1", lab: "start", type: "plotQ1", ask: "Now graph " + nQ + " (orange): " + m3EqH(mQ, bQ) + ". Start at <i>x</i> = 0.", hint: ["Put <i>x</i> = 0 into the equation.", "At <i>x</i> = 0 the cost is " + bQ + "."], line: nQ + " starts at (0, " + bQ + ")" },
         { id: "y1", fine: 1, lab: "x = 1", ask: "Find the cost for " + nQ + " when <i>x</i> = 1: put 1 in for <i>x</i> in " + m3EqH(mQ, bQ) + ".", pre: "<i>y</i> =", ans: mQ + bQ, hint: ["Replace <i>x</i> with 1 and calculate.", m3Co(mQ) + "(1) + " + bQ + " = " + (mQ + bQ) + "."], line: "<i>y</i> = " + mQ + "(1) + " + bQ + " = " + (mQ + bQ) },
-        { id: "plotQ2", lab: "second point", type: "plotQ2", ask: "Click the point of " + nQ + " where <i>x</i> = 1.", hint: ["You just found the cost when <i>x</i> = 1.", "Click at <i>x</i> = 1 and <i>y</i> = " + (mQ + bQ) + "."], line: nQ + "'s line is drawn (orange)" },
-        { id: "cross", lab: "crossing", type: "cross", ask: "The plans cost the same where the two lines cross. Click that point.", hint: ["Look for the point that is on both lines.", "The lines cross at (" + xs + ", " + ystar + ")."], line: "The lines cross at (" + xs + ", " + ystar + ")" },
+        { id: "plotQ2", lab: "second point", type: "plotQ2", ask: "Find the point of " + nQ + " where <i>x</i> = 1.", hint: ["You just found the cost when <i>x</i> = 1.", "Click at <i>x</i> = 1 and <i>y</i> = " + (mQ + bQ) + "."], line: nQ + "'s line is drawn (orange)" },
+        { id: "cross", lab: "crossing", type: "cross", ask: "Find where the two lines cross.", hint: ["Look for the point that is on both lines.", "The lines cross at (" + xs + ", " + ystar + ")."], line: "The lines cross at (" + xs + ", " + ystar + ")" },
         S2[6], S2[7], S2[8], S2[9]
       ];
       pb.csteps = pb.isteps;
@@ -14097,14 +14099,15 @@ var ESPIC = {
     var D = m3Data(tier), sc = D.sc, m = D.m, b = D.b, X = m3Pick([9, 10]), dots = [1, 3, 5, 7, 9].map(function (x, i) { return { x: x, y: b + m * x, i: i }; });
     var pb = { kind: 3, sc: sc, dots: dots }, pos = m > 0, est = m * X + b;
     pb.head = sc.s; pb.pic = m3Svg(sc.pic);
-    pb.story = sc.s + " The scatter plot shows the data, and a line of fit is drawn. Use two points on the line to write its equation, then use the equation to make an estimate.";
+    pb.story = sc.s + " The scatter plot shows the data, and a line of fit is drawn.";
+    pb.tq = "<div class=\"regQ\">Write an equation of the line of fit. Then estimate the " + sc.yn.toLowerCase() + " when " + sc.xn.toLowerCase() + " is " + X + ".</div>";
     pb.fig = function (x) {
       var sel = x.sel || []; return m3Fig({ xmax: 10, ymax: D.ymax, xs: 1, ys: D.ystep, xl: sc.xn, yl: sc.yn, alt: sc.s, line: { m: m, b: b }, scat: D.x.map(function (v, i) { return [v, D.y[i]]; }), dots: dots.map(function (d) { return { x: d.x, y: d.y, i: d.i, on: sel.indexOf(d.i) >= 0 || (x.p && x.p.some(function (q) { return q.i === d.i; })) }; }) });
     };
     var P = function (x) { return x.p || [{ x: 1, y: 1 }, { x: 2, y: 2 }]; };
     pb.steps = [
       { id: "corr", lab: "Correlation", ask: "Do the points show a positive correlation, a negative correlation, or no correlation?", type: "pick", opts: [{ t: "Positive correlation", ok: pos, why: "The points go down as you move right: that is a negative correlation." }, { t: "Negative correlation", ok: !pos, why: "The points go up as you move right: that is a positive correlation." }, { t: "No correlation", ok: false, why: "The points follow a line closely, so there is a correlation." }], hint: ["Look at the direction the points go as you move to the right.", "The points go " + (pos ? "up" : "down") + "."], line: (pos ? "Positive" : "Negative") + " correlation" },
-      { id: "pts", lab: "Two points", type: "pts", ask: "Click two of the circles on the line of fit.", hint: ["Choose two circles that sit on the purple line.", "Any two circles on the line work."], line: function (p, x, s) { return "Points " + s; } },
+      { id: "pts", lab: "Two points", type: "pts", ask: "Choose two points on the line of fit.", hint: ["Choose two circles that sit on the purple line.", "Any two circles on the line work."], line: function (p, x, s) { return "Points " + s; } },
       { id: "rise", fine: 1, lab: "rise", ask: function (p, x) { var q = P(x); return "Find the rise from (" + q[0].x + ", " + q[0].y + ") to (" + q[1].x + ", " + q[1].y + "): " + q[1].y + " − " + q[0].y + "."; }, pre: "rise =", ans: function (p, x) { var q = P(x); return q[1].y - q[0].y; }, hint: ["Subtract the first <i>y</i> from the second <i>y</i>.", "Use the two points you clicked."], line: function (p, x) { var q = P(x); return "rise = " + q[1].y + " − " + q[0].y + " = " + m3F(q[1].y - q[0].y); } },
       { id: "run", fine: 1, lab: "run", ask: "Find the run, the change in <i>x</i>.", pre: "run =", ans: function (p, x) { var q = P(x); return q[1].x - q[0].x; }, hint: ["Subtract the first <i>x</i> from the second <i>x</i>.", "Use the two points you clicked."], line: function (p, x) { var q = P(x); return "run = " + q[1].x + " − " + q[0].x + " = " + (q[1].x - q[0].x); } },
       { id: "m", fine: 1, lab: "m", ask: "The slope is rise ÷ run.", pre: "<i>m</i> =", ans: m, wrong: function (v) { return v === -m ? "Check the sign: the line goes " + (pos ? "up" : "down") + "." : ""; }, hint: ["Slope = rise ÷ run.", "The slope is " + m3F(m) + "."], line: "<i>m</i> = " + m3F(m) },
@@ -14133,12 +14136,13 @@ var ESPIC = {
     sc = D.sc; var X = m3Pick([9, 10]), est = Math.round((a * X + b) * 100) / 100, mC = Math.round(a), cC = Math.round(b) + (rnd(2) ? 1 : -1), E = mC * X + cC, diff = Math.round(Math.abs(est - E) * 100) / 100;
     var pos = r > 0, pb = { kind: 4, sc: sc }, rs = m3F(r), eqs = "y = " + m3F(a) + "x " + (b < 0 ? "− " : "+ ") + m3F(Math.abs(b));
     pb.head = sc.s; pb.pic = m3Svg(sc.pic);
-    pb.story = sc.s + " The table and the scatter plot show the data. Use a calculator's linear regression to find the line of best fit, and compare it with a classmate's line of fit.";
+    pb.story = sc.s + " The table and the scatter plot show the data.";
+    pb.tq = "<div class=\"regQ\">Find the line of best fit and compare it with a classmate's line of fit.</div><div class=\"supp\">Round to the nearest tenth.</div>";
     pb.tbl = m3Tbl(sc.xn, sc.yn, xs, ys);
     pb.fig = function (x) { return m3Fig({ xmax: 10, ymax: D.ymax, xs: 1, ys: D.ystep, xl: sc.xn, yl: sc.yn, alt: sc.s, line: x && x.reg ? { m: a, b: b } : null, scat: xs.map(function (v, i) { return [v, ys[i]]; }) }); };
     var sgn = pos ? "positive" : "negative", osg = pos ? "negative" : "positive";
     pb.steps = [
-      { id: "reg", lab: "Regression", type: "btn", btn: "Linear Regression", ask: "Press Linear Regression. The calculator finds the line that fits the data best.", hint: ["The calculator does the hard work for you.", "Press the button."], line: "Best-fit line: " + eqs.replace("y = ", "<i>y</i> = ") + ", <i>r</i> = " + rs },
+      { id: "reg", lab: "Regression", type: "btn", btn: "Linear Regression", ask: "Find the line of best fit (linear regression).", hint: ["The calculator does the hard work for you.", "Press the button."], line: "Best-fit line: " + eqs.replace("y = ", "<i>y</i> = ") + ", <i>r</i> = " + rs },
       { id: "r", lab: "Meaning of r", ask: "The calculator shows <i>r</i> = " + rs + ". What does <i>r</i> tell you?", type: "pick", opts: m3Sh([{ t: "A strong " + sgn + " correlation: the points are close to the line.", ok: true }, { t: "A weak " + sgn + " correlation: the points are far from the line.", ok: false, why: "<i>r</i> is close to " + (pos ? "1" : "−1") + ", so the fit is strong." }, { t: "A strong " + osg + " correlation.", ok: false, why: "The sign of <i>r</i> matches the direction of the points: " + sgn + "." }, { t: "No correlation.", ok: false, why: "<i>r</i> is close to " + (pos ? "1" : "−1") + ", not 0." }]), hint: ["<i>r</i> is between −1 and 1. Close to 1 or −1 is a strong fit; close to 0 is no correlation.", "The sign matches the direction: " + sgn + "."], line: "<i>r</i> = " + rs + ": a strong " + sgn + " correlation" },
       { id: "ax", fine: 1, lab: "a × x", ask: "To estimate <i>y</i> when <i>x</i> is " + X + ", first multiply the slope by " + X + ".", pre: m3F(a) + " × " + X + " =", ans: Math.round(a * X * 100) / 100, tol: .02, hint: ["Multiply the number in front of <i>x</i> by " + X + ".", m3F(a) + " × " + X + " = " + m3F(a * X) + "."], line: m3F(a) + " × " + X + " = " + m3F(a * X) },
       { id: "est", lab: "Estimate", ask: "Use the best-fit line to estimate the " + sc.yn.toLowerCase() + " when " + sc.xn.toLowerCase() + " is " + X + ".", pre: "<i>y</i> ≈", ans: est, tol: .1, hint: ["Put <i>x</i> = " + X + " into " + eqs + ".", m3F(a * X) + " " + (b < 0 ? "−" : "+") + " " + m3F(Math.abs(b)) + " = " + m3F(est) + "."], line: "<i>y</i> ≈ " + m3F(est) },
@@ -14547,16 +14551,16 @@ var ESPIC = {
       };
       var sayA = a === 1 ? "No number in front of " + c2X + "² means a = 1." : "a is the number in front of " + c2X + "².";
       pb.steps = [
-        { id: "a", fine: 1, lab: "a", type: "eqc", k: "a", ans: a, ask: "Click on the equation to find the <i>a</i> value." + (a === 1 ? " With no number in front of " + c2X + "², click the space where it would be." : ""), hint: [sayA, "<i>a</i> = " + c2F(a) + "."], line: "<i>a</i> = " + c2F(a) },
-        { id: "b", fine: 1, lab: "b", type: "eqc", k: "b", ans: b, ask: "Click on the equation to find the <i>b</i> value.", hint: ["b is the number in front of " + c2X + ", with its sign.", "<i>b</i> = " + c2F(b) + "."], line: "<i>b</i> = " + c2F(b) },
-        { id: "c", fine: 1, lab: "c", type: "eqc", k: "c", ans: c, ask: "Click on the equation to find the <i>c</i> value.", hint: ["c is the constant term, with its sign.", "<i>c</i> = " + c2F(c) + "."], line: "<i>c</i> = " + c2F(c) },
+        { id: "a", fine: 1, lab: "a", type: "eqc", k: "a", ans: a, ask: "Find <i>a</i>.", hint: [sayA, "<i>a</i> = " + c2F(a) + "."], line: "<i>a</i> = " + c2F(a) },
+        { id: "b", fine: 1, lab: "b", type: "eqc", k: "b", ans: b, ask: "Find <i>b</i>.", hint: ["b is the number in front of " + c2X + ", with its sign.", "<i>b</i> = " + c2F(b) + "."], line: "<i>b</i> = " + c2F(b) },
+        { id: "c", fine: 1, lab: "c", type: "eqc", k: "c", ans: c, ask: "Find <i>c</i>.", hint: ["c is the constant term, with its sign.", "<i>c</i> = " + c2F(c) + "."], line: "<i>c</i> = " + c2F(c) },
         { id: "op", fine: 1, lab: "Opens", type: "pick", ask: "Does the parabola open upward or downward?", opts: c2Pk(up ? "Upward" : "Downward", [[up ? "Downward" : "Upward", "Look at the sign of <i>a</i> = " + c2Q(a)[0] + ": positive opens upward, negative opens downward."]]), hint: ["The sign of <i>a</i> tells you.", "<i>a</i> = " + c2Q(a)[0] + ", so it opens " + (up ? "upward" : "downward") + "."], line: "opens " + (up ? "upward" : "downward") },
         { id: "mm", lab: "Min or max", type: "pick", ask: "Does <i>f</i> have a minimum value or a maximum value?", opts: c2Pk(up ? "A minimum" : "A maximum", [[up ? "A maximum" : "A minimum", "It opens " + (up ? "upward, so the vertex is the lowest point." : "downward, so the vertex is the highest point.")]]), hint: ["Opening upward gives a minimum; opening downward gives a maximum.", "It opens " + (up ? "upward: a minimum." : "downward: a maximum.")], line: "a " + mm },
         { id: "xv", fine: 1, noseq: 1, lab: "x of vertex", ask: "The " + mm + " is at the vertex, where " + c2X + " = −<i>b</i>/(2<i>a</i>). Find " + c2X + ".", pre: c2X + " =", ans: h, after: function (x) { x.xh = true; }, wrong: function (v) { return v === -h ? "Remember the negative sign: " + c2X + " = −b/(2a)." : ""; }, hint: ["<i>a</i> = " + c2Q(a)[0] + " and <i>b</i> = " + c2F(b) + ".", "−(" + c2F(b) + ")/(2 · " + c2Q(a)[0] + ") = " + c2F(h) + "."], line: c2X + " = −<i>b</i>/(2<i>a</i>) = " + c2F(h) },
         { id: "val", lab: "Value", ask: c2S("Find the <i>y</i>-value of the vertex: work out <i>f</i>(" + c2F(h) + ") in the table. That is the " + mm + " value.", "Find the minimum or maximum value: the <i>y</i>-value of the vertex."), pre: c2Y + " =", ans: k, after: function (x) { x.vv = true; }, hint: ["Work out " + work + ".", "<i>f</i>(" + c2F(h) + ") = " + c2F(k) + "."], line: "the " + mm + " value is " + c2F(k) }
       ];
       // Demo, Sequence: the y-value is found by clicking the work in the table (one operation per click)
-      pb.isteps = pb.steps.map(function (st) { return st.id !== "val" ? st : { id: "val", lab: "Value", type: "tclick", n: WS.length - 1, ans: k, ask: "Click the work in the middle of the table to find the <i>y</i>-value, one step at a time. That is the " + mm + " value.", after: st.after, hint: st.hint, line: st.line }; });
+      pb.isteps = pb.steps.map(function (st) { return st.id !== "val" ? st : { id: "val", lab: "Value", type: "tclick", n: WS.length - 1, ans: k, ask: "Find the " + mm + " value.", after: st.after, hint: st.hint, line: st.line }; });
       // Calculate ("Try Another"): every box at once
       var W1 = function (L) { return function (v) { return L.indexOf(String(v).trim().toLowerCase().replace(/\.$/, "")) >= 0; }; };
       pb.tsteps = [
@@ -14655,12 +14659,12 @@ var ESPIC = {
       pb.dsm = { F1: F1, F2: F2, D1: D1, D2: D2, xmax: Math.max(D1, D2) * 1.12, ymax: Math.max(H1, H2) * 1.35, l1: "y=" + c2T(a1, 6) + "\\left(x-" + D1 / 2 + "\\right)^{2}+" + H1, l2: "y=-" + c2T(a, 6) + "x\\left(x-" + D2 + "\\right)" };
       pb.head = sc.s + " Path 1: " + f1.replace(/<[^>]+>/g, "") + "  Path 2: " + f2.replace(/<[^>]+>/g, ""); pb.pic = c2Pic(sc.pic);
       var st0 = sc.s + " In each path, " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + ").<br>Path of the first " + it + ": <span class=\"lm\" style=\"color:#C74440\">" + f1 + "</span><br>Path of the second " + it + ": <span class=\"lm\" style=\"color:#2D70B3\">" + f2 + "</span>";   // (red and blue, as Desmos draws the first and second expressions)
-      Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () { return st0 + (mode === "solo" ? "<br><b>Graph both in Desmos, then fill in the table and press Submit.</b>" : ""); } });
+      Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () { return st0; } });
       pb.cb = 1; pb.qc = 1; pb.grid = { it: it, u: u };   // (Circle Back in Demo, Sequence and Calculate; one static grid in Write)
       pb.fig = function () { return ""; };
       var far = D1 > D2 ? "first" : "second", hi = H1 > H2 ? "first" : "second";
       pb.steps = [
-        { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph each on Desmos.", line: "graphed both paths in Desmos" },
+        { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph each path.", line: "graphed both paths in Desmos" },
         { id: "d1", lab: "Distance 1", ask: "How far does the first " + it + " travel before it lands? Click its path in Desmos to see the " + c2X + "-intercepts.", post: u, ans: D1, hint: ["It starts at (0, 0) and lands at the other " + c2X + "-intercept.", "The other " + c2X + "-intercept is (" + D1 + ", 0)."], line: "first " + it + ": " + D1 + " " + u },
         { id: "h1", lab: "Height 1", ask: "What is the maximum height of the first " + it + "? Click its path to see the maximum.", post: u, ans: H1, hint: ["The maximum is the vertex: the top of the path.", "The vertex is (" + D1 / 2 + ", " + H1 + ")."], line: "first " + it + " height: " + H1 + " " + u },
         { id: "d2", lab: "Distance 2", ask: "How far does the second " + it + " travel before it lands?", post: u, ans: D2, hint: ["Read the " + c2X + "-intercept where it lands.", "It lands at (" + D2 + ", 0)."], line: "second " + it + ": " + D2 + " " + u },
@@ -14765,7 +14769,7 @@ var ESPIC = {
     var c4 = ws("c4", "num", "Work it out.", { pre: c2F(R) + " ÷ " + V.D + " =", post: V.ap ? "(to the nearest hundredth)" : "", ans: V.a, tol: V.ap ? 0.005 + 1e-9 : 1e-9, after: setS(6), wl: "", hint: ["Divide." + (V.ap ? " Round to the nearest hundredth." : ""), c2F(R) + " ÷ " + V.D + " " + aTx + "."] });
     var gr = { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph " + E[0] + " in Desmos.", line: "graphed " + Ftx + " in Desmos", hint: ["Type the equation on the first line of Desmos.", "Type " + E[1] + "."] };
     var how = V.qt === "y" ? "Type " + c2X + " = " + c2F(V.Xq) + " on a new line and click where it crosses the parabola." : V.qt === "xt" ? "Type " + c2Y + " = " + c2F(V.Yq) + " on a new line and click where it crosses the parabola on the way down." : "Click the parabola: Desmos shows where it crosses the " + c2X + "-axis.";
-    var ansA = function () { return mode === "solo" ? q : "Use the parabola in Desmos. " + q + " <span class=\"vpHow\">(" + how + ")</span>"; };
+    var ansA = function () { return q; };
     var isY = V.qt === "y", aTx2 = (V.qt === "xi" && !Number.isInteger(V.ans) ? "about " : "") + c2F(V.ans);
     var ans = { id: "ans", lab: isY ? "Height" : "Distance", ask: ansA, pre: (isY ? c2Y : c2X) + " =", post: u, ans: V.ans, tol: 0.051,
       nums: isY ? [k, V.Y0, c2R(V.a * (V.Xq - h) * (V.Xq - h) + k, 1)] : [h, c2R(2 * h - V.Xq, 4), V.X0, k],
@@ -15043,7 +15047,7 @@ var ESPIC = {
     var c4 = ws("c4", "num", "Work it out.", { pre: N(V.Y0) + " ÷ " + Pn(V.D) + " =", post: V.ap ? "(to the nearest hundredth)" : "", ans: V.a, tol: V.ap ? 0.005 + 1e-9 : 1e-9, after: setS(6), wl: "", hint: ["Divide." + (V.ap ? " Round to the nearest hundredth." : ""), N(V.Y0) + " ÷ " + Pn(V.D) + " " + aTx + "."] });
     var gr = { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph " + E[0] + " in Desmos.", line: "graphed " + Ftx + " in Desmos", hint: ["Type the equation on the first line of Desmos.", "Type " + E[1] + "."] };
     var isH = V.qt === "h", how = "Click the parabola: Desmos shows its " + (V.up ? "lowest" : "highest") + " point, the vertex (" + c2X.replace(/x/, "h") + ", <i>k</i>).";
-    var ansA = function () { return mode === "solo" ? qtx : "Use the parabola in Desmos. " + qtx + " <span class=\"vpHow\">(" + how + ")</span>"; };
+    var ansA = function () { return qtx; };
     var ans = { id: "ans", lab: isH ? "h" : "k", ask: ansA, pre: isH ? "<i>h</i> =" : "<i>k</i> =", post: isH ? xu : u, ans: V.ans, tol: 0.051,
       nums: isH ? [p, q, k, V.X0] : [h, V.Y0, -k, c2R(V.a * (h - p) * (h - q), 1)],
       line: isH ? "the vertex is at " + c2X + " = " + N(h) + " " + xu : "the vertex is at height " + N(k) + " " + u,
@@ -15169,8 +15173,8 @@ var ESPIC = {
         : qt === "xi" ? ["At what " + sc.xw + " does the " + sc.yw + " fall to 0?", "Click the parabola: Desmos shows where it crosses the " + c2X + "-axis, the " + c2X + "-intercepts. Use the one to the right of the data.", c2X + " ≈", sc.xu, "the " + sc.yw + " falls to 0 at " + c2X + " ≈ " + c2F(ans) + " " + sc.xu]
         : ["Estimate the " + sc.what + ".", "On the parabola, find the point where " + c2X + " = " + X + " (click the parabola and drag along it: Desmos shows the point's coordinates).", c2Y + " ≈", sc.u, "at " + c2X + " = " + X + ", " + c2Y + " ≈ " + c2F(ans) + " " + sc.u];
       pb.head = sc.s; pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + "<span class=\"regP\">Type the data into a table on Desmos and run a quadratic regression. Then use the graph to answer:</span>";
-      pb.tq = "<div class=\"regQ\">" + Q[0] + "</div><div class=\"regR\">Round to the nearest tenth.</div>";   // (the question goes under the table, bold and larger; the rounding in plain type below it)
+      pb.story = sc.s;
+      pb.tq = "<div class=\"regQ\">" + Q[0] + "</div><div class=\"supp\">Round to the nearest tenth.</div>";   // (the question goes under the table, bold and larger; the rounding in plain type below it)
       pb.dsm = { reg: 1, xs: xs.slice(), ys: ys.slice(), rg: "ax_{1}^{2}+bx_{1}+c" };
       pb.tbl = m3Tbl(sc.xn.replace(/ \(.*/, ""), sc.yn.replace(/ \(.*/, ""), xs, ys.map(function (v) { return c2F(v); }));
       var xa = c2Axis(0, Math.max(xs[xs.length - 1], X) + 1), ya = c2Axis(0, Math.max.apply(null, ys.concat([Y])) * 1.12);
