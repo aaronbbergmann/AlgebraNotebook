@@ -1940,7 +1940,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
   }
   function exRender(hot) { exRender0(hot); if (BX && !BX.done && EXP && !EXP.eq) bxRow(); exWork(); exDnUpd(); }
   function exRender0(hot) {
-    $("exBox").classList.toggle("solved", !!locked); if ($("exSoloRt")) $("exSoloRt").hidden = !(EXP && EXP.rad && !EXP.eq); var bxk = !!(BUILT[act] && BUILT[act].solver && EXP && !EXP.rad && (svL() ? !EXP.eq : JSON.stringify(EXP).indexOf('"b":') >= 0 || /x\^2/.test(JSON.stringify(EXP)))); $("exSoloX2").hidden = $("exSoloX").hidden = !(bxk && mode === "solo"); $("askX2").hidden = $("askX").hidden = !(bxk && mode === "calculate");   /* (x and x² keys) */   // (2.4A Box Method: an x² key wherever an answer is typed)   // (a square root to simplify: a √ key beside the Write box)
+    $("exBox").classList.toggle("solved", !!locked); if ($("exSoloRt")) $("exSoloRt").hidden = !(EXP && ((EXP.rad && !EXP.eq) || (EXP.eq && svWr() && /x\^2|"pw":true|"b":\[/.test(JSON.stringify(EXP.orig || {})))));   /* (a √ key: square roots to simplify, and quadratic equations in Write, whose answers may have square roots) */ var bxk = !!(BUILT[act] && BUILT[act].solver && EXP && !EXP.rad && (svL() ? !EXP.eq : JSON.stringify(EXP).indexOf('"b":') >= 0 || /x\^2/.test(JSON.stringify(EXP)))); $("exSoloX2").hidden = $("exSoloX").hidden = !(bxk && mode === "solo"); $("askX2").hidden = $("askX").hidden = !(bxk && mode === "calculate");   /* (x and x² keys) */   // (2.4A Box Method: an x² key wherever an answer is typed)   // (a square root to simplify: a √ key beside the Write box)
     if (!EXP) return;
     if (EXP.eq) { eqRender(hot); return; }
     zpPaint();
@@ -7126,7 +7126,8 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     $(p[0]).addEventListener("click", function () { var el = $(p[1]), i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd; el.focus(); el.setRangeText("x\u00b2", i, j, "end"); el.dispatchEvent(new Event("input", { bubbles: true })); });
   });
   $("exSoloRt").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the box
-  $("exSoloRt").addEventListener("click", function () { var el = $("exSoloIn"), i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd; el.focus(); el.setRangeText("\u221a", i, j, "end"); });
+  var exLastIn = "exSoloIn"; ["exSoloIn", "exSoloIn2"].forEach(function (id) { $(id).addEventListener("focus", function () { exLastIn = id; }); });   // (the √ key types into the box last used)
+  $("exSoloRt").addEventListener("click", function () { var el = $(exLastIn) && !$(exLastIn).closest("[hidden]") ? $(exLastIn) : $("exSoloIn"), i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd; el.focus(); el.setRangeText("\u221a", i, j, "end"); });
   $("exSoloGo").addEventListener("click", exCheckSolo); $("exSoloIn2").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); }); $("exSoloIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); });
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
   $("ansGo").addEventListener("click", checkAnswer);
