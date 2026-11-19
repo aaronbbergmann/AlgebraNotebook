@@ -8,6 +8,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
 html:not([data-mode=solo]) body.dsmOn #dsmSteps { min-height: 124px; }   /* (Demo, Sequence, Calculate: the prompt keeps its room, so the graph below it never moves) */
 html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.dsmOn #pgQcue { min-height: 1.5em; }   /* (and its message line: "Well done!" appearing does not move the graph) */
 .exNote { text-align: center; font: 700 1.05rem/1.4 system-ui, sans-serif; margin-top: 14px; min-height: 1.4em; }
+.c3RadIn { border-top: 0.06em solid currentColor; display: inline-block; line-height: 1.02; padding: .03em .06em 0; margin-left: -.04em; } .c3Q { color: #7A3FB5; }
 </style></head><body>
 <!DOCTYPE html>
 <html lang="en">
@@ -4766,13 +4767,25 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     10: { eq: [function (r) { return r.cs === 1; }, function (r) { return r.cs === 2; }, function (r) { return r.cs === 3; }] },   // 3.3A complete the square
     12: { eq: [function (r) { return r.qu === 1; }, function (r) { return r.qu === 2; }, function (r) { return r.qu === 3; }] },
     14: { lin4: 1 },                                                                          // 3.1A 4-step linear equations: 3(x − 2) + 4 = x + 10
-    15: { bin: 1 }                                                                            // 3.1A two binomials with the 2 x 2 box, to the simplified expression    // 3.4A the quadratic formula
+    15: { bin: 1 },
+    17: { sqh: 1 }                                                                            // 3.1B solving with square roots, the answer simplified: x² = 32 → x = ±4√2                                                                            // 3.1A two binomials with the 2 x 2 box, to the simplified expression    // 3.4A the quadratic formula
   };
   function svL() { return (act === "2.4" && lesson >= 5) || (act === "3.1" && !!C3SV[lesson]); }
   function svAct() { return act === "2.4" || act === "3.1"; }   // (a section whose exercises switch between the quiz engine and the Play Solve engine)
   function c3Make() {   // a Chapter 3 problem: the Demo opens on the first (simplest) kind, every other mode on any kind
     var c = C3SV[lesson], cl = function (o) { return JSON.parse(JSON.stringify(o)); };
     if (c.rad || c.box || c.bin) return false;   // (made like 2.4's Square Roots and Box Method)
+    if (c.sqh) {   // a square root equation whose solutions need simplifying: x² = 32, 3x² = 75 → ±5... (never a perfect square), x² − 7 = 41, (x − 3)² = 12
+      var X2h = function (q) { return { k: "x", v: "x^2", n: mk(q) }; }, Ch = function (q) { return { k: "c", n: mk(q) }; }, rh, mh, vh, Lh, Rh, form = mode === "demo" ? 0 : rnd(4), grp = false;
+      do { rh = 2 + rnd(5); mh = [2, 3, 5, 6, 7][rnd(5)]; vh = rh * rh * mh; } while (vh > 300);
+      if (form === 0) { Lh = [X2h(1)]; Rh = [Ch(vh)]; }
+      else if (form === 1) { var ah = 2 + rnd(3); Lh = [X2h(ah)]; Rh = [Ch(ah * vh)]; }
+      else if (form === 2) { var bh = nz(12); Lh = [X2h(1), Ch(bh)]; Rh = [Ch(vh + bh)]; if (rnd(2)) Lh.reverse(); }
+      else { var hh = nz(6), items = [{ k: "x", v: "x", n: mk(1) }, Ch(-hh)]; Lh = [{ k: "g", m: mk(1), items: items, b: JSON.parse(JSON.stringify(items)), pw: true }]; Rh = [Ch(vh)]; grp = true; }
+      SV = "x";
+      EXP = { eq: true, ask: null, vk: "x", L: Lh, R: Rh, rel: "=", cmp: null, c3: null, qf: null, qu: null, grUser: false, quq: false, lit: false, quad: false, av: false, sq: !grp, dvq: false, zpq: false, grq: false, qd: false, sf: false, zp: null, src: "", svk: lesson };
+      EXP.orig = { L: cl(Lh), R: cl(Rh), rel: "=" }; return true;
+    }
     if (c.lin4) {
       var X4 = function (q) { return { k: "x", v: "x", n: mk(q) }; }, C4 = function (q) { return { k: "c", n: mk(q) }; }, a4, b4, c4, d4, e4, x4;
       do { a4 = 2 + rnd(5); b4 = nz(8); c4 = nz(12); d4 = 1 + rnd(5); x4 = nz(9); e4 = a4 * (x4 + b4) + c4 - d4 * x4; } while (d4 === a4 || !e4 || x4 + b4 === 0);
@@ -5947,7 +5960,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     ["2.4A", "2.4", ["1", "2", "5", "6", "7"], "Modeling with Quadratic Functions"],
     ["2.4B", "2.4", ["4", "5", "8"], "Modeling with Quadratic Functions (Day 2)"],   // (Regression, 3-Step Equations, Distributing)   // (exercise 3, Three Points with first and second differences, was taken out)
     ["3.1A", "3.1", ["1", "14", "15"], "Solving Quadratic Equations: Graphing"],
-    ["3.1B", "3.1", ["2", "3"], "Solving Quadratic Equations: Square Roots"],
+    ["3.1B", "3.1", ["16", "2", "3", "17"], "Solving Quadratic Equations: Square Roots"],
     ["3.1C", "3.1", ["4"], "Solving Quadratic Equations: Real Life"],
     ["3.1D", "3.1", ["5", "6"], "Solving Quadratic Equations: Factoring"],
     ["3.1E", "3.1", ["7"], "Solving Quadratic Equations: Solving by Factoring"],
@@ -6009,8 +6022,8 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
     "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics of a Parabola"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics"], function (l) { return l === 11 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
-    "3.1": c2Built("3.1", ["Solving by Graphing", "Simplifying Square Roots", "Solving with Square Roots", "Real Life", "Multiplying (Box Method)", "Factoring", "Solving by Factoring", "Special Products", "Factoring ax\u00b2 + bx + c", "Completing the Square", "Vertex Form by Completing the Square", "The Quadratic Formula", "The Discriminant", "4-Step Linear Equations", "Multiplying Binomials (Box Method)"],
-      ["Graphing", "Simplify Roots", "Square Roots", "Real Life", "Box Method", "Factoring", "Solve by Factoring", "Special Products", "Factor ax\u00b2 + bx + c", "Complete the Square", "Vertex Form", "Quadratic Formula", "Discriminant", "4-Step Equations", "Binomials"]),
+    "3.1": c2Built("3.1", ["Solving by Graphing", "Simplifying Square Roots", "Solving with Square Roots", "Real Life", "Multiplying (Box Method)", "Factoring", "Solving by Factoring", "Special Products", "Factoring ax\u00b2 + bx + c", "Completing the Square", "Vertex Form by Completing the Square", "The Quadratic Formula", "The Discriminant", "4-Step Linear Equations", "Multiplying Binomials (Box Method)", "Perfect Square Factors", "Solving with Square Roots (Simplify)"],
+      ["Graphing", "Simplify Roots", "Square Roots", "Real Life", "Box Method", "Factoring", "Solve by Factoring", "Special Products", "Factor ax\u00b2 + bx + c", "Complete the Square", "Vertex Form", "Quadratic Formula", "Discriminant", "4-Step Equations", "Binomials", "Perfect Squares", "Square Roots: Simplify"]),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression", "3-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Distributing"], ["Vertex & Point", "Intercepts", "Three Points", "Regression", "3-Step Equations", "Box Method", "Square Roots", "Distributing"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -15616,6 +15629,37 @@ var ESPIC = {
       return pb;
     }
   }
+
+  // 3.1B Perfect Square Factors (from the Amplify activity's screen 5): simplify √a one question at a time: a perfect square factor of a, the other (leftover)
+  // factor, then the perfect square's square root: √50 = √25 · √2 = 5√2.  Demo, Sequence: two choices each (the wrong one as in the activity); Calculate, Write: typed
+  var C3PSF = [[8, 4], [12, 4], [18, 9], [20, 4], [24, 4], [27, 9], [28, 4], [32, 16], [45, 9], [48, 16], [50, 25], [54, 9], [63, 9], [72, 36], [75, 25], [80, 16], [96, 16], [98, 49], [125, 25], [200, 100], [300, 100], [500, 100], [600, 100], [700, 100]];
+  function c3Rt(n, coef) { return "<span class=\"c3Rad\">" + (coef != null ? coef : "") + "√<span class=\"c3RadIn\">" + n + "</span></span>"; }
+  function c3M16(tier) {
+    var q = C3PSF[rnd(C3PSF.length)], a = q[0], b = q[1], c = a / b, d = Math.round(Math.sqrt(b)), pb = { kind: 20 };
+    var inc1 = b === 4 ? 9 : b === 9 ? 4 : b === 16 ? 25 : b === 25 ? 16 : 7, inc2 = c === d ? b : d, inc3 = d === 2 ? 3 : d === c && d > 2 ? 2 : c;
+    pb.head = "√" + a; pb.pic = "";
+    Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () { return mode === "solo" ? "<span class=\"lm cf\">Simplify " + c3Rt(a) + ".</span>" : ""; } });   // (Demo, Sequence, Calculate: the work below shows √a once)
+    pb.tq = "";
+    pb.ws = function () {   // the work, built up as each answer is given (Demo, Sequence, Calculate): √a, then √b · √c, then d√c
+      if (mode === "solo") return ""; var x = QZ.m3x || {}, Q = "<span class=\"c3Q\">?</span>";
+      var l2 = c3Rt(x.ps ? b : Q) + " · " + c3Rt(x.lf ? c : Q), l3 = x.lf ? (x.sr ? c3Rt(c, d) : Q + c3Rt(c)) : "";
+      return "<div class=\"c3Eq lm\" style=\"font-size:40px;flex-direction:column;align-items:center;gap:6px\"><div>" + c3Rt(a) + "</div><div>= " + l2 + "</div>" + (l3 ? "<div>= " + l3 + "</div>" : "<div style=\"visibility:hidden\">=</div>") + "</div>";
+    };
+    pb.fig = function () { return ""; };
+    var two = function (good, bad) { return m3Sh([{ t: String(good), ok: true }, { t: String(bad), ok: false, why: "" }]); };
+    pb.isteps = [
+      { id: "ps", lab: "perfect square factor", type: "pick", ask: "Which is a perfect square factor of " + a + "?", opts: m3Sh([{ t: String(b), ok: true }, { t: String(inc1), ok: false, why: inc1 + (a % inc1 ? " does not divide " + a + "." : " is not the largest perfect square factor.") }]), after: function (x) { x.ps = true; }, hint: ["Perfect squares: 4, 9, 16, 25, 36, 49, 64, 81, 100.", b + " · " + c + " = " + a + "."], line: c3Rt(a) + " = " + c3Rt(b) + " · " + c3Rt("?") },
+      { id: "lf", lab: "leftover factor", type: "pick", ask: "Which is the other leftover factor?", opts: m3Sh([{ t: String(c), ok: true }, { t: String(inc2), ok: false, why: b + " · " + inc2 + " is not " + a + "." }]), after: function (x) { x.lf = true; }, hint: [a + " ÷ " + b + " = ?", a + " ÷ " + b + " = " + c + "."], line: c3Rt(a) + " = " + c3Rt(b) + " · " + c3Rt(c) },
+      { id: "sr", lab: "square root", type: "pick", ask: "What is the square root of " + b + "?", opts: m3Sh([{ t: String(d), ok: true }, { t: String(inc3), ok: false, why: inc3 + " · " + inc3 + " is not " + b + "." }]), after: function (x) { x.sr = true; }, hint: ["What number times itself is " + b + "?", d + " · " + d + " = " + b + "."], line: c3Rt(a) + " = " + c3Rt(c, d) }
+    ];
+    pb.steps = [
+      { id: "ps", lab: "perfect square factor", ask: "What is the largest perfect square factor of " + a + "?", pre: c3Rt(a) + " = √", ans: b, nums: [inc1, a / 2, c], after: function (x) { x.ps = true; }, hint: pb.isteps[0].hint, line: pb.isteps[0].line },
+      { id: "lf", lab: "leftover factor", ask: "What is the other leftover factor?", pre: "√" + b + " · √", ans: c, nums: [inc2, b, a - b], after: function (x) { x.lf = true; }, hint: pb.isteps[1].hint, line: pb.isteps[1].line },
+      { id: "sr", lab: "square root", ask: "What is the square root of " + b + "?", pre: "√" + b + " =", ans: d, nums: [inc3, b / 2, d + 1], after: function (x) { x.sr = true; }, hint: pb.isteps[2].hint, line: pb.isteps[2].line }
+    ];
+    pb.qwa = { Q: [[c3Rt(a)]], W: [[c3Rt(b) + " · " + c3Rt("?"), ["ps"]], [c3Rt(b) + " · " + c3Rt(c), ["lf"]]], A: [[c3Rt(c, d), ["sr"]]] };
+    return pb;
+  }
   // 3.4B The Discriminant: a, b and c, then b² − 4ac, then how many real solutions (positive: 2, zero: 1, negative: 0)
   function c3M13(tier) {
     for (var t = 0; t < 500; t++) {
@@ -15721,7 +15765,7 @@ var ESPIC = {
   // which exercise makes the problem
   function c2Make(tier) {
     c2Dec = act === "2.1" || act === "2.4" || act === "3.1" || (act === "2.2" && lesson === 5);
-    var pb = act === "3.1" ? c3Nums(({ 1: c3M1, 4: c3M4, 11: c3M11, 13: c3M13 }[lesson] || c3M13)(tier)) : act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211, c2M2212][lesson - 1](tier)
+    var pb = act === "3.1" ? c3Nums(({ 1: c3M1, 4: c3M4, 11: c3M11, 13: c3M13, 16: c3M16 }[lesson] || c3M13)(tier)) : act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211, c2M2212][lesson - 1](tier)
       : ([c2M241, c2M242, null, c2M244][lesson - 1] || c2M244)(tier);   // (2.4 exercise 3, Three Points with first and second differences, was taken out)
     pb.head = m3Plain(pb.head);   // (Show work's first line is plain text)
     return pb;
