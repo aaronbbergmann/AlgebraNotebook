@@ -5960,7 +5960,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     ["2.4A", "2.4", ["1", "2", "5", "6", "7"], "Modeling with Quadratic Functions"],
     ["2.4B", "2.4", ["4", "5", "8"], "Modeling with Quadratic Functions (Day 2)"],   // (Regression, 3-Step Equations, Distributing)   // (exercise 3, Three Points with first and second differences, was taken out)
     ["3.1A", "3.1", ["1", "14", "15"], "Solving Quadratic Equations: Graphing"],
-    ["3.1B", "3.1", ["16", "2", "3", "17"], "Solving Quadratic Equations: Square Roots"],
+    ["3.1B", "3.1", ["16", "3", "17"], "Solving Quadratic Equations: Square Roots"],   // (Simplifying Square Roots, lesson 2, taken out: Perfect Square Factors covers it)
     ["3.1C", "3.1", ["4"], "Solving Quadratic Equations: Real Life"],
     ["3.1D", "3.1", ["5", "6"], "Solving Quadratic Equations: Factoring"],
     ["3.1E", "3.1", ["7"], "Solving Quadratic Equations: Solving by Factoring"],
@@ -13547,7 +13547,7 @@ var ESPIC = {
   }
   function m3wSteps() {
     if (m3Cur() && m3Cur().grid) { m3wGrid(); return; }
-    var el = $("wfSteps"), L = m3L(), W = QZ.m3w, h = "", sig = [QZ.pi];
+    var el = $("wfSteps"), L = m3L(), W = QZ.m3w, h = "", sig = [QZ.pi, m3Cur() ? m3Cur().head : ""];   // (the problem itself is in the key: a new one with the same step names is drawn again)
     $("undo").hidden = true;
     L.forEach(function (st) {
       if (W.ok[st.id]) return; if (st.wif && !st.wif(W.v)) { sig.push(st.id + ":hid"); return; }   // (3.1A: the x = boxes come once "how many" is chosen)
@@ -13558,6 +13558,7 @@ var ESPIC = {
       else if (t === "pick") h += "<div class=\"wfRow m3Opts\">" + st.opts.map(function (o, i) { var on = W.v[st.id] === i; return "<button type=\"button\" class=\"btn wfBtn" + (on ? " sel" : "") + (on ? bad : "") + "\" data-m3w=\"pick\" data-sid=\"" + st.id + "\" data-v=\"" + i + "\" aria-pressed=\"" + on + "\">" + o.t + "</button>"; }).join("") + "</div>";
       else if (t === "btn") h += "<div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn\" data-m3w=\"go\" data-sid=\"" + st.id + "\">" + st.btn + "</button></div>";
       else if (st.pair) { var pv = String(W.v[st.id] || "|").split("|"); h += "<div class=\"wfRow cg\">" + [0, 1].map(function (k) { return "<span" + (k ? " style=\"margin-left:1.2em\"" : "") + ">" + st.pre + "</span><input class=\"m3In" + bad + "\" data-sid=\"" + st.id + "\" data-k=\"" + k + "\" value=\"" + m3wQ(pv[k] || "") + "\" style=\"width:6rem\" inputmode=\"decimal\" autocomplete=\"off\">"; }).join("") + "</div>"; }
+      else if (st.rootKey) h += "<div class=\"wfRow cg\">" + (st.pre ? "<span>" + st.pre + "</span>" : "") + "<input class=\"m3In" + bad + "\" data-sid=\"" + st.id + "\" value=\"" + m3wQ(W.v[st.id]) + "\" style=\"width:8rem\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Your answer\"><button type=\"button\" class=\"btn m3RtK\" data-rtk=\"" + st.id + "\" aria-label=\"Insert a square root\">√</button></div>";   // (a typed answer with square roots: a √ key)
       else if (t === "num" || t === "eq" || t === "fn") h += "<div class=\"wfRow cg\">" + (st.pre ? "<span>" + st.pre + "</span>" : "") + "<input class=\"m3In" + bad + "\" data-sid=\"" + st.id + "\" value=\"" + m3wQ(W.v[st.id]) + "\" style=\"width:" + (t === "eq" || t === "fn" ? "13" : "8") + "rem\" inputmode=\"" + (t === "eq" || t === "fn" ? "text" : "decimal") + "\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"" + m3wQ(st.lab) + "\">" + (st.post ? "<span>" + st.post + "</span>" : "") + "</div>";
       else if (bad) h += "<div class=\"m3wBad\">Not quite yet.</div>";
       h += "</div>";
@@ -13686,6 +13687,11 @@ var ESPIC = {
     if (bad.length) { QZ.wrong++; if (vpWrTa()) { if (QZ.ww) QZ.ww.fin = true; drawPlay(); m3Redraw(); pqPanel(); var ansW = m3L().filter(function (q) { return !QZ.m3w.ok[q.id] && m3AnsTx(q); }).map(function (q) { return m3wLab(q) + ": " + m3AnsTx(q); }); pqMsg(m3Plain("Not quite." + (ansW.length ? " " + ansW.join("; ") + "." : "") + " Show work has every step; Try Another gives a new problem.")); return; } drawPlay(); m3Redraw(); var ansM = c2cOn() ? m3L().filter(function (q) { return !QZ.m3w.ok[q.id] && m3AnsTx(q); }).map(function (q) { return m3wLab(q) + ": " + m3AnsTx(q); }) : []; pqMsg(m3Plain("Not quite. Check " + wsList(bad) + ", then press Submit again." + (ansM.length ? " The answers: " + ansM.join("; ") + "." : ""))); return; }
     pqMsg(""); drawPlay(); pqEval();
   }
+  $("wfSteps").addEventListener("mousedown", function (e) { if (e.target.closest && e.target.closest(".m3RtK")) e.preventDefault(); });   // (the cursor stays in the box)
+  $("wfSteps").addEventListener("click", function (e) {
+    var k = e.target.closest && e.target.closest(".m3RtK"); if (!k) return; var el = document.querySelector("#wfSteps .m3In[data-sid=\"" + k.dataset.rtk + "\"]"); if (!el) return;
+    var i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd; el.focus(); el.setRangeText("√", i, j, "end"); el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
   $("wfSteps").addEventListener("input", function (e) { if (m3() && e.target.classList.contains("m3In")) { if (m3wOn()) { var sid = e.target.dataset.sid; if (e.target.dataset.k != null) { var pv = String(QZ.m3w.v[sid] || "|").split("|"); pv[+e.target.dataset.k] = e.target.value; QZ.m3w.v[sid] = pv.join("|"); } else QZ.m3w.v[sid] = e.target.value; return; } m3Try(e.target, false); } });
   $("wfSteps").addEventListener("keydown", function (e) {
     if (e.key === "Enter" && m3() && e.target.classList.contains("m3In")) {
@@ -15423,7 +15429,7 @@ var ESPIC = {
   function c2cOn() { return pq() && act === "2.2" && (lesson === 3 || lesson === 4 || lesson === 5 || lesson === 12); }
   function ansAdd(msg, a) { msg = msg || "Not quite."; if (!(c2cOn() || (pq() && ivL()) || vfnTA() || (pq() && (mode === "sequence" || mode === "calculate"))) || a == null || a === "") return msg;   /* (an error in Sequence or Calculate shows the right answer with Try another) */ return msg.replace(/\s*Try again\.?\s*$/, "") + " The answer is " + String(a).replace(/\.\s*$/, "") + "."; }
   function m3AnsTx(st) {
-    if (!st) return ""; var t = st.type || "num"; if (st.pair) return c2X.replace(/<[^>]+>/g, "") + " = " + m3F(st.pair[0]) + " and " + c2X.replace(/<[^>]+>/g, "") + " = " + m3F(st.pair[1]);
+    if (!st) return ""; var t = st.type || "num"; if (st.ansT) return st.ansT; if (st.pair) return c2X.replace(/<[^>]+>/g, "") + " = " + m3F(st.pair[0]) + " and " + c2X.replace(/<[^>]+>/g, "") + " = " + m3F(st.pair[1]);
     try {
       if (t === "pick") { var o = (st.opts || []).filter(function (q) { return q.ok; })[0]; return o ? String(o.t).replace(/<\/?[A-Za-z][^>]*>/g, "").replace(/\.\s*$/, "") : ""; }
       if (t === "num") { var v = m3V(st.ans); return v == null || !isFinite(v) ? "" : c2T(v, 6).replace(/-/g, "−") + (st.post ? " " + String(st.post).replace(/<[^>]+>/g, "") : ""); }
@@ -15638,10 +15644,11 @@ var ESPIC = {
     var q = C3PSF[rnd(C3PSF.length)], a = q[0], b = q[1], c = a / b, d = Math.round(Math.sqrt(b)), pb = { kind: 20 };
     var nsf = []; for (var f = 2; f < a; f++) if (a % f === 0 && !isSq(f)) nsf.push(f); var inc1 = nsf[rnd(nsf.length)],   /* (the wrong choice is another factor of a, one that is not a perfect square) */ inc2 = c === d ? b : d, inc3 = d === 2 ? 3 : d === c && d > 2 ? 2 : c;
     pb.head = "√" + a; pb.pic = "";
-    Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () { return mode === "solo" ? "<span class=\"lm cf\">Simplify " + c3Rt(a) + ".</span>" : ""; } });   // (Demo, Sequence, Calculate: the work below shows √a once)
+    pb.story = ""; pb.noCueW = 1;   // (every mode starts with √a alone, shown large below; Write: no list of the parts)
     pb.tq = "";
     pb.ws = function () {   // the work, built up as each answer is given (Demo, Sequence, Calculate): √a, then √b · √c, then d√c
-      if (mode === "solo") return ""; var x = QZ.m3x || {}, Q = "<span class=\"c3Q\">?</span>";
+      if (mode === "solo") return "<div class=\"c3Eq lm\" style=\"font-size:40px;flex-direction:column;align-items:center\"><div>" + c3Rt(a) + "</div></div>";   // (Write: √a, and the answer typed in its box)
+      var x = QZ.m3x || {}, Q = "<span class=\"c3Q\">?</span>";
       var l2 = x.ps ? c3Rt(b) + " · " + c3Rt(x.lf ? c : Q) : "", l3 = x.lf ? (x.sr ? c3Rt(c, d) : Q + c3Rt(c)) : "", line = function (t) { return t ? "<div>= " + t + "</div>" : "<div style=\"visibility:hidden\">= " + c3Rt(b) + "</div>"; };   // (it starts with √a alone; each line comes as it is found, in a place kept for it)
       return "<div class=\"c3Eq lm\" style=\"font-size:40px;flex-direction:column;align-items:center;gap:6px\"><div>" + c3Rt(a) + "</div>" + line(l2) + line(l3) + "</div>";
     };
@@ -15657,7 +15664,16 @@ var ESPIC = {
       { id: "lf", lab: "leftover factor", ask: "What is the other leftover factor?", pre: "√" + b + " · √", ans: c, nums: [inc2, b, a - b], after: function (x) { x.lf = true; }, hint: pb.isteps[1].hint, line: pb.isteps[1].line },
       { id: "sr", lab: "square root", ask: "What is the square root of " + b + "?", pre: "√" + b + " =", ans: d, nums: [inc3, b / 2, d + 1], after: function (x) { x.sr = true; }, hint: pb.isteps[2].hint, line: pb.isteps[2].line }
     ];
-    pb.qwa = { Q: [[c3Rt(a)]], W: [[c3Rt(b) + " · " + c3Rt("?"), ["ps"]], [c3Rt(b) + " · " + c3Rt(c), ["lf"]]], A: [[c3Rt(c, d), ["sr"]]] };
+    pb.steps.forEach(function (st) { st.wno = 1; });   // (Calculate keeps the three typed answers; Write has one box, below)
+    pb.steps.push({ id: "ans", lab: "simplified", ask: "Simplify.", pre: c3Rt(a) + " =", ans: d, ansT: d + "√" + c, rootKey: 1, so: 1,
+      okf: function (raw) {   // the simplified form typed, like 5√2 (5·√2, 5 sqrt(2) and 5√(2) are read too)
+        var t = String(raw).replace(/\s+/g, "").replace(/sqrt/gi, "√").replace(/[*·]/g, "").replace(/√\((\d+)\)/g, "√$1"), m = /^(\d*)√(\d+)$/.exec(t);
+        if (!m) return { ok: false, msg: "Type the simplified square root, like 5√2." };
+        var k = m[1] === "" ? 1 : +m[1], r = +m[2]; if (Math.abs(k * k * r - a) > 1e-9) return { ok: false, msg: "Not quite." };
+        if (r !== c) return { ok: false, msg: "That is equal to √" + a + ", but it can be simplified more." };
+        return { ok: true, show: c3Rt(c, d) };
+      }, hint: pb.isteps[0].hint, line: c3Rt(a) + " = " + c3Rt(b) + " · " + c3Rt(c) + " = " + c3Rt(c, d) });
+    pb.qwa = { Q: [[c3Rt(a)]], W: [[c3Rt(b) + " · " + c3Rt("?"), ["ps"]], [c3Rt(b) + " · " + c3Rt(c), ["lf", "ans"]]], A: [[c3Rt(c, d), ["sr", "ans"]]] };
     return pb;
   }
   // 3.4B The Discriminant: a, b and c, then b² − 4ac, then how many real solutions (positive: 2, zero: 1, negative: 0)
