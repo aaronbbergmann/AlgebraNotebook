@@ -6241,7 +6241,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
   function levelUp() {
     up = null; var c = prog[LK() + ":" + mode] || 0;
     if (mode === "create") return;
-    if (mode === "solo" ? c < (ivL() ? 1 : 2) : !modeEarned()) return;   // (2.2B Interval Notation: one whole round of Write)
+    if (mode === "solo" ? c < (ivL() ? 1 : 2) && pct() < 100 : !modeEarned()) return;   /* (an exercise with one round of Write, like 3.1A Graphing: at 100% Next moves on too) */   // (2.2B Interval Notation: one whole round of Write)
     var B0 = BUILT[act], ml = ((B0.modesFor ? B0.modesFor(lesson) : B0.modes) || ["demo", "sequence", "calculate", "solo"]).filter(function (m) { return m !== "create"; }), nx = ml[ml.indexOf(mode) + 1], stayT = "Try another in " + MODES[mode] + " mode";
     if (nx) up = { label: MODES[nx] + " Mode", stayText: stayT, go: function () { setMode(nx); } };   // the next mode is never Create
     else if (rev && mode === "solo") { var ri = BUILT[rev].items; if (pct() >= 100 && revI < ri.length - 1) up = { label: "Next: " + ri[revI + 1].q, stay: true, stayText: "Stay in this exercise", go: function () { revGo(revI + 1); } }; }   // a review: the Next button moves on to its next item
