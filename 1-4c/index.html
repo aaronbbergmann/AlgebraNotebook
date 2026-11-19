@@ -7,6 +7,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
 .m3DoneP { visibility: hidden; }
 html:not([data-mode=solo]) body.dsmOn #dsmSteps { min-height: 124px; }   /* (Demo, Sequence, Calculate: the prompt keeps its room, so the graph below it never moves) */
 html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.dsmOn #pgQcue { min-height: 1.5em; }   /* (and its message line: "Well done!" appearing does not move the graph) */
+.exNote { text-align: center; font: 700 1.05rem/1.4 system-ui, sans-serif; margin-top: 14px; min-height: 1.4em; }
 </style></head><body>
 <!DOCTYPE html>
 <html lang="en">
@@ -992,7 +993,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     <div class="wrap">
       <main class="eqs work" id="wsEl"></main><div class="ctrAsk" id="ctrAsk"></div>
       <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="zpWrap" id="zpA" hidden></div><div class="exRow" id="exRow"></div><div class="zpWrap" id="zpB" hidden></div>
-        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button type="button" class="btn" id="exSoloRt" hidden aria-label="Insert a square root">√</button><button type="button" class="btn" id="exSoloX" hidden aria-label="Insert x"><i>x</i></button><button type="button" class="btn" id="exSoloX2" hidden aria-label="Insert x squared"><i>x</i>²</button><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div></section>
+        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button type="button" class="btn" id="exSoloRt" hidden aria-label="Insert a square root">√</button><button type="button" class="btn" id="exSoloX" hidden aria-label="Insert x"><i>x</i></button><button type="button" class="btn" id="exSoloX2" hidden aria-label="Insert x squared"><i>x</i>²</button><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div><div class="exNote bad" id="exNote" aria-live="polite"></div></section>
       <section class="nlBox" id="nlBox" hidden aria-label="The solutions on a number line"></section>
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
@@ -2246,7 +2247,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     tally(true); up = { label: "Try Another", go: function () { solverGo(0, mode); } }; nxShow();
     var nx = $("next"); nx.textContent = "Try Another"; nx.hidden = false; nx.disabled = false; $("again").hidden = true;
     document.body.classList.add("swErr"); $("show").hidden = false;
-    var m = $("exMsg"); m.className = "bad"; m.textContent = "Not quite." + (ans ? " The answer is " + ans + "." : "") + " Show Work has every step; Try Another gives a new problem.";
+    var m = $("exNote"); m.className = "exNote bad"; m.textContent = "Not quite." + (ans ? " The answer is " + ans + "." : "") + " Show Work has every step; Try Another gives a new problem.";
   }
   function exCheckSolo0() {
     if (EXP.eq) { eqCheckSolo(); return; }
@@ -2281,7 +2282,8 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
   function exHide() { $("exBox").hidden = true; $("wsEl").style.display = ""; }
   function exBegin() {
     document.body.classList.remove("swErr"); var sg = $("exSoloGo"); if (sg) { sg.textContent = svWr() ? "Submit" : "Check"; sg.classList.toggle("next", svWr()); }   // (a Progress exercise's Write: a plum-red Submit)
-    if (svWr()) { up = null; $("next").hidden = true; $("exMsg").className = ""; $("exMsg").textContent = ""; }   // (a new problem: no Try Another or Next until it is answered)
+    if (svWr()) { up = null; $("next").hidden = true; $("exMsg").className = ""; $("exMsg").textContent = ""; }
+    $("exNote").textContent = "";   // (a new problem: no message below the equation)   // (a new problem: no Try Another or Next until it is answered)
     hideKind(); distHide(); fmHide(); stopDemo(); closeAsk(false); stopParty(); busy = false; calc = null; $("modePick").hidden = true;
     if (BUILT[act].solver) $("stT").textContent = svTitle();
     wkBox = null; orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
@@ -6246,7 +6248,8 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
   function demoCredit() { return quiz() ? !!PG.demoFin : !!(DM4.run && !DM4.paused) || locked; }   // a finished demo, or the student took over a paused demo and solved it correctly alone
   function tally(quiet) {
     if (!quiz() && BUILT[act] && ((BUILT[act].sub && !BUILT[act].solver) || svL()) && mode !== "create" && mode !== "demo" && EQW > 0) {   // the equation pane: any error message along the way means no Progress for this problem
-      if (!counted) { counted = true; note(mode === "demo" ? "No Progress for this demo: there were error messages along the way." : "No Progress for this problem: there were error messages along the way. Try another with none."); }
+      if (!counted) { counted = true; var npT = mode === "demo" ? "No Progress for this demo: there were error messages along the way." : "No Progress for this problem: there were error messages along the way. Try another with none.", npM = !$("exBox").hidden ? $("exNote") : $("ansMsg") && $("ansMsg").offsetParent ? $("ansMsg") : null; if (npM && npM.id === "exNote" && $("exMsg").className === "ok") $("exMsg").textContent = "";   /* (no cheer when there were errors) */
+        if (npM) { npM.classList.add("bad"); npM.textContent = npT; } else note(npT); }   // (in red, below the equation)
       up = mode === "demo" ? null : { label: "Try another", go: function () { newProblem(); } }; return;
     }
     var earn = mode !== "demo" || demoCredit();
