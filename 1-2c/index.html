@@ -5967,7 +5967,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     ["2.4A", "2.4", ["1", "2", "5", "6", "7"], "Modeling with Quadratic Functions"],
     ["2.4B", "2.4", ["4", "5", "8"], "Modeling with Quadratic Functions (Day 2)"],   // (Regression, 3-Step Equations, Distributing)   // (exercise 3, Three Points with first and second differences, was taken out)
     ["3.1A", "3.1", ["1", "14", "15"], "Solving Quadratic Equations: Graphing"],
-    ["3.1B", "3.1", ["16", "3", "17"], "Solving Quadratic Equations: Square Roots"],   // (Simplifying Square Roots, lesson 2, taken out: Perfect Square Factors covers it)
+    ["3.1B", "3.1", ["16", "3", "17", "15"], "Solving Quadratic Equations: Square Roots"],   // (Simplifying Square Roots, lesson 2, taken out: Perfect Square Factors covers it)
     ["3.1C", "3.1", ["4"], "Solving Quadratic Equations: Real Life"],
     ["3.1D", "3.1", ["5", "6"], "Solving Quadratic Equations: Factoring"],
     ["3.1E", "3.1", ["7"], "Solving Quadratic Equations: Solving by Factoring"],
@@ -6422,7 +6422,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
   var SV = "x", SVL = ["x", "y", "z", "m", "n", "p", "t", "u", "v", "w"];
   function svRand() { return window.__SV || SVL[Math.floor(Math.random() * SVL.length)]; }
   function svOn() { return SV !== "x" && !!BUILT[act] && !!BUILT[act].solver; }
-  function svTitle() { return !(EXP && !EXP.eq) ? "Solve for " + SV : "Solve"; }
+  function svTitle() { return !(EXP && !EXP.eq) ? "Solve for " + SV : "Simplify"; }   // (an expression is simplified, an equation solved)
   (function () {
     var RX = /(?<![A-Za-z])x(?![A-Za-z])/g, skipSel = ".ctl-sel,#actList,.eqKeys,.crKeys,script,style,textarea";
     function fixText(n) {
