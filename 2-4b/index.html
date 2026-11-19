@@ -4,6 +4,9 @@ html.swOff #show { display: none !important; }
 body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
 .c3Eq { display: flex; justify-content: center; align-items: baseline; gap: .1em; font-size: 2.2rem; margin: 18px 0 8px; } .c3T { cursor: grab; padding: 0 .12em; border-radius: 6px; touch-action: none; user-select: none; } .c3T:hover { background: color-mix(in srgb, #7A3FB5 12%, transparent); } .c3G { font-size: 42px; font-family: "LM", "Latin Modern Roman", Georgia, serif; } .c3Is { padding: 0 .3em; }
 .m3Rads { display: flex; gap: 22px; } .m3Rad { display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; padding: 4px 2px; font: inherit; font-size: 1.15rem; color: inherit; cursor: pointer; } .m3RadC { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #4B5563; box-sizing: border-box; display: inline-block; } .m3Rad.sel .m3RadC { border-color: #7A3FB5; background: radial-gradient(circle, #7A3FB5 0 45%, transparent 50%); } .m3Rad.bad .m3RadC { border-color: #C0262D; }
+.m3DoneP { visibility: hidden; }
+html:not([data-mode=solo]) body.dsmOn #dsmSteps { min-height: 124px; }   /* (Demo, Sequence, Calculate: the prompt keeps its room, so the graph below it never moves) */
+html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.dsmOn #pgQcue { min-height: 1.5em; }   /* (and its message line: "Well done!" appearing does not move the graph) */
 </style></head><body>
 <!DOCTYPE html>
 <html lang="en">
@@ -13383,6 +13386,9 @@ var ESPIC = {
   function m3Q0() {
     var pb = m3Cur(); if (!pb) return "";
     var done = QZ.m3l.filter(Boolean).map(function (l) { return "<div><span class=\"cueOk\">✓</span> " + l + "</div>"; }).join("");
+    if (mode !== "solo" && QZ.step < 4) {   // (Demo, Sequence, Calculate: a line is kept for every step still to come, unseen, so the lines appearing never move the equation, graph or prompt below them)
+      m3L().slice(QZ.m3l.length).forEach(function (st) { if (st.nol) return; var t = ""; try { t = m3V(st.line); } catch (e) { } if (!t) return; done += "<div class=\"m3DoneP\" aria-hidden=\"true\"><span class=\"cueOk\">✓</span> " + t + "</div>"; });
+    }
     var fig = pb.fig(QZ.m3x || {}), tb = typeof pb.tbl === "function" ? pb.tbl(QZ.m3x || {}) : pb.tbl || "";
     if (fig && fhGraph()) fig = "<button type=\"button\" class=\"btn fhBtn\" data-fh title=\"Show the graph: a Free Hint costs nothing\">Free Hint</button>";
     if (m3TA() || m3WB()) return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div>" + pb.pic + "</div>" + (pb.tq || "") + "<div class=\"m3Body\">" + m3taList() + (fig ? "<div class=\"m3FigC\"><div class=\"m3FigW\">" + fig + "</div></div>" : "") + "</div>";   // ("Try Another": a screen of boxes, the graph a Free Hint beside them)
