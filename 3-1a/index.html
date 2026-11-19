@@ -7750,7 +7750,7 @@ body.swErr #show { background: #8E2465; border-color: #8E2465; color: #fff; }
   function ysFor(f) { var st = [1, 0.5, 0.25, 0.2, 0.1]; for (var i = 0; i < st.length; i++) { var ok = true; for (var x = -10; x <= 10 && ok; x++) { var y = f(x); if (Math.abs(y) <= 10 && Math.abs(y / st[i] - Math.round(y / st[i])) > 1e-9) ok = false; } if (ok) return st[i]; } return 1; }   // (thirds fit none: whole-number points are still there)
   function snap(v, ay) {
     if (typeof v !== "number") { hist.push([JSON.stringify([ws, vals, sys, sysV, elim]), steps.length, ops]); updUndo(); return; }
-    var st = snapStep(ay), W = ay ? ZM.toY : ZM.to; if (ay) st = Math.min(st, pgYs()), c = ay ? ZM.toy : ZM.tox; return Math.max(c - W, Math.min(c + W, +(Math.round(v / st) * st).toFixed(8)));
+    var st = snapStep(ay), W = ay ? ZM.toY : ZM.to, c = ay ? ZM.toy : ZM.tox; if (ay) st = Math.min(st, pgYs()); return Math.max(c - W, Math.min(c + W, +(Math.round(v / st) * st).toFixed(8)));
   }
   function G_() { return document.body.classList.contains("play") ? PG : QZ; }
   function gRef() { if (G_() === PG) drawPlay(); else qzRender(); }
