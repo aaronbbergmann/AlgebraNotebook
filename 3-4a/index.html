@@ -9,6 +9,7 @@ html:not([data-mode=solo]) body.dsmOn #dsmSteps { min-height: 124px; }   /* (Dem
 html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.dsmOn #pgQcue { min-height: 1.5em; }   /* (and its message line: "Well done!" appearing does not move the graph) */
 .exNote { text-align: center; font: 700 1.05rem/1.4 system-ui, sans-serif; margin-top: 14px; min-height: 1.4em; }
 .c3RadIn { border-top: 0.06em solid currentColor; display: inline-block; line-height: 1.02; padding: .03em .06em 0; margin-left: -.04em; } .c3Q { color: #7A3FB5; }
+#exSolo2 { display: inline-flex; align-items: center; gap: .4em; margin-left: .8em; } #exSolo2[hidden] { display: none; } #exSoloIn2 { width: 9rem; }
 </style></head><body>
 <!DOCTYPE html>
 <html lang="en">
@@ -994,7 +995,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     <div class="wrap">
       <main class="eqs work" id="wsEl"></main><div class="ctrAsk" id="ctrAsk"></div>
       <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="zpWrap" id="zpA" hidden></div><div class="exRow" id="exRow"></div><div class="zpWrap" id="zpB" hidden></div>
-        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><button type="button" class="btn" id="exSoloRt" hidden aria-label="Insert a square root">√</button><button type="button" class="btn" id="exSoloX" hidden aria-label="Insert x"><i>x</i></button><button type="button" class="btn" id="exSoloX2" hidden aria-label="Insert x squared"><i>x</i>²</button><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div><div class="exNote bad" id="exNote" aria-live="polite"></div></section>
+        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><span id="exSolo2" hidden><span class="exSolo2L"></span><input id="exSoloIn2" autocomplete="off" aria-label="The other solution"></span><button type="button" class="btn" id="exSoloRt" hidden aria-label="Insert a square root">√</button><button type="button" class="btn" id="exSoloX" hidden aria-label="Insert x"><i>x</i></button><button type="button" class="btn" id="exSoloX2" hidden aria-label="Insert x squared"><i>x</i>²</button><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div><div class="exNote bad" id="exNote" aria-live="polite"></div></section>
       <section class="nlBox" id="nlBox" hidden aria-label="The solutions on a number line"></section>
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
@@ -2238,7 +2239,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
   }
   function svWrong() {
     EQW++; if (EXP.eq) wkSim();   // (Show work: the whole solution, worked out from the start)
-    var last = steps.length ? steps[steps.length - 1] : null, ans = EXP.eq && last && last.eqs && last.eqs.length ? plain(String(last.eqs[last.eqs.length - 1])) : "";
+    var last = steps.length ? steps[steps.length - 1] : null, ans = EXP.eq && last && last.eqs && last.eqs.length ? last.eqs.map(function (e) { var t = plain(String(e)), m = /^(.+?)\s*=\s*([a-z])$/.exec(t); return m ? m[2] + " = " + m[1] : t; }).join(" or ") : "";   // (every solution, each written x = …)
     if (!EXP.eq && !EXP.rad && !EXP.fac && !EXP.grp) {   // (an expression multiplied out: its simplified form, from the totals of its terms: x², then x, then the number)
       var T = exTot(EXP.items), parts = [];
       Object.keys(T).sort(function (p, q) { var d = function (k) { var m = /\^(\d+)/.exec(k); return k === "" ? 0 : m ? +m[1] : 1; }; return d(q) - d(p); }).forEach(function (k) { var f = T[k]; if (!f || !f.n) return; parts.push({ k: k === "" ? "c" : "x", v: k.replace(/\^\d+/, ""), n: f, pw: (/\^(\d+)/.exec(k) || [0, 1])[1] }); });
@@ -2251,6 +2252,10 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     var m = $("exNote"); m.className = "exNote bad"; m.textContent = "Not quite." + (ans ? " The answer is " + ans + "." : "") + " Show Work has every step; Try Another gives a new problem.";
   }
   function exCheckSolo0() {
+    if (EXP.eq && !$("exSolo2").hidden) {   // (two boxes: read together, in either order)
+      var i1 = $("exSoloIn"), v1 = i1.value, v2 = $("exSoloIn2").value; i1.value = [v1, v2].map(function (v) { return v.trim(); }).filter(Boolean).join(", ");
+      try { eqCheckSolo(); } finally { if (!locked) i1.value = v1; } return;
+    }
     if (EXP.eq) { eqCheckSolo(); return; }
     if (EXP.rad) {   // a square root: the simplified form typed, like 10√2 (or 7 for √49)
       var m0 = $("exMsg"), raw = $("exSoloIn").value, want = EXP.items.reduce(function (a, t) { return a + radF(t); }, 0), q = rdIn(raw), v = numVal(raw); ansTouched = true;
@@ -2293,6 +2298,8 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
     $("top").style.display = "none"; $("vals").style.display = "none"; $("creator").hidden = true; $("answer").hidden = true; $("wsEl").style.display = "none";
     $("exBox").hidden = false; $("exSolo").hidden = mode !== "solo"; $("exMsg").textContent = ""; $("exSoloIn").value = "";
+    var two = !!(EXP.eq && !eqIneq() && svWr() && /x\^2|"pw":true|"b":\[/.test(JSON.stringify(EXP.orig || {})));   // (a quadratic equation: up to two solutions, a box for each)
+    $("exSolo2").hidden = !two; if (two) { $("exSolo2").firstElementChild.textContent = (EXP.vk || "x") + " ="; $("exSoloIn2").value = ""; $("exSoloIn2").placeholder = "the other, if any"; }
     $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : EXP.grp ? "Answer:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.cmp ? (EXP.cmp.join === "or" ? "e.g. x < -1 or x > 4" : "e.g. -2 < x <= 3") : EXP.av && eqIneq() ? "e.g. -2 < x < 4 or x < -2 or x > 4" : EXP.zpq || EXP.grq ? "e.g. 3, -2" : EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
     exRender(); updUndo();
     if (EXP.eq) {
@@ -6022,8 +6029,8 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
     "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics of a Parabola"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics"], function (l) { return l === 11 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
-    "3.1": c2Built("3.1", ["Solving by Graphing", "Simplifying Square Roots", "Solving with Square Roots", "Real Life", "Multiplying (Box Method)", "Factoring", "Solving by Factoring", "Special Products", "Factoring ax\u00b2 + bx + c", "Completing the Square", "Vertex Form by Completing the Square", "The Quadratic Formula", "The Discriminant", "4-Step Linear Equations", "Multiplying Binomials (Box Method)", "Perfect Square Factors", "Solving with Square Roots (Simplify)"],
-      ["Graphing", "Simplify Roots", "Square Roots", "Real Life", "Box Method", "Factoring", "Solve by Factoring", "Special Products", "Factor ax\u00b2 + bx + c", "Complete the Square", "Vertex Form", "Quadratic Formula", "Discriminant", "4-Step Equations", "Binomials", "Perfect Squares", "Square Roots: Simplify"]),
+    "3.1": c2Built("3.1", ["Solving by Graphing", "Simplifying Square Roots", "Solving with Square Roots", "Real Life", "Multiplying (Box Method)", "Factoring", "Solving by Factoring", "Special Products", "Factoring ax\u00b2 + bx + c", "Completing the Square", "Vertex Form by Completing the Square", "The Quadratic Formula", "The Discriminant", "4-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Solving with Square Roots (Simplify)"],
+      ["Graphing", "Simplify Roots", "Square Roots", "Real Life", "Box Method", "Factoring", "Solve by Factoring", "Special Products", "Factor ax\u00b2 + bx + c", "Complete the Square", "Vertex Form", "Quadratic Formula", "Discriminant", "4-Step Equations", "Binomials", "Simplify Roots", "Square Roots: Simplify"]),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression", "3-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Distributing"], ["Vertex & Point", "Intercepts", "Three Points", "Regression", "3-Step Equations", "Box Method", "Square Roots", "Distributing"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -7120,7 +7127,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
   });
   $("exSoloRt").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the box
   $("exSoloRt").addEventListener("click", function () { var el = $("exSoloIn"), i = el.selectionStart == null ? el.value.length : el.selectionStart, j = el.selectionEnd == null ? i : el.selectionEnd; el.focus(); el.setRangeText("\u221a", i, j, "end"); });
-  $("exSoloGo").addEventListener("click", exCheckSolo); $("exSoloIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); });
+  $("exSoloGo").addEventListener("click", exCheckSolo); $("exSoloIn2").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); }); $("exSoloIn").addEventListener("keydown", function (e) { if (e.key === "Enter") exCheckSolo(); });
   $("crIn").addEventListener("keydown", function (e) { if (e.key === "Enter") crAdd(); });
   $("ansGo").addEventListener("click", checkAnswer);
   $("ansKind").addEventListener("change", function () { $("ansFields").hidden = this.value !== "one"; eqSubReady(); });
