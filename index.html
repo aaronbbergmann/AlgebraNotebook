@@ -10499,7 +10499,7 @@ var ESPIC = {
   // and runs a regression (the "dsm" step checks for both), then answers the typed questions from it (problems with dsm.reg)
   var DSM = { calc: null, state: "", key: "", km: "", fail: false, saved: {} };
   function dsmOn() { return pq() && ((act === "2.2" && lesson === 5) || act === "2.4" || (act === "3.1" && lesson === 1)) && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm && dsmLate(); }
-  function dsmLate() { var P = m3Cur().dsm; return !P.late || mode === "solo" || !!(QZ.m3x && QZ.m3x.vs >= 6 && !QZ.m3x.pend); }   // (2.4A Vertex and a Point: Desmos comes once a is found)
+  function dsmLate() { var P = m3Cur().dsm; return !P.late || mode === "solo" || !!(QZ.m3x && ((QZ.m3x.vs >= 6 && !QZ.m3x.pend) || QZ.m3x.dA)); }   /* (dA: the Demo opens Desmos to divide for a) */   // (2.4A Vertex and a Point: Desmos comes once a is found)
   function dsmReg() { return dsmOn() && !!m3Cur().dsm.reg; }
   function dsmLoad() {
     if (DSM.state) return; DSM.state = "loading";
@@ -10600,13 +10600,30 @@ var ESPIC = {
     (function st() { if (pgRun !== run) return; var u = ++k / N, e = u * u * (3 - 2 * u); DSM.calc.setMathBounds({ left: A.l + (B.l - A.l) * e, right: A.r + (B.r - A.r) * e, bottom: A.b + (B.b - A.b) * e, top: A.t + (B.t - A.t) * e }); if (k < N) pgWait(60, st); else pgWait(800, n); })();
   }
   // the demo: the hand types each equation into Desmos's expression list
+  // 2.4A Vertex and a Point, Point and x-Intercepts, Demo: Desmos opens and the hand types the numerator over the denominator on a new line; Desmos shows its decimal value
+  function vpDsmDiv(st, run, n) {
+    QZ.m3x.dA = 1; try { drawPlay(); } catch (e) { } try { dsmSync(); } catch (e) { }
+    var num = st.dfr[0], den = st.dfr[1], tries = 0;
+    (function wait() {
+      if (pgRun !== run) return; if (DSM.fail) { n(); return; } if (!DSM.calc) { if (++tries < 60) pgWait(150, wait); else n(); return; }
+      var box = $("dsmCalc"), a = c2T(num, 6), b = c2T(den, 6), c = 0, at = dsmLineAt(box, 0);
+      var qc = document.querySelector("#pgQt .m3QC"), q0 = qc ? qc.innerHTML : "", say = function (t) { dmCap(t); if (qc) qc.textContent = t; };   // (the question in the centre pane says it too)
+      say("Divide in Desmos: type " + c2F(num) + " / " + c2F(den) + " on a new line.");
+      handGo(at, 650);
+      pgWait(800, function () {
+        if (pgRun !== run) return; handTap();
+        (function top() { if (pgRun !== run) return; c = Math.min(a.length, c + 1); DSM.calc.setExpression({ id: "vpa", latex: a.slice(0, c) }); if (c < a.length) pgWait(120, top); else { c = 0; pgWait(250, bot); } })();
+        function bot() { if (pgRun !== run) return; c = Math.min(b.length, c + 1); DSM.calc.setExpression({ id: "vpa", latex: "\\frac{" + a + "}{" + b.slice(0, c) + "}" }); if (c < b.length) pgWait(120, bot); else pgWait(900, function () { if (pgRun !== run) return; var v = num / den; say("Desmos shows the decimal: " + c2F(num) + " ÷ " + c2F(den) + " = " + c2F(c2R(v, 6)) + (Math.abs(v - c2R(v, 2)) > 1e-9 ? ", about " + c2F(c2R(v, 2)) : "") + "."); pgWait(2600, function () { if (qc && document.body.contains(qc)) qc.innerHTML = q0; n(); }); }); }
+      });
+    })();
+  }
   function dsmDemoType(run, n) {
     var P = m3Cur().dsm, box = $("dsmCalc"); if (!DSM.calc) { pgWait(800, n); return; }
     var pgCapDsm = function (t) { dmCap(t); };
-    var r = box.getBoundingClientRect(), L = [P.l1, P.l2].filter(Boolean), i = 0;
+    var r = box.getBoundingClientRect(), L = [P.l1, P.l2].filter(Boolean), i = 0, off = DSM.calc.getExpressions().some(function (e) { return e.id === "vpa"; }) ? 1 : 0;   // (2.4A: the division is on the first line, the parabola goes on the next)
     (function one() {
       if (pgRun !== run) return; if (i >= L.length) { pgWait(900, n); return; }
-      var lt = L[i], id = "p" + (i + 1), c = 0, at = dsmLineAt(box, i);
+      var lt = L[i], id = "p" + (i + 1), c = 0, at = dsmLineAt(box, i + off);
       handGo(at, 650);
       pgWait(800, function () { handTap(); (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else { i++; if (i >= L.length && P.one && P.zo) { dsmHomeView(); dsmCheck(); pgWait(900, one); return; } if (i >= L.length && P.one) { DSM.calc.setMathBounds({ left: -P.xmax * 0.06, right: P.xmax, bottom: P.ymin != null ? P.ymin : -P.ymax * 0.12, top: P.ymax }); dsmCheck(); pgWait(900, one); return; }   // (2.4A: the window simply shows the parabola; new demos do not show zooming)
  if (i >= L.length) { pgCapDsm(P.one ? "The parabola goes off the screen. Zoom out to see it whole." : "The paths go off the screen. Zoom out to see them whole."); handGo({ x: r.right - 30, y: r.top + 70 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); dsmZoomOut(run, function () { dsmCheck(); pgWait(500, one); }); }); return; } dsmCheck(); pgWait(700, one); } })(); });
@@ -14891,7 +14908,7 @@ var ESPIC = {
     var o3 = ws("o3", "vop", "Click the subtraction to combine " + c2F(V.Y0) + " − " + k + ".", { op: "o3", after: opA("o3", 4), wl: c2F(R) + " = " + V.D + "a", hint: ["Combine the numbers on the left.", "Click the − between " + c2F(V.Y0) + " and " + k + "."] });
     var c3 = ws("c3", "num", "Work it out.", { pre: c2F(V.Y0) + " − " + k + " =", ans: R, after: setS(4), wl: "", hint: ["Subtract.", c2F(V.Y0) + " − " + k + " = " + c2F(R) + "."] });
     var dv = ws("dv", "vdv", "Drag " + V.D + " to the other side of the = to divide.", { after: setS(5), wl: c2F(R) + "/" + V.D + " = a", hint: [V.D + " multiplies a. Undo it by dividing.", "Drag " + V.D + " across the = sign."] });
-    var o4 = ws("o4", "vop", "Click the fraction bar to divide." + (V.ap ? " Round to the nearest hundredth." : ""), { op: "o4", after: opA("o4", 6), wl: "a " + aTx, hint: ["A fraction bar means divide.", "Click the bar between " + c2F(R) + " and " + V.D + "."] });
+    var o4 = ws("o4", "vop", "Click the fraction bar to divide." + (V.ap ? " Round to the nearest hundredth." : ""), { op: "o4", dfr: [R, V.D], after: opA("o4", 6), wl: "a " + aTx, hint: ["A fraction bar means divide.", "Click the bar between " + c2F(R) + " and " + V.D + "."] });
     var c4 = ws("c4", "num", "Work it out.", { pre: c2F(R) + " ÷ " + V.D + " =", post: V.ap ? "(to the nearest hundredth)" : "", ans: V.a, tol: V.ap ? 0.005 + 1e-9 : 1e-9, after: setS(6), wl: "", hint: ["Divide." + (V.ap ? " Round to the nearest hundredth." : ""), c2F(R) + " ÷ " + V.D + " " + aTx + "."] });
     var gr = { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph " + E[0] + " in Desmos.", line: "graphed " + Ftx + " in Desmos", hint: ["Type the equation on the first line of Desmos.", "Type " + E[1] + "."] };
     var how = V.qt === "y" ? "Type " + c2X + " = " + c2F(V.Xq) + " on a new line and click where it crosses the parabola." : V.qt === "xt" ? "Type " + c2Y + " = " + c2F(V.Yq) + " on a new line and click where it crosses the parabola on the way down." : "Click the parabola: Desmos shows where it crosses the " + c2X + "-axis.";
@@ -15169,7 +15186,7 @@ var ESPIC = {
     var o3 = ws("o3", "vop", "Multiply: click the parentheses.", { op: "o3", after: opA("o3", 3), wl: N(V.Y0) + " = " + N(V.D) + "a", hint: ["The two numbers in parentheses multiply.", "Click (" + N(V.d1) + ")(" + N(V.d2) + ")."] });
     var c3 = ws("c3", "num", "Work it out.", { pre: "(" + N(V.d1) + ")(" + N(V.d2) + ") =", ans: V.D, after: setS(3), wl: "", hint: ["Multiply the two numbers.", "(" + N(V.d1) + ")(" + N(V.d2) + ") = " + N(V.D) + "."], wrong: function (v) { return v === -V.D ? "Check the sign: " + (V.D < 0 ? "a positive times a negative is negative." : "two negatives (or two positives) make a positive.") : ""; } });
     var dv = ws("dv", "vdv", "Drag " + N(V.D) + " to the other side of the = to divide.", { after: setS(5), wl: N(V.Y0) + "/" + Pn(V.D) + " = a", hint: [N(V.D) + " multiplies a. Undo it by dividing.", "Drag " + N(V.D) + " across the = sign."] });
-    var o4 = ws("o4", "vop", "Click the fraction bar to divide." + (V.ap ? " Round to the nearest hundredth." : ""), { op: "o4", after: opA("o4", 6), wl: "a " + aTx, hint: ["A fraction bar means divide.", "Click the bar between " + N(V.Y0) + " and " + N(V.D) + "."] });
+    var o4 = ws("o4", "vop", "Click the fraction bar to divide." + (V.ap ? " Round to the nearest hundredth." : ""), { op: "o4", dfr: [V.Y0, V.D], after: opA("o4", 6), wl: "a " + aTx, hint: ["A fraction bar means divide.", "Click the bar between " + N(V.Y0) + " and " + N(V.D) + "."] });
     var c4 = ws("c4", "num", "Work it out.", { pre: N(V.Y0) + " ÷ " + Pn(V.D) + " =", post: V.ap ? "(to the nearest hundredth)" : "", ans: V.a, tol: V.ap ? 0.005 + 1e-9 : 1e-9, after: setS(6), wl: "", hint: ["Divide." + (V.ap ? " Round to the nearest hundredth." : ""), N(V.Y0) + " ÷ " + Pn(V.D) + " " + aTx + "."] });
     var gr = { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph " + E[0] + " in Desmos.", line: "graphed " + Ftx + " in Desmos", hint: ["Type the equation on the first line of Desmos.", "Type " + E[1] + "."] };
     var isH = V.qt === "h", how = "Click the parabola: Desmos shows its " + (V.up ? "lowest" : "highest") + " point, the vertex (" + c2X.replace(/x/, "h") + ", <i>k</i>).";
@@ -16878,6 +16895,7 @@ var ESPIC = {
         var st = m3Step(); if (!st) { n(); return; }
         var t = st.type || "num"; cap(m3QC() ? "" : m3Say(st.ask)); if (m3QC() && !document.querySelector("#pgQt .m3QC")) $("pgQt").innerHTML = m3Q();   // (questions in the centre pane are asked only there)
         var P1 = m3Cur();
+        if (st.dfr && mode === "demo" && !QZ.m3x.dA) { pgWait(1200, function () { if (pgRun === run) vpDsmDiv(st, run, function () { if (pgRun === run) m3Do(n); }); }); return; }   // (2.4A: the division for a, on a new line of Desmos first)
         if (/^v(sub|op|mv|dv)$/.test(t)) { pgWait(1300, function () { if (pgRun === run) vpDemo(st, run, n); }); return; }
         if (st.demo) { pgWait(1200, function () { if (pgRun === run) st.demo(run, n); }); return; }   // (a step with a Demo of its own: 3.1A, the terms dragged across the =)   // 2.4A: drag the numbers onto the formula, then solve for a
         if (st.dpre && QZ.m3x.dp !== st.id) { QZ.m3x.dp = st.id; pgWait(1200, function () { if (pgRun === run) st.dpre(run, function () { if (pgRun === run) m3Do(n); }); }); return; }   // (2.4A: the hand finds the point in Desmos first)
