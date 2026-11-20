@@ -6287,7 +6287,8 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     if (mode === "demo" && BUILT[act].solver && locked && (!DM4.run || DM4.paused)) { DM4.run = DM4.paused = false; clearTimeout(DM4.t); dmUI("idle"); dmCap("Solved!"); solverFinish(); }
     if (mode === "demo") { nx.hidden = true; ag.hidden = true; return; }   // the demo button carries it
     if (BUILT[act].solver) {   // Next, then Harder, then the small Try another link
-      nx.textContent = svL() && EQW > 0 ? "Try another" : nextLabel(); nx.hidden = false; nx.disabled = false; $("nxHard").hidden = svL(); $("nxHard").textContent = hardLabel(); ag.textContent = "Try another"; ag.hidden = svL() && EQW > 0; easyUpd(); if (svL()) $("nxEasy").hidden = true; return;   // (2.4A: no Level Up; an error message means another problem in this mode)
+      var tryT = "Try another in " + MODES[mode] + " mode";   /* (the problem's own mode, named) */
+      nx.textContent = svL() && EQW > 0 ? tryT : nextLabel(); nx.hidden = false; nx.disabled = false; $("nxHard").hidden = svL(); $("nxHard").textContent = hardLabel(); ag.textContent = tryT; ag.hidden = svL() && EQW > 0; easyUpd(); if (svL()) $("nxEasy").hidden = true; return;   // (2.4A: no Level Up; an error message means another problem in this mode)
     }
     nx.textContent = up ? up.label : EXP ? "Another expression" : BUILT[act].solver ? "Another equation" : "Next"; nx.hidden = false; nx.disabled = false;
     ag.textContent = stay; ag.hidden = !stay;
@@ -6509,8 +6510,8 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     var ce = on && !quiz();   // the equation pane (1.4): the calculation box and the No Solutions / Infinite Solutions choice
     if (ce) { if (K.parentNode !== $("ctrAsk")) $("ctrAsk").appendChild(K); if (Q.parentNode !== $("ctrAsk")) $("ctrAsk").appendChild(Q); }
     else { if (Q.parentNode !== A) A.insertBefore(Q, $("eqSubRow")); if (K.parentNode !== A) A.insertBefore(K, Q); }
-    var R = document.querySelector(".qzRow"), wc = on && mode === "solo" && W.parentNode === $("ctrSteps");   /* (Write with its box in the centre: Submit and Next sit under it) */
-    if (R) { if (wc) { if (R.parentNode !== $("ctrSteps")) $("ctrSteps").appendChild(R); } else if (R.parentNode !== $("qz")) $("qz").appendChild(R); }
+    var R = ctrSync.row || (ctrSync.row = document.querySelector("#qz > .qzRow")), wc = on && mode === "solo" && W.parentNode === $("ctrSteps");   /* (Write with its box in the centre: Submit and Next sit under it) */
+    if (R) { if (wc) { if (R.parentNode !== $("ctrSteps")) $("ctrSteps").appendChild(R); } else if (R.parentNode !== $("qz")) $("qz").appendChild(R); }   /* (only the quiz's own row: the Next row, .qzRow.nxRow, stays where it is) */
   }
   function theme() {
     try { ctrSync(); } catch (e) { }
