@@ -5397,7 +5397,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
   // Calculate mode: a red arrow grows from small to large beside the prompt in the right side panel, so the student sees where to answer
   function askArrow(on, el) {
     var A = $("askArrow"); if (!A) { A = document.createElement("div"); A.id = "askArrow"; A.innerHTML = "<svg viewBox=\"0 0 100 60\" aria-hidden=\"true\"><path d=\"M2 22h58V4l38 26-38 26V38H2z\"/></svg>"; document.body.appendChild(A); }
-    A.hidden = true; A.classList.remove("grow"); if (!on || mode !== "calculate") return;
+    A.hidden = true; A.classList.remove("grow"); if (!on || mode !== "calculate") return; try { if (m3() && m3Cur() && m3Cur().noArrow) return; } catch (e) { }   /* (3.1B Simplifying Square Roots: only the question and its box) */
     var r = (el || $("ask")).getBoundingClientRect(), side = r.left > innerWidth * 0.45 || !!(el || $("ask")).closest("#ctrSteps,#ctrAsk"), w = 84;   // (a prompt in the centre pane: the arrow comes from its left)
     A.style.left = (side ? Math.max(4, r.left - w - 6) : Math.max(4, r.left + r.width / 2 - w / 2)) + "px";
     A.style.top = (side ? r.top + Math.min(r.height, 120) / 2 - 25 : Math.max(4, r.top - 56)) + "px";
@@ -15671,7 +15671,7 @@ var ESPIC = {
     var q = C3PSF[rnd(C3PSF.length)], a = q[0], b = q[1], c = a / b, d = Math.round(Math.sqrt(b)), pb = { kind: 20 };
     var nsf = []; for (var f = 2; f < a; f++) if (a % f === 0 && !isSq(f)) nsf.push(f); var inc1 = nsf[rnd(nsf.length)],   /* (the wrong choice is another factor of a, one that is not a perfect square) */ inc2 = c === d ? b : d, inc3 = d === 2 ? 3 : d === c && d > 2 ? 2 : c;
     pb.head = "√" + a; pb.pic = "";
-    pb.story = ""; pb.noCueW = 1; pb.noList = 1;   // (no list of the steps done under the instruction: the work is in the centre pane) (every mode starts with √a alone, shown large below; Write: no list of the parts)
+    pb.story = ""; pb.noCueW = 1; pb.noList = 1; pb.noArrow = 1;   // (no list of the steps done under the instruction: the work is in the centre pane) (every mode starts with √a alone, shown large below; Write: no list of the parts)
     Object.defineProperty(pb, "tq", { get: function () { return mode === "solo" ? "" : "<div class=\"regQ\">Simplify.</div>"; } });   // (the instruction; Write asks "Simplify √a" itself, above its box)
     pb.ws = function () {   // the work, built up as each answer is given (Demo, Sequence, Calculate): √a, then √b · √c, then d√c
       if (mode === "solo") return QZ.m3done ? "<div class=\"c3Eq lm\" style=\"font-size:40px\">" + c3Rt(a) + " = " + c3Rt(c, d) + "</div>" : "";   // (Write: "Simplify √a" and its box, in the centre; once right, √a = d√c)
@@ -15687,9 +15687,9 @@ var ESPIC = {
       { id: "sr", lab: "square root", type: "pick", ask: "What is the square root of " + b + "?", opts: m3Sh([{ t: String(d), ok: true }, { t: String(inc3), ok: false, why: inc3 + " · " + inc3 + " is not " + b + "." }]), after: function (x) { x.sr = true; }, hint: ["What number times itself is " + b + "?", d + " · " + d + " = " + b + "."], line: c3Rt(a) + " = " + c3Rt(c, d) }
     ];
     pb.steps = [
-      { id: "ps", lab: "perfect square factor", ask: "What is the largest perfect square factor of " + a + "?", pre: c3Rt(a) + " = √", ans: b, nums: [inc1, a / 2, c], after: function (x) { x.ps = true; }, hint: pb.isteps[0].hint, line: pb.isteps[0].line },
-      { id: "lf", lab: "leftover factor", ask: "What is the other leftover factor?", pre: "√" + b + " · √", ans: c, nums: [inc2, b, a - b], after: function (x) { x.lf = true; }, hint: pb.isteps[1].hint, line: pb.isteps[1].line },
-      { id: "sr", lab: "square root", ask: "What is the square root of " + b + "?", pre: "√" + b + " =", ans: d, nums: [inc3, b / 2, d + 1], after: function (x) { x.sr = true; }, hint: pb.isteps[2].hint, line: pb.isteps[2].line }
+      { id: "ps", lab: "perfect square factor", ask: "What is the largest perfect square factor of " + a + "?", pre: "", ans: b, nums: [inc1, a / 2, c], after: function (x) { x.ps = true; }, hint: pb.isteps[0].hint, line: pb.isteps[0].line },
+      { id: "lf", lab: "leftover factor", ask: "What is the other leftover factor?", pre: "", ans: c, nums: [inc2, b, a - b], after: function (x) { x.lf = true; }, hint: pb.isteps[1].hint, line: pb.isteps[1].line },
+      { id: "sr", lab: "square root", ask: "What is the square root of " + b + "?", pre: "", ans: d, nums: [inc3, b / 2, d + 1], after: function (x) { x.sr = true; }, hint: pb.isteps[2].hint, line: pb.isteps[2].line }
     ];
     pb.steps.forEach(function (st) { st.wno = 1; });   // (Calculate keeps the three typed answers; Write has one box, below)
     pb.steps.push({ id: "ans", lab: "simplified", ask: "Simplify " + c3Rt(a), pre: "", ans: d, ansT: d + "√" + c, rootKey: 1, so: 1,
