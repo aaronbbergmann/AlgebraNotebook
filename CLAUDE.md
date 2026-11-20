@@ -59,6 +59,8 @@ An exercise that lives in more than one place is listed here. A change to one co
 | Comparing Different Forms | 2.2C (2.2, lesson 5) | RevQ2 Q6 |
 | 3-Step Equations | 2.4A (2.4, lesson 5) | 2.4B; Play Solve |
 | Box Method, Distributing, Square Roots | 2.4A/2.4B (2.4, lessons 6, 8, 7) | Play Solve; 3.1B Simplify Roots, 3.1D Box Method and 3.1A Binomials (3.1, lessons 2, 5 and 15) use the same generators |
-| Multiplying Binomials (box method) | 2.4A Box Method (2.4, lesson 6) | 3.1A and 3.1B Binomials (3.1, lesson 15); 3.1D Box Method (3.1, lesson 5). Different section numbers: listed in COPYG in the page |
+| Multiplying Binomials (box method) | 2.4A Box Method (2.4, lesson 6) | 3.1A, 3.1B and 3.1C Binomials (3.1, lesson 15); 3.1D Box Method (3.1, lesson 5). Different section numbers: listed in COPYG in the page |
+| Vertex and a Point | 2.4A Vertex & Point (2.4, lesson 1) | 3.1C Vertex & Point (3.1, lesson 18, the same generator c2M241). Different section numbers: listed in COPYG in the page |
+| Square Roots: Simplify | 3.1B (3.1, lesson 17) | 3.1C |
 | Square Roots (solve, x² = 36, (x + 6)² = 63) | 3.1B (3.1, lesson 3) | Play Solve (sq, sqg levels); 3.1B Square Roots: Simplify (lesson 17) and 3.3A Complete the Square use the same solver steps (± and √, dragging terms, the exponent) |
 | Chapter 3 equation exercises (3.1B, 3.1D–G, 3.3A, 3.4A) | Play Solve levels (sq, sqg, zp, grp, fm, cs, qu; expression levels 5, 13) | C3SV in the page maps each 3.1 lesson to its levels |

@@ -5970,7 +5970,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     ["2.4B", "2.4", ["4", "5", "8"], "Modeling with Quadratic Functions (Day 2)"],   // (Regression, 3-Step Equations, Distributing)   // (exercise 3, Three Points with first and second differences, was taken out)
     ["3.1A", "3.1", ["1", "14", "15"], "Solving Quadratic Equations: Graphing"],
     ["3.1B", "3.1", ["16", "3", "17", "15"], "Solving Quadratic Equations: Square Roots"],   // (Simplifying Square Roots, lesson 2, taken out: Perfect Square Factors covers it)
-    ["3.1C", "3.1", ["4"], "Solving Quadratic Equations: Real Life"],
+    ["3.1C", "3.1", ["4", "17", "15", "18"], "Solving Quadratic Equations: Real Life"],
     ["3.1D", "3.1", ["5", "6"], "Solving Quadratic Equations: Factoring"],
     ["3.1E", "3.1", ["7"], "Solving Quadratic Equations: Solving by Factoring"],
     ["3.1F", "3.1", ["8"], "Solving Quadratic Equations: Formulas"],
@@ -6031,8 +6031,8 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
     "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics of a Parabola"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics"], function (l) { return l === 11 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
-    "3.1": c2Built("3.1", ["Solving by Graphing", "Simplifying Square Roots", "Solving with Square Roots", "Real Life", "Multiplying (Box Method)", "Factoring", "Solving by Factoring", "Special Products", "Factoring ax\u00b2 + bx + c", "Completing the Square", "Vertex Form by Completing the Square", "The Quadratic Formula", "The Discriminant", "4-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Solving with Square Roots (Simplify)"],
-      ["Graphing", "Simplify Roots", "Square Roots", "Real Life", "Box Method", "Factoring", "Solve by Factoring", "Special Products", "Factor ax\u00b2 + bx + c", "Complete the Square", "Vertex Form", "Quadratic Formula", "Discriminant", "4-Step Equations", "Binomials", "Simplify Roots", "Square Roots: Simplify"]),
+    "3.1": c2Built("3.1", ["Solving by Graphing", "Simplifying Square Roots", "Solving with Square Roots", "Real Life", "Multiplying (Box Method)", "Factoring", "Solving by Factoring", "Special Products", "Factoring ax\u00b2 + bx + c", "Completing the Square", "Vertex Form by Completing the Square", "The Quadratic Formula", "The Discriminant", "4-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Solving with Square Roots (Simplify)", "Vertex and a Point"],
+      ["Graphing", "Simplify Roots", "Square Roots", "Real Life", "Box Method", "Factoring", "Solve by Factoring", "Special Products", "Factor ax\u00b2 + bx + c", "Complete the Square", "Vertex Form", "Quadratic Formula", "Discriminant", "4-Step Equations", "Binomials", "Simplify Roots", "Square Roots: Simplify", "Vertex & Point"]),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression", "3-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Distributing"], ["Vertex & Point", "Intercepts", "Three Points", "Regression", "3-Step Equations", "Box Method", "Square Roots", "Distributing"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -10501,7 +10501,7 @@ var ESPIC = {
   // 2.4 Modeling with Quadratic Functions uses the same blank Desmos graph in place of its own graph: the student types the data in a Desmos table
   // and runs a regression (the "dsm" step checks for both), then answers the typed questions from it (problems with dsm.reg)
   var DSM = { calc: null, state: "", key: "", km: "", fail: false, saved: {} };
-  function dsmOn() { return pq() && ((act === "2.2" && lesson === 5) || act === "2.4" || (act === "3.1" && lesson === 1)) && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm && dsmLate(); }
+  function dsmOn() { return pq() && ((act === "2.2" && lesson === 5) || act === "2.4" || (act === "3.1" && (lesson === 1 || lesson === 18))) && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm && dsmLate(); }
   function dsmLate() { var P = m3Cur().dsm; return !P.late || mode === "solo" || !!(QZ.m3x && ((QZ.m3x.vs >= 6 && !QZ.m3x.pend) || QZ.m3x.dA)); }   /* (dA: the Demo opens Desmos to divide for a) */   // (2.4A Vertex and a Point: Desmos comes once a is found)
   function dsmReg() { return dsmOn() && !!m3Cur().dsm.reg; }
   function dsmLoad() {
@@ -13347,7 +13347,7 @@ var ESPIC = {
   }
   // ---- steps.  A step: {id, lab (Solo's short name), fine (only in Demo, Sequence and Calculate), ask, pre (before the box), post (after it), type: num | eq | pick | pts | btn,
   //   ans (a number, or a function of the problem), tol, a & b (an equation), opts (pick), wrong(v) -> message, hint:[two hints], line (for Show work), nums (extra wrong choices)}
-  var M3ACT = ["c3mv", "eqc", "tclick", "dsm", "gpt", "yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab", "geq", "grow", "vsub", "vop", "vmv", "vdv"];   // the steps that are answered on the graph
+  var M3ACT = ["c3mv", "eqc", "tclick", "dsm", "gpt", "yint", "rr", "clickpt", "frac", "eqd", "plotT", "lineT", "plotQ1", "plotQ2", "cross", "gdrag", "gtab", "geq", "grow", "vsub", "vop", "vmv", "vdv", "vex"];   // the steps that are answered on the graph
   function m3L(pb) { pb = pb || m3Cur(); return pb ? (pb.csteps && mode === "calculate" ? pb.csteps : pb.isteps && (mode === "sequence" || mode === "demo") ? pb.isteps : pb.steps).filter(function (s) { return mode === "solo" ? !s.fine && !s.wno : !s.so && !(s.noseq && mode === "sequence"); }) : []; }   // (noseq: a step left out of Sequence)
   // Circle Back (pb.cb, not Write): questions one at a time; a wrong answer shows the right one, moves on, and that question comes back after all the others
   // until it is answered right once (misses cost no Progress)
@@ -14981,6 +14981,7 @@ var ESPIC = {
   function vpWs(pb) {
     if (mode === "solo") return "";
     if (pb.vp.form === "i") return vpWsI(pb);   // (2.4A Point and x-Intercepts)
+    if (pb.vp.form === "d") return vpWsD(pb);   // (3.1C the dropped object)
     var V = pb.vp, x = QZ.m3x || {}, sb = x.sb || {}, st = m3Step(), vs = x.vs || 0, cur = st && st.type;
     if (mode === "calculate" && !x.frm) return "";   // (the formula is typed in the box just below)
     var N = function (v) { return c2F(v); }, op = function (id, ch) { return "<span class=\"vpOp" + (cur === "vop" && st.op === id ? " live" : "") + (x.pend === id ? " vpPend" : "") + "\" data-vpop=\"" + id + "\">" + ch + "</span>"; };
@@ -14999,6 +15000,23 @@ var ESPIC = {
     var cap = vs === 0 && !(sb.h || sb.k || sb.x || sb.y) ? "Vertex form" : "", fin = "";
     if (vs >= 6) fin = "<div class=\"vpFin lm\">" + c2Vf(V.ar, V.h, V.k, "x", c2Y)[0] + "</div>";
     return "<div class=\"vpWs\">" + (cap ? "<div class=\"vpCap\">" + cap + "</div>" : "") + row + fin + "</div>";
+  }
+  function vpWsD(pb) {   // 3.1C: h(t) = −16t² + s₀, then 0 = −16t² + s₀ solved a step at a time
+    var V = pb.vp, x = QZ.m3x || {}, sb = x.sb || {}, st = m3Step(), vs = x.vs || 0, cur = st && st.type, T = "<i>t</i>", all = sb.h && sb.s;
+    var op = function (id, ch) { return "<span class=\"vpOp" + (cur === "vop" && st.op === id ? " live" : "") + (x.pend === id ? " vpPend" : "") + "\" data-vpop=\"" + id + "\">" + ch + "</span>"; };
+    var slot = function (kk, html) { return "<span class=\"vpS" + (cur === "vsub" && st.k === kk ? " next" : "") + "\" data-vps=\"" + kk + "\">" + html + "</span>"; };
+    var vt = function (k, html) { return "<span class=\"vpT\" data-vpt=\"" + k + "\">" + html + "</span>"; };
+    var L, R, eqS = "=", more = "";
+    if (vs === 0) { L = sb.h ? "<span class=\"vpV\">0</span>" : slot("h", "<i>h</i>(<i>t</i>)"); R = "−16" + T + "<sup>2</sup> " + (sb.s ? (all ? vt("k", "+ " + V.s0) : "+ <span class=\"vpV\">" + V.s0 + "</span>") : "+ " + slot("s", "<i>s</i><sub>0</sub>")); }
+    else if (vs === 1) { L = "0 " + op("o1", "−") + " " + V.s0; R = "−16" + T + "<sup>2</sup>"; }
+    else if (vs === 2) { L = "−" + V.s0; R = vt("D", "−16") + T + "<sup>2</sup>"; }
+    else if (vs === 3) { L = "<span class=\"vpFr" + (cur === "vop" && st.op === "o2" ? " live" : "") + (x.pend === "o2" ? " vpPend" : "") + "\" data-vpop=\"o2\"><span>−" + V.s0 + "</span><span>−16</span></span>"; R = T + "<sup>2</sup>"; }
+    else if (vs === 4) { L = String(V.n); R = T + vt("e", "<sup>2</sup>"); }
+    else if (vs === 5) { L = "±" + op("o3", c3Rt(V.n)); R = T; }
+    else if (vs === 6) { L = V.sq ? "±" + V.r : "±" + c2F(V.Tr); R = T; eqS = V.sq ? "=" : "≈"; more = "<div class=\"vpFin lm\">" + T + " " + eqS + " " + c2F(V.sq ? V.r : V.Tr) + " &nbsp; or &nbsp; " + T + " " + eqS + " −" + c2F(V.sq ? V.r : V.Tr) + "</div>"; }
+    else { L = T; R = c2F(V.sq ? V.r : V.Tr); eqS = V.sq ? "=" : "≈"; more = "<div class=\"vpCap\">" + T + " " + eqS + " −" + c2F(V.sq ? V.r : V.Tr) + " is not a time</div>"; }
+    var row = "<div class=\"vpEq lm\" id=\"vpEq\"><span class=\"vpSide\" data-vpside=\"L\">" + L + "</span><span class=\"vpEqS\" id=\"vpEqS\">" + eqS + "</span><span class=\"vpSide\" data-vpside=\"R\">" + R + "</span></div>";
+    return "<div class=\"vpWs\">" + row + more + "</div>";
   }
   // a number dropped on a letter of the formula
   function vpSwapPQ() {   // Point and x-Intercepts: the other intercept was put on p, so the work goes on with p and q swapped (the story stays as it was)
@@ -15028,6 +15046,7 @@ var ESPIC = {
   }
   function vpMove() { var st = m3Step(); if (st && st.type === "vmv") m3Accept(st, ""); }
   function vpDiv() { var st = m3Step(); if (st && st.type === "vdv") m3Accept(st, ""); }
+  function vpExp() { var st = m3Step(); if (st && st.type === "vex") m3Accept(st, ""); }   // (3.1C: the exponent crosses the = and becomes ±√)
   // dragging: a number from the story or the sketch onto a letter; a term or the coefficient of a across the =
   var VPD = null;
   function vpOnEx() { var pb = m3Cur(); return m3() && !!pb && !!pb.vp && mode !== "solo"; }
@@ -15035,7 +15054,7 @@ var ESPIC = {
     if (!vpOnEx() || e.button > 0) return; var el = e.target.closest && e.target.closest("[data-vpsrc],[data-vpt]"); if (!el || !$("pgQt").contains(el)) return;
     if (mode === "demo" && pgRun && !pgPaused && e.isTrusted) return;
     var st = m3Step(); if (!st) return;
-    if (el.dataset.vpsrc ? st.type !== "vsub" : !((el.dataset.vpt === "k" && st.type === "vmv") || (el.dataset.vpt === "D" && st.type === "vdv"))) {
+    if (el.dataset.vpsrc ? st.type !== "vsub" : !((el.dataset.vpt === "k" && st.type === "vmv") || (el.dataset.vpt === "D" && st.type === "vdv") || (el.dataset.vpt === "e" && st.type === "vex"))) {
       if (el.dataset.vpt) pqMsg(st.type === "vmv" ? "First move + " + m3Cur().vp.k + " to the other side." : st.type === "vop" ? "First click to simplify." : "Not that one yet.");
       return;
     }
@@ -15050,7 +15069,7 @@ var ESPIC = {
     [].forEach.call(document.querySelectorAll(".vpS.hot"), function (s) { s.classList.remove("hot"); });
     if (D.el.dataset.vpsrc) { var u = document.elementFromPoint(e.clientX, e.clientY), sl = u && u.closest && u.closest("[data-vps]"); if (sl) sl.classList.add("hot"); return; }
     var q = $("vpEqS"); if (!q) return; var left = e.clientX < ctr(q).x;
-    D.g.textContent = left ? (D.el.dataset.vpt === "k" ? "− " + m3Cur().vp.k : "÷" + m3Cur().vp.D) : D.t0;   // the sign changes as it crosses the =
+    D.g.textContent = left ? (D.el.dataset.vpt === "k" ? "− " + m3Cur().vp.k : D.el.dataset.vpt === "e" ? "±√" : "÷" + (m3Cur().vp.Dg || m3Cur().vp.D)) : D.t0;   // the sign changes as it crosses the =
     var side = document.querySelector("#vpEq [data-vpside=L]"); if (side) side.classList.toggle("hot", left);
   });
   document.addEventListener("pointerup", function (e) {
@@ -15058,7 +15077,7 @@ var ESPIC = {
     [].forEach.call(document.querySelectorAll(".vpS.hot,.vpSide.hot"), function (s) { s.classList.remove("hot"); });
     if (D.el.dataset.vpsrc) { var u = document.elementFromPoint(e.clientX, e.clientY), sl = u && u.closest && u.closest("[data-vps]"); if (sl) vpSub(sl.dataset.vps, +D.el.dataset.vpv); return; }
     var q = $("vpEqS"), eq = $("vpEq"); if (!q || !eq) return; var rb = eq.getBoundingClientRect();
-    if (e.clientX < ctr(q).x && e.clientY > rb.top - 140 && e.clientY < rb.bottom + 140) { if (D.el.dataset.vpt === "k") vpMove(); else vpDiv(); }
+    if (e.clientX < ctr(q).x && e.clientY > rb.top - 140 && e.clientY < rb.bottom + 140) { if (D.el.dataset.vpt === "k") vpMove(); else if (D.el.dataset.vpt === "e") vpExp(); else vpDiv(); }
   });
   $("pgQt").addEventListener("click", function (e) {
     var o = e.target.closest && e.target.closest("[data-vpop]"); if (!o || !vpOnEx()) return; if (e.isTrusted) pgUser(); if (mode === "demo" && pgRun && !pgPaused && e.isTrusted) return; vpOp(o.dataset.vpop);
@@ -15076,7 +15095,8 @@ var ESPIC = {
     }
     if (t === "vop") { var o = document.querySelector("#pgQt .vpOp[data-vpop=\"" + st.op + "\"], #pgQt .vpFr[data-vpop=\"" + st.op + "\"]"); if (!o) { then(); return; } handGo(ctr(o), 650); pgWait(850, function () { if (pgRun !== run) return; handTap(); vpOp(st.op); pgWait(900, then); }); return; }
     if (t === "vmv") { fl(document.querySelector("#pgQt [data-vpt=k]"), document.querySelector("#vpEq [data-vpside=L]"), "− " + V.k, function () { vpMove(); pgWait(700, then); }); return; }
-    if (t === "vdv") { fl(document.querySelector("#pgQt [data-vpt=D]"), document.querySelector("#vpEq [data-vpside=L]"), "÷" + V.D, function () { vpDiv(); pgWait(700, then); }); return; }
+    if (t === "vdv") { fl(document.querySelector("#pgQt [data-vpt=D]"), document.querySelector("#vpEq [data-vpside=L]"), "÷" + (V.Dg || V.D), function () { vpDiv(); pgWait(700, then); }); return; }
+    if (t === "vex") { fl(document.querySelector("#pgQt [data-vpt=e]"), document.querySelector("#vpEq [data-vpside=L]"), "±√", function () { vpExp(); pgWait(700, then); }); return; }
     then();
   }
   // the demo, before the last answer: a vertical line at the x asked about, and the point where it crosses the parabola, labelled
@@ -15736,27 +15756,63 @@ var ESPIC = {
   }
   // 3.1C Real Life: a dropped object, h(t) = −16t² + s₀ (when does it hit the ground?), or the greatest revenue from intercept form (the max is halfway between the zeros)
   var C3DROP = [
-    ["For a science competition, students design a container that keeps an egg from breaking when it is dropped from " , " feet.", "egg"],
-    ["A window washer drops a squeegee from " , " feet above the sidewalk.", "drop"],
-    ["A climber drops a water bottle from a ledge " , " feet above the ground.", "drop"],
-    ["A drone drops a package from " , " feet above a field.", "drop"]
+    ["For a science competition, students design a container that keeps an egg from breaking when it is dropped from " , " feet onto {the ground}.", "egg"],
+    ["A window washer drops a squeegee from " , " feet above {the sidewalk}.", "drop"],
+    ["A climber drops a water bottle from a ledge " , " feet above {the ground}.", "drop"],
+    ["A drone drops a package from " , " feet above {the field}.", "drop"]
   ];
+  // 3.1C the dropped object: h(t) = −16t² + s₀ in the centre pane.  The student drags the place it lands ("the ground": h = 0) onto h(t) and the height onto s₀,
+  // then undoes the operations in order, as in Play Solve: drag + s₀ across the =, click the subtraction, drag −16 across (it divides), click the fraction bar,
+  // drag the exponent across (it becomes ±√), click the root, and keeps the positive time.  Calculate asks each value; Write: the answer alone
+  function c3Drop(tier) {
+    var sc = c2Pick(C3DROP), n = c2Pick(tier === 0 ? [1, 4, 9, 16, 25] : [1, 4, 9, 16, 25, 2, 3, 5, 6, 7, 8, 10, 12]), s0 = 16 * n, r = Math.sqrt(n), sq = Number.isInteger(r), Tr = c2R(r, 1), pb = { kind: 20 };
+    var place = /\{([^}]*)\}/.exec(sc[1])[1], ground = "<span class=\"vpN vpG\" data-vpsrc=\"sg\" data-vpv=\"0\">" + place + "</span>";
+    pb.head = sc[0] + s0 + sc[1].replace(/[{}]/g, "") + " How long does it take to hit " + place.replace(/^the /, "the ") + "?";
+    pb.pic = c2Pic("ball");
+    var story0 = sc[0] + vpN(s0, "ss") + sc[1].replace(/\{[^}]*\}/, ground), fml = " A dropped object's height is <span class=\"lm\"><i>h</i>(<i>t</i>) = −16<i>t</i>² + <i>s</i><sub>0</sub></span>.";
+    Object.defineProperty(pb, "story", { get: function () { return story0 + (mode === "solo" ? fml : ""); } });   // (Write: the formula in the story; the other modes: large, in the centre)
+    pb.tq = "<div class=\"regQ\">How long does it take to hit " + place + "?</div><div class=\"supp\"><i>t</i> = seconds, <i>h</i> = height in feet." + (sq ? "" : " Round to the nearest tenth.") + "</div>";
+    pb.qc = 1; pb.vp = { form: "d", s0: s0, n: n, r: r, sq: sq, Tr: Tr, k: s0, D: -16, Dg: "(−16)", want: { h: 0, s: s0 }, why: { h: "h(t) is the height. On " + place + ", the height is 0.", s: "s₀ is the height it starts from, " + s0 + " feet." }, place: place };
+    pb.ws = function () { return vpWs(pb); };
+    pb.fig = function () { return ""; };
+    var ws = function (id, type, ask, o) { var st = { id: id, type: type, fine: 1, nol: 1, ask: ask, lab: id }; for (var kk in o) st[kk] = o[kk]; return st; };
+    var setS = function (k) { return function (x) { x.vs = k; x.pend = ""; }; };
+    var opA = function (id, k) { return function (x) { if (mode === "calculate") x.pend = id; else { x.vs = k; x.pend = ""; } }; };
+    var subA = function (key) { return function (x) { x.sb = x.sb || {}; x.sb[key] = 1; }; };
+    var askS = "Drag the numbers you know onto the formula: where it lands, the height <i>h</i>(<i>t</i>) is 0, and <i>s</i><sub>0</sub> is the height it starts from.";
+    var SUB = [
+      ws("sh", "vsub", askS, { k: "h", v: 0, after: subA("h"), hint: ["On " + place + ", the height is 0.", "Drag \u201c" + place + "\u201d onto h(t)."] }),
+      ws("ss", "vsub", askS, { k: "s", v: s0, after: subA("s"), hint: ["It starts " + s0 + " feet up.", "Drag " + s0 + " onto s₀."] })
+    ];
+    var rt = sq ? String(r) : "≈ " + c2F(Tr), tA = sq ? "<i>t</i> = " + r : "<i>t</i> ≈ " + c2F(Tr);
+    var mv = ws("mv", "vmv", "Undo the addition: drag + " + s0 + " to the other side of the =.", { after: setS(1), hint: ["The " + s0 + " is added to −16t².", "Drag + " + s0 + " across the = sign. It becomes − " + s0 + "."] });
+    var o1 = ws("o1", "vop", "Click the subtraction.", { op: "o1", after: opA("o1", 2), hint: ["Combine 0 − " + s0 + ".", "Click the − between 0 and " + s0 + "."] });
+    var c1 = ws("c1", "num", "Work it out.", { pre: "0 − " + s0 + " =", ans: -s0, after: setS(2), hint: ["Subtract.", "0 − " + s0 + " = −" + s0 + "."] });
+    var dv = ws("dv", "vdv", "Undo the multiplication: drag −16 to the other side of the =.", { after: setS(3), hint: ["−16 multiplies t². Undo it by dividing.", "Drag −16 across the = sign."] });
+    var o2 = ws("o2", "vop", "Click the fraction bar to divide.", { op: "o2", after: opA("o2", 4), hint: ["A fraction bar means divide.", "Click the bar between −" + s0 + " and −16."] });
+    var c2 = ws("c2", "num", "Work it out.", { pre: "−" + s0 + " ÷ (−16) =", ans: n, after: setS(4), hint: ["A negative divided by a negative is positive.", "−" + s0 + " ÷ (−16) = " + n + "."] });
+    var ex = ws("ex", "vex", "Undo the exponent: drag the 2 to the other side of the =.", { after: setS(5), hint: ["The square root undoes the square.", "Drag the 2 across the = sign. It becomes ±√."] });
+    var o3 = ws("o3", "vop", "Click the square root." + (sq ? "" : " Round to the nearest tenth."), { op: "o3", after: opA("o3", 6), hint: [sq ? "What number times itself is " + n + "?" : "√" + n + " is between " + Math.floor(r) + " and " + Math.ceil(r) + ".", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
+    var c3 = ws("c3", "num", "Work it out.", { pre: "√" + n + " " + (sq ? "=" : "≈"), post: sq ? "" : "(to the nearest tenth)", ans: sq ? r : Tr, tol: sq ? 1e-9 : 0.051, after: setS(6), hint: [sq ? "What number times itself is " + n + "?" : "Use a calculator, then round.", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
+    var ng = ws("ng", "pick", "Which solution answers the question?", { opts: m3Sh([{ t: sq ? "t = " + r : "t ≈ " + c2F(Tr), ok: true }, { t: sq ? "t = −" + r : "t ≈ −" + c2F(Tr), ok: false, why: "A time cannot be negative." }]), after: setS(7), hint: ["Time is counted forward from the drop.", "A time cannot be negative: keep the positive solution."] });
+    var ans = { id: "ans", lab: "Time", ask: "How long does it take to hit " + place + "?", pre: sq ? "<i>t</i> =" : "<i>t</i> ≈", post: "s", ans: sq ? r : Tr, tol: sq ? 1e-9 : 0.051,
+      nums: [n, c2R(s0 / 16 / 2, 1), c2R(r * 2, 1)].filter(function (v, j, A) { return Math.abs(v - Tr) > 0.06 && A.indexOf(v) === j; }),
+      hint: ["Set h(t) = 0: 0 = −16t² + " + s0 + ".", "t² = " + n + ", so t = √" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + " (a time is not negative)."], line: "it hits " + place + " after " + (sq ? "" : "about ") + c2F(Tr) + " seconds" };
+    pb.isteps = SUB.concat([mv, o1, dv, o2, ex, o3, ng]);
+    pb.csteps = SUB.concat([mv, o1, c1, dv, o2, c2, ex, o3, c3, ng]);
+    pb.steps = [ans];   // (Write: the answer alone)
+    var gV = function (k) { return function (x) { return (x.vs || 0) >= k && !(x.pend && (x.vs || 0) === k - 1); }; };
+    var gM = function (t) { return "<span class=\"lm\">" + t + "</span>"; };
+    pb.guess = { G: [["<i>s</i><sub>0</sub> = " + s0 + " ft", function (x, dn) { return (x.sb && x.sb.s) || dn.ans; }], ["<i>h</i>(<i>t</i>) = 0 on " + place, function (x, dn) { return (x.sb && x.sb.h) || dn.ans; }]],
+      U: [["<i>t</i> = ? seconds", null]],
+      E: [[gM("<i>h</i>(<i>t</i>) = −16<i>t</i>² + <i>s</i><sub>0</sub>"), null]],
+      S1: [[gM("0 = −16<i>t</i>² + " + s0), function (x, dn) { return (x.sb && x.sb.h && x.sb.s) || dn.ans; }]],
+      S2: [[gM("−" + s0 + " = −16<i>t</i>²"), gV(2)], [gM(n + " = <i>t</i>²"), gV(4)], [gM("±√" + n + " = <i>t</i>"), gV(5)], [gM("<i>t</i> " + (sq ? "= ±" + r : "≈ ±" + c2F(Tr))), gV(6)], ["a time is not negative: " + gM(tA), gV(7)]],
+      A: [["It hits " + place + " after " + (sq ? "" : "about ") + c2F(Tr) + " seconds.", function (x, dn) { return (x.vs || 0) >= 7 || dn.ans; }]] };
+    return pb;
+  }
   function c3M4(tier) {
-    if (rnd(2)) {   // the dropped object
-      var sc = c2Pick(C3DROP), s0 = c2Pick([36, 50, 64, 80, 100, 120, 144, 150, 200]), T = Math.sqrt(s0 / 16), Tr = c2R(T, 1), pb = { kind: 20 };
-      pb.head = sc[0] + s0 + sc[1]; pb.pic = c2Pic("ball");
-      pb.story = sc[0] + s0 + sc[1] + " A dropped object's height is <span class=\"lm\"><i>h</i>(<i>t</i>) = −16<i>t</i>² + <i>s</i><sub>0</sub></span>.";
-      pb.tq = "<div class=\"regQ\">How long does it take to hit the ground?</div><div class=\"supp\"><i>t</i> = seconds, <i>h</i> = height in feet. Round to the nearest tenth.</div>";
-      pb.fig = function (x) { x = x || {}; if (!x.tt) return ""; var xa = c2Axis(0, T + 0.5), ya = c2Axis(0, s0 * 1.1); return c2Fig({ H: 260, xmin: 0, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Time (seconds)", yl: "Height (feet)", alt: "The height over time", curves: [{ fn: function (t0) { return -16 * t0 * t0 + s0; }, col: C2P, lo: 0, hi: T }], pts: [{ x: 0, y: s0, col: C2P, lab: "(0, " + s0 + ")" }, { x: T, y: 0, col: C2P, lab: "(" + c2F(Tr) + ", 0)", dy: -8 }] }); };
-      pb.steps = [
-        { id: "s0", lab: "initial height", ask: "Find the initial height.", pre: "<i>s</i><sub>0</sub> =", post: "ft", ans: s0, nums: [16, s0 / 2, 2 * s0], hint: ["It is dropped from " + s0 + " feet.", "<i>s</i><sub>0</sub> = " + s0 + "."], line: "<i>s</i><sub>0</sub> = " + s0 + " ft" },
-        { id: "t", lab: "Time", ask: "How long does it take to hit the ground?", pre: "<i>t</i> ≈", post: "s", ans: Tr, tol: 0.06, nums: [c2R(s0 / 16, 1), c2R(T * 2, 1), c2R(Math.sqrt(s0) / 4 + 1, 1)].filter(function (v, j, A) { return Math.abs(v - Tr) > 0.06 && A.indexOf(v) === j; }),
-          after: function (x) { x.tt = true; }, hint: ["Set <i>h</i>(<i>t</i>) = 0: 0 = −16<i>t</i>² + " + s0 + ", so 16<i>t</i>² = " + s0 + ".", "<i>t</i>² = " + c2F(c2R(s0 / 16, 4)) + ", so <i>t</i> = √" + c2F(c2R(s0 / 16, 4)) + " ≈ " + c2F(Tr) + " (time is not negative)."], line: "it hits the ground after about " + c2F(Tr) + " seconds" }
-      ];
-      pb.guess = { G: [["<i>s</i><sub>0</sub> = " + s0 + " ft", ["s0"]]], U: [["<i>t</i> when <i>h</i> = 0", null]], E: [["<i>h</i>(<i>t</i>) = −16<i>t</i>² + <i>s</i><sub>0</sub>", null]],
-        S1: [["0 = −16<i>t</i>² + " + s0, ["t"]]], S2: [["16<i>t</i>² = " + s0 + ", <i>t</i>² = " + c2F(c2R(s0 / 16, 4)) + ", <i>t</i> = ±√" + c2F(c2R(s0 / 16, 4)) + " ≈ ±" + c2F(Tr), ["t"]], ["−" + c2F(Tr) + " is not a time", ["t"]]], A: [["<i>t</i> ≈ " + c2F(Tr) + " seconds", ["t"]]] };
-      return pb;
-    }
+    if (rnd(2)) return c3Drop(tier);   // the dropped object, solved algebraically
     for (var t = 0; t < 500; t++) {   // the revenue: R(x) = (S − d·x)(P + x), x = the price increase in dollars
       var P = 4 + rnd(9), d = c2Pick([0.5, 1, 1.5, 2]), Z = P + 2 + rnd(12); if ((Z - P) % 2) continue;   // (zeros Z and −P; their average a whole number of dollars)
       var S = c2R(Z * d, 4), xm = (Z - P) / 2, price = P + xm, R = c2R((S - d * xm) * (P + xm), 4), pb2 = { kind: 20 };
@@ -15811,7 +15867,7 @@ var ESPIC = {
   // which exercise makes the problem
   function c2Make(tier) {
     c2Dec = act === "2.1" || act === "2.4" || act === "3.1" || (act === "2.2" && lesson === 5);
-    var pb = act === "3.1" ? c3Nums(({ 1: c3M1, 4: c3M4, 11: c3M11, 13: c3M13, 16: c3M16 }[lesson] || c3M13)(tier)) : act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211, c2M2212][lesson - 1](tier)
+    var pb = act === "3.1" ? c3Nums(({ 1: c3M1, 4: c3M4, 11: c3M11, 13: c3M13, 16: c3M16, 18: c2M241 }[lesson] || c3M13)(tier)) : act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211, c2M2212][lesson - 1](tier)
       : ([c2M241, c2M242, null, c2M244][lesson - 1] || c2M244)(tier);   // (2.4 exercise 3, Three Points with first and second differences, was taken out)
     pb.head = m3Plain(pb.head);   // (Show work's first line is plain text)
     return pb;
@@ -16899,7 +16955,7 @@ var ESPIC = {
         var t = st.type || "num"; cap(m3QC() ? "" : m3Say(st.ask)); if (m3QC() && !document.querySelector("#pgQt .m3QC")) $("pgQt").innerHTML = m3Q();   // (questions in the centre pane are asked only there)
         var P1 = m3Cur();
         if (st.dfr && mode === "demo" && !QZ.m3x.dA) { pgWait(1200, function () { if (pgRun === run) vpDsmDiv(st, run, function () { if (pgRun === run) m3Do(n); }); }); return; }   // (2.4A: the division for a, on a new line of Desmos first)
-        if (/^v(sub|op|mv|dv)$/.test(t)) { pgWait(1300, function () { if (pgRun === run) vpDemo(st, run, n); }); return; }
+        if (/^v(sub|op|mv|dv|ex)$/.test(t)) { pgWait(1300, function () { if (pgRun === run) vpDemo(st, run, n); }); return; }
         if (st.demo) { pgWait(1200, function () { if (pgRun === run) st.demo(run, n); }); return; }   // (a step with a Demo of its own: 3.1A, the terms dragged across the =)   // 2.4A: drag the numbers onto the formula, then solve for a
         if (st.dpre && QZ.m3x.dp !== st.id) { QZ.m3x.dp = st.id; pgWait(1200, function () { if (pgRun === run) st.dpre(run, function () { if (pgRun === run) m3Do(n); }); }); return; }   // (2.4A: the hand finds the point in Desmos first)
         if (t === "plotT") { pgWait(1600, function () { (function nx(i) { if (i >= P1.rows.length) { n(); return; } m3HClick(m3Scr(P1.rows[i], P1.tys[i]), function () { nx(i + 1); }); })(0); }); return; }
@@ -17205,7 +17261,8 @@ var ESPIC = {
   }
   // exercises that are copies of each other under different section numbers: a mode finished in one opens the same starting mode in the others (stars stay apart)
   var COPYG = [
-    [["2.4", "6"], ["3.1", "15"], ["3.1", "5"]]   // Multiplying Binomials, the box method: 2.4A Box Method, 3.1A and 3.1B Binomials, 3.1D Box Method
+    [["2.4", "6"], ["3.1", "15"], ["3.1", "5"]],   // Multiplying Binomials, the box method: 2.4A Box Method, 3.1A and 3.1B Binomials, 3.1C Binomials, 3.1D Box Method
+    [["2.4", "1"], ["3.1", "18"]]   // Vertex and a Point: 2.4A, 3.1C
   ];
   // a mode finished in any copy counts as finished here too, so every copy opens at the same starting mode (stars stay with the copy that earned them)
   function copyModeFin(m) {
