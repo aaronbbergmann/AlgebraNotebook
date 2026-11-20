@@ -15779,7 +15779,7 @@ var ESPIC = {
     var setS = function (k) { return function (x) { x.vs = k; x.pend = ""; }; };
     var opA = function (id, k) { return function (x) { if (mode === "calculate") x.pend = id; else { x.vs = k; x.pend = ""; } }; };
     var subA = function (key) { return function (x) { x.sb = x.sb || {}; x.sb[key] = 1; }; };
-    var askS = "Drag the numbers you know onto the formula: where it lands, the height <i>h</i>(<i>t</i>) is 0, and <i>s</i><sub>0</sub> is the height it starts from.";
+    var askS = "";   // (no instructions on dragging: the Demo shows it)
     var SUB = [
       ws("sh", "vsub", askS, { k: "h", v: 0, after: subA("h"), hint: ["On " + place + ", the height is 0.", "Drag \u201c" + place + "\u201d onto h(t)."] }),
       ws("ss", "vsub", askS, { k: "s", v: s0, after: subA("s"), hint: ["It starts " + s0 + " feet up.", "Drag " + s0 + " onto s₀."] })
