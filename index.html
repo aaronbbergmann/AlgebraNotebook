@@ -2224,6 +2224,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     if (k.kind === "mul3") { var gm3 = its[k.i]; if (r.some(function (t) { return t.k === "g"; }) || !exSame(exTot(r), exTot(exDist(exMulPair(gm3, k.f.s, k.f.t))))) { m.textContent = "Not quite. Multiply every term by every term and try again."; $("askIn").select(); return; } exMulApply(k.i, k.f.s, k.f.t); return; }
     var want = k.kind === "comb" ? [exCombineTo(k.i, k.j)[k.j > k.i ? k.j - 1 : k.j]] : exDist(its[k.i]);
     if (k.kind === "comb" && want[0] && want[0].k !== "g" && want[0].n.n === 0 && exLike(its[k.i], its[k.j])) want = [{ k: "c", n: mk(0) }];
+    if (k.kind === "comb" && exLike(its[k.i], its[k.j])) { try { var sm0 = exSum(its[k.i], its[k.j]); if (sm0 && sm0.n && sm0.n.n === 0) want = [{ k: "c", n: mk(0) }]; } catch (e) { } }   // (like terms that cancel, 3x − 3x: the answer is 0 (or 0x), even though the term then drops out of the list)
     function key(t) { return EXP.lit ? litKey(t) : exKey(t) + ":" + t.n.n + "/" + t.n.d; }
     var nz = function (l) { return l.filter(function (t) { return t.k !== "c" || t.n.n !== 0 || l.length === 1; }); };
     ok = r.every(function (t) { return t.k !== "g"; }) && JSON.stringify(nz(r).map(key).sort()) === JSON.stringify(nz(want).map(key).sort()) || (k.kind === "comb" && r.length === 1 && r[0].k !== "g" && r[0].n.n === 0 && want[0].n.n === 0);
@@ -3395,7 +3396,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     if (!EXP.sq || (EXP.rel || "=") !== "=") return null;
     for (var q = 0; q < 2; q++) {
       var S = q ? "R" : "L", O = q ? "L" : "R", a = EXP[S], b = EXP[O];
-      if (a.length === 1 && a[0].k === "x" && a[0].v === "x^2" && same(a[0].n, mk(1)) && !hasS(a[0]) && b.length === 1 && b[0].k === "c" && !b[0].pm && !b[0].u) return { S: S, O: O, q: b[0].n };
+      if (a.length === 1 && a[0].k === "x" && a[0].v === "x^2" && same(a[0].n, mk(1)) && !hasS(a[0]) && b.length === 1 && b[0].k === "c" && !b[0].pm) return { S: S, O: O, q: b[0].n };   /* (a fraction not yet simplified, 162/2, is its value: 81) */
     }
     return null;
   }
@@ -3816,7 +3817,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     if (!live) return;
     var dropOf = function (S, i) { return function (t) { if (t.dataset.drop === "eq=") eqDrop(S, i, eqOther(S), -1); else { var p = t.dataset.drop.split(":"); eqDrop(S, i, p[1], +p[2]); } }; };
     eqOpWire(R, idx);
-    if (EXP.sq && !rad) [].forEach.call(R.querySelectorAll(".exT sup"), function (sp) {   // the exponent of x^2 is dragged across the = and becomes a square root
+    if (EXP.sq && !EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.mf; })) [].forEach.call(R.querySelectorAll(".exT sup"), function (sp) {   /* (fractions on screen do not stop it: 2/2 w² = 162/2) */   // the exponent of x^2 is dragged across the = and becomes a square root
       sp.classList.add("exExp"); sp.title = "Drag the exponent across the = to take the square root"; sp._eqEl = R.querySelector(".exEq");
       sp._cross = function (on) { if (on) sp.style.width = sp.getBoundingClientRect().width + "px"; else sp.style.width = ""; sp.textContent = on ? "\u221a" : "2"; sp.classList.toggle("exSqrt", on); };
       sp.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, sp, function () { note("Drag the 2 across the = and it becomes a square root."); }, function () { eqRoot(); }, ["et:", "eq="]); });
@@ -3824,7 +3825,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     [].forEach.call(R.querySelectorAll(".exT"), function (el) {
       var S = el.dataset.s, i = +el.dataset.i, t = EXP[S][i], mEl = el.querySelector(":scope > .exM") || el.querySelector(".exOvD") || exSignOf(el), gEl = el.querySelector(":scope > .exG") || el.querySelector(".exOvG"), lcEl = el.querySelector(".exLc");
       if (lcEl) { lcEl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); lcEl.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); fdMul(S, i); }); }
-      if (rad) {   // ± and square roots are clicked, nothing is dragged
+      if (rad && (t.k === "r" || t.pm || t.u || t.mf || el.querySelector(".exPm, .exRad, .exMf"))) {   // ± and square roots are clicked (and fractions); every other term (x + 6 = ±√63: the 6) is still dragged as usual
         var pe = el.querySelector(".exPm"), re = el.querySelector(".exRad");
         if (t.u) { el.classList.add("grab", "exU"); el.title = "Click the fraction to simplify"; el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqFrSimp(S, i); }); }
         if (pe) { pe.classList.add("grab"); pe.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqPm(); }); }
@@ -4139,6 +4140,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
       var w = k.b.want, t = r[0], fm = w.simp ? /(\d+)\/(\d+)(?:[a-z](?:\^\d)?)?\s*$/.exec($("askIn").value) : null;
       if (fm && gcd(+fm[1], +fm[2]) > 1) { m.textContent = "That fraction can still be simplified."; $("askIn").select(); return; }
       ok = r.length === 1 && t.k !== "g" && (w.n.n === 0 ? t.n.n === 0 : EXP.lit ? litKey(t) === litKey(w) : exKey(t) === exKey(w) && same(t.n, w.n));
+      if (!ok && w.simp && w.k === "x" && r.length === 1 && t.k === "c" && same(t.n, w.n)) ok = true;   // (a fraction in front of x clicked: its value alone, like 1 for 2/2 w², is right too)
     } else {
       var key = EXP.lit ? litKey : function (t) { return exKey(t) + ":" + t.n.n + "/" + t.n.d; };
       ok = r.every(function (t) { return t.k !== "g"; }) && JSON.stringify(r.map(key).sort()) === JSON.stringify(k.d.map(key).sort());

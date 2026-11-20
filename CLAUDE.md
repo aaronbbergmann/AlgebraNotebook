@@ -31,6 +31,12 @@ Make a change in one copy, then copy it to the others. Apply the same patch to t
 
 An exercise that lives in more than one place is listed here. A change to one copy is made to every copy. Starting mode is shared between copies; stars are not.
 
+**Always, for every change to an exercise:**
+1. Look the exercise up in this table (and in C3SV in the page, for the Chapter 3 equation exercises).
+2. Make the same change in every copy. A change to shared engine code (Play Solve's solver, the box method, the quiz engine) reaches every copy once the page copies are synced; a change to one exercise's own generator or settings must be repeated for each copy.
+3. Test the change in at least one copy besides the one in the screenshot, and name the copies in the reply to the user.
+4. When a new copy is made (an exercise added to a review, a second day, a Playground), add a row here in the same commit.
+
 | Exercise | Original | Copies |
 |---|---|---|
 | Memorizing Parents | 1.1A (act 1.1, lesson 1) | RevT1 Q1 |
@@ -53,4 +59,5 @@ An exercise that lives in more than one place is listed here. A change to one co
 | 3-Step Equations | 2.4A (2.4, lesson 5) | 2.4B; Play Solve |
 | Box Method, Distributing, Square Roots | 2.4A/2.4B (2.4, lessons 6, 8, 7) | Play Solve; 3.1B Simplify Roots, 3.1D Box Method and 3.1A Binomials (3.1, lessons 2, 5 and 15) use the same generators |
 | Binomials (2x2 box) | 3.1A (3.1, lesson 15) | 3.1B |
+| Square Roots (solve, x² = 36, (x + 6)² = 63) | 3.1B (3.1, lesson 3) | Play Solve (sq, sqg levels); 3.1B Square Roots: Simplify (lesson 17) and 3.3A Complete the Square use the same solver steps (± and √, dragging terms, the exponent) |
 | Chapter 3 equation exercises (3.1B, 3.1D–G, 3.3A, 3.4A) | Play Solve levels (sq, sqg, zp, grp, fm, cs, qu; expression levels 5, 13) | C3SV in the page maps each 3.1 lesson to its levels |
