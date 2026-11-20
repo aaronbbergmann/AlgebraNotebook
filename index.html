@@ -15833,7 +15833,7 @@ var ESPIC = {
       pb2.fig = function () { return ""; };
       pb2.qc = 1; pb2.noCueW = 1;   // (Write: no list of the parts)
       pb2.dsm = { one: 1, F1: FrD, D1: Z, xmin: -P - 2, xmax: Z + 2, ymin: -R * 0.15, ymax: R * 1.25, l1: "y=\\left(" + c2T(S, 6) + "-" + (d === 1 ? "" : c2T(d, 6)) + "x\\right)\\left(" + P + "+x\\right)" };
-      var gr = { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph <span class=\"lm\"><i>R</i>(" + c2X + ") = (" + c2F(S) + " − " + dX + ")(" + P + " + " + c2X + ")</span> in Desmos.", line: "graphed R(x) in Desmos", hint: ["Type the revenue function on the first line of Desmos, with y or R(x).", "Type y = (" + c2F(S) + " − " + dX.replace(/<[^>]+>/g, "") + ")(" + P + " + x)."] };
+      var gr = { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "", line: "graphed R(x) in Desmos", hint: ["Type the revenue function on the first line of Desmos, with y or R(x).", "Type y = (" + c2F(S) + " − " + dX.replace(/<[^>]+>/g, "") + ")(" + P + " + x)."] };
       var Q4 = [
         { id: "qz", lab: "Price increase", ask: "At what price increase would the " + (subs === "spots" ? "gym have no spots filled" : "service have no subscribers") + "?", pre: c2X + " =", post: "dollars", ans: Z, nums: [P, -P, xm], hint: ["No " + subs + " means no revenue: find where the graph crosses the x-axis, on the right.", "The x-intercept is (" + Z + ", 0), so " + c2X + " = " + Z + "."], line: "x-intercept (" + Z + ", 0): no " + subs + " at a $" + Z + " increase", x: Z, y: 0 },
         { id: "qp", lab: "Price change", ask: "What change in price would make it free (a price of $0)?", pre: c2X + " =", post: "dollars", ans: -P, nums: [P, Z, -Z], hint: ["A price of $0 means no revenue: find where the graph crosses the x-axis, on the left.", "The x-intercept is (" + c2F(-P) + ", 0), so " + c2X + " = " + c2F(-P) + "."], line: "x-intercept (" + c2F(-P) + ", 0): the price drops by $" + P + " to $0", x: -P, y: 0 },
@@ -15842,7 +15842,7 @@ var ESPIC = {
       ];
       var pick = m3Sh(Q4.slice()).slice(0, 2).sort(function (u, v) { return Q4.indexOf(u) - Q4.indexOf(v); });
       pick.forEach(function (q) { var X0 = q.x, Y0 = q.y; q.dpre = function (run, then) { c3DsmPt(X0, Y0, run, then); }; });
-      pb2.tq = "<div class=\"regQ\">" + pick.map(function (q) { return q.ask; }).join(" ") + "</div><div class=\"supp\">Revenue in " + who[4] + "s of dollars.</div>";
+      pb2.tq = "<div class=\"supp\">Revenue in " + who[4] + "s of dollars.</div>";   // (each question is asked once, by itself)
       pb2.isteps = pb2.csteps = [gr].concat(pick);
       pb2.steps = [gr].concat(pick);
       pb2.qwa = { Q: [[pb2.head.replace(/<[^>]+>/g, "")], ["<i>R</i>(" + c2X + ") = (" + c2F(S) + " − " + dX + ")(" + P + " + " + c2X + ")"]], W: [["graphed in Desmos: x-intercepts (" + c2F(-P) + ", 0) and (" + Z + ", 0), vertex (" + c2F(xm) + ", " + c2F(R) + ")", function (x, dn) { return dn.gr || pick.some(function (q) { return dn[q.id]; }); }]], A: pick.map(function (q) { return [q.line, [q.id]]; }) };
