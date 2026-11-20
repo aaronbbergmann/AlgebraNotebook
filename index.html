@@ -17197,8 +17197,16 @@ var ESPIC = {
     var vk = sx ? "s" : String(l), k = A === "1.4D" ? (sx ? 4 : l === 4 ? "g" : l) : l;
     VIEWS.forEach(function (v) { if (v[1] === A && v[2].indexOf(vk) >= 0 && (rev || v[0] !== view)) out.push({ key: vwKey(v[0]), k: k }); });
     Object.keys(BUILT).forEach(function (R) { if (!BUILT[R].review) return; BUILT[R].items.forEach(function (o, i) { if (o.act === A && o.lesson === l && !!o.subx === sx && !(rev === R && revI === i)) out.push({ key: BUILT[R].key, k: i }); }); });
+    COPYG.forEach(function (g) {   // the same exercise under another section's number (CLAUDE.md, Copies log): its subsections count too
+      if (sx || !g.some(function (m) { return m[0] === A && m[1] === String(l); })) return;
+      g.forEach(function (m) { if (m[0] === A && m[1] === String(l)) return; VIEWS.forEach(function (v) { if (v[1] === m[0] && v[2].indexOf(m[1]) >= 0) out.push({ key: vwKey(v[0]), k: +m[1] }); }); });
+    });
     return out;
   }
+  // exercises that are copies of each other under different section numbers: a mode finished in one opens the same starting mode in the others (stars stay apart)
+  var COPYG = [
+    [["2.4", "6"], ["3.1", "15"], ["3.1", "5"]]   // Multiplying Binomials, the box method: 2.4A Box Method, 3.1A and 3.1B Binomials, 3.1D Box Method
+  ];
   // a mode finished in any copy counts as finished here too, so every copy opens at the same starting mode (stars stay with the copy that earned them)
   function copyModeFin(m) {
     var keep = prog;
