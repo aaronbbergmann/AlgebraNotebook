@@ -5970,7 +5970,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     ["2.4B", "2.4", ["4", "5", "8"], "Modeling with Quadratic Functions (Day 2)"],   // (Regression, 3-Step Equations, Distributing)   // (exercise 3, Three Points with first and second differences, was taken out)
     ["3.1A", "3.1", ["1", "14", "15"], "Solving Quadratic Equations: Graphing"],
     ["3.1B", "3.1", ["16", "3", "17", "15"], "Solving Quadratic Equations: Square Roots"],   // (Simplifying Square Roots, lesson 2, taken out: Perfect Square Factors covers it)
-    ["3.1C", "3.1", ["4", "17", "15", "18"], "Solving Quadratic Equations: Real Life"],
+    ["3.1C", "3.1", ["4", "19", "17", "15", "18"], "Solving Quadratic Equations: Real Life"],
     ["3.1D", "3.1", ["5", "6"], "Solving Quadratic Equations: Factoring"],
     ["3.1E", "3.1", ["7"], "Solving Quadratic Equations: Solving by Factoring"],
     ["3.1F", "3.1", ["8"], "Solving Quadratic Equations: Formulas"],
@@ -6031,8 +6031,8 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     ] },
     "2.1": c2Built("2.1", ["Translations", "Reflections and Stretches", "Writing a Transformed Quadratic", "Using a Transformed Quadratic"], ["Translations", "Reflect & Stretch", "Write g", "Real Life"], function (l) { return l <= 3 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }, 3),
     "2.2": c2Built("2.2", ["Graphing Vertex Form", "Graphing Standard Form", "Minimum and Maximum Values", "Graphing Intercept Form", "Comparing Different Forms", "Interval Notation", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics of a Parabola"], ["Vertex Form", "Standard Form", "Min & Max", "Intercept Form", "Compare", "Interval", "Domain", "Range", "Increasing", "Decreasing", "Memorize", "Characteristics"], function (l) { return l === 11 ? ["demo", "sequence", "calculate"] : l === 1 ? ["demo", "sequence", "calculate", "solo", "create"] : ["demo", "sequence", "calculate", "solo"]; }),
-    "3.1": c2Built("3.1", ["Solving by Graphing", "Simplifying Square Roots", "Solving with Square Roots", "Real Life", "Multiplying (Box Method)", "Factoring", "Solving by Factoring", "Special Products", "Factoring ax\u00b2 + bx + c", "Completing the Square", "Vertex Form by Completing the Square", "The Quadratic Formula", "The Discriminant", "4-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Solving with Square Roots (Simplify)", "Vertex and a Point"],
-      ["Graphing", "Simplify Roots", "Square Roots", "Real Life", "Box Method", "Factoring", "Solve by Factoring", "Special Products", "Factor ax\u00b2 + bx + c", "Complete the Square", "Vertex Form", "Quadratic Formula", "Discriminant", "4-Step Equations", "Binomials", "Simplify Roots", "Square Roots: Simplify", "Vertex & Point"]),
+    "3.1": c2Built("3.1", ["Solving by Graphing", "Simplifying Square Roots", "Solving with Square Roots", "Real Life", "Multiplying (Box Method)", "Factoring", "Solving by Factoring", "Special Products", "Factoring ax\u00b2 + bx + c", "Completing the Square", "Vertex Form by Completing the Square", "The Quadratic Formula", "The Discriminant", "4-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Solving with Square Roots (Simplify)", "Vertex and a Point", "Real Life Desmos"],
+      ["Graphing", "Simplify Roots", "Square Roots", "Real Life", "Box Method", "Factoring", "Solve by Factoring", "Special Products", "Factor ax\u00b2 + bx + c", "Complete the Square", "Vertex Form", "Quadratic Formula", "Discriminant", "4-Step Equations", "Binomials", "Simplify Roots", "Square Roots: Simplify", "Vertex & Point", "Real Life Desmos"]),
     "2.4": c2Built("2.4", ["Vertex and a Point", "Point and x-Intercepts", "Three Points", "Quadratic Regression", "3-Step Linear Equations", "Multiplying Binomials (Box Method)", "Simplifying Square Roots", "Distributing"], ["Vertex & Point", "Intercepts", "Three Points", "Regression", "3-Step Equations", "Box Method", "Square Roots", "Distributing"]),
     "Play Solve": { solver: true, title: "Solve", top: 1, modes: ["demo", "sequence", "calculate", "solo", "create"], key: "algebraProgress:PlaySolver", levels: [] },   // a Playground whose pane is the equation pane of 1.4 > One Variable > Create
     "Play Graph": { play: true, top: 1, key: "algebraProgress:Playground", levels: [] },
@@ -10501,7 +10501,7 @@ var ESPIC = {
   // 2.4 Modeling with Quadratic Functions uses the same blank Desmos graph in place of its own graph: the student types the data in a Desmos table
   // and runs a regression (the "dsm" step checks for both), then answers the typed questions from it (problems with dsm.reg)
   var DSM = { calc: null, state: "", key: "", km: "", fail: false, saved: {} };
-  function dsmOn() { return pq() && ((act === "2.2" && lesson === 5) || act === "2.4" || (act === "3.1" && (lesson === 1 || lesson === 18))) && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm && dsmLate(); }
+  function dsmOn() { return pq() && ((act === "2.2" && lesson === 5) || act === "2.4" || (act === "3.1" && (lesson === 1 || lesson === 18 || lesson === 19))) && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm && dsmLate(); }
   function dsmLate() { var P = m3Cur().dsm; return !P.late || mode === "solo" || !!(QZ.m3x && ((QZ.m3x.vs >= 6 && !QZ.m3x.pend) || QZ.m3x.dA)); }   /* (dA: the Demo opens Desmos to divide for a) */   // (2.4A Vertex and a Point: Desmos comes once a is found)
   function dsmReg() { return dsmOn() && !!m3Cur().dsm.reg; }
   function dsmLoad() {
@@ -10521,7 +10521,7 @@ var ESPIC = {
   function dsmFn(lt) {
     var t = String(lt || "").replace(/\\left\\\{[\s\S]*$/, "").replace(/\\left/g, "").replace(/\\right/g, "").replace(/\\cdot/g, "*").replace(/\\ /g, "").replace(/\s+/g, "");
     for (var g = 0; g < 6 && /\\frac\{/.test(t); g++) t = t.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, "(($1)/($2))");
-    t = t.replace(/\^\{([^{}]*)\}/g, "^($1)").replace(/^(y|[a-z]\(x\))=/, "");
+    t = t.replace(/\^\{([^{}]*)\}/g, "^($1)").replace(/^(y|[a-zA-Z]\(x\))=/, "");
     if (!t || /[\\{}=<>]/.test(t)) return null;
     return function (x) { return csqEval(t, { x: x }); };
   }
@@ -10599,7 +10599,7 @@ var ESPIC = {
   }
   function dsmHomeView() { var b = $("dsmCalc").getBoundingClientRect(), r = b.width ? b.height / b.width : 0.6; DSM.calc.setMathBounds({ left: -10, right: 10, bottom: -10 * r, top: 10 * r }); }
   function dsmZoomOut(run, n) {   // the demo: the window widens from home until both paths fit
-    var P = m3Cur().dsm, b = $("dsmCalc").getBoundingClientRect(), r = b.width ? b.height / b.width : 0.6, A = { l: -10, r: 10, b: -10 * r, t: 10 * r }, B = { l: -P.xmax * 0.06, r: P.xmax, b: P.ymin != null && P.ymin < 0 ? P.ymin * 1.12 : -P.ymax * 0.12, t: P.ymax }, k = 0, N = 30;
+    var P = m3Cur().dsm, b = $("dsmCalc").getBoundingClientRect(), r = b.width ? b.height / b.width : 0.6, A = { l: -10, r: 10, b: -10 * r, t: 10 * r }, B = { l: P.xmin != null ? P.xmin : -P.xmax * 0.06, r: P.xmax, b: P.ymin != null && P.ymin < 0 ? P.ymin * 1.12 : -P.ymax * 0.12, t: P.ymax }, k = 0, N = 30;
     (function st() { if (pgRun !== run) return; var u = ++k / N, e = u * u * (3 - 2 * u); DSM.calc.setMathBounds({ left: A.l + (B.l - A.l) * e, right: A.r + (B.r - A.r) * e, bottom: A.b + (B.b - A.b) * e, top: A.t + (B.t - A.t) * e }); if (k < N) pgWait(60, st); else pgWait(800, n); })();
   }
   // the demo: the hand types each equation into Desmos's expression list
@@ -10628,7 +10628,7 @@ var ESPIC = {
       if (pgRun !== run) return; if (i >= L.length) { pgWait(900, n); return; }
       var lt = L[i], id = "p" + (i + 1), c = 0, at = dsmLineAt(box, i + off);
       handGo(at, 650);
-      pgWait(800, function () { handTap(); (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else { i++; if (i >= L.length && P.one && P.zo) { dsmHomeView(); dsmCheck(); pgWait(900, one); return; } if (i >= L.length && P.one) { DSM.calc.setMathBounds({ left: -P.xmax * 0.06, right: P.xmax, bottom: P.ymin != null ? P.ymin : -P.ymax * 0.12, top: P.ymax }); dsmCheck(); pgWait(900, one); return; }   // (2.4A: the window simply shows the parabola; new demos do not show zooming)
+      pgWait(800, function () { handTap(); (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else { i++; if (i >= L.length && P.one && P.zo) { dsmHomeView(); dsmCheck(); pgWait(900, one); return; } if (i >= L.length && P.one) { DSM.calc.setMathBounds({ left: P.xmin != null ? P.xmin : -P.xmax * 0.06, right: P.xmax, bottom: P.ymin != null ? P.ymin : -P.ymax * 0.12, top: P.ymax }); dsmCheck(); pgWait(900, one); return; }   // (2.4A: the window simply shows the parabola; new demos do not show zooming)
  if (i >= L.length) { pgCapDsm(P.one ? "The parabola goes off the screen. Zoom out to see it whole." : "The paths go off the screen. Zoom out to see them whole."); handGo({ x: r.right - 30, y: r.top + 70 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); dsmZoomOut(run, function () { dsmCheck(); pgWait(500, one); }); }); return; } dsmCheck(); pgWait(700, one); } })(); });
     })();
   }
@@ -15811,8 +15811,15 @@ var ESPIC = {
       A: [["It hits " + place + " after " + (sq ? "" : "about ") + c2F(Tr) + " seconds.", function (x, dn) { return (x.vs || 0) >= 7 || dn.ans; }]] };
     return pb;
   }
-  function c3M4(tier) {
-    if (rnd(2)) return c3Drop(tier);   // the dropped object, solved algebraically
+  function c3M4(tier) { return c3Drop(tier); }   // 3.1C Real Life: the dropped object, solved algebraically
+  // 3.1C Real Life Desmos: the revenue R(x) = (S − dx)(P + x), graphed in Desmos; two questions about its x-intercepts or the coordinates of its vertex, read from the graph
+  function c3DsmPt(x0, y0, run, then) {   // the demo: the hand clicks the point of the graph, and Desmos labels it
+    var box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { then(); return; }
+    try { box.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (er) { }
+    pgWait(450, function () { if (pgRun !== run) return; var rb = box.getBoundingClientRect(); handGo(vpDsmPx(x0, y0) || { x: rb.left + rb.width * 0.7, y: rb.top + rb.height * 0.4 }, 700); });
+    pgWait(1300, function () { if (pgRun !== run) return; handTap(); try { DSM.calc.setExpression({ id: "rq" + x0, latex: "\\left(" + c2T(x0, 6) + "," + c2T(y0, 6) + "\\right)", color: "#7A3FB5", showLabel: true }); } catch (er) { } pgWait(1400, then); });
+  }
+  function c3M19(tier) {
     for (var t = 0; t < 500; t++) {   // the revenue: R(x) = (S − d·x)(P + x), x = the price increase in dollars
       var P = 4 + rnd(9), d = c2Pick([0.5, 1, 1.5, 2]), Z = P + 2 + rnd(12); if ((Z - P) % 2) continue;   // (zeros Z and −P; their average a whole number of dollars)
       var S = c2R(Z * d, 4), xm = (Z - P) / 2, price = P + xm, R = c2R((S - d * xm) * (P + xm), 4), pb2 = { kind: 20 };
@@ -15820,18 +15827,25 @@ var ESPIC = {
       pb2.head = who[0] + P + who[1] + c2F(S) + who[2] + c2F(d) + who[3]; pb2.pic = "";
       var dX = (d === 1 ? "" : c2F(d)) + c2X;
       pb2.story = pb2.head + " The revenue is <span class=\"lm\"><i>R</i>(" + c2X + ") = (" + c2F(S) + " − " + dX + ")(" + P + " + " + c2X + ")</span>, where " + c2X + " is the price increase in dollars.";
-      pb2.tq = "<div class=\"regQ\">What price gives the greatest revenue? What is the greatest revenue?</div><div class=\"supp\">Revenue in " + who[4] + "s of dollars.</div>";
       var Fr = function (x) { return (S - d * x) * (P + x); };
       pb2.fig = function (x) { x = x || {}; if (!x.zz) return ""; var xa = c2Axis(-P - 1, Z + 1), ya = c2Axis(0, R * 1.15); return c2Fig({ H: 260, xmin: xa.min, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Price increase ($)", yl: "Revenue", alt: "The revenue", curves: [{ fn: Fr, col: C2P }], pts: [{ x: -P, y: 0, col: C2P, lab: "(" + c2F(-P) + ", 0)" }, { x: Z, y: 0, col: C2P, lab: "(" + Z + ", 0)" }].concat(x.mx ? [{ x: xm, y: R, col: C2P, lab: "(" + c2F(xm) + ", " + c2F(R) + ")", dy: -8 }] : []) }); };
-      pb2.steps = [
-        { id: "z1", lab: "zero", ask: "Find the zero where the subscribers run out.", pre: c2X + " =", ans: Z, nums: [P, -Z, Z / 2], hint: ["Set " + c2F(S) + " − " + dX + " = 0.", c2X + " = " + c2F(S) + " ÷ " + c2F(d) + " = " + Z + "."], after: function (x) { x.zz = true; }, line: "zeros: " + c2X + " = " + Z + " and " + c2X + " = " + c2F(-P) },
-        { id: "z2", fine: 1, lab: "other zero", ask: "Find the other zero.", pre: c2X + " =", ans: -P, nums: [P, Z, -Z], hint: ["Set " + P + " + " + c2X + " = 0.", c2X + " = " + c2F(-P) + "."], line: c2X + " = " + c2F(-P) },
-        { id: "xm", lab: "increase", ask: "Find the price increase halfway between the zeros.", pre: c2X + " =", post: "dollars", ans: xm, nums: [Z - P, (Z + P) / 2, xm + 1].filter(function (v) { return v !== xm; }), after: function (x) { x.mx = true; }, hint: ["The greatest revenue is halfway between the zeros: their average.", "(" + Z + " + " + c3P(-P) + ") ÷ 2 = " + c2F(xm) + "."], line: "halfway: (" + Z + " + " + c3P(-P) + ") ÷ 2 = " + c2F(xm) },
-        { id: "pr", lab: "Price", ask: "What price gives the greatest revenue?", pre: "$", ans: price, nums: [xm, P, price + 1], hint: ["Add the increase to $" + P + ".", "$" + P + " + $" + c2F(xm) + " = $" + c2F(price) + "."], line: "charge $" + c2F(price) },
-        { id: "rv", lab: "Revenue", ask: "What is the greatest revenue?", pre: "<i>R</i> =", post: who[4], ans: R, tol: 0.01, nums: [c2R(S * P, 4), c2R(R + d * 2, 4), c2R(Z * P, 4)].filter(function (v) { return Math.abs(v - R) > 0.01; }), hint: ["Put " + c2X + " = " + c2F(xm) + " into <i>R</i>(" + c2X + ").", "(" + c2F(S) + " − " + c2F(d) + "·" + c2F(xm) + ")(" + P + " + " + c2F(xm) + ") = " + c2F(R) + "."], line: "the greatest revenue is " + c2F(R) + " " + who[4] }
+      var FrD = function (x) { return (S - d * x) * (P + x); }, subs = who[4] === "million" ? "subscribers" : "spots";
+      pb2.fig = function () { return ""; };
+      pb2.qc = 1; pb2.noCueW = 1;   // (Write: no list of the parts)
+      pb2.dsm = { one: 1, F1: FrD, D1: Z, xmin: -P - 2, xmax: Z + 2, ymin: -R * 0.15, ymax: R * 1.25, l1: "y=\\left(" + c2T(S, 6) + "-" + (d === 1 ? "" : c2T(d, 6)) + "x\\right)\\left(" + P + "+x\\right)" };
+      var gr = { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph <span class=\"lm\"><i>R</i>(" + c2X + ") = (" + c2F(S) + " − " + dX + ")(" + P + " + " + c2X + ")</span> in Desmos.", line: "graphed R(x) in Desmos", hint: ["Type the revenue function on the first line of Desmos, with y or R(x).", "Type y = (" + c2F(S) + " − " + dX.replace(/<[^>]+>/g, "") + ")(" + P + " + x)."] };
+      var Q4 = [
+        { id: "qz", lab: "Price increase", ask: "At what price increase would the " + (subs === "spots" ? "gym have no spots filled" : "service have no subscribers") + "?", pre: c2X + " =", post: "dollars", ans: Z, nums: [P, -P, xm], hint: ["No " + subs + " means no revenue: find where the graph crosses the x-axis, on the right.", "The x-intercept is (" + Z + ", 0), so " + c2X + " = " + Z + "."], line: "x-intercept (" + Z + ", 0): no " + subs + " at a $" + Z + " increase", x: Z, y: 0 },
+        { id: "qp", lab: "Price change", ask: "What change in price would make it free (a price of $0)?", pre: c2X + " =", post: "dollars", ans: -P, nums: [P, Z, -Z], hint: ["A price of $0 means no revenue: find where the graph crosses the x-axis, on the left.", "The x-intercept is (" + c2F(-P) + ", 0), so " + c2X + " = " + c2F(-P) + "."], line: "x-intercept (" + c2F(-P) + ", 0): the price drops by $" + P + " to $0", x: -P, y: 0 },
+        { id: "qh", lab: "Price increase", ask: "What price increase gives the greatest revenue?", pre: c2X + " =", post: "dollars", ans: xm, nums: [Z, P, xm + 1].filter(function (v) { return v !== xm; }), hint: ["The greatest revenue is the highest point of the graph, its vertex.", "The vertex is (" + c2F(xm) + ", " + c2F(R) + "), so " + c2X + " = " + c2F(xm) + "."], line: "vertex (" + c2F(xm) + ", " + c2F(R) + "): a $" + c2F(xm) + " increase, a price of $" + c2F(price), x: xm, y: R },
+        { id: "qk", lab: "Revenue", ask: "What is the greatest revenue?", pre: "<i>R</i> =", post: who[4] + " dollars", ans: R, tol: 0.01, nums: [c2R(S * P, 4), Z, c2R(R + d * 2, 4)].filter(function (v) { return Math.abs(v - R) > 0.01; }), hint: ["The greatest revenue is the height of the vertex.", "The vertex is (" + c2F(xm) + ", " + c2F(R) + "), so the greatest revenue is " + c2F(R) + " " + who[4] + " dollars."], line: "vertex (" + c2F(xm) + ", " + c2F(R) + "): the greatest revenue is " + c2F(R) + " " + who[4] + " dollars", x: xm, y: R }
       ];
-      pb2.guess = { G: [["<i>R</i>(" + c2X + ") = (" + c2F(S) + " − " + dX + ")(" + P + " + " + c2X + ")", null]], U: [["the price and <i>R</i> at the greatest revenue", null]], E: [["zeros: " + c2F(S) + " − " + dX + " = 0, " + P + " + " + c2X + " = 0", ["z1"]]],
-        S1: [[c2X + " = " + Z + ", " + c2X + " = " + c2F(-P) + "; halfway (" + Z + " + " + c3P(-P) + ") ÷ 2 = " + c2F(xm), ["xm"]]], S2: [["<i>R</i>(" + c2F(xm) + ") = (" + c2F(S) + " − " + c2F(d) + "·" + c2F(xm) + ")(" + P + " + " + c2F(xm) + ") = " + c2F(R), ["rv"]]], A: [["charge $" + c2F(price) + "; the greatest revenue is " + c2F(R) + " " + who[4], ["rv"]]] };
+      var pick = m3Sh(Q4.slice()).slice(0, 2).sort(function (u, v) { return Q4.indexOf(u) - Q4.indexOf(v); });
+      pick.forEach(function (q) { var X0 = q.x, Y0 = q.y; q.dpre = function (run, then) { c3DsmPt(X0, Y0, run, then); }; });
+      pb2.tq = "<div class=\"regQ\">" + pick.map(function (q) { return q.ask; }).join(" ") + "</div><div class=\"supp\">Revenue in " + who[4] + "s of dollars.</div>";
+      pb2.isteps = pb2.csteps = [gr].concat(pick);
+      pb2.steps = [gr].concat(pick);
+      pb2.qwa = { Q: [[pb2.head.replace(/<[^>]+>/g, "")], ["<i>R</i>(" + c2X + ") = (" + c2F(S) + " − " + dX + ")(" + P + " + " + c2X + ")"]], W: [["graphed in Desmos: x-intercepts (" + c2F(-P) + ", 0) and (" + Z + ", 0), vertex (" + c2F(xm) + ", " + c2F(R) + ")", function (x, dn) { return dn.gr || pick.some(function (q) { return dn[q.id]; }); }]], A: pick.map(function (q) { return [q.line, [q.id]]; }) };
       return pb2;
     }
   }
@@ -15867,7 +15881,7 @@ var ESPIC = {
   // which exercise makes the problem
   function c2Make(tier) {
     c2Dec = act === "2.1" || act === "2.4" || act === "3.1" || (act === "2.2" && lesson === 5);
-    var pb = act === "3.1" ? c3Nums(({ 1: c3M1, 4: c3M4, 11: c3M11, 13: c3M13, 16: c3M16, 18: c2M241 }[lesson] || c3M13)(tier)) : act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211, c2M2212][lesson - 1](tier)
+    var pb = act === "3.1" ? c3Nums(({ 1: c3M1, 4: c3M4, 11: c3M11, 13: c3M13, 16: c3M16, 18: c2M241, 19: c3M19 }[lesson] || c3M13)(tier)) : act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211, c2M2212][lesson - 1](tier)
       : ([c2M241, c2M242, null, c2M244][lesson - 1] || c2M244)(tier);   // (2.4 exercise 3, Three Points with first and second differences, was taken out)
     pb.head = m3Plain(pb.head);   // (Show work's first line is plain text)
     return pb;
