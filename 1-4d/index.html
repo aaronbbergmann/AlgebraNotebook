@@ -6258,7 +6258,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
   function svSwap(sv0) { if (svAct() && sv0 !== svL()) { EXP = null; up = null; if (svL()) { leaveQuiz(); var W0 = $("wfSteps"); W0.hidden = true; W0.innerHTML = ""; m3wKey = ""; $("pgQmsg").textContent = ""; document.body.classList.remove("vpDrag");   /* (no questions left over from the word problem in the side panel) */ document.body.classList.add("solver", "svEx"); } else { exHide(); document.body.classList.remove("solver", "svEx"); qzShow(); } } }
   function vwNext() {
     var ls = VW[view].ls, i = ls.indexOf(vwK()); if (i < 0) return null;
-    if (i < ls.length - 1) { var k = ls[i + 1]; return { name: exShort(act, k), go: function () { msSave(); var sv0 = svL(); vwSet(k); $("lesson").value = k; svSwap(sv0); gdCustom = null; wfCustom = null; c2Custom = null; useCustom = null; buildModes(); setMode(resumeMode()); } }; }
+    if (i < ls.length - 1) { var k = ls[i + 1]; return { name: exShort(act, k), go: function () { msSave(); var sv0 = svL(); vwSet(k); $("lesson").value = k; svSwap(sv0); gdCustom = null; wfCustom = null; c2Custom = null; useCustom = null; buildModes(); carryOff = true; try { setMode(resumeMode()); } finally { carryOff = false; } } }; }
     for (var j = VW[view].i + 1; j < VIEWS.length; j++) {
       var v = VIEWS[j]; if (v[1] !== act) return null; if (!v[2].length) continue;
       return { name: v[0] + " " + exShort(v[1], v[2][0]), go: (function (id) { return function () { setActivity(id); }; })(v[0]) };
@@ -6537,9 +6537,9 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
   }
   // ---- Going down a mode keeps the question: from Write to Calculate, Sequence or Demo (or Calculate to Sequence, ...) the student meets the very
   // problem they were on, in the lower mode, instead of a new one.  carryQ holds it until the lower mode deals its first problem (pqStart / newProblem) ====
-  var carryQ = null;
+  var carryQ = null, carryOff = false;   // carryOff: another exercise was chosen, so its first problem is a new one (never the last exercise's)
   function carryTake(m) {
-    carryQ = null;
+    carryQ = null; if (carryOff) return false;
     if (!(MORD.indexOf(m) >= 0 && MORD.indexOf(mode) > MORD.indexOf(m)) || BUILT[act].solver || BUILT[act].play) return false;
     try {
       if (quiz()) {
@@ -7113,7 +7113,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     return "Substitute " + s[1];
   }
 
-  $("lesson").addEventListener("change", function () { msSave(); if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; var sv0 = svL(); lesson = subx ? 2 : +this.value; svSwap(sv0); gdCustom = null; wfCustom = null; c2Custom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; setMode(resumeMode()); var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
+  $("lesson").addEventListener("change", function () { msSave(); if (rev) { revGo(+this.value); var mr = this; mr.blur(); setTimeout(function () { mr.blur(); }, 0); setTimeout(function () { mr.blur(); }, 150); return; } subx = this.value === "s"; var sv0 = svL(); lesson = subx ? 2 : +this.value; svSwap(sv0); gdCustom = null; wfCustom = null; c2Custom = null; buildModes(); if (mode === "create") orig = []; useCustom = null; carryOff = true; try { setMode(resumeMode()); } finally { carryOff = false; } var me = this; me.blur(); setTimeout(function () { me.blur(); }, 0); setTimeout(function () { me.blur(); }, 150); });
   $("crAdd").addEventListener("click", crAdd);
   ["askT", "askErr", "exMsg", "pgQmsg", "crErr", "stCap"].forEach(function (id) { var a = $(id); if (!a) return; new MutationObserver(function () { if (a.children.length) return; var t = a.textContent, u = sqTxt(t); if (u !== t) a.textContent = u; }).observe(a, { childList: true, characterData: true, subtree: true }); });   // prompts and messages write x², not x^2
   $("crKeys").addEventListener("mousedown", function (e) { e.preventDefault(); });   // the cursor stays in the box
@@ -10501,7 +10501,7 @@ var ESPIC = {
   // 2.4 Modeling with Quadratic Functions uses the same blank Desmos graph in place of its own graph: the student types the data in a Desmos table
   // and runs a regression (the "dsm" step checks for both), then answers the typed questions from it (problems with dsm.reg)
   var DSM = { calc: null, state: "", key: "", km: "", fail: false, saved: {} };
-  function dsmOn() { return pq() && ((act === "2.2" && lesson === 5) || act === "2.4" || (act === "3.1" && (lesson === 1 || lesson === 18 || lesson === 19))) && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm && dsmLate(); }
+  function dsmOn() { return pq() && ((act === "2.2" && lesson === 5) || act === "2.4" || (act === "3.1" && (lesson === 1 || lesson === 18 || lesson === 19 || (lesson === 4 && (mode === "calculate" || mode === "solo"))))) && m3() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().dsm && dsmLate(); }
   function dsmLate() { var P = m3Cur().dsm; return !P.late || mode === "solo" || !!(QZ.m3x && ((QZ.m3x.vs >= 6 && !QZ.m3x.pend) || QZ.m3x.dA)); }   /* (dA: the Demo opens Desmos to divide for a) */   // (2.4A Vertex and a Point: Desmos comes once a is found)
   function dsmReg() { return dsmOn() && !!m3Cur().dsm.reg; }
   function dsmLoad() {
@@ -10560,6 +10560,7 @@ var ESPIC = {
   }
   function dsmCheck() {
     if (!dsmOn()) return; var st = m3Step(), n = $("dsmNote");
+    if (m3Cur().dsm.calc) { if (n) n.innerHTML = ""; return; }   // (Desmos as a calculator: nothing to check)
     if (dsmReg()) {
       var R = dsmRegDone(), any = e11AnyReg();
       if (n) {
@@ -14526,6 +14527,7 @@ var ESPIC = {
     balloon: '<path d="M12 86l10-20 10 20" stroke-width="3"/><circle cx="22" cy="60" r="7" fill="#2D70B3" fill-opacity=".45"/><path d="M30 56q36-56 82 30" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M0 90h120" stroke-width="2.5"/>',
     human: '<circle cx="18" cy="70" r="5"/><path d="M14 76l-6 10M22 76l8 6" stroke-width="2.5"/><path d="M8 82l18-14" stroke-width="7"/><path d="M28 62q34-50 70 14" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M92 74h22v6H92z" fill="#d9534f" fill-opacity=".4"/><path d="M96 80v10M110 80v10" stroke-width="2"/><path d="M0 92h120" stroke-width="2.5"/>',
     ramp: '<path d="M4 90l30-18v18" fill="var(--plus)" fill-opacity=".3"/><circle cx="28" cy="62" r="4"/><circle cx="40" cy="62" r="4"/><path d="M28 62l6-6 6 6" stroke-width="2"/><path d="M40 58q32-42 64 10" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M96 90l20-14v14" fill="var(--plus)" fill-opacity=".3"/><path d="M0 92h120" stroke-width="2.5"/>',
+    drop: '<path d="M34 92V36h28v56" fill="var(--plus)" fill-opacity=".2"/><circle cx="70" cy="32" r="5" fill="#d98a1c" fill-opacity=".6"/><path d="M70 40v40" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M64.5 74l5.5 7 5.5-7" stroke-width="2" fill="none"/><circle cx="70" cy="88" r="4"/><path d="M0 92h120" stroke-width="2.5"/>',   // (a dropped object: straight down, never up)
     ball: '<path d="M6 92V52h18v40" fill="var(--plus)" fill-opacity=".2"/><circle cx="28" cy="48" r="5" fill="#d98a1c" fill-opacity=".6"/><path d="M32 46q30-36 70 30" stroke-width="2.5" stroke-dasharray="4 4"/><circle cx="104" cy="80" r="4"/><path d="M104 84v8" stroke-width="2"/><path d="M0 92h120" stroke-width="2.5"/>',
     skier: '<path d="M4 92l40-24v24" fill="#2D70B3" fill-opacity=".25"/><circle cx="40" cy="58" r="4"/><path d="M40 62v8M34 72h14" stroke-width="2.5"/><path d="M46 60q26-36 60 20" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M0 92q15-4 30 0t30 0 30 0 30 0" stroke="#2D70B3" stroke-width="2.5"/>',
     temp: '<rect x="50" y="10" width="20" height="62" rx="10" fill="var(--plus)" fill-opacity=".14"/><circle cx="60" cy="80" r="13" fill="#2D70B3" fill-opacity=".5"/><path d="M60 72V36" stroke="#2D70B3" stroke-width="6"/><path d="M76 24h10M76 38h10M76 52h10" stroke-width="2"/>',
@@ -15011,8 +15013,8 @@ var ESPIC = {
     else if (vs === 1) { L = "0 " + op("o1", "−") + " " + V.s0; R = "−16" + T + "<sup>2</sup>"; }
     else if (vs === 2) { L = "−" + V.s0; R = vt("D", "−16") + T + "<sup>2</sup>"; }
     else if (vs === 3) { L = "<span class=\"vpFr" + (cur === "vop" && st.op === "o2" ? " live" : "") + (x.pend === "o2" ? " vpPend" : "") + "\" data-vpop=\"o2\"><span>−" + V.s0 + "</span><span>−16</span></span>"; R = T + "<sup>2</sup>"; }
-    else if (vs === 4) { L = String(V.n); R = T + vt("e", "<sup>2</sup>"); }
-    else if (vs === 5) { L = "±" + op("o3", c3Rt(V.n)); R = T; }
+    else if (vs === 4) { L = c2F(V.n); R = T + vt("e", "<sup>2</sup>"); }
+    else if (vs === 5) { L = "±" + op("o3", c3Rt(c2F(V.n))); R = T; }
     else if (vs === 6) { L = V.sq ? "±" + V.r : "±" + c2F(V.Tr); R = T; eqS = V.sq ? "=" : "≈"; more = "<div class=\"vpFin lm\">" + T + " " + eqS + " " + c2F(V.sq ? V.r : V.Tr) + " &nbsp; or &nbsp; " + T + " " + eqS + " −" + c2F(V.sq ? V.r : V.Tr) + "</div>"; }
     else { L = T; R = c2F(V.sq ? V.r : V.Tr); eqS = V.sq ? "=" : "≈"; more = "<div class=\"vpCap\">" + T + " " + eqS + " −" + c2F(V.sq ? V.r : V.Tr) + " is not a time</div>"; }
     var row = "<div class=\"vpEq lm\" id=\"vpEq\"><span class=\"vpSide\" data-vpside=\"L\">" + L + "</span><span class=\"vpEqS\" id=\"vpEqS\">" + eqS + "</span><span class=\"vpSide\" data-vpside=\"R\">" + R + "</span></div>";
@@ -15765,13 +15767,16 @@ var ESPIC = {
   // then undoes the operations in order, as in Play Solve: drag + s₀ across the =, click the subtraction, drag −16 across (it divides), click the fraction bar,
   // drag the exponent across (it becomes ±√), click the root, and keeps the positive time.  Calculate asks each value; Write: the answer alone
   function c3Drop(tier) {
-    var sc = c2Pick(C3DROP), n = c2Pick(tier === 0 ? [1, 4, 9, 16, 25] : [1, 4, 9, 16, 25, 2, 3, 5, 6, 7, 8, 10, 12]), s0 = 16 * n, r = Math.sqrt(n), sq = Number.isInteger(r), Tr = c2R(r, 1), pb = { kind: 20 };
+    var sc = c2Pick(C3DROP), s0 = 0, n = 0;
+    if (rnd(3) === 0) { n = c2Pick([1, 4, 9, 16, 25]); s0 = 16 * n; } else { do { s0 = c2Rng(20, 320); n = s0 / 16; } while (Number.isInteger(Math.sqrt(n))); }   // (most need a calculator: 150 ÷ 16 = 9.375, √9.375 ≈ 3.1)
+    var r = Math.sqrt(n), sq = Number.isInteger(r), Tr = c2R(r, 1), pb = { kind: 20 };
     var place = /\{([^}]*)\}/.exec(sc[1])[1], ground = "<span class=\"vpN vpG\" data-vpsrc=\"sg\" data-vpv=\"0\">" + place + "</span>";
     pb.head = sc[0] + s0 + sc[1].replace(/[{}]/g, "") + " How long does it take to hit " + place.replace(/^the /, "the ") + "?";
-    pb.pic = c2Pic("ball");
+    pb.pic = c2Pic("drop");
     var story0 = sc[0] + vpN(s0, "ss") + sc[1].replace(/\{[^}]*\}/, ground), fml = " A dropped object's height is <span class=\"lm\"><i>h</i>(<i>t</i>) = −16<i>t</i>² + <i>s</i><sub>0</sub></span>.";
     Object.defineProperty(pb, "story", { get: function () { return story0 + (mode === "solo" ? fml : ""); } });   // (Write: the formula in the story; the other modes: large, in the centre)
     pb.tq = "<div class=\"regQ\">How long does it take to hit " + place + "?</div><div class=\"supp\"><i>t</i> = seconds, <i>h</i> = height in feet." + (sq ? "" : " Round to the nearest tenth.") + "</div>";
+    pb.dsm = { calc: 1 };   // (Calculate and Write: Desmos to divide and take the root; nothing is checked in it)
     pb.qc = 1; pb.vp = { form: "d", s0: s0, n: n, r: r, sq: sq, Tr: Tr, k: s0, D: -16, Dg: "(−16)", want: { h: 0, s: s0 }, why: { h: "h(t) is the height. On " + place + ", the height is 0.", s: "s₀ is the height it starts from, " + s0 + " feet." }, place: place };
     pb.ws = function () { return vpWs(pb); };
     pb.fig = function () { return ""; };
@@ -15790,7 +15795,7 @@ var ESPIC = {
     var c1 = ws("c1", "num", "Work it out.", { pre: "0 − " + s0 + " =", ans: -s0, after: setS(2), hint: ["Subtract.", "0 − " + s0 + " = −" + s0 + "."] });
     var dv = ws("dv", "vdv", "Undo the multiplication: drag −16 to the other side of the =.", { after: setS(3), hint: ["−16 multiplies t². Undo it by dividing.", "Drag −16 across the = sign."] });
     var o2 = ws("o2", "vop", "Click the fraction bar to divide.", { op: "o2", after: opA("o2", 4), hint: ["A fraction bar means divide.", "Click the bar between −" + s0 + " and −16."] });
-    var c2 = ws("c2", "num", "Work it out.", { pre: "−" + s0 + " ÷ (−16) =", ans: n, after: setS(4), hint: ["A negative divided by a negative is positive.", "−" + s0 + " ÷ (−16) = " + n + "."] });
+    var c2 = ws("c2", "num", "Work it out.", { pre: "−" + s0 + " ÷ (−16) =", ans: n, tol: Number.isInteger(n) ? 1e-9 : 0.0051, after: setS(4), hint: ["A negative divided by a negative is positive.", "−" + s0 + " ÷ (−16) = " + n + "."] });
     var ex = ws("ex", "vex", "Undo the exponent: drag the 2 to the other side of the =.", { after: setS(5), hint: ["The square root undoes the square.", "Drag the 2 across the = sign. It becomes ±√."] });
     var o3 = ws("o3", "vop", "Click the square root." + (sq ? "" : " Round to the nearest tenth."), { op: "o3", after: opA("o3", 6), hint: [sq ? "What number times itself is " + n + "?" : "√" + n + " is between " + Math.floor(r) + " and " + Math.ceil(r) + ".", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
     var c3 = ws("c3", "num", "Work it out.", { pre: "√" + n + " " + (sq ? "=" : "≈"), post: sq ? "" : "(to the nearest tenth)", ans: sq ? r : Tr, tol: sq ? 1e-9 : 0.051, after: setS(6), hint: [sq ? "What number times itself is " + n + "?" : "Use a calculator, then round.", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
