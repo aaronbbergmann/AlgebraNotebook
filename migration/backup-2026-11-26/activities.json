@@ -1,0 +1,3573 @@
+{
+ "exported": "2026-11-26T11:21:03.861Z",
+ "views": [
+  {
+   "abbreviation": "1.1A",
+   "section": "1.1",
+   "title": "Parent Functions and Transformations",
+   "exercises": [
+    {
+     "key": "1",
+     "name": "Parents",
+     "modes": [
+      "demo",
+      "sequence",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "1",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 40,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    },
+    {
+     "key": "2",
+     "name": "Graph & Describe",
+     "modes": [
+      "demo",
+      "sequence",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "2",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 40,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "1.1B",
+   "section": "1.1",
+   "title": "Parent Functions and Transformations: Desmos",
+   "exercises": [
+    {
+     "key": "3",
+     "name": "Estimate",
+     "modes": [
+      "demo",
+      "sequence",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "3",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 40,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "1.1C",
+   "section": "1.1",
+   "title": "Parent Functions and Transformations: Shrink Stretch",
+   "sectionLevels": [
+    {
+     "exercise": "1",
+     "mode": "demo",
+     "percent": 10,
+     "label": "Demo Mode",
+     "round": 1
+    },
+    {
+     "exercise": "1",
+     "mode": "sequence",
+     "percent": 25,
+     "label": "Sequence Mode",
+     "round": 1
+    },
+    {
+     "exercise": "1",
+     "mode": "solo",
+     "percent": 40,
+     "label": "Write Mode",
+     "round": 1
+    },
+    {
+     "exercise": "1",
+     "mode": "solo",
+     "percent": 70,
+     "label": "Write Mode, 2nd round",
+     "round": 2
+    },
+    {
+     "exercise": "1",
+     "mode": "solo",
+     "percent": 100,
+     "label": "Write Mode, 3rd round",
+     "round": 3
+    },
+    {
+     "exercise": "2",
+     "mode": "demo",
+     "percent": 10,
+     "label": "Demo Mode",
+     "round": 1
+    },
+    {
+     "exercise": "2",
+     "mode": "sequence",
+     "percent": 25,
+     "label": "Sequence Mode",
+     "round": 1
+    },
+    {
+     "exercise": "2",
+     "mode": "solo",
+     "percent": 40,
+     "label": "Write Mode",
+     "round": 1
+    },
+    {
+     "exercise": "2",
+     "mode": "solo",
+     "percent": 70,
+     "label": "Write Mode, 2nd round",
+     "round": 2
+    },
+    {
+     "exercise": "2",
+     "mode": "solo",
+     "percent": 100,
+     "label": "Write Mode, 3rd round",
+     "round": 3
+    },
+    {
+     "exercise": "3",
+     "mode": "demo",
+     "percent": 10,
+     "label": "Demo Mode",
+     "round": 1
+    },
+    {
+     "exercise": "3",
+     "mode": "sequence",
+     "percent": 25,
+     "label": "Sequence Mode",
+     "round": 1
+    },
+    {
+     "exercise": "3",
+     "mode": "solo",
+     "percent": 40,
+     "label": "Write Mode",
+     "round": 1
+    },
+    {
+     "exercise": "3",
+     "mode": "solo",
+     "percent": 70,
+     "label": "Write Mode, 2nd round",
+     "round": 2
+    },
+    {
+     "exercise": "3",
+     "mode": "solo",
+     "percent": 100,
+     "label": "Write Mode, 3rd round",
+     "round": 3
+    }
+   ],
+   "sectionModes": [
+    "demo",
+    "sequence",
+    "solo"
+   ],
+   "exercises": []
+  },
+  {
+   "abbreviation": "1.2A",
+   "section": "1.2",
+   "title": "Transformations of Linear and Absolute Value Functions",
+   "exercises": [
+    {
+     "key": "1",
+     "name": "Translations",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "1",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    },
+    {
+     "key": "3",
+     "name": "Stretches",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "3",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "1.2B",
+   "section": "1.2",
+   "title": "Transformations of Linear and AbsVal Functions: Reflections",
+   "exercises": [
+    {
+     "key": "2",
+     "name": "Reflections",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "2",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "1.2C",
+   "section": "1.2",
+   "title": "Transformations of Linear and AbsVal Functions: Combinations",
+   "exercises": [
+    {
+     "key": "4",
+     "name": "Combining",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "4",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    },
+    {
+     "key": "5",
+     "name": "Profit",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "5",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "5",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "1.3A",
+   "section": "1.3",
+   "title": "Modeling with Linear Functions",
+   "sectionLevels": [
+    {
+     "exercise": "1",
+     "mode": "demo",
+     "percent": 10,
+     "label": "Demo Mode",
+     "round": 1
+    },
+    {
+     "exercise": "1",
+     "mode": "sequence",
+     "percent": 25,
+     "label": "Sequence Mode",
+     "round": 1
+    },
+    {
+     "exercise": "1",
+     "mode": "calculate",
+     "percent": 40,
+     "label": "Calculate Mode",
+     "round": 1
+    },
+    {
+     "exercise": "1",
+     "mode": "solo",
+     "percent": 55,
+     "label": "Write Mode",
+     "round": 1
+    },
+    {
+     "exercise": "1",
+     "mode": "solo",
+     "percent": 80,
+     "label": "Write Mode, 2nd round",
+     "round": 2
+    },
+    {
+     "exercise": "1",
+     "mode": "solo",
+     "percent": 100,
+     "label": "Write Mode, 3rd round",
+     "round": 3
+    },
+    {
+     "exercise": "2",
+     "mode": "demo",
+     "percent": 10,
+     "label": "Demo Mode",
+     "round": 1
+    },
+    {
+     "exercise": "2",
+     "mode": "sequence",
+     "percent": 25,
+     "label": "Sequence Mode",
+     "round": 1
+    },
+    {
+     "exercise": "2",
+     "mode": "calculate",
+     "percent": 40,
+     "label": "Calculate Mode",
+     "round": 1
+    },
+    {
+     "exercise": "2",
+     "mode": "solo",
+     "percent": 55,
+     "label": "Write Mode",
+     "round": 1
+    },
+    {
+     "exercise": "2",
+     "mode": "solo",
+     "percent": 80,
+     "label": "Write Mode, 2nd round",
+     "round": 2
+    },
+    {
+     "exercise": "2",
+     "mode": "solo",
+     "percent": 100,
+     "label": "Write Mode, 3rd round",
+     "round": 3
+    },
+    {
+     "exercise": "3",
+     "mode": "demo",
+     "percent": 10,
+     "label": "Demo Mode",
+     "round": 1
+    },
+    {
+     "exercise": "3",
+     "mode": "sequence",
+     "percent": 25,
+     "label": "Sequence Mode",
+     "round": 1
+    },
+    {
+     "exercise": "3",
+     "mode": "calculate",
+     "percent": 40,
+     "label": "Calculate Mode",
+     "round": 1
+    },
+    {
+     "exercise": "3",
+     "mode": "solo",
+     "percent": 55,
+     "label": "Write Mode",
+     "round": 1
+    },
+    {
+     "exercise": "3",
+     "mode": "solo",
+     "percent": 80,
+     "label": "Write Mode, 2nd round",
+     "round": 2
+    },
+    {
+     "exercise": "3",
+     "mode": "solo",
+     "percent": 100,
+     "label": "Write Mode, 3rd round",
+     "round": 3
+    },
+    {
+     "exercise": "4",
+     "mode": "demo",
+     "percent": 10,
+     "label": "Demo Mode",
+     "round": 1
+    },
+    {
+     "exercise": "4",
+     "mode": "sequence",
+     "percent": 25,
+     "label": "Sequence Mode",
+     "round": 1
+    },
+    {
+     "exercise": "4",
+     "mode": "calculate",
+     "percent": 40,
+     "label": "Calculate Mode",
+     "round": 1
+    },
+    {
+     "exercise": "4",
+     "mode": "solo",
+     "percent": 55,
+     "label": "Write Mode",
+     "round": 1
+    },
+    {
+     "exercise": "4",
+     "mode": "solo",
+     "percent": 80,
+     "label": "Write Mode, 2nd round",
+     "round": 2
+    },
+    {
+     "exercise": "4",
+     "mode": "solo",
+     "percent": 100,
+     "label": "Write Mode, 3rd round",
+     "round": 3
+    }
+   ],
+   "sectionModes": [
+    "demo",
+    "sequence",
+    "calculate",
+    "solo"
+   ],
+   "exercises": []
+  },
+  {
+   "abbreviation": "1.3B",
+   "section": "1.3",
+   "title": "Modeling with Linear Functions (Day 2)",
+   "exercises": [
+    {
+     "key": "1",
+     "name": "Equation",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "1",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    },
+    {
+     "key": "2",
+     "name": "Compare",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "2",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    },
+    {
+     "key": "3",
+     "name": "Line of Fit",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "3",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    },
+    {
+     "key": "4",
+     "name": "Best Fit",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "4",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "1.4A",
+   "section": "1.4D",
+   "title": "Solve Linear Systems: Graphing",
+   "exercises": [
+    {
+     "key": "4",
+     "name": "Graphing",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "g",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "g",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "g",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "g",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "g",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "g",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "1.4B",
+   "section": "1.4D",
+   "title": "Solve Linear Systems Algebraically (Substitution)",
+   "exercises": [
+    {
+     "key": "1",
+     "name": "One Variable",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "1",
+       "mode": "demo",
+       "percent": 5,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "sequence",
+       "percent": 10,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "calculate",
+       "percent": 15,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 20,
+       "label": "Write Mode",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "s",
+     "name": "Substitution",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": []
+    }
+   ]
+  },
+  {
+   "abbreviation": "1.4C",
+   "section": "1.4D",
+   "title": "Solve Linear Systems Algebraically (Elimination)",
+   "exercises": [
+    {
+     "key": "2",
+     "name": "2×2 Systems",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "2",
+       "mode": "demo",
+       "percent": 25,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "sequence",
+       "percent": 30,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "calculate",
+       "percent": 35,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 40,
+       "label": "Write Mode",
+       "round": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "1.4D",
+   "section": "1.4D",
+   "title": "Solve Systems of Linear Equations in 3 Variables",
+   "exercises": [
+    {
+     "key": "3",
+     "name": "3×3 Systems",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "3",
+       "mode": "demo",
+       "percent": 50,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "sequence",
+       "percent": 60,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "calculate",
+       "percent": 70,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 90,
+       "label": "Write Mode, 2nd problem",
+       "round": 2
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd problem",
+       "round": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "2.1A",
+   "section": "2.1",
+   "title": "Transformations of Quadratic Functions",
+   "exercises": [
+    {
+     "key": "1",
+     "name": "Translations",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "1",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    },
+    {
+     "key": "2",
+     "name": "Reflect & Stretch",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "2",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "2.1B",
+   "section": "2.1",
+   "title": "Transformations of Quadratic Functions: Trans to Func",
+   "exercises": [
+    {
+     "key": "3",
+     "name": "Write g",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "3",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    },
+    {
+     "key": "4",
+     "name": "Real Life",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "4",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "2.2A",
+   "section": "2.2",
+   "title": "Characteristics of Quadratic Functions",
+   "exercises": [
+    {
+     "key": "1",
+     "name": "Vertex Form",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "1",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    },
+    {
+     "key": "2",
+     "name": "Standard Form",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "2",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 55,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 80,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3rd round",
+       "round": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "2.2B",
+   "section": "2.2",
+   "title": "Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing",
+   "exercises": [
+    {
+     "key": "6",
+     "name": "Interval",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "6",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "6",
+       "mode": "sequence",
+       "percent": 40,
+       "label": "Sequence Mode, 3 problems",
+       "round": 1
+      },
+      {
+       "exercise": "6",
+       "mode": "calculate",
+       "percent": 70,
+       "label": "Calculate Mode, 3 problems",
+       "round": 1
+      },
+      {
+       "exercise": "6",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3 problems",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "7",
+     "name": "Domain",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "7",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "7",
+       "mode": "sequence",
+       "percent": 40,
+       "label": "Sequence Mode, 3 problems",
+       "round": 1
+      },
+      {
+       "exercise": "7",
+       "mode": "calculate",
+       "percent": 70,
+       "label": "Calculate Mode, 3 problems",
+       "round": 1
+      },
+      {
+       "exercise": "7",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3 problems",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "8",
+     "name": "Range",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "8",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "8",
+       "mode": "sequence",
+       "percent": 40,
+       "label": "Sequence Mode, 3 problems",
+       "round": 1
+      },
+      {
+       "exercise": "8",
+       "mode": "calculate",
+       "percent": 70,
+       "label": "Calculate Mode, 3 problems",
+       "round": 1
+      },
+      {
+       "exercise": "8",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3 problems",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "9",
+     "name": "Increasing",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "9",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "9",
+       "mode": "sequence",
+       "percent": 40,
+       "label": "Sequence Mode, 3 problems",
+       "round": 1
+      },
+      {
+       "exercise": "9",
+       "mode": "calculate",
+       "percent": 70,
+       "label": "Calculate Mode, 3 problems",
+       "round": 1
+      },
+      {
+       "exercise": "9",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3 problems",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "10",
+     "name": "Decreasing",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "10",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "10",
+       "mode": "sequence",
+       "percent": 40,
+       "label": "Sequence Mode, 3 problems",
+       "round": 1
+      },
+      {
+       "exercise": "10",
+       "mode": "calculate",
+       "percent": 70,
+       "label": "Calculate Mode, 3 problems",
+       "round": 1
+      },
+      {
+       "exercise": "10",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 3 problems",
+       "round": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "2.2C",
+   "section": "2.2",
+   "title": "Characteristics of Quadratic Functions: Intercept Form",
+   "exercises": [
+    {
+     "key": "11",
+     "name": "Memorize",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate"
+     ],
+     "levels": [
+      {
+       "exercise": "11",
+       "mode": "demo",
+       "percent": 20,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "11",
+       "mode": "sequence",
+       "percent": 50,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "11",
+       "mode": "calculate",
+       "percent": 100,
+       "label": "Calculate Mode",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "3",
+     "name": "Min & Max",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "3",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "12",
+     "name": "Characteristics",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "12",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "12",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "12",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "12",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "12",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "4",
+     "name": "Intercept Form",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "4",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "5",
+     "name": "Compare",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "5",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "2.4A",
+   "section": "2.4",
+   "title": "Modeling with Quadratic Functions",
+   "exercises": [
+    {
+     "key": "1",
+     "name": "Vertex & Point",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "1",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "2",
+     "name": "Intercepts",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "2",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "2",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "5",
+     "name": "3-Step Equations",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "5",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "6",
+     "name": "Box Method",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "6",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "6",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "6",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "6",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "6",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "7",
+     "name": "Square Roots",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "7",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "7",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "7",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "7",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "7",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "2.4B",
+   "section": "2.4",
+   "title": "Modeling with Quadratic Functions (Day 2)",
+   "exercises": [
+    {
+     "key": "4",
+     "name": "Regression",
+     "modes": [
+      "demo",
+      "sequence",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "4",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "5",
+     "name": "3-Step Equations",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "5",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "8",
+     "name": "Distributing",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "8",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "8",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "8",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "8",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "8",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "3.1A",
+   "section": "3.1",
+   "title": "Solving Quadratic Equations: Graphing",
+   "exercises": [
+    {
+     "key": "1",
+     "name": "Graphing",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "1",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "1",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "14",
+     "name": "4-Step Equations",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "14",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "14",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "14",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "14",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "14",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "15",
+     "name": "Binomials",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "15",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "3.1B",
+   "section": "3.1",
+   "title": "Solving Quadratic Equations: Square Roots",
+   "exercises": [
+    {
+     "key": "16",
+     "name": "Simplify Roots",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "16",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "16",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "16",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "16",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "3",
+     "name": "Square Roots",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "3",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "3",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "17",
+     "name": "Square Roots: Simplify",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "17",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "17",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "17",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "17",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "17",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "15",
+     "name": "Binomials",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "15",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "3.1C",
+   "section": "3.1",
+   "title": "Solving Quadratic Equations: Real Life",
+   "exercises": [
+    {
+     "key": "4",
+     "name": "Real Life",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "4",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "4",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "19",
+     "name": "Real Life Desmos",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "19",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "19",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "19",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "19",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode",
+       "round": 1
+      }
+     ]
+    },
+    {
+     "key": "17",
+     "name": "Square Roots: Simplify",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "17",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "17",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "17",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "17",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "17",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "15",
+     "name": "Binomials",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "15",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "15",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "18",
+     "name": "Vertex & Point",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "18",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "18",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "18",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "18",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode",
+       "round": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "3.1D",
+   "section": "3.1",
+   "title": "Solving Quadratic Equations: Factoring",
+   "exercises": [
+    {
+     "key": "5",
+     "name": "Box Method",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "5",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "5",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    },
+    {
+     "key": "6",
+     "name": "Factoring",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "6",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "6",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "6",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "6",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "6",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "3.1E",
+   "section": "3.1",
+   "title": "Solving Quadratic Equations: Solving by Factoring",
+   "exercises": [
+    {
+     "key": "7",
+     "name": "Solve by Factoring",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "7",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "7",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "7",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "7",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "7",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "3.1F",
+   "section": "3.1",
+   "title": "Solving Quadratic Equations: Formulas",
+   "exercises": [
+    {
+     "key": "8",
+     "name": "Special Products",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "8",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "8",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "8",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "8",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "8",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "3.1G",
+   "section": "3.1",
+   "title": "Solving Quadratic Equations: Factor ax² + bx + c",
+   "exercises": [
+    {
+     "key": "9",
+     "name": "Factor ax² + bx + c",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "9",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "9",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "9",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "9",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "9",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "3.3A",
+   "section": "3.1",
+   "title": "Complete the Square (Solve)",
+   "exercises": [
+    {
+     "key": "10",
+     "name": "Complete the Square",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "10",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "10",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "10",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "10",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "10",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "3.3B",
+   "section": "3.1",
+   "title": "Complete the Square (Vertex Form)",
+   "exercises": [
+    {
+     "key": "11",
+     "name": "Vertex Form",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "11",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "11",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "11",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "11",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode",
+       "round": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "3.4A",
+   "section": "3.1",
+   "title": "Use the Quadratic Formula and the Discriminant",
+   "exercises": [
+    {
+     "key": "12",
+     "name": "Quadratic Formula",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "12",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "12",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "12",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "12",
+       "mode": "solo",
+       "percent": 70,
+       "label": "Write Mode",
+       "round": 1
+      },
+      {
+       "exercise": "12",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode, 2nd round",
+       "round": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "abbreviation": "3.4B",
+   "section": "3.1",
+   "title": "Use the Quadratic Formula and the Discriminant: The Discriminant",
+   "exercises": [
+    {
+     "key": "13",
+     "name": "Discriminant",
+     "modes": [
+      "demo",
+      "sequence",
+      "calculate",
+      "solo"
+     ],
+     "levels": [
+      {
+       "exercise": "13",
+       "mode": "demo",
+       "percent": 10,
+       "label": "Demo Mode",
+       "round": 1
+      },
+      {
+       "exercise": "13",
+       "mode": "sequence",
+       "percent": 25,
+       "label": "Sequence Mode",
+       "round": 1
+      },
+      {
+       "exercise": "13",
+       "mode": "calculate",
+       "percent": 40,
+       "label": "Calculate Mode",
+       "round": 1
+      },
+      {
+       "exercise": "13",
+       "mode": "solo",
+       "percent": 100,
+       "label": "Write Mode",
+       "round": 1
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "reviews": [
+  {
+   "abbreviation": "RevT1",
+   "title": "RevT1",
+   "items": [
+    {
+     "q": "Q1 Families",
+     "section": "1.1",
+     "exercise": 1,
+     "subx": false
+    },
+    {
+     "q": "Q2 Solutions",
+     "section": "1.4D",
+     "exercise": 2,
+     "subx": false
+    },
+    {
+     "q": "Q3 Graph",
+     "section": "1.1",
+     "exercise": 2,
+     "subx": false
+    },
+    {
+     "q": "Q4 Rule",
+     "section": "1.2",
+     "exercise": 4,
+     "subx": false
+    },
+    {
+     "q": "Q5 Line",
+     "section": "1.3",
+     "exercise": 1,
+     "subx": false
+    },
+    {
+     "q": "Q6 Graphing",
+     "section": "1.4D",
+     "exercise": 4,
+     "subx": false
+    },
+    {
+     "q": "Q6 Substitution",
+     "section": "1.4D",
+     "exercise": 2,
+     "subx": true
+    },
+    {
+     "q": "Q6 Elimination",
+     "section": "1.4D",
+     "exercise": 2,
+     "subx": false
+    },
+    {
+     "q": "Q7 Three Variables",
+     "section": "1.4D",
+     "exercise": 3,
+     "subx": false
+    },
+    {
+     "q": "Q8 Word Problem",
+     "section": "1.4D",
+     "exercise": 4,
+     "subx": false
+    }
+   ]
+  },
+  {
+   "abbreviation": "RevQ2",
+   "title": "RevQ2",
+   "items": [
+    {
+     "q": "Q1",
+     "section": "2.2",
+     "exercise": 2,
+     "subx": false
+    },
+    {
+     "q": "Q2",
+     "section": "2.2",
+     "exercise": 3,
+     "subx": false
+    },
+    {
+     "q": "Q3",
+     "section": "2.2",
+     "exercise": 1,
+     "subx": false
+    },
+    {
+     "q": "Q4",
+     "section": "2.2",
+     "exercise": 12,
+     "subx": false
+    },
+    {
+     "q": "Q5",
+     "section": "2.2",
+     "exercise": 4,
+     "subx": false
+    },
+    {
+     "q": "Q6",
+     "section": "2.2",
+     "exercise": 5,
+     "subx": false
+    }
+   ]
+  }
+ ],
+ "playgrounds": [
+  "Play Solve",
+  "Play Graph",
+  "Play Data"
+ ],
+ "copyGroups": [
+  [
+   [
+    "2.4",
+    "6"
+   ],
+   [
+    "3.1",
+    "15"
+   ],
+   [
+    "3.1",
+    "5"
+   ]
+  ],
+  [
+   [
+    "2.4",
+    "1"
+   ],
+   [
+    "3.1",
+    "18"
+   ]
+  ]
+ ],
+ "c3sv": {
+  "2": {
+   "rad": 1
+  },
+  "3": {
+   "eq": [
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "5": {
+   "box": 1
+  },
+  "6": {
+   "ex": [
+    5,
+    13
+   ]
+  },
+  "7": {
+   "eq": [
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "8": {
+   "eq": [
+    null,
+    null
+   ]
+  },
+  "9": {
+   "eq": [
+    null
+   ]
+  },
+  "10": {
+   "eq": [
+    null,
+    null,
+    null
+   ]
+  },
+  "12": {
+   "eq": [
+    null,
+    null,
+    null
+   ]
+  },
+  "14": {
+   "lin4": 1
+  },
+  "15": {
+   "bin": 1
+  },
+  "17": {
+   "sqh": 1
+  }
+ },
+ "dueDates": {
+  "2.4A": "2026-11-17T12:55",
+  "RevQ2": "2026-11-12T13:55",
+  "2.4B": "2026-11-19T08:15",
+  "3.1A": "2026-11-20T11:00",
+  "3.1B": "2026-11-23T13:55"
+ },
+ "dueDatesSource": "Progress Sheet, Settings tab, read 2026-11-26"
+}
