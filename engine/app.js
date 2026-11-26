@@ -4813,7 +4813,7 @@
       if (works.indexOf(QZ.ww) < 0) works.push(QZ.ww);
       if (QZ.ww.guess || QZ.ww.qwa) { QZ.ww.gx = QZ.m3x; if (QZ.step >= 4 || QZ.m3done) QZ.ww.fin = true; }
     }
-    var list = c21 ? c21Show() : wf() || m3() ? works.filter(function (w) { return w.wf; }) : works.filter(function (w) { return w.steps.length >= 2; }), cur = c21 ? list[list.length - 1] : m3() && QZ && QZ.ww && list.indexOf(QZ.ww) >= 0 ? QZ.ww : works[works.length - 1];
+    var list = c21 ? c21Show() : wf() || m3() ? works.filter(function (w) { return w.wf; }) : works.filter(function (w) { return w.steps.length >= 2 && !w.wf; }), cur = c21 ? list[list.length - 1] : m3() && QZ && QZ.ww && list.indexOf(QZ.ww) >= 0 ? QZ.ww : wf() || m3() ? works[works.length - 1] : list[list.length - 1];   // (an equation exercise shows equation work only, never a word problem made earlier on the page)
     if (!list.length) list = [{ steps: steps, label: "" }];
     var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
@@ -12267,7 +12267,7 @@ var ESPIC = {
     QZ.m3i = 0; QZ.m3ord = null; QZ.ta = null; QZ.m3l = []; QZ.m3x = {}; QZ.m3done = false; QZ.m3o = null; QZ.hn = 0; QZ.arrowAt = -1; QZ.m3w = { v: {}, ok: {}, bad: {} }; m3wKey = "";
     for (var wi = works.length - 1; wi >= 0; wi--) if (works[wi].wf && works[wi].steps.length < 2) works.splice(wi, 1);
     var pb = m3Cur(); QZ.ww = null;
-    if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); if (pb.qwa) { QZ.ww.qwa = pb.qwa; QZ.ww.done = {}; QZ.ww.gx = QZ.m3x; } if (pb.guess) { QZ.ww.guess = pb.guess; QZ.ww.done = {}; QZ.ww.gx = QZ.m3x; if (pb.vp && pb.dsm) QZ.ww.pic = function (w) { var d = w.done || {}; return w.fin || d.gr || d.ans ? vpWorkPic(pb) : ""; }; } if (pb.grid && pb.dsm) { QZ.ww.gonly = true; QZ.ww.pic = c2CmpPic(pb); } }   // (2.2C Compare: Show work is the graph alone)
+    if (pb) { QZ.ww = { steps: [{ cls: "cf", eqs: [pb.head] }], label: MODES[mode] + " mode, " + lessonName(lesson), wf: true }; works.push(QZ.ww); if (pb.qwa) { QZ.ww.qwa = pb.qwa; QZ.ww.done = {}; QZ.ww.gx = QZ.m3x; } if (pb.guess) { QZ.ww.guess = pb.guess; QZ.ww.done = {}; QZ.ww.gx = QZ.m3x; if (pb.vp && pb.dsm && pb.vp.form !== "d") QZ.ww.pic = function (w) { var d = w.done || {}; return w.fin || d.gr || d.ans ? vpWorkPic(pb) : ""; }; } if (pb.grid && pb.dsm) { QZ.ww.gonly = true; QZ.ww.pic = c2CmpPic(pb); } }   // (2.2C Compare: Show work is the graph alone)
     PG.show = { eq: false, table: false, graph: false, desc: false, parent: false };
   }
   // ==== "Try Another" questioning (pb.ta, Calculate): every box is on the screen; a box is accepted the moment it is right.  A wrong box, once the student
