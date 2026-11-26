@@ -4777,6 +4777,18 @@
     };
     return "<section style=\"padding:.2rem 0 .6rem\">" + row("Q", "Question", g.Q) + row("W", "Work", g.W) + row("A", "Answer", g.A, true) + "</section>";
   }
+  // QWA for a system solved in the equation pane (1.4C 2x2 Systems; RevT1's copies): Question, the system and the unknown point; Work, the steps so far;
+  // Answer, the solution read from the last step (x = 5 and y = -2, or 0 = 0, or 0 = a number), and what it means
+  function sysQwaOn(w) { return w && w.act === "1.4D" && w.les === 2 && !w.sub && w.steps && w.steps.length; }
+  function sysQwa(w) {
+    var st = w.steps, V = ["x", "y"], last = st.length > 1 ? st[st.length - 1].eqs : [], got = {}, ans = "";
+    last.forEach(function (e) { var m = /^([a-z]) = ([^a-z]+)$/.exec(e); if (m) got[m[1]] = m[2]; });
+    if (V.every(function (v) { return got[v] != null; })) ans = "(" + V.map(function (v) { return "<i>" + v + "</i>"; }).join(", ") + ") = (" + V.map(function (v) { return got[v]; }).join(", ") + "): the one point on both lines";
+    else if (last.some(function (e) { return /^0 = 0$/.test(e); })) ans = "Infinitely many solutions: the two equations are the same line";
+    else if (last.some(function (e) { return /^0 = [\u2212-]?[0-9]/.test(e) && !/^0 = 0$/.test(e); })) ans = "No solution: the lines are parallel and never meet";
+    var eqs = function (L) { return L.map(function (e) { return "<div>" + wkMath(e) + "</div>"; }).join(""); };
+    return { qwa: { Q: [[eqs(st[0].eqs), null], ["(<i>x</i>, <i>y</i>) = ?", null]], W: st.length > 1 ? [[workHTML(st.slice(1)), null]] : [], A: ans ? [[ans, null]] : [] } };
+  }
   function guessHTML(w) {
     var g = w.guess, d = w.done || {}, x = w.gx || {}, all = !!w.fin;
     var on = function (it) { var c = it[1]; return all || c == null || (typeof c === "function" ? !!c(x, d) : c.some(function (id) { return d[id]; })); };
@@ -4792,7 +4804,7 @@
   }
   // every problem worked in the session is kept, so Show work can page back and forward through them
   function workAny() { return steps.length >= 2 || works.some(function (w) { return w.steps.length >= 2; }); }
-  function workBegin() { works.push({ steps: steps, label: MODES[mode] + " mode, " + (subx ? "Substitution" : lessonName(lesson)) }); if (works.length > 300) works.shift(); }
+  function workBegin() { works.push({ steps: steps, label: MODES[mode] + " mode, " + (subx ? "Substitution" : lessonName(lesson)), act: act, les: lesson, sub: !!subx }); if (works.length > 300) works.shift(); }
   function workCreate() { var l = works[works.length - 1]; if (l && l.create) l.steps = steps; else { workBegin(); works[works.length - 1].create = true; } }
   // Previous / Next: runs inside the Show work window (and in the on-page sheet)
   function workNavInit(root) {
@@ -4814,10 +4826,10 @@
       if (QZ.ww.guess || QZ.ww.qwa) { QZ.ww.gx = QZ.m3x; if (QZ.step >= 4 || QZ.m3done) QZ.ww.fin = true; }
     }
     var list = c21 ? c21Show() : wf() || m3() ? works.filter(function (w) { return w.wf; }) : works.filter(function (w) { return w.steps.length >= 2 && !w.wf; }), cur = c21 ? list[list.length - 1] : m3() && QZ && QZ.ww && list.indexOf(QZ.ww) >= 0 ? QZ.ww : wf() || m3() ? works[works.length - 1] : list[list.length - 1];   // (an equation exercise shows equation work only, never a word problem made earlier on the page)
-    if (!list.length) list = [{ steps: steps, label: "" }];
+    if (!list.length) list = [{ steps: steps, label: "", act: act, les: lesson, sub: !!subx }];
     var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
-      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + (w.guess ? guessHTML(w) : w.qwa ? qwaHTML(w) : w.gonly ? "" : workHTML(w.steps)) + (function (pc) { return pc ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + pc + "</section>" : ""; })(typeof w.pic === "function" ? w.pic(w) : w.pic) + "</div>"; }).join("");
+      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + (w.guess ? guessHTML(w) : w.qwa ? qwaHTML(w) : sysQwaOn(w) ? qwaHTML(sysQwa(w)) : w.gonly ? "" : workHTML(w.steps)) + (function (pc) { return pc ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + pc + "</section>" : ""; })(typeof w.pic === "function" ? w.pic(w) : w.pic) + "</div>"; }).join("");
     var css = ".wpic svg{max-width:100%;height:auto}.wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
     body = svHTML(body);
     var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;min-width:min(34rem,90vw);width:fit-content;max-width:none;margin:2rem auto;padding:0 1rem}.r>span,.r td{white-space:nowrap}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#7A3FB5}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
