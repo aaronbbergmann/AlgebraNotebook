@@ -862,7 +862,7 @@
     if (!EXP || !$("exBox") || $("exBox").hidden) return;
     var L = exLines(), sp = !!(EXP.eq && EXP.zp), ai = sp && locked ? avIneqEnd() || cmpEnd() : null, key = L.join("\n") + (ai ? "\n" + ai.say : "");
     var mkS = function () { var o = { eqs: L, ms: L.map(function () { return ""; }) }; if (sp) o.split = true; if (ai) o.fin = ai.say; if (wkBox) { o.box = wkBox; wkBox = null; } return o; };
-    if (!steps.length) { steps.push(mkS()); works.push({ steps: steps, label: MODES[mode] + " mode, Play Solve" }); if (works.length > 300) works.shift(); }
+    if (!steps.length) { steps.push(mkS()); works.push({ steps: steps, label: MODES[mode] + " mode, Play Solve", unk: EXP && EXP.eq ? "<i>" + (EXP.vk || "x") + "</i> = ?" : "" }); if (works.length > 300) works.shift(); }
     else {
       var k = -1; for (var i = steps.length - 1; i >= 0; i--) if (steps[i].eqs.join("\n") + (steps[i].fin ? "\n" + steps[i].fin : "") === key) { k = i; break; }
       if (k >= 0) steps.length = k + 1; else steps.push(mkS());
@@ -1082,6 +1082,7 @@
   function exDone(its) { return EXP.rad ? !its.some(rdLeft) : EXP.grp && exProd(its) ? true : EXP.fac ? facDone(its) : exFin(its); }
   function exEnd() {
     locked = true; exRender(); closeAsk(false);
+    workAns(exSay(EXP.items));
     if (EXONE) { exOneEnd(); return; }   // (Demo next step reached the end: no credit, and the work goes back)
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note((EXP.fac || (EXP.grp && exProd(EXP.items)) ? "Fully factored: " : "Fully simplified: ") + exSay(EXP.items) + ".");
     if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(EXP.fac || (EXP.grp && exProd(EXP.items)) ? "Fully factored!" : "Fully simplified!"); solverFinish(); }
@@ -1625,6 +1626,7 @@
     if (SIM) { SIM.done = true; eqRender(); return; }
     var Q = EXP.qu; locked = true; eqRender(); closeAsk(false);
     var none = Q.D < 0, ap = function (v) { return String(Math.round(v * 100) / 100).replace("-", "\u2212"); }, txt = none ? "No real solutions: b² − 4ac = " + quNs(Q.D) + " is negative, and no real number squares to a negative number." : Q.r === 0 ? "Solved: " + quText().replace(/^x = /, "x = ") + ". b² − 4ac = 0, so there is one solution." : Q.r !== null ? "Solved: " + quText() + "." : "Solved: " + quText() + ", so x ≈ " + ap((Q.B + Q.co * Math.sqrt(Q.m)) / Q.Q) + " or x ≈ " + ap((Q.B - Q.co * Math.sqrt(Q.m)) / Q.Q) + ".";
+    workAns(txt.split(":")[0]);
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note(txt);
     if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(none ? "No real solutions" : "Solved!"); solverFinish(); }
     else { tally(); nxShow(); }
@@ -3135,6 +3137,7 @@
     if (SIM) { SIM.done = true; eqRender(); return; }
     locked = true; eqRender(); closeAsk(false); nlEq(kind);
     var iq = eqIneq(), txt = kind === "one" ? "Solved: " + (EXP.zp ? zpSay() : exSay(EXP.L) + " " + (EXP.rel || "=") + " " + (EXP.lit ? litSay(EXP.R) : exSay(EXP.R))) + "." : kind === "none" ? (iq ? "No solution: the inequality is never true." : EXP.negSq ? "No real solution: no number squares to a negative number." : EXP.av ? "No solution: an absolute value is a distance from 0, so it can never be negative." : "No solution: the two sides can never be equal.") : (iq ? "Every number is a solution: the inequality is always true." : "Infinitely many solutions: the two sides are always equal.");
+    workAns(txt.replace(/^Solved: /, "").replace(/\.$/, ""));
     if (mode === "solo") { var m = $("exMsg"); m.className = "ok"; m.textContent = cheer(); } else note(txt);
     if (mode === "demo") { handHide(); onSolved(); DM4.run = DM4.paused = false; dmUI("idle"); dmCap(kind === "one" ? "Solved!" : kind === "none" ? "No solution" : iq ? "Every number" : "Infinitely many"); solverFinish(); }
     else { tally(); nxShow(); }
@@ -4777,18 +4780,31 @@
     };
     return "<section style=\"padding:.2rem 0 .6rem\">" + row("Q", "Question", g.Q) + row("W", "Work", g.W) + row("A", "Answer", g.A, true) + "</section>";
   }
-  // QWA for a system solved in the equation pane (1.4C 2x2 Systems; RevT1's copies): Question, the system and the unknown point; Work, the steps so far;
-  // Answer, the solution read from the last step (x = 5 and y = -2, or 0 = 0, or 0 = a number), and what it means
-  function sysQwaOn(w) { return w && w.act === "1.4D" && w.les === 2 && !w.sub && w.steps && w.steps.length; }
+  // ==== Show work in QWA for everything that is not GUESS (see CLAUDE.md): Question, the problem and its unknown; Work, the steps so far (and the graph);
+  // Answer, once finished, and what it means ====
+  // a system or an equation solved in the equation pane (1.4B One Variable and Substitution, 1.4C 2x2, 1.4D 3x3; RevT1's copies): the answer is read from
+  // the last step (x = 5 and y = -2, or 0 = 0, or 0 = a number)
+  function sysQwaOn(w) { return w && w.act === "1.4D" && (w.les === 1 || w.les === 2 || w.les === 3) && w.steps && w.steps.length; }
   function sysQwa(w) {
-    var st = w.steps, V = ["x", "y"], last = st.length > 1 ? st[st.length - 1].eqs : [], got = {}, ans = "";
+    var st = w.steps, V = w.les === 3 ? ["x", "y", "z"] : w.les === 1 ? ["x"] : ["x", "y"], last = st.length > 1 ? st[st.length - 1].eqs : [], got = {}, ans = "";
     last.forEach(function (e) { var m = /^([a-z]) = ([^a-z]+)$/.exec(e); if (m) got[m[1]] = m[2]; });
-    if (V.every(function (v) { return got[v] != null; })) ans = "(" + V.map(function (v) { return "<i>" + v + "</i>"; }).join(", ") + ") = (" + V.map(function (v) { return got[v]; }).join(", ") + "): the one point on both lines";
-    else if (last.some(function (e) { return /^0 = 0$/.test(e); })) ans = "Infinitely many solutions: the two equations are the same line";
-    else if (last.some(function (e) { return /^0 = [\u2212-]?[0-9]/.test(e) && !/^0 = 0$/.test(e); })) ans = "No solution: the lines are parallel and never meet";
+    var it = function (v) { return "<i>" + v + "</i>"; }, pt = "(" + V.map(it).join(", ") + ")";
+    if (V.every(function (v) { return got[v] != null; })) ans = V.length === 1 ? it("x") + " = " + got.x : pt + " = (" + V.map(function (v) { return got[v]; }).join(", ") + "): the one point on " + (V.length === 3 ? "all three planes" : "both lines");
+    else if (last.some(function (e) { return /^0 = 0$/.test(e); })) ans = V.length === 1 ? "Infinitely many solutions: every number works" : V.length === 3 ? "Infinitely many solutions: the planes meet in a whole line" : "Infinitely many solutions: the two equations are the same line";
+    else if (last.some(function (e) { return /^0 = [\u2212-]?[0-9]/.test(e) && !/^0 = 0$/.test(e); })) ans = V.length === 1 ? "No solution: no number works" : V.length === 3 ? "No solution: the three planes have no point in common" : "No solution: the lines are parallel and never meet";
     var eqs = function (L) { return L.map(function (e) { return "<div>" + wkMath(e) + "</div>"; }).join(""); };
-    return { qwa: { Q: [[eqs(st[0].eqs), null], ["(<i>x</i>, <i>y</i>) = ?", null]], W: st.length > 1 ? [[workHTML(st.slice(1)), null]] : [], A: ans ? [[ans, null]] : [] } };
+    return { qwa: { Q: [[eqs(st[0].eqs), null], [V.length === 1 ? it("x") + " = ?" : pt + " = ?", null]], W: st.length > 1 ? [[workHTML(st.slice(1)), null]] : [], A: ans ? [[ans, null]] : [] } };
   }
+  // any other record of steps (equation exercises, graphing, writing functions, word problems with steps, 2.1): the first step is the question; the
+  // answer is the one saved when it was solved (w.ans), or else the last step of a finished problem; the graph goes in Work
+  function stepQwa(w, pic) {
+    var st = w.steps || [], fin = !!(w.ans || w.fin) && st.length > 1, useLast = !w.ans && fin;
+    var mid = st.slice(1, useLast ? st.length - 1 : st.length), lastH = useLast ? workHTML([st[st.length - 1]]) : "";
+    var W = []; if (mid.length) W.push([workHTML(mid), null]); if (pic) W.push(["<div class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + pic + "</div>", null]);
+    return { qwa: { Q: [[st.length ? workHTML(st.slice(0, 1)) : "", null]].concat(w.unk ? [[w.unk, null]] : []), W: W, A: w.ans ? [[wkMath(w.ans), null]] : useLast ? [[lastH, null]] : [] } };
+  }
+  // the answer of the equation exercise on the screen, kept with its record when it is solved
+  function workAns(t) { works.forEach(function (w) { if (w.steps === steps) { w.ans = t; w.fin = true; } }); }
   function guessHTML(w) {
     var g = w.guess, d = w.done || {}, x = w.gx || {}, all = !!w.fin;
     var on = function (it) { var c = it[1]; return all || c == null || (typeof c === "function" ? !!c(x, d) : c.some(function (id) { return d[id]; })); };
@@ -4823,13 +4839,13 @@
     var c21 = c21On() && (!c2On() || grN());   // 2.1: its own record of the work (every exercise and mode)
     if (m3() && QZ && QZ.ww) {   // the problem on the screen: its own work (a question kept from another mode may have had its record dropped), all of it once it is finished
       if (works.indexOf(QZ.ww) < 0) works.push(QZ.ww);
-      if (QZ.ww.guess || QZ.ww.qwa) { QZ.ww.gx = QZ.m3x; if (QZ.step >= 4 || QZ.m3done) QZ.ww.fin = true; }
+      QZ.ww.gx = QZ.m3x; if (QZ.step >= 4 || QZ.m3done) QZ.ww.fin = true;
     }
     var list = c21 ? c21Show() : wf() || m3() ? works.filter(function (w) { return w.wf; }) : works.filter(function (w) { return w.steps.length >= 2 && !w.wf; }), cur = c21 ? list[list.length - 1] : m3() && QZ && QZ.ww && list.indexOf(QZ.ww) >= 0 ? QZ.ww : wf() || m3() ? works[works.length - 1] : list[list.length - 1];   // (an equation exercise shows equation work only, never a word problem made earlier on the page)
     if (!list.length) list = [{ steps: steps, label: "", act: act, les: lesson, sub: !!subx }];
     var start = list.indexOf(cur); if (start < 0) start = list.length - 1;
     var body = (list.length > 1 ? "<div class=\"wnav\" data-start=\"" + start + "\"><button type=\"button\" class=\"wprev\" data-nav=\"-1\">\u2039 Previous</button><span class=\"wcount\"></span><button type=\"button\" class=\"wnext\" data-nav=\"1\">Next \u203a</button></div>" : "") +
-      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + (w.guess ? guessHTML(w) : w.qwa ? qwaHTML(w) : sysQwaOn(w) ? qwaHTML(sysQwa(w)) : w.gonly ? "" : workHTML(w.steps)) + (function (pc) { return pc ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + pc + "</section>" : ""; })(typeof w.pic === "function" ? w.pic(w) : w.pic) + "</div>"; }).join("");
+      list.map(function (w, i) { return "<div class=\"wp\"" + (i === start ? "" : " hidden") + ">" + (list.length > 1 ? "<div class=\"wt\">" + w.label + "</div>" : "") + (function (pc) { return w.guess || w.qwa ? (w.guess ? guessHTML(w) : qwaHTML(w)) + (pc ? "<section class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + pc + "</section>" : "") : sysQwaOn(w) ? qwaHTML(sysQwa(w)) : qwaHTML(stepQwa(w, pc)); })(typeof w.pic === "function" ? w.pic(w) : w.pic) + "</div>"; }).join("");
     var css = ".wpic svg{max-width:100%;height:auto}.wnav{display:flex;align-items:center;justify-content:space-between;gap:1rem;font:600 1rem system-ui,sans-serif;margin-bottom:.8rem}.wnav button{font:600 1rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #1B2433;border-radius:999px;background:#fff;color:#1B2433;cursor:pointer}.wnav button:hover{background:#EEF1F6}.wt{font:600 .95rem system-ui,sans-serif;color:#5B6577;margin-bottom:.2rem}.wp[hidden]{display:none}";
     body = svHTML(body);
     var doc = "<!doctype html><meta charset=utf-8><title>My work</title><style>" + $("fontcss").textContent + "i{font-style:italic}body{font:1.5rem LM,Georgia,serif;min-width:min(34rem,90vw);width:fit-content;max-width:none;margin:2rem auto;padding:0 1rem}.r>span,.r td{white-space:nowrap}section{border-bottom:1px solid #ccd;padding:.7rem 0}.r{display:flex;gap:.8em}.m{min-width:3.4em;text-align:right;color:#2F5BEA;font-size:.85em}.r.cf{color:#2D70B3}.r.cg{color:#7A3FB5}" + css + "</style>" + body + "<script>(" + workNavInit.toString() + ")(document)<\/script>", w = null;
@@ -9666,7 +9682,7 @@ var ESPIC = {
   function c21Label() { return MODES[mode] + " mode, " + lessonName(lesson) + (QZ.order.length > 1 ? ", problem " + (QZ.pi + 1) : ""); }
   function c21Save() { if (!c21On() || c2On() && !grN()) return; var st = c21Steps(); if (st.length) { C21W.push({ steps: st, label: c21Label() }); if (C21W.length > 100) C21W.shift(); } }
   function c21Show() {
-    var list = C21W.slice(); if (QZ.step < 4) { var cur = c21Steps(); if (cur.length) list.push({ steps: cur, label: c21Label() + " (in progress)" }); }
+    var list = C21W.map(function (w) { w.fin = true; return w; }); if (QZ.step < 4) { var cur = c21Steps(); if (cur.length) list.push({ steps: cur, label: c21Label() + " (in progress)" }); }
     if (!list.length) list = [{ steps: [{ txt: true, eqs: ["No work yet."] }], label: "" }];
     return list;
   }
@@ -9810,7 +9826,7 @@ var ESPIC = {
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { pqMsg(""); }
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
-        QZ.step = 4; if (QZ.ww && (QZ.ww.guess || QZ.ww.qwa)) QZ.ww.fin = true; var last = QZ.pi === QZ.order.length - 1; if (act === "2.1") c21Save();
+        QZ.step = 4; if (QZ.ww) QZ.ww.fin = true; var last = QZ.pi === QZ.order.length - 1; if (act === "2.1") c21Save();
         var c2Err = QZ.wrong > 0;   // any error message in this round (in Demo, this problem) means no Progress for it
         if (!QZ.custom && mode !== "create" && mode !== "demo" && !c2Err && !ivL()) { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
         pqMsg(mode === "solo" ? cheer() : est() || wf() || m3() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last && QZ.order.length > 1 ? (QZ.order.length === 3 ? "You have finished all three!" : "You have finished all four!") : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
