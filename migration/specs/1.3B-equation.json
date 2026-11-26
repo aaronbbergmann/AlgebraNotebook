@@ -1,0 +1,41 @@
+{
+ "id": "1.3B-equation",
+ "title": "Equation from a Graph",
+ "section": "1.3",
+ "example": 1,
+ "skills": [
+  "slope",
+  "linear equations",
+  "word problems"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 3,
+ "showWork": "GUESS",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "m3Make1"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "m3Make1"
+ },
+ "engineEdits": [
+  [
+   "lesson === 1 ? m3Make1(tier)",
+   "lesson === 1 ? bankGen(\"1.3B-equation\")(tier)"
+  ]
+ ]
+}

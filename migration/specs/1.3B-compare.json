@@ -1,0 +1,41 @@
+{
+ "id": "1.3B-compare",
+ "title": "Comparing Linear Equations",
+ "section": "1.3",
+ "example": 2,
+ "skills": [
+  "slope",
+  "linear equations",
+  "comparing rates"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 3,
+ "showWork": "GUESS",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "m3Make2"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "m3Make2"
+ },
+ "engineEdits": [
+  [
+   "lesson === 2 ? m3Make2(tier)",
+   "lesson === 2 ? bankGen(\"1.3B-compare\")(tier)"
+  ]
+ ]
+}

@@ -1,0 +1,41 @@
+{
+ "id": "1.3B-line-of-fit",
+ "title": "Line of Fit",
+ "section": "1.3",
+ "example": 3,
+ "skills": [
+  "line of fit",
+  "slope",
+  "predictions"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 3,
+ "showWork": "GUESS",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "m3Make3"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "m3Make3"
+ },
+ "engineEdits": [
+  [
+   "lesson === 3 ? m3Make3(tier)",
+   "lesson === 3 ? bankGen(\"1.3B-line-of-fit\")(tier)"
+  ]
+ ]
+}

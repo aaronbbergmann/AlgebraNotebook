@@ -1,0 +1,41 @@
+{
+ "id": "1.4A-graphing",
+ "title": "Solving Systems by Graphing (word problem)",
+ "section": "1.4",
+ "example": 4,
+ "skills": [
+  "systems of equations",
+  "graphing",
+  "word problems"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 3,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "m3MakeG"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "m3MakeG"
+ },
+ "engineEdits": [
+  [
+   "gl() ? m3MakeG(tier)",
+   "gl() ? bankGen(\"1.4A-graphing\")(tier)"
+  ]
+ ]
+}
