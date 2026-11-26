@@ -21,11 +21,18 @@ For both formats, `when` is one of:
 
 Show work fills in as the work is done, and a finished problem shows all of it.
 
-## Copies of the page
+## The shared engine (since 2026-11-26, Question Bank migration step 2)
 
-Every activity page (`1-1a/index.html` … `2-4b/index.html`, `3-1a/` … `3-4b/`, `playsolve/`, `playgraph/`, `playdata/`, `revq2/`, `revt1/`) is the same file. The root `index.html` differs from them only in its icon paths (no `../`).
+The app lives in three files:
+- `engine/app.js`: all of the app's code.
+- `engine/styles.css`: the app's styles.
+- `engine/page.html`: the page shell (head, font block, the page's HTML), with the markers `<!--ENGINE_CSS-->` and `<!--ENGINE_JS-->`.
 
-Make a change in one copy, then copy it to the others. Apply the same patch to the root `index.html`.
+Make every change in these files, then run `python3 tools/build_pages.py`. It writes every activity page (`1-1a/index.html` … `3-4b/`, `playsolve/`, `playgraph/`, `playdata/`, `revq2/`, `revt1/`) and the root `index.html` (icon paths without `../`). Each page loads `engine/` with a version stamp, so browsers fetch the new code after a change. Never edit a page's `index.html` by hand; `python3 tools/build_pages.py --check` reports any page that is out of date. Commit `engine/` and the rebuilt pages together.
+
+Folders that are not activity pages (`1-1`, `1-2`, `2-1`, `2-4`, `1-1play`, `playsolver`, `teacher`) are not built from the engine.
+
+Syntax check before a commit: `node --check engine/app.js`.
 
 ## Copies log
 
