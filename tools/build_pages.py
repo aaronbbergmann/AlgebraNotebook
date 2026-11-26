@@ -5,6 +5,7 @@ The app lives in three files:
   engine/page.html   the page shell (head, the HTML of the page), with two markers
   engine/styles.css  the app's styles
   engine/app.js      the app's code
+  bank/*.js          the question bank: one file per question, loaded before the engine
 Every activity folder's index.html (and the root index.html) is written from them,
 loading the styles and the code from engine/ with a version stamp, so a browser
 fetches the new files after each change.
@@ -54,11 +55,13 @@ def split():
 
 def pages():
     shell, css, js = rd("engine/page.html"), rd("engine/styles.css"), rd("engine/app.js")
+    bank = sorted(f for f in os.listdir(os.path.join(ROOT, "bank")) if f.endswith(".js")) if os.path.isdir(os.path.join(ROOT, "bank")) else []
+    bankSrc = "".join(rd("bank/" + f) for f in bank)
     assert shell.count(CSS_MARK) == 1 and shell.count(JS_MARK) == 1, "engine/page.html must hold each marker once"
-    v = hashlib.sha1((css + "\0" + js).encode("utf-8")).hexdigest()[:10]
+    v = hashlib.sha1((css + "\0" + js + "\0" + bankSrc).encode("utf-8")).hexdigest()[:10]
     out = {}
     for pre, name in (("../", None), ("", "index.html")):
-        p = shell.replace(CSS_MARK, '<link rel="stylesheet" href="%sengine/styles.css?v=%s">' % (pre, v)).replace(JS_MARK, '<script src="%sengine/app.js?v=%s"></script>' % (pre, v))
+        p = shell.replace(CSS_MARK, '<link rel="stylesheet" href="%sengine/styles.css?v=%s">' % (pre, v)).replace(JS_MARK, "".join('<script src="%sbank/%s?v=%s"></script>' % (pre, f, v) for f in bank) + '<script src="%sengine/app.js?v=%s"></script>' % (pre, v))
         if name:   # the root page: its icons sit beside it (no ../)
             p = re.sub(r'href="\.\./(favicon|icon-192|apple-touch)', r'href="\1', p)
             out[name] = p

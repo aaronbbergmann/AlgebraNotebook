@@ -32,7 +32,11 @@ Make every change in these files, then run `python3 tools/build_pages.py`. It wr
 
 Folders that are not activity pages (`1-1`, `1-2`, `2-1`, `2-4`, `1-1play`, `playsolver`, `teacher`) are not built from the engine.
 
-Syntax check before a commit: `node --check engine/app.js`.
+- `bank/`: the question bank. Each converted question is one file, `bank/<id>.js`, that registers its definition in `AN_BANK` (id, version, title, section, Example, skills, tiers, modes, engine, Write rounds, Show work, patterns) and a `build()` returning its generator and scenarios. The engine finds it with `bankQ(id)` / `bankGen(id)`; the build script loads every file in `bank/`. A question used in two activities (2.4A and 3.1C Vertex & Point) is one file. Raise `version` on every content change.
+- Seeds: every problem made by the 2.x / 3.1 word-problem engine has `pb.seed`; `withSeed(seed, fn)` makes the same problem again. All randomness goes through `rnd()` (never `Math.random()` in a generator).
+- Converting a question: record problems from fixed seeds first (old code), move it, and check the same seeds give identical problems; only the intended changes may differ.
+
+Syntax check before a commit: `node --check engine/app.js` (and each changed file in `bank/`).
 
 ## Copies log
 
