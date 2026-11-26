@@ -6638,7 +6638,7 @@
   function qzStart() {
     if (pq()) { pqStart(); return; }
     stopDemo(); stopParty(); busy = false; up = null; counted = false;
-    var o = [0, 1, 2, 3]; for (var i = 3; i > 0; i--) { var j = rnd(i + 1), t = o[i]; o[i] = o[j]; o[j] = t; }
+    var o = bankQ("1.1A-parents").generate();   // the parent families in a random order (the bank question)
     QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null };
     if (mode !== "demo") explainOn = false;
     logEl.innerHTML = "";
