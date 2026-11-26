@@ -905,3 +905,21 @@
   .ctrSteps{display:none}body.ctrOn .ctrSteps{display:flex;justify-content:center;width:100%}
   body.ctrOn .ctrSteps #wfSteps{max-width:46rem;padding:.3rem 0 .5rem}body.ctrOn .ctrSteps #wfSteps .wfAsk{font:700 1.15rem/1.4 system-ui,sans-serif;margin:.2rem 0 .45rem}body.ctrOn .ctrSteps #wfSteps .wfRow{justify-content:center}body.ctrOn .ctrSteps:has(>.qzRow){flex-direction:column;align-items:center}body.ctrOn .ctrSteps>.qzRow{display:flex;justify-content:center;gap:.6rem;margin-top:.4rem}body.ctrOn .ctrSteps #wfSteps .m3RtK{margin-left:.4rem}
   .ctrAsk{display:flex;flex-direction:column;align-items:center;gap:.5rem}.ctrAsk .composer{position:static!important;width:min(30rem,90%);margin:.8rem auto;border:2px solid var(--ink);border-radius:16px;padding:.8rem 1rem;background:var(--bg)}.ctrAsk .composer .row{justify-content:center}.ctrAsk .composer{font:400 1.05rem/1.4 system-ui,sans-serif;color:var(--ink)}
+
+  /* ---- the standard side panel (Question Bank migration, step 3): the slots in their fixed order, top to bottom:
+     account (auth.js puts it first) · where you are · Main button · Demo controls · Demo next step, Undo, Show work · notes (#log, at the foot) */
+  .ctlbox>.ctl-sel{order:1}
+  .ctlbox>.nxRow,.ctlbox>#pqNx{order:2}
+  .ctlbox>#dmCtl,.ctlbox>#pgCtl,.ctlbox>#pgCap{order:3}
+  .ctlbox>.ctl-btn{order:4}
+  .ctlbox>#pgFam,.ctlbox>.lbl{order:5}
+  .ctl-btn>#hint{order:1}.ctl-btn>#undo{order:2}.ctl-btn>#show{order:3}.ctl-btn>*{order:4}
+  /* the Main button's slot: one height in every exercise, so the buttons below never move */
+  html:not([data-mode=demo]) .ctlbox>.nxRow{min-height:6rem}
+  html:not([data-mode=demo]) body.solver.svEx .ctlbox>.nxRow{min-height:6rem}
+  html:not([data-mode=demo]) body.pq #pqNx{min-height:6rem}
+  body.pq .ctlbox>.nxRow:not(:has(>:not([hidden]))){display:none}
+  .ctlbox>.nxRow>#exSoloGo,.ctlbox>.nxRow>#eqSub{align-self:center}
+  .ctlbox>.nxRow>.btn,#pqNx>.btn{min-width:9.6rem}
+  html:not([data-mode=demo]) .ctlbox>.ctl-btn{min-height:7.5rem;justify-content:flex-start}
+  #svAsk:empty{display:none}

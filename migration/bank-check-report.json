@@ -1,0 +1,534 @@
+[
+ {
+  "activity": "1.1B",
+  "exercise": "Estimate",
+  "mode": "Demo",
+  "part": "#pgFam \"Change Family\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.1B",
+  "exercise": "Estimate",
+  "mode": "Demo",
+  "part": "\"Regression\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.1B",
+  "exercise": "Estimate",
+  "mode": "Sequence",
+  "part": "#pgFam \"Change Family\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.1B",
+  "exercise": "Estimate",
+  "mode": "Sequence",
+  "part": "\"Regression\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.1B",
+  "exercise": "Estimate",
+  "mode": "Write",
+  "part": "#pgFam \"Change Family\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.1B",
+  "exercise": "Estimate",
+  "mode": "Write",
+  "part": "\"Regression\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2A",
+  "exercise": "Translations",
+  "mode": "Write",
+  "part": "\"x\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2A",
+  "exercise": "Translations",
+  "mode": "Write",
+  "part": "\"x²\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2A",
+  "exercise": "Translations",
+  "mode": "Write",
+  "part": "\"| |\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2A",
+  "exercise": "Stretches",
+  "mode": "Write",
+  "part": "\"x\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2A",
+  "exercise": "Stretches",
+  "mode": "Write",
+  "part": "\"x²\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2A",
+  "exercise": "Stretches",
+  "mode": "Write",
+  "part": "\"| |\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2B",
+  "exercise": "Reflections",
+  "mode": "Write",
+  "part": "\"x\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2B",
+  "exercise": "Reflections",
+  "mode": "Write",
+  "part": "\"x²\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2B",
+  "exercise": "Reflections",
+  "mode": "Write",
+  "part": "\"| |\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2C",
+  "exercise": "Combining",
+  "mode": "Write",
+  "part": "\"x\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2C",
+  "exercise": "Combining",
+  "mode": "Write",
+  "part": "\"x²\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2C",
+  "exercise": "Combining",
+  "mode": "Write",
+  "part": "\"| |\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2C",
+  "exercise": "Profit",
+  "mode": "Write",
+  "part": "#wfEv \"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "1.2C",
+  "exercise": "Profit",
+  "mode": "Write",
+  "part": "\"x\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2C",
+  "exercise": "Profit",
+  "mode": "Write",
+  "part": "\"x²\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.2C",
+  "exercise": "Profit",
+  "mode": "Write",
+  "part": "\"| |\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Equation",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Equation",
+  "mode": "Write",
+  "part": "\"The savings go down $10 for each week.\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Equation",
+  "mode": "Write",
+  "part": "\"The savings are $40 at the start.\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Equation",
+  "mode": "Write",
+  "part": "\"The savings go up $10 for each week.\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Equation",
+  "mode": "Write",
+  "part": "\"The savings go up $40 for each week.\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Equation",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Compare",
+  "mode": "Write",
+  "part": "\"Shop B\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Compare",
+  "mode": "Write",
+  "part": "\"Shop A\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Compare",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Compare",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Compare",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Line of Fit",
+  "mode": "Write",
+  "part": "\"Positive correlation\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Line of Fit",
+  "mode": "Write",
+  "part": "\"Negative correlation\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Line of Fit",
+  "mode": "Write",
+  "part": "\"No correlation\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Line of Fit",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Line of Fit",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Best Fit",
+  "mode": "Write",
+  "part": "\"Linear Regression\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Best Fit",
+  "mode": "Write",
+  "part": "\"A strong negative correlation.\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Best Fit",
+  "mode": "Write",
+  "part": "\"A strong positive correlation: the point\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Best Fit",
+  "mode": "Write",
+  "part": "\"A weak positive correlation: the points \"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Best Fit",
+  "mode": "Write",
+  "part": "\"No correlation.\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Best Fit",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "1.3B",
+  "exercise": "Best Fit",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "1.4B",
+  "exercise": "One Variable",
+  "mode": "Write",
+  "part": "\"Work this out on your own, type your answer, then press Submit.\"",
+  "kind": "notes text"
+ },
+ {
+  "activity": "1.4B",
+  "exercise": "Substitution",
+  "mode": "Write",
+  "part": "\"Work this out on your own, type your answer, then press Submit.\"",
+  "kind": "notes text"
+ },
+ {
+  "activity": "1.4C",
+  "exercise": "2×2 Systems",
+  "mode": "Write",
+  "part": "\"Work this out on your own, type your answer, then press Submit.\"",
+  "kind": "notes text"
+ },
+ {
+  "activity": "1.4D",
+  "exercise": "3×3 Systems",
+  "mode": "Write",
+  "part": "\"Work this out on your own, type your answer, then press Submit.\"",
+  "kind": "notes text"
+ },
+ {
+  "activity": "2.1A",
+  "exercise": "Translations",
+  "mode": "Demo",
+  "part": "#ptTog \"Parent Table\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "2.1A",
+  "exercise": "Translations",
+  "mode": "Sequence",
+  "part": "#ptTog \"Parent Table\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "2.1A",
+  "exercise": "Translations",
+  "mode": "Calculate",
+  "part": "#ptTog \"Parent Table\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "2.1A",
+  "exercise": "Translations",
+  "mode": "Write",
+  "part": "#ptTog \"Parent Table\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "2.1A",
+  "exercise": "Reflect & Stretch",
+  "mode": "Demo",
+  "part": "#ptTog \"Parent Table\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "2.1A",
+  "exercise": "Reflect & Stretch",
+  "mode": "Sequence",
+  "part": "#ptTog \"Parent Table\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "2.1A",
+  "exercise": "Reflect & Stretch",
+  "mode": "Calculate",
+  "part": "#ptTog \"Parent Table\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "2.1A",
+  "exercise": "Reflect & Stretch",
+  "mode": "Write",
+  "part": "#ptTog \"Parent Table\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.1F",
+  "exercise": "Special Products",
+  "mode": "Demo",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.1F",
+  "exercise": "Special Products",
+  "mode": "Sequence",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.1F",
+  "exercise": "Special Products",
+  "mode": "Calculate",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.1G",
+  "exercise": "Factor ax² + bx + c",
+  "mode": "Demo",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.1G",
+  "exercise": "Factor ax² + bx + c",
+  "mode": "Sequence",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.1G",
+  "exercise": "Factor ax² + bx + c",
+  "mode": "Calculate",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.3A",
+  "exercise": "Complete the Square",
+  "mode": "Demo",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.3A",
+  "exercise": "Complete the Square",
+  "mode": "Sequence",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.3A",
+  "exercise": "Complete the Square",
+  "mode": "Calculate",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.3B",
+  "exercise": "Vertex Form",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "3.3B",
+  "exercise": "Vertex Form",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "3.3B",
+  "exercise": "Vertex Form",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "3.4A",
+  "exercise": "Quadratic Formula",
+  "mode": "Demo",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.4A",
+  "exercise": "Quadratic Formula",
+  "mode": "Sequence",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.4A",
+  "exercise": "Quadratic Formula",
+  "mode": "Calculate",
+  "part": "#quBtn \"Quadratic Formula\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.4B",
+  "exercise": "Discriminant",
+  "mode": "Write",
+  "part": "\"\"",
+  "kind": "input in the panel"
+ },
+ {
+  "activity": "3.4B",
+  "exercise": "Discriminant",
+  "mode": "Write",
+  "part": "\"2\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.4B",
+  "exercise": "Discriminant",
+  "mode": "Write",
+  "part": "\"1\"",
+  "kind": "button outside the slots"
+ },
+ {
+  "activity": "3.4B",
+  "exercise": "Discriminant",
+  "mode": "Write",
+  "part": "\"0\"",
+  "kind": "button outside the slots"
+ }
+]

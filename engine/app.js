@@ -1248,6 +1248,7 @@
     exRender(); updUndo();
     if (EXP.eq) {
       if (mode === "demo") { dmUI("idle"); dmCap(BUILT[act].solver ? "" : "Press Start Demo to watch this equation solved."); }
+      else if (svL()) { }   /* (no instructions on mechanics: the Demo teaches them) */
       else if (mode === "solo") note("Solve it on your own, then type your answer.");
       else if (EXP.grq) note("Drag a term down into the square to factor by grouping: put each term in a box, then click the spaces on the left and above to type the greatest common factor of each row and column. The factored form goes back into the equation, and then you can split it into two equations." + (mode === "calculate" ? " You will be asked for each result." : ""));
       else if (EXP.zpq) note("Drag one of the parentheses up or down. A product is 0 only when one of its factors is 0 (the zero product property), so the equation splits." + (EXP.L[0] && EXP.L[0].c ? " One factor splits off and the other two stay together, ready to split again." : "") + (mode === "calculate" ? " You will be asked for each result." : ""));
@@ -1255,6 +1256,7 @@
       return;
     }
     if (mode === "demo") { dmUI("idle"); dmCap(BUILT[act].solver ? "" : "Press Start Demo to watch this expression " + (EXP.rad ? "simplified." : EXP.fac ? "factored." : EXP.grp ? "factored by grouping." : "simplified.")); }
+    else if (svL()) { }   /* (no instructions on mechanics) */
     else if (mode === "solo") note(EXP.rad ? "Simplify the square root on your own, then type your answer, like 10\u221a2 (use the \u221a key, or type sqrt)." : EXP.fac ? "Factor it on your own, then type your answer, like 3(x + 2)." : EXP.grp ? "Simplify it or factor it on your own, then type your answer, like (x + 3)(x + 5)." : "Simplify it on your own, then type your answer.");
     else if (EXP.rad) note("Click the square root to take out a perfect square factor. Product Property of Square Roots: \u221a(a \u00b7 b) = \u221aa \u00b7 \u221ab." + (mode === "calculate" ? " You will be asked for the factor pair." : ""));
     else if (EXP.grp) note("Drag a term down into the square to factor by grouping, or drop it on a like term to combine them." + (mode === "calculate" ? " You will be asked for each result." : ""));
@@ -4343,7 +4345,7 @@
   function askArrow(on, el) {
     var A = $("askArrow"); if (!A) { A = document.createElement("div"); A.id = "askArrow"; A.innerHTML = "<svg viewBox=\"0 0 100 60\" aria-hidden=\"true\"><path d=\"M2 22h58V4l38 26-38 26V38H2z\"/></svg>"; document.body.appendChild(A); }
     A.hidden = true; A.classList.remove("grow"); if (!on || mode !== "calculate") return; try { if (m3() && m3Cur() && m3Cur().noArrow) return; } catch (e) { }   /* (3.1B Simplifying Square Roots: only the question and its box) */
-    var r = (el || $("ask")).getBoundingClientRect(), side = r.left > innerWidth * 0.45 || !!(el || $("ask")).closest("#ctrSteps,#ctrAsk"), w = 84;   // (a prompt in the centre pane: the arrow comes from its left)
+    var r = (el || $("ask")).getBoundingClientRect(), side = r.left > innerWidth * 0.45 || !!(el || $("ask")).closest("#ctrSteps,#ctrAsk,#svAsk"), w = 84;   // (a prompt in the centre pane: the arrow comes from its left)
     A.style.left = (side ? Math.max(4, r.left - w - 6) : Math.max(4, r.left + r.width / 2 - w / 2)) + "px";
     A.style.top = (side ? r.top + Math.min(r.height, 120) / 2 - 25 : Math.max(4, r.top - 56)) + "px";
     A.style.transformOrigin = side ? "100% 50%" : "50% 100%"; A.dataset.dir = side ? "r" : "d"; A.hidden = false; void A.offsetWidth; A.classList.add("grow");
@@ -5454,8 +5456,12 @@
     if (!(typeof dsmOn === "function" && dsmOn())) { if (on) { if (W.parentNode !== $("ctrSteps")) $("ctrSteps").appendChild(W); } else if (W.parentNode !== A) A.insertBefore(W, $("qz")); }   // (Desmos places it itself: dsmSync)
     var ce = on && !quiz();   // the equation pane (1.4): the calculation box and the No Solutions / Infinite Solutions choice
     if (ce) { if (K.parentNode !== $("ctrAsk")) $("ctrAsk").appendChild(K); if (Q.parentNode !== $("ctrAsk")) $("ctrAsk").appendChild(Q); }
-    else { if (Q.parentNode !== A) A.insertBefore(Q, $("eqSubRow")); if (K.parentNode !== A) A.insertBefore(K, Q); }
-    var R = ctrSync.row || (ctrSync.row = document.querySelector("#qz > .qzRow")), wc = on && mode === "solo" && W.parentNode === $("ctrSteps");   /* (Write with its box in the centre: Submit and Next sit under it) */
+    else {
+      if (Q.parentNode !== A) A.insertBefore(Q, $("eqSubRow"));
+      var sa = !!(BUILT[act] && BUILT[act].solver && svL() && mode !== "solo" && $("svAsk"));   // (the equation and expression exercises: Calculate's answer box sits in the centre, under the equation)
+      if (sa) { if (K.parentNode !== $("svAsk")) $("svAsk").appendChild(K); } else if (K.parentNode !== A) A.insertBefore(K, Q);
+    }
+    var R = null, wc = false;   /* (Write's Submit is the Main button, in the side panel: see pqNx) */   /* (Write with its box in the centre: Submit and Next sit under it) */
     if (R) { if (wc) { if (R.parentNode !== $("ctrSteps")) $("ctrSteps").appendChild(R); } else if (R.parentNode !== $("qz")) $("qz").appendChild(R); }   /* (only the quiz's own row: the Next row, .qzRow.nxRow, stays where it is) */
   }
   function theme() {
@@ -9875,7 +9881,7 @@ var ESPIC = {
     else $("pgQt").textContent = "What is the parent function of the " + QFAM[fam] + " family?";
     pqCue();
     var go = $("qzGo"), nx = $("qzNext");
-    go.hidden = demo || done || (gd() && mode === "create" && !QZ.cr) || wfCr() || (m3() && !wsubAct()) || (wf() && (mode === "sequence" || mode === "calculate")); go.textContent = wsubAct() ? "Submit" : "Check"; document.body.classList.toggle("wsub", wsubAct());
+    go.hidden = demo || done || (m3() && m3taFail()) || vfnTaFail() || taAny() || vpWrTa() || (gd() && mode === "create" && !QZ.cr) || wfCr() || (m3() && !wsubAct()) || (wf() && (mode === "sequence" || mode === "calculate")); go.textContent = wsubAct() ? "Submit" : "Check"; document.body.classList.toggle("wsub", wsubAct());
     // the one Next (see nxShow): in Demo the demo button carries it; otherwise it sits here in the side panel
     var taF = (m3() && m3taFail()) || vfnTaFail() || taAny() || vpWrTa();
     document.body.classList.toggle("swErr", vpWrTa());   // (after an error in Write, Show work turns plum red: it has every step)
@@ -10028,7 +10034,14 @@ var ESPIC = {
     if (gl() && !pq()) { dm4Reset(); qzShow(); } else if (!gl() && pq()) leaveQuiz();
   }
   // in 1.1 and 1.2 the Next button and its link sit above Progress and Show work (the same slot as in the equation activities)
-  (function () { var nx = document.createElement("div"); nx.id = "pqNx"; document.querySelector(".ctlbox").insertBefore(nx, document.querySelector(".ctl-btn")); nx.appendChild($("qzNext")); nx.appendChild($("qzAgain")); })();
+  (function () {   // the standard side panel: the equation exercises' Submit (and 1.4's) are the Main button too, in its slot, shown until Next takes over
+    var main = document.querySelector(".ctlbox>.nxRow"), go = $("exSoloGo"), sub = $("eqSub"), ex = $("exSolo"), row = $("eqSubRow"), nx = $("next"); if (!main || !go || !sub) return;
+    main.insertBefore(sub, main.firstChild); main.insertBefore(go, main.firstChild);
+    var busyS = false, sync = function () { busyS = false; var g = !!ex.closest("[hidden]") || locked || !nx.hidden, b = !!row.closest("[hidden]") || !nx.hidden; if (go.hidden !== g) go.hidden = g; if (sub.hidden !== b) sub.hidden = b; };   /* (set only when it changes: setting it fires the observer again) */
+    new MutationObserver(function () { if (!busyS) { busyS = true; Promise.resolve().then(sync); } }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["hidden"] });
+    sync();
+  })();
+  (function () { var nx = document.createElement("div"); nx.id = "pqNx"; document.querySelector(".ctlbox").insertBefore(nx, document.querySelector(".ctl-btn")); nx.appendChild($("qzGo")); nx.appendChild($("qzNext")); nx.appendChild($("qzAgain")); })();   /* (the standard side panel: Submit, Next and Try another share the Main button's slot; they never show at once) */
   function leaveQuiz() {
     if (!document.body.classList.contains("quiz")) return;
     $("modePick").hidden = true; stopDemo(); busy = false; if (pgRun) pgStop();
