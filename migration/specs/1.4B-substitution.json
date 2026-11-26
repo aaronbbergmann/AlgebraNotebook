@@ -1,0 +1,40 @@
+{
+ "id": "1.4B-substitution",
+ "title": "Substitution",
+ "section": "1.4",
+ "example": null,
+ "skills": [
+  "systems of equations",
+  "substitution"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "systems",
+ "writeRounds": 0,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "about": "One equation solved for y, the other in standard form; now and then (after a regular one) a system with no solution or infinitely many. Also RevT1 Q6 Substitution.",
+ "functions": [
+  "generateSub"
+ ],
+ "exports": {
+  "generate": "generateSub"
+ },
+ "engineEdits": [
+  [
+   "return generateSub(mode === \"demo\" ? 1 : 0);",
+   "return bankQ(\"1.4B-substitution\").generate(mode === \"demo\" ? 1 : 0);"
+  ]
+ ]
+}

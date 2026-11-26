@@ -149,24 +149,8 @@
   function mkEq(a, b, e, c) { return { a: mk(a), b: mk(b), e: mk(e), ks: [], c: mk(c) }; }
   function allV() { return lesson === 3 ? ["x", "y", "z"] : lesson === 1 ? ["x"] : ["x", "y"]; }
   function dv() { return lesson === 1 ? curVs() : allV(); }
-  function generate2(level, demo) {
-    var m = level ? 7 : 4, sm = level ? 9 : 5, x, y, a1, b1, a2, b2;
-    do {
-      x = nz(sm); y = nz(sm); a1 = nz(m); b1 = nz(m); a2 = nz(m); b2 = nz(m);
-    } while (a1 * b2 - a2 * b1 === 0 || (level && (Math.abs(b1) === Math.abs(b2) || b1 % b2 === 0 || b2 % b1 === 0)) ||
-             (demo === 1 && (Math.abs(a1) === Math.abs(a2) || need(a1, a2) !== 1 || need(b1, b2) !== 2)) ||
-             (demo === 2 && (need(a1, a2) !== 2 || need(b1, b2) !== 2)));
-    return [[a1, b1], [a2, b2]].map(function (p) { return mkEq(p[0], p[1], 0, p[0] * x + p[1] * y); });
-  }
-  // one variable, two steps: a x + k = c, k before or after the x, sometimes written + (−k)
-  function generate1() {
-    var a = nz(5), x = nz(9), k = nz(9), form = rnd(3);
-    if (Math.abs(a) < 2) a = a < 0 ? -2 : 2;
-    if (form === 2 && k > 0) k = -k;
-    var q = mkEq(a, 0, 0, a * x + k);
-    q.ks = [{ v: form === 1 ? "p" : "s", k: mk(k), pa: form === 2 }];
-    return [q];
-  }
+  // 2x2 Systems: moved to the question bank, bank/1.4C-2x2-systems.js
+  // One Variable: moved to the question bank, bank/1.4B-one-variable.js
   // how many solutions: "one", "inf" (infinitely many) or "none" (checked behind the scenes, never shown as a method)
   function rankOf(M) {
     var A = M.map(function (r) { return r.slice(); }), rk = 0;
@@ -210,13 +194,13 @@
   var lastDeg = false;
   function degOK() { return !lastDeg && (prog[LK() + ":" + mode + ":one"] || 0) >= 1; }
   function makeProblem() {
-    if (SUB()) return generateSub(mode === "demo" ? 1 : 0);
+    if (SUB()) return bankQ("1.4B-substitution").generate(mode === "demo" ? 1 : 0);
     if (lesson === 1 && BUILT[act].solver) { SOL.fresh = false; var st0 = LADDER[SOL.lvl] || {}; if (st0.one) return solverOne(); return st0.e === "pane" && st0.lv != null ? (st0.ineq ? paneIneq(st0.lv, mode === "demo") : solverEq(st0.lv, mode === "demo")) : solverEq(0, mode === "demo"); }
-    if (lesson === 1) return generate1();
+    if (lesson === 1) return bankQ("1.4B-one-variable").generate();
     var dm = mode === "demo" ? curDm : 0;
-    if (!dm && mode !== "create" && degOK() && Math.random() < 0.2) { lastDeg = true; return generateDeg(Math.random() < 0.5 ? "inf" : "none"); }
+    if (!dm && mode !== "create" && degOK() && RNG() < 0.2) { lastDeg = true; return generateDeg(RNG() < 0.5 ? "inf" : "none"); }
     lastDeg = false;
-    return lesson === 3 ? generate3(dm) : generate2(0, dm);
+    return lesson === 3 ? bankQ("1.4D-3x3-systems").generate(dm) : bankQ("1.4C-2x2-systems").generate(0, dm);
   }
   function det3(M) {
     return M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]) - M[0][1] * (M[1][0] * M[2][2] - M[1][2] * M[2][0]) + M[0][2] * (M[1][0] * M[2][1] - M[1][1] * M[2][0]);
@@ -240,15 +224,7 @@
     });
     return best;
   }
-  function generate3(demo) {
-    for (;;) {
-      var sol = [nz(4), nz(4), nz(4)], M = [0, 1, 2].map(function () { return [nz(3), nz(3), nz(3)]; });
-      if (!det3(M)) continue;
-      var E = M.map(function (r) { return mkEq(r[0], r[1], r[2], r[0] * sol[0] + r[1] * sol[1] + r[2] * sol[2]); });
-      var b = bestElim(E);
-      if (b && (demo !== 1 || b.cost <= 2)) return E;
-    }
-  }
+  // 3x3 Systems: moved to the question bank, bank/1.4D-3x3-systems.js
   // a solved equation: one variable, coefficient 1, nothing else
   function valName(q) {
     if (q.raw || q.ks.length) return "";
@@ -5364,7 +5340,7 @@
   // ---- Play Solve: the letter being solved for. The engines always work in x; a generated problem picks one of x y z m n p t u v w and
   // everything on screen that is a standalone x is shown as that letter (and what the student types is read back as x) ----
   var SV = "x", SVL = ["x", "y", "z", "m", "n", "p", "t", "u", "v", "w"];
-  function svRand() { return window.__SV || SVL[Math.floor(Math.random() * SVL.length)]; }
+  function svRand() { return window.__SV || SVL[Math.floor(RNG() * SVL.length)]; }
   function svOn() { return SV !== "x" && !!BUILT[act] && !!BUILT[act].solver; }
   function svTitle() { return !(EXP && !EXP.eq) ? "Solve for " + SV : "Simplify"; }   // (an expression is simplified, an equation solved)
   (function () {
@@ -6457,19 +6433,7 @@
       release();
     }, 1300);
   }
-  // a system for substitution: one equation already solved for y (y = mx + n), the other in standard form
-  function generateSub(demo) {
-    var deg = !demo && mode !== "create" && degOK() && Math.random() < 0.2 ? (Math.random() < 0.5 ? "inf" : "none") : "";
-    lastDeg = !!deg;
-    for (;;) {
-      var m = nz(4), x0 = nz(5), y0 = nz(6), n = y0 - m * x0, a, b, c;
-      if (!n || Math.abs(n) > 12) continue;
-      if (deg) { var t = [2, 3, -1, -2, 4][rnd(5)]; a = -m * t; b = t; c = n * t + (deg === "none" ? nz(5) : 0); }
-      else { a = nz(5); b = nz(5); if (a + b * m === 0 || Math.abs(b) === 1 && a === -m) continue; c = a * x0 + b * y0; }
-      var E1 = mkEq(a, b, 0, c), E2 = mkEq(-m, 1, 0, n); E2.sol = "y";
-      return rnd(2) ? [E1, E2] : [E2, E1];
-    }
-  }
+  // Substitution: moved to the question bank, bank/1.4B-substitution.js
 
   // ---- 1.1 Memorize Parents: the activity asks; the student answers in the panel or on the graph ----
   var QFAM = ["constant", "linear", "absolute value", "quadratic"];
@@ -9225,7 +9189,7 @@ var ESPIC = {
   function csqFormOk(f, t) {
     var x = String(t || "").trim().replace(/^(f\(x\)|y)\s*=\s*/i, ""); if (!x || /=/.test(x)) return false;
     for (var n = 0; n < 6; n++) {
-      var V = {}; CSQ_F[f].vars.split("").forEach(function (c) { V[c] = (rnd(2) ? 1 : -1) * (1.3 + Math.random() * 4); });
+      var V = {}; CSQ_F[f].vars.split("").forEach(function (c) { V[c] = (rnd(2) ? 1 : -1) * (1.3 + RNG() * 4); });
       var y = csqEval(x, V), z = CSQ_F[f].fn(V); if (!isFinite(y) || Math.abs(y - z) > 1e-6 * Math.max(1, Math.abs(z))) return false;
     }
     return true;

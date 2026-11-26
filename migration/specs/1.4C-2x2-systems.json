@@ -1,0 +1,40 @@
+{
+ "id": "1.4C-2x2-systems",
+ "title": "2x2 Systems",
+ "section": "1.4",
+ "example": null,
+ "skills": [
+  "systems of equations",
+  "elimination"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "systems",
+ "writeRounds": 1,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "about": "Two equations in x and y with one solution (generateDeg, in the engine, makes the special ones). Also RevT1 Q2 and Q6 Elimination.",
+ "functions": [
+  "generate2"
+ ],
+ "exports": {
+  "generate": "generate2"
+ },
+ "engineEdits": [
+  [
+   ": generate2(0, dm);",
+   ": bankQ(\"1.4C-2x2-systems\").generate(0, dm);"
+  ]
+ ]
+}

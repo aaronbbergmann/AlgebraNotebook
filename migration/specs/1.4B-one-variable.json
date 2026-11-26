@@ -1,0 +1,40 @@
+{
+ "id": "1.4B-one-variable",
+ "title": "One Variable",
+ "section": "1.4",
+ "example": null,
+ "skills": [
+  "two-step equations",
+  "inverse operations"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "systems",
+ "writeRounds": 1,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "about": "a x + k = c, k before or after the x. Play Solve (its copy) draws from its own levels instead.",
+ "functions": [
+  "generate1"
+ ],
+ "exports": {
+  "generate": "generate1"
+ },
+ "engineEdits": [
+  [
+   "if (lesson === 1) return generate1();",
+   "if (lesson === 1) return bankQ(\"1.4B-one-variable\").generate();"
+  ]
+ ]
+}

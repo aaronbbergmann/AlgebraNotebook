@@ -1,0 +1,41 @@
+{
+ "id": "1.4D-3x3-systems",
+ "title": "3x3 Systems",
+ "section": "1.4",
+ "example": null,
+ "skills": [
+  "systems of equations",
+  "elimination",
+  "three variables"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "systems",
+ "writeRounds": 3,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "about": "Three equations in x, y and z with one solution. Also RevT1 Q7.",
+ "functions": [
+  "generate3"
+ ],
+ "exports": {
+  "generate": "generate3"
+ },
+ "engineEdits": [
+  [
+   "return lesson === 3 ? generate3(dm)",
+   "return lesson === 3 ? bankQ(\"1.4D-3x3-systems\").generate(dm)"
+  ]
+ ]
+}
