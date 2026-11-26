@@ -1,0 +1,12 @@
+{
+  "id": "2.4B-quadratic-regression", "title": "Quadratic Regression", "section": "2.4", "example": 4,
+  "about": "A data table whose inputs are not equally spaced; the student enters it in Desmos, runs a quadratic regression\nand answers questions from the curve.",
+  "skills": ["quadratic regression", "data tables", "Desmos regression"],
+  "tiers": [0, 1, 2], "modes": ["demo", "sequence", "solo"], "engine": "word", "writeRounds": 2, "showWork": "QWA",
+  "patterns": {"sequence": "Try Another", "solo": "Submit"},
+  "ranges": [["  var C2S244 = [", "  // ==== 1.1B Estimating a Value from a Graph, in Desmos"]],
+  "exports": {"generate": "c2M244", "scenarios": "C2S244"},
+  "engine": [
+    ["[bankGen(\"2.4A-vertex-point\"), bankGen(\"2.4A-point-intercepts\"), null, c2M244][lesson - 1] || c2M244)(tier);", "[bankGen(\"2.4A-vertex-point\"), bankGen(\"2.4A-point-intercepts\"), null, bankGen(\"2.4B-quadratic-regression\")][lesson - 1] || bankGen(\"2.4B-quadratic-regression\"))(tier);"]
+  ]
+}
