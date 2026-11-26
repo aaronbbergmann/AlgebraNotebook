@@ -1,0 +1,44 @@
+{
+ "id": "3.4B-discriminant",
+ "title": "The Discriminant",
+ "section": "3.4",
+ "example": 13,
+ "skills": [
+  "discriminant",
+  "number of solutions"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 1,
+ "showWork": "QWA",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c3M13"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c3M13"
+ },
+ "engineEdits": [
+  [
+   "13: c3M13, ",
+   "13: bankGen(\"3.4B-discriminant\"), "
+  ],
+  [
+   "}[lesson] || c3M13)(tier)",
+   "}[lesson] || bankGen(\"3.4B-discriminant\"))(tier)"
+  ]
+ ]
+}

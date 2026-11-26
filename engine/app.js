@@ -13998,123 +13998,14 @@ var ESPIC = {
   }
   // 3.1A Solving by Graphing: the terms to one side (= 0), the related function graphed in Desmos, how many x-intercepts and what they are, then how many solutions and what they are
   function c3Lx(a, b, c) { var t = "y=", f = function (n, v, first) { if (!n) return ""; var A = Math.abs(n), s0 = n < 0 ? "-" : first ? "" : "+"; return s0 + (v && A === 1 ? "" : String(A)) + v; }; t += f(a, "x^{2}", true) + f(b, "x", false) + f(c, "", false); return t; }
-  function c3M1(tier) {
-    for (var t = 0; t < 800; t++) {
-      var kind = rnd(10) < 6 ? 2 : rnd(2), a = c2Pick([1, 1, 1, -1, 2, -2]), b, c, r1 = 0, r2 = 0;
-      if (kind === 0) { var h0 = c2Rng(-4, 4), k0 = 1 + rnd(5); if (a < 0) k0 = -k0; b = -2 * a * h0; c = a * h0 * h0 + k0; }   // (no x-intercepts: the vertex above the axis, opening up, or below it, opening down)
-      else { r1 = c2Rng(-6, 6); r2 = kind === 1 ? r1 : c2Rng(-6, 6); if (kind === 2 && r1 === r2) continue; b = -a * (r1 + r2); c = a * r1 * r2; }
-      if (!b && !c) continue;
-      var lo = Math.min(r1, r2), hi = Math.max(r1, r2), F = function (x) { return a * x * x + b * x + c; }, hv = -b / (2 * a), k = F(hv);
-      if (Math.abs(k) > 40 || Math.abs(c) > 40) continue;
-      // the terms: x² on the left; the others on either side, at least one on the right
-      var L = [{ c: a, d: 2 }], R = [], parts = [{ c: b, d: 1 }, { c: c, d: 0 }].filter(function (q) { return q.c; });
-      parts.forEach(function (q) { if (rnd(2)) R.push({ c: -q.c, d: q.d }); else L.push(q); }); if (!R.length) { var mv0 = L.pop(); R.push({ c: -mv0.c, d: mv0.d }); }
-      var eq = c3Side(L) + " = " + c3Side(R), std = c3T(a, b, c) + " = 0", rel = "<i>y</i> = " + c3T(a, b, c), n = kind, pb = { kind: 20 };
-      pb.c3 = { L: L, R: R }; pb.ws = c3Ws; pb.noCueW = 1;   // (Write: no list of the parts under the graph, and no related function question)
-      pb.head = eq; pb.pic = "";
-      Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () { return mode === "solo" ? "<span class=\"lm cf\">" + eq + "</span>" : ""; } });   // (Demo, Sequence, Calculate: the draggable equation takes its place)
-      pb.tq = "<div class=\"regQ\">Solve by graphing.</div>";
-      pb.dsm = { one: 1, zo: 1, F1: F, F1b: function (x0) { return -F(x0); }, D1: 6, xmax: 10, ymax: Math.max(10, Math.abs(k) * 1.3), l1: c3Lx(a, b, c) };
-      var pts = n === 2 ? [{ x: lo, y: 0, col: C2P, lab: "(" + lo + ", 0)", dy: -8 }, { x: hi, y: 0, col: C2P, lab: "(" + hi + ", 0)", dy: hi - lo <= 4 ? 18 : -8 }] : n === 1 ? [{ x: r1, y: 0, col: C2P, lab: "(" + r1 + ", 0)", dy: a > 0 ? 16 : -8 }] : [];
-      var pic = function (lab) { var xa = c2Axis(Math.min(n ? lo : hv - 3, 0) - 2, Math.max(n ? hi : hv + 3, 0) + 2, false), ya = c2Axis(Math.min(k, 0) - 2, Math.max(k, c, 0) + 2, false); return c2Fig({ H: 260, xmin: xa.min, xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t * 2, ty: ya.t * 2, noGrid: 1, alt: "The graph of " + rel.replace(/<[^>]+>/g, ""), curves: [{ fn: F, col: C2P }], pts: lab ? pts : [] }); };
-      pb.fig = function (x) { return DSM.fail ? pic(!!(x && x.xi)) : ""; };   // (Desmos is the graph; the drawn one only if Desmos cannot load)
-      var relN = "<i>y</i> = " + c3T(-a, -b, -c), right = function (xx) { return !!(xx && xx.c3L && !xx.c3L.length); }, relOf = function (xx) { return right(xx) ? relN : rel; }, stdOf = function (xx) { return right(xx) ? "0 = " + c3T(-a, -b, -c) : std; };   // (the terms dragged to the right: 0 = −ax² − bx − c, and its related function)
-      var wrongT = [[a, b, 0], [a, -b, c], [a, 0, c], [a, b, -c], [-a, b, c]].map(function (q) { return "<i>y</i> = " + c3T(q[0], q[1], q[2]); }).filter(function (t) { return t !== rel && t !== relN; })[0];   // (the wrong choice never matches a right one: with no number term, dropping it changes nothing)
-      var opts = m3Sh([{ t: rel, ok: true }, { t: relN, ok: true }, { t: wrongT, ok: false, why: "Keep every term and each sign: the related function is <span class=\"lm\">" + rel + "</span> (or <span class=\"lm\">" + relN + "</span>)." }]);
-      var zx0 = Math.min(n ? lo : hv, hv, 0), zx1 = Math.max(n ? hi : hv, hv, 0), zy0 = Math.min(k, 0), zy1 = Math.max(k, 0), zw = Math.max(zx1 - zx0, 8) * 1.5 + 4, zh = Math.max(zy1 - zy0, 8) * 1.4 + 4, zcx = (zx0 + zx1) / 2, zcy = (zy0 + zy1) / 2;
-      var zoomV = { l: Math.min(zcx - zw / 2, -11), r: Math.max(zcx + zw / 2, 11), b: Math.min(zcy - zh / 2, -8), t: Math.max(zcy + zh / 2, 8) };   // (always wider than the home view: the Demo zooms out)
-      var howMany = function (id, ask, what) { return { id: id, lab: "number of " + what + "s", dpre: id === "nx" ? c3ZoomDemo(zoomV) : undefined, type: "pick", radio: 1, wno: id === "nx" ? 1 : 0, ask: ask, opts: [0, 1, 2].map(function (v) { return { t: String(v), ok: v === n, why: n === 0 ? "The parabola never reaches the " + c2X + "-axis." : n === 1 ? "The parabola touches the " + c2X + "-axis once, at its vertex." : "The parabola crosses the " + c2X + "-axis twice." }; }), after: function (x) { x.xi = true; }, hint: ["Count where the parabola meets the " + c2X + "-axis.", n + "."], line: n + " " + what + (n === 1 ? "" : "s").replace(/^/, "") }; };
-      var boxes = function (pre, ask1, ask2, word, pick) {   // the x = boxes: two (either order), one, or none
-        if (n === 0) return [];
-        if (n === 1) return [{ id: pre + "1", lab: word, ask: ask1, pre: c2X + " =", ans: r1, nums: [-r1, c, r1 + 2].filter(function (v) { return v !== r1; }), wif: function (v) { return v[pick] === 1; }, hint: ["Where does the parabola touch the " + c2X + "-axis?", c2X + " = " + r1 + "."], line: c2X + " = " + r1 }];
-        return [{ id: pre + "1", lab: word + "s", ask: ask2, pre: c2X + " =", ans: lo, pair: [lo, hi], wif: function (v) { return v[pick] === 2; },
-          okf: function (raw) { var v = String(raw).split("|").map(m3Num); if (v.length < 2 || v.some(isNaN)) return { ok: false, msg: "Type both values." }; var a0 = Math.min(v[0], v[1]), b0 = Math.max(v[0], v[1]); if (Math.abs(a0 - lo) < 1e-9 && Math.abs(b0 - hi) < 1e-9) return { ok: true, show: c2X + " = " + m3F(v[0]) + " and " + c2X + " = " + m3F(v[1]) }; return { ok: false, msg: "Not quite." }; },
-          hint: ["The parabola crosses the " + c2X + "-axis twice.", c2X + " = " + m3F(lo) + " and " + c2X + " = " + m3F(hi) + "."], line: c2X + " = " + m3F(lo) + " and " + c2X + " = " + m3F(hi) }];   // (both x = boxes at once, either order)
-      };
-      pb.steps = [
-        { id: "mv", fine: 1, lab: "standard form", type: "c3mv", ask: "Move the terms to one side, so the equation equals 0.", demo: c3MvDemo, after: function (x) { x.std = true; }, hint: ["Drag the terms across the = until one side is 0. Each sign changes as it crosses.", "<span class=\"lm\">" + std + "</span>."], line: function (pp, xx) { return "standard form: <span class=\"lm\">" + stdOf(xx) + "</span>"; } },
-        { id: "rel", lab: "related function", type: "pick", wno: 1, ask: "What is the related function?", opts: opts, hint: ["Write it as <span class=\"lm\">" + std + "</span>; the related function is <i>y</i> = the side that is not 0.", "<span class=\"lm\">" + rel + "</span> (or <span class=\"lm\">" + relN + "</span>)."], line: function (pp, xx) { return "related function: <span class=\"lm\">" + relOf(xx) + "</span>"; } },
-        { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph the related function.", line: function (pp, xx) { return "graphed <span class=\"lm\">" + relOf(xx) + "</span>"; }, hint: ["Type the related function on the first line of Desmos.", "Type " + c3Lx(a, b, c).replace(/\^\{2\}/g, "^2") + "."] },
-        howMany("nx", "How many <i>x</i>-intercepts are there?", "x-intercept")
-      ].concat(boxes("xi", "What is the <i>x</i>-intercept?", "What are the <i>x</i>-intercepts?", "x-intercept", "nx").map(function (q) { q.wno = 1; return q; }))
-       .concat([howMany("ns", function () { return mode === "solo" ? "How many solutions are there?" : "How many solutions to <span class=\"lm\">" + eq + "</span> are there?"; }, "solution")])
-       .concat(boxes("so", "What is the solution?", "What are the solutions?", "solution", "ns"));
-      var ansT = n === 2 ? c2X + " = " + lo + " and " + c2X + " = " + hi : n === 1 ? c2X + " = " + r1 + " (only one solution)" : "no real solutions";
-      pb.qwa = { Q: [["<span class=\"lm\">" + eq + "</span>"], [c2X + " = ?"]],
-        W: [[function (x) { return "<span class=\"lm\">" + stdOf(x) + "</span>, related function <span class=\"lm\">" + relOf(x) + "</span>"; }, ["mv", "rel"]], [function (x) { return pic(!!(x && x.xi)); }, ["gr", "nx"]]],
-        A: [[ansT, ["ns"]]] };
-      return pb;
-    }
-  }
+  // Solving by Graphing: moved to the question bank, bank/3.1A-graphing.js
 
   // 3.1B Perfect Square Factors (from the Amplify activity's screen 5): simplify √a one question at a time: a perfect square factor of a, the other (leftover)
   // factor, then the perfect square's square root: √50 = √25 · √2 = 5√2.  Demo, Sequence: two choices each (the wrong one as in the activity); Calculate, Write: typed
   var C3PSF = [[8, 4], [12, 4], [18, 9], [20, 4], [24, 4], [27, 9], [28, 4], [32, 16], [45, 9], [48, 16], [50, 25], [54, 9], [63, 9], [72, 36], [75, 25], [80, 16], [96, 16], [98, 49], [125, 25], [200, 100], [300, 100], [500, 100], [600, 100], [700, 100]];
   function c3Rt(n, coef) { return "<span class=\"c3Rad\">" + (coef != null ? coef : "") + "√<span class=\"c3RadIn\">" + n + "</span></span>"; }
-  function c3M16(tier) {
-    var q = C3PSF[rnd(C3PSF.length)], a = q[0], b = q[1], c = a / b, d = Math.round(Math.sqrt(b)), pb = { kind: 20 };
-    var nsf = []; for (var f = 2; f < a; f++) if (a % f === 0 && !isSq(f)) nsf.push(f); var inc1 = nsf[rnd(nsf.length)],   /* (the wrong choice is another factor of a, one that is not a perfect square) */ inc2 = c === d ? b : d, inc3 = d === 2 ? 3 : d === c && d > 2 ? 2 : c;
-    pb.head = "√" + a; pb.pic = "";
-    pb.story = ""; pb.noCueW = 1; pb.noList = 1; pb.noArrow = 1;   // (no list of the steps done under the instruction: the work is in the centre pane) (every mode starts with √a alone, shown large below; Write: no list of the parts)
-    Object.defineProperty(pb, "tq", { get: function () { return mode === "solo" ? "" : "<div class=\"regQ\">Simplify.</div>"; } });   // (the instruction; Write asks "Simplify √a" itself, above its box)
-    pb.ws = function () {   // the work, built up as each answer is given (Demo, Sequence, Calculate): √a, then √b · √c, then d√c
-      if (mode === "solo") return QZ.m3done ? "<div class=\"c3Eq lm\" style=\"font-size:40px;flex-direction:column;align-items:center;gap:6px\"><div>" + c3Rt(a) + "</div><div>" + c3Rt(b) + " · " + c3Rt(c) + "</div><div>" + c3Rt(c, d) + "</div></div>" : "";   /* (Write, once right: the three lines of Show work, without = signs) */   // (Write: "Simplify √a" and its box, in the centre; once right, √a = d√c)
-      var x = QZ.m3x || {}, Q = "<span class=\"c3Q\">?</span>";
-      var l2 = x.ps ? c3Rt(b) + " · " + c3Rt(x.lf ? c : Q) : "", l3 = x.lf ? (x.sr ? c3Rt(c, d) : Q + c3Rt(c)) : "", line = function (t) { return t ? "<div>" + t + "</div>" : "<div style=\"visibility:hidden\">" + c3Rt(b) + "</div>"; };   /* (each line alone, without an = sign) */   // (it starts with √a alone; each line comes as it is found, in a place kept for it)
-      return "<div class=\"c3Eq lm\" style=\"font-size:40px;flex-direction:column;align-items:center;gap:6px\"><div>" + c3Rt(a) + "</div>" + line(l2) + line(l3) + "</div>";
-    };
-    pb.fig = function () { return ""; };
-    var two = function (good, bad) { return m3Sh([{ t: String(good), ok: true }, { t: String(bad), ok: false, why: "" }]); };
-    pb.isteps = [
-      { id: "ps", lab: "perfect square factor", type: "pick", ask: "Which is a perfect square factor of " + a + "?", opts: m3Sh([{ t: String(b), ok: true }, { t: String(inc1), ok: false, why: inc1 + " is a factor of " + a + ", but it is not a perfect square." }]), after: function (x) { x.ps = true; }, hint: ["Perfect squares: 4, 9, 16, 25, 36, 49, 64, 81, 100.", b + " · " + c + " = " + a + "."], line: c3Rt(a) + " = " + c3Rt(b) + " · " + c3Rt("?") },
-      { id: "lf", lab: "leftover factor", type: "pick", ask: "Which is the other leftover factor?", opts: m3Sh([{ t: String(c), ok: true }, { t: String(inc2), ok: false, why: b + " · " + inc2 + " is not " + a + "." }]), after: function (x) { x.lf = true; }, hint: [a + " ÷ " + b + " = ?", a + " ÷ " + b + " = " + c + "."], line: c3Rt(a) + " = " + c3Rt(b) + " · " + c3Rt(c) },
-      { id: "sr", lab: "square root", type: "pick", ask: "What is the square root of " + b + "?", opts: m3Sh([{ t: String(d), ok: true }, { t: String(inc3), ok: false, why: inc3 + " · " + inc3 + " is not " + b + "." }]), after: function (x) { x.sr = true; }, hint: ["What number times itself is " + b + "?", d + " · " + d + " = " + b + "."], line: c3Rt(a) + " = " + c3Rt(c, d) }
-    ];
-    pb.steps = [
-      { id: "ps", lab: "perfect square factor", ask: "What is the largest perfect square factor of " + a + "?", pre: "", ans: b, nums: [inc1, a / 2, c], after: function (x) { x.ps = true; }, hint: pb.isteps[0].hint, line: pb.isteps[0].line },
-      { id: "lf", lab: "leftover factor", ask: "What is the other leftover factor?", pre: "", ans: c, nums: [inc2, b, a - b], after: function (x) { x.lf = true; }, hint: pb.isteps[1].hint, line: pb.isteps[1].line },
-      { id: "sr", lab: "square root", ask: "What is the square root of " + b + "?", pre: "", ans: d, nums: [inc3, b / 2, d + 1], after: function (x) { x.sr = true; }, hint: pb.isteps[2].hint, line: pb.isteps[2].line }
-    ];
-    pb.steps.forEach(function (st) { st.wno = 1; });   // (Calculate keeps the three typed answers; Write has one box, below)
-    pb.steps.push({ id: "ans", lab: "simplified", ask: "Simplify " + c3Rt(a), pre: "", ans: d, ansT: d + "√" + c, rootKey: 1, so: 1,
-      okf: function (raw) {   // the simplified form typed, like 5√2 (5·√2, 5 sqrt(2) and 5√(2) are read too)
-        var t = String(raw).replace(/\s+/g, "").replace(/sqrt/gi, "√").replace(/[*·]/g, "").replace(/√\((\d+)\)/g, "√$1"), m = /^(\d*)√(\d+)$/.exec(t);
-        if (!m) return { ok: false, msg: "Type the simplified square root, like 5√2." };
-        var k = m[1] === "" ? 1 : +m[1], r = +m[2]; if (Math.abs(k * k * r - a) > 1e-9) return { ok: false, msg: "Not quite." };
-        if (r !== c) return { ok: false, msg: "That is equal to √" + a + ", but it can be simplified more." };
-        return { ok: true, show: c3Rt(c, d) };
-      }, hint: pb.isteps[0].hint, line: c3Rt(a) + " = " + c3Rt(b) + " · " + c3Rt(c) + " = " + c3Rt(c, d) });
-    pb.qwa = { Q: [[c3Rt(a)]], W: [[c3Rt(b) + " · " + c3Rt("?"), ["ps"]], [c3Rt(b) + " · " + c3Rt(c), ["lf", "ans"]]], A: [[c3Rt(c, d), ["sr", "ans"]]] };
-    return pb;
-  }
-  // 3.4B The Discriminant: a, b and c, then b² − 4ac, then how many real solutions (positive: 2, zero: 1, negative: 0)
-  function c3M13(tier) {
-    for (var t = 0; t < 500; t++) {
-      var kind = rnd(3), a, b, c;
-      if (kind === 1) { var p0 = c2Pick([1, 1, 2, 3]), q0 = nz(6); a = p0 * p0; b = 2 * p0 * q0; c = q0 * q0; if (rnd(4) === 0) { a = -a; b = -b; c = -c; } }
-      else { a = c2Pick([1, 1, 2, 3, -1, -2]); b = nz(9); c = nz(12); }
-      var D = b * b - 4 * a * c; if ((kind === 0 && D >= 0) || (kind === 2 && D <= 0) || (kind === 1 && D !== 0)) continue;
-      var pb = { kind: 20, mx: { a: a, b: b, c: c } }, eq = c3T(a, b, c) + " = 0", n = D > 0 ? 2 : D === 0 ? 1 : 0;
-      pb.head = eq; pb.pic = "";
-      pb.story = "<span class=\"lm cf\">" + eq + "</span>";
-      pb.tq = "<div class=\"regQ\">Find the discriminant. How many real solutions does the equation have?</div>";
-      var F = function (x) { return a * x * x + b * x + c; }, h = -b / (2 * a), k = F(h);
-      pb.fig = function (x) { x = x || {}; if (!x.ns) return ""; return c2Pl(c2Plane(Math.min(k, 0) - 3, Math.max(k, 0) + 3), x, { alt: "Graph of y = " + c3T(a, b, c), curves: [{ fn: F, col: C2P }] }); };
-      var wd = D > 0 ? "positive" : D === 0 ? "zero" : "negative", nn = function (v) { return [v, -v, b * b, b * b + 4 * a * c].filter(function (z, j, A) { return z !== D && A.indexOf(z) === j; }).slice(0, 3); };
-      pb.steps = [
-        { id: "a", fine: 1, lab: "a", ask: "Find <i>a</i>.", pre: "<i>a</i> =", ans: a, nums: [b, c, -a].filter(function (z) { return z !== a; }), hint: ["<i>a</i> is the number in front of " + c2X + "².", "<i>a</i> = " + c2F(a) + "."], line: "<i>a</i> = " + c2F(a) },
-        { id: "b", fine: 1, lab: "b", ask: "Find <i>b</i>.", pre: "<i>b</i> =", ans: b, nums: [a, c, -b].filter(function (z) { return z !== b; }), hint: ["<i>b</i> is the number in front of " + c2X + ".", "<i>b</i> = " + c2F(b) + "."], line: "<i>b</i> = " + c2F(b) },
-        { id: "c", fine: 1, lab: "c", ask: "Find <i>c</i>.", pre: "<i>c</i> =", ans: c, nums: [a, b, -c].filter(function (z) { return z !== c; }), hint: ["<i>c</i> is the number on its own.", "<i>c</i> = " + c2F(c) + "."], line: "<i>c</i> = " + c2F(c) },
-        { id: "d", lab: "Discriminant", ask: "Find the discriminant.", pre: "<i>b</i>² − 4<i>ac</i> =", ans: D, nums: nn(D), hint: ["<i>b</i>² − 4<i>ac</i> = " + c3P(b) + "² − 4(" + c2F(a) + ")(" + c2F(c) + ")" + ".", c3P(b) + "² − 4(" + c2F(a) + ")(" + c2F(c) + ")" + " = " + c2F(b * b) + " − " + c3P(4 * a * c) + " = " + c2F(D) + "."], line: "<i>b</i>² − 4<i>ac</i> = " + c3P(b) + "² − 4(" + c2F(a) + ")(" + c2F(c) + ")" + " = " + c2F(D) },
-        { id: "n", lab: "Solutions", type: "pick", ask: "How many real solutions?", opts: [{ t: "2", ok: n === 2, why: "The discriminant is " + wd + "." }, { t: "1", ok: n === 1, why: "The discriminant is " + wd + "." }, { t: "0", ok: n === 0, why: "The discriminant is " + wd + "." }],
-          after: function (x) { x.ns = true; }, hint: ["Positive: 2 solutions. Zero: 1. Negative: 0.", "The discriminant is " + wd + ", so " + n + "."], line: "the discriminant is " + wd + ": " + n + " real solution" + (n === 1 ? "" : "s") }
-      ];
-      pb.qwa = { Q: [["<span class=\"lm\">" + eq + "</span>"], ["<i>b</i>² − 4<i>ac</i> = ?"]],
-        W: [["<i>a</i> = " + c2F(a) + ", <i>b</i> = " + c2F(b) + ", <i>c</i> = " + c2F(c), ["a", "b", "c", "d"]], ["<i>b</i>² − 4<i>ac</i> = " + c3P(b) + "² − 4(" + c2F(a) + ")(" + c2F(c) + ")" + " = " + c2F(D), ["d"]]],
-        A: [[c2F(D) + " is " + wd + ": " + n + " real solution" + (n === 1 ? "" : "s"), ["n"]]] };
-      return pb;
-    }
-  }
+  // Simplifying Square Roots: moved to the question bank, bank/3.1B-simplify-roots.js
+  // The Discriminant: moved to the question bank, bank/3.4B-discriminant.js
   // 3.1C Real Life: a dropped object, h(t) = −16t² + s₀ (when does it hit the ground?), or the greatest revenue from intercept form (the max is halfway between the zeros)
   var C3DROP = [
     ["For a science competition, students design a container that keeps an egg from breaking when it is dropped from " , " feet onto {the ground}.", "egg"],
@@ -14122,60 +14013,7 @@ var ESPIC = {
     ["A climber drops a water bottle from a ledge " , " feet above {the ground}.", "drop"],
     ["A drone drops a package from " , " feet above {the field}.", "drop"]
   ];
-  // 3.1C the dropped object: h(t) = −16t² + s₀ in the centre pane.  The student drags the place it lands ("the ground": h = 0) onto h(t) and the height onto s₀,
-  // then undoes the operations in order, as in Play Solve: drag + s₀ across the =, click the subtraction, drag −16 across (it divides), click the fraction bar,
-  // drag the exponent across (it becomes ±√), click the root, and keeps the positive time.  Calculate asks each value; Write: the answer alone
-  function c3Drop(tier) {
-    var sc = c2Pick(C3DROP), s0 = 0, n = 0;
-    if (rnd(3) === 0) { n = c2Pick([1, 4, 9, 16, 25]); s0 = 16 * n; } else { do { s0 = c2Rng(20, 320); n = s0 / 16; } while (Number.isInteger(Math.sqrt(n))); }   // (most need a calculator: 150 ÷ 16 = 9.375, √9.375 ≈ 3.1)
-    var r = Math.sqrt(n), sq = Number.isInteger(r), Tr = c2R(r, 1), pb = { kind: 20 };
-    var place = /\{([^}]*)\}/.exec(sc[1])[1], ground = "<span class=\"vpN vpG\" data-vpsrc=\"sg\" data-vpv=\"0\">" + place + "</span>";
-    pb.head = sc[0] + s0 + sc[1].replace(/[{}]/g, "") + " How long does it take to hit " + place.replace(/^the /, "the ") + "?";
-    pb.pic = c2Pic("drop");
-    var story0 = sc[0] + vpN(s0, "ss") + sc[1].replace(/\{[^}]*\}/, ground), fml = " A dropped object's height is <span class=\"lm\"><i>h</i>(<i>t</i>) = −16<i>t</i>² + <i>s</i><sub>0</sub></span>.";
-    Object.defineProperty(pb, "story", { get: function () { return story0 + (mode === "solo" ? fml : ""); } });   // (Write: the formula in the story; the other modes: large, in the centre)
-    pb.tq = "<div class=\"regQ\">How long does it take to hit " + place + "?</div><div class=\"supp\"><i>t</i> = seconds, <i>h</i> = height in feet." + (sq ? "" : " Round to the nearest tenth.") + "</div>";
-    pb.dsm = { calc: 1 };   // (Calculate and Write: Desmos to divide and take the root; nothing is checked in it)
-    pb.qc = 1; pb.vp = { form: "d", s0: s0, n: n, r: r, sq: sq, Tr: Tr, k: s0, D: -16, Dg: "(−16)", want: { h: 0, s: s0 }, why: { h: "h(t) is the height. On " + place + ", the height is 0.", s: "s₀ is the height it starts from, " + s0 + " feet." }, place: place };
-    pb.ws = function () { return vpWs(pb); };
-    pb.fig = function () { return ""; };
-    var ws = function (id, type, ask, o) { var st = { id: id, type: type, fine: 1, nol: 1, ask: ask, lab: id }; for (var kk in o) st[kk] = o[kk]; return st; };
-    var setS = function (k) { return function (x) { x.vs = k; x.pend = ""; }; };
-    var opA = function (id, k) { return function (x) { if (mode === "calculate") x.pend = id; else { x.vs = k; x.pend = ""; } }; };
-    var subA = function (key) { return function (x) { x.sb = x.sb || {}; x.sb[key] = 1; }; };
-    var askS = "";   // (no instructions on dragging: the Demo shows it)
-    var SUB = [
-      ws("sh", "vsub", askS, { k: "h", v: 0, after: subA("h"), hint: ["On " + place + ", the height is 0.", "Drag \u201c" + place + "\u201d onto h(t)."] }),
-      ws("ss", "vsub", askS, { k: "s", v: s0, after: subA("s"), hint: ["It starts " + s0 + " feet up.", "Drag " + s0 + " onto s₀."] })
-    ];
-    var rt = sq ? String(r) : "≈ " + c2F(Tr), tA = sq ? "<i>t</i> = " + r : "<i>t</i> ≈ " + c2F(Tr);
-    var mv = ws("mv", "vmv", "Undo the addition.", { after: setS(1), hint: ["The " + s0 + " is added to −16t².", "Drag + " + s0 + " across the = sign. It becomes − " + s0 + "."] });
-    var o1 = ws("o1", "vop", "Subtract.", { op: "o1", after: opA("o1", 2), hint: ["Combine 0 − " + s0 + ".", "Click the − between 0 and " + s0 + "."] });
-    var c1 = ws("c1", "num", "Work it out.", { pre: "0 − " + s0 + " =", ans: -s0, after: setS(2), hint: ["Subtract.", "0 − " + s0 + " = −" + s0 + "."] });
-    var dv = ws("dv", "vdv", "Undo the multiplication.", { after: setS(3), hint: ["−16 multiplies t². Undo it by dividing.", "Drag −16 across the = sign."] });
-    var o2 = ws("o2", "vop", "Divide.", { op: "o2", after: opA("o2", 4), hint: ["A fraction bar means divide.", "Click the bar between −" + s0 + " and −16."] });
-    var c2 = ws("c2", "num", "Work it out.", { pre: "−" + s0 + " ÷ (−16) =", ans: n, tol: Number.isInteger(n) ? 1e-9 : 0.0051, after: setS(4), hint: ["A negative divided by a negative is positive.", "−" + s0 + " ÷ (−16) = " + n + "."] });
-    var ex = ws("ex", "vex", "Undo the exponent.", { after: setS(5), hint: ["The square root undoes the square.", "Drag the 2 across the = sign. It becomes ±√."] });
-    var o3 = ws("o3", "vop", "Take the square root." + (sq ? "" : " Round to the nearest tenth."), { op: "o3", after: opA("o3", 6), hint: [sq ? "What number times itself is " + n + "?" : "√" + n + " is between " + Math.floor(r) + " and " + Math.ceil(r) + ".", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
-    var c3 = ws("c3", "num", "Work it out.", { pre: "√" + n + " " + (sq ? "=" : "≈"), post: sq ? "" : "(to the nearest tenth)", ans: sq ? r : Tr, tol: sq ? 1e-9 : 0.051, after: setS(6), hint: [sq ? "What number times itself is " + n + "?" : "Use a calculator, then round.", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
-    var ng = ws("ng", "pick", "Which solution answers the question?", { opts: m3Sh([{ t: sq ? "t = " + r : "t ≈ " + c2F(Tr), ok: true }, { t: sq ? "t = −" + r : "t ≈ −" + c2F(Tr), ok: false, why: "A time cannot be negative." }]), after: setS(7), hint: ["Time is counted forward from the drop.", "A time cannot be negative: keep the positive solution."] });
-    var ans = { id: "ans", lab: "Time", ask: "How long does it take to hit " + place + "?", pre: sq ? "<i>t</i> =" : "<i>t</i> ≈", post: "s", ans: sq ? r : Tr, tol: sq ? 1e-9 : 0.051,
-      nums: [n, c2R(s0 / 16 / 2, 1), c2R(r * 2, 1)].filter(function (v, j, A) { return Math.abs(v - Tr) > 0.06 && A.indexOf(v) === j; }),
-      hint: ["Set h(t) = 0: 0 = −16t² + " + s0 + ".", "t² = " + n + ", so t = √" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + " (a time is not negative)."], line: "it hits " + place + " after " + (sq ? "" : "about ") + c2F(Tr) + " seconds" };
-    pb.isteps = SUB.concat([mv, o1, dv, o2, ex, o3, ng]);
-    pb.csteps = SUB.concat([mv, o1, c1, dv, o2, c2, ex, o3, c3, ng]);
-    pb.steps = [ans];   // (Write: the answer alone)
-    var gV = function (k) { return function (x) { return (x.vs || 0) >= k && !(x.pend && (x.vs || 0) === k - 1); }; };
-    var gM = function (t) { return "<span class=\"lm\">" + t + "</span>"; };
-    pb.guess = { G: [["<i>s</i><sub>0</sub> = " + s0 + " ft", function (x, dn) { return (x.sb && x.sb.s) || dn.ans; }], ["<i>h</i>(<i>t</i>) = 0 on " + place, function (x, dn) { return (x.sb && x.sb.h) || dn.ans; }]],
-      U: [["<i>t</i> = ? seconds", null]],
-      E: [[gM("<i>h</i>(<i>t</i>) = −16<i>t</i>² + <i>s</i><sub>0</sub>"), null]],
-      S1: [[gM("0 = −16<i>t</i>² + " + s0), function (x, dn) { return (x.sb && x.sb.h && x.sb.s) || dn.ans; }]],
-      S2: [[gM("−" + s0 + " = −16<i>t</i>²"), gV(2)], [gM(n + " = <i>t</i>²"), gV(4)], [gM("±√" + n + " = <i>t</i>"), gV(5)], [gM("<i>t</i> " + (sq ? "= ±" + r : "≈ ±" + c2F(Tr))), gV(6)], ["a time is not negative: " + gM(tA), gV(7)]],
-      A: [["It hits " + place + " after " + (sq ? "" : "about ") + c2F(Tr) + " seconds.", function (x, dn) { return (x.vs || 0) >= 7 || dn.ans; }]] };
-    return pb;
-  }
-  function c3M4(tier) { return c3Drop(tier); }   // 3.1C Real Life: the dropped object, solved algebraically
+  // Real Life: moved to the question bank, bank/3.1C-real-life.js
   // 3.1C Real Life Desmos: the revenue R(x) = (S − dx)(P + x), graphed in Desmos; two questions about its x-intercepts or the coordinates of its vertex, read from the graph
   function c3DsmPt(x0, y0, run, then) {   // the demo: the hand clicks the point of the graph, and Desmos labels it
     var box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { then(); return; }
@@ -14183,57 +14021,8 @@ var ESPIC = {
     pgWait(450, function () { if (pgRun !== run) return; var rb = box.getBoundingClientRect(); handGo(vpDsmPx(x0, y0) || { x: rb.left + rb.width * 0.7, y: rb.top + rb.height * 0.4 }, 700); });
     pgWait(1300, function () { if (pgRun !== run) return; handTap(); try { DSM.calc.setExpression({ id: "rq" + x0, latex: "\\left(" + c2T(x0, 6) + "," + c2T(y0, 6) + "\\right)", color: "#7A3FB5", showLabel: true }); } catch (er) { } pgWait(1400, then); });
   }
-  function c3M19(tier) {
-    for (var t = 0; t < 500; t++) {   // the revenue: R(x) = (S − d·x)(P + x), x = the price increase in dollars
-      var P = 4 + rnd(9), d = c2Pick([0.5, 1, 1.5, 2]), Z = P + 2 + rnd(12); if ((Z - P) % 2) continue;   // (zeros Z and −P; their average a whole number of dollars)
-      var S = c2R(Z * d, 4), xm = (Z - P) / 2, price = P + xm, R = c2R((S - d * xm) * (P + xm), 4), pb2 = { kind: 20 };
-      var who = c2Pick([["A streaming service charges $", " per month and has ", " million subscribers. For each $1 increase in price, the service loses ", " million subscribers.", "million"], ["A gym charges $", " per class and fills ", " hundred spots each month. For each $1 increase in price, it fills ", " hundred fewer.", "hundred"]]);
-      pb2.head = who[0] + P + who[1] + c2F(S) + who[2] + c2F(d) + who[3]; pb2.pic = "";
-      var dX = (d === 1 ? "" : c2F(d)) + c2X;
-      pb2.story = pb2.head + " The revenue is <span class=\"lm\"><i>R</i>(" + c2X + ") = (" + c2F(S) + " − " + dX + ")(" + P + " + " + c2X + ")</span>, where " + c2X + " is the price increase in dollars.";
-      var Fr = function (x) { return (S - d * x) * (P + x); };
-      pb2.fig = function (x) { x = x || {}; if (!x.zz) return ""; var xa = c2Axis(-P - 1, Z + 1), ya = c2Axis(0, R * 1.15); return c2Fig({ H: 260, xmin: xa.min, xmax: xa.max, ymin: 0, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Price increase ($)", yl: "Revenue", alt: "The revenue", curves: [{ fn: Fr, col: C2P }], pts: [{ x: -P, y: 0, col: C2P, lab: "(" + c2F(-P) + ", 0)" }, { x: Z, y: 0, col: C2P, lab: "(" + Z + ", 0)" }].concat(x.mx ? [{ x: xm, y: R, col: C2P, lab: "(" + c2F(xm) + ", " + c2F(R) + ")", dy: -8 }] : []) }); };
-      var FrD = function (x) { return (S - d * x) * (P + x); }, subs = who[4] === "million" ? "subscribers" : "spots";
-      pb2.fig = function () { return ""; };
-      pb2.qc = 1; pb2.noCueW = 1;   // (Write: no list of the parts)
-      pb2.dsm = { one: 1, F1: FrD, D1: Z, xmin: -P - 2, xmax: Z + 2, ymin: -R * 0.15, ymax: R * 1.25, l1: "y=\\left(" + c2T(S, 6) + "-" + (d === 1 ? "" : c2T(d, 6)) + "x\\right)\\left(" + P + "+x\\right)" };
-      var gr = { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "", line: "graphed R(x) in Desmos", hint: ["Type the revenue function on the first line of Desmos, with y or R(x).", "Type y = (" + c2F(S) + " − " + dX.replace(/<[^>]+>/g, "") + ")(" + P + " + x)."] };
-      var Q4 = [
-        { id: "qz", lab: "Price increase", ask: "At what price increase would the " + (subs === "spots" ? "gym have no spots filled" : "service have no subscribers") + "?", pre: c2X + " =", post: "dollars", ans: Z, nums: [P, -P, xm], hint: ["No " + subs + " means no revenue: find where the graph crosses the x-axis, on the right.", "The x-intercept is (" + Z + ", 0), so " + c2X + " = " + Z + "."], line: "x-intercept (" + Z + ", 0): no " + subs + " at a $" + Z + " increase", x: Z, y: 0 },
-        { id: "qp", lab: "Price change", ask: "What change in price would make it free (a price of $0)?", pre: c2X + " =", post: "dollars", ans: -P, nums: [P, Z, -Z], hint: ["A price of $0 means no revenue: find where the graph crosses the x-axis, on the left.", "The x-intercept is (" + c2F(-P) + ", 0), so " + c2X + " = " + c2F(-P) + "."], line: "x-intercept (" + c2F(-P) + ", 0): the price drops by $" + P + " to $0", x: -P, y: 0 },
-        { id: "qh", lab: "Price increase", ask: "What price increase gives the greatest revenue?", pre: c2X + " =", post: "dollars", ans: xm, nums: [Z, P, xm + 1].filter(function (v) { return v !== xm; }), hint: ["The greatest revenue is the highest point of the graph, its vertex.", "The vertex is (" + c2F(xm) + ", " + c2F(R) + "), so " + c2X + " = " + c2F(xm) + "."], line: "vertex (" + c2F(xm) + ", " + c2F(R) + "): a $" + c2F(xm) + " increase, a price of $" + c2F(price), x: xm, y: R },
-        { id: "qk", lab: "Revenue", ask: "What is the greatest revenue?", pre: "<i>R</i> =", post: who[4] + " dollars", ans: R, tol: 0.01, nums: [c2R(S * P, 4), Z, c2R(R + d * 2, 4)].filter(function (v) { return Math.abs(v - R) > 0.01; }), hint: ["The greatest revenue is the height of the vertex.", "The vertex is (" + c2F(xm) + ", " + c2F(R) + "), so the greatest revenue is " + c2F(R) + " " + who[4] + " dollars."], line: "vertex (" + c2F(xm) + ", " + c2F(R) + "): the greatest revenue is " + c2F(R) + " " + who[4] + " dollars", x: xm, y: R }
-      ];
-      Q4 = Q4.filter(function (q) { return q.id !== "qp"; });   // (the left x-intercept, a price of $0, is not a sensible answer: the intercept asked about is the right one)
-      var pick = m3Sh(Q4.slice()).slice(0, 2).sort(function (u, v) { return Q4.indexOf(u) - Q4.indexOf(v); });
-      pick.forEach(function (q) { var X0 = q.x, Y0 = q.y; q.dpre = function (run, then) { c3DsmPt(X0, Y0, run, then); }; });
-      pb2.tq = "<div class=\"supp\">Revenue in " + who[4] + "s of dollars.</div>";   // (each question is asked once, by itself)
-      pb2.isteps = pb2.csteps = [gr].concat(pick);
-      pb2.steps = [gr].concat(pick);
-      pb2.qwa = { Q: [[pb2.head.replace(/<[^>]+>/g, "")], ["<i>R</i>(" + c2X + ") = (" + c2F(S) + " − " + dX + ")(" + P + " + " + c2X + ")"]], W: [["graphed in Desmos: x-intercepts (" + c2F(-P) + ", 0) and (" + Z + ", 0), vertex (" + c2F(xm) + ", " + c2F(R) + ")", function (x, dn) { return dn.gr || pick.some(function (q) { return dn[q.id]; }); }]], A: pick.map(function (q) { return [q.line, [q.id]]; }) };
-      return pb2;
-    }
-  }
-  // 3.3B Vertex form by completing the square: y = x² + bx + c → y = (x − h)² + k (and with a in front: divide by a first)
-  function c3M11(tier) {
-    var a = rnd(3) ? 1 : c2Pick([2, 3, 5]), hh = nz(8), b = -2 * a * hh, c = nz(12) + a * hh * hh, q = hh * hh, k = c - a * q, pb = { kind: 20 };
-    var eq = "<i>y</i> = " + c3T(a, b, c), vf = "<i>y</i> = " + (a === 1 ? "" : a) + "(" + c2X + (hh > 0 ? " − " + hh : " + " + -hh) + ")²" + (k ? (k < 0 ? " − " + -k : " + " + k) : "");
-    pb.head = eq; pb.pic = "";
-    pb.story = "<span class=\"lm cf\">" + eq + "</span>";
-    pb.tq = "<div class=\"regQ\">Write the function in vertex form by completing the square.</div>";
-    var Fv = function (x0) { return a * (x0 - hh) * (x0 - hh) + k; };
-    pb.fig = function (x) { x = x || {}; if (!x.vf) return ""; return c2Pl(c2Plane(Math.min(k, 0) - 3, Math.max(k, 0) + 3), x, { alt: "Graph of the parabola", curves: [{ fn: Fv, col: C2P }], pts: [{ x: hh, y: k, col: C2P, lab: true, dy: -8 }] }); };   // (once the vertex form is found: the parabola, its vertex labelled)
-    var bb = b / a, half = bb / 2, lhs = a === 1 ? "<i>y</i> − " + c3P(c) : "(<i>y</i> − " + c3P(c) + ")/" + a;
-    pb.steps = [
-      { id: "sq", lab: "(b ÷ 2)²", ask: "Find (<i>b</i> ÷ 2)²" + (a === 1 ? "" : " for " + c2X + "² + " + c3P(bb) + c2X) + ".", pre: "(<i>b</i> ÷ 2)² =", ans: q, nums: [half, bb * bb, q * 2].filter(function (v) { return v !== q; }), hint: ["(" + c3P(bb) + " ÷ 2)² = " + c3P(half) + "².", c3P(half) + "² = " + q + "."], line: "(" + c3P(bb) + " ÷ 2)² = " + q },
-      { id: "h", lab: "h", ask: "Find <i>h</i>.", pre: "<i>h</i> =", ans: hh, nums: [-hh, half, q].filter(function (v) { return v !== hh; }), hint: [c2X + "² " + (bb < 0 ? "− " : "+ ") + Math.abs(bb) + c2X + " + " + q + " = (" + c2X + (half < 0 ? " − " + -half : " + " + half) + ")².", "<i>h</i> = " + hh + "."], line: lhs + " + " + q + " = (" + c2X + (half < 0 ? " − " + -half : " + " + half) + ")²" },
-      { id: "k", lab: "k", ask: "Find <i>k</i>.", pre: "<i>k</i> =", ans: k, nums: [c + a * q, -k, c].filter(function (v) { return v !== k; }), after: function (x) { x.vf = true; }, hint: ["Isolate <i>y</i>: subtract " + q + (a === 1 ? "" : ", multiply by " + a) + ", then add " + c3P(c) + ".", "<i>k</i> = " + c3P(c) + " − " + (a === 1 ? "" : a + "·") + q + " = " + k + "."], line: vf }
-    ];
-    pb.qwa = { Q: [["<span class=\"lm\">" + eq + "</span>"]],
-      W: [[lhs + " = " + c2X + "² " + (bb < 0 ? "− " : "+ ") + Math.abs(bb) + c2X, ["sq"]], ["(" + c3P(bb) + " ÷ 2)² = " + q, ["sq"]], [lhs + " + " + q + " = (" + c2X + (half < 0 ? " − " + -half : " + " + half) + ")²", ["h"]]],
-      A: [["<span class=\"lm\">" + vf + "</span>", ["k"]]] };
-    return pb;
-  }
+  // Real Life Desmos: moved to the question bank, bank/3.1C-real-life-desmos.js
+  // Vertex Form by Completing the Square: moved to the question bank, bank/3.3B-vertex-form.js
   // Sequence's answer choices: three wrong ones, all different (near misses filled in when the generator gave too few)
   function c3Nums(pb) {
     (pb.steps || []).forEach(function (st) {
@@ -14251,7 +14040,7 @@ var ESPIC = {
     return pb;
   }
   function c2Make0(tier) {
-    var pb = act === "3.1" ? c3Nums(({ 1: c3M1, 4: c3M4, 11: c3M11, 13: c3M13, 16: c3M16, 18: bankGen("2.4A-vertex-point"), 19: c3M19 }[lesson] || c3M13)(tier)) : act === "2.1" ? bankGen("2.1B-real-life")(tier) : act === "2.2" ? [bankGen("2.2A-vertex-form"), bankGen("2.2A-standard-form"), bankGen("2.2C-min-max"), bankGen("2.2C-intercept-form"), bankGen("2.2C-compare"), bankGen("2.2B-interval-notation"), bankGen("2.2B-domain"), bankGen("2.2B-range"), bankGen("2.2B-increasing"), bankGen("2.2B-decreasing"), bankGen("2.2C-memorize"), bankGen("2.2C-characteristics")][lesson - 1](tier)
+    var pb = act === "3.1" ? c3Nums(({ 1: bankGen("3.1A-graphing"), 4: bankGen("3.1C-real-life"), 11: bankGen("3.3B-vertex-form"), 13: bankGen("3.4B-discriminant"), 16: bankGen("3.1B-simplify-roots"), 18: bankGen("2.4A-vertex-point"), 19: bankGen("3.1C-real-life-desmos") }[lesson] || bankGen("3.4B-discriminant"))(tier)) : act === "2.1" ? bankGen("2.1B-real-life")(tier) : act === "2.2" ? [bankGen("2.2A-vertex-form"), bankGen("2.2A-standard-form"), bankGen("2.2C-min-max"), bankGen("2.2C-intercept-form"), bankGen("2.2C-compare"), bankGen("2.2B-interval-notation"), bankGen("2.2B-domain"), bankGen("2.2B-range"), bankGen("2.2B-increasing"), bankGen("2.2B-decreasing"), bankGen("2.2C-memorize"), bankGen("2.2C-characteristics")][lesson - 1](tier)
       : ([bankGen("2.4A-vertex-point"), bankGen("2.4A-point-intercepts"), null, bankGen("2.4B-quadratic-regression")][lesson - 1] || bankGen("2.4B-quadratic-regression"))(tier);   // (2.4 exercise 3, Three Points with first and second differences, was taken out)
     return pb;
   }

@@ -1,0 +1,41 @@
+{
+ "id": "3.1A-graphing",
+ "title": "Solving by Graphing",
+ "section": "3.1",
+ "example": 1,
+ "skills": [
+  "solving by graphing",
+  "x-intercepts",
+  "Desmos graphing"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 1,
+ "showWork": "QWA",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c3M1"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c3M1"
+ },
+ "engineEdits": [
+  [
+   "{ 1: c3M1, ",
+   "{ 1: bankGen(\"3.1A-graphing\"), "
+  ]
+ ]
+}

@@ -1,0 +1,40 @@
+{
+ "id": "3.3B-vertex-form",
+ "title": "Vertex Form by Completing the Square",
+ "section": "3.3",
+ "example": 11,
+ "skills": [
+  "completing the square",
+  "vertex form"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 1,
+ "showWork": "QWA",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c3M11"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c3M11"
+ },
+ "engineEdits": [
+  [
+   "11: c3M11, ",
+   "11: bankGen(\"3.3B-vertex-form\"), "
+  ]
+ ]
+}

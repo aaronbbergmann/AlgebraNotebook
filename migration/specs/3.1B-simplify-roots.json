@@ -1,0 +1,40 @@
+{
+ "id": "3.1B-simplify-roots",
+ "title": "Simplifying Square Roots",
+ "section": "3.1",
+ "example": 16,
+ "skills": [
+  "square roots",
+  "product property"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 1,
+ "showWork": "QWA",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c3M16"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c3M16"
+ },
+ "engineEdits": [
+  [
+   "16: c3M16, ",
+   "16: bankGen(\"3.1B-simplify-roots\"), "
+  ]
+ ]
+}

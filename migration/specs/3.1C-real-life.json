@@ -1,0 +1,42 @@
+{
+ "id": "3.1C-real-life",
+ "title": "Real Life",
+ "section": "3.1",
+ "example": 4,
+ "skills": [
+  "square roots",
+  "inverse operations",
+  "modeling"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 1,
+ "showWork": "GUESS",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c3Drop",
+  "c3M4"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c3M4"
+ },
+ "engineEdits": [
+  [
+   "4: c3M4, ",
+   "4: bankGen(\"3.1C-real-life\"), "
+  ]
+ ]
+}
