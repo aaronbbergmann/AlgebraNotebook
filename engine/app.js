@@ -8827,48 +8827,13 @@ var ESPIC = {
     }).join(plain ? " " + (P.join || "or") + " " : " <span class=\"ivOr\">" + (P.join || "or") + "</span> ");
   }
   function ivEsc(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-  // the problems: a round gets harder (a ray; two boundaries, or a ray written backwards; mixed dots, or "or")
-  function c2M226(tier) {
-    var demo = mode === "demo", st = c2Pick(tier === 0 ? [1, 1, 2] : tier === 1 ? [1, 2, 5] : [2, 5, 10]), m0 = st * c2Rng(-4, 0), M = [0, 1, 2, 3, 4].map(function (i) { return m0 + i * st; });
-    var kind = demo ? "mix" : tier === 0 ? "one" : tier === 1 ? c2Pick(["two", "mix", "one"]) : c2Pick(["mix", "mix", "two"]), cl = function () { return !!rnd(2); }, pcs, flip = false, i, j;
-    if (kind === "one") { var b = M[1 + rnd(3)], c = cl(); pcs = [rnd(2) ? ivPc({ v: -IVI }, { v: b, cl: c }) : ivPc({ v: b, cl: c }, { v: IVI })]; flip = tier === 1; }
-    else if (kind === "or") { i = rnd(2); j = i + 2 + rnd(3 - i); pcs = [ivPc({ v: -IVI }, { v: M[i], cl: cl() }), ivPc({ v: M[j], cl: cl() }, { v: IVI })]; }
-    else { i = rnd(3); j = i + 2 + rnd(3 - i); var c1 = cl(), c2 = kind === "mix" ? !c1 : c1; pcs = [ivPc({ v: M[i], cl: c1 }, { v: M[j], cl: c2 })]; }
-    var show = ivGr() ? "graph" : mode === "calculate" ? "both" : tier === 0 ? "ineq" : tier === 1 ? "line" : c2Pick(["ineq", "line"]);
-    var P = { M: M, pcs: pcs, flip: flip, show: show }, pb = { kind: 26, iv: P, pic: "" };
-    pb.head = ivIneq(P, true);
-    pb.story = show === "line" ? "Write the numbers graphed on the number line in interval notation." : (ivGr() ? "Graph " : "Write ") + "<span class=\"lm\">" + ivIneq(P) + "</span>" + (ivGr() ? " on the number line." : " in interval notation.");
-    pb.fig = function () { return ""; };
-    pb.steps = [{ id: "iv", lab: "Interval notation", type: "ivn", ask: "" }];
-    pb.ex = "A closed dot and a bracket [ ] mean the boundary is included (≤ or ≥); an open dot and a parenthesis ( ) mean it is not (< or >). ∞ and −∞ always take a parenthesis. " + ivIneq(P, true) + " in interval notation is " + ivStr(pcs) + ".";
-    return pb;
-  }
+  // Interval Notation: moved to the question bank, bank/2.2B-interval-notation.js
 
   // ---- 2.2B Domain (2.2's seventh exercise): a graph (a segment or a curve) that starts and ends with dots; the domain is the interval of its x-values.
   // Demo and Sequence: the inequality is a hint and the answer is graphed on the number line. Calculate: the number line is the hint, the interval is typed.
   // Write: only the graph.
   function ivPoly(N) { return function (x) { var s = 0; for (var i = 0; i < N.length; i++) { var t = N[i][1]; for (var j = 0; j < N.length; j++) if (j !== i) t *= (x - N[j][0]) / (N[i][0] - N[j][0]); s += t; } return s; }; }
-  function c2M227(tier) {
-    for (var t = 0; t < 4000; t++) {
-      var a = c2Rng(-6, 2), b = a + c2Rng(2, 8); if (b > 6) continue;
-      var st = b - a <= 4 ? 1 : (b - a) % 2 ? 0 : 2; if (!st) continue;
-      var lo = Math.max(-6 * st, b - 4 * st), hi = a, opts = []; for (var m = lo; m <= hi; m += 1) if ((a - m) % st === 0) opts.push(m); if (!opts.length) continue;
-      var m0 = c2Pick(opts), M = [0, 1, 2, 3, 4].map(function (i) { return m0 + i * st; }); if (M.indexOf(b) < 0) continue;
-      var deg = tier === 0 ? c2Pick([1, 2]) : tier === 1 ? c2Pick([2, 3]) : c2Pick([1, 2, 3, 3]), N = [];
-      for (var i = 0; i <= deg; i++) N.push([a + (b - a) * i / deg, c2Rng(-5, 5)]);
-      if (deg === 1 && N[0][1] === N[1][1]) continue;
-      var F = ivPoly(N), ok = true; for (var x = a; x <= b + 1e-9; x += (b - a) / 60) if (Math.abs(F(x)) > 6.4) ok = false; if (!ok) continue;
-      var ya = Math.round(F(a)), yb = Math.round(F(b)), c1 = !!rnd(2), c2 = demoMix() ? !c1 : tier === 0 ? c1 : !!rnd(2);
-      var pcs = [ivPc({ v: a, cl: c1 }, { v: b, cl: c2 })], show = ivGr() ? "graph" : mode === "calculate" ? "both" : "fig";
-      var P = { M: M, pcs: pcs, show: show, dom: { N: N, a: a, b: b, ya: ya, yb: yb } }, pb = { kind: 27, iv: P, pic: "" };
-      pb.head = "domain " + ivIneq(P, true) + " " + JSON.stringify(N);
-      pb.story = "What is the domain of the graph?";
-      pb.fig = function () { return ""; };
-      pb.steps = [{ id: "iv", lab: "Domain", type: "ivn", ask: "" }];
-      pb.ex = "The domain is every x-value of the graph. It starts at x = " + c2F(a) + (c1 ? " (closed dot: included)" : " (open dot: not included)") + " and ends at x = " + c2F(b) + (c2 ? " (closed dot: included)" : " (open dot: not included)") + ", so the domain is " + ivIneq(P, true) + ", or " + ivStr(pcs) + " in interval notation.";
-      return pb;
-    }
-  }
+  // Domain: moved to the question bank, bank/2.2B-domain.js
   function demoMix() { return mode === "demo"; }
   // ---- 2.2B Increasing and Decreasing (2.2's ninth and tenth exercises): the same as Domain, but the answer is where the graph goes up (or down) from left to right.
   // A turning point belongs to both sides (closed); an end of the graph keeps its own dot. Two parts are joined with ∪ (the hint says "and", as in the packet).
@@ -8903,8 +8868,8 @@ var ESPIC = {
       return pb;
     }
   }
-  function c2M229(tier) { return ivMono(tier, 1); }
-  function c2M2210(tier) { return ivMono(tier, -1); }
+  // Increasing: moved to the question bank, bank/2.2B-increasing.js
+  // Decreasing: moved to the question bank, bank/2.2B-decreasing.js
   var IV_RIDERS = [["🏃", 1], ["🚶", 1], ["⛷️", 0], ["🛼", 0], ["🎢", 0]], ivRideN = 0, ivRideId = 0;
   function ivRide(P) {
     var svg = $("ivnFig").querySelector("svg"); if (!svg || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -8931,27 +8896,7 @@ var ESPIC = {
     var opts = []; for (var m = hi - 4 * st; m <= lo; m++) if ((lo - m) % st === 0) opts.push(m); if (!opts.length) return null;
     var m0 = c2Pick(opts); return [0, 1, 2, 3, 4].map(function (i) { return m0 + i * st; });
   }
-  function c2M228(tier) {
-    for (var t = 0; t < 4000; t++) {
-      var n = tier === 0 ? 1 : tier === 1 ? 2 : 3, xs = [c2Rng(-6, 0)], K;
-      for (var i = 0; i < n; i++) xs.push(xs[i] + (n === 1 ? c2Rng(3, 8) : c2Rng(2, n === 2 ? 5 : 4))); if (xs[n] > 6) continue;
-      K = xs.map(function (x) { return [x, c2Rng(-6, 6)]; }); if (K.some(function (k, i) { return i && k[1] === K[i - 1][1]; })) continue;
-      if (n > 1 && K.some(function (k, i) { return i > 0 && i < n && (k[1] - K[i - 1][1]) * (k[1] - K[i + 1][1]) <= 0; })) continue;   // every inside point is a turning point
-      var ca = !!rnd(2), cb = !!rnd(2), ys = K.map(function (k) { return k[1]; }), lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys);
-      var inc = function (v) { return K.some(function (k, i) { return k[1] === v && (i === 0 ? ca : i === n ? cb : true); }); }, cl = inc(lo), ch = inc(hi);
-      if (mode === "demo" && cl === ch) continue;
-      var M = ivMarks(lo, hi); if (!M) continue;
-      var pcs = [ivPc({ v: lo, cl: cl }, { v: hi, cl: ch })], show = ivGr() ? "graph" : mode === "calculate" ? "both" : "fig";
-      var P = { M: M, pcs: pcs, show: show, v: "y", dom: { K: K, a: K[0][0], b: K[n][0], ya: K[0][1], yb: K[n][1], ca: ca, cb: cb } }, pb = { kind: 28, iv: P, pic: "" };
-      if (n === 1) P.dom.K = null, P.dom.N = K;   // (a segment: drawn straight)
-      pb.head = "range " + ivIneq(P, true) + " " + JSON.stringify(K) + ca + cb;
-      pb.story = "What is the range of the graph?";
-      pb.fig = function () { return ""; };
-      pb.steps = [{ id: "iv", lab: "Range", type: "ivn", ask: "" }];
-      pb.ex = "The range is every y-value of the graph. The lowest is y = " + c2F(lo) + (cl ? " (the graph reaches it: included)" : " (only at an open dot: not included)") + " and the highest is y = " + c2F(hi) + (ch ? " (included)" : " (only at an open dot: not included)") + ", so the range is " + ivIneq(P, true) + ", or " + ivStr(pcs) + " in interval notation.";
-      return pb;
-    }
-  }
+  // Range: moved to the question bank, bank/2.2B-range.js
 
   function ivDomSvg(P, w) {
     var D = P.dom, S = 300, R = 7, X = function (x) { return S / 2 + x / R * (S / 2 - 8); }, Y = function (y) { return S / 2 - y / R * (S / 2 - 8); }, g = "", F = D.K ? ivKnot(D.K) : ivPoly(D.N);
@@ -9366,11 +9311,7 @@ var ESPIC = {
   var CS_N = { s: 4, v: 4, i: 4 }, CS_NM = { s: "Standard Form", v: "Vertex Form", i: "Intercept Form" };
   function csL() { return act === "2.2" && lesson === 11; }
   function csN() { return pq() && csL() && !!QZ && !!QZ.m3p && !!m3Cur() && !!m3Cur().cs && (mode === "demo" || mode === "sequence" || mode === "calculate"); }
-  function c2M2211() {
-    var ids = Object.keys(CS_CARDS); for (var i = ids.length - 1; i > 0; i--) { var j = rnd(i + 1), t = ids[i]; ids[i] = ids[j]; ids[j] = t; }
-    return { kind: 30, cs: { order: ids, qs: mode === "calculate" ? csqMake() : null }, head: "Sort into three piles " + ids.join(""), pic: "", story: "Sort into three piles.", fig: function () { return ""; }, steps: [{ id: "cs" }],
-      ex: "Standard Form is f(x) = ax² + bx + c: its vertex is at x = −b/(2a), which goes in the centre row of the table. Vertex Form is f(x) = a(x − h)² + k: (h, k) is the vertex, the centre row of the parent table. Intercept Form is f(x) = a(x − p)(x − q): p and q are the x-intercepts." };
-  }
+  // Memorizing the Forms: moved to the question bank, bank/2.2C-memorize.js
   function csSt() { if (!QZ.cs || QZ.cs.pi !== QZ.pi) QZ.cs = { pi: QZ.pi, deck: m3Cur().cs.order.slice(), piles: [[], [], []], sel: null, ok: false, hist: [] }; return QZ.cs; }
   function csG(id) { return id.charAt(0); }
   function csPileG(P) { return P.length ? csG(P[0]) : null; }
@@ -13515,54 +13456,7 @@ var ESPIC = {
     sprout: '<path d="M38 62h44l-6 30H44z" fill="#b5651d" fill-opacity=".45"/><path d="M34 62h52" stroke-width="4"/><path d="M60 62V32" stroke-width="3"/><path d="M60 48q-26-2-28-24q24 0 28 24zM60 40q24-2 28-22q-24-2-28 22z" fill="#3d8f4f" fill-opacity=".5" stroke-width="2.5"/>'
   };
   function c2Pic(k) { return c2Svg(C2PIC[k]); }
-  // ---- 2.1, fourth exercise: Using a Transformed Quadratic.  A path h(x) = ax² + bx + c lands at x = R; it must land D feet farther (or closer), so the whole path moves
-  // up (or down) by -h(R + D): g(x) = h(x) + k.  The textbook's Example 4 and its What If (closer).
-  var C2S214 = [
-    { pic: "hose", s: "A firefighter sprays water from a hose.", w: "water", land: "hits the ground", from: "the fire truck", up: "The crew raises the aerial ladder", dn: "The crew lowers the aerial ladder" },
-    { pic: "fount", s: "A fountain in a park shoots a jet of water from a nozzle.", w: "water", land: "lands", from: "the nozzle", up: "The park crew raises the nozzle", dn: "The park crew lowers the nozzle" },
-    { pic: "sprink", s: "A garden sprinkler sprays a stream of water across a lawn.", w: "water", land: "lands", from: "the sprinkler", up: "The gardener puts the sprinkler on a taller stand", dn: "The gardener puts the sprinkler on a shorter stand" },
-    { pic: "cannon", s: "A water cannon at a splash park shoots a stream of water.", w: "water", land: "lands", from: "the cannon", up: "The cannon is lifted onto a higher platform", dn: "The cannon is moved down onto a lower platform" },
-    { pic: "boat", s: "A fireboat sprays water across a river.", w: "water", land: "hits the river", from: "the fireboat", up: "The crew raises the water gun on its tower", dn: "The crew lowers the water gun on its tower" }
-  ];
-  function c2M214(tier) {
-    for (var t = 0; t < 2000; t++) {
-      var q = c2Pick(tier === 0 ? [10, 20] : tier === 1 ? [20, 25] : [20, 25, 50]), R = c2Pick([20, 25, 30, 40, 50, 60]), r1 = c2Pick([-5, -10, -15, -20, -25]);
-      var D = tier === 2 && rnd(2) ? -c2Pick([5, 10]) : c2Pick([5, 10]), N = R + D;
-      var hN = -(N - r1) * (N - R) / q; if (!Number.isInteger(hN) || !hN) continue;
-      var a = -1 / q, b = (R + r1) / q, c = -r1 * R / q;
-      if (!Number.isInteger(c * 100) || !Number.isInteger(c2R(b * 100, 6)) || c < 4 || c > 45 || b <= 0) continue;
-      var peak = c + b * b * q / 4; if (peak > 70) continue;
-      var k = -hN, sc = c2Pick(C2S214), H = function (x) { return a * x * x + b * x + c; }, G = function (x) { return H(x) + k; };
-      var hS = c2Sf(a, b, c, "<i>h</i>(" + c2X + ")"), gS = c2Sf(a, b, c + k, "<i>g</i>(" + c2X + ")"), far = D > 0, dir = k > 0 ? "up" : "down";
-      var pb = { kind: 20, sc: sc };
-      pb.gr = { a: a, b: b, c: c, R: R, N: N, D: D, k: k, hN: hN, peak: peak, xmax: Math.max(R, N) + 5 };
-      pb.head = hS[0].replace(/<[^>]+>/g, "");
-      pb.pic = c2Pic(sc.pic);
-      pb.story = sc.s + " The height (in feet) of the " + sc.w + " is modeled by <span class=\"lm cf\">" + hS[0] + "</span>, where " + c2X + " is the horizontal distance (in feet) from " + sc.from + ". " + (far ? sc.up : sc.dn) + " so that the " + sc.w + " " + sc.land + " " + Math.abs(D) + " feet " + (far ? "farther from" : "closer to") + " " + sc.from + ". Write a function <i>g</i> that models the new path.";
-      var xa = c2Axis(0, Math.max(R, N) + 5), ya = c2Axis(Math.min(0, hN, k < 0 ? 0 : 0), Math.max(peak, peak + k) + 2);
-      pb.fig = (function (xa, ya) { return function (x) {
-        x = x || {}; var o = { xmin: 0, xmax: xa.max, ymin: ya.min, ymax: ya.max, gx: xa.g, gy: ya.g, tx: xa.t, ty: ya.t, xl: "Horizontal distance (feet)", yl: "Height (feet)", alt: sc.s };
-        o.curves = [{ fn: H, col: C2B, lo: 0, hi: x.gv ? Math.max(R, N) + 5 : R + (far ? Math.abs(D) + 4 : 0) }];
-        o.pts = [{ x: R, y: 0, col: C2B, lab: true, dy: 16, an: "start" }];
-        if (x.hv) { o.pts.push({ x: N, y: hN, col: C2G, lab: true, dy: hN < 0 ? 16 : -8, an: "start" }); o.segs = [{ x1: N, y1: hN, x2: N, y2: 0, col: C2G, dash: "5 4" }]; }
-        if (x.gv) { o.curves.push({ fn: G, col: C2P, lo: 0, hi: N }); o.pts.push({ x: N, y: 0, col: C2P, lab: true, dy: -8, an: far ? "start" : "end" }); }
-        return c2Fig(o);
-      }; })(xa, ya);
-      var wrongs = [c2Sf(a, b, c - k, "<i>g</i>(" + c2X + ")")[0], c2Sf(a, b + k, c, "<i>g</i>(" + c2X + ")")[0], c2Sf(a, b, c + D, "<i>g</i>(" + c2X + ")")[0]];
-      pb.steps = [
-        { id: "hN", lab: "<i>h</i>(" + N + ")", ask: c2S("Because <i>h</i>(" + R + ") = 0, the " + sc.w + " now " + sc.land + " " + R + " feet from " + sc.from + ". The new path must be at height 0 when " + c2X + " = " + N + ". Find the height of the old path there: <i>h</i>(" + N + ").", "Find <i>h</i>(" + N + "), the height of the old path at " + c2X + " = " + N + "."),
-          pre: "<i>h</i>(" + N + ") =", ans: hN, after: function (x) { x.hv = true; }, hint: ["Replace every " + c2X + " in <i>h</i>(" + c2X + ") with " + N + ".", c2F(a) + "(" + N + ")² + " + c2F(b) + "(" + N + ") + " + c2F(c) + " = " + c2F(hN) + "."], line: "<i>h</i>(" + N + ") = " + c2F(hN) },
-        { id: "k", fine: 1, lab: "shift", ask: "To bring the point (" + N + ", " + c2F(hN) + ") to height 0, how far " + dir + " must the whole path move?", pre: dir, post: "feet", ans: Math.abs(k), wrong: function (v) { return v === -Math.abs(k) ? "Type how far, as a positive number. The direction is already " + dir + "." : ""; }, hint: ["The new path must be at 0 where the old one is at " + c2F(hN) + ".", "From " + c2F(hN) + " to 0 is " + Math.abs(k) + " feet " + dir + "."], line: "a translation " + Math.abs(k) + " feet " + dir },
-        { id: "g", lab: "<i>g</i>(" + c2X + ")", type: "fn", ask: c2S("Moving " + dir + " " + Math.abs(k) + " " + (k > 0 ? "adds" : "subtracts") + " " + Math.abs(k) + " to the output: <i>g</i>(" + c2X + ") = <i>h</i>(" + c2X + ") " + (k > 0 ? "+ " : "− ") + Math.abs(k) + ". Write <i>g</i>(" + c2X + ") and simplify.", "Write <i>g</i>(" + c2X + ")."),
-          fn: G, xs: [0, 5, 10, 20, 30, 40, 2.5], rtol: 1e-6, eg: "g(x) = −0.05x^2 + 1.5x + 20", typed: gS[1], fo: c2Fo(gS[0], wrongs), after: function (x) { x.gv = true; },
-          wrongFn: function (f) { return c2Same(f, H, [0, 10, 20]) ? "That is still h(x). Add " + k + " to the output." : c2Same(f, function (x) { return H(x) - k; }, [0, 10, 20]) ? "Check the direction: the path moves " + dir + "." : ""; },
-          hint: ["Add " + c2F(k) + " to the constant term of <i>h</i>(" + c2X + ").", gS[0] + "."], line: gS[0] },
-        { id: "chk", fine: 1, lab: "check", ask: "Check: find <i>g</i>(" + N + "). The new path should be on the ground there.", pre: "<i>g</i>(" + N + ") =", ans: 0, hint: ["Put " + N + " into <i>g</i>(" + c2X + ").", "<i>h</i>(" + N + ") " + (k > 0 ? "+ " : "− ") + Math.abs(k) + " = " + c2F(hN) + (k > 0 ? " + " : " − ") + Math.abs(k) + " = 0."], line: "<i>g</i>(" + N + ") = 0 ✓" }
-      ];
-      pb.ex = "Because <i>h</i>(" + R + ") = 0, the " + sc.w + " " + sc.land + " " + R + " feet away. To land at " + N + " feet, the path must be at height 0 there, but <i>h</i>(" + N + ") = " + c2F(hN) + ". So the path moves " + dir + " " + Math.abs(k) + " feet: " + gS[0] + ", and <i>g</i>(" + N + ") = 0.";
-      return pb;
-    }
-  }
+  // Real Life: moved to the question bank, bank/2.1B-real-life.js
 
   // ---- 2.2 Characteristics of Quadratic Functions
   // the plane for graphing: x and y from -10 to 10 (labels every 5), or taller when the vertex is far down or up
@@ -13575,224 +13469,11 @@ var ESPIC = {
   // the last step of a graph in Solo: four more points on the parabola, two on each side of the axis of symmetry
   function c2Any(F, h, k, n) { return { id: "pa", so: 1, lab: "Points", type: "gpt", ask: "Plot " + (n || 4) + " more points on the parabola, " + (n || 4) / 2 + " on each side of the axis of symmetry.", any: F, n: n || 4, side: h, not: [[h, k]], after: function (x) { x.cv = true; }, hint: ["Choose an " + c2X + " and find f(" + c2X + "). Use the axis of symmetry to get a matching point on the other side.", "Try " + c2X + " = " + (h + 1) + " and " + c2X + " = " + (h - 1) + "."], line: "Points plotted on both sides of the axis" }; }
 
-  // Example 1: Using Symmetry to Graph (vertex form)
-  function c2M221(tier) {
-    for (var t = 0; t < 2000; t++) {
-      var a = c2Pick(tier === 0 ? [1, -1] : tier === 1 ? [2, -2, 1, -1] : [2, -2, 0.5, -0.5]), h = c2Rng(-5, 5), k = c2Rng(-6, 6), s = rnd(2) ? 1 : -1, d = Math.abs(a) === 0.5 ? [2, 4] : [1, 2];
-      if (tier === 0 && rnd(3) === 0) h = 0;
-      if (a === 1 && !h && !k) continue;   // (never the parent x² itself: at least one transformation)
-      if (c2Cu()) { a = c2Custom.a; h = c2Custom.h; k = c2Custom.k; d = Math.abs(a) === 0.5 ? [2, 4] : [1, 2]; }   // (Create: the student's own function)
-      var F = function (x) { return a * (x - h) * (x - h) + k; }, x1 = h + s * d[0], x2 = h + s * d[1], y1 = F(x1), y2 = F(x2);
-      if ([x1, x2, 2 * h - x1, 2 * h - x2].some(function (v) { return Math.abs(v) > 9; }) || [y1, y2].some(function (v) { return Math.abs(v) > 9; })) continue;
-      var fS = c2Vf(a, h, k, "x", "<i>f</i>(" + c2X + ")"), pb = { kind: 20, vf: { std: 1, vx: 1, a: a, b: -2 * a * h, c: a * h * h + k, h: h, k: k } };   // (vx: Vertex Form, with a graphing table)
-      pb.head = fS[0];   /* (c2Make turns it into plain text, fractions as a/b) */ pb.pic = "";
-      pb.story = "Graph <span class=\"lm cf\">" + fS[0] + "</span>. Label the vertex and the axis of symmetry.";
-      pb.fig = function (x) { x = x || {}; var o = c2Plane(-9, 9), ex = { alt: "Coordinate plane" }; ex.vl = x.ax ? [{ x: h, col: C2G, lab: c2X + " = " + c2F(h) }] : []; ex.curves = x.cv ? [{ fn: F, col: C2P }] : []; return c2Pl(o, x, ex); };
-      pb.steps = [
-        { id: "h", fine: 1, lab: "h", ask: "Compare with <i>f</i>(" + c2X + ") = <i>a</i>(" + c2X + " − <i>h</i>)² + <i>k</i>. What is <i>h</i>?", pre: "<i>h</i> =", ans: h, wrong: function (v) { return v === -h && h ? "Careful with the sign: " + c2X + c2Sg(-h) + " is " + c2X + " − (" + c2F(h) + "), so <i>h</i> = " + c2F(h) + "." : ""; }, hint: ["<i>h</i> is the number subtracted from " + c2X + " inside the parentheses.", h ? c2X + c2Sg(-h) + " = " + c2X + " − (" + c2F(h) + "), so <i>h</i> = " + c2F(h) + "." : "There is nothing subtracted from " + c2X + ", so <i>h</i> = 0."], line: "<i>h</i> = " + c2F(h) },
-        { id: "k", fine: 1, lab: "k", ask: "What is <i>k</i>?", pre: "<i>k</i> =", ans: k, hint: ["<i>k</i> is the number added at the end.", "<i>k</i> = " + c2F(k) + "."], line: "<i>k</i> = " + c2F(k) },
-        { id: "v", lab: "Vertex", type: "gpt", ask: c2S("Plot the vertex (<i>h</i>, <i>k</i>) = " + c2Pt(h, k) + ".", "Plot the vertex."), pts: [[h, k]], miss: function (px, py) { return px === k && py === h ? "Swap them: the vertex is (h, k), so " + c2X + " = " + c2F(h) + " comes first." : px === -h && py === k ? "Check the sign of h." : "The vertex is (h, k). Try again."; }, hint: ["The vertex of <i>a</i>(" + c2X + " − <i>h</i>)² + <i>k</i> is (<i>h</i>, <i>k</i>).", "Click " + c2Pt(h, k) + "."], line: "vertex " + c2Pt(h, k) },
-        { id: "ax", lab: "Axis", ask: "The axis of symmetry is the vertical line through the vertex. Write its equation.", pre: c2X + " =", ans: h, after: function (x) { x.ax = true; }, hint: ["A vertical line through (" + c2F(h) + ", " + c2F(k) + ") has the equation " + c2X + " = a number.", c2X + " = " + c2F(h) + "."], line: "axis of symmetry " + c2X + " = " + c2F(h) },
-        { id: "y1", fine: 1, lab: "f(" + x1 + ")", ask: "Find one more point: evaluate <i>f</i>(" + c2F(x1) + ").", pre: "<i>f</i>(" + c2F(x1) + ") =", ans: y1, hint: ["Replace " + c2X + " with " + c2F(x1) + ".", c2F(a) + "(" + c2F(x1) + c2Sg(-h) + ")² " + (k < 0 ? "− " : "+ ") + c2F(Math.abs(k)) + " = " + c2F(y1) + "."], line: "<i>f</i>(" + c2F(x1) + ") = " + c2F(y1) },
-        { id: "y2", fine: 1, lab: "f(" + x2 + ")", ask: "And <i>f</i>(" + c2F(x2) + ").", pre: "<i>f</i>(" + c2F(x2) + ") =", ans: y2, hint: ["Replace " + c2X + " with " + c2F(x2) + ".", c2F(a) + "(" + c2F(x2) + c2Sg(-h) + ")² " + (k < 0 ? "− " : "+ ") + c2F(Math.abs(k)) + " = " + c2F(y2) + "."], line: "<i>f</i>(" + c2F(x2) + ") = " + c2F(y2) },
-        { id: "p", fine: 1, lab: "points", type: "gpt", ask: "Plot " + c2Pt(x1, y1) + " and " + c2Pt(x2, y2) + ".", pts: [[x1, y1], [x2, y2]], hint: ["Go across to " + c2X + ", then up or down to " + c2Y + ".", "Click " + c2Pt(x1, y1) + " and " + c2Pt(x2, y2) + "."], line: "points " + c2Pt(x1, y1) + " and " + c2Pt(x2, y2) },
-        { id: "r", fine: 1, lab: "reflections", type: "gpt", ask: "Reflect both points in the axis of symmetry " + c2X + " = " + c2F(h) + ": plot their mirror images.", pts: [[2 * h - x1, y1], [2 * h - x2, y2]], after: function (x) { x.cv = true; }, hint: ["A mirror image is the same distance from the axis, on the other side, at the same height.", "Click " + c2Pt(2 * h - x1, y1) + " and " + c2Pt(2 * h - x2, y2) + "."], line: "mirror images " + c2Pt(2 * h - x1, y1) + " and " + c2Pt(2 * h - x2, y2) },
-        c2Any(F, h, k)
-      ];
-      pb.ex = "In " + fS[0] + ", <i>h</i> = " + c2F(h) + " and <i>k</i> = " + c2F(k) + ", so the vertex is " + c2Pt(h, k) + " and the axis of symmetry is " + c2X + " = " + c2F(h) + ". <i>f</i>(" + c2F(x1) + ") = " + c2F(y1) + " and <i>f</i>(" + c2F(x2) + ") = " + c2F(y2) + "; their mirror images in the axis are " + c2Pt(2 * h - x1, y1) + " and " + c2Pt(2 * h - x2, y2) + ". The parabola goes through all five points.";
-      return pb;
-    }
-  }
-  // Example 2: Graphing a Quadratic Function in Standard Form
-  function c2M222(tier) {
-    for (var t = 0; t < 3000; t++) {
-      var a = c2Pick(tier === 0 ? [1, -1] : tier === 1 ? [1, -1, 2, -2] : [2, -2, 3, -3]), h = c2Nz(-4, 4), k = c2Rng(-7, 7), b = -2 * a * h, c = a * h * h + k;
-      var F = function (x) { return a * x * x + b * x + c; }, s = rnd(2) ? 1 : -1, x3 = h + s; if (x3 === 0 || x3 === 2 * h) x3 = h - s; if (x3 === 0 || x3 === 2 * h) continue;
-      var y3 = F(x3);
-      if (Math.abs(c) > 9 || Math.abs(2 * h) > 9 || Math.abs(y3) > 9 || Math.abs(2 * h - x3) > 9 || Math.abs(k) > 9) continue;
-      if (!c) continue; var nvp = 0; for (var dd = 1; dd <= 9; dd++) if (Math.abs(h + dd) <= 10 && Math.abs(h - dd) <= 10 && Math.abs(F(h + dd)) <= 9.5) nvp++; if (nvp < 2) continue;   // (c is clicked in the equation, and two pairs of mirror points must be on the graph)
-      var fS = c2Sf(a, b, c, "<i>f</i>(" + c2X + ")"), pb = { kind: 20, vf: { std: 1, a: a, b: b, c: c, h: h, k: k } };
-      pb.head = fS[0];   /* (c2Make turns it into plain text, fractions as a/b) */ pb.pic = "";
-      pb.story = "Graph <span class=\"lm cf\">" + fS[0] + "</span>. Label the vertex and the axis of symmetry.";
-      pb.fig = function (x) { x = x || {}; var ex = { alt: "Coordinate plane" }; ex.vl = x.ax ? [{ x: h, col: C2G, lab: c2X + " = " + c2F(h) }] : []; ex.curves = x.cv ? [{ fn: F, col: C2P }] : []; return c2Pl(c2Plane(-9, 9), x, ex); };
-      pb.steps = [
-        { id: "xv", fine: 1, lab: "x of vertex", ask: "The coefficients are <i>a</i> = " + c2F(a) + ", <i>b</i> = " + c2F(b) + " and <i>c</i> = " + c2F(c) + ". The vertex has " + c2X + " = −<i>b</i> ÷ (2<i>a</i>). Find it.", pre: c2X + " =", ans: h, wrong: function (v) { return v === -h ? "Remember the negative sign: " + c2X + " = −b ÷ (2a)." : v === -b / a ? "Divide by 2a, not by a." : ""; }, hint: ["Put <i>a</i> and <i>b</i> into −<i>b</i> ÷ (2<i>a</i>).", "−(" + c2F(b) + ") ÷ (2 · " + c2F(a) + ") = " + c2F(h) + "."], line: c2X + " = −<i>b</i> ÷ (2<i>a</i>) = " + c2F(h) },
-        { id: "yv", fine: 1, lab: "y of vertex", ask: "Find the " + c2Y + "-coordinate of the vertex: <i>f</i>(" + c2F(h) + ").", pre: "<i>f</i>(" + c2F(h) + ") =", ans: k, hint: ["Replace " + c2X + " with " + c2F(h) + " in <i>f</i>.", c2F(a) + "(" + c2F(h) + ")² " + (b < 0 ? "− " : "+ ") + c2F(Math.abs(b)) + "(" + c2F(h) + ") " + (c < 0 ? "− " : "+ ") + c2F(Math.abs(c)) + " = " + c2F(k) + "."], line: "<i>f</i>(" + c2F(h) + ") = " + c2F(k) },
-        { id: "v", lab: "Vertex", type: "gpt", ask: c2S("Plot the vertex " + c2Pt(h, k) + ".", "Plot the vertex."), pts: [[h, k]], hint: ["The vertex is (−b ÷ (2a), f(−b ÷ (2a))).", "Click " + c2Pt(h, k) + "."], line: "vertex " + c2Pt(h, k) },
-        { id: "ax", lab: "Axis", ask: "Write the equation of the axis of symmetry.", pre: c2X + " =", ans: h, after: function (x) { x.ax = true; }, hint: ["It is the vertical line through the vertex.", c2X + " = " + c2F(h) + "."], line: "axis of symmetry " + c2X + " = " + c2F(h) },
-        { id: "c", fine: 1, lab: "y-intercept", ask: "The " + c2Y + "-intercept of <i>ax</i>² + <i>bx</i> + <i>c</i> is <i>c</i>. What is it?", pre: c2Y + "-intercept =", ans: c, hint: ["When " + c2X + " = 0, only <i>c</i> is left.", "<i>c</i> = " + c2F(c) + "."], line: c2Y + "-intercept " + c2F(c) },
-        { id: "pc", fine: 1, lab: "points", type: "gpt", ask: "Plot the " + c2Y + "-intercept (0, " + c2F(c) + ") and its mirror image in the axis of symmetry.", pts: [[0, c], [2 * h, c]], hint: ["(0, " + c2F(c) + ") is " + Math.abs(h) + " units from the axis; its mirror image is " + Math.abs(h) + " units on the other side.", "Click (0, " + c2F(c) + ") and " + c2Pt(2 * h, c) + "."], line: "points (0, " + c2F(c) + ") and " + c2Pt(2 * h, c) },
-        { id: "y3", fine: 1, lab: "f(" + x3 + ")", ask: "Find one more point: evaluate <i>f</i>(" + c2F(x3) + ").", pre: "<i>f</i>(" + c2F(x3) + ") =", ans: y3, hint: ["Replace " + c2X + " with " + c2F(x3) + ".", "<i>f</i>(" + c2F(x3) + ") = " + c2F(y3) + "."], line: "<i>f</i>(" + c2F(x3) + ") = " + c2F(y3) },
-        { id: "p3", fine: 1, lab: "points", type: "gpt", ask: "Plot " + c2Pt(x3, y3) + " and its mirror image.", pts: [[x3, y3], [2 * h - x3, y3]], after: function (x) { x.cv = true; }, hint: ["The mirror image is the same distance from the axis, on the other side.", "Click " + c2Pt(x3, y3) + " and " + c2Pt(2 * h - x3, y3) + "."], line: "points " + c2Pt(x3, y3) + " and " + c2Pt(2 * h - x3, y3) },
-        c2Any(F, h, k)
-      ];
-      pb.ex = "For " + fS[0] + ", " + c2X + " = −<i>b</i> ÷ (2<i>a</i>) = " + c2F(h) + " and <i>f</i>(" + c2F(h) + ") = " + c2F(k) + ", so the vertex is " + c2Pt(h, k) + " and the axis of symmetry is " + c2X + " = " + c2F(h) + ". The " + c2Y + "-intercept (0, " + c2F(c) + ") reflects to " + c2Pt(2 * h, c) + ", and " + c2Pt(x3, y3) + " reflects to " + c2Pt(2 * h - x3, y3) + ".";
-      return pb;
-    }
-  }
-  // Example 3: Finding a Minimum or a Maximum Value (ends with the y-value of the vertex)
-  // Demo, Sequence: Circle Back. a, b and c are clicked in the equation (they stay listed), then opens up or down, minimum or maximum, x = −b/(2a), and the
-  // y-value of the vertex on a one-row table (x and the work in the centre already filled in).  Calculate: a list of boxes, "Try Another" questioning.
-  // Write: minimum or maximum, and the value.
-  function c2M223(tier) {
-    for (var t = 0; t < 2000; t++) {
-      var a = c2Pick(tier === 0 ? [1, -1, 2, -2] : tier === 1 ? [2, -2, 3, -3, 0.5] : [3, -3, 4, -4, 0.5, -0.5]), h = c2Rng(-5, 5), k = c2Rng(-8, 8), b = -2 * a * h, c = a * h * h + k;
-      if (!Number.isInteger(b) || !Number.isInteger(c) || !h || !c) continue;
-      var F = function (x) { return a * x * x + b * x + c; }, up = a > 0, mm = up ? "minimum" : "maximum";
-      var fS = c2Sf(a, b, c, "<i>f</i>(" + c2X + ")"), pb = { kind: 20, cb: 1, ta: 1, qc: 1, noPt: 1, wb: 1, mx: { a: a, b: b, c: c, h: h, k: k } };   /* (noPt: the demo ends on the minimum or maximum value, with no point clicked on the graph) */
-      pb.head = fS[0];   /* (c2Make turns it into plain text, fractions as a/b) */ pb.pic = "";
-      // the equation, with a, b and c each a part that can be clicked (Demo, Sequence)
-      var eqC = function () {
-        var st = m3Step(), live = st && st.type === "eqc" && QZ.step < 4, co = c2Co(a)[0], cb = c2Q(Math.abs(b))[0];
-        var sp = function (k0, inner, one) { return "<span class=\"vfnE m3c" + (one ? " vfnE1" : "") + (live ? " live" : "") + "\" data-m3c=\"" + k0 + "\"" + (one ? " title=\"No number here means a = 1\"" : "") + ">" + inner + "</span>"; };
-        return "<i>f</i>(" + c2X + ") = " + sp("a", co, a === 1) + c2X + "² " + sp("b", (b < 0 ? "− " : "+ ") + (Math.abs(b) === 1 ? "" : cb)) + c2X + " " + sp("c", (c < 0 ? "− " : "+ ") + c2F(Math.abs(c)));
-      };
-      Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () {
-        var eq = mode === "demo" || mode === "sequence" ? eqC() : fS[0];
-        return "Find the minimum or maximum value of <span class=\"lm cf\">" + eq + "</span>.";
-      } });
-      pb.fig = function (x) { x = x || {}; if (!x.vv && mode !== "calculate") return ""; return c2Pl(c2Plane(k - 2, k + 2), x, { alt: "Graph of f", curves: [{ fn: F, col: C2P }], vl: [{ x: h, col: C2G, lab: c2X + " = " + c2F(h) }], pts: [{ x: h, y: k, col: C2P, lab: true, dy: up ? 18 : -8 }] }); };
-      // the one-row table for the y-value of the vertex: x and the work are filled in (Demo, Sequence, once x = −b/(2a) is found)
-      var work = (a === 1 ? "" : a === -1 ? "−" : c2F(a)) + "(" + c2F(h) + ")² " + (b < 0 ? "− " : "+ ") + c2F(Math.abs(b)) + "(" + c2F(h) + ") " + (c < 0 ? "− " : "+ ") + c2F(Math.abs(c));
-      // the work, one operation per click: the square, a times it (unless a = ±1), b times h, then adding left to right
-      var WS = (function () {
-        var L = [work], sq = h * h, t1 = a * sq, t2 = b * h, row = function (A) { return A.map(function (v, i) { return i === 0 ? c2F(v) : (v < 0 ? "− " : "+ ") + c2F(Math.abs(v)); }).join(" "); };
-        var bS = (b < 0 ? "− " : "+ ") + c2F(Math.abs(b)) + "(" + c2F(h) + ")", cS = (c < 0 ? "− " : "+ ") + c2F(Math.abs(c));
-        if (Math.abs(a) !== 1) L.push(c2F(a) + "(" + c2F(sq) + ") " + bS + " " + cS);
-        L.push(c2F(t1) + " " + bS + " " + cS); L.push(row([t1, t2, c])); L.push(row([t1 + t2, c])); L.push(c2F(k));
-        return L;
-      })();
-      pb.tbl = function (x) {
-        x = x || {}; var cs = m3Step(); if (!(mode === "demo" || mode === "sequence") || !(x.xh || x.vv || (cs && cs.id === "val"))) return "";   // (also when x = −b/(2a) was missed and comes back later: the y-value question always has its table)
-        return "<table class=\"cmpG m3Row\"><thead><tr><th class=\"lm\"><i>x</i></th><th class=\"lm\"><i>f</i>(<i>x</i>)</th><th class=\"lm\"><i>y</i></th></tr></thead><tbody><tr><td class=\"lm\">" + c2F(h) + "</td><td class=\"lm" + (cs && cs.type === "tclick" && QZ.step < 4 ? " m3tc live" : "") + "\"" + (cs && cs.type === "tclick" ? " data-m3tc=\"1\" title=\"Click to work it out, one step at a time\"" : "") + ">" + (x.vv ? work : WS[Math.min(x.ts || 0, WS.length - 1)]) + "</td><td class=\"lm\">" + (x.vv ? c2F(k) + " <span class=\"cueOk\">✓</span>" : "?") + "</td></tr></tbody></table>";
-      };
-      var sayA = a === 1 ? "No number in front of " + c2X + "² means a = 1." : "a is the number in front of " + c2X + "².";
-      pb.steps = [
-        { id: "a", fine: 1, lab: "a", type: "eqc", k: "a", ans: a, ask: "Find <i>a</i>.", hint: [sayA, "<i>a</i> = " + c2F(a) + "."], line: "<i>a</i> = " + c2F(a) },
-        { id: "b", fine: 1, lab: "b", type: "eqc", k: "b", ans: b, ask: "Find <i>b</i>.", hint: ["b is the number in front of " + c2X + ", with its sign.", "<i>b</i> = " + c2F(b) + "."], line: "<i>b</i> = " + c2F(b) },
-        { id: "c", fine: 1, lab: "c", type: "eqc", k: "c", ans: c, ask: "Find <i>c</i>.", hint: ["c is the constant term, with its sign.", "<i>c</i> = " + c2F(c) + "."], line: "<i>c</i> = " + c2F(c) },
-        { id: "op", fine: 1, lab: "Opens", type: "pick", ask: "Does the parabola open upward or downward?", opts: c2Pk(up ? "Upward" : "Downward", [[up ? "Downward" : "Upward", "Look at the sign of <i>a</i> = " + c2Q(a)[0] + ": positive opens upward, negative opens downward."]]), hint: ["The sign of <i>a</i> tells you.", "<i>a</i> = " + c2Q(a)[0] + ", so it opens " + (up ? "upward" : "downward") + "."], line: "opens " + (up ? "upward" : "downward") },
-        { id: "mm", lab: "Min or max", type: "pick", ask: "Does <i>f</i> have a minimum value or a maximum value?", opts: c2Pk(up ? "A minimum" : "A maximum", [[up ? "A maximum" : "A minimum", "It opens " + (up ? "upward, so the vertex is the lowest point." : "downward, so the vertex is the highest point.")]]), hint: ["Opening upward gives a minimum; opening downward gives a maximum.", "It opens " + (up ? "upward: a minimum." : "downward: a maximum.")], line: "a " + mm },
-        { id: "xv", fine: 1, noseq: 1, lab: "x of vertex", ask: "The " + mm + " is at the vertex, where " + c2X + " = −<i>b</i>/(2<i>a</i>). Find " + c2X + ".", pre: c2X + " =", ans: h, after: function (x) { x.xh = true; }, wrong: function (v) { return v === -h ? "Remember the negative sign: " + c2X + " = −b/(2a)." : ""; }, hint: ["<i>a</i> = " + c2Q(a)[0] + " and <i>b</i> = " + c2F(b) + ".", "−(" + c2F(b) + ")/(2 · " + c2Q(a)[0] + ") = " + c2F(h) + "."], line: c2X + " = −<i>b</i>/(2<i>a</i>) = " + c2F(h) },
-        { id: "val", lab: "Value", ask: c2S("Find the <i>y</i>-value of the vertex: work out <i>f</i>(" + c2F(h) + ") in the table. That is the " + mm + " value.", "Find the minimum or maximum value: the <i>y</i>-value of the vertex."), pre: c2Y + " =", ans: k, after: function (x) { x.vv = true; }, hint: ["Work out " + work + ".", "<i>f</i>(" + c2F(h) + ") = " + c2F(k) + "."], line: "the " + mm + " value is " + c2F(k) }
-      ];
-      // Demo, Sequence: the y-value is found by clicking the work in the table (one operation per click)
-      pb.isteps = pb.steps.map(function (st) { return st.id !== "val" ? st : { id: "val", lab: "Value", type: "tclick", n: WS.length - 1, ans: k, ask: "Find the " + mm + " value.", after: st.after, hint: st.hint, line: st.line }; });
-      // Calculate ("Try Another"): every box at once
-      var W1 = function (L) { return function (v) { return L.indexOf(String(v).trim().toLowerCase().replace(/\.$/, "")) >= 0; }; };
-      pb.tsteps = [
-        { id: "a", pre: "<i>a</i> =", ans: a, line: "<i>a</i> = " + c2F(a) },
-        { id: "b", pre: "<i>b</i> =", ans: b, line: "<i>b</i> = " + c2F(b) },
-        { id: "c", pre: "<i>c</i> =", ans: c, line: "<i>c</i> = " + c2F(c) },
-        { id: "op", pre: "Opens upward or downward?", w: 9, word: W1(up ? ["up", "upward", "upwards"] : ["down", "downward", "downwards"]), show: up ? "upward" : "downward", line: "opens " + (up ? "upward" : "downward") },
-        { id: "mm", pre: "Minimum or maximum?", w: 9, word: W1(up ? ["min", "minimum", "a minimum"] : ["max", "maximum", "a maximum"]), show: mm, line: "a " + mm },
-        { id: "xv", pre: c2X + " = −<i>b</i>/(2<i>a</i>) =", ans: h, line: c2X + " = −<i>b</i>/(2<i>a</i>) = " + c2F(h) },
-        { id: "val", pre: "<i>y</i>-value of the vertex: <i>f</i>(" + c2X + ") =", ans: k, after: function (x) { x.vv = true; }, line: "the " + mm + " value is " + c2F(k) }
-      ];
-      pb.ex = "<i>a</i> = " + c2Q(a)[0] + ", <i>b</i> = " + c2F(b) + " and <i>c</i> = " + c2F(c) + ". <i>a</i> is " + (up ? "positive, so the parabola opens upward and has a minimum" : "negative, so the parabola opens downward and has a maximum") + ". At " + c2X + " = −<i>b</i>/(2<i>a</i>) = " + c2F(h) + ", <i>f</i>(" + c2F(h) + ") = " + work + " = " + c2F(k) + ", so the " + mm + " value is " + c2F(k) + ".";
-      return pb;
-    }
-  }
-  // 2.2C Characteristics of a Parabola: the equation and its graph, vertex labelled, are given; report the axis of symmetry, domain, range, increasing and
-  // decreasing.  Demo, Sequence: Circle Back, multiple-choice buttons.  Calculate: a list of boxes, "Try Another" questioning (interval keys below them).
-  function c2M2212(tier) {
-    for (var t = 0; t < 2000; t++) {
-      var a = c2Pick(tier === 0 ? [1, -1, 2, -2] : [1, -1, 2, -2, 0.5, -0.5, 3, -3]), h = c2Rng(-6, 6), k = c2Rng(-7, 7), b = -2 * a * h, c = a * h * h + k;
-      if (!h || h === k || h === -k) continue;   // (so no wrong choice repeats the right one)
-      var std = rnd(2) && Number.isInteger(b) && Number.isInteger(c), up = a > 0, F = function (x) { return a * (x - h) * (x - h) + k; };
-      var fS = std ? c2Sf(a, b, c, "<i>f</i>(" + c2X + ")") : c2Vf(a, h, k, "x", "<i>f</i>(" + c2X + ")"), pb = { kind: 20, cb: 1, ta: 1, ivk: 1, qc: 1, wb: 1 };
-      pb.head = fS[0];   /* (c2Make turns it into plain text, fractions as a/b) */ pb.pic = "";
-      pb.story = "The graph of <span class=\"lm cf\">" + fS[0] + "</span> is shown, with its vertex labelled. Find the axis of symmetry, the domain and range, and where the function is increasing and decreasing.";
-      pb.fig = function (x) { return c2Pl(c2Plane(k - 2, k + 2), x || {}, { alt: "Graph of f with its vertex", curves: [{ fn: F, col: C2P }], pts: [{ x: h, y: k, col: C2P, lab: true, dy: up ? 18 : -8 }] }); };
-      var L = { v: -IVI }, Rr = { v: IVI }, K = { v: k, cl: true }, H = { v: h, cl: true }, I = function (p, q) { return ivStr([ivPc(p, q)]); };
-      var D = I(L, Rr), Rg = up ? I(K, Rr) : I(L, K), Inc = up ? I(H, Rr) : I(L, H), Dec = up ? I(L, H) : I(H, Rr);
-      // inequalities are the default way an answer is shown (x for increasing and decreasing, y for the range); the domain of a parabola is all real numbers
-      var Q = function (v, op, n, html) { return (html ? (v === "y" ? c2Y : c2X) : v) + " " + op + " " + c2F(n); }, ge = "≥", le = "≤";
-      var allR = "all real numbers", rgQ = function (H0) { return Q("y", up ? ge : le, k, H0); }, incQ = function (H0) { return Q("x", up ? ge : le, h, H0); }, decQ = function (H0) { return Q("x", up ? le : ge, h, H0); };
-      var ax = c2X + " = " + c2F(h);
-      pb.steps = [
-        { id: "ax", lab: "Axis", type: "pick", ask: "What is the axis of symmetry?", opts: c2Pk(ax, [[c2X + " = " + c2F(k), "The axis is the vertical line through the vertex: use its x-coordinate, " + c2F(h) + "."], [c2Y + " = " + c2F(h), "The axis is a vertical line, so its equation is x = …"], [c2X + " = " + c2F(-h), "Check the sign: the vertex is at x = " + c2F(h) + "."]]), hint: ["The axis of symmetry is the vertical line through the vertex.", "The vertex is (" + c2F(h) + ", " + c2F(k) + "), so " + ax + "."], line: "axis of symmetry " + ax },
-        { id: "dom", lab: "Domain", type: "pick", ask: "What is the domain?", opts: c2Pk(allR, [[Q("y", up ? ge : le, k, 1), "That describes the outputs (the range). Every x can go in."], [Q("x", up ? ge : le, h, 1), "The parabola goes on forever to the left and right: every x can go in."]]), hint: ["The domain is every x you can put in.", "A parabola's domain is all real numbers, (−∞, ∞)."], line: "domain: " + allR },
-        { id: "rng", lab: "Range", type: "pick", ask: "What is the range?", opts: c2Pk(rgQ(1), [[Q("y", up ? le : ge, k, 1), "It opens " + (up ? "upward, so the outputs go up from " : "downward, so the outputs go down from ") + c2F(k) + "."], [allR, "The outputs never go " + (up ? "below " : "above ") + "the vertex's y-value, " + c2F(k) + "."], [Q("y", up ? ge : le, h, 1), "Use the vertex's y-value, " + c2F(k) + ", not its x-value."]]), hint: ["The range starts at the vertex's y-value.", "It opens " + (up ? "upward from " : "downward from ") + c2F(k) + ": " + rgQ(1) + "."], line: "range: " + rgQ(1) },
-        { id: "inc", lab: "Increasing", type: "pick", ask: "Where is the function increasing?", opts: c2Pk(incQ(1), [[decQ(1), "That is where it decreases. Read the graph from left to right."], [Q("x", up ? ge : le, k, 1), "Use the vertex's x-value, " + c2F(h) + ", not its y-value."]]), hint: ["Move left to right along the graph: where does it go up?", "It goes up " + (up ? "after x = " : "until x = ") + c2F(h) + ": " + incQ(1) + "."], line: "increasing: " + incQ(1) },
-        { id: "dec", lab: "Decreasing", type: "pick", ask: "Where is the function decreasing?", opts: c2Pk(decQ(1), [[incQ(1), "That is where it increases. Read the graph from left to right."], [Q("x", up ? le : ge, k, 1), "Use the vertex's x-value, " + c2F(h) + ", not its y-value."]]), hint: ["Move left to right along the graph: where does it go down?", "It goes down " + (up ? "until x = " : "after x = ") + c2F(h) + ": " + decQ(1) + "."], line: "decreasing: " + decQ(1) }
-      ];
-      // Calculate and Write: boxes; each answer may be typed in interval notation or as an inequality (increasing/decreasing in x, the range in y; the ends at the
-      // vertex may be open or closed for increasing and decreasing); the domain is all real numbers, typed as (−∞, ∞), ℝ or in words
-      var ivOk = function (want, alt) { return function (v) { var t0 = String(v || "").trim(); if (/^(ℝ|R|all real numbers)$/i.test(t0)) t0 = "(−∞, ∞)"; var r = ivParse(t0); if (!r.pcs) return false; var got = ivStr(r.pcs); return got === want || (alt && got === alt); }; };
-      var op = function (iv) { return iv.replace("[" + ivNum(h) + ",", "(" + ivNum(h) + ",").replace(", " + ivNum(h) + "]", ", " + ivNum(h) + ")"); };
-      var inq = function (t0) {   // "x ≥ 3", "x>=3", "3 <= x", "y≤−2" → { v, op, n } with the variable on the left
-        t0 = String(t0 || "").replace(/\s+/g, "").replace(/[−–]/g, "-").replace(/>=|=>/g, "≥").replace(/<=|=</g, "≤").toLowerCase();
-        var num = "(-?\\d+(?:\\.\\d+)?(?:/\\d+)?)", m = t0.match(new RegExp("^([xy])([≥≤<>])" + num + "$")), fl = { "≥": "≤", "≤": "≥", "<": ">", ">": "<" };
-        if (!m) { var m2 = t0.match(new RegExp("^" + num + "([≥≤<>])([xy])$")); if (!m2) return null; m = [0, m2[3], fl[m2[2]], m2[1]]; }
-        var n = m[3].indexOf("/") > 0 ? +m[3].split("/")[0] / +m[3].split("/")[1] : +m[3]; return isFinite(n) ? { v: m[1], op: m[2], n: n } : null;
-      };
-      var inqOk = function (v0, ops, n) { return function (v) { var q = inq(v); return !!q && q.v === v0 && ops.indexOf(q.op) >= 0 && Math.abs(q.n - n) < 1e-9; }; };
-      var either = function (f1, f2) { return function (v) { return f1(v) || f2(v); }; };
-      pb.tsteps = [
-        { id: "ax", pre: "Axis of Symmetry:", w: 6.5, own: 1, word: function (v) { var m = String(v || "").replace(/\s+/g, "").replace(/[−–]/g, "-").toLowerCase().match(/^x=(-?\d+(?:\.\d+)?)$/); return !!m && Math.abs(+m[1] - h) < 1e-9; }, show: "x = " + c2F(h), line: "axis of symmetry " + ax },   // (the whole equation, like x = 2)
-        { id: "dom", pre: "Domain:", w: 8, iv: 1, own: 1, word: ivOk(D), show: allR + ", (−∞, ∞)", line: "domain: " + allR },
-        { id: "rng", pre: "Range:", w: 8, iv: 1, own: 1, word: either(ivOk(Rg), inqOk("y", [up ? ge : le], k)), show: rgQ() + " or " + Rg, line: "range: " + rgQ(1) },
-        { id: "inc", pre: "Increasing:", w: 8, iv: 1, own: 1, word: either(ivOk(Inc, op(Inc)), inqOk("x", up ? [ge, ">"] : [le, "<"], h)), show: incQ() + " or " + Inc, line: "increasing: " + incQ(1) },
-        { id: "dec", pre: "Decreasing:", w: 8, iv: 1, own: 1, word: either(ivOk(Dec, op(Dec)), inqOk("x", up ? [le, "<"] : [ge, ">"], h)), show: decQ() + " or " + Dec, line: "decreasing: " + decQ(1) }
-      ];
-      pb.ex = "The vertex is (" + c2F(h) + ", " + c2F(k) + "), so the axis of symmetry is " + ax + ". Every x can go in, so the domain is all real numbers. The parabola opens " + (up ? "upward" : "downward") + " from " + c2F(k) + ", so the range is " + rgQ(1) + ". Reading left to right, it " + (up ? "decreases for " + decQ(1) + " and increases for " + incQ(1) : "increases for " + incQ(1) + " and decreases for " + decQ(1)) + ".";
-      return pb;
-    }
-  }
-  // Example 4: Graphing a Quadratic Function in Intercept Form
-  function c2M224(tier) {   // 2.2C Graphing Intercept Form: f(x) = a(x − p)(x − q) on the 2.2A Standard Form engine (table rows ts apart, p and q on rows 2 and 4)
-    for (var t = 0; t < 4000; t++) {
-      // p and q are 2 or 4 apart (ts = half the distance, also the spacing of the table's rows); a varies more as the round goes on
-      var ts = c2Pick([1, 2]), a = c2Pick(tier === 0 ? [1, -1, 2, -2, 0.5, -0.5] : tier === 1 ? [1, -1, 2, -2, 0.5, -0.5, 3, -3] : [2, -2, 3, -3, 0.5, -0.5]);
-      var p = c2Rng(-8, 6 - 2 * ts), q = p + 2 * ts, h = (p + q) / 2, k = -a * ts * ts;
-      if (p - ts < -9 || q + ts > 9 || Math.abs(k) > 9 || (tier > 0 && p === 0) || q === 0 && tier === 0) continue;
-      var F0 = function (x) { return a * (x - p) * (x - q); }, gp = 0; for (var gx = -10; gx <= 10; gx++) { var gy = F0(gx); if (Number.isInteger(gy) && Math.abs(gy) <= 10) gp++; }
-      if (gp < 5) continue;   // (Write: at least 5 grid points on the parabola, inside the graph)
-      var sw = rnd(2), p1 = sw ? q : p, q1 = sw ? p : q, fS = c2If(a, p1, q1, "<i>f</i>(" + c2X + ")");
-      var pb = { kind: 20, vf: { std: 1, ip: 1, a: a, p1: p1, q1: q1, h: h, k: k, ts: ts } };
-      pb.head = fS[0];   /* (c2Make turns it into plain text, fractions as a/b) */ pb.pic = ""; pb.story = "Graph <span class=\"lm cf\">" + fS[0] + "</span>.";
-      pb.fig = function () { return ""; }; pb.steps = [{ id: "v" }];
-      pb.ex = "In " + fS[0] + ", <i>a</i> = " + c2F(a) + ", <i>p</i> = " + c2F(p1) + " and <i>q</i> = " + c2F(q1) + ", so the " + c2X + "-intercepts are " + c2F(p) + " and " + c2F(q) + ". Put them in rows 2 and 4 of the table, fill in the other " + c2X + "-values, work out each <i>f</i>(" + c2X + "), and graph the points: the parabola opens " + (a > 0 ? "up." : "down.");
-      return pb;
-    }
-  }
-  // Example 5: Comparing Functions in Different Forms (two paths: one graphed, one in intercept form)
-  var C2S225 = [
-    { pic: "golf", s: "You hit two golf shots.", it: "shot", u: "yards", Ds: [80, 90, 100, 110, 120, 140, 160], Hs: [15, 40] },
-    { pic: "soccer", s: "A soccer player kicks the ball twice.", it: "kick", u: "yards", Ds: [30, 40, 50, 60], Hs: [8, 20] },
-    { pic: "punt", s: "A football player punts the ball twice.", it: "punt", u: "yards", Ds: [40, 50, 60, 70], Hs: [12, 30] },
-    { pic: "frog", s: "A frog makes two jumps.", it: "jump", u: "inches", Ds: [20, 24, 30, 36, 40], Hs: [6, 16] },
-    { pic: "balloon", s: "A water balloon launcher fires two balloons.", it: "launch", u: "feet", Ds: [60, 80, 100, 120], Hs: [15, 45] }
-  ];
-  function c2M225(tier) {
-    for (var t = 0; t < 6000; t++) {
-      var sc = c2Pick(C2S225), D1 = c2Pick(sc.Ds), D2 = c2Pick(sc.Ds), H1 = c2Rng(sc.Hs[0], sc.Hs[1]), a = c2Pick([0.01, 0.02, 0.025, 0.04, 0.05, 0.08, 0.1, 0.125, 0.2, 0.25]);
-      var H2 = a * D2 * D2 / 4, a1 = c2R(-4 * H1 / (D1 * D1), 9); if (D1 === D2 || !Number.isInteger(H2) || H2 === H1 || H2 < sc.Hs[0] || H2 > sc.Hs[1] || D1 % 2 || D2 % 2) continue;
-      if (Math.abs(a1 * 10000 - Math.round(a1 * 10000)) > 1e-7) continue;   // (the first path's a is a short decimal)
-      if (tier < 2 && (D1 > D2) === (H1 > H2) && rnd(3)) continue;   // usually one goes farther and the other higher
-      var F1 = function (x) { return a1 * (x - D1 / 2) * (x - D1 / 2) + H1; }, F2 = function (x) { return -a * x * (x - D2); }, u = sc.u, it = sc.it;
-      var f1 = c2Vf(a1, D1 / 2, H1, "x", c2Y)[0], f2 = c2Y + " = −" + c2F(a) + c2X + "(" + c2X + " − " + D2 + ")", pb = { kind: 20, sc: sc };
-      pb.dsm = { F1: F1, F2: F2, D1: D1, D2: D2, xmax: Math.max(D1, D2) * 1.12, ymax: Math.max(H1, H2) * 1.35, l1: "y=" + c2T(a1, 6) + "\\left(x-" + D1 / 2 + "\\right)^{2}+" + H1, l2: "y=-" + c2T(a, 6) + "x\\left(x-" + D2 + "\\right)" };
-      pb.head = sc.s + " Path 1: " + f1.replace(/<[^>]+>/g, "") + "  Path 2: " + f2.replace(/<[^>]+>/g, ""); pb.pic = c2Pic(sc.pic);
-      var st0 = sc.s + " In each path, " + c2X + " is the horizontal distance and " + c2Y + " is the height (both in " + u + ").<br>Path of the first " + it + ": <span class=\"lm\" style=\"color:#C74440\">" + f1 + "</span><br>Path of the second " + it + ": <span class=\"lm\" style=\"color:#2D70B3\">" + f2 + "</span>";   // (red and blue, as Desmos draws the first and second expressions)
-      Object.defineProperty(pb, "story", { enumerable: true, configurable: true, get: function () { return st0; } });
-      pb.cb = 1; pb.qc = 1; pb.grid = { it: it, u: u };   // (Circle Back in Demo, Sequence and Calculate; one static grid in Write)
-      pb.fig = function () { return ""; };
-      var far = D1 > D2 ? "first" : "second", hi = H1 > H2 ? "first" : "second";
-      pb.steps = [
-        { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph each path.", line: "graphed both paths in Desmos" },
-        { id: "d1", lab: "Distance 1", ask: "How far does the first " + it + " travel before it lands? Click its path in Desmos to see the " + c2X + "-intercepts.", post: u, ans: D1, hint: ["It starts at (0, 0) and lands at the other " + c2X + "-intercept.", "The other " + c2X + "-intercept is (" + D1 + ", 0)."], line: "first " + it + ": " + D1 + " " + u },
-        { id: "h1", lab: "Height 1", ask: "What is the maximum height of the first " + it + "? Click its path to see the maximum.", post: u, ans: H1, hint: ["The maximum is the vertex: the top of the path.", "The vertex is (" + D1 / 2 + ", " + H1 + ")."], line: "first " + it + " height: " + H1 + " " + u },
-        { id: "d2", lab: "Distance 2", ask: "How far does the second " + it + " travel before it lands?", post: u, ans: D2, hint: ["Read the " + c2X + "-intercept where it lands.", "It lands at (" + D2 + ", 0)."], line: "second " + it + ": " + D2 + " " + u },
-        { id: "h2", lab: "Height 2", ask: "What is the maximum height of the second " + it + "?", post: u, ans: H2, hint: ["Click the second path's maximum.", "The vertex is (" + D2 / 2 + ", " + H2 + ")."], line: "second " + it + " height: " + H2 + " " + u },
-        { id: "far", lab: "Farther", type: "pick", ask: "Which " + it + " travels farther before landing?", opts: c2Pk("The " + far + " " + it, [["The " + (far === "first" ? "second" : "first") + " " + it, "Compare " + D1 + " and " + D2 + " " + u + "."]]), hint: ["Compare the two distances.", Math.max(D1, D2) + " " + u + " is farther."], line: "the " + far + " " + it + " travels farther" },
-        { id: "hi", lab: "Higher", type: "pick", ask: "Which " + it + " travels higher?", opts: c2Pk("The " + hi + " " + it, [["The " + (hi === "first" ? "second" : "first") + " " + it, "Compare " + H1 + " and " + H2 + " " + u + "."]]), hint: ["Compare the two maximum heights.", Math.max(H1, H2) + " " + u + " is higher."], line: "the " + hi + " " + it + " travels higher" }
-      ];
-      pb.ex = "In Desmos, the first path lands at (" + D1 + ", 0) and its maximum is (" + D1 / 2 + ", " + H1 + "); the second lands at (" + D2 + ", 0) and its maximum is (" + D2 / 2 + ", " + H2 + "). So the " + far + " " + it + " travels farther and the " + hi + " " + it + " travels higher.";
-      return pb;
-    }
-  }
+  // Graphing Vertex Form, Graphing Standard Form: moved to the question bank, bank/2.2A-vertex-form.js and bank/2.2A-standard-form.js
+  // Minimum and Maximum Values: moved to the question bank, bank/2.2C-min-max.js
+  // Characteristics of a Parabola: moved to the question bank, bank/2.2C-characteristics.js
+  // Graphing Intercept Form: moved to the question bank, bank/2.2C-intercept-form.js
+  // Comparing Different Forms: moved to the question bank, bank/2.2C-compare.js
   // ---- 2.4 Modeling with Quadratic Functions
   // ==== 2.4A Vertex and a Point.  The story gives the vertex of a path and one more point on it, and asks about a third point.  The equation is not known.
   // Demo, Sequence and Calculate: a sketch (no numbers on its axes, so it cannot be read for the answer) shows the two points; the formula y = a(x − h)² + k
@@ -14570,7 +14251,7 @@ var ESPIC = {
     return pb;
   }
   function c2Make0(tier) {
-    var pb = act === "3.1" ? c3Nums(({ 1: c3M1, 4: c3M4, 11: c3M11, 13: c3M13, 16: c3M16, 18: bankGen("2.4A-vertex-point"), 19: c3M19 }[lesson] || c3M13)(tier)) : act === "2.1" ? c2M214(tier) : act === "2.2" ? [c2M221, c2M222, c2M223, c2M224, c2M225, c2M226, c2M227, c2M228, c2M229, c2M2210, c2M2211, c2M2212][lesson - 1](tier)
+    var pb = act === "3.1" ? c3Nums(({ 1: c3M1, 4: c3M4, 11: c3M11, 13: c3M13, 16: c3M16, 18: bankGen("2.4A-vertex-point"), 19: c3M19 }[lesson] || c3M13)(tier)) : act === "2.1" ? bankGen("2.1B-real-life")(tier) : act === "2.2" ? [bankGen("2.2A-vertex-form"), bankGen("2.2A-standard-form"), bankGen("2.2C-min-max"), bankGen("2.2C-intercept-form"), bankGen("2.2C-compare"), bankGen("2.2B-interval-notation"), bankGen("2.2B-domain"), bankGen("2.2B-range"), bankGen("2.2B-increasing"), bankGen("2.2B-decreasing"), bankGen("2.2C-memorize"), bankGen("2.2C-characteristics")][lesson - 1](tier)
       : ([bankGen("2.4A-vertex-point"), bankGen("2.4A-point-intercepts"), null, bankGen("2.4B-quadratic-regression")][lesson - 1] || bankGen("2.4B-quadratic-regression"))(tier);   // (2.4 exercise 3, Three Points with first and second differences, was taken out)
     return pb;
   }

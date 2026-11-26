@@ -1,0 +1,40 @@
+{
+ "id": "2.2B-interval-notation",
+ "title": "Interval Notation",
+ "section": "2.2",
+ "example": 6,
+ "skills": [
+  "interval notation"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 1,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c2M226"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c2M226"
+ },
+ "engineEdits": [
+  [
+   "c2M226, ",
+   "bankGen(\"2.2B-interval-notation\"), "
+  ]
+ ],
+ "engine_kind": "word"
+}

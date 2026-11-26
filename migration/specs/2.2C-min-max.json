@@ -1,0 +1,41 @@
+{
+ "id": "2.2C-min-max",
+ "title": "Minimum and Maximum Values",
+ "section": "2.2",
+ "example": 3,
+ "skills": [
+  "minimum and maximum",
+  "vertex"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 2,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c2M223"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c2M223"
+ },
+ "engineEdits": [
+  [
+   "c2M223, ",
+   "bankGen(\"2.2C-min-max\"), "
+  ]
+ ],
+ "engine_kind": "word"
+}

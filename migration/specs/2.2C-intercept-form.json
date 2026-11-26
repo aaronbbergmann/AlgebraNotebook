@@ -1,0 +1,42 @@
+{
+ "id": "2.2C-intercept-form",
+ "title": "Graphing Intercept Form",
+ "section": "2.2",
+ "example": 4,
+ "skills": [
+  "intercept form",
+  "x-intercepts",
+  "graphing parabolas"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 2,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c2M224"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c2M224"
+ },
+ "engineEdits": [
+  [
+   "c2M224, ",
+   "bankGen(\"2.2C-intercept-form\"), "
+  ]
+ ],
+ "engine_kind": "word"
+}

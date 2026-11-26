@@ -1,0 +1,42 @@
+{
+ "id": "2.2C-compare",
+ "title": "Comparing Different Forms",
+ "section": "2.2",
+ "example": 5,
+ "skills": [
+  "vertex form",
+  "standard form",
+  "intercept form"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 2,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c2M225"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c2M225"
+ },
+ "engineEdits": [
+  [
+   "c2M225, ",
+   "bankGen(\"2.2C-compare\"), "
+  ]
+ ],
+ "engine_kind": "word"
+}

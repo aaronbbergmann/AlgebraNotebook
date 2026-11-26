@@ -1,0 +1,41 @@
+{
+ "id": "2.1B-real-life",
+ "title": "Real Life",
+ "section": "2.1",
+ "example": 4,
+ "skills": [
+  "transformations",
+  "modeling"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 3,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c2M214"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c2M214"
+ },
+ "engineEdits": [
+  [
+   "c2M214(tier)",
+   "bankGen(\"2.1B-real-life\")(tier)"
+  ]
+ ],
+ "engine_kind": "word"
+}

@@ -1,0 +1,42 @@
+{
+ "id": "2.2A-vertex-form",
+ "title": "Graphing Vertex Form",
+ "section": "2.2",
+ "example": 1,
+ "skills": [
+  "vertex form",
+  "graphing parabolas",
+  "axis of symmetry"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 3,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c2M221"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c2M221"
+ },
+ "engineEdits": [
+  [
+   "c2M221, ",
+   "bankGen(\"2.2A-vertex-form\"), "
+  ]
+ ],
+ "engine_kind": "word"
+}

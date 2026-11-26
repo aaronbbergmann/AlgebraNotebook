@@ -1,0 +1,39 @@
+{
+ "id": "2.2C-memorize",
+ "title": "Memorizing the Forms",
+ "section": "2.2",
+ "example": 11,
+ "skills": [
+  "standard form",
+  "vertex form",
+  "intercept form"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate"
+ ],
+ "engine": "word",
+ "writeRounds": 0,
+ "showWork": "steps",
+ "patterns": {},
+ "functions": [
+  "c2M2211"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c2M2211"
+ },
+ "engineEdits": [
+  [
+   "c2M2211, ",
+   "bankGen(\"2.2C-memorize\"), "
+  ]
+ ],
+ "engine_kind": "word"
+}

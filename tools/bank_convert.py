@@ -35,8 +35,11 @@ import re
 def fn_range(name):
     """A top-level engine function: its comment lines just above it, the function, through its closing "  }"."""
     i = find('  function %s(' % name)
-    j = next(k for k in range(i + 1, len(L)) if L[k] == '  }') + 1
-    while i > 0 and L[i - 1].startswith('  //'):
+    if L[i].count('{') and L[i].count('{') == L[i].count('}'):   # a one-line function
+        j = i + 1
+    else:
+        j = next(k for k in range(i + 1, len(L)) if L[k] == '  }') + 1
+    while i > 0 and L[i - 1].startswith('  //') and 'moved to the question bank' not in L[i - 1]:
         i -= 1
     return i, j
 

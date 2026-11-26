@@ -1,0 +1,42 @@
+{
+ "id": "2.2A-standard-form",
+ "title": "Graphing Standard Form",
+ "section": "2.2",
+ "example": 2,
+ "skills": [
+  "standard form",
+  "graphing parabolas",
+  "axis of symmetry"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 3,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c2M222"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c2M222"
+ },
+ "engineEdits": [
+  [
+   "c2M222, ",
+   "bankGen(\"2.2A-standard-form\"), "
+  ]
+ ],
+ "engine_kind": "word"
+}

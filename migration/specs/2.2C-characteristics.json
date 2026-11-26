@@ -1,0 +1,43 @@
+{
+ "id": "2.2C-characteristics",
+ "title": "Characteristics of a Parabola",
+ "section": "2.2",
+ "example": 12,
+ "skills": [
+  "vertex",
+  "axis of symmetry",
+  "intercepts",
+  "domain and range"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 2,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c2M2212"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c2M2212"
+ },
+ "engineEdits": [
+  [
+   "c2M2212]",
+   "bankGen(\"2.2C-characteristics\")]"
+  ]
+ ],
+ "engine_kind": "word"
+}

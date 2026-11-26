@@ -1,0 +1,41 @@
+{
+ "id": "2.2B-domain",
+ "title": "Domain",
+ "section": "2.2",
+ "example": 7,
+ "skills": [
+  "domain",
+  "interval notation"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 1,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c2M227"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c2M227"
+ },
+ "engineEdits": [
+  [
+   "c2M227, ",
+   "bankGen(\"2.2B-domain\"), "
+  ]
+ ],
+ "engine_kind": "word"
+}

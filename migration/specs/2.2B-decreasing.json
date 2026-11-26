@@ -1,0 +1,41 @@
+{
+ "id": "2.2B-decreasing",
+ "title": "Decreasing",
+ "section": "2.2",
+ "example": 10,
+ "skills": [
+  "increasing and decreasing",
+  "interval notation"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "word",
+ "writeRounds": 1,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "functions": [
+  "c2M2210"
+ ],
+ "vars": "auto",
+ "exports": {
+  "generate": "c2M2210"
+ },
+ "engineEdits": [
+  [
+   "c2M2210, ",
+   "bankGen(\"2.2B-decreasing\"), "
+  ]
+ ],
+ "engine_kind": "word"
+}
