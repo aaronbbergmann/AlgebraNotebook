@@ -1,0 +1,44 @@
+{
+ "id": "1.1B-estimate",
+ "title": "Estimating a Value from a Graph",
+ "section": "1.1",
+ "example": 3,
+ "skills": [
+  "reading graphs",
+  "estimating",
+  "scatter plots"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "solo"
+ ],
+ "engine": "graph",
+ "writeRounds": 3,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "about": "Used by 1.1B Estimate and Play Data. generate(n) returns n problems, each from a different kind (ESTT, in the engine).",
+ "functions": [
+  "estSet"
+ ],
+ "exports": {
+  "generate": "estSet"
+ },
+ "engineEdits": [
+  [
+   "estSet(o.length)",
+   "bankQ(\"1.1B-estimate\").generate(o.length)"
+  ],
+  [
+   "estSet(1)[0]",
+   "bankQ(\"1.1B-estimate\").generate(1)[0]"
+  ]
+ ]
+}

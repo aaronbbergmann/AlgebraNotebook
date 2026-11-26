@@ -1,0 +1,47 @@
+{
+ "id": "1.2-write-transformations",
+ "title": "Writing Transformations",
+ "section": "1.2",
+ "example": 1,
+ "skills": [
+  "translations",
+  "reflections",
+  "stretches",
+  "writing functions"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "write-function",
+ "writeRounds": 3,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "about": "Used by 1.2A Translations and Stretches, 1.2B Reflections, 1.2C Combining and Profit (each kind chosen by the exercise) and RevT1 Q4. generate(n) returns n different problems.",
+ "functions": [
+  "wfMake",
+  "wfSet"
+ ],
+ "exports": {
+  "generate": "wfSet"
+ },
+ "engineEdits": [
+  [
+   "wfSet(o.length)",
+   "bankQ(\"1.2-write-transformations\").generate(o.length)"
+  ],
+  [
+   "wfSet(QZ.wfp.length)",
+   "bankQ(\"1.2-write-transformations\").generate(QZ.wfp.length)"
+  ]
+ ]
+}

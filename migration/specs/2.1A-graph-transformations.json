@@ -1,0 +1,46 @@
+{
+ "id": "2.1A-graph-transformations",
+ "title": "Transformations of Quadratic Functions",
+ "section": "2.1",
+ "example": 1,
+ "skills": [
+  "vertex form",
+  "translations",
+  "reflections",
+  "stretches"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "calculate",
+  "solo"
+ ],
+ "engine": "graph",
+ "writeRounds": 3,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "about": "Used by 2.1A Translations, 2.1A Reflect & Stretch, 2.1B Write g and RevQ2's copies. generate(i) returns problem i of a round (they get harder).",
+ "functions": [
+  "gdMake21"
+ ],
+ "exports": {
+  "generate": "gdMake21"
+ },
+ "engineEdits": [
+  [
+   "return gdMake21(i);",
+   "return bankQ(\"2.1A-graph-transformations\").generate(i);"
+  ],
+  [
+   "QZ.tr[i] = gdMake21(i)",
+   "QZ.tr[i] = bankQ(\"2.1A-graph-transformations\").generate(i)"
+  ]
+ ]
+}

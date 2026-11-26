@@ -1,0 +1,44 @@
+{
+ "id": "1.1A-graph-describe",
+ "title": "Graphing and Describing Translations",
+ "section": "1.1",
+ "example": 2,
+ "skills": [
+  "parent functions",
+  "translations",
+  "graphing"
+ ],
+ "tiers": [
+  0,
+  1,
+  2
+ ],
+ "modes": [
+  "demo",
+  "sequence",
+  "solo"
+ ],
+ "engine": "graph",
+ "writeRounds": 3,
+ "showWork": "steps",
+ "patterns": {
+  "solo": "Submit"
+ },
+ "about": "Used by 1.1A Graph & Describe, Play Graph and RevT1 Q3. generate(fam) returns the shift { h, k } for the family fam.",
+ "functions": [
+  "gdMake"
+ ],
+ "exports": {
+  "generate": "gdMake"
+ },
+ "engineEdits": [
+  [
+   "o.map(gdMake)",
+   "o.map(bankGen(\"1.1A-graph-describe\"))"
+  ],
+  [
+   "QZ.tr[i] = gdMake(QZ.order[i])",
+   "QZ.tr[i] = bankQ(\"1.1A-graph-describe\").generate(QZ.order[i])"
+  ]
+ ]
+}

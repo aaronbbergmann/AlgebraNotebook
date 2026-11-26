@@ -7114,10 +7114,7 @@ var ESPIC = {
     return estFin(o, "at", Xq, F.at(Xq), 3, "they curve upward, bending more as x grows", "read the graph at x = " + Xq);
   }
   var ESTT = [function () { return estProj(false); }, function () { return estProj(true); }, estLine, estAbs, estScatter];
-  function estSet(n) {
-    var idx = [0, 1, 2, 3, 4], i, j, t; for (i = 4; i > 0; i--) { j = rnd(i + 1); t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
-    var out = []; for (i = 0; i < n; i++) out.push(ESTT[idx[i % 5]]()); return out;
-  }
+  // Estimating a Value from a Graph: moved to the question bank, bank/1.1B-estimate.js
   function estProb() { return QZ.est && QZ.est[QZ.pi]; }
   function estHTML() {
     var e = estProb(); if (!e) return "";
@@ -7325,27 +7322,7 @@ var ESPIC = {
     if (bad.length) { QZ.wrong++; drawPlay(); pqMsg("Not quite. Check " + wsList(bad) + ", then press Submit again."); return; }
     pqMsg(""); drawPlay(); pqEval();
   }   // the equation is the answer
-  function gdMake21(tier) {
-    function nz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
-    function pk(a) { return a[rnd(a.length)]; }
-    for (var t = 0; t < 200; t++) {
-    var h = 0, k = 0, a = 1;
-    if (lesson === 1) {
-      if (tier === 0) { if (rnd(2)) h = nz(4); else k = nz(4); }
-      else if (tier === 1) { h = nz(4); k = nz(4); }
-      else { h = nz(6); k = nz(6); }
-    } else if (lesson === 2) {
-      a = tier === 0 ? pk([2, 0.5, -1, 0.25]) : tier === 1 ? pk([-2, -0.5, 2, -0.25]) : pk([2, -2, 0.5, -0.5, -1]);
-      if (tier === 2) { if (rnd(2)) h = nz(4); else k = nz(4); }
-    } else {
-      a = tier === 0 ? pk([2, 0.5, 0.25]) : tier === 1 ? pk([-1, -2, -0.5]) : pk([-2, -0.5, 2, 0.5, -0.25]);
-      if (tier === 0) { if (rnd(2)) h = nz(4); else k = nz(4); } else { h = nz(4); k = nz(4); }
-    }
-    if (Math.abs(k + 4 * a) > 10) continue;   // the table's outer rows (two from the vertex) stay inside the window, so it never has to zoom out
-    return { h: h, k: k, a: a };
-    }
-    return { h: 1, k: -2, a: 2 };
-  }
+  // Transformations of Quadratic Functions: moved to the question bank, bank/2.1A-graph-transformations.js
   // in words, in the order the changes are made: the stretch, shrink or reflection first, then the translation
   function gdSay21(t) {
     var w = [], ab = Math.abs(t.a), mv = [];
@@ -9719,12 +9696,7 @@ var ESPIC = {
   var gdCustom = null;   // Graph & Describe: the function typed in Create, carried into the other modes
   function gdTyped() { return gd() && (soloish() || A() !== 1 || gd2()); }   // the description is typed (not clicked) when practising alone, or when it needs a stretch or a reflection
   function soloish() { return mode === "solo" || mode === "create"; }
-  function gdMake(fam) {
-    function nz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
-    var h = 0, k = 0;
-    if (fam < 2) k = nz(5); else { h = nz(5); k = nz(5); var r = rnd(4); if (r === 0) h = 0; else if (r === 1) k = 0; }
-    return { h: h, k: k };
-  }
+  // Graphing and Describing Translations: moved to the question bank, bank/1.1A-graph-describe.js
   function gdWords(t) { var w = [], ex = ""; if (t.a && t.a !== 1) { var ab = Math.abs(t.a); ex = (ab > 1 ? "stretched by a factor of " + nf(ab) : ab < 1 ? "shrunk by a factor of " + nf(ab) : "") + (t.a < 0 ? (ab !== 1 ? " and " : "") + "reflected over the x-axis" : ""); }
     var r0 = gdWords0(t); return r0 && ex ? r0 + ", " + ex : r0 || ex; }
   function gdWords0(t) { var w = []; if (t.h) w.push((t.h > 0 ? "right " : "left ") + Math.abs(t.h)); if (t.k) w.push((t.k > 0 ? "up " : "down ") + Math.abs(t.k)); return w.join(" and "); }
@@ -9769,8 +9741,8 @@ var ESPIC = {
     var cu = gd() && mode !== "create" && gdCustom;
     if (gd() && mode === "create") { o = [0]; gdCustom = null; }   // Create: the student types the function, so there is one problem and no family yet
     else if (cu) o = [cu.fam];   // the student's own function runs in whichever mode they pick
-    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : gd2() ? o.map(function (f, i) { return gdMake21(i); }) : o.map(gdMake), est: est() ? estSet(o.length) : null, cr: false, custom: !!cu }; updProg();
-    if (wf()) { QZ.custom = !!cuw; QZ.tr = []; QZ.wfp = cuw ? [wfCustom] : mode === "create" ? [null] : wfSet(o.length); QZ.cs = "f"; QZ.wd = {}; QZ.wl = []; if (mode === "create") wfCustom = null; }
+    QZ = { order: o, pi: 0, step: 0, pts: [], shape: null, tool: null, clk: [], hn: 0, wrong: 0, locked: false, tbl: null, tr: cu ? [{ h: cu.h, k: cu.k, a: cu.a }] : est() ? [] : gd2() ? o.map(function (f, i) { return bankQ("2.1A-graph-transformations").generate(i); }) : o.map(bankGen("1.1A-graph-describe")), est: est() ? bankQ("1.1B-estimate").generate(o.length) : null, cr: false, custom: !!cu }; updProg();
+    if (wf()) { QZ.custom = !!cuw; QZ.tr = []; QZ.wfp = cuw ? [wfCustom] : mode === "create" ? [null] : bankQ("1.2-write-transformations").generate(o.length); QZ.cs = "f"; QZ.wd = {}; QZ.wl = []; if (mode === "create") wfCustom = null; }
     if (m3() && csL()) { o = [0]; QZ.order = o; }   // (2.2C Memorize: one sort)
     if (m3() && ((act === "2.4" && +lesson === 4) || act === "3.1") && o.length > 1) { o = [0]; QZ.order = o; if (QZ.m3p && QZ.m3p.length > 1) QZ.m3p = QZ.m3p.slice(0, 1); }   // 2.4B Regression: one problem per round (Write: two rounds, so two problems)
     if (m3() && act === "2.2" && [1, 2, 3, 4, 5, 12].indexOf(+lesson) >= 0 && o.length > 1) { o = [0]; QZ.order = o; if (QZ.m3p && QZ.m3p.length > 1) QZ.m3p = QZ.m3p.slice(0, 1); }   // 2.2A and 2.2C: one problem per round (Write still needs three rounds for full Progress)
@@ -11457,31 +11429,7 @@ var ESPIC = {
       return P;
     }
   }
-  // tier 0: the plain line f(x) = x + b moved one way only; tier 1: a line with a slope or an absolute value, still one way only;
-  // tier 2: moved sideways and up or down (like the last problems of the textbook's practice, which grow harder)
-  function wfMake(tier) {
-    if (wfL() === 2) return wfMakeR(tier);
-    if (wfL() === 3) return wfMakeS(tier);
-    if (wfL() === 4) return wfMakeC(tier);
-    if (wfL() === 5) return wfMakeP(tier);
-    for (var t = 0; t < 400; t++) {
-      var ab = tier === 0 ? false : rnd(2) === 1, p;
-      if (tier === 0) p = { fam: 1, fa: 1, fh: 0, fk: rnd(9) - 4 };
-      else p = ab ? { fam: 2, fa: [1, 1, 2, -1, 3, -2][rnd(6)], fh: rnd(5) - 2, fk: rnd(7) - 3 } : { fam: 1, fa: [2, 3, -1, -2, -3][rnd(5)], fh: 0, fk: rnd(9) - 4 };
-      var side = rnd(2) === 1;   // one way only: sideways or up/down
-      p.dh = tier === 2 ? wfNz(5) : side ? wfNz(tier === 0 ? 4 : 5) : 0; p.dk = tier === 2 ? wfNz(5) : side ? 0 : wfNz(tier === 0 ? 4 : 5); wfG(p);
-      if (p.fam === 1 && p.g.k === p.fk) continue;
-      if (Math.abs(p.g.k) > 8 || Math.abs(p.g.h) > 7) continue;
-      return p;
-    }
-  }
-  // a round gets harder as it goes: the first problem is the simplest, the last the hardest
-  function wfSet(n) {
-    if (n === 1) return [wfMake(0)];   // the Demo always starts with the simplest kind: a plain line, moved one way (or reflected in the x-axis, or stretched)
-    var out = [], key = function (p) { return JSON.stringify([p.fam, p.fa, p.fh, p.fk, p.dh, p.dk, p.rf, p.scn, p.scd, p.comb && p.comb.map(function (c) { return [c.dh, c.dk, c.rf, c.scn, c.scd]; })]); };
-    while (out.length < n) { var p = wfMake(Math.min(out.length, 2)); if (!out.some(function (o) { return key(o) === key(p) || (p.ctx && o.ctx && o.ctx.sc === p.ctx.sc); })) out.push(p); }
-    return out;
-  }
+  // Writing Transformations: moved to the question bank, bank/1.2-write-transformations.js
   var wfX = "<i>x</i>";
   function wfSg(v) { return " " + (v < 0 ? "−" : "+") + " " + nf(Math.abs(v)); }
   function wfCo(a) { if (wfQd() && !Number.isInteger(a)) { for (var d = 2; d <= 4; d++) if (Number.isInteger(Math.round(a * d * 1e9) / 1e9)) return (a < 0 ? "−" : "") + wfFr(Math.abs(Math.round(a * d)), d); } return a === 1 ? "" : a === -1 ? "−" : nf(a); }
@@ -13636,10 +13584,10 @@ var ESPIC = {
     up = null; var i = QZ.pi, t = Math.min(i, 2);
     try {
       if (m3() && QZ.m3p) { var h0 = QZ.m3p[i].head, q = null; for (var g = 0; g < 25; g++) { q = m3Make(t); if (q.head !== h0) break; } QZ.m3p[i] = q; }
-      else if (est() && QZ.est) QZ.est[i] = estSet(1)[0];
-      else if (wf() && QZ.wfp) { var w0 = JSON.stringify(QZ.wfp[i]); for (var g2 = 0; g2 < 25; g2++) { var W = wfSet(QZ.wfp.length)[i]; if (JSON.stringify(W) !== w0) { QZ.wfp[i] = W; break; } } }
-      else if (gd2() && QZ.tr) QZ.tr[i] = gdMake21(i);
-      else if (gd() && QZ.tr) QZ.tr[i] = gdMake(QZ.order[i]);
+      else if (est() && QZ.est) QZ.est[i] = bankQ("1.1B-estimate").generate(1)[0];
+      else if (wf() && QZ.wfp) { var w0 = JSON.stringify(QZ.wfp[i]); for (var g2 = 0; g2 < 25; g2++) { var W = bankQ("1.2-write-transformations").generate(QZ.wfp.length)[i]; if (JSON.stringify(W) !== w0) { QZ.wfp[i] = W; break; } } }
+      else if (gd2() && QZ.tr) QZ.tr[i] = bankQ("2.1A-graph-transformations").generate(i);
+      else if (gd() && QZ.tr) QZ.tr[i] = bankQ("1.1A-graph-describe").generate(QZ.order[i]);
     } catch (e) { }
     QZ.wrong = 0; QZ.step = 0; QZ.vf = null; QZ.iv = null; QZ.gr = null; QZ.gn = null; QZ.cs = null; if (QZ.fh) QZ.fh[i] = false;
     pqSetup(); logEl.innerHTML = ""; drawPlay(); pqPanel(); if (dsmOn()) { DSM.key = ""; dsmSync(); } if (e11On()) { DSM.key = ""; e11Sync(); }
