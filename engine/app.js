@@ -3764,24 +3764,16 @@
     if (!g) { var keep = SOL.lvl; SOL.lvl = LADDER.indexOf(st); var em = EXP; EXP = null; solverEqBuild(st); SOL.lvl = keep; if (!EXP || !EXP.L || !EXP.L.length) { EXP = em; return c3Make(); } EXP.svk = lesson; return true; }
     EXP.L = g.L; EXP.R = g.R; EXP.orig = { L: cl(g.L), R: cl(g.R), rel: "=" }; return true;
   }
-  function svMake() {
-    var X = function (a) { return { k: "x", v: "x", n: mk(a) }; }, C = function (c) { return { k: "c", n: mk(c) }; }, cl = function (o) { return JSON.parse(JSON.stringify(o)); }; SV = "x"; distHide(); fmHide(); grHide();
-    var lesson0 = lesson; if (act === "3.1") { if (c3Make()) return; act = "2.4"; lesson = C3SV[lesson0].rad ? 7 : C3SV[lesson0].bin ? 6 : rnd(3) ? 6 : 8; try { svMake(); } finally { act = "3.1"; lesson = lesson0; } if (EXP) EXP.svk = lesson; return; }   // (Chapter 3; 3.1B's square roots and 3.1D's box made as 2.4's)
-    if (lesson === 5) {   // 3-step linear equations: 5(x + 2) − 13 = 7, or (x − 2)/3 + 2 = 10
-      var g = rnd(2) ? eqOv() : (function () { var a = 2 + rnd(5), b = nz(9), c = nz(15), x = nz(9), d = a * (x + b) + c; if (!d || x + b === 0) return null; return { L: [{ k: "g", m: mk(a), items: [X(1), C(b)] }, C(c)], R: [C(d)] }; })();
-      if (!g) { svMake(); return; }
+  function svMake() { var sd = newSeed(); withSeed(sd, svMake0); if (EXP) EXP.seed = sd; }   // (every problem has a seed: Question Bank, Seeds)
+  function svMake0() {
+    var cl = function (o) { return JSON.parse(JSON.stringify(o)); }; SV = "x"; distHide(); fmHide(); grHide();
+    var lesson0 = lesson; if (act === "3.1") { if (c3Make()) return; act = "2.4"; lesson = C3SV[lesson0].rad ? 7 : C3SV[lesson0].bin ? 6 : rnd(3) ? 6 : 8; try { svMake0(); } finally { act = "3.1"; lesson = lesson0; } if (EXP) EXP.svk = lesson; return; }   // (Chapter 3; 3.1B's square roots and 3.1D's box made as 2.4's)
+    if (lesson === 5) {   // 3-step linear equations: the bank question 2.4A-3step-equations
+      var g = bankQ("2.4A-3step-equations").generate();
       EXP = { eq: true, ask: null, vk: "x", L: g.L, R: g.R, rel: "=", cmp: null, c3: null, qf: null, qu: null, grUser: false, quq: false, lit: false, quad: false, av: false, sq: false, dvq: false, zpq: false, grq: false, qd: false, sf: false, zp: null, src: "", svk: 5 };
       EXP.orig = { L: cl(g.L), R: cl(g.R), rel: "=" }; return;
     }
-    var its;
-    if (lesson === 8) {   // distributing with the box (1 x 2): 3(x − 2) = 3x − 6
-      var m8 = (rnd(5) ? 1 : -1) * (2 + rnd(8)), k8 = rnd(4) ? 1 : 2 + rnd(3), c8 = nz(9); its = [{ k: "g", m: mk(m8), items: [X(k8), C(c8)] }];
-    } else if (lesson === 6) {   // two binomials multiplied with the box: (x − 2)(x + 5) = x² + 3x − 10
-      var a1 = rnd(10) < 7 ? 1 : 2 + rnd(2), p = nz(9), q = nz(9); if (gcd(a1, Math.abs(p)) > 1) { svMake(); return; } its = [{ k: "g", m: mk(1), items: [X(a1), C(p)], b: [X(1), C(q)] }];
-    } else {   // a square root with a perfect square factor: √200 = 10√2
-      var M = [2, 3, 5, 6, 7, 10, 11], sq, m1, n; do { sq = 2 + rnd(9); m1 = M[rnd(M.length)]; n = sq * sq * m1; } while (n > 300);
-      its = [{ k: "r", n: mk(rnd(5) ? 1 : 2 + rnd(2)), r: mk(n) }];
-    }
+    var its = bankQ(lesson === 8 ? "2.4B-distributing" : lesson === 6 ? "2.4A-box-method" : "2.4A-square-roots").generate();   // (the bank questions; any other lesson: square roots, as before)
     EXP = { src: "", orig: cl(its), items: its, ask: null, fac: false, lit: false, grp: false, rad: lesson === 7, svk: lesson };
   }
   function solverGo(dl, m) {
