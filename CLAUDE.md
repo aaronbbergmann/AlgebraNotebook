@@ -32,7 +32,7 @@ Make every change in these files, then run `python3 tools/build_pages.py`. It wr
 
 Folders that are not activity pages (`1-1`, `1-2`, `2-1`, `2-4`, `1-1play`, `playsolver`, `teacher`) are not built from the engine.
 
-- `bank/`: the question bank. Each converted question is one file, `bank/<id>.js`, that registers its definition in `AN_BANK` (id, version, title, section, Example, skills, tiers, modes, engine, Write rounds, Show work, patterns) and a `build()` returning its generator and scenarios. The engine finds it with `bankQ(id)` / `bankGen(id)`; the build script loads every file in `bank/`. A question used in two activities (2.4A and 3.1C Vertex & Point) is one file. Raise `version` on every content change.
+- `bank/`: the question bank. Each converted question is one file, `bank/<id>.js`, that registers its definition in `AN_BANK` (id, version, title, section, Example, skills, tiers, modes, engine, Write rounds, Show work, patterns) and a `build()` returning its generator and scenarios. The engine finds it with `bankQ(id)` / `bankGen(id)`; the build script loads every file in `bank/`. A question used in two activities (2.4A and 3.1C Vertex & Point) is one file. Raise `version` on every content change. A Chapter 3 equation exercise drawn from Play Solve's levels keeps its levels in its bank file's `solve` (the generators stay shared engine code, since Play Solve uses them too).
 - Seeds: every problem made by the 2.x / 3.1 word-problem engine has `pb.seed`; `withSeed(seed, fn)` makes the same problem again. All randomness goes through `rnd()` (never `Math.random()` in a generator).
 - Converting a question: record problems from fixed seeds first (old code), move it, and check the same seeds give identical problems; only the intended changes may differ.
 
@@ -74,4 +74,4 @@ An exercise that lives in more than one place is listed here. A change to one co
 | Vertex and a Point | 2.4A Vertex & Point (2.4, lesson 1) | 3.1C Vertex & Point (3.1, lesson 18, the same generator c2M241). Different section numbers: listed in COPYG in the page |
 | Square Roots: Simplify | 3.1B (3.1, lesson 17) | 3.1C |
 | Square Roots (solve, x² = 36, (x + 6)² = 63) | 3.1B (3.1, lesson 3) | Play Solve (sq, sqg levels); 3.1B Square Roots: Simplify (lesson 17) and 3.3A Complete the Square use the same solver steps (± and √, dragging terms, the exponent) |
-| Chapter 3 equation exercises (3.1B, 3.1D–G, 3.3A, 3.4A) | Play Solve levels (sq, sqg, zp, grp, fm, cs, qu; expression levels 5, 13) | C3SV in the page maps each 3.1 lesson to its levels |
+| Chapter 3 equation exercises (3.1B, 3.1D–G, 3.3A, 3.4A) | Play Solve levels (sq, sqg, zp, grp, fm, cs, qu; expression levels 5, 13) | Each exercise's bank file (`solve`) names its levels; C3SV in engine/app.js maps each 3.1 lesson to them |

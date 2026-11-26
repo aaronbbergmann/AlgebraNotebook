@@ -3722,17 +3722,17 @@
   // Chapter 3 exercises on the Play Solve engine: each draws its problems from Play Solve's own levels (ladder rungs for equations, EXLAD levels for expressions)
   var C3SV = {
     2: { rad: 1 },                                                                            // 3.1B simplify a square root: √200 = 10√2
-    3: { eq: [function (r) { return r.sq === 1; }, function (r) { return r.sq === 2; }, function (r) { return r.sq === 3; }, function (r) { return r.sqg === 1; }] },   // 3.1B x² = 32, 5x² = 80, z² − 7 = 29, (n − 4)² = 5
+    3: AN_BANK["3.1B-square-roots"].solve,   // 3.1B Solving with Square Roots: bank/3.1B-square-roots.js
     5: { box: 1 },                                                                            // 3.1D multiply with the box: 4x(x + 2), (x + 1)(x − 5)
-    6: { ex: [5, 13] },                                                                       // 3.1D factor: the GCF, then x² + 7x + 6 with the box
-    7: { eq: [function (r) { return r.zp === 1; }, function (r) { return r.zp === 2; }, function (r) { return r.zp === 5; }, function (r) { return r.grp === 3; }] },   // 3.1E split (Zero Product Property); set equal to zero, factor, split
-    8: { eq: [function (r) { return r.fm === 1; }, function (r) { return r.fm === 2; }] },  // 3.1F a² − b² and a² ± 2ab + b²
-    9: { eq: [function (r) { return r.grp === 4; }] },                                       // 3.1G factor ax² + bx + c ("ac")
-    10: { eq: [function (r) { return r.cs === 1; }, function (r) { return r.cs === 2; }, function (r) { return r.cs === 3; }] },   // 3.3A complete the square
-    12: { eq: [function (r) { return r.qu === 1; }, function (r) { return r.qu === 2; }, function (r) { return r.qu === 3; }] },
-    14: { lin4: 1 },                                                                          // 3.1A 4-step linear equations: 3(x − 2) + 4 = x + 10
+    6: AN_BANK["3.1D-factoring"].solve,   // 3.1D Factoring: bank/3.1D-factoring.js
+    7: AN_BANK["3.1E-solve-factoring"].solve,   // 3.1E Solve by Factoring: bank/3.1E-solve-factoring.js
+    8: AN_BANK["3.1F-special-products"].solve,   // 3.1F Special Products: bank/3.1F-special-products.js
+    9: AN_BANK["3.1G-factor-ac"].solve,   // 3.1G Factor ax^2 + bx + c: bank/3.1G-factor-ac.js
+    10: AN_BANK["3.3A-complete-square"].solve,   // 3.3A Complete the Square: bank/3.3A-complete-square.js
+    12: AN_BANK["3.4A-quadratic-formula"].solve,   // 3.4A Quadratic Formula: bank/3.4A-quadratic-formula.js
+    14: AN_BANK["3.1A-4step-equations"].solve,   // 3.1A 4-Step Equations: bank/3.1A-4step-equations.js
     15: { bin: 1 },
-    17: { sqh: 1 }                                                                            // 3.1B solving with square roots, the answer simplified: x² = 32 → x = ±4√2                                                                            // 3.1A two binomials with the 2 x 2 box, to the simplified expression    // 3.4A the quadratic formula
+    17: AN_BANK["3.1B-square-roots-simplify"].solve   // 3.1B Square Roots: Simplify: bank/3.1B-square-roots-simplify.js
   };
   function svL() { return (act === "2.4" && lesson >= 5) || (act === "3.1" && !!C3SV[lesson]); }
   function svAct() { return act === "2.4" || act === "3.1"; }   // (a section whose exercises switch between the quiz engine and the Play Solve engine)
@@ -3740,19 +3740,13 @@
     var c = C3SV[lesson], cl = function (o) { return JSON.parse(JSON.stringify(o)); };
     if (c.rad || c.box || c.bin) return false;   // (made like 2.4's Square Roots and Box Method)
     if (c.sqh) {   // a square root equation whose solutions need simplifying: x² = 32, 3x² = 75 → ±5... (never a perfect square), x² − 7 = 41, (x − 3)² = 12
-      var X2h = function (q) { return { k: "x", v: "x^2", n: mk(q) }; }, Ch = function (q) { return { k: "c", n: mk(q) }; }, rh, mh, vh, Lh, Rh, form = mode === "demo" ? 0 : rnd(4), grp = false;
-      do { rh = 2 + rnd(5); mh = [2, 3, 5, 6, 7][rnd(5)]; vh = rh * rh * mh; } while (vh > 300);
-      if (form === 0) { Lh = [X2h(1)]; Rh = [Ch(vh)]; }
-      else if (form === 1) { var ah = 2 + rnd(3); Lh = [X2h(ah)]; Rh = [Ch(ah * vh)]; }
-      else if (form === 2) { var bh = nz(12); Lh = [X2h(1), Ch(bh)]; Rh = [Ch(vh + bh)]; if (rnd(2)) Lh.reverse(); }
-      else { var hh = nz(6), items = [{ k: "x", v: "x", n: mk(1) }, Ch(-hh)]; Lh = [{ k: "g", m: mk(1), items: items, b: JSON.parse(JSON.stringify(items)), pw: true }]; Rh = [Ch(vh)]; grp = true; }
+      var gh = bankQ("3.1B-square-roots-simplify").generate(), Lh = gh.L, Rh = gh.R, grp = gh.grp;   // (the bank question)
       SV = "x";
       EXP = { eq: true, ask: null, vk: "x", L: Lh, R: Rh, rel: "=", cmp: null, c3: null, qf: null, qu: null, grUser: false, quq: false, lit: false, quad: false, av: false, sq: !grp, dvq: false, zpq: false, grq: false, qd: false, sf: false, zp: null, src: "", svk: lesson };
       EXP.orig = { L: cl(Lh), R: cl(Rh), rel: "=" }; return true;
     }
     if (c.lin4) {
-      var X4 = function (q) { return { k: "x", v: "x", n: mk(q) }; }, C4 = function (q) { return { k: "c", n: mk(q) }; }, a4, b4, c4, d4, e4, x4;
-      do { a4 = 2 + rnd(5); b4 = nz(8); c4 = nz(12); d4 = 1 + rnd(5); x4 = nz(9); e4 = a4 * (x4 + b4) + c4 - d4 * x4; } while (d4 === a4 || !e4 || x4 + b4 === 0);
+      var g4 = bankQ("3.1A-4step-equations").generate(), X4 = function (q) { return { k: "x", v: "x", n: mk(q) }; }, C4 = function (q) { return { k: "c", n: mk(q) }; }, a4 = g4.a, b4 = g4.b, c4 = g4.c, d4 = g4.d, e4 = g4.e;   // (the bank question)
       SV = "x"; var L4 = [{ k: "g", m: mk(a4), items: [X4(1), C4(b4)] }, C4(c4)], R4 = [X4(d4), C4(e4)];
       EXP = { eq: true, ask: null, vk: "x", L: L4, R: R4, rel: "=", cmp: null, c3: null, qf: null, qu: null, grUser: false, quq: false, lit: false, quad: false, av: false, sq: false, dvq: false, zpq: false, grq: false, qd: false, sf: false, zp: null, src: "", svk: lesson };
       EXP.orig = { L: cl(L4), R: cl(R4), rel: "=" }; return true;
