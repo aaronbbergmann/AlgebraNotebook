@@ -923,3 +923,7 @@
   .ctlbox>.nxRow>.btn,#pqNx>.btn{min-width:9.6rem}
   html:not([data-mode=demo]) .ctlbox>.ctl-btn{min-height:7.5rem;justify-content:flex-start}
   #svAsk:empty{display:none}
+  .pgCtl.pgTools{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:.5rem;margin:.4rem auto}
+  .pgTools:empty,.svTools:empty{display:none}
+  .svTools{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;margin:.6rem auto}
+  body.ctrOn .ctrSteps .eqKeys{margin:.4rem auto}

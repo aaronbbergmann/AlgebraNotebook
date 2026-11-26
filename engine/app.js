@@ -5449,11 +5449,22 @@
   // ONE place decides the colours: the page's theme follows the current mode in every activity (new ones included).
   // Demo = the Welcome cream, Solo = white, Sequence / Create / Calculate = pale tints. Play (no modes) is white, cream while its demo runs.
   // ---- the prompts in the centre pane (Sequence and Calculate of every Progress activity; Write, Create, Demo and the Playgrounds keep the right panel) ----
-  function ctrWant() { var B = BUILT[act]; return !welcome && !!B && !B.play && !B.solver && (mode === "sequence" || mode === "calculate" || (mode === "demo" && act === "3.1") || (mode === "solo" && act === "3.1" && lesson === 16)); }   // (Chapter 3: the Demo's prompts sit in the centre pane too)
+  function ctrWant() { var B = BUILT[act]; return !welcome && !!B && !B.play && !B.solver && (mode === "sequence" || mode === "calculate" || (mode === "demo" && act === "3.1") || mode === "solo"); }   /* (Write too: answer boxes and choices sit in the centre, never in the side panel) */   // (Chapter 3: the Demo's prompts sit in the centre pane too)
+  // the Progress exercises' own tools (Change Family and the Show toggles, Parent Table, Quadratic Formula, Difference of Squares) sit in the centre, by what they act on; the Playgrounds keep them in the side panel
+  function toolSync() {
+    var T = $("pgTools"), SV = $("svTools"), C = $("pgCtl"), CB = document.querySelector(".ctl-btn"); if (!T || !SV || !C || !CB) return;
+    if (!toolSync.els) toolSync.els = [$("pgFam")].concat([].slice.call(C.querySelectorAll(".lbl, .tog")));
+    var prog = !welcome && !!BUILT[act] && !BUILT[act].play;
+    toolSync.els.forEach(function (e) { var to = prog ? T : C; if (e.parentNode !== to) to.appendChild(e); });
+    var pt = $("ptTog"); if (pt) { if (prog) { if (pt.parentNode !== T) T.appendChild(pt); } else if (pt.parentNode !== CB) CB.insertBefore(pt, $("hint")); }
+    ["fmTogBtn", "quBtn"].forEach(function (id) { var e = $(id); if (!e) return; var to = prog ? SV : CB; if (e.parentNode !== to) to.appendChild(e); });
+  }
   function ctrSync() {
     var A = document.querySelector("aside.chat"), on = ctrWant(), W = $("wfSteps"), K = $("ask"), Q = $("kindAsk"); if (!A || !W) return;
     document.body.classList.toggle("ctrOn", on);
     if (!(typeof dsmOn === "function" && dsmOn())) { if (on) { if (W.parentNode !== $("ctrSteps")) $("ctrSteps").appendChild(W); } else if (W.parentNode !== A) A.insertBefore(W, $("qz")); }   // (Desmos places it itself: dsmSync)
+    var EK = $("eqKeys"); if (EK) { if (on && W.parentNode === $("ctrSteps")) { if (EK.parentNode !== $("ctrSteps")) $("ctrSteps").appendChild(EK); } else if (EK.parentNode !== A) A.insertBefore(EK, $("pgPt").nextSibling); }   // (the x, x\u00b2 and | | keys go with the answer box)
+    toolSync();
     var ce = on && !quiz();   // the equation pane (1.4): the calculation box and the No Solutions / Infinite Solutions choice
     if (ce) { if (K.parentNode !== $("ctrAsk")) $("ctrAsk").appendChild(K); if (Q.parentNode !== $("ctrAsk")) $("ctrAsk").appendChild(Q); }
     else {
@@ -5687,7 +5698,7 @@
     render(-1); head();
     if (mode === "demo") peekNext();
     if (plain) buildAnswer();
-    if (mode === "solo") note(eqWsAct() ? "Work this out on your own, type your answer, then press Submit." : "Work this out on your own, then type your answer.");
+    /* (Write: no instruction on mechanics) */
     if (building) crPrompt();
     eqSubSync();
   }

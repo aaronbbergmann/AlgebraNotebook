@@ -30,7 +30,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     <div class="stHead" id="stHead" hidden><div class="stT" id="stT"></div><div class="stCap" id="stCap" role="status" aria-live="polite"></div></div>
     <section class="welcome" id="welcome" hidden><div class="wsmall">Welcome to</div><div class="wbig">Algebra Notebook</div></section>
     <section class="pg" id="pg" hidden aria-label="Playground">
-      <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQcue" id="pgQcue">(Equation, Table, Graph)</div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div>
+      <div class="pgQ" id="pgQ"><div class="pgQt" id="pgQt"></div><div class="pgQcue" id="pgQcue">(Equation, Table, Graph)</div><div class="pgQmsg" id="pgQmsg" aria-live="polite"></div></div><div class="pgCtl pgTools" id="pgTools"></div>
       <div class="ctrSteps" id="ctrSteps"></div>
       <div class="dsmSteps" id="dsmSteps"></div>
       <div class="dsmWrap" id="dsmWrap"><div class="dsmNote" id="dsmNote" aria-live="polite"></div><div class="dsmCalc" id="dsmCalc"></div></div><div class="dsmSteps dsmAfter" id="dsmAfter"></div>
@@ -88,7 +88,7 @@ html:not([data-mode=solo]) body.dsmOn #pgQmsg, html:not([data-mode=solo]) body.d
     <div class="wrap">
       <main class="eqs work" id="wsEl"></main><div class="ctrAsk" id="ctrAsk"></div>
       <section class="exBox eqs work" id="exBox" hidden aria-label="Expression"><div class="zpWrap" id="zpA" hidden></div><div class="exRow" id="exRow"></div><div class="zpWrap" id="zpB" hidden></div>
-        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><span id="exSolo2" hidden><span class="exSolo2L"></span><input id="exSoloIn2" autocomplete="off" aria-label="The other solution"></span><button type="button" class="btn" id="exSoloRt" hidden aria-label="Insert a square root">√</button><button type="button" class="btn" id="exSoloX" hidden aria-label="Insert x"><i>x</i></button><button type="button" class="btn" id="exSoloX2" hidden aria-label="Insert x squared"><i>x</i>²</button><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div><div class="ctrAsk" id="svAsk"></div><div class="exNote bad" id="exNote" aria-live="polite"></div></section>
+        <div class="exAsk" id="exSolo" hidden><span>Simplified:</span> <input id="exSoloIn" autocomplete="off" aria-label="Simplified expression"><span id="exSolo2" hidden><span class="exSolo2L"></span><input id="exSoloIn2" autocomplete="off" aria-label="The other solution"></span><button type="button" class="btn" id="exSoloRt" hidden aria-label="Insert a square root">√</button><button type="button" class="btn" id="exSoloX" hidden aria-label="Insert x"><i>x</i></button><button type="button" class="btn" id="exSoloX2" hidden aria-label="Insert x squared"><i>x</i>²</button><button class="btn" id="exSoloGo">Check</button><div id="exMsg"></div></div><div class="svTools" id="svTools"></div><div class="ctrAsk" id="svAsk"></div><div class="exNote bad" id="exNote" aria-live="polite"></div></section>
       <section class="nlBox" id="nlBox" hidden aria-label="The solutions on a number line"></section>
       <section class="panel" id="creator" hidden>
         <div id="crT" style="font-weight:700;font-size:1.1rem"></div>
