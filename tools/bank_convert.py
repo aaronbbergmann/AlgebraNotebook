@@ -10,7 +10,7 @@ spec.json:
   "patterns": {"solo": "Submit"}, "about": "one or two comment lines",
   "ranges": [["  var C2S242 = [", "  function c2M242(tier) {"], ["  function c2M242(tier) {", "  function vpFrmOkI(raw) {"]],
   "exports": {"generate": "c2M242", "scenarios": "C2S242", "makePb": "c2M242Pb"},
-  "engine": [["old text", "new text"], ...]          (engine lines changed to reach the question through the bank)
+  "engineEdits": [["old text", "new text"], ...]     (engine lines changed to reach the question through the bank)
 }
 Each range runs from the line that starts with its first prefix up to (not including) the line that starts with its second.
 The moved code keeps working unchanged: it runs inside the definition's build(), which the engine calls the first time the question is used.
@@ -29,8 +29,46 @@ def find(prefix, start=0):
     return m[0]
 
 
+import re
+
+
+def fn_range(name):
+    """A top-level engine function: its comment lines just above it, the function, through its closing "  }"."""
+    i = find('  function %s(' % name)
+    j = next(k for k in range(i + 1, len(L)) if L[k] == '  }') + 1
+    while i > 0 and L[i - 1].startswith('  //'):
+        i -= 1
+    return i, j
+
+
+def var_range(name):
+    """A top-level engine var (a scenarios list): its comment lines, the var line, through its closing line."""
+    i = find('  var %s = ' % name)
+    if L[i].rstrip().endswith(';'):
+        j = i + 1
+    else:
+        j = next(k for k in range(i + 1, len(L)) if L[k].startswith('  ]') or L[k].startswith('  }'))+ 1
+    while i > 0 and L[i - 1].startswith('  //') and not L[i - 1].startswith('  // ===='):
+        i -= 1
+    return i, j
+
+
 moved, cuts = [], []
-for a, b in spec['ranges']:
+for name in spec.get('functions', []):
+    i, j = fn_range(name)
+    body = '\n'.join(L[i:j])
+    # a scenarios list (C2S...) used only by this function moves with it
+    if spec.get('vars') == 'auto':
+        for v in sorted(set(re.findall(r'\b(C2S\w+|C2[A-Z][A-Z0-9_]*)\b', body))):
+            try:
+                vi, vj = var_range(v)
+            except AssertionError:
+                continue
+            rest = '\n'.join(L[:vi] + L[vj:i] + L[j:])
+            if not re.search(r'\b%s\b' % v, rest):
+                moved += L[vi:vj]; cuts.append((vi, vj)); spec.setdefault('exports', {}).setdefault('scenarios', v)
+    moved += L[i:j]; cuts.append((i, j))
+for a, b in spec.get('ranges', []):
     i = find(a); j = find(b, i + 1)
     moved += L[i:j]; cuts.append((i, j))
 for i, j in sorted(cuts, reverse=True):
@@ -38,7 +76,7 @@ for i, j in sorted(cuts, reverse=True):
 first = sorted(cuts)[0][0]
 L.insert(first, '  // %s: moved to the question bank, bank/%s.js' % (spec['title'], spec['id']))
 s = '\n'.join(L)
-for old, new in spec.get('engine', []):
+for old, new in spec.get('engineEdits', []):
     assert s.count(old) == 1, ('engine text found %d times: ' % s.count(old)) + old[:80]
     s = s.replace(old, new)
 open(p, 'w', encoding='utf-8').write(s)

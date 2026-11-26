@@ -9,7 +9,7 @@
   skills: ["quadratic regression", "data tables", "Desmos regression"],
   tiers: [0, 1, 2],
   modes: ["demo", "sequence", "solo"],
-  engine: [["[bankGen(\"2.4A-vertex-point\"), bankGen(\"2.4A-point-intercepts\"), null, c2M244][lesson - 1] || c2M244)(tier);", "[bankGen(\"2.4A-vertex-point\"), bankGen(\"2.4A-point-intercepts\"), null, bankGen(\"2.4B-quadratic-regression\")][lesson - 1] || bankGen(\"2.4B-quadratic-regression\"))(tier);"]],
+  engine: "word",
   writeRounds: 2,
   showWork: "QWA",
   patterns: {"sequence": "Try Another", "solo": "Submit"},

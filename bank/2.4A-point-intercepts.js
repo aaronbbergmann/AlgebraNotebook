@@ -9,7 +9,7 @@
   skills: ["intercept form", "substitution", "solve for a", "vertex from a graph", "Desmos graphing"],
   tiers: [0, 1, 2],
   modes: ["demo", "sequence", "calculate", "solo"],
-  engine: [["    var pb2 = c2M242Pb(pb.sc, V2);", "    var pb2 = bankQ(\"2.4A-point-intercepts\").makePb(pb.sc, V2);"], ["[bankGen(\"2.4A-vertex-point\"), c2M242, null, c2M244]", "[bankGen(\"2.4A-vertex-point\"), bankGen(\"2.4A-point-intercepts\"), null, c2M244]"]],
+  engine: "word",
   writeRounds: 1,
   showWork: "GUESS",
   patterns: {"sequence": "Try Another", "calculate": "Try Another", "solo": "Submit"},

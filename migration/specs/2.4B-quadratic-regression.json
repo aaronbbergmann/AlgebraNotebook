@@ -6,7 +6,7 @@
   "patterns": {"sequence": "Try Another", "solo": "Submit"},
   "ranges": [["  var C2S244 = [", "  // ==== 1.1B Estimating a Value from a Graph, in Desmos"]],
   "exports": {"generate": "c2M244", "scenarios": "C2S244"},
-  "engine": [
+  "engineEdits": [
     ["[bankGen(\"2.4A-vertex-point\"), bankGen(\"2.4A-point-intercepts\"), null, c2M244][lesson - 1] || c2M244)(tier);", "[bankGen(\"2.4A-vertex-point\"), bankGen(\"2.4A-point-intercepts\"), null, bankGen(\"2.4B-quadratic-regression\")][lesson - 1] || bankGen(\"2.4B-quadratic-regression\"))(tier);"]
   ]
 }

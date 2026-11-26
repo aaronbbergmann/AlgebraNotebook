@@ -6,7 +6,7 @@
   "patterns": {"sequence": "Try Another", "calculate": "Try Another", "solo": "Submit"},
   "ranges": [["  var C2S242 = [", "  function c2M242(tier) {"], ["  function c2M242(tier) {", "  function vpFrmOkI(raw) {"]],
   "exports": {"generate": "c2M242", "scenarios": "C2S242", "makePb": "c2M242Pb"},
-  "engine": [
+  "engineEdits": [
     ["    var pb2 = c2M242Pb(pb.sc, V2);", "    var pb2 = bankQ(\"2.4A-point-intercepts\").makePb(pb.sc, V2);"],
     ["[bankGen(\"2.4A-vertex-point\"), c2M242, null, c2M244]", "[bankGen(\"2.4A-vertex-point\"), bankGen(\"2.4A-point-intercepts\"), null, c2M244]"]
   ]
