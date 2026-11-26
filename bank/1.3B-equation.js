@@ -11,7 +11,7 @@
   writeRounds: 3,
   showWork: "GUESS",
   patterns: {"solo": "Submit"},
-  version: 1,
+  version: 2,   // 2: step commands name the step only (no mechanics instructions)
   build: function () {
     function m3Make1(tier) {
       for (var t = 0; t < 800; t++) {
@@ -66,9 +66,9 @@
           { id: "rr", lab: "rise and run", type: "rr", after: function (x) { x.rv = x.nv = true; }, ask: "Find the rise and the run.", hint: ["Click the <i>y</i>-intercept, then the other point.", "The arrows go across (run) and up or down (rise) between the two points."], line: "rise = " + y2 + " − " + b + " = " + m3F(y2 - b) + ", run = " + x2 + " − 0 = " + x2 },
           { id: "frac", lab: "slope formula", type: "frac", ask: "Find the slope: rise ÷ run.", hint: ["Rise goes on top of the fraction and run on the bottom.", "Drag the rise tile to the top and the run tile to the bottom."], line: "slope = rise ÷ run = " + m3F(y2 - b) + " ÷ " + x2 },
           pb.steps[3],
-          { id: "eqd", lab: "Equation", type: "eqd", ask: "Write the equation: drag the slope and the <i>y</i>-intercept into <i>y</i> = <i>mx</i> + <i>b</i>.", hint: ["The slope <i>m</i> goes in front of <i>x</i>. The <i>y</i>-intercept <i>b</i> goes at the end.", "Drag the <i>m</i> tile and the <i>b</i> tile into the blanks."], line: m3EqH(m, b) },
+          { id: "eqd", lab: "Equation", type: "eqd", ask: "Write the equation in <i>y</i> = <i>mx</i> + <i>b</i>.", hint: ["The slope <i>m</i> goes in front of <i>x</i>. The <i>y</i>-intercept <i>b</i> goes at the end.", "Drag the <i>m</i> tile and the <i>b</i> tile into the blanks."], line: m3EqH(m, b) },
           { id: "sent", lab: "Slope", type: "sent", ask: "What does the slope mean in this story?", hint: ["The slope is the change in " + sc.yn.toLowerCase() + " for each 1 " + sc.x1 + ".", "Click " + sc.yn + ", then its unit, then the unit of the <i>x</i>-axis. Choose up or down."], line: "The slope " + m3F(m) + " means: the " + yw + " " + (sc.pl ? "go " : "goes ") + (up ? "up " : "down ") + amt + " " + sc.yu + " for each " + sc.x1 + "." },
-          { id: "pt", lab: "Point", type: "clickpt", ask: sc.tq(T) + " Click the point on the line that helps answer it.", hint: ["The question gives <i>y</i> = " + T + ". Find the point on the line at that height.", "Click the line where <i>y</i> is " + T + "."], line: "The point (" + k + ", " + T + ") is on the line" },
+          { id: "pt", lab: "Point", type: "clickpt", ask: sc.tq(T) + " Find the point on the line that answers it.", hint: ["The question gives <i>y</i> = " + T + ". Find the point on the line at that height.", "Click the line where <i>y</i> is " + T + "."], line: "The point (" + k + ", " + T + ") is on the line" },
           pb.steps[6], pb.steps[7]
         ];
         pb.csteps = [

@@ -11,7 +11,7 @@
   writeRounds: 3,
   showWork: "GUESS",
   patterns: {"solo": "Submit"},
-  version: 1,
+  version: 2,   // 2: step commands name the step only (no mechanics instructions)
   build: function () {
     function m3Make2(tier) {
       for (var t = 0; t < 800; t++) {
@@ -52,8 +52,8 @@
         ];
         var S2 = pb.steps, PC = " (" + "purple" + ")", OC = " (orange)";
         pb.isteps = [
-          { id: "plotT", lab: "plot", type: "plotT", ask: "Plot the points from the table for " + nT + ". Click each point on the graph.", hint: ["For each column of the table, find the <i>x</i> on the bottom axis and the <i>y</i> on the side axis.", "Click where they meet."], line: "Plotted the points from the table for " + nT },
-          { id: "lineT", lab: "line", type: "lineT", ask: "Draw the line through the points: click two of the points you plotted.", hint: ["The points are in a straight line.", "Click any two of the points."], line: nT + "'s line is drawn (purple)" },
+          { id: "plotT", lab: "plot", type: "plotT", ask: "Plot the points from the table for " + nT + ".", hint: ["For each column of the table, find the <i>x</i> on the bottom axis and the <i>y</i> on the side axis.", "Click where they meet."], line: "Plotted the points from the table for " + nT },
+          { id: "lineT", lab: "line", type: "lineT", ask: "Draw the line through the points.", hint: ["The points are in a straight line.", "Click any two of the points."], line: nT + "'s line is drawn (purple)" },
           S2[0], S2[1], S2[2], S2[3], S2[4], S2[5],
           { id: "plotQ1", lab: "start", type: "plotQ1", ask: "Now graph " + nQ + " (orange): " + m3EqH(mQ, bQ) + ". Start at <i>x</i> = 0.", hint: ["Put <i>x</i> = 0 into the equation.", "At <i>x</i> = 0 the cost is " + bQ + "."], line: nQ + " starts at (0, " + bQ + ")" },
           { id: "y1", fine: 1, lab: "x = 1", ask: "Find the cost for " + nQ + " when <i>x</i> = 1: put 1 in for <i>x</i> in " + m3EqH(mQ, bQ) + ".", pre: "<i>y</i> =", ans: mQ + bQ, hint: ["Replace <i>x</i> with 1 and calculate.", m3Co(mQ) + "(1) + " + bQ + " = " + (mQ + bQ) + "."], line: "<i>y</i> = " + mQ + "(1) + " + bQ + " = " + (mQ + bQ) },

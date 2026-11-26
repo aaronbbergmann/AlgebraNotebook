@@ -11,7 +11,7 @@
   writeRounds: 2,
   showWork: "steps",
   patterns: {"solo": "Submit"},
-  version: 1,
+  version: 2,   // 2: step commands name the step only (no mechanics instructions)
   build: function () {
     // Example 5: Comparing Functions in Different Forms (two paths: one graphed, one in intercept form)
     var C2S225 = [
@@ -38,8 +38,8 @@
         var far = D1 > D2 ? "first" : "second", hi = H1 > H2 ? "first" : "second";
         pb.steps = [
           { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph each path.", line: "graphed both paths in Desmos" },
-          { id: "d1", lab: "Distance 1", ask: "How far does the first " + it + " travel before it lands? Click its path in Desmos to see the " + c2X + "-intercepts.", post: u, ans: D1, hint: ["It starts at (0, 0) and lands at the other " + c2X + "-intercept.", "The other " + c2X + "-intercept is (" + D1 + ", 0)."], line: "first " + it + ": " + D1 + " " + u },
-          { id: "h1", lab: "Height 1", ask: "What is the maximum height of the first " + it + "? Click its path to see the maximum.", post: u, ans: H1, hint: ["The maximum is the vertex: the top of the path.", "The vertex is (" + D1 / 2 + ", " + H1 + ")."], line: "first " + it + " height: " + H1 + " " + u },
+          { id: "d1", lab: "Distance 1", ask: "How far does the first " + it + " travel before it lands?", post: u, ans: D1, hint: ["It starts at (0, 0) and lands at the other " + c2X + "-intercept.", "The other " + c2X + "-intercept is (" + D1 + ", 0)."], line: "first " + it + ": " + D1 + " " + u },
+          { id: "h1", lab: "Height 1", ask: "What is the maximum height of the first " + it + "?", post: u, ans: H1, hint: ["The maximum is the vertex: the top of the path.", "The vertex is (" + D1 / 2 + ", " + H1 + ")."], line: "first " + it + " height: " + H1 + " " + u },
           { id: "d2", lab: "Distance 2", ask: "How far does the second " + it + " travel before it lands?", post: u, ans: D2, hint: ["Read the " + c2X + "-intercept where it lands.", "It lands at (" + D2 + ", 0)."], line: "second " + it + ": " + D2 + " " + u },
           { id: "h2", lab: "Height 2", ask: "What is the maximum height of the second " + it + "?", post: u, ans: H2, hint: ["Click the second path's maximum.", "The vertex is (" + D2 / 2 + ", " + H2 + ")."], line: "second " + it + " height: " + H2 + " " + u },
           { id: "far", lab: "Farther", type: "pick", ask: "Which " + it + " travels farther before landing?", opts: c2Pk("The " + far + " " + it, [["The " + (far === "first" ? "second" : "first") + " " + it, "Compare " + D1 + " and " + D2 + " " + u + "."]]), hint: ["Compare the two distances.", Math.max(D1, D2) + " " + u + " is farther."], line: "the " + far + " " + it + " travels farther" },

@@ -144,6 +144,8 @@
   // A definition's build() runs once, the first time the question is used (so it may use the engine's helpers), and returns its generator and scenarios.
   var AN_BANK = window.AN_BANK || (window.AN_BANK = {}), BANKQ = {};
   function bankQ(id) { if (!BANKQ[id]) { var d = AN_BANK[id]; if (!d) throw new Error("No bank question " + id); var b = d.build(); BANKQ[id] = Object.assign({}, d, b); } return BANKQ[id]; }
+  // a step command for moving a term across the =: it names the step only (no mechanics), by the sign of the term
+  function undoW(t) { var q = t && (t.n || t.m); return q && q.n < 0 ? "Undo the subtraction." : "Undo the addition."; }
   function bankGen(id) { return function (tier) { return bankQ(id).generate(tier); }; }
   function nz(m) { var v = 0; while (!v) v = rnd(2 * m + 1) - m; return v; }
   function mkEq(a, b, e, c) { return { a: mk(a), b: mk(b), e: mk(e), ks: [], c: mk(c) }; }
@@ -703,10 +705,10 @@
   }
   function fdDemo(S, its) {   // the next fraction step for the demo: { tap, cap, run } or null
     var sel = function (i) { return S ? '.exT[data-s="' + S + '"][data-i="' + i + '"]' : '#exRow .exT[data-i="' + i + '"]'; }, opSel = function (k) { return '.exOp[data-op="' + (S || "") + k + '"]'; };
-    for (var i = 0; i < its.length; i++) if (its[i].lc) return (function (i) { return { tap: sel(i) + " .exLc", cap: "Click the ⋅ to multiply.", run: function () { fdMul(S, i); } }; })(i);
+    for (var i = 0; i < its.length; i++) if (its[i].lc) return (function (i) { return { tap: sel(i) + " .exLc", cap: "Multiply.", run: function () { fdMul(S, i); } }; })(i);
     for (var k = 1; k < its.length; k++) {
-      if (fdNeed(its[k - 1], its[k])) return (function (k) { return { tap: opSel(k), cap: "The denominators are different. Click the " + (its[k].n.n < 0 ? "−" : "+") + ".", run: function () { fdStart(S, k - 1, k); } }; })(k);
-      if ((its[k - 1].w || its[k].w) && exLike(its[k - 1], its[k]) && fdD(its[k - 1]) === fdD(its[k])) return (function (k) { return { tap: opSel(k), cap: "Same denominators: click the " + (its[k].n.n < 0 ? "−" : "+") + " to add.", run: function () { if (S) eqDrop(S, k - 1, S, k); else exDrop(k, k - 1); } }; })(k);
+      if (fdNeed(its[k - 1], its[k])) return (function (k) { return { tap: opSel(k), cap: "The denominators are different: find a common denominator.", run: function () { fdStart(S, k - 1, k); } }; })(k);
+      if ((its[k - 1].w || its[k].w) && exLike(its[k - 1], its[k]) && fdD(its[k - 1]) === fdD(its[k])) return (function (k) { return { tap: opSel(k), cap: "Same denominators: " + (its[k].n.n < 0 ? "subtract" : "add") + ".", run: function () { if (S) eqDrop(S, k - 1, S, k); else exDrop(k, k - 1); } }; })(k);
     }
     return null;
   }
@@ -968,7 +970,7 @@
     [].forEach.call(el.querySelectorAll(".bxCell"), function (c3) { c3.addEventListener("click", function () { if (BX && BX.ready && mode !== "calculate") bxReveal(+c3.dataset.c); }); });
     note("Multiply " + exSay([g]) + " with the box. " + bxHow());
   }
-  function bxHow() { return BX.nL === 1 ? "Drag " + bxBin(0) + " to the spot on the left of the box, and the terms of " + bxBin(1) + " across the top." : BX.nL === BX.nT ? "Drag the terms of one factor down the left side of the box and the terms of the other across the top." : "Drag the " + BX.nL + " terms of " + bxBin(0) + " down the left side and the " + BX.nT + " terms of " + bxBin(1) + " across the top."; }
+  function bxHow() { return BX.nL === 1 ? "Set up the box: " + bxBin(0) + " on the left, the terms of " + bxBin(1) + " across the top." : BX.nL === BX.nT ? "Set up the box: the terms of one factor down the left side, the terms of the other across the top." : "Set up the box: the " + BX.nL + " terms of " + bxBin(0) + " down the left side, the " + BX.nT + " terms of " + bxBin(1) + " across the top."; }
   function bxRow() {   // while the box is open, each term of the factors in the expression is picked up on its own
     if (!BX || BX.done) return; var te = bxEl(); if (!te) return;
     var used = {}; Object.keys(BX.slot).forEach(function (q) { used[BX.slot[q].b + ":" + BX.slot[q].k] = 1; });
@@ -989,7 +991,7 @@
     if (Object.keys(BX.slot).length === BX.nL + BX.nT) {
       BX.ready = true; el.classList.add("bxReady"); var m = el.querySelector(".bxMsg");
       if (mode === "calculate") { m.textContent = "Multiply each row by each column."; note("Now each box inside: multiply its row by its column."); bxAsk(); }
-      else { m.textContent = "Click each box inside to multiply its row by its column."; note("Now click each box inside: it shows its row times its column."); }
+      else { m.textContent = "Multiply each box: its row times its column."; note("Now multiply each box: its row times its column."); }
     } else note("");
   }
   function bxRC(n) { var r = BX.slot["L" + Math.floor(n / BX.nT)], c = BX.slot["T" + n % BX.nT]; return [BX.bins[r.b][r.k], BX.bins[c.b][c.k]]; }
@@ -1037,9 +1039,9 @@
       if (Object.keys(BX.slot).some(function (q) { return BX.slot[q].b === b && BX.slot[q].k === k; })) continue;
       var side = sd[b] || (b === 0 ? "L" : "T"), n = side === "L" ? BX.nL : BX.nT; for (var p = 0; p < n; p++) if (!BX.slot[side + p]) { order = [b, k, side + p]; break; }
     }
-    if (order) { dmCap(order[0] === 0 ? "Drag the " + (BX.nL === 1 ? "number " + bxBin(0) : "terms of " + bxBin(0)) + " to the left side of the box." : "Drag the terms of " + bxBin(1) + " across the top."); bxMoveDemo('#exRow .bxChip[data-b="' + order[0] + '"][data-k="' + order[1] + '"]', '#distBox [data-slot="' + order[2] + '"]', function () { bxDrop(order[0], order[1], order[2]); }, next); return; }
+    if (order) { dmCap(order[0] === 0 ? (BX.nL === 1 ? bxBin(0) + " goes" : "The terms of " + bxBin(0) + " go") + " on the left side of the box." : "The terms of " + bxBin(1) + " go across the top."); bxMoveDemo('#exRow .bxChip[data-b="' + order[0] + '"][data-k="' + order[1] + '"]', '#distBox [data-slot="' + order[2] + '"]', function () { bxDrop(order[0], order[1], order[2]); }, next); return; }
     var c = BX.cell.findIndex(function (x) { return !x; });
-    if (c >= 0 && !BX.done) { dmCap("Click the box: " + bxSay(c) + "."); exTapDemo('#distBox .bxCell[data-c="' + c + '"]', function () { bxReveal(c); }, next); return; }
+    if (c >= 0 && !BX.done) { dmCap("Multiply: " + bxSay(c) + "."); exTapDemo('#distBox .bxCell[data-c="' + c + '"]', function () { bxReveal(c); }, next); return; }
     DM4.t = setTimeout(next, 900);   // (the products are on their way up)
   }
   function distShow(g) {
@@ -1283,9 +1285,9 @@
       DM4.t = setTimeout(function () {
         if (!EXP || !DM4.run || DM4.paused || locked) return;
         var i = -1; EXP.items.forEach(function (t, j) { if (i < 0 && rdLeft(t)) i = j; }); if (i < 0) return;
-        var t = EXP.items[i]; if (t.mf) { exRender(); dmCap("Click the \u00b7 to multiply: " + t.mf.map(function (q) { return exFr(q); }).join(" \u00b7 ") + "."); exTapDemo('.exT[data-i="' + i + '"] .exMf', function () { exMfDo(i); }, function () { if (!locked) exDemoStep(900); }); return; }
+        var t = EXP.items[i]; if (t.mf) { exRender(); dmCap("Multiply: " + t.mf.map(function (q) { return exFr(q); }).join(" \u00b7 ") + "."); exTapDemo('.exT[data-i="' + i + '"] .exMf', function () { exMfDo(i); }, function () { if (!locked) exDemoStep(900); }); return; }
         var k = t.f ? Math.max(0, rfNext(t.f)) : 0, f = t.f ? t.f[k] : t.r.n; exRender();
-        dmCap(isSq(f) ? "\u221a" + f + " = " + Math.round(Math.sqrt(f)) + ". Click it." : "The biggest perfect square that divides " + f + " is " + rfBig(f) + ". Click \u221a" + f + " to split it: \u221a" + f + " = \u221a(" + rfPair(f, rfBig(f)).join(" \u00b7 ") + ").");
+        dmCap(isSq(f) ? "\u221a" + f + " = " + Math.round(Math.sqrt(f)) + "." : "The biggest perfect square that divides " + f + " is " + rfBig(f) + ": \u221a" + f + " = \u221a(" + rfPair(f, rfBig(f)).join(" \u00b7 ") + ").");
         exTapDemo('.exT[data-i="' + i + '"] .exRad' + (t.f ? '[data-rf="' + k + '"]' : ""), function () { exRadSimp(i, 0, k); }, function () { if (!locked) exDemoStep(900); });
       }, ms);
       return;
@@ -1303,7 +1305,7 @@
         }
         if (!bs) return;
         var sm = its[bs.i].k === "g" ? facWhole(its[bs.i]) : facCoef(its[bs.i]);
-        exRender(); dmCap("Drag " + facSay(sm) + " onto " + exSay([its[bs.j]]) + " to factor it out.");
+        exRender(); dmCap("Factor out " + facSay(sm) + ".");
         exMoveDemo('.exT[data-i="' + bs.i + '"] > ' + (its[bs.i].k === "g" ? ".exM" : ".exK"), '.exT[data-i="' + bs.j + '"]', function () { var nn = its.slice(); nn[bs.j] = bs.f.group; nn.splice(bs.i, 1); exSet(nn, bs.f.msg, bs.f.show); }, function () { if (!locked) exDemoStep(900); });
         return;
       }
@@ -1311,17 +1313,17 @@
       var go = function (fn) { DM4.t = setTimeout(function () { if (!EXP || !DM4.run || DM4.paused) return; fn(); if (!locked) exDemoStep(900); }, 1300); };
       if (gi >= 0) {
         var g = its[gi]; exRender();
-        if (g.c) { dmCap("Drag one set of parentheses onto another to multiply them."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { exMulApply(gi, 0, 1); }, function () { if (!locked) exDemoStep(900); }); return; }
-        if (g.b && bxOn(gi)) { dmCap("Drag one binomial onto the other: the box opens."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { bxOpen(gi); }, function () { if (!locked) exDemoStep(700); }); return; }
-        if (g.b) { dmCap("Drag one set of parentheses onto the other to multiply them."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, distMsg(g, exDist(g)), g); }, function () { if (!locked) exDemoStep(900); }); return; }
-        dmCap("Drag " + (dgWord(g.m) === "the number" ? exSay([{ k: "c", n: g.m }]) : dgWord(g.m)) + " onto the parentheses to distribute it.");
+        if (g.c) { dmCap("Multiply the parentheses."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { exMulApply(gi, 0, 1); }, function () { if (!locked) exDemoStep(900); }); return; }
+        if (g.b && bxOn(gi)) { dmCap("Multiply the binomials with the box."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { bxOpen(gi); }, function () { if (!locked) exDemoStep(700); }); return; }
+        if (g.b) { dmCap("Multiply the parentheses."); exMoveDemo('.exT[data-i="' + gi + '"] > .exG', '.exT[data-i="' + gi + '"] > .exH', function () { var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, distMsg(g, exDist(g)), g); }, function () { if (!locked) exDemoStep(900); }); return; }
+        dmCap("Distribute " + (dgWord(g.m) === "the number" ? exSay([{ k: "c", n: g.m }]) : dgWord(g.m)) + ".");
         exDragDemo('.exT[data-i="' + gi + '"]', function () { if (bxOn(gi)) { bxOpen(gi); return; } var n = EXP.items.slice(); n.splice.apply(n, [gi, 1].concat(exDist(g))); exSet(n, distMsg(g, exDist(g)), g); }, function () { if (!locked) exDemoStep(900); }, String(gi));   // (Play Solve: the box opens)
         return;
       }
       var fdS = fdDemo(null, its); if (fdS) { exRender(); dmCap(fdS.cap); exTapDemo(fdS.tap, fdS.run, function () { if (!locked) exDemoStep(900); }); return; }
       for (j = 0; j < its.length && a < 0; j++) for (k = j + 1; k < its.length; k++) if (exLike(its[k], its[j])) { a = j; b = k; break; }
       if (a < 0) return;
-      exRender(); dmCap("Drag " + exSay([its[b]]) + " onto " + exSay([its[a]]) + " to combine them.");
+      exRender(); dmCap("Combine " + exSay([its[a]]) + " and " + exSay([its[b]]) + ".");
       exMoveDemo('.exT[data-i="' + b + '"]', '.exT[data-i="' + a + '"]', function () { exSet(exCombineTo(b, a), exSay([its[a], its[b]]) + " = " + exSay([exSum(its[a], its[b])])); }, function () { if (!locked) exDemoStep(900); });
     }, ms);
   }
@@ -1537,8 +1539,8 @@
     if (op === "p2") return { label: quPn(4 * Q.a) + "(" + quNs(Q.c) + ") =", want: [4 * Q.a * Q.c], msg: quPn(4 * Q.a) + "(" + quNs(Q.c) + ") = " + quNs(4 * Q.a * Q.c) + "." };
     if (op === "df") return { label: Q.b * Q.b + " − " + quPn(4 * Q.a * Q.c) + " =", want: [Q.D], msg: Q.b * Q.b + " − " + quPn(4 * Q.a * Q.c) + " = " + quNs(Q.D) + (Q.D < 0 ? ": negative under the square root." : ".") };
     if (op === "rt" && Q.D > 0 && Q.r === null) { var p0 = rfPair(Q.rm, rfBig(Q.rm)); return { cap: "The biggest perfect square that divides " + Q.rm + " is " + rfBig(Q.rm) + ". Click \u221a" + Q.rm + " to split it.", msg: "Product Property of Square Roots: \u221a" + Q.rm + " = \u221a(" + p0[0] + " \u00b7 " + p0[1] + ") = \u221a" + p0[0] + " \u00b7 \u221a" + p0[1] + "." }; }
-    if (op === "mf") { var pm0 = Q.mfp.reduce(function (a, b) { return a * b; }, 1); return { label: Q.mfp.join(" \u00b7 ") + " =", want: [pm0], cap: "Click the product to multiply: " + Q.mfp.join(" \u00b7 ") + ".", msg: Q.mfp.join(" \u00b7 ") + " = " + pm0 + "." }; }
-    if (/^f\d+$/.test(op)) { var fv = Q.rf[+op.slice(1)]; if (isSq(fv)) return { label: "\u221a" + fv + " =", want: [Math.sqrt(fv)], cap: "\u221a" + fv + " = " + Math.sqrt(fv) + ". Click it.", msg: "\u221a" + fv + " = " + Math.sqrt(fv) + "." }; var p1 = rfPair(fv, rfBig(fv)); return { cap: "The biggest perfect square that divides " + fv + " is " + rfBig(fv) + ". Click \u221a" + fv + " to split it.", msg: "Product Property of Square Roots: \u221a" + fv + " = \u221a(" + p1[0] + " \u00b7 " + p1[1] + ") = \u221a" + p1[0] + " \u00b7 \u221a" + p1[1] + "." }; }
+    if (op === "mf") { var pm0 = Q.mfp.reduce(function (a, b) { return a * b; }, 1); return { label: Q.mfp.join(" \u00b7 ") + " =", want: [pm0], cap: "Multiply: " + Q.mfp.join(" \u00b7 ") + ".", msg: Q.mfp.join(" \u00b7 ") + " = " + pm0 + "." }; }
+    if (/^f\d+$/.test(op)) { var fv = Q.rf[+op.slice(1)]; if (isSq(fv)) return { label: "\u221a" + fv + " =", want: [Math.sqrt(fv)], cap: "\u221a" + fv + " = " + Math.sqrt(fv) + ".", msg: "\u221a" + fv + " = " + Math.sqrt(fv) + "." }; var p1 = rfPair(fv, rfBig(fv)); return { cap: "The biggest perfect square that divides " + fv + " is " + rfBig(fv) + ": split \u221a" + fv + ".", msg: "Product Property of Square Roots: \u221a" + fv + " = \u221a(" + p1[0] + " \u00b7 " + p1[1] + ") = \u221a" + p1[0] + " \u00b7 \u221a" + p1[1] + "." }; }
     if (op === "rt") return { label: "√" + Q.D + " =", want: [Math.sqrt(Math.max(Q.D, 0))], msg: Q.D < 0 ? "No real number squares to " + quNs(Q.D) + "." : "√" + Q.D + " = " + (Q.r !== null ? Q.r : (Q.co === 1 ? "" : Q.co) + "√" + Q.m) + "." };
     if (op === "pm") return { msg: Q.r === 0 ? "± 0 changes nothing, so there is one answer." : "± gives two answers: one with +, one with −." };
     if (op === "bar") return { label: "Simplified, x =", all: true, want: [(Q.B + Q.co * Math.sqrt(Q.m)) / Q.Q, (Q.B - Q.co * Math.sqrt(Q.m)) / Q.Q], msg: "Every number shares a factor of " + Q.g + ": divide each by " + Q.g + "." };
@@ -1635,7 +1637,7 @@
       el.classList.add("grab"); el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; var op = el.dataset.op, ops = quOps(); if (op === "df" && !(EXP.qu.sqD && EXP.qu.p2D)) { note("First work out the square and the product, then subtract."); return; } quStep(op); });
     });
   }
-  function quDemoStep() { var ops = quOps(); if (!ops.length) return null; var op = ops[0], inf = quOpInfo(op); return { tap: '#exRow .quK[data-op="' + op + '"]', cap: inf.cap ? inf.cap : op === "pm" ? "± means two answers. Click it to split them." : op === "bar" ? "Click the fraction bar to divide out the common factor." : "Click " + (inf.label || "it").replace(/ =$/, "") + " to work it out.", run: function () { quAdv(op, inf); } }; }
+  function quDemoStep() { var ops = quOps(); if (!ops.length) return null; var op = ops[0], inf = quOpInfo(op); return { tap: '#exRow .quK[data-op="' + op + '"]', cap: inf.cap ? inf.cap : op === "pm" ? "± means two answers: split them." : op === "bar" ? "Divide out the common factor." : "Work out " + (inf.label || "it").replace(/ =$/, "") + ".", run: function () { quAdv(op, inf); } }; }
 
   function quGen(n) {   // 1: two answers that are whole numbers or fractions; 2: answers with a square root (sometimes one answer, or none); 3: not in standard form yet
     var X = function (k, v) { return { k: "x", v: v || "x", n: mk(k) }; }, C = function (k) { return { k: "c", n: mk(k) }; };
@@ -1651,13 +1653,13 @@
   // ---- deriving the quadratic formula (Big Ideas Math Algebra 1, 9.5, the way the book does it): ax^2 + bx + c = 0, multiply by 4a, add b^2, subtract 4ac,
   // write the left side as a square, take the square root, subtract b, divide by 2a. Each step is a gesture on the equation; Calculate asks for the new equation each time.
   var QFS = [
-    { L: "<i>a</i><i>x</i><sup>2</sup> + <i>b</i><i>x</i> + <i>c</i>", R: "0", t: "ax^2 + bx + c = 0", go: { pop: "mul", want: ["4a"] }, cap: "Multiply both sides by 4a: click the = and choose ×.", why: "Multiply each side by 4a." },
-    { L: "4<i>a</i><sup>2</sup><i>x</i><sup>2</sup> + 4<i>a</i><i>b</i><i>x</i> + 4<i>a</i><i>c</i>", R: "0", t: "4a^2x^2 + 4abx + 4ac = 0", go: { pop: "add", want: ["b^2", "b2", "bb"] }, cap: "Add b² to both sides: click the = and choose +.", why: "Add b² to each side." },
-    { L: "4<i>a</i><sup>2</sup><i>x</i><sup>2</sup> + 4<i>a</i><i>b</i><i>x</i> + <span class=\"qfT\" data-q=\"4ac\">4<i>a</i><i>c</i></span> + <i>b</i><sup>2</sup>", R: "<i>b</i><sup>2</sup>", t: "4a^2x^2 + 4abx + 4ac + b^2 = b^2", go: { cross: "4ac" }, cap: "Drag 4ac to the other side.", why: "Subtract 4ac from each side." },
-    { L: "<span class=\"qfT qfUp\" data-q=\"sq\">4<i>a</i><sup>2</sup><i>x</i><sup>2</sup></span> + 4<i>a</i><i>b</i><i>x</i> + <i>b</i><sup>2</sup>", R: "<i>b</i><sup>2</sup> − 4<i>a</i><i>c</i>", t: "4a^2x^2 + 4abx + b^2 = b^2 - 4ac", go: { up: 1 }, cap: "A perfect square trinomial: A = 2ax and B = b. Drag 4a²x² up to write it as a square.", why: "Write the left side as a square: A² + 2AB + B² = (A + B)² with A = 2ax, B = b." },
-    { L: "(2<i>a</i><i>x</i> + <i>b</i>)<sup class=\"qfExp\">2</sup>", R: "<i>b</i><sup>2</sup> − 4<i>a</i><i>c</i>", t: "(2ax + b)^2 = b^2 - 4ac", go: { exp: 1 }, cap: "Drag the exponent across the =: it turns into ±√.", why: "Take the square root of each side." },
-    { L: "2<i>a</i><i>x</i> + <span class=\"qfT\" data-q=\"b\"><i>b</i></span>", R: "±<span class=\"exRad\"><span class=\"rsg\">√</span><span class=\"rbar\"><i>b</i><sup>2</sup> − 4<i>a</i><i>c</i></span></span>", t: "2ax + b = ±√(b^2 - 4ac)", go: { cross: "b" }, cap: "Drag b to the other side.", why: "Subtract b from each side." },
-    { L: "<span class=\"qfCo\">2<i>a</i></span><i>x</i>", R: "−<i>b</i> ± <span class=\"exRad\"><span class=\"rsg\">√</span><span class=\"rbar\"><i>b</i><sup>2</sup> − 4<i>a</i><i>c</i></span></span>", t: "2ax = -b ± √(b^2 - 4ac)", go: { co: 1 }, cap: "Drag 2a across the = to divide.", why: "Divide each side by 2a." },
+    { L: "<i>a</i><i>x</i><sup>2</sup> + <i>b</i><i>x</i> + <i>c</i>", R: "0", t: "ax^2 + bx + c = 0", go: { pop: "mul", want: ["4a"] }, cap: "Multiply both sides by 4a.", why: "Multiply each side by 4a." },
+    { L: "4<i>a</i><sup>2</sup><i>x</i><sup>2</sup> + 4<i>a</i><i>b</i><i>x</i> + 4<i>a</i><i>c</i>", R: "0", t: "4a^2x^2 + 4abx + 4ac = 0", go: { pop: "add", want: ["b^2", "b2", "bb"] }, cap: "Add b² to both sides.", why: "Add b² to each side." },
+    { L: "4<i>a</i><sup>2</sup><i>x</i><sup>2</sup> + 4<i>a</i><i>b</i><i>x</i> + <span class=\"qfT\" data-q=\"4ac\">4<i>a</i><i>c</i></span> + <i>b</i><sup>2</sup>", R: "<i>b</i><sup>2</sup>", t: "4a^2x^2 + 4abx + 4ac + b^2 = b^2", go: { cross: "4ac" }, cap: "Undo the subtraction of 4ac.", why: "Subtract 4ac from each side." },
+    { L: "<span class=\"qfT qfUp\" data-q=\"sq\">4<i>a</i><sup>2</sup><i>x</i><sup>2</sup></span> + 4<i>a</i><i>b</i><i>x</i> + <i>b</i><sup>2</sup>", R: "<i>b</i><sup>2</sup> − 4<i>a</i><i>c</i>", t: "4a^2x^2 + 4abx + b^2 = b^2 - 4ac", go: { up: 1 }, cap: "A perfect square trinomial: A = 2ax and B = b. Write it as a square.", why: "Write the left side as a square: A² + 2AB + B² = (A + B)² with A = 2ax, B = b." },
+    { L: "(2<i>a</i><i>x</i> + <i>b</i>)<sup class=\"qfExp\">2</sup>", R: "<i>b</i><sup>2</sup> − 4<i>a</i><i>c</i>", t: "(2ax + b)^2 = b^2 - 4ac", go: { exp: 1 }, cap: "Undo the exponent: ±√.", why: "Take the square root of each side." },
+    { L: "2<i>a</i><i>x</i> + <span class=\"qfT\" data-q=\"b\"><i>b</i></span>", R: "±<span class=\"exRad\"><span class=\"rsg\">√</span><span class=\"rbar\"><i>b</i><sup>2</sup> − 4<i>a</i><i>c</i></span></span>", t: "2ax + b = ±√(b^2 - 4ac)", go: { cross: "b" }, cap: "Undo the addition of b.", why: "Subtract b from each side." },
+    { L: "<span class=\"qfCo\">2<i>a</i></span><i>x</i>", R: "−<i>b</i> ± <span class=\"exRad\"><span class=\"rsg\">√</span><span class=\"rbar\"><i>b</i><sup>2</sup> − 4<i>a</i><i>c</i></span></span>", t: "2ax = -b ± √(b^2 - 4ac)", go: { co: 1 }, cap: "Divide by 2a.", why: "Divide each side by 2a." },
     { L: "<i>x</i>", R: "<span class=\"fr\"><span>−<i>b</i> ± <span class=\"exRad\"><span class=\"rsg\">√</span><span class=\"rbar\"><i>b</i><sup>2</sup> − 4<i>a</i><i>c</i></span></span></span><span>2<i>a</i></span></span>", t: "x = (-b ± √(b^2 - 4ac))/(2a)" }
   ];
   function qfRender(R) {
@@ -1743,7 +1745,7 @@
     if (!z) { EXP.zp = z = { eqs: pair, done: [false, false], act: 0 }; } else { z.eqs.splice(t, 1, pair[0], pair[1]); z.done.splice(t, 1, false, false); z.act = t; }
     EXP.zpNew = true; EXP.L = cp(z.eqs[t].L); EXP.R = cp(z.eqs[t].R); EXP.rel = "=";
     closeAsk(false); eqRender();
-    note("A product is 0 only when one of its factors is 0, so " + pair.map(function (e) { return exSay(e.L) + " = 0"; }).join(" or ") + "." + (noM ? " The " + (g.m.d === 1 && g.m.n === -1 ? "minus sign" : "number") + " in front stays with the factors you did not drag." : "") + (again ? " The second equation is still a product: drag one of its parentheses up or down to split it again." : " Solve them in any order."));
+    note("A product is 0 only when one of its factors is 0, so " + pair.map(function (e) { return exSay(e.L) + " = 0"; }).join(" or ") + "." + (noM ? " The " + (g.m.d === 1 && g.m.n === -1 ? "minus sign" : "number") + " in front stays with the factors you did not drag." : "") + (again ? " The second equation is still a product: split it again." : " Solve them in any order."));
     var k = eqKind(); if (k) eqEnd(k);
   }
   function zpFocus(k) {   // the user began working on equation k: it becomes the active one (the equation the solver acts on); the others keep their place
@@ -1871,7 +1873,7 @@
       var e = el.querySelector("[data-sp=\"" + a[0] + "\"]"), rd = !!two(a[0]); e.innerHTML = a[1] ? grTermHtml(a[1]) : ""; e.classList.toggle("set", !!a[1]); e.classList.toggle("ready", !a[1] && rd && !GRP.done && !(GRP.gp.tri && !GRP.split)); e.title = rd ? "Click to type the greatest common factor" : "";
     });
     var n = GRP.cells.filter(Boolean).length, m = el.querySelector(".gmsg"); m.className = "gmsg" + (GRP.bad ? " bad" : "");
-    m.textContent = GRP.msg || (GRP.done ? "Factored!" : GRP.gp.tri ? (n < 3 ? "Drag each of the three terms into a box." : "Find the pair that multiplies to " + sg(mk(GRP.gp.a * GRP.gp.c)) + " and adds to " + sg(mk(GRP.gp.b)) + ".") : n < 4 ? "Drag each term into a box." : "Now click the spaces on the left and above, and type each greatest common factor.");
+    m.textContent = GRP.msg || (GRP.done ? "Factored!" : GRP.gp.tri ? (n < 3 ? "Put each of the three terms in the box." : "Find the pair that multiplies to " + sg(mk(GRP.gp.a * GRP.gp.c)) + " and adds to " + sg(mk(GRP.gp.b)) + ".") : n < 4 ? "Put each term in the box." : "Now find the greatest common factor of each row and column.");
     grSelUpd();
     el.querySelector(".gclear").hidden = !n || !!GRP.done;
   }
@@ -2040,7 +2042,7 @@
     if (sfZero(EXP.L) && EXP.R.length > 1) { var sw = EXP.L; EXP.L = EXP.R; EXP.R = sw; if (EXP.rel && EXP.rel !== "=") EXP.rel = relRev(EXP.rel); }
     if (!sfZero(EXP.R)) { eqRender(); note("To factor with the box, first write the equation in standard form: bring every term to one side so the other side is 0."); return true; }
     if (!grAny(EXP.L)) { eqRender(); note("These terms do not factor with whole numbers, so the box cannot finish it. Combine like terms and simplify fractions first, or try completing the square or the Quadratic Formula."); return true; }
-    EXP.grq = true; EXP.grUser = true; eqRender(); grShow(); note("Drag a term down into the square to factor by grouping: put each term in a box, then click the spaces on the left and above to type the greatest common factor of each row and column.");
+    EXP.grq = true; EXP.grUser = true; eqRender(); grShow(); note("Factor by grouping: put each term in the box, then find the greatest common factor of each row and column.");
     return true;
   }
   function fmAbove(S, i, ev) {   // the squared term let go anywhere above the equation opens the formula
@@ -2161,8 +2163,8 @@
       if (EXP.eq) {
         var O9 = S === "L" ? "R" : "L", zero = EXP[O9].length === 1 && EXP[O9][0].k === "c" && !EXP[O9][0].n.n;
         hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: EXP.rel || "=", z: null })); updUndo(); EXP[S] = [g];
-        if (zero) { EXP.rel = "="; EXP.zpq = true; EXP.sq = false; EXP.grq = true; EXP.zp = null; closeAsk(false); eqRender(); note(msg + " Now drag a factor up or down to split it into equations."); }
-        else { closeAsk(false); eqRender(); note(msg + (sqgOf(EXP.L, EXP.R) ? " Now drag the exponent across the = to take the square root of both sides." : "")); }
+        if (zero) { EXP.rel = "="; EXP.zpq = true; EXP.sq = false; EXP.grq = true; EXP.zp = null; closeAsk(false); eqRender(); note(msg + " Now split it into equations."); }
+        else { closeAsk(false); eqRender(); note(msg + (sqgOf(EXP.L, EXP.R) ? " Now take the square root of both sides." : "")); }
       }
       else { EXP.grp = true; exSet([g], msg); }
       if (demo && !locked) (EXP.eq ? eqDemoStep : exDemoStep)(900);
@@ -2176,11 +2178,11 @@
       var S = EXP.eq ? (fmFits(EXP.L) ? "L" : fmFits(EXP.R) ? "R" : "L") : null, its = fmSideOf(S || "L"), f = fmFits(its), sel = function (i) { return (EXP.eq ? "#exRow .exT[data-s=\"" + S + "\"]" : "#exRow .exT") + "[data-i=\"" + i + "\"]"; }, more = function () { fmDemoStep(700); };
       if (!f) return; if (FM && FM.done) return;
       var ia = f.ia;
-      if (!FM) { dmCap("Drag the squared term up to factor with a formula."); exMoveDemo(sel(ia), fmAnchor(), function () { fmShow(S); }, more); return; }
+      if (!FM) { dmCap("Factor with a formula."); exMoveDemo(sel(ia), fmAnchor(), function () { fmShow(S); }, more); return; }
       if (FM.kind !== f.kind) { dmCap(f.kind === "dos" ? "Two terms, one subtracted: a difference of squares." : "Three terms: a perfect square trinomial."); exTapDemo("#fmTogBtn", function () { fmToggle(); }, more); return; }
       var plan = { A2: f.ia, B2: f.ib, AB: f.iab };
       var k = fmNeed().filter(function (q) { return !FM.slots[q]; })[0]; if (!k) { more(); return; }
-      dmCap("Drag " + exSay([its[plan[k]]]) + " onto " + (k === "A2" ? "A²" : k === "B2" ? "B²" : "2AB") + ".");
+      dmCap(exSay([its[plan[k]]]) + " is " + (k === "A2" ? "A²" : k === "B2" ? "B²" : "2AB") + ".");
       exMoveDemo(sel(plan[k]), "#fmBox [data-drop=\"fm:" + k + "\"]", function () { fmPlace(k, plan[k]); }, more);
     }, ms);
   }
@@ -2251,7 +2253,7 @@
     grHide();
     if (EXP.eq) {
       hist.push(JSON.stringify({ L: EXP.L, R: EXP.R, rel: "=", z: null })); updUndo();
-      EXP.L = [g]; EXP.R = [{ k: "c", n: mk(0) }]; EXP.rel = "="; EXP.zpq = true; EXP.zp = null; closeAsk(false); eqRender(); note(msg + " Now drag a factor up or down to split it into equations.");
+      EXP.L = [g]; EXP.R = [{ k: "c", n: mk(0) }]; EXP.rel = "="; EXP.zpq = true; EXP.zp = null; closeAsk(false); eqRender(); note(msg + " Now split it into equations.");
     } else exSet([g], msg);
     if (demo && !locked) (EXP.eq ? eqDemoStep : exDemoStep)(900);
   }
@@ -2261,18 +2263,18 @@
       if (!EXP || !DM4.run || DM4.paused || locked) return;
       var its = grItems(); if (FM || fmFits(its)) { fmDemoStep(ms); return; } var gp = grAny(its); if (!gp) return;
       var alive = function () { return EXP && DM4.run && !DM4.paused && !locked; }, more = function () { grDemoStep(600); };
-      if (!GRP) { exRender(); grShow(); dmCap("Drag each term down into a box."); grDemoStep(1200); return; }
+      if (!GRP) { exRender(); grShow(); dmCap("Fill the box with the terms."); grDemoStep(1200); return; }
       if (GRP.done) return;
       if (gp.tri) {   // the AC method: x^2 top left, the middle term top right, the number bottom right; then turn the wheel to the pair that adds to b and click the circle
         var plan = [gp.ia, gp.ib, null, gp.ic];
         for (var c3 = 0; c3 < 4; c3++) if (plan[c3] != null && (!GRP.cells[c3] || GRP.cells[c3].i !== plan[c3])) {
-          (function (c, i) { dmCap("Drag " + exSay([its[i]]) + " into a box."); exMoveDemo((EXP.eq ? ".exT[data-s=\"L\"]" : ".exT") + "[data-i=\"" + i + "\"]", "#grpBox .gcell[data-k=\"" + c + "\"]", function () { grPlace(c, i); if (EXP.eq) eqRender(); else exRender(); }, more); })(c3, plan[c3]);
+          (function (c, i) { dmCap("Put " + exSay([its[i]]) + " in the box."); exMoveDemo((EXP.eq ? ".exT[data-s=\"L\"]" : ".exT") + "[data-i=\"" + i + "\"]", "#grpBox .gcell[data-k=\"" + c + "\"]", function () { grPlace(c, i); if (EXP.eq) eqRender(); else exRender(); }, more); })(c3, plan[c3]);
           return;
         }
         if (GRP.split) { grDemoStep(600); return; }   // the middle term is splitting: wait for it
         if (!grSelOn()) return;
         var P3 = grPairs(gp.a * gp.c), want3 = P3.findIndex(function (q) { return q[0] === gp.p && q[1] === gp.q; }), dirn = want3 > GRP.si ? 1 : -1;
-        if (want3 === GRP.si && !GRP.touched) { dmCap("The first pair already works. Click the circle to check it."); exTapDemo("#grpBox .gsDial [data-g=\"go\"]", function () { grSelPick(); }, function () { grDemoStep(900); }); return; }
+        if (want3 === GRP.si && !GRP.touched) { dmCap("The first pair already works."); exTapDemo("#grpBox .gsDial [data-g=\"go\"]", function () { grSelPick(); }, function () { grDemoStep(900); }); return; }
         if (want3 === GRP.si) { dmCap("This pair multiplies to " + sg(mk(gp.a * gp.c)) + " and adds to " + sg(mk(gp.b)) + "."); grDemoStep(900); return; }   // it is taken on its own
         dmCap("Turn the wheel: find two numbers that multiply to " + sg(mk(gp.a * gp.c)) + " and add to " + sg(mk(gp.b)) + ".");
         exTapDemo("#grpBox .gsDial [data-g=\"" + (dirn > 0 ? "dn" : "up") + "\"]", function () { grSelMove(dirn); }, function () { grDemoStep(700); });
@@ -2280,7 +2282,7 @@
       }
       for (var c = 0; c < 4; c++) if (!GRP.cells[c] || GRP.cells[c].i !== gp.cells[c]) {
         (function (c) {
-          var i = gp.cells[c]; dmCap("Drag " + exSay([its[i]]) + " into a box.");
+          var i = gp.cells[c]; dmCap("Put " + exSay([its[i]]) + " in the box.");
           exMoveDemo((EXP.eq ? ".exT[data-s=\"L\"]" : ".exT") + "[data-i=\"" + i + "\"]", "#grpBox .gcell[data-k=\"" + c + "\"]", function () { grPlace(c, i); if (EXP.eq) eqRender(); else exRender(); }, more);
         })(c);
         return;
@@ -2358,7 +2360,7 @@
     radWheelHide(); var P = radPairs(n), w = document.createElement("div"), si = 0, dragged = false; w.id = "radWheel"; w.setAttribute("aria-label", "Factor pairs of " + n);
     w.innerHTML = "<div class=\"rwT\">√" + n + " = √( ? · ? )</div><div class=\"rwB\"><div class=\"gsWin\"><div class=\"gsList\"></div><div class=\"gsMid\"></div></div>" +
       "<div class=\"gsDial\" title=\"Drag up or down, or click the triangles; click the circle to choose\"><svg viewBox=\"0 0 18 44\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linejoin=\"round\"><path data-g=\"up\" d=\"M9 1.8 16.3 12.6H1.7Z\"/><circle data-g=\"go\" cx=\"9\" cy=\"22\" r=\"5.4\"/><path data-g=\"dn\" d=\"M1.7 31.4H16.3L9 42.2Z\"/></svg></div></div>" +
-      "<div class=\"rwM\">Turn the wheel to a pair with a perfect square in it, then click the circle.</div>";
+      "<div class=\"rwM\">Find a pair with a perfect square in it.</div>";
     document.body.appendChild(w); var r = el.getBoundingClientRect(); w.style.left = Math.max(8, Math.min(window.innerWidth - w.offsetWidth - 8, r.left + r.width / 2 - w.offsetWidth / 2)) + "px"; w.style.top = Math.max(8, r.top - w.offsetHeight - 14) + "px";
     var win = w.querySelector(".gsWin"), dial = w.querySelector(".gsDial"), L = w.querySelector(".gsList"), m = w.querySelector(".rwM");
     var rowH = function () { return L.firstChild ? L.firstChild.getBoundingClientRect().height || 20 : 20; };
@@ -2410,26 +2412,26 @@
     if (isSq(f)) {   // a perfect square: its root becomes a number in front
       var rt = Math.round(Math.sqrt(f)), nf = fs.slice(); nf.splice(k, 1); var u = rfMk(t, mul(t.n, mk(rt)), nf);
       if (t.mf || !same(mk(Math.abs(t.n.n), t.n.d), mk(1))) u.mf = (t.mf ? t.mf.slice() : [mk(Math.abs(t.n.n), t.n.d)]).concat([mk(rt)]);   // 3√100 · √2 becomes 3 · 10 · √2: the multiplying is its own step
-      var go = function () { apply(u, "√" + f + " = " + rt + (fs.length > 1 || !same(t.n, mk(1)) ? ", so " + exSay([t]).replace(/^±/, "") + " = " + exSay([u]).replace(/^±/, "") : "") + "." + (u.mf ? " Now click the \u00b7 to multiply." : rdLeft(u) ? " Now click " + (u.f && isSq(u.f[rfNext(u.f)]) ? "the perfect square." : "the square root: a perfect square still divides " + (u.f ? u.f[rfNext(u.f)] : u.r.n) + ".") : "")); };
+      var go = function () { apply(u, "√" + f + " = " + rt + (fs.length > 1 || !same(t.n, mk(1)) ? ", so " + exSay([t]).replace(/^±/, "") + " = " + exSay([u]).replace(/^±/, "") : "") + "." + (u.mf ? " Now multiply." : rdLeft(u) ? " Now " + (u.f && isSq(u.f[rfNext(u.f)]) ? "take the square root of the perfect square." : "simplify the square root: a perfect square still divides " + (u.f ? u.f[rfNext(u.f)] : u.r.n) + ".") : "")); };
       if (mode === "calculate" && !pick && !SIM) { eqAsk({ kind: "rsv", want: rt, go: go }, "√" + f + " ="); $("askIn").placeholder = "e.g. 3"; return; }
       go(); return;
     }
-    if (radSq(f).s === 1) { note("√" + f + " is already simplified: no perfect square (other than 1) divides " + f + "." + (t.f && rfNext(t.f) >= 0 ? " Click the other square root." : "")); return; }
+    if (radSq(f).s === 1) { note("√" + f + " is already simplified: no perfect square (other than 1) divides " + f + "." + (t.f && rfNext(t.f) >= 0 ? " Simplify the other square root." : "")); return; }
     var take = function (sq) { var pr = rfPair(f, sq), nf2 = fs.slice(); nf2.splice.apply(nf2, [k, 1].concat(pr));
-      apply(rfMk(t, t.n, nf2), "Product Property of Square Roots: √" + f + " = √(" + pr[0] + " · " + pr[1] + ") = √" + pr[0] + " · √" + pr[1] + ". Now click " + (isSq(pr[0]) && isSq(pr[1]) ? "each square root" : "√" + (isSq(pr[0]) ? pr[0] : pr[1])) + "."); };
+      apply(rfMk(t, t.n, nf2), "Product Property of Square Roots: √" + f + " = √(" + pr[0] + " · " + pr[1] + ") = √" + pr[0] + " · √" + pr[1] + ". Now take the square root of " + (isSq(pr[0]) && isSq(pr[1]) ? "each perfect square" : (isSq(pr[0]) ? pr[0] : pr[1])) + "."); };
     if (pick) { take(pick); return; }
     rfChoose(f, elOf(), take);
   }
   function mfDo(t, apply) {   // the product in front worked out: 3 · 10 · √2 becomes 30√2
     if (!t || !t.mf) return; var u = JSON.parse(JSON.stringify(t)); delete u.mf; var pr = t.mf.reduce(function (a, b) { return mul(a, b); }, mk(1)), lab = t.mf.map(function (q) { return exFr(q); }).join(" \u00b7 ");
-    var go = function () { apply(u, lab + " = " + exFr(pr) + ", so " + exSay([t]).replace(/^\u00b1/, "") + " = " + exSay([u]).replace(/^\u00b1/, "") + "." + (rdLeft(u) ? " Now click the square root: a perfect square still divides " + (u.f ? u.f[rfNext(u.f)] : u.r.n) + "." : "")); };
+    var go = function () { apply(u, lab + " = " + exFr(pr) + ", so " + exSay([t]).replace(/^\u00b1/, "") + " = " + exSay([u]).replace(/^\u00b1/, "") + "." + (rdLeft(u) ? " Now simplify the square root: a perfect square still divides " + (u.f ? u.f[rfNext(u.f)] : u.r.n) + "." : "")); };
     if (mode === "calculate" && !SIM) { eqAsk({ kind: "cq", want: { k: "c", n: pr }, go: go }, lab + " ="); $("askT").textContent = lab + " ="; $("askIn").placeholder = "e.g. 30"; return; }
     go();
   }
   function rfDemo(S, i) {   // the equation's next square root step, for the demo
-    var t0 = EXP[S][i]; if (t0.mf) return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"] .exMf', cap: "Click the \u00b7 to multiply: " + t0.mf.map(function (q) { return exFr(q); }).join(" \u00b7 ") + ".", run: function () { eqMfDo(S, i); } };
+    var t0 = EXP[S][i]; if (t0.mf) return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"] .exMf', cap: "Multiply: " + t0.mf.map(function (q) { return exFr(q); }).join(" \u00b7 ") + ".", run: function () { eqMfDo(S, i); } };
     var t = EXP[S][i], k = t.f ? Math.max(0, rfNext(t.f)) : 0, f = t.f ? t.f[k] : t.r.n;
-    return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"] .exRad' + (t.f ? '[data-rf="' + k + '"]' : ""), cap: t.r.d !== 1 ? "Find the square root of " + exFr(t.r) + "." : isSq(f) ? "√" + f + " = " + Math.round(Math.sqrt(f)) + ". Click it." : "The biggest perfect square that divides " + f + " is " + rfBig(f) + ". Click √" + f + " to split it.", run: function () { eqSimp(S, i, null, k); } };
+    return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"] .exRad' + (t.f ? '[data-rf="' + k + '"]' : ""), cap: t.r.d !== 1 ? "Find the square root of " + exFr(t.r) + "." : isSq(f) ? "√" + f + " = " + Math.round(Math.sqrt(f)) + "." : "The biggest perfect square that divides " + f + " is " + rfBig(f) + ": split √" + f + ".", run: function () { eqSimp(S, i, null, k); } };
   }
   function radParse(v, n) {   // a typed pair, "4*50", "4·50", "4 50" or "4, 50": [a, b] with a·b = n
     var m = String(v).replace(/[\u221a()]/g, " ").match(/(\d+)\s*(?:[*\u00b7x\u00d7,]|\s)\s*(\d+)/); if (!m) return null; var a = +m[1], b = +m[2]; return a * b === n ? [a, b] : null;
@@ -2444,7 +2446,7 @@
     if (t.r.d === 1 && !isSq(t.r.n) && t.r.n > 1) {   // not a perfect square: choose a factor pair with a perfect square in it
       var rs0 = radSq(t.r.n); if (rs0.s === 1) { note("\u221a" + t.r.n + " is already as simple as it gets: no perfect square divides " + t.r.n + "."); return; }
       var take = function (sq) { var N2 = eqClone(), u2 = { k: "r", n: mul(t.n, mk(Math.round(Math.sqrt(sq)))), r: mk(t.r.n / sq) }; if (t.pm) u2.pm = true; if (u2.r.n === 1) { u2 = { k: "c", n: u2.n }; if (t.pm) u2.pm = true; }
-        N2[S][i] = u2; eqSet(N2, "\u221a" + t.r.n + " = \u221a(" + sq + " \u00b7 " + t.r.n / sq + ") = \u221a" + sq + " \u00b7 \u221a" + t.r.n / sq + " = " + exSay([u2]).replace(/^\u00b1/, "") + "." + (radSq(t.r.n / sq).s > 1 ? " Click the square root again: a perfect square still divides " + t.r.n / sq + "." : "")); };
+        N2[S][i] = u2; eqSet(N2, "\u221a" + t.r.n + " = \u221a(" + sq + " \u00b7 " + t.r.n / sq + ") = \u221a" + sq + " \u00b7 \u221a" + t.r.n / sq + " = " + exSay([u2]).replace(/^\u00b1/, "") + "." + (radSq(t.r.n / sq).s > 1 ? " Simplify the square root again: a perfect square still divides " + t.r.n / sq + "." : "")); };
       if (pick) { take(pick); return; }
       if (SIM) { take(rs0.s * rs0.s); return; }
       if (mode === "sequence") { var el = document.querySelector('#exRow .exT[data-s="' + S + '"][data-i="' + i + '"] .exRad') || $("exRow"); radWheel(t.r.n, el, function (sq) { take(sq); }); return; }
@@ -2850,7 +2852,7 @@
     N.L = dv(N.L, "L"); N.R = dv(N.R, "R");
     ["L", "R"].forEach(function (Sd) { for (var j = N[Sd].length - 1; j >= 0; j--) { var g = N[Sd][j]; if (g.k === "g" && same(g.m, mk(1)) && !g.b && !g.abs && !g.pm) N[Sd].splice.apply(N[Sd], [j, 1].concat(g.items)); } });
     N.L = eqNorm(N.L); N.R = eqNorm(N.R); if (flip) N.rel = relRev(N.rel);
-    var msg = "Divide both sides by " + sg(a) + ": every term on both sides is divided by " + sg(a) + "." + (whole ? " Click a fraction to simplify it." : "") + (flip ? " Dividing by a negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "." : "");
+    var msg = "Divide both sides by " + sg(a) + ": every term on both sides is divided by " + sg(a) + "." + (whole ? " Simplify the fractions." : "") + (flip ? " Dividing by a negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "." : "");
     if (mode === "calculate" && !ready && !whole) { cqRun(cqScale(ia, "\u00f7 " + cqN(a)), N, msg); return; }   // (a whole number: 8/2 is left to click and simplify)
     eqSet(N, msg);
   }
@@ -2935,7 +2937,7 @@
     }
     var N = eqClone(), t = N[s.S][0], c = N[s.O][0], a = t.n, q = mul(c.n, inv(a)), red = a.d === 1 && c.n.d === 1 && Math.abs(a.n) > 1 && gcd(c.n.n, a.n) > 1 && c.n.n % a.n !== 0 && c.k === "c";   // 6/4 stays as it is until its bar is clicked
     t.n = mk(1); if (red) c.u = { n: c.n.n * (a.n < 0 ? -1 : 1), d: Math.abs(a.n) }; c.n = q;
-    if (red) { eqSet(N, "Divide both sides by " + sg(a) + ": " + sg(EXP[s.O][0].n) + " \u00f7 " + sg(a) + " = " + (c.u.n < 0 ? "\u2212" : "") + Math.abs(c.u.n) + "/" + c.u.d + ". Click the fraction to simplify."); return; }
+    if (red) { eqSet(N, "Divide both sides by " + sg(a) + ": " + sg(EXP[s.O][0].n) + " \u00f7 " + sg(a) + " = " + (c.u.n < 0 ? "\u2212" : "") + Math.abs(c.u.n) + "/" + c.u.d + ". Simplify the fraction."); return; }
     var b = { N: N, msg: "Divide both sides by " + sg(a) + ": " + sg(EXP[s.O][0].n) + " ÷ " + sg(a) + " = " + sg(q) + ".", want: { k: "c", n: q } };
     if (a.n < 0 && N.rel !== "=") { N.rel = relRev(N.rel); b.msg += " Dividing by a negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "."; }
     if (mode === "calculate") { eqAsk({ kind: "term", b: b }, sg(EXP[s.O][0].n) + " ÷ " + sg(a) + " ="); return; }
@@ -3229,50 +3231,50 @@
     if (EXP.qu) return quDemoStep();
     var sides = ["L", "R"], q, i, j, S;
     var sg0 = !EXP.zp ? sqgOf(EXP.L, EXP.R) : null;
-    if (sg0 && sg0.g.pw) return { mv: ['#exRow .exT[data-s="' + sg0.S + '"][data-i="0"] .exPw', "#exRow .exEq"], cap: "Drag the exponent across the =: it turns into \u00b1\u221a.", run: function () { eqRootG(sg0.S, 0); } };
+    if (sg0 && sg0.g.pw) return { mv: ['#exRow .exT[data-s="' + sg0.S + '"][data-i="0"] .exPw', "#exRow .exEq"], cap: "Undo the exponent: \u00b1\u221a.", run: function () { eqRootG(sg0.S, 0); } };
     if (!EXP.zp && EXP.L.concat(EXP.R).some(function (t) { return t.mf || (t.k === "r" && !radDone(t)); })) { for (var q9 = 0; q9 < 2; q9++) { var S9 = q9 ? "R" : "L"; for (var i9 = 0; i9 < EXP[S9].length; i9++) if (EXP[S9][i9].mf || (EXP[S9][i9].k === "r" && !radDone(EXP[S9][i9]))) return rfDemo(S9, i9); } }
-    if (!EXP.zp && EXP.L.concat(EXP.R).some(function (t) { return t.pm; })) return { tap: ".exPm", cap: "\u00b1 means two equations. Click it to split them.", run: function () { eqPm(); } };
-    if (!EXP.zp) for (var uq = 0; uq < 2; uq++) { var Su = uq ? "R" : "L"; for (var ui = 0; ui < EXP[Su].length; ui++) if (EXP[Su][ui].u) return { tap: '.exT[data-s="' + Su + '"][data-i="' + ui + '"]', cap: "Click the fraction to simplify.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(Su, ui) }; }   // fractions from dividing every term are simplified first
+    if (!EXP.zp && EXP.L.concat(EXP.R).some(function (t) { return t.pm; })) return { tap: ".exPm", cap: "\u00b1 means two equations: split them.", run: function () { eqPm(); } };
+    if (!EXP.zp) for (var uq = 0; uq < 2; uq++) { var Su = uq ? "R" : "L"; for (var ui = 0; ui < EXP[Su].length; ui++) if (EXP[Su][ui].u) return { tap: '.exT[data-s="' + Su + '"][data-i="' + ui + '"]', cap: "Simplify the fraction.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(Su, ui) }; }   // fractions from dividing every term are simplified first
     if ((EXP.sf || EXP.quq) && !EXP.zp && !EXP.grq) { var sfs = sfStep(); if (sfs) return sfs; }
-    if (EXP.quq && !EXP.zp) { var qo = quStd(); if (qo && !qo.bad) return { tap: "#quBtn", cap: "Standard form: a = " + quNs(qo.a) + ", b = " + quNs(qo.b) + ", c = " + quNs(qo.c) + ". Click Quadratic Formula.", run: function () { quGo(qo); } }; }
+    if (EXP.quq && !EXP.zp) { var qo = quStd(); if (qo && !qo.bad) return { tap: "#quBtn", cap: "Standard form: a = " + quNs(qo.a) + ", b = " + quNs(qo.b) + ", c = " + quNs(qo.c) + ". Use the Quadratic Formula.", run: function () { quGo(qo); } }; }
     if (EXP.qd && !EXP.zp && !sg0 && !EXP.L.concat(EXP.R).some(function (t) { return t.k === "g"; })) { var qs = qdStep(); if (qs) return qs; }
-    if (EXP.c3) return { tap: "#exRow .c3Rel", cap: "A three-part inequality is two inequalities. Tap a sign to split it.", run: function () { cmpSplit(); } };
+    if (EXP.c3) return { tap: "#exRow .c3Rel", cap: "A three-part inequality is two inequalities: split it.", run: function () { cmpSplit(); } };
     if (EXP.zp && EXP.zp.done[EXP.zp.act]) { var nx = EXP.zp.done.indexOf(false); if (nx >= 0) zpFocus(nx); }
     var avs = EXP.av ? avFind() : null;
     if (avs) {   // isolate the absolute value, tap a bar, click the ±
       var aS = avs.S, aO = eqOther(aS), aT = function (S, i) { return '.exT[data-s="' + S + '"][data-i="' + i + '"]'; };
-      if (avs.t.pm) return { tap: ".exPm", cap: "\u00b1 means two equations. Click it to split them.", run: function () { eqPm(); } };
+      if (avs.t.pm) return { tap: ".exPm", cap: "\u00b1 means two equations: split them.", run: function () { eqPm(); } };
       var aci = EXP[aS].findIndex(function (t) { return t.k === "c"; });
-      if (aci >= 0) { var atj = EXP[aO].findIndex(function (t) { return t.k === "c"; }); return { mv: [aT(aS, aci), atj >= 0 ? aT(aO, atj) : ".exEq"], cap: "Drag the number to the other side.", run: function () { var b = eqBuild(aS, aci, aO, atj); eqSet(b.N, b.msg); } }; }
-      for (var ai = 0; ai < EXP[aO].length; ai++) for (var aj = ai + 1; aj < EXP[aO].length; aj++) if (exLike(EXP[aO][ai], EXP[aO][aj])) return (function (i2, j2) { return { mv: [aT(aO, i2), aT(aO, j2)], cap: "Drag a number onto the other number.", run: function () { var b = eqBuild(aO, i2, aO, j2); eqSet(b.N, b.msg); } }; })(ai, aj);
-      if (!same(avs.t.m, mk(1))) return { mv: [same(avs.t.m, mk(-1)) ? '.exOp.exNeg[data-for="' + aS + ":" + avs.i + '"]' : aT(aS, avs.i) + " > .exM", ".exEq"], cap: "Drag the " + exFr(avs.t.m) + " to the other side: it divides both sides by " + exFr(avs.t.m) + ".", run: function () { eqDivGroup(aS, avs.i); } };
-      return { tap: aT(aS, avs.i) + " .avBar", cap: "Tap a bar of the absolute value.", run: function () { eqAvOpen(aS, avs.i); } };
+      if (aci >= 0) { var atj = EXP[aO].findIndex(function (t) { return t.k === "c"; }); return { mv: [aT(aS, aci), atj >= 0 ? aT(aO, atj) : ".exEq"], cap: undoW(EXP[aS][aci]), run: function () { var b = eqBuild(aS, aci, aO, atj); eqSet(b.N, b.msg); } }; }
+      for (var ai = 0; ai < EXP[aO].length; ai++) for (var aj = ai + 1; aj < EXP[aO].length; aj++) if (exLike(EXP[aO][ai], EXP[aO][aj])) return (function (i2, j2) { return { mv: [aT(aO, i2), aT(aO, j2)], cap: "Combine the numbers.", run: function () { var b = eqBuild(aO, i2, aO, j2); eqSet(b.N, b.msg); } }; })(ai, aj);
+      if (!same(avs.t.m, mk(1))) return { mv: [same(avs.t.m, mk(-1)) ? '.exOp.exNeg[data-for="' + aS + ":" + avs.i + '"]' : aT(aS, avs.i) + " > .exM", ".exEq"], cap: "Divide both sides by " + exFr(avs.t.m) + ".", run: function () { eqDivGroup(aS, avs.i); } };
+      return { tap: aT(aS, avs.i) + " .avBar", cap: "Open the absolute value.", run: function () { eqAvOpen(aS, avs.i); } };
     }
     var ovg = null; if (!EXP.zp && !EXP.lit) ["L", "R"].forEach(function (S1) { EXP[S1].forEach(function (t1, i1) { if (!ovg && t1.k === "g" && t1.ov && !t1.b) ovg = { S: S1, i: i1, t: t1 }; }); });
     if (ovg) {   // (x − 2)/3 + 2 = 10: move the 2 first, then multiply both sides by 3
       var oS = ovg.S, oO = eqOther(oS), oT = function (S1, i1) { return '.exT[data-s="' + S1 + '"][data-i="' + i1 + '"]'; }, oc = EXP[oS].findIndex(function (t1, i1) { return i1 !== ovg.i; });
-      if (oc >= 0) { var otj = EXP[oO].findIndex(function (t1) { return t1.k === EXP[oS][oc].k && exLike(t1, EXP[oS][oc]); }); if (otj >= 0 && fdNeed(EXP[oS][oc], EXP[oO][otj])) otj = -1; return { mv: [oT(oS, oc), otj >= 0 ? oT(oO, otj) : ".exEq"], cap: "Drag " + exSay([EXP[oS][oc]]) + " to the other side, so the fraction is by itself.", run: function () { var b = eqBuild(oS, oc, oO, otj); eqSet(b.N, b.msg); } }; }
-      return { mv: [oT(oS, ovg.i) + " .exOvD", ".exEq"], cap: "Drag the " + ovg.t.m.d + " across the =: it multiplies both sides by " + ovg.t.m.d + ".", run: function () { eqDivGroup(oS, ovg.i); } };
+      if (oc >= 0) { var otj = EXP[oO].findIndex(function (t1) { return t1.k === EXP[oS][oc].k && exLike(t1, EXP[oS][oc]); }); if (otj >= 0 && fdNeed(EXP[oS][oc], EXP[oO][otj])) otj = -1; return { mv: [oT(oS, oc), otj >= 0 ? oT(oO, otj) : ".exEq"], cap: undoW(EXP[oS][oc]).replace(".", ", so the fraction is by itself."), run: function () { var b = eqBuild(oS, oc, oO, otj); eqSet(b.N, b.msg); } }; }
+      return { mv: [oT(oS, ovg.i) + " .exOvD", ".exEq"], cap: "Multiply both sides by " + ovg.t.m.d + ".", run: function () { eqDivGroup(oS, ovg.i); } };
     }
     var dvk = EXP.dvq && !EXP.zpq && EXP.rel === "=" ? dvOK(EXP.L, EXP.R) : null;
-    if (dvk) { var dg = EXP[dvk.S][dvk.i]; return { mv: ['.exT[data-s="' + dvk.S + '"][data-i="' + dvk.i + '"] > .exM', ".exEq"], cap: "Drag the " + dg.m.n + " to the other side: it divides every term by " + dg.m.n + ".", run: function () { eqDivGroup(dvk.S, dvk.i); } }; }
-    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].u) return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"]', cap: "Click the fraction to simplify.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(S, i) }; }
-    if (EXP.zpq && zpOf(EXP.L, EXP.R)) return { cap: "If two numbers multiply to make 0, one of them must be 0. Drag a factor up.", mv: ['#exRow .exT[data-s="L"][data-i="0"] > .exG', zpAnchor(true)], run: function () { var a = $("zpAnchor"); if (a) a.remove(); zpSplit(0, true); } };
-    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return EXP[S][i].b && !EXP[S][i].c && bxOnT(EXP[S][i]) ? { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"] > .exG', '.exT[data-s="' + S + '"][data-i="' + i + '"] > .exH'], cap: "Drag one set of parentheses onto the other: the box opens.", run: (function (S, i) { return function () { bxOpen(i, S); }; })(S, i) } : { hot: [S + i], cap: "Drag " + dgWord(EXP[S][i].m) + " onto the parentheses." + (bxOnT(EXP[S][i]) ? " The box opens." : ""), key: S + ":" + i, anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { if (bxOnT(EXP[S][i])) { bxOpen(i, S); return; } var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, distMsg(g, d), g); }; })(S, i) }; }
+    if (dvk) { var dg = EXP[dvk.S][dvk.i]; return { mv: ['.exT[data-s="' + dvk.S + '"][data-i="' + dvk.i + '"] > .exM', ".exEq"], cap: "Divide every term by " + dg.m.n + ".", run: function () { eqDivGroup(dvk.S, dvk.i); } }; }
+    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].u) return { tap: '.exT[data-s="' + S + '"][data-i="' + i + '"]', cap: "Simplify the fraction.", run: (function (S, i) { return function () { eqFrSimp(S, i); }; })(S, i) }; }
+    if (EXP.zpq && zpOf(EXP.L, EXP.R)) return { cap: "If two numbers multiply to make 0, one of them must be 0: split into two equations.", mv: ['#exRow .exT[data-s="L"][data-i="0"] > .exG', zpAnchor(true)], run: function () { var a = $("zpAnchor"); if (a) a.remove(); zpSplit(0, true); } };
+    for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].k === "g") return EXP[S][i].b && !EXP[S][i].c && bxOnT(EXP[S][i]) ? { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"] > .exG', '.exT[data-s="' + S + '"][data-i="' + i + '"] > .exH'], cap: "Multiply the binomials with the box.", run: (function (S, i) { return function () { bxOpen(i, S); }; })(S, i) } : { hot: [S + i], cap: "Distribute " + dgWord(EXP[S][i].m) + ".", key: S + ":" + i, anim: '.exT[data-s="' + S + '"][data-i="' + i + '"]', run: (function (S, i) { return function () { if (bxOnT(EXP[S][i])) { bxOpen(i, S); return; } var N = eqClone(), g = N[S][i], d = exDist(g); N[S].splice.apply(N[S], [i, 1].concat(d)); N.L = eqNorm(N.L); N.R = eqNorm(N.R); eqSet(N, distMsg(g, d), g); }; })(S, i) }; }
     for (q = 0; q < 2; q++) { var fdq = fdDemo(sides[q], EXP[sides[q]]); if (fdq) return fdq; }
-    for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"]', '.exT[data-s="' + S + '"][data-i="' + j + '"]'], cap: "Drag a term onto its like term.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
+    for (q = 0; q < 2; q++) { S = sides[q]; var its = EXP[S]; for (i = 0; i < its.length; i++) for (j = i + 1; j < its.length; j++) if (exLike(its[i], its[j])) return { mv: ['.exT[data-s="' + S + '"][data-i="' + i + '"]', '.exT[data-s="' + S + '"][data-i="' + j + '"]'], cap: "Combine like terms.", run: (function (S, i, j) { return function () { var b = eqBuild(S, i, S, j); eqSet(b.N, b.msg); }; })(S, i, j) }; }
     var xi = function (S) { return EXP[S].findIndex(function (t) { return t.k === "x"; }); }, ci = function (S) { return EXP[S].findIndex(function (t) { return t.k === "c"; }); };
     var xl = xi("L"), xr = xi("R");
     if (xl >= 0 && xr >= 0) {   // x on both sides: move the smaller x term onto the larger, so the x that is left is positive
       var big = EXP.lit || EXP.L[xl].n.n * EXP.R[xr].n.d - EXP.R[xr].n.n * EXP.L[xl].n.d > 0, from = big ? "R" : "L", to = big ? "L" : "R", fi = big ? xr : xl, ti = big ? xl : xr;
-      return { mv: ['.exT[data-s="' + from + '"][data-i="' + fi + '"]', '.exT[data-s="' + to + '"][data-i="' + ti + '"]'], cap: "Drag the x term onto the other x term.", run: function () { var b = eqBuild(from, fi, to, ti); eqSet(b.N, b.msg); } };
+      return { mv: ['.exT[data-s="' + from + '"][data-i="' + fi + '"]', '.exT[data-s="' + to + '"][data-i="' + ti + '"]'], cap: "Combine the x terms.", run: function () { var b = eqBuild(from, fi, to, ti); eqSet(b.N, b.msg); } };
     }
     var xs = xl >= 0 ? "L" : "R", os = eqOther(xs), cx = ci(xs);
-    if (cx >= 0 && xi(xs) >= 0 && EXP[xs].length > 1) { var tj = ci(os); if (tj >= 0 && fdNeed(EXP[xs][cx], EXP[os][tj])) tj = -1; return { mv: ['.exT[data-s="' + xs + '"][data-i="' + cx + '"]', tj >= 0 ? '.exT[data-s="' + os + '"][data-i="' + tj + '"]' : ".exEq"], cap: "Drag the number to the other side.", run: function () { var b = eqBuild(xs, cx, os, tj); eqSet(b.N, b.msg); } }; }
-    if (eqDivReady()) return { mv: ['.exT[data-s="' + eqDivReady().S + '"][data-i="0"] .exCo', ".exEq"], cap: (function () { var c0 = EXP[eqDivReady().S][0]; return c0 && c0.n && c0.n.n === -1 && c0.n.d === 1 && !hasS(c0) ? "Drag the \u2212 in front of x across the =: it means \u22121." : "Drag the number in front of x across the =."; })(), run: function () { eqDivide(); } };
+    if (cx >= 0 && xi(xs) >= 0 && EXP[xs].length > 1) { var tj = ci(os); if (tj >= 0 && fdNeed(EXP[xs][cx], EXP[os][tj])) tj = -1; return { mv: ['.exT[data-s="' + xs + '"][data-i="' + cx + '"]', tj >= 0 ? '.exT[data-s="' + os + '"][data-i="' + tj + '"]' : ".exEq"], cap: undoW(EXP[xs][cx]), run: function () { var b = eqBuild(xs, cx, os, tj); eqSet(b.N, b.msg); } }; }
+    if (eqDivReady()) return { mv: ['.exT[data-s="' + eqDivReady().S + '"][data-i="0"] .exCo', ".exEq"], cap: (function () { var c0 = EXP[eqDivReady().S][0]; return c0 && c0.n && c0.n.n === -1 && c0.n.d === 1 && !hasS(c0) ? "The \u2212 in front of x means \u22121: divide by \u22121." : "Divide by the number in front of x."; })(), run: function () { eqDivide(); } };
     var sq = sqSides();
-    if (sq) return { mv: ['.exT[data-s="' + sq.S + '"][data-i="0"] sup', ".exEq"], cap: "Drag the exponent across the =: it turns into a square root.", run: function () { eqRoot(); } };
-    if (!EXP.zp && EXP.L.concat(EXP.R).some(function (t) { return t.pm; })) return { tap: ".exPm", cap: "\u00b1 means two answers. Click it to split into two equations.", run: function () { eqPm(); } };
+    if (sq) return { mv: ['.exT[data-s="' + sq.S + '"][data-i="0"] sup', ".exEq"], cap: "Undo the exponent: take the square root.", run: function () { eqRoot(); } };
+    if (!EXP.zp && EXP.L.concat(EXP.R).some(function (t) { return t.pm; })) return { tap: ".exPm", cap: "\u00b1 means two answers: split into two equations.", run: function () { eqPm(); } };
     for (q = 0; q < 2; q++) { S = sides[q]; for (i = 0; i < EXP[S].length; i++) if (EXP[S][i].mf || (EXP[S][i].k === "r" && !radDone(EXP[S][i]))) return rfDemo(S, i); }
     return null;
   }
@@ -4196,7 +4198,7 @@
     else if (mode === "calculate") n.raw = sg(q.c) + "/" + wrap(co);
     ws[i] = n; done(i);
     if (q.rel && co.n < 0) note("Dividing both sides by a negative number turns the sign around: " + q.rel + " becomes " + n.rel + ".");
-    else if (red) note("Click the fraction to simplify " + n.raw.replace("-", "\u2212") + ".");
+    else if (red) note("Simplify the fraction " + n.raw.replace("-", "\u2212") + ".");
     if (mode === "calculate" && !red) openAsk(ws.indexOf(n), "simp");
   }
   // drag a constant over to the other side: combine it into the right side
@@ -5698,8 +5700,8 @@
     D3.P = { planes: P, sol: sol, R: R, polys: d3Polys(P, R), lines: d3Lines(P, R) };
     var num = function (v) { v = Math.round(v * 100) / 100; return (v < 0 ? "−" : "") + Math.abs(v); };
     $("d3Leg").innerHTML = orig.map(function (q, i) { return "<span style=\"color:" + D3C[i] + "\">■ " + fmt(q) + "</span>"; }).join("");
-    $("d3Txt").innerHTML = sol ? "Each equation is a plane. The three planes meet at one point, the solution <b>(" + sol.map(num).join(", ") + ")</b>. Drag to turn the picture."
-      : "Each equation is a plane. These three planes do not meet at a single point, so there is no one solution. Drag to turn the picture.";
+    $("d3Txt").innerHTML = sol ? "Each equation is a plane. The three planes meet at one point, the solution <b>(" + sol.map(num).join(", ") + ")</b>."
+      : "Each equation is a plane. These three planes do not meet at a single point, so there is no one solution.";
     s.hidden = false; D3.spin = !matchMedia("(prefers-reduced-motion: reduce)").matches; d3Loop();
     setTimeout(function () { try { s.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) { } }, 300);
   }
@@ -7326,7 +7328,7 @@ var ESPIC = {
     if (!on) { if (!el.hidden) { el.hidden = true; el.innerHTML = ""; } gwSig = ""; return; }
     var P = gwParts(gwCur()), d = QZ.gwd || 0, sig = QZ.pi + "|" + d + "|" + !!QZ.gwAsk + "|" + P.map(function (q) { return q.txt; }).join(";");
     if (sig === gwSig && !el.hidden) return; gwSig = sig;
-    var h = "<div class=\"gwLab\">" + (d < P.length ? "Drag each transformation onto <span class=\"cg lm\"><i>g</i>(<i>x</i>)</span>, in order:" : "Now drag <span class=\"cf lm\"><i>x</i>\u00b2</span> from <span class=\"cf lm\"><i>f</i>(<i>x</i>) = <i>x</i>\u00b2</span> in the question onto <span class=\"cg lm\"><i>g</i>(<i>x</i>)</span>.") + "</div>";
+    var h = "<div class=\"gwLab\">" + (d < P.length ? "Apply each transformation to <span class=\"cg lm\"><i>g</i>(<i>x</i>)</span>, in order:" : "Now replace <span class=\"cf lm\"><i>f</i></span> with its rule, <span class=\"cf lm\"><i>x</i>\u00b2</span>.") + "</div>";
     P.forEach(function (q, i) { h += "<span class=\"gwChip" + (i < d ? " used" : "") + "\" data-gw=\"" + i + "\"" + (i < d ? "" : " title=\"Drag me onto g(x)\"") + ">" + q.txt.replace("x-axis", "<i>x</i>-axis") + "</span>"; });
     if (QZ.gwAsk) h += "<div class=\"gwLab\">A reflection in the <i>x</i>-axis multiplies the number in front by \u22121:</div><div class=\"gwAsk\"><span>\u22121 \u00b7 " + nf(Math.abs(gwCur().a)) + " =</span><input id=\"gwIn\" inputmode=\"decimal\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"The new number in front of f(x)\"></div>";
     el.innerHTML = h; el.hidden = false;
@@ -7351,7 +7353,7 @@ var ESPIC = {
   // the question's f dropped on g(x): f is replaced by its rule, and that g(x) is the answer
   function gwSub() {
     if (!gwOn() || PG.show.eq || QZ.step >= 4) return;
-    var P = gwParts(gwCur()); if ((QZ.gwd || 0) < P.length || QZ.gwAsk) { QZ.wrong++; pqMsg("First drag each transformation onto g(x), in order."); return; }
+    var P = gwParts(gwCur()); if ((QZ.gwd || 0) < P.length || QZ.gwAsk) { QZ.wrong++; pqMsg("First apply each transformation to g(x), in order."); return; }
     pqMsg(""); PG.eqTxt = gwRule(); eqEnter(); absorbEl($("pgEq"));
   }
   (function () {
@@ -7403,7 +7405,7 @@ var ESPIC = {
   }
   function gwnQ() {
     var t = QZ.tr[QZ.pi], q = "Let the graph of <i>g</i> be " + gdSay21(t) + " of the graph of <span class=\"cf\"><i>f</i>(<i>x</i>) = <i>x</i>²</span>. ";
-    return q + (mode === "solo" ? "Find <i>a</i>, <i>h</i>, <i>k</i>, the vertex and a rule for <i>g</i>." : mode === "calculate" ? "Use the sliders to transform <i>g</i>." : "Drag the points on <i>g</i> to transform it.");
+    return q + (mode === "solo" ? "Find <i>a</i>, <i>h</i>, <i>k</i>, the vertex and a rule for <i>g</i>." : mode === "calculate" ? "Transform <i>g</i>." : "Transform <i>g</i>.");
   }
   function gwnScr(x, y) { var S = $("gwnSvg"), m = S.getScreenCTM(), p = S.createSVGPoint(); p.x = x; p.y = -y; p = p.matrixTransform(m); return { x: p.x, y: p.y }; }
   function gwnDraw() {
@@ -7565,14 +7567,14 @@ var ESPIC = {
     var mv = []; if (t.h) mv.push(Math.abs(t.h) + (Math.abs(t.h) === 1 ? " unit " : " units ") + (t.h > 0 ? "right" : "left")); if (t.k) mv.push(Math.abs(t.k) + (Math.abs(t.k) === 1 ? " unit " : " units ") + (t.k > 0 ? "up" : "down"));
     var aStep = function (n) {
       if (Math.abs(s.a - t.a) < 1e-9) { n(); return; }
-      cap((aw || "No stretch, shrink or reflection") + (calc ? ": slide a to " + gwnAT(t.a) + "." : ": drag the purple point until a = " + gwnAT(t.a) + "."));
+      cap((aw || "No stretch, shrink or reflection") + ": a = " + gwnAT(t.a) + ".");
       if (calc) slide("a", t.a, n); else drag("a", t.a, n);
     };
     var vStep = function (n) {
       if (s.h === t.h && s.k === t.k) { n(); return; }
       var w = mv.length ? "A translation " + mv.join(" and ") : "No translation";
       if (calc) { cap(w + ": slide h to " + nf(t.h) + " and k to " + nf(t.k) + "."); var kk = function () { if (s.k === t.k) n(); else slide("k", t.k, n); }; if (s.h === t.h) kk(); else slide("h", t.h, kk); return; }
-      cap(w + ": drag the green vertex to (" + nf(t.h) + ", " + nf(t.k) + ")."); drag("v", [t.h, t.k], n);
+      cap(w + ": the vertex moves to (" + nf(t.h) + ", " + nf(t.k) + ")."); drag("v", [t.h, t.k], n);
     };
     if (ONE) {
       var one = Math.abs(s.a - t.a) > 1e-9 ? aStep : vStep;
@@ -7580,7 +7582,7 @@ var ESPIC = {
       return;
     }
     var L = [
-      function (n) { cap("g(x) starts as f(x) = x². " + (calc ? "Use the sliders to transform it." : "Drag its points to transform it.")); pgWait(2200, n); },
+      function (n) { cap("g(x) starts as f(x) = x². " + "Transform it."); pgWait(2200, n); },
       aStep, vStep,
       function (n) { cap("g(x) = " + gwnEq(t.a, t.h, t.k).replace(/<span class="fr"><span>1<\/span><span>(\d)<\/span><\/span>/g, "(1/$1)").replace(/<[^>]+>/g, "").replace(/^g\(x\) = /, "") + ", with vertex (" + nf(t.h) + ", " + nf(t.k) + ")."); pgWait(2600, n); }
     ], i = 0;
@@ -7736,12 +7738,12 @@ var ESPIC = {
     }
     var mv = function (n) {
       if (s.k === p.k) { n(); return; }
-      cap("h(" + p.N + ") = " + nf(p.hN) + ", so the path moves " + dir + " " + Math.abs(p.k) + " feet: " + (calc ? "slide c to " + nf(p.c + p.k) + "." : "drag the y-intercept " + dir + " " + Math.abs(p.k) + "."));
+      cap("h(" + p.N + ") = " + nf(p.hN) + ", so the path moves " + dir + " " + Math.abs(p.k) + " feet: " + (calc ? "c = " + nf(p.c + p.k) + "." : "move the y-intercept " + dir + " " + Math.abs(p.k) + "."));
       move(n);
     };
     var look = function (n) {
       if (s.pts.some(function (q) { return q.c === "h" && q.x === p.N; })) { n(); return; }
-      cap("Click the dotted path at x = " + p.N + " to see its height there.");
+      cap("Find the height of the path at x = " + p.N + ".");
       handGo(grnScr(p.N, p.hN), 800);
       pgWait(950, function () { if (pgRun !== run) return; handTap(); s.pts.push({ c: "h", x: p.N }); grnSync(); cap("h(" + p.N + ") = " + nf(p.hN) + ": the new path must be 0 there."); pgWait(2600, n); });
     };
@@ -8589,14 +8591,14 @@ var ESPIC = {
     function graph(n) {
       var place = function (n2) {
         if (s.par) { n2(); return; }
-        cap("Press the parabola button, then click the graph to place the vertex.");
+        cap("Graph the vertex.");
         go(at("#vfnTools [data-vft=U]"), function () { vfnTool("U"); pgWait(700, function () { if (pgRun !== run) return; var v0 = [p.h === 0 && p.k === 0 ? 2 : 0, 0]; s.hov = { x: v0[0], y: v0[1] }; vfnDraw(); go(vfnScr(v0[0], v0[1]), function () { vfnPush(); s.par = { h: v0[0], k: v0[1], dx: v0[0] + 1, dy: v0[1] + 1 }; s.tool = null; s.hov = null; vfnSync(); pgWait(700, n2); }); }); });
       };
       place(function () {
-        var mvV = function (n3) { if (s.par.h === p.h && s.par.k === p.k) { n3(); return; } cap(std ? "The vertex is (" + nf(p.h) + ", " + nf(p.k) + "), the centre row of the table. Drag the vertex there." : "The vertex of f is (h, k) = (" + nf(p.h) + ", " + nf(p.k) + "). Drag the vertex there."); slide("v", [s.par.h, s.par.k], [p.h, p.k], n3); };
+        var mvV = function (n3) { if (s.par.h === p.h && s.par.k === p.k) { n3(); return; } cap(std ? "The vertex is (" + nf(p.h) + ", " + nf(p.k) + "), the centre row of the table. Plot the vertex." : "The vertex of f is (h, k) = (" + nf(p.h) + ", " + nf(p.k) + "). Plot the vertex."); slide("v", [s.par.h, s.par.k], [p.h, p.k], n3); };
         mvV(function () {
           if (vfnParOK(s)) { vfnParCheck(); pgWait(600, n); return; }
-          cap("a = " + nf(p.a) + ": from the vertex, go right " + dx + " and " + (p.a > 0 ? "up " : "down ") + nf(Math.abs(p.a * dx * dx)) + ". Drag the other point there.");
+          cap("a = " + nf(p.a) + ": from the vertex, go right " + dx + " and " + (p.a > 0 ? "up " : "down ") + nf(Math.abs(p.a * dx * dx)) + ". Plot the other point.");
           slide("d", [s.par.dx, s.par.dy], dTo, function () { vfnParCheck(); if (vfnIp()) { pgWait(900, n); return; } cap("The axis of symmetry comes with the parabola."); pgWait(1800, n); });
         });
       });
@@ -8606,7 +8608,7 @@ var ESPIC = {
     for (var d = 1; d <= 9 && pairs.length < 2; d++) { var y = vfnF(p.h + d); if (Math.abs(p.h + d) <= 10 && Math.abs(p.h - d) <= 10 && Math.abs(y) <= 9.5) pairs.push([p.h - d, p.h + d]); }
     function pair(i) { return function (n) {
       var pr = pairs[i] || pairs[0]; if (!pr) { n(); return; } var y = vfnF(pr[0]);
-      cap(i ? "Another pair: two points at the same height, the same distance from the axis." : "Mirror points are at the same height, the same distance from the axis. Click one point…");
+      cap(i ? "Another pair: two points at the same height, the same distance from the axis." : "Mirror points are at the same height, the same distance from the axis.");
       go(vfnScr(pr[0], y), function () { vfnClick("cv", { x: pr[0], y: y }); pgWait(900, function () { if (pgRun !== run) return; cap("…then its mirror image across the axis."); go(vfnScr(pr[1], y), function () { vfnClick("cv", { x: pr[1], y: y }); pgWait(1500, n); }); }); });
     }; }
     function typeKeys(e, get, set, val, after) { var i = 0; set(""); (function ch() { if (pgRun !== run) return; if (i >= val.length) { after(); return; } set(get() + val.charAt(i++)); e.value = get(); pgWait(110, ch); })(); }
@@ -8621,11 +8623,11 @@ var ESPIC = {
     }; }
     function yIn(r) { return function (n) {   // Calculate: work out f(x) and type it in the y column
       var x = vfnRX(r), e = document.querySelector("[data-vfy=\"" + r + "\"]"); if (!e) { n(); return; }
-      cap("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x)) + ". Type it in the y column.");
+      cap("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x)) + ".");
       go(ctr(e), function () { typeKeys(e, function () { return s.gt[r] || ""; }, function (v) { s.gt[r] = v; }, String(vfnF(x)), function () { vfnYTyped(r, false); pgWait(600, n); }); });
     }; }
     function dragChip(n) {
-      cap(p.vx ? "The vertex's x, h = " + nf(p.h) + ", is the centre of the table. Drag it into the table." : "x = −b/(2a) = " + nf(p.h) + " is the centre of the table. Drag it into the table.");
+      cap(p.vx ? "The vertex's x, h = " + nf(p.h) + ", is the centre of the table." : "x = −b/(2a) = " + nf(p.h) + " is the centre of the table.");
       var c = document.querySelector("[data-vfchip]"); if (!c) { n(); return; }
       var a = ctr(c);
       go(a, function () {
@@ -8639,17 +8641,17 @@ var ESPIC = {
         pgRaf(step);
       });
     }
-    function rowTap(r) { return function (n) { var x = vfnRX(r); cap("Click " + vfnExpr(x) + " to work it out."); clickTd(r, n); }; }
+    function rowTap(r) { return function (n) { var x = vfnRX(r); cap("Evaluate " + vfnExpr(x) + "."); clickTd(r, n); }; }
     function clickTd(r, n) {   // Demo and Sequence: click the expression once per step until its value drops into the y column
       (function one() { if (pgRun !== run) return; if (s.gy[r] || vfnSid() !== "tbl") { pgWait(500, n); return; } var e = document.querySelector("[data-vfr=\"" + r + "\"]"); go(e ? ctr(e) : null, function () { vfnStepClick(r); pgWait(550, one); }); })();
     }
     var pt = function (q) { return "(" + q + ", " + vfnF(q) + ")"; }, vt = "(" + p.h + ", " + p.k + ")";
     var m1 = pairs[0] || [p.h - 1, p.h + 1], m2 = pairs[1] || m1, I = [], past = function (id) { return function () { return vfnPast(id); }; }, okF = function (f) { return function () { return !!(s.wok[f] || s.wok[f.replace(/^(m[12])[ab]$/, "$1")]); }; };
-    var eqSay = p.ip ? { a: p.a === 1 ? "No number in front of the parentheses means a = 1. Click the space where it would be." : "a is the number in front of the parentheses.", p: "p is subtracted from x in the first factor: (x − p).", q: "q is subtracted from x in the second factor: (x − q)." } : { a: "a is the number in front of x².", b: "b is the number in front of x, with its sign.", c: "c is the constant term, with its sign." };
-    var ivAns = function (f) { return f === "mm" ? String(p.k) : ivStr(vfnIvAns(f)); }, ivSayD = { dom: "The parabola goes on forever left and right: every x. Press ℝ for all real numbers.", rng: "The y-values start at the vertex, y = " + nf(p.k) + ", and go " + (p.a > 0 ? "up" : "down") + " forever.", inc: "Left to right, the graph goes up " + (p.a > 0 ? "after" : "until") + " the vertex.", dec: "Left to right, the graph goes down " + (p.a > 0 ? "until" : "after") + " the vertex.", mm: "It opens " + (p.a > 0 ? "up, so the vertex is a minimum" : "down, so the vertex is a maximum") + ": y = " + nf(p.k) + "." };
+    var eqSay = p.ip ? { a: p.a === 1 ? "No number in front of the parentheses means a = 1." : "a is the number in front of the parentheses.", p: "p is subtracted from x in the first factor: (x − p).", q: "q is subtracted from x in the second factor: (x − q)." } : { a: "a is the number in front of x².", b: "b is the number in front of x, with its sign.", c: "c is the constant term, with its sign." };
+    var ivAns = function (f) { return f === "mm" ? String(p.k) : ivStr(vfnIvAns(f)); }, ivSayD = { dom: "The parabola goes on forever left and right: every x, all real numbers (ℝ).", rng: "The y-values start at the vertex, y = " + nf(p.k) + ", and go " + (p.a > 0 ? "up" : "down") + " forever.", inc: "Left to right, the graph goes up " + (p.a > 0 ? "after" : "until") + " the vertex.", dec: "Left to right, the graph goes down " + (p.a > 0 ? "until" : "after") + " the vertex.", mm: "It opens " + (p.a > 0 ? "up, so the vertex is a minimum" : "down, so the vertex is a maximum") + ": y = " + nf(p.k) + "." };
     function typeXs(n) {   // Intercept Form: the hand types rows 1, 3 and 5 of the x column
       var calc = mode === "calculate", L = (calc ? [1, 3, 2, 0, 4] : [0, 2, 4]).filter(function (r) { return !s.xok[r] && !(s.dx && s.dx[r]); });
-      cap(calc ? "Type p and q in rows 2 and 4. The rows are evenly spaced: row 3 is halfway between them." : "The rows are evenly spaced: row 3 is halfway between p and q. Type the other x-values.");
+      cap(calc ? "p and q go in rows 2 and 4. The rows are evenly spaced: row 3 is halfway between them." : "The rows are evenly spaced: row 3 is halfway between p and q. Fill in the other x-values.");
       (function one() {
         if (pgRun !== run) return; var r = L.shift(); if (r == null) { pgWait(900, n); return; }
         var e = document.querySelector("#vfnTb [data-vfxi=\"" + r + "\"]"); if (!e) { one(); return; }
@@ -8658,7 +8660,7 @@ var ESPIC = {
     }
     function dragPQ(n) {   // Intercept Form: the hand drags p, then q, from the equation into rows 2 and 4 of the x column
       var L = [["p", p.p1], ["q", p.q1]].filter(function (z) { var r = z[1] === Math.min(p.p1, p.q1) ? 1 : 3; return !(s.dx || {})[r]; });
-      cap("The x-intercepts are p = " + nf(p.p1) + " and q = " + nf(p.q1) + ". Drag the values you found below the graph into the x column: the smaller in row 2, the larger in row 4.");
+      cap("The x-intercepts are p = " + nf(p.p1) + " and q = " + nf(p.q1) + ". They go in the x column: the smaller in row 2, the larger in row 4.");
       (function one() {
         if (pgRun !== run) return; var z = L.shift(); if (!z) { pgWait(900, n); return; }
         var fromOut = document.querySelector("#vfnOut [data-vfo=" + z[0] + "]");   // (the Demo drags both from the values found below the graph, never from the equation)
@@ -8712,12 +8714,12 @@ var ESPIC = {
         else if (id === "a" || id === "b" || id === "c" || id === "p" || id === "q") r = (function (k) { return function (n) { clickOn("#pgQt [data-vfe=" + k + "]", VFN_ASK[k].replace(/<[^>]+>/g, "") + " " + eqSay[k], "e:" + k, n); }; })(id);
         else if (id === "drag") r = p.ip ? dragPQ : dragChip;
         else if (id === "xs") r = typeXs;
-        else if (id === "tbl") r = function (n) { var L = VFN_XS.map(function (d, i) { return i; }).filter(function (i) { return !s.gy[i]; }), j = 0; cap(p.ip ? "Click each expression: first the subtractions, then multiply. Each finished row is a point on the graph." : p.vx ? "Click each expression to simplify it one step at a time: the subtraction, the exponent, then multiplying, then adding. Each finished row is a point on the graph." : "Click each expression to simplify it one step at a time: the exponent, then multiplying, then adding. Each finished row is a point on the graph."); (function nx() { if (pgRun !== run) return; if (j >= L.length || vfnSid() !== "tbl") { pgWait(800, n); return; } clickTd(L[j++], nx); })(); };
-        else if (p.vx && (id === "h" || id === "k")) r = (function (k) { return function (n) { clickOn("#pgQt [data-vfe=" + k + "]", "Click on the equation to find the " + k + " value. " + (k === "h" ? "h is the number subtracted from x inside the parentheses" + (p.h ? "" : ": nothing is subtracted, so h = 0") + "." : "k is the number added at the end" + (p.k ? "" : ": nothing is added, so k = 0") + "."), "e:" + k, n); }; })(id);
+        else if (id === "tbl") r = function (n) { var L = VFN_XS.map(function (d, i) { return i; }).filter(function (i) { return !s.gy[i]; }), j = 0; cap(p.ip ? "Evaluate each expression: first the subtractions, then multiply. Each finished row is a point on the graph." : p.vx ? "Simplify each expression one step at a time: the subtraction, the exponent, then multiplying, then adding. Each finished row is a point on the graph." : "Simplify each expression one step at a time: the exponent, then multiplying, then adding. Each finished row is a point on the graph."); (function nx() { if (pgRun !== run) return; if (j >= L.length || vfnSid() !== "tbl") { pgWait(800, n); return; } clickTd(L[j++], nx); })(); };
+        else if (p.vx && (id === "h" || id === "k")) r = (function (k) { return function (n) { clickOn("#pgQt [data-vfe=" + k + "]", "Find the " + k + " value in the equation. " + (k === "h" ? "h is the number subtracted from x inside the parentheses" + (p.h ? "" : ": nothing is subtracted, so h = 0") + "." : "k is the number added at the end" + (p.k ? "" : ": nothing is added, so k = 0") + "."), "e:" + k, n); }; })(id);
         else if (id === "h") r = function (n) { clickOn("#vfnSvg [data-vfc=vh]", VFN_ASK.h.replace(/<[^>]+>/g, "") + " h is the x-coordinate of the vertex.", "vh", n); };
         else if (id === "k") r = function (n) { clickOn("#vfnSvg [data-vfc=vk]", VFN_ASK.k.replace(/<[^>]+>/g, "") + " k is the y-coordinate.", "vk", n); };
         else if (id === "v") r = function (n) { clickOn("#vfnSvg [data-vfc=vx]", VFN_ASK.v.replace(/<[^>]+>/g, ""), "vx", n); };
-        else if (id === "ax") r = function (n) { var py = vfnP(), yy = Math.abs(py.k) < 5 ? (py.a > 0 ? -6 : 6) : 0; cap(VFN_ASK.ax.replace(/<[^>]+>/g, "") + " Click the green dotted line or its equation."); go(vfnScr(py.h, yy), function () { vfnClick("ax", null); pgWait(1500, n); }); };
+        else if (id === "ax") r = function (n) { var py = vfnP(), yy = Math.abs(py.k) < 5 ? (py.a > 0 ? -6 : 6) : 0; cap(VFN_ASK.ax.replace(/<[^>]+>/g, "") + ""); go(vfnScr(py.h, yy), function () { vfnClick("ax", null); pgWait(1500, n); }); };
         else r = pair(id === "m1" ? 0 : 1);
         I.push({ done: past(id), run: r });
       });
@@ -8984,13 +8986,13 @@ var ESPIC = {
   function ivnQ() { var pb = m3Cur(); return "<div class=\"m3Top\"><div class=\"estP w5\">" + pb.story + "</div></div>"; }
   function ivnAsk() {
     var s = ivSt(), P = ivP(); if (QZ.step >= 4 || s.ok) return "";
-    if (mode === "calculate") return "Type the interval notation. Use the buttons for [ ] ( ) and ∞.";
-    if (mode === "solo") return "Type the interval notation, then press Submit.";
-    if (s.tool === "sw") return "Click a dot to switch it between open and closed.";
-    if (s.p1) return "Click where the shading ends: a number, or an arrow for ∞.";
-    if (s.tool) return "Click the number line where the first dot goes (or press there and drag the shading).";
-    if (s.pcs.length && s.pcs.length < P.pcs.length) return "Now graph the other part: choose a dot again.";
-    return "Choose a dot (open: not included, closed: included). Click it, or drag it onto the number line.";
+    if (mode === "calculate") return "Write the interval notation.";
+    if (mode === "solo") return "Write the interval notation.";
+    if (s.tool === "sw") return "Switch the dot between open and closed.";
+    if (s.p1) return "Where does the shading end? At a number, or at ∞.";
+    if (s.tool) return "Where does the first dot go?";
+    if (s.pcs.length && s.pcs.length < P.pcs.length) return "Now graph the other part.";
+    return "Graph it: an open dot (not included) or a closed dot (included).";
   }
   var ivOutKey = "";
   function ivnOut() {
@@ -9112,13 +9114,13 @@ var ESPIC = {
     function draw(t, first) { return function (n) {
       var f = ivFin(t.lo.v) ? t.lo : t.hi, e = f === t.lo ? t.hi : t.lo, typ = f.cl ? "c" : "o";
       s.p1 = null; s.tool = null; s.hov = null; ivnSync();
-      cap((P.mono ? "The graph " + (P.mono > 0 ? "rises" : "falls") + " from x = " + c2F(f.v) + " to x = " + c2F(e.v) + ". " + c2F(f.v) + (f.cl ? " is included: a closed dot. " : " is not included (the graph has an open dot there): an open dot. ") : P.dom && P.v === "y" ? "The lowest y-value of the graph is " + c2F(f.v) + (f.cl ? ", and the graph reaches it, so " + c2F(f.v) + " is in the range. " : " at an open dot, so " + c2F(f.v) + " is not in the range. ") : P.dom ? "The graph starts at x = " + c2F(f.v) + (f.cl ? " with a closed dot, so " + c2F(f.v) + " is in the domain. " : " with an open dot, so " + c2F(f.v) + " is not in the domain. ") : f.cl ? "≤ or ≥: " + c2F(f.v) + " is included, a closed dot. " : "< or >: " + c2F(f.v) + " is not included, an open dot. ") + "Drag the " + (f.cl ? "closed" : "open") + "-dot button to " + c2F(f.v) + ".");
+      cap((P.mono ? "The graph " + (P.mono > 0 ? "rises" : "falls") + " from x = " + c2F(f.v) + " to x = " + c2F(e.v) + ". " + c2F(f.v) + (f.cl ? " is included: a closed dot. " : " is not included (the graph has an open dot there): an open dot. ") : P.dom && P.v === "y" ? "The lowest y-value of the graph is " + c2F(f.v) + (f.cl ? ", and the graph reaches it, so " + c2F(f.v) + " is in the range. " : " at an open dot, so " + c2F(f.v) + " is not in the range. ") : P.dom ? "The graph starts at x = " + c2F(f.v) + (f.cl ? " with a closed dot, so " + c2F(f.v) + " is in the domain. " : " with an open dot, so " + c2F(f.v) + " is not in the domain. ") : f.cl ? "≤ or ≥: " + c2F(f.v) + " is included, a closed dot. " : "< or >: " + c2F(f.v) + " is not included, an open dot. ") + "A" + (f.cl ? " closed" : "n open") + " dot at " + c2F(f.v) + ".");
       var a = ctr(btn(typ));
       go(a, function () {
         s.tool = typ; ivGhostMake(typ, a.x, a.y); ivnSync(); var to = ivScr(f.v);
         glide(a, to, 1200, function (q) { ivGhostAt(q.x, q.y); var v = ivOver(q.x, q.y); if (v !== s.hov) { s.hov = v; ivnSync(); } }, function () {
           ivGhostEnd(); s.hov = null; ivFirst(f.v);
-          cap("Now move toward " + say(e.v) + ": the shading and the interval notation grow with the pointer. Click to finish.");
+          cap("Now move toward " + say(e.v) + ": the shading and the interval notation grow with it.");
           pgWait(700, function () {
             if (pgRun !== run) return; var b = ivScr(e.v);
             glide(to, b, 2000, function (q) { var v = ivAt(ivSx(q.x, q.y)); if (v !== s.hov) { s.hov = v; ivnSync(); } }, function () { handTap(); ivSecond(e.v); pgWait(1300, n); });
@@ -9128,12 +9130,12 @@ var ESPIC = {
     }; }
     function swap(i, end) { return function (n) {
       var q = s.pcs[i][end], t = ivSort(P.pcs).filter(function (r) { return ivSpan(r, s.pcs[i]); })[0];
-      cap((P.mono ? "x = " + c2F(q.v) + (t && t[end].cl ? " is included, so its dot must be closed." : " is not included (the graph has an open dot there), so its dot must be open.") : P.dom && P.v === "y" ? "The highest y-value is " + c2F(q.v) + ": " + (t && t[end].cl ? "the graph reaches it, so its dot must be closed." : "it is only at an open dot, so its dot must be open.") : P.dom ? "The graph ends at x = " + c2F(q.v) + " with " + (t && t[end].cl ? "a closed dot: it is in the domain, so its dot must be closed." : "an open dot: it is not in the domain, so its dot must be open.") : c2F(q.v) + (t && t[end].cl ? " is included (≤ or ≥): its dot must be closed." : " is not included (< or >): its dot must be open.")) + " Press the switch button, then click the dot.");
+      cap((P.mono ? "x = " + c2F(q.v) + (t && t[end].cl ? " is included, so its dot must be closed." : " is not included (the graph has an open dot there), so its dot must be open.") : P.dom && P.v === "y" ? "The highest y-value is " + c2F(q.v) + ": " + (t && t[end].cl ? "the graph reaches it, so its dot must be closed." : "it is only at an open dot, so its dot must be open.") : P.dom ? "The graph ends at x = " + c2F(q.v) + " with " + (t && t[end].cl ? "a closed dot: it is in the domain, so its dot must be closed." : "an open dot: it is not in the domain, so its dot must be open.") : c2F(q.v) + (t && t[end].cl ? " is included (≤ or ≥): its dot must be closed." : " is not included (< or >): its dot must be open.")) + " Switch the dot.");
       go(ctr(btn("sw")), function () { if (s.tool !== "sw") ivTool("sw"); pgWait(500, function () { if (pgRun !== run) return; go(ivScr(q.v), function () { ivSwitch(i + ":" + end); pgWait(1600, n); }); }); });
     }; }
     function typeAns(n) {
       var e = $("ivnIn"); if (!e) { n(); return; } var val = ivStr(P.pcs), i = 0;
-      cap("[ ] for a boundary that is included, ( ) for one that is not, and always ( ) next to ∞. Type " + val + ".");
+      cap("[ ] for a boundary that is included, ( ) for one that is not, and always ( ) next to ∞: " + val + ".");
       go(ctr(e), function () { s.txt = ""; e.value = ""; (function ch() { if (pgRun !== run) return; if (i >= val.length) { ivnTyped(false); pgWait(900, n); return; } s.txt += val.charAt(i++); e.value = s.txt; pgWait(120, ch); })(); });
     }
     function nextItem() {   // what is still to do on the line
@@ -9160,7 +9162,7 @@ var ESPIC = {
   function csqMake() {
     var L = [], sh = function (a) { for (var i = a.length - 1; i > 0; i--) { var j = rnd(i + 1), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }, nz = function (lo, hi) { return c2Nz(lo, hi); };
     ["s", "v", "i"].forEach(function (f) { L.push({ k: "type", f: f, ask: "Write the formula for " + CSQ_F[f].nm + " Form." }); });
-    L.push({ k: "ctr", ask: "In Standard Form, type the formula for the <i>x</i>-value in the centre row of the table." });
+    L.push({ k: "ctr", ask: "In Standard Form, what is the formula for the <i>x</i>-value in the centre row of the table?" });
     L.push({ k: "mc", a: "s", ask: "This picture is associated with which form?", show: "<img class=\"csqPic\" src=\"../assets/card-standard-table.png\" alt=\"x = −b/(2a), worked out, being dragged into the centre row of a table\">" });
     L.push({ k: "mc", a: "v", ask: "This picture is associated with which form?", show: "<img class=\"csqPic\" src=\"../assets/card-vertex-table.png\" alt=\"A parent table with its centre row filled in\">" });
     L.push({ k: "mc", a: "i", ask: "This picture is associated with which form?", show: "<img class=\"csqPic\" src=\"../assets/card-intercept-table.png\" alt=\"A blank table with rows 2 and 4 of the x column ready for p and q\">" });
@@ -9515,7 +9517,7 @@ var ESPIC = {
     var P = m3Cur().dsm, box = $("dsmCalc"); if (!DSM.calc || DSM.fail) { pgWait(800, n); return; }
     var r = box.getBoundingClientRect(), at = function (i) { return dsmLineAt(box, i); }, X = [], Y = [];
     function typeL(id, lt, then) { var c = 0; (function ch() { if (pgRun !== run) return; c = Math.min(lt.length, c + 3); DSM.calc.setExpression({ id: id, latex: lt.slice(0, c) }); if (c < lt.length) pgWait(90, ch); else pgWait(700, then); })(); }
-    cap("Type table on the first line: Desmos makes a table"); handGo(at(0), 650);
+    cap("Make a table"); handGo(at(0), 650);
     pgWait(900, function () {
       if (pgRun !== run) return; handTap();
       typeL("t", "table", function () {   // (in Desmos, typing table on a line turns it into a table)
@@ -9531,22 +9533,22 @@ var ESPIC = {
     });
     var k0 = P.xs.length + 1;
     function step2() {   // the table's Add Regression button (in the table's left margin), then the quadratic regression appears
-      cap("Click Add Regression (the button in the table's left margin)"); var b0 = dsmRegBtn(); handGo(b0, 600);
+      cap("Add a regression"); var b0 = dsmRegBtn(); handGo(b0, 600);
       var hasReg = function () { try { return DSM.calc.getExpressions().some(function (x) { return /\\sim/.test(x.latex || ""); }); } catch (e) { return false; } };
       var put = function () { if (!hasReg()) DSM.calc.setExpression({ id: "r", latex: "y_{1}\\sim " + P.rg }); };   // (only if Desmos's own button did not add it)
       pgWait(850, function () { if (pgRun !== run) return; handTap(); var bt = b0.el || dsmRegEl() || document.elementFromPoint(b0.x, b0.y); if (bt) dsmTap(bt, b0);
         pgWait(700, function () { if (pgRun !== run) return; var q = dsmMenuItem(/^quadratic( regression)?$/i);
           if (!q && !hasReg()) { fakeReg(); return; }   // (Desmos does not answer the demo's click: the demo shows its regression dropdown, like Desmos's)
-          if (q) { cap("Choose Quadratic Regression"); var qr = q.getBoundingClientRect(); handGo({ x: qr.left + Math.min(qr.width / 2, 60), y: qr.top + qr.height / 2 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); q.classList.add("on"); dsmTap(q); pgWait(450, function () { var fm = $("dsmFakeMenu"); if (fm) fm.remove(); if (pgRun !== run) return; put(); go(); }); }); }
+          if (q) { cap("Quadratic Regression"); var qr = q.getBoundingClientRect(); handGo({ x: qr.left + Math.min(qr.width / 2, 60), y: qr.top + qr.height / 2 }, 600); pgWait(800, function () { if (pgRun !== run) return; handTap(); q.classList.add("on"); dsmTap(q); pgWait(450, function () { var fm = $("dsmFakeMenu"); if (fm) fm.remove(); if (pgRun !== run) return; put(); go(); }); }); }
           else { put(); go(); }
         });
       });
       function go() { pgWait(350, function () { if (pgRun !== run) return; dsmCheck(); pgWait(1600, step3); }); }
       function fakeReg() {   // Add Regression puts a regression under the table set to Linear Regression; its dropdown is opened and Quadratic Regression chosen
         var F = dsmFakeReg(), alive = function () { if (pgRun === run) return true; var fm = $("dsmFakeMenu"); if (fm) fm.remove(); return false; };
-        cap("A regression appears under the table, set to Linear Regression. Open its menu"); var sr = F.sel.getBoundingClientRect(); handGo({ x: sr.right - 22, y: sr.top + sr.height / 2 }, 600);
+        cap("A regression appears under the table, set to Linear Regression"); var sr = F.sel.getBoundingClientRect(); handGo({ x: sr.right - 22, y: sr.top + sr.height / 2 }, 600);
         pgWait(850, function () { if (!alive()) return; handTap(); F.list.hidden = false;
-          pgWait(550, function () { if (!alive()) return; cap("Choose Quadratic Regression"); var qr = F.quad.getBoundingClientRect(); handGo({ x: qr.left + 80, y: qr.top + qr.height / 2 }, 600);
+          pgWait(550, function () { if (!alive()) return; cap("Quadratic Regression"); var qr = F.quad.getBoundingClientRect(); handGo({ x: qr.left + 80, y: qr.top + qr.height / 2 }, 600);
             pgWait(850, function () { if (!alive()) return; handTap(); F.quad.classList.add("on");
               pgWait(300, function () { if (!alive()) return; F.list.hidden = true; F.txt.textContent = "Quadratic Regression";
                 pgWait(900, function () { var fm = $("dsmFakeMenu"); if (fm) fm.remove(); if (pgRun !== run) return; put(); go(); }); }); }); }); });
@@ -11784,7 +11786,7 @@ var ESPIC = {
     if (v !== right) { wfBad(b, wfStr(p) ? "Not quite. A vertical stretch or shrink changes the output, so the factor multiplies all of f(x)." : v === "x" ? "Not quite. \u2212x changes the input, which reflects in the y-axis." : "Not quite. \u2212f(x) changes the output, which reflects in the x-axis."); return; }
     wfSnap(); QZ.wd.c = true; pqMsg(""); var r = b.getBoundingClientRect(); drawPlay(); wfSteps(); rvMark("ok", r.right + 12, r.top - 6);
   }
-  function wfFirst(p) { if (wfSl()) return "First use the sliders and buttons so that g is f " + wfWhat(p) + "."; return wfStr(p) ? "First " + (p.scd === 1 ? "stretch" : "shrink") + " the graph vertically." : p.rf ? "First flip the graph in the " + p.rf + "-axis." : "First drag the graph " + wfMoves(p) + "."; }
+  function wfFirst(p) { if (wfSl()) return "First use the sliders and buttons so that g is f " + wfWhat(p) + "."; return wfStr(p) ? "First " + (p.scd === 1 ? "stretch" : "shrink") + " the graph vertically." : p.rf ? "First flip the graph in the " + p.rf + "-axis." : "First move the graph " + wfMoves(p) + "."; }
   function wfSubstX() {
     var p = wfCur(); if (!p || QZ.step >= 4 || !wfNi(p) || QZ.wd.i) return;
     if (!QZ.wd.m) { QZ.wrong++; pqMsg(wfFirst(p)); return; }
@@ -11795,7 +11797,7 @@ var ESPIC = {
   function wfReplace() {
     var p = wfCur(); if (!p || QZ.step >= 4 || QZ.wd.r) return;
     if (!QZ.wd.m) { QZ.wrong++; pqMsg(wfFirst(p)); return; }
-    if (!QZ.wd.i) { QZ.wrong++; pqMsg("First drag " + wfPlain(wfInnerTx(p)).replace(/-/g, "−") + " from g(x) onto f(x) in the question."); return; }
+    if (!QZ.wd.i) { QZ.wrong++; pqMsg("First replace x in f(x) with " + wfPlain(wfInnerTx(p)).replace(/-/g, "−") + "."); return; }
     var line = "<i>g</i>(<i>x</i>) = " + wfStg(p)[0].h;
     wfSnap(); QZ.wd.r = true; QZ.wst = 0; QZ.wl.push(line); wfWork(line); pqMsg("");
     if (wfStg(p).length === 1) { QZ.wd.s = true; wfReveal(); return; }   // nothing is left to combine
@@ -11857,16 +11859,16 @@ var ESPIC = {
     if (mode === "solo" || !p || (mode === "demo" && !pgRun && !QZ.wl.length && QZ.step < 4)) { el.hidden = true; el.innerHTML = ""; askArrow(false); return; }
     if (QZ.step < 4) {
       var nx = wfNext();
-      if (nx === "m" && wfSl()) h += "<div class=\"wfAsk\">Use the sliders and buttons to change <span class=\"cg\"><i>g</i>(<i>x</i>) = <i>f</i>(<i>x</i>)</span> so that <span class=\"cg\"><i>g</i></span> is <span class=\"cf\"><i>f</i></span> <span class=\"cg\">" + wfWhat(p) + "</span>.</div>";
-      else if (nx === "m") h += wfStr(p) ? "<div class=\"wfAsk\">Grab the purple graph and " + (p.scd === 1 ? "pull it away from" : "squeeze it toward") + " the x-axis until it is <span class=\"cg\">" + wfWhat(p) + "</span>.</div>" : p.rf ? "<div class=\"wfAsk\">Grab the purple graph and flip it over the <span class=\"cg\">" + p.rf + "-axis</span>.</div>" : "<div class=\"wfAsk\">Drag the purple graph to move <span class=\"cg\"><i>g</i> " + wfMoves(p) + "</span>.</div>";
+      if (nx === "m" && wfSl()) h += "<div class=\"wfAsk\">Change <span class=\"cg\"><i>g</i>(<i>x</i>) = <i>f</i>(<i>x</i>)</span> so that <span class=\"cg\"><i>g</i></span> is <span class=\"cf\"><i>f</i></span> <span class=\"cg\">" + wfWhat(p) + "</span>.</div>";
+      else if (nx === "m") h += wfStr(p) ? "<div class=\"wfAsk\">" + (p.scd === 1 ? "Stretch" : "Shrink") + " <span class=\"cg\"><i>g</i></span> vertically until it is <span class=\"cg\">" + wfWhat(p) + "</span>.</div>" : p.rf ? "<div class=\"wfAsk\">Reflect <span class=\"cg\"><i>g</i></span> in the <span class=\"cg\">" + p.rf + "-axis</span>.</div>" : "<div class=\"wfAsk\">Move <span class=\"cg\"><i>g</i> " + wfMoves(p) + "</span>.</div>";
       else if (nx === "c") h += wfStr(p) ? "<div class=\"wfAsk\">To make <span class=\"cf\"><i>f</i>(<i>x</i>)</span> <span class=\"cg\">" + wfWhat(p) + "</span>, change it to:</div><div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"c\" data-v=\"x\">" + wfScH(p) + "<i>x</i></button><button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"c\" data-v=\"fx\">" + wfScH(p) + "<i>f</i>(<i>x</i>)</button></div>" : "<div class=\"wfAsk\">To reflect <span class=\"cf\"><i>f</i>(<i>x</i>)</span> in the <span class=\"cg\">" + p.rf + "-axis</span>, change it to:</div><div class=\"wfRow\"><button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"c\" data-v=\"x\">\u2212<i>x</i></button><button type=\"button\" class=\"btn wfBtn lm\" data-wf=\"c\" data-v=\"fx\">\u2212<i>f</i>(<i>x</i>)</button></div>";
-      else if (nx === "i") h += "<div class=\"wfAsk\">Drag <span class=\"cf\">" + wfInnerTx(p) + "</span> from <span class=\"cg\"><i>g</i>(<i>x</i>)</span> onto <span class=\"cf\"><i>f</i>(<i>x</i>)</span> in the question.</div>";
-      else if (nx === "r") h += "<div class=\"wfAsk\">Drag the blue right side of <span class=\"cf\"><i>f</i>(<i>x</i>)</span> from the question onto <span class=\"cg\"><i>g</i>(<i>x</i>)</span>.</div>";
+      else if (nx === "i") h += "<div class=\"wfAsk\">Replace <i>x</i> in <span class=\"cf\"><i>f</i>(<i>x</i>)</span> with <span class=\"cf\">" + wfInnerTx(p) + "</span>.</div>";
+      else if (nx === "r") h += "<div class=\"wfAsk\">Replace <span class=\"cf\"><i>f</i></span> in <span class=\"cg\"><i>g</i>(<i>x</i>)</span> with its rule.</div>";
       else if (nx === "s") {
         var sq = wfStg(p)[QZ.wst + 1];
         if (mode === "calculate" && QZ.wop && sq && sq.q) {
           h += "<div class=\"wfAsk\">" + (sq.q.ask || (sq.kind === "paren" ? "Take away the parentheses." : "Add the numbers.")) + "</div><div class=\"wfRow cg\"><span>" + sq.q.lab + " =</span><input class=\"wfIn\" style=\"width:9.5rem\" data-k=\"s\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"The answer\"></div>";
-        } else h += "<div class=\"wfAsk\">" + (sq && sq.kind === "paren" ? "Click the parentheses to take them away." : sq && sq.q && sq.q.abs !== undefined ? "Click inside " + wfVN(sq.q.fam) + ": " + sq.q.lab + " is the same as " + wfBar(sq.q.fam, wfX + wfSg(sq.q.abs)) + "." : "Combine like terms: click the operation between two like terms.") + "</div>";
+        } else h += "<div class=\"wfAsk\">" + (sq && sq.kind === "paren" ? "Take away the parentheses." : sq && sq.q && sq.q.abs !== undefined ? "Simplify inside " + wfVN(sq.q.fam) + ": " + sq.q.lab + " is the same as " + wfBar(sq.q.fam, wfX + wfSg(sq.q.abs)) + "." : "Combine like terms.") + "</div>";
       }
     }
     var was = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains("wfIn");
@@ -13487,7 +13489,7 @@ var ESPIC = {
         DSM.calc.setExpression({ id: "t", type: "table", columns: [{ latex: "x_{1}", values: X.slice() }, { latex: "y_{1}", values: Y.slice() }] }); pgWait(420, function () { row(i + 1); });
       })(0);
     });
-    function step2() { cap("Type the regression"); handGo(at(1), 500); pgWait(700, function () { handTap(); typeL("r", "y_{1}\\sim " + RG[0], function () { e11Check(); pgWait(1600, step3); }); }); }
+    function step2() { cap("The regression"); handGo(at(1), 500); pgWait(700, function () { handTap(); typeL("r", "y_{1}\\sim " + RG[0], function () { e11Check(); pgWait(1600, step3); }); }); }
     function step3() { cap("Name the curve"); handGo(at(2), 500); pgWait(700, function () { handTap(); typeL("f", "f\\left(x\\right)=" + RG[1], function () { pgWait(900, step4); }); }); }
     function step4() { cap(EP.kind === "when" ? "Find where it reaches 0" : "Evaluate it"); handGo(at(3), 500); pgWait(700, function () { handTap(); typeL("v", ev, function () { pgWait(1500, n); }); }); }
   }
@@ -14491,9 +14493,9 @@ var ESPIC = {
       var dragAll = function (i, then) { if (i > 4) { then(); return; } dragRow(i, function () { dragAll(i + 1, then); }); };
       steps = [
         function (n) { cap("Start with the equation: the simplest one in the family."); typeEq(EQT, function () { eqEnter(); pgWait(1700, n); }); },
-        function (n) { cap("Drag the equation onto any center cell of the table."); dragEq(0, n); },
-        function (n) { cap("Type a y-value."); typeRow(0, n); },
-        function (n) { cap("Click a calculation to simplify it."); clickRow(1, n); },
+        function (n) { cap("Fill the table from the equation."); dragEq(0, n); },
+        function (n) { cap("Find a y-value."); typeRow(0, n); },
+        function (n) { cap("Simplify a calculation."); clickRow(1, n); },
         function (n) {
           // a constant, an absolute value and a parabola are symmetric about the middle row, so a finished y-value can be dragged to the matching cell on the other side
           if (pqFam !== 1) { cap("Fill in the middle row."); typeRow(2, n); return; }
@@ -14501,10 +14503,10 @@ var ESPIC = {
         },
         function (n) {
           if (pqFam === 1) { n(); return; }
-          cap("Copy a y-value: drag it from one y cell to another cell with the same answer."); dragY(1, 3, function () { cap("Same for the first row: drag its y-value to the last."); dragY(0, 4, n); });
+          cap("Copy a y-value to the cell with the same answer."); dragY(1, 3, function () { cap("Same for the first row: its y-value goes in the last."); dragY(0, 4, n); });
         },
-        function (n) { cap("Drag each row onto the graph."); dragAll(0, n); },
-        function (n) { cap("Now the graph: choose the tool that fits the points."); pqFam < 2 ? clickTool("line", [0, ys(0)], [1, ys(1)], n) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, n); },
+        function (n) { cap("Plot each row."); dragAll(0, n); },
+        function (n) { cap("Now the graph."); pqFam < 2 ? clickTool("line", [0, ys(0)], [1, ys(1)], n) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, n); },
         function (n) { spDemo(function () { zoomDemo(function () { rectDemo(n); }); }); },
         function (n) { cap("The equation, the table and the graph all describe the same parent."); var tg = document.querySelector(".tog[data-part=graph]"); if (!PG.show.graph && tg) tg.click(); pgWait(2300, n); }
       ];
@@ -14516,20 +14518,20 @@ var ESPIC = {
       var scroll = shifts() && H() !== 0;
       steps = [
         function (n) { if (!gdW()) { n(); return; } if (gwOn()) { gwDemo(n, false); return; } cap("Write the rule: the stretch, shrink or reflection is the number in front, and the translation goes in the parentheses and at the end."); var tw = QZ.tr[QZ.pi], co = tw.a === 1 ? "" : tw.a === -1 ? "-" : String(tw.a); typeEq("g(x)=" + co + (tw.h ? "(x" + (tw.h > 0 ? "-" : "+") + Math.abs(tw.h) + ")^2" : "x^2") + (tw.k ? (tw.k > 0 ? "+" : "-") + Math.abs(tw.k) : ""), function () { eqEnter(); pgWait(1600, n); }); },
-        function (n) { cap(gdW() ? "Now the table: drag g(x) onto any center cell." : "g(x) is given. Start with the table: drag g(x) onto any center cell."); dragEq(0, n); },
-        function (n) { if (!scroll) { n(); return; } cap("The x-values are centered at 0, but the vertex of g is at x = " + nf(H()) + ". Drag the arrows to scroll the table until x = " + nf(H()) + " is in the middle row."); dialDemo(-H(), n); },
+        function (n) { cap(gdW() ? "Now the table: fill it from g(x)." : "g(x) is given. Start with the table: fill it from g(x)."); dragEq(0, n); },
+        function (n) { if (!scroll) { n(); return; } cap("The x-values are centered at 0, but the vertex of g is at x = " + nf(H()) + ". Scroll the table until x = " + nf(H()) + " is in the middle row."); dialDemo(-H(), n); },
         function (n) {
-          if (pqFam !== 1) { cap("Type a y-value, click a calculation to simplify, and do the middle row."); typeRow(0, function () { clickRow(1, function () { typeRow(2, n); }); }); return; }   // symmetric families: the rest are copied next
-          cap("Type a y-value, click calculations to simplify, and fill in the rest."); typeRow(0, function () { clickRow(1, function () { typeRow(2, function () { clickRow(3, function () { typeRow(4, n); }); }); }); });
+          if (pqFam !== 1) { cap("Find a y-value, simplify a calculation, and do the middle row."); typeRow(0, function () { clickRow(1, function () { typeRow(2, n); }); }); return; }   // symmetric families: the rest are copied next
+          cap("Find a y-value, simplify the calculations, and fill in the rest."); typeRow(0, function () { clickRow(1, function () { typeRow(2, function () { clickRow(3, function () { typeRow(4, n); }); }); }); });
         },
         function (n) {
           if (pqFam === 1) { n(); return; }
-          cap("Copy a y-value: drag it from one y cell to another cell with the same answer."); dragY(1, 3, function () { cap("Same for the first row: drag its y-value to the last."); dragY(0, 4, n); });
+          cap("Copy a y-value to the cell with the same answer."); dragY(1, 3, function () { cap("Same for the first row: its y-value goes in the last."); dragY(0, 4, n); });
         },
         function (n) { cap("Now graph the parent function: the simplest graph in the " + FAMS[pqFam] + " family."); zoomHome(); pgWait(2000, n); },
         function (n) { pqFam < 2 ? clickTool("line", [0, pf(0)], [1, pf(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [0, 0], null, watch(n)); },
         function (n) { cap("A correct parent turns dotted. Now graph g(x) with the same tool."); pgWait(1800, n); },
-        function (n) { pqFam < 2 ? clickTool("line", [0, g(0)], [1, g(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [H(), K()], null, function () { if (A() === 1) { watch(n)(); return; } cap("Drag a side point of the shape to set the stretch."); stretch(A(), watch(n), 1); }); },
+        function (n) { pqFam < 2 ? clickTool("line", [0, g(0)], [1, g(1)], watch(n)) : clickTool(pqFam === 2 ? "V" : "U", [H(), K()], null, function () { if (A() === 1) { watch(n)(); return; } cap("Set the stretch."); stretch(A(), watch(n), 1); }); },
         function (n) { cap("A correct graph of g(x) turns red."); pgWait(1800, n); },
         function (n) {
           if (!gdTyped()) { n(); return; }   // a stretch or a reflection is typed, so the hand uses the description box
@@ -14542,7 +14544,7 @@ var ESPIC = {
         },
         function (n) {
           if (gdTyped()) { n(); return; }
-          cap("Describe the transformation: press the transformation button, then click where the parent's " + (shifts() ? "vertex" : "point on the y-axis") + " ends up.");
+          cap("Describe the transformation: where does the parent's " + (shifts() ? "vertex" : "point on the y-axis") + " end up?");
           var b = document.querySelector(".qzTools [data-tool=tr]"); handGo(ctr(b), 650);
           pgWait(800, function () { handTap(); b.classList.add("simPress"); pgWait(180, function () { b.classList.remove("simPress"); qzTool("tr"); pgWait(600, function () {
             pathTo([gO, gT], function () { handTap(); tmClick(); pgWait(700, function () { gdWatch(); drawPlay(); pgWait(1000, n); }); });
@@ -14627,13 +14629,13 @@ var ESPIC = {
         if (d < P.length) {
           var c = document.querySelector("#gwBox .gwChip[data-gw=\"" + d + "\"]"); if (!c) { n(); return; }
           var q = P[d], what = q.op === "a" ? "multiplies f(x) by " + nf(Math.abs(gwCur().a)) : q.op === "r" ? "makes f(x) negative" : q.op === "h" ? "changes x to x " + (gwCur().h > 0 ? "\u2212 " : "+ ") + Math.abs(gwCur().h) : (gwCur().k > 0 ? "adds " : "subtracts ") + Math.abs(gwCur().k);
-          cap((d === 0 ? "g(x) starts as f(x). " : "") + "Drag \u201c" + q.txt + "\u201d onto g(x): it " + what + ".");
+          cap((d === 0 ? "g(x) starts as f(x). " : "") + "\u201c" + q.txt + "\u201d: it " + what + ".");
           handGo(ctr(c), 650);
           pgWait(850, function () { if (pgRun !== run) return; handTap(); pgWait(250, function () { c = document.querySelector("#gwBox .gwChip[data-gw=\"" + d + "\"]") || c; handGo(ctr($("pgEq")), 1400); fly(c, $("pgEq"), function () { if (pgRun !== run) return; gwApply(d, true); pgWait(1500, function () { if (one) n(); else gwDemo(n, false); }); }, false); }); });
           return;
         }
         var f = document.querySelector("#pgQt [data-gwrhs]"); if (!f) { n(); return; }
-        cap("Now replace f with its rule: drag x\u00b2 from f(x) = x\u00b2 in the question onto g(x).");
+        cap("Now replace f with its rule, x\u00b2.");
         handGo(ctr(f), 650);
         pgWait(850, function () { if (pgRun !== run) return; handTap(); pgWait(250, function () { f = document.querySelector("#pgQt [data-gwrhs]") || f; handGo(ctr($("pgEq")), 1400); fly(f, $("pgEq"), function () { if (pgRun !== run) return; gwSub(); pgWait(1800, n); }, false); }); });
       };
@@ -14655,12 +14657,12 @@ var ESPIC = {
             pgWait(600, function () { handTap(); caretEnd(); var c0 = 0; (function nx() { if (pgRun !== run) return; c0++; caretEnd(); e0.setRangeText(tk0.t.charAt(c0 - 1), e0.value.length, e0.value.length, "end"); e0.dispatchEvent(new Event("input", { bubbles: true })); if (c0 < tk0.t.length) pgWait(260, nx); else pgWait(500, d); })(); });
           }, function () { if (PG.dOK && !gdW()) { pgWait(700, n); return; } tap($("pgDescGo"), function () { pgWait(600, n); }); });
         },
-        tog: function (n) { cap("Press Parent Table to switch from the graphing table to the parent table."); tap($("ptTog"), function () { pgWait(900, n); }); },
+        tog: function (n) { cap("Use the parent table."); tap($("ptTog"), function () { pgWait(900, n); }); },
         labels: function (n) {
           var list = [], o = ptYOps(A(), K());
           if (H()) list.push(["h", "gx"]);
           o.forEach(function (q, ix) { var col = ix ? "gy" : "sy"; if (q.t === "a") { if (Math.abs(A()) !== 1) list.push(["a", col]); if (A() < 0) list.push(["r", col]); } else list.push(["k", col]); });
-          cap("Label each column the table needs: drag each change from the description onto the box above its column.");
+          cap("Label each column the table needs with its change from the description.");
           each(list, function (it, d) {
             var ch = document.querySelector("#pgDesc .dChip[data-op=\"" + it[0] + "\"]"), dst = ptLabCell(it[1]); if (!ch || !dst) { d(); return; }
             var a = ctr(ch), b = ctr(dst); handGo(a, 650);
@@ -14671,20 +14673,20 @@ var ESPIC = {
             });
           }, n);
         },
-        fill: function (n) { cap("Drag the parabola button onto the table: the parent columns fill in with x and y = x²."); ptDropUD(n); },
+        fill: function (n) { cap("The parent columns: x and y = x²."); ptDropUD(n); },
         xs: function (n) {
           if (!ptUse("gx")) { n(); return; }   // no move left or right: the x column of g is not needed
-          cap(H() ? "Click a parent x-value: it slides left to x " + (H() > 0 ? "+ " : "− ") + Math.abs(H()) + "." : "Click a parent x-value: there is no move left or right, so it slides left unchanged.");
+          cap(H() ? "Move a parent x-value: x " + (H() > 0 ? "+ " : "− ") + Math.abs(H()) + "." : "Move a parent x-value: there is no move left or right, so it stays the same.");
           each([0, 1], function (i, d) { ptClickD(i, "px", d); }, function () {
-            cap("Or type the x-value of g yourself.");
-            ptTypeD(2, "gx", String(ptRight(ptRows()[2], "gx")).replace("−", "-"), function () { cap("Click the rest."); each([3, 4], function (i, d) { ptClickD(i, "px", d); }, n); });
+            cap("Or find the x-value of g yourself.");
+            ptTypeD(2, "gx", String(ptRight(ptRows()[2], "gx")).replace("−", "-"), function () { cap("The rest."); each([3, 4], function (i, d) { ptClickD(i, "px", d); }, n); });
           });
         },
-        ys: function (n) { if (ptYKey() === "py") { cap("There is no change to y, so the parent y-values are already the y-values of g."); pgWait(2400, n); return; } cap("Click a parent y-value: " + ys0() + "."); each([0, 1, 2], function (i, d) { ptClickD(i, "py", d); }, n); },
-        copy: function (n) { var yk = ptYKey(); if (yk === "py") { n(); return; } cap("A parabola is symmetric: drag a finished y-value to the row with the same answer."); ptCopyD(1, yk, 3, yk, function () { cap("Same for the first row and the last."); ptCopyD(0, yk, 4, yk, n); }); },
-        plot: function (n) { cap("Drag each finished row onto the graph to plot its point."); each([0, 1, 2, 3, 4], ptRowD, n); },
+        ys: function (n) { if (ptYKey() === "py") { cap("There is no change to y, so the parent y-values are already the y-values of g."); pgWait(2400, n); return; } cap("A parent y-value: " + ys0() + "."); each([0, 1, 2], function (i, d) { ptClickD(i, "py", d); }, n); },
+        copy: function (n) { var yk = ptYKey(); if (yk === "py") { n(); return; } cap("A parabola is symmetric: a finished y-value goes in the row with the same answer."); ptCopyD(1, yk, 3, yk, function () { cap("Same for the first row and the last."); ptCopyD(0, yk, 4, yk, n); }); },
+        plot: function (n) { cap("Plot each finished row."); each([0, 1, 2, 3, 4], ptRowD, n); },
         par: function (n) { cap("Now graph the parent function f(x) = x². A correct parent turns dotted."); pgWait(1200, function () { clickTool("U", [0, 0], null, watch(n)); }); },
-        g: function (n) { cap("Graph g(x) with the same button: click its vertex, (" + nf(H()) + ", " + nf(K()) + ")."); clickTool("U", [H(), K()], null, function () { if (A() === 1) { watch(n)(); return; } cap("Drag the side point to set the stretch of " + ptFr(A()) + "."); stretch(A(), watch(n), 1); }); },
+        g: function (n) { cap("Graph g(x): its vertex is (" + nf(H()) + ", " + nf(K()) + ")."); clickTool("U", [H(), K()], null, function () { if (A() === 1) { watch(n)(); return; } cap("Set the stretch of " + ptFr(A()) + "."); stretch(A(), watch(n), 1); }); },
         red: function (n) { cap("A correct graph of g(x) turns red, through every point from the table."); pgWait(2000, n); }
       };
       steps = [PTS.rule, PTS.desc, PTS.tog, PTS.labels, PTS.fill, PTS.xs, PTS.ys, PTS.copy, PTS.plot, PTS.par, PTS.g, PTS.red, function (n) { spDemo(n, true); }, GDS[GDS.length - 1]];   // (no zoom in the 2.1 demos)
@@ -14738,7 +14740,7 @@ var ESPIC = {
           });
           return;
         }
-        cap("The function g(x) is f(x) " + wfWhat(wp) + ". Drag the graph.");
+        cap("The function g(x) is f(x) " + wfWhat(wp) + ". Move the graph.");
         handGo(svgPt(wax, way), 650);
         pgWait(900, function () {
           handTap(); var t0 = null;
@@ -14752,13 +14754,13 @@ var ESPIC = {
       };
       var wsub = function (n) {
         var c = document.querySelector("[data-wfrhs]"); if (!c || QZ.wd.r) { n(); return; }
-        cap("Replace " + wfLetter("f") + " with its rule: drag the right side of " + wfLetter("f") + "(x) onto " + wfLetter("g") + "(x).");
+        cap("Replace " + wfLetter("f") + " with its rule.");
         handGo(ctr(c), 650);
         pgWait(800, function () { handTap(); pgWait(250, function () { c = document.querySelector("[data-wfrhs]") || c; handGo(ctr($("pgEq")), 1400); fly(c, $("pgEq"), function () { if (pgRun !== run) return; wfReplace(); pgWait(1800, n); }, false); }); });
       };
       var wsubx = function (n) {
         var c = $("pgEq").querySelector("[data-wfin]"), t = document.querySelector("[data-wfchip]"); if (!c || !t || QZ.wd.i) { n(); return; }
-        cap(wfStr(wp) ? "Drag the factor onto f(x) in the question." : wp.rf ? "Drag the negative onto f(x) in the question." : "Drag the move inside the parentheses onto f(x) in the question.");
+        cap(wfStr(wp) ? "Multiply f(x) by the factor." : wp.rf ? "Put the negative on f(x)." : "Put the move inside the parentheses.");
         handGo(ctr(c), 650);
         // the equation may be redrawn while the hand travels: pick the pieces up again from the page just before the drag
         pgWait(800, function () { handTap(); pgWait(250, function () { c = $("pgEq").querySelector("[data-wfin]") || c; t = document.querySelector("[data-wfchip]") || t; handGo(ctr(t), 1400); fly(c, t, function () { if (pgRun !== run) return; wfSubstX(); pgWait(1800, n); }, false); }); });
@@ -14766,7 +14768,7 @@ var ESPIC = {
       var wsimp = function (n) {
         (function again() {
           if (pgRun !== run) return; var b = document.querySelector("#pgEq [data-wfop]"); if (!b || QZ.step >= 4) { n(); return; }
-          var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Click the parentheses to take them away." : st && st.q && st.q.abs !== undefined ? "Click inside " + wfVN(st.q.fam) + " to take away the negative." : "Click the operation between two numbers to combine them."); tap(b, function () { pgWait(1500, again); });
+          var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Take away the parentheses." : st && st.q && st.q.abs !== undefined ? "Take away the negative inside " + wfVN(st.q.fam) + "." : "Combine the numbers."); tap(b, function () { pgWait(1500, again); });
         })();
       };
       var weval = function (n) {
@@ -14884,7 +14886,7 @@ var ESPIC = {
       var DSX = [5, 10][rnd(2)], DSC = 0.8 + rnd(5) * 0.1, DYS = [225, 401, 524, 602, 623, 600, 524].map(function (v) { return Math.round(v * DSC) + rnd(9) - 4; });   // each run: a new step for x and a new scale for y (the same rise-and-fall)
       if (est() && e11On()) {   // 1.1B in Desmos: the data into a Desmos table, the regression, then the estimate
         var EP1 = estProb();
-        steps = [function (n) { e11Demo(run, n, EP1, cap); }, function (n) { cap("Type the estimate"); typeBox("estTx", String(Math.round(EP1.ans * 100) / 100), function () { tap($("estGo"), function () { pgWait(900, n); }); }); }];
+        steps = [function (n) { e11Demo(run, n, EP1, cap); }, function (n) { cap("The estimate"); typeBox("estTx", String(Math.round(EP1.ans * 100) / 100), function () { tap($("estGo"), function () { pgWait(900, n); }); }); }];
       } else if (est()) {   // 1.1, Estimating a Value from a Graph: the data go into the table, the U goes through them, and the graph gives the estimate
         var EP = estProb();
         steps = [
@@ -14892,7 +14894,7 @@ var ESPIC = {
           function (n) { cap("Return auto-fills"); ret(function () { pgWait(300, n); }, 700); },
           function (n) { cap("Now y-values"); toTop(function () { key("ArrowRight"); pgWait(600, function () { (function ys(i) { if (i > 4) { n(); return; } typeHere(EP.y[i], function () { ys(i + 1); }); })(0); }); }); },
           function (n) { cap("Zoom to data"); tap($("zmData"), function () { pgWait(1800, n); }); },
-          function (n) { cap("Press Regression"); tap(tog("reg"), function () { pgWait(2400, n); }); },
+          function (n) { cap("The regression"); tap(tog("reg"), function () { pgWait(2400, n); }); },
           function (n) {
             cap("Change families");
             (function again(i) { if (PG.fam === EP.fam || i >= 6) { pgWait(1800, n); return; } tap($("pgFam"), function () { pgWait(1100, function () { again(i + 1); }); }); })(0);
@@ -14903,7 +14905,7 @@ var ESPIC = {
             cap("Zoom out"); (function out(i) { if (!far() || i >= 4) { pgWait(1200, n); return; } tap($("zmOut"), function () { pgWait(1300, function () { out(i + 1); }); }); })(0);
           },
           function (n) {
-            cap("Click the curve");
+            cap("A point on the curve");
             var sp = ZM.to, x0 = EP.tx - sp * .3, p = { k: "c", fam: PG.fam, sh: null, free: true }; handGo(svgPt(x0, g(x0)), 700);
             pgWait(900, function () {
               handTap(); spSet(PG, p, x0, g(x0)); (PG.sp = PG.sp || []).push(p); SPD = { G: PG, i: PG.sp.length - 1, moved: true, isNew: true }; drawPlay();
@@ -14913,12 +14915,12 @@ var ESPIC = {
               (function glide(j) { if (j >= xs.length) { pgWait(1500, function () { SPD = null; drawPlay(); n(); }); return; } spSet(PG, p, xs[j], g(xs[j])); handGo(svgPt(xs[j], g(xs[j])), 60); drawPlay(); pgWait(55, function () { glide(j + 1); }); })(0);
             });
           },
-          function (n) { cap("Type the estimate"); typeBox("estTx", String(Math.round(EP.ans * 100) / 100), function () { tap($("estGo"), function () { pgWait(900, n); }); }); }
+          function (n) { cap("The estimate"); typeBox("estTx", String(Math.round(EP.ans * 100) / 100), function () { tap($("estGo"), function () { pgWait(900, n); }); }); }
         ];
       } else
       steps = [
         function (n) {
-          cap("Type x-values");
+          cap("The x-values");
           PG.fam = 1; PG.drows = null; PG.pts = []; PG.sp = []; Object.keys(PG.show).forEach(function (q) { PG.show[q] = false; }); PG.show.eq = false; drawPlay();
           clickCell(0, "x", function () { typeHere(DSX, function () { typeHere(2 * DSX, function () { typeHere(3 * DSX, n); }); }); });
         },
@@ -14930,7 +14932,7 @@ var ESPIC = {
           cap("Now y-values");
           toTop(function () { key("ArrowRight"); pgWait(600, function () { (function ys(i) { if (i > 6) { n(); return; } typeHere(DYS[i], function () { ys(i + 1); }); })(0); }); });
         },
-        function (n) { cap("Press Regression"); tap(tog("reg"), function () { pgWait(2600, n); }); },
+        function (n) { cap("The regression"); tap(tog("reg"), function () { pgWait(2600, n); }); },
         function (n) {
           cap("Change families");
           (function again(i) { if (i >= 6) { pgWait(2200, n); return; } tap($("pgFam"), function () { pgWait(i === 5 ? 600 : 1100, function () { again(i + 1); }); }); })(0);
@@ -14950,14 +14952,14 @@ var ESPIC = {
         if (nx === "m") return [steps[0]];
         if (nx === "c") return one(function (n) {
           var v = wp.rf === "y" ? "x" : "fx", b = document.querySelector("#wfSteps button[data-v=\"" + v + "\"]"); if (!b) { n(); return; }
-          cap(wfStr(wp) ? "A vertical " + (wp.scd === 1 ? "stretch" : "shrink") + " multiplies f(x): choose " + wfPlain(wfScH(wp)) + "f(x)." : "Reflecting in the " + wp.rf + "-axis: choose " + (v === "x" ? "\u2212x." : "\u2212f(x)."));
+          cap(wfStr(wp) ? "A vertical " + (wp.scd === 1 ? "stretch" : "shrink") + " multiplies f(x): " + wfPlain(wfScH(wp)) + "f(x)." : "Reflecting in the " + wp.rf + "-axis: " + (v === "x" ? "\u2212x." : "\u2212f(x)."));
           handGo(ctr(b), 650); pgWait(850, function () { handTap(); pgWait(300, function () { wfChoose(v, b); n(); }); });
         });
         if (nx === "i") return [steps[1]];
         if (nx === "r") return [steps[2]];
         if (nx === "s") return one(function (n) {
           var b = document.querySelector("#pgEq [data-wfop]"); if (!b) { n(); return; }
-          var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Click the parentheses to take them away." : st && st.q && st.q.abs !== undefined ? "Click inside " + wfVN(st.q.fam) + " to take away the negative." : "Click the operation between two numbers to combine them.");
+          var st = wfStg(wp)[QZ.wst + 1]; cap(st && st.kind === "paren" ? "Take away the parentheses." : st && st.q && st.q.abs !== undefined ? "Take away the negative inside " + wfVN(st.q.fam) + "." : "Combine the numbers.");
           handGo(ctr(b), 650); pgWait(850, function () { handTap(); pgWait(300, function () { wfSimplify(); n(); }); });
         });
         return [function (n) { cap("Everything is done."); n(); }];
@@ -14971,23 +14973,23 @@ var ESPIC = {
       for (i = 0; i < R.length; i++) if (!R[i].done) { row = i; break; }
       var tableStep = function (n) {
         var r = row;
-        if (r === 3 && sym && R[1].done) { cap("Copy a y-value: drag it from one y cell to another cell with the same answer."); dragY(1, 3, n); return; }
-        if (r === 4 && sym && R[0].done) { cap("Same for the first row: drag its y-value to the last."); dragY(0, 4, n); return; }
-        if (r % 2) { cap("Click a calculation to simplify it."); clickRow(r, n); } else { cap("Type a y-value."); typeRow(r, n); }
+        if (r === 3 && sym && R[1].done) { cap("Copy a y-value to the cell with the same answer."); dragY(1, 3, n); return; }
+        if (r === 4 && sym && R[0].done) { cap("Same for the first row: its y-value goes in the last."); dragY(0, 4, n); return; }
+        if (r % 2) { cap("Simplify a calculation."); clickRow(r, n); } else { cap("Find a y-value."); typeRow(r, n); }
       };
       var plotted = function (j) { var p = TB.pt(j); return PG.pts.some(function (z) { return z[0] === p[0] && z[1] === p[1]; }); };
       if (GD && gd2() && PTS) {   // 2.1: the next step, with the parent table (or the graphing table, when that is the one the student has started)
         if (gdW() && !PG.show.eq) return gwOn() ? one(function (n) { gwDemo(n, true); }) : [PTS.rule];
         if (!PG.dOK) return [PTS.desc];
         if (!pqParts().table) {
-          if (!PG.ptOn && (PG.subd || R.some(function (q) { return q.done || q.sub; }))) { if (!PG.subd && !tbAuto()) return one(function (n) { cap("Drag g(x) onto any center cell."); dragEq(0, n); }); if (row >= 0) return one(tableStep); }
+          if (!PG.ptOn && (PG.subd || R.some(function (q) { return q.done || q.sub; }))) { if (!PG.subd && !tbAuto()) return one(function (n) { cap("Fill the table from g(x)."); dragEq(0, n); }); if (row >= 0) return one(tableStep); }
           if (!PG.ptOn) return [PTS.tog];
           if (!ptLabelsDone()) return [PTS.labels];
           var PR = ptRows();
           if (!PR.some(function (q) { return q.d.py; })) return [PTS.fill];
-          for (i = 0; i < PR.length; i++) if (PR[i].px === undefined) { var ix = i; return one(function (n) { cap("Type a parent x-value."); ptTypeD(ix, "px", String(ix - 2), n); }); }
-          for (i = 0; i < PR.length; i++) if (ptUse("gx") && !PR[i].d.gx) { var ig = i; return one(function (n) { cap("Click a parent x-value: it slides left to the x-value of g."); ptClickD(ig, "px", n); }); }
-          var yk = ptYKey(); for (i = 0; i < PR.length; i++) if (!PR[i].d[yk]) { var iy = i; return one(function (n) { if (!PR[iy].d.py) { cap("Type the parent y-value: x²."); ptTypeD(iy, "py", String(ptRight(PR[iy], "py")), n); return; } cap("Click a parent y-value: " + ys0() + "."); ptClickD(iy, ptNextTo(PR[iy], "sy") ? "sy" : "py", n); }); }
+          for (i = 0; i < PR.length; i++) if (PR[i].px === undefined) { var ix = i; return one(function (n) { cap("A parent x-value."); ptTypeD(ix, "px", String(ix - 2), n); }); }
+          for (i = 0; i < PR.length; i++) if (ptUse("gx") && !PR[i].d.gx) { var ig = i; return one(function (n) { cap("Move a parent x-value to the x-value of g."); ptClickD(ig, "px", n); }); }
+          var yk = ptYKey(); for (i = 0; i < PR.length; i++) if (!PR[i].d[yk]) { var iy = i; return one(function (n) { if (!PR[iy].d.py) { cap("The parent y-value: x²."); ptTypeD(iy, "py", String(ptRight(PR[iy], "py")), n); return; } cap("A parent y-value: " + ys0() + "."); ptClickD(iy, ptNextTo(PR[iy], "sy") ? "sy" : "py", n); }); }
         }
         if (!PG.pdone) return [PTS.par];
         if (!PG.show.graph) return [PTS.g];
@@ -15004,7 +15006,7 @@ var ESPIC = {
       if (!PG.show.eq) return [steps[0]];
       if (!PG.subd) return [steps[1]];
       if (row >= 0) return one(tableStep);
-      for (i = 0; i < 5; i++) if (!plotted(i)) { var j = i; return one(function (n) { cap("Drag a row onto the graph."); dragRow(j, n); }); }
+      for (i = 0; i < 5; i++) if (!plotted(i)) { var j = i; return one(function (n) { cap("Plot a row."); dragRow(j, n); }); }
       if (!(PG.shape && shapeOK(PG.shape))) return [steps[7]];
       return [function (n) { cap("Everything is done."); n(); }];
     }
@@ -15372,7 +15374,7 @@ var ESPIC = {
       handTap();
       if (P.sp) { var sp = { k: "c", fam: PG.fam, sh: null, free: est() }; spSet(PG, sp, P.x, P.y); (PG.sp = PG.sp || []).push(sp); drawPlay(); }
       else { var key = gpMeta(S, true).key; (GPS[key] = GPS[key] || []).push(P.q); gpPaint(S); }
-      cap("Click a graph to see a point’s coordinates: (" + gpN(P.x) + ", " + gpN(P.y) + ").");
+      cap("A point’s coordinates: (" + gpN(P.x) + ", " + gpN(P.y) + ").");
       pgWait(2600, function () { handHide(); then(); });
     });
   }
@@ -15421,7 +15423,7 @@ var ESPIC = {
       for (var d = 0; d < 6 && !q; d++) [base + d, base - d].forEach(function (t) { var c = { c: 0, inv: inv, t: t }, P = d2Pt(S, c); if (!q && P && Math.abs(P[0]) <= S.R - 1 && Math.abs(P[1]) <= S.R - 1 && !(S.sol && Math.abs(P[0] - S.sol[0]) < .5 && Math.abs(P[1] - S.sol[1]) < .5)) q = c; });
       if (!q) return; var P = d2Pt(S, q), cv = $("d3Cv"), r = cv.getBoundingClientRect(), M = d2Map(), pt = { x: r.left + M.cx + M.sc * P[0], y: r.top + M.cy - M.sc * P[1] };
       handGo(pt, 650);
-      setTimeout(function () { if (g0 !== MS.gen || mode !== "demo" || D3.P !== S) { handHide(); return; } handTap(); d2Show2(q); dmCap("Click a line to see a point’s coordinates: (" + gpN(P[0]) + ", " + gpN(P[1]) + ")."); setTimeout(handHide, 1600); }, 850);
+      setTimeout(function () { if (g0 !== MS.gen || mode !== "demo" || D3.P !== S) { handHide(); return; } handTap(); d2Show2(q); dmCap("A point’s coordinates: (" + gpN(P[0]) + ", " + gpN(P[1]) + ")."); setTimeout(handHide, 1600); }, 850);
     }, 1400);
   }
   buildActs(); buildLessons(); updProg();
