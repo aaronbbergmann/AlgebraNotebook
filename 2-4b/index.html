@@ -10612,12 +10612,12 @@ var ESPIC = {
       if (pgRun !== run) return; if (DSM.fail) { n(); return; } if (!DSM.calc) { if (++tries < 60) pgWait(150, wait); else n(); return; }
       var box = $("dsmCalc"), a = c2T(num, 6), b = c2T(den, 6), c = 0, at = dsmLineAt(box, 0);
       var qc = document.querySelector("#pgQt .m3QC"), q0 = qc ? qc.innerHTML : "", say = function (t) { dmCap(t); if (qc) qc.textContent = t; };   // (the question in the centre pane says it too)
-      say("Divide in Desmos: type " + c2F(num) + " / " + c2F(den) + " on a new line.");
+      /* (no instruction: the hand shows it) */
       handGo(at, 650);
       pgWait(800, function () {
         if (pgRun !== run) return; handTap();
         (function top() { if (pgRun !== run) return; c = Math.min(a.length, c + 1); DSM.calc.setExpression({ id: "vpa", latex: a.slice(0, c) }); if (c < a.length) pgWait(120, top); else { c = 0; pgWait(250, bot); } })();
-        function bot() { if (pgRun !== run) return; c = Math.min(b.length, c + 1); DSM.calc.setExpression({ id: "vpa", latex: "\\frac{" + a + "}{" + b.slice(0, c) + "}" }); if (c < b.length) pgWait(120, bot); else pgWait(900, function () { if (pgRun !== run) return; var v = num / den; say("Desmos shows the decimal: " + c2F(num) + " ÷ " + c2F(den) + " = " + c2F(c2R(v, 6)) + (Math.abs(v - c2R(v, 2)) > 1e-9 ? ", about " + c2F(c2R(v, 2)) : "") + "."); pgWait(2600, function () { if (qc && document.body.contains(qc)) qc.innerHTML = q0; n(); }); }); }
+        function bot() { if (pgRun !== run) return; c = Math.min(b.length, c + 1); DSM.calc.setExpression({ id: "vpa", latex: "\\frac{" + a + "}{" + b.slice(0, c) + "}" }); if (c < b.length) pgWait(120, bot); else pgWait(900, function () { if (pgRun !== run) return; pgWait(2600, function () { if (qc && document.body.contains(qc)) qc.innerHTML = q0; n(); }); }); }
       });
     })();
   }
@@ -15790,14 +15790,14 @@ var ESPIC = {
       ws("ss", "vsub", askS, { k: "s", v: s0, after: subA("s"), hint: ["It starts " + s0 + " feet up.", "Drag " + s0 + " onto s₀."] })
     ];
     var rt = sq ? String(r) : "≈ " + c2F(Tr), tA = sq ? "<i>t</i> = " + r : "<i>t</i> ≈ " + c2F(Tr);
-    var mv = ws("mv", "vmv", "Undo the addition: drag + " + s0 + " to the other side of the =.", { after: setS(1), hint: ["The " + s0 + " is added to −16t².", "Drag + " + s0 + " across the = sign. It becomes − " + s0 + "."] });
-    var o1 = ws("o1", "vop", "Click the subtraction.", { op: "o1", after: opA("o1", 2), hint: ["Combine 0 − " + s0 + ".", "Click the − between 0 and " + s0 + "."] });
+    var mv = ws("mv", "vmv", "Undo the addition.", { after: setS(1), hint: ["The " + s0 + " is added to −16t².", "Drag + " + s0 + " across the = sign. It becomes − " + s0 + "."] });
+    var o1 = ws("o1", "vop", "Subtract.", { op: "o1", after: opA("o1", 2), hint: ["Combine 0 − " + s0 + ".", "Click the − between 0 and " + s0 + "."] });
     var c1 = ws("c1", "num", "Work it out.", { pre: "0 − " + s0 + " =", ans: -s0, after: setS(2), hint: ["Subtract.", "0 − " + s0 + " = −" + s0 + "."] });
-    var dv = ws("dv", "vdv", "Undo the multiplication: drag −16 to the other side of the =.", { after: setS(3), hint: ["−16 multiplies t². Undo it by dividing.", "Drag −16 across the = sign."] });
-    var o2 = ws("o2", "vop", "Click the fraction bar to divide.", { op: "o2", after: opA("o2", 4), hint: ["A fraction bar means divide.", "Click the bar between −" + s0 + " and −16."] });
+    var dv = ws("dv", "vdv", "Undo the multiplication.", { after: setS(3), hint: ["−16 multiplies t². Undo it by dividing.", "Drag −16 across the = sign."] });
+    var o2 = ws("o2", "vop", "Divide.", { op: "o2", after: opA("o2", 4), hint: ["A fraction bar means divide.", "Click the bar between −" + s0 + " and −16."] });
     var c2 = ws("c2", "num", "Work it out.", { pre: "−" + s0 + " ÷ (−16) =", ans: n, tol: Number.isInteger(n) ? 1e-9 : 0.0051, after: setS(4), hint: ["A negative divided by a negative is positive.", "−" + s0 + " ÷ (−16) = " + n + "."] });
-    var ex = ws("ex", "vex", "Undo the exponent: drag the 2 to the other side of the =.", { after: setS(5), hint: ["The square root undoes the square.", "Drag the 2 across the = sign. It becomes ±√."] });
-    var o3 = ws("o3", "vop", "Click the square root." + (sq ? "" : " Round to the nearest tenth."), { op: "o3", after: opA("o3", 6), hint: [sq ? "What number times itself is " + n + "?" : "√" + n + " is between " + Math.floor(r) + " and " + Math.ceil(r) + ".", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
+    var ex = ws("ex", "vex", "Undo the exponent.", { after: setS(5), hint: ["The square root undoes the square.", "Drag the 2 across the = sign. It becomes ±√."] });
+    var o3 = ws("o3", "vop", "Take the square root." + (sq ? "" : " Round to the nearest tenth."), { op: "o3", after: opA("o3", 6), hint: [sq ? "What number times itself is " + n + "?" : "√" + n + " is between " + Math.floor(r) + " and " + Math.ceil(r) + ".", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
     var c3 = ws("c3", "num", "Work it out.", { pre: "√" + n + " " + (sq ? "=" : "≈"), post: sq ? "" : "(to the nearest tenth)", ans: sq ? r : Tr, tol: sq ? 1e-9 : 0.051, after: setS(6), hint: [sq ? "What number times itself is " + n + "?" : "Use a calculator, then round.", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
     var ng = ws("ng", "pick", "Which solution answers the question?", { opts: m3Sh([{ t: sq ? "t = " + r : "t ≈ " + c2F(Tr), ok: true }, { t: sq ? "t = −" + r : "t ≈ −" + c2F(Tr), ok: false, why: "A time cannot be negative." }]), after: setS(7), hint: ["Time is counted forward from the drop.", "A time cannot be negative: keep the positive solution."] });
     var ans = { id: "ans", lab: "Time", ask: "How long does it take to hit " + place + "?", pre: sq ? "<i>t</i> =" : "<i>t</i> ≈", post: "s", ans: sq ? r : Tr, tol: sq ? 1e-9 : 0.051,
