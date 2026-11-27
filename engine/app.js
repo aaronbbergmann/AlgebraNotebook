@@ -5657,6 +5657,7 @@
   function resumeMode() { try { if (!ladOn()) return "demo"; var L = ladder(); for (var i = 0; i < L.length; i++) if (!modeFin(L[i])) return L[i]; return L[L.length - 1] || "demo"; } catch (e) { return "demo"; } }
 
   function newProblem() {
+    document.body.classList.remove("swErr");   // (a wrong Write Submit turned Show work plum red; a new problem starts plain)
     nlHide(); fmHide(); if ($("quBtn")) $("quBtn").hidden = true; hideKind(); d3Hide(); $("eqSubRow").hidden = true;
     if (quiz()) { $("next").hidden = true; $("nxHard").hidden = true; $("again").hidden = true; qzStart(); return; }   // (nothing left over from the activity we came from)
     $("qzNext").hidden = true; $("qzAgain").hidden = true;
@@ -5953,6 +5954,15 @@
       allV().forEach(function (v, j) { var Lv = {}; Lv[v] = mk(1); var t = numOrEq($("ans_" + v).value, Lv); if (!t) miss = true; else if (!same(t, sol[j])) ok = false; });
     }
     if (miss) { m.className = "bad"; m.textContent = lesson === 1 && isIneq(orig[0]) ? "Type your answer like x < 3 or x ≥ 1/2." : "Enter a number for each variable, like 3, -2 or 1/2."; return; }
+    if (!ok && mode === "solo") {   // Write: a wrong Submit shows the answer, a plum-red Try Another and a plum-red Show work (as in the equation exercises)
+      EQW++; locked = true; tally(true);
+      var say = cl === "one" ? solveSys(orig).map(function (t, j) { return allV()[j] + " " + (lesson === 1 && isIneq(orig[0]) ? relGlyph(orig[0].a.n < 0 ? relRev(qRel(orig[0])) : qRel(orig[0])) : "=") + " " + sg(t); }).join(", ") : cl === "none" ? "no solution" : "infinitely many solutions";
+      $("ansT").hidden = true; $("ansKind").hidden = true; $("ansFields").hidden = true; $("ansGo").hidden = true; eqSubSync();
+      up = { label: "Try Another", go: function () { newProblem(); } }; nxShow();
+      var nx = $("next"); nx.textContent = "Try Another"; nx.hidden = false; nx.disabled = false; $("again").hidden = true;
+      document.body.classList.add("swErr"); $("show").hidden = false; $("show").style.visibility = "";
+      m.className = "bad"; m.textContent = "Not quite. The answer is " + say + ". Show Work has every step; Try Another gives a new problem."; return;
+    }
     if (!ok) { EQW++; eqwTa(); m.className = "bad"; m.textContent = "Not quite. Check your work and try again."; return; }
     m.className = "ok"; m.textContent = mode === "solo" ? cheer() : "Correct!";
     // the answer fields and buttons give way to the correct solution
