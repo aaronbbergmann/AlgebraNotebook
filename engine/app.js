@@ -5027,7 +5027,7 @@
   ] };
   // ---- Practice: /q/?id=<bank id> plays one bank question (Question Bank migration, step 5).  It is a review with the question's own items (where the
   // question runs: its section and exercise number), with progress of its own, kept apart from every activity's stars.  /q/ alone lists the bank.
-  var QPLACE = window.AN_QPLACE || {};   // (bank/_place.js: the builder reads the same table)
+  var QPLACE = window.AN_QPLACE || {};   // (bank/place.js: the builder reads the same table; no file name may start with _, which GitHub Pages does not publish)
 
   // (a fifth entry, 1, marks a copy: the same question placed in another activity, as the copies log lists; practice uses the original)
   var QID = null;

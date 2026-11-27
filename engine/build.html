@@ -130,6 +130,7 @@
     drawItems(); say(a ? "Editing " + esc(a.abbr) + ". Save keeps the same link." : "", true);
   }
   $("clear").addEventListener("click", function () { load(null); });
+  ["title", "abbr", "due"].forEach(function (id) { $(id).addEventListener("input", function () { if ($("out").querySelector(".bad")) say(""); }); });   // (an old message goes once the field is changed)
   function linkOf(id) { return SITE + "a/?id=" + encodeURIComponent(id); }
   $("save").addEventListener("click", function () {
     if (!canSave()) { say("Sign in as a teacher to save."); return; }
