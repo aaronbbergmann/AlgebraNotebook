@@ -22,7 +22,7 @@ COPIES = ("1-1a 1-1b 1-1c 1-2a 1-2b 1-2c 1-3a 1-3b 1-4a 1-4b 1-4c 1-4d 2-1a 2-1b
           "2-4a 2-4b 3-1a 3-1b 3-1c 3-1d 3-1e 3-1f 3-1g 3-3a 3-3b 3-4a 3-4b "
           "a playdata playgraph playsolve q revq2 revt1").split()
 CSS_MARK, JS_MARK = "<!--ENGINE_CSS-->", "<!--ENGINE_JS-->"
-# The activities 1.1A to 3.1C (with RevT1 and RevQ2) are assignments now (P-<abbreviation>, saved by the server: server/Code.gs, CONVERTED). Their folders
+# Every activity, 1.1A to 3.4B (with RevT1 and RevQ2), is an assignment now (P-<abbreviation>, saved by the server: server/Code.gs, CONVERTED). Their folders
 # are only redirects, so old links still work: tools/redirects.json maps each old ?ex= to the assignment and question that has it now (a fixed table).
 REDIRECTS = json.loads(open(os.path.join(ROOT, "tools/redirects.json"), encoding="utf-8").read())
 STUB = r"""<!doctype html>

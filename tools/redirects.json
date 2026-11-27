@@ -832,5 +832,629 @@
     "q2"
    ]
   }
+ },
+ "3-1d": {
+  "title": "3.1D Solving Quadratic Equations: Factoring",
+  "to": "P-3.1D",
+  "ex": {
+   "graphing": [
+    "P-3.1A",
+    "q1"
+   ],
+   "square-roots": [
+    "P-3.1B",
+    "q2"
+   ],
+   "real-life": [
+    "P-3.1C",
+    "q1"
+   ],
+   "box-method": [
+    "P-3.1D",
+    "q1"
+   ],
+   "factoring": [
+    "P-3.1D",
+    "q2"
+   ],
+   "solve-by-factoring": [
+    "P-3.1E",
+    "q1"
+   ],
+   "special-products": [
+    "P-3.1F",
+    "q1"
+   ],
+   "factor-ax-bx-c": [
+    "P-3.1G",
+    "q1"
+   ],
+   "complete-the-square": [
+    "P-3.3A",
+    "q1"
+   ],
+   "vertex-form": [
+    "P-3.3B",
+    "q1"
+   ],
+   "quadratic-formula": [
+    "P-3.4A",
+    "q1"
+   ],
+   "discriminant": [
+    "P-3.4B",
+    "q1"
+   ],
+   "4-step-equations": [
+    "P-3.1A",
+    "q2"
+   ],
+   "binomials": [
+    "P-3.1A",
+    "q3"
+   ],
+   "simplify-roots": [
+    "P-3.1B",
+    "q1"
+   ],
+   "square-roots-simplify": [
+    "P-3.1B",
+    "q3"
+   ],
+   "vertex-point": [
+    "P-3.1C",
+    "q5"
+   ],
+   "real-life-desmos": [
+    "P-3.1C",
+    "q2"
+   ]
+  }
+ },
+ "3-1e": {
+  "title": "3.1E Solving Quadratic Equations: Solving by Factoring",
+  "to": "P-3.1E",
+  "ex": {
+   "graphing": [
+    "P-3.1A",
+    "q1"
+   ],
+   "square-roots": [
+    "P-3.1B",
+    "q2"
+   ],
+   "real-life": [
+    "P-3.1C",
+    "q1"
+   ],
+   "box-method": [
+    "P-3.1D",
+    "q1"
+   ],
+   "factoring": [
+    "P-3.1D",
+    "q2"
+   ],
+   "solve-by-factoring": [
+    "P-3.1E",
+    "q1"
+   ],
+   "special-products": [
+    "P-3.1F",
+    "q1"
+   ],
+   "factor-ax-bx-c": [
+    "P-3.1G",
+    "q1"
+   ],
+   "complete-the-square": [
+    "P-3.3A",
+    "q1"
+   ],
+   "vertex-form": [
+    "P-3.3B",
+    "q1"
+   ],
+   "quadratic-formula": [
+    "P-3.4A",
+    "q1"
+   ],
+   "discriminant": [
+    "P-3.4B",
+    "q1"
+   ],
+   "4-step-equations": [
+    "P-3.1A",
+    "q2"
+   ],
+   "binomials": [
+    "P-3.1A",
+    "q3"
+   ],
+   "simplify-roots": [
+    "P-3.1B",
+    "q1"
+   ],
+   "square-roots-simplify": [
+    "P-3.1B",
+    "q3"
+   ],
+   "vertex-point": [
+    "P-3.1C",
+    "q5"
+   ],
+   "real-life-desmos": [
+    "P-3.1C",
+    "q2"
+   ]
+  }
+ },
+ "3-1f": {
+  "title": "3.1F Solving Quadratic Equations: Formulas",
+  "to": "P-3.1F",
+  "ex": {
+   "graphing": [
+    "P-3.1A",
+    "q1"
+   ],
+   "square-roots": [
+    "P-3.1B",
+    "q2"
+   ],
+   "real-life": [
+    "P-3.1C",
+    "q1"
+   ],
+   "box-method": [
+    "P-3.1D",
+    "q1"
+   ],
+   "factoring": [
+    "P-3.1D",
+    "q2"
+   ],
+   "solve-by-factoring": [
+    "P-3.1E",
+    "q1"
+   ],
+   "special-products": [
+    "P-3.1F",
+    "q1"
+   ],
+   "factor-ax-bx-c": [
+    "P-3.1G",
+    "q1"
+   ],
+   "complete-the-square": [
+    "P-3.3A",
+    "q1"
+   ],
+   "vertex-form": [
+    "P-3.3B",
+    "q1"
+   ],
+   "quadratic-formula": [
+    "P-3.4A",
+    "q1"
+   ],
+   "discriminant": [
+    "P-3.4B",
+    "q1"
+   ],
+   "4-step-equations": [
+    "P-3.1A",
+    "q2"
+   ],
+   "binomials": [
+    "P-3.1A",
+    "q3"
+   ],
+   "simplify-roots": [
+    "P-3.1B",
+    "q1"
+   ],
+   "square-roots-simplify": [
+    "P-3.1B",
+    "q3"
+   ],
+   "vertex-point": [
+    "P-3.1C",
+    "q5"
+   ],
+   "real-life-desmos": [
+    "P-3.1C",
+    "q2"
+   ]
+  }
+ },
+ "3-1g": {
+  "title": "3.1G Solving Quadratic Equations: Factor ax² + bx + c",
+  "to": "P-3.1G",
+  "ex": {
+   "graphing": [
+    "P-3.1A",
+    "q1"
+   ],
+   "square-roots": [
+    "P-3.1B",
+    "q2"
+   ],
+   "real-life": [
+    "P-3.1C",
+    "q1"
+   ],
+   "box-method": [
+    "P-3.1D",
+    "q1"
+   ],
+   "factoring": [
+    "P-3.1D",
+    "q2"
+   ],
+   "solve-by-factoring": [
+    "P-3.1E",
+    "q1"
+   ],
+   "special-products": [
+    "P-3.1F",
+    "q1"
+   ],
+   "factor-ax-bx-c": [
+    "P-3.1G",
+    "q1"
+   ],
+   "complete-the-square": [
+    "P-3.3A",
+    "q1"
+   ],
+   "vertex-form": [
+    "P-3.3B",
+    "q1"
+   ],
+   "quadratic-formula": [
+    "P-3.4A",
+    "q1"
+   ],
+   "discriminant": [
+    "P-3.4B",
+    "q1"
+   ],
+   "4-step-equations": [
+    "P-3.1A",
+    "q2"
+   ],
+   "binomials": [
+    "P-3.1A",
+    "q3"
+   ],
+   "simplify-roots": [
+    "P-3.1B",
+    "q1"
+   ],
+   "square-roots-simplify": [
+    "P-3.1B",
+    "q3"
+   ],
+   "vertex-point": [
+    "P-3.1C",
+    "q5"
+   ],
+   "real-life-desmos": [
+    "P-3.1C",
+    "q2"
+   ]
+  }
+ },
+ "3-3a": {
+  "title": "3.3A Complete the Square (Solve)",
+  "to": "P-3.3A",
+  "ex": {
+   "graphing": [
+    "P-3.1A",
+    "q1"
+   ],
+   "square-roots": [
+    "P-3.1B",
+    "q2"
+   ],
+   "real-life": [
+    "P-3.1C",
+    "q1"
+   ],
+   "box-method": [
+    "P-3.1D",
+    "q1"
+   ],
+   "factoring": [
+    "P-3.1D",
+    "q2"
+   ],
+   "solve-by-factoring": [
+    "P-3.1E",
+    "q1"
+   ],
+   "special-products": [
+    "P-3.1F",
+    "q1"
+   ],
+   "factor-ax-bx-c": [
+    "P-3.1G",
+    "q1"
+   ],
+   "complete-the-square": [
+    "P-3.3A",
+    "q1"
+   ],
+   "vertex-form": [
+    "P-3.3B",
+    "q1"
+   ],
+   "quadratic-formula": [
+    "P-3.4A",
+    "q1"
+   ],
+   "discriminant": [
+    "P-3.4B",
+    "q1"
+   ],
+   "4-step-equations": [
+    "P-3.1A",
+    "q2"
+   ],
+   "binomials": [
+    "P-3.1A",
+    "q3"
+   ],
+   "simplify-roots": [
+    "P-3.1B",
+    "q1"
+   ],
+   "square-roots-simplify": [
+    "P-3.1B",
+    "q3"
+   ],
+   "vertex-point": [
+    "P-3.1C",
+    "q5"
+   ],
+   "real-life-desmos": [
+    "P-3.1C",
+    "q2"
+   ]
+  }
+ },
+ "3-3b": {
+  "title": "3.3B Complete the Square (Vertex Form)",
+  "to": "P-3.3B",
+  "ex": {
+   "graphing": [
+    "P-3.1A",
+    "q1"
+   ],
+   "square-roots": [
+    "P-3.1B",
+    "q2"
+   ],
+   "real-life": [
+    "P-3.1C",
+    "q1"
+   ],
+   "box-method": [
+    "P-3.1D",
+    "q1"
+   ],
+   "factoring": [
+    "P-3.1D",
+    "q2"
+   ],
+   "solve-by-factoring": [
+    "P-3.1E",
+    "q1"
+   ],
+   "special-products": [
+    "P-3.1F",
+    "q1"
+   ],
+   "factor-ax-bx-c": [
+    "P-3.1G",
+    "q1"
+   ],
+   "complete-the-square": [
+    "P-3.3A",
+    "q1"
+   ],
+   "vertex-form": [
+    "P-3.3B",
+    "q1"
+   ],
+   "quadratic-formula": [
+    "P-3.4A",
+    "q1"
+   ],
+   "discriminant": [
+    "P-3.4B",
+    "q1"
+   ],
+   "4-step-equations": [
+    "P-3.1A",
+    "q2"
+   ],
+   "binomials": [
+    "P-3.1A",
+    "q3"
+   ],
+   "simplify-roots": [
+    "P-3.1B",
+    "q1"
+   ],
+   "square-roots-simplify": [
+    "P-3.1B",
+    "q3"
+   ],
+   "vertex-point": [
+    "P-3.1C",
+    "q5"
+   ],
+   "real-life-desmos": [
+    "P-3.1C",
+    "q2"
+   ]
+  }
+ },
+ "3-4a": {
+  "title": "3.4A Use the Quadratic Formula and the Discriminant",
+  "to": "P-3.4A",
+  "ex": {
+   "graphing": [
+    "P-3.1A",
+    "q1"
+   ],
+   "square-roots": [
+    "P-3.1B",
+    "q2"
+   ],
+   "real-life": [
+    "P-3.1C",
+    "q1"
+   ],
+   "box-method": [
+    "P-3.1D",
+    "q1"
+   ],
+   "factoring": [
+    "P-3.1D",
+    "q2"
+   ],
+   "solve-by-factoring": [
+    "P-3.1E",
+    "q1"
+   ],
+   "special-products": [
+    "P-3.1F",
+    "q1"
+   ],
+   "factor-ax-bx-c": [
+    "P-3.1G",
+    "q1"
+   ],
+   "complete-the-square": [
+    "P-3.3A",
+    "q1"
+   ],
+   "vertex-form": [
+    "P-3.3B",
+    "q1"
+   ],
+   "quadratic-formula": [
+    "P-3.4A",
+    "q1"
+   ],
+   "discriminant": [
+    "P-3.4B",
+    "q1"
+   ],
+   "4-step-equations": [
+    "P-3.1A",
+    "q2"
+   ],
+   "binomials": [
+    "P-3.1A",
+    "q3"
+   ],
+   "simplify-roots": [
+    "P-3.1B",
+    "q1"
+   ],
+   "square-roots-simplify": [
+    "P-3.1B",
+    "q3"
+   ],
+   "vertex-point": [
+    "P-3.1C",
+    "q5"
+   ],
+   "real-life-desmos": [
+    "P-3.1C",
+    "q2"
+   ]
+  }
+ },
+ "3-4b": {
+  "title": "3.4B Use the Quadratic Formula and the Discriminant: The Discriminant",
+  "to": "P-3.4B",
+  "ex": {
+   "graphing": [
+    "P-3.1A",
+    "q1"
+   ],
+   "square-roots": [
+    "P-3.1B",
+    "q2"
+   ],
+   "real-life": [
+    "P-3.1C",
+    "q1"
+   ],
+   "box-method": [
+    "P-3.1D",
+    "q1"
+   ],
+   "factoring": [
+    "P-3.1D",
+    "q2"
+   ],
+   "solve-by-factoring": [
+    "P-3.1E",
+    "q1"
+   ],
+   "special-products": [
+    "P-3.1F",
+    "q1"
+   ],
+   "factor-ax-bx-c": [
+    "P-3.1G",
+    "q1"
+   ],
+   "complete-the-square": [
+    "P-3.3A",
+    "q1"
+   ],
+   "vertex-form": [
+    "P-3.3B",
+    "q1"
+   ],
+   "quadratic-formula": [
+    "P-3.4A",
+    "q1"
+   ],
+   "discriminant": [
+    "P-3.4B",
+    "q1"
+   ],
+   "4-step-equations": [
+    "P-3.1A",
+    "q2"
+   ],
+   "binomials": [
+    "P-3.1A",
+    "q3"
+   ],
+   "simplify-roots": [
+    "P-3.1B",
+    "q1"
+   ],
+   "square-roots-simplify": [
+    "P-3.1B",
+    "q3"
+   ],
+   "vertex-point": [
+    "P-3.1C",
+    "q5"
+   ],
+   "real-life-desmos": [
+    "P-3.1C",
+    "q2"
+   ]
+  }
  }
 }

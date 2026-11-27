@@ -10182,9 +10182,9 @@ var ESPIC = {
   // the full title shown in the list (an activity can give its own, otherwise code + name)
   function shortOf(id) { return id === "1.4D" ? "1.4 Algebra" : id; }
   function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
-  // the activities 1.1A to 3.1C (with RevT1 and RevQ2) are assignments now (P-2.4A, saved by the server); their folders only redirect (tools/redirects.json).
+  // every activity, 1.1A to 3.4B (with RevT1 and RevQ2), is an assignment now (P-2.4A, saved by the server); their folders only redirect (tools/redirects.json).
   // Their definitions stay here: the presets are built from them, and students' old progress is still copied into the assignments (presetMirror)
-  var GONE = (function () { var ids = ACTS.map(function (a) { return a[0]; }); return ids.slice(ids.indexOf("1.1A"), ids.indexOf("3.1C") + 1); })();
+  var GONE = (function () { var ids = ACTS.map(function (a) { return a[0]; }); return ids.slice(ids.indexOf("1.1A")); })();
   function buildActs() {
     $("actLbl").textContent = soon ? soon : welcome ? "Choose an activity" : rev ? (BUILT[rev].practice ? "Practice" : BUILT[rev].asg ? BUILT[rev].abbr : rev) : view ? view : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
     var here = soon || rev || view || act; if (fixedAct) document.title = fullTitle(here) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(here));
