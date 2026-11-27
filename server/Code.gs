@@ -332,7 +332,9 @@ function deleteAssignment(who, id) {
   var me = String(who.email).toLowerCase(), A = asgRows();
   for (var i = 0; i < A.rows.length; i++) if (String(A.rows[i][0]) === String(id)) {
     if (String(A.rows[i][3]).toLowerCase() !== me) return { error: "forbidden", message: "That assignment belongs to another teacher." };
-    A.sh.deleteRow(i + 2); return { ok: true };
+    var posts = {}, warn = []; try { posts = JSON.parse(A.rows[i][8] || "{}"); } catch (e) { }
+    Object.keys(posts).forEach(function (c) { try { Classroom.Courses.CourseWork.remove(c, posts[c]); } catch (e) { warn.push(className(c) + ": " + String(e && e.message || e)); } });   // (its Classroom posts go too)
+    A.sh.deleteRow(i + 2); return { ok: true, warnings: warn };
   }
   return { error: "bad", message: "That assignment was not found." };
 }

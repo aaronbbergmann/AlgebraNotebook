@@ -195,8 +195,8 @@
       AN.api("sendGrades", { id: g.id }).then(function (j) { b.textContent = j.sent + " sent"; if ((j.warnings || []).length) alert("Google Classroom: " + j.warnings.join("\n")); }).catch(function (er) { b.disabled = false; b.textContent = "Send grades"; alert(er.message || "Could not send the grades."); });
     }
     else if (b.hasAttribute("data-del")) {
-      var a = MINE[+b.getAttribute("data-del")]; if (!confirm("Delete " + a.abbr + "? Students' saved work stays, but the link stops working.")) return;
-      AN.api("deleteAssignment", { id: a.id }).then(function () { if (cur.id === a.id) load(null); loadMine(); }).catch(function (er) { alert(er.message || "Could not delete."); });
+      var a = MINE[+b.getAttribute("data-del")]; if (!confirm("Delete " + a.abbr + "? " + ((a.posted || []).length ? "Its post in Google Classroom is deleted too (with its grades there). " : "") + "Students' saved work stays, but the link stops working.")) return;
+      AN.api("deleteAssignment", { id: a.id }).then(function (j) { if ((j.warnings || []).length) alert("Google Classroom: " + j.warnings.join("\n")); if (cur.id === a.id) load(null); loadMine(); }).catch(function (er) { alert(er.message || "Could not delete."); });
     }
   });
   function loadMine() {
