@@ -7,6 +7,9 @@
  *   Students  - one row per student: email, name, last saved, then one column per activity (stars, 0.0 to 5.0)
  *   Data      - the raw saved progress (JSON, split over columns if long)
  *   Sessions  - sign-in sessions (a random key per device, valid 90 days)
+ *   Assignments - one row per assignment a teacher saved: id, title, abbreviation, owner, classes, due (JSON), items (JSON), created
+ *   Attempts  - one row per finished problem of an assignment or of practice (append only): time, student, class, assignment, question,
+ *               version, seed, mode, tier, correct, tries
  *   Settings  - due dates (due:<activity> = yyyy-mm-ddThh:mm, or yyyy-mm-dd from older saves), the Google Classroom classes last synced, and their teachers
  *
  * Google Classroom sync (the "Sync with Google Classroom" button on the class progress page) needs the Classroom service:
@@ -30,7 +33,9 @@ function doPost(e) {
     if (req.action === "load") return out(load(who));
     if (req.action === "save") return out(save(who, req.data, req.summary));
     if (req.action === "signout") { endSession(req.session); return out({ ok: true }); }
-    if (req.action === "due") return out({ due: dueDates() });   // (any signed-in student: the welcome page opens the activity due next)
+    if (req.action === "due") return out({ due: dueDates() });
+    if (req.action === "assignment") return out(getAssignment(req.id));   // (step 5: /a/?id= fetches its record once)
+    if (req.action === "attempts") return out(logAttempts(who, req.rows || []));   // (step 5: finished problems, in batches)   // (any signed-in student: the welcome page opens the activity due next)
     if (["roster", "setDue", "courses", "syncClassroom"].indexOf(req.action) >= 0 && !isTeacher(who.email)) return out({ error: "forbidden", message: "Teachers only." });
     if (req.action === "roster") return out(roster());
     if (req.action === "setDue") return out(setDue(req.act, req.date));
@@ -239,6 +244,32 @@ function syncClassroom(ids) {
 }
 
 /** Run once from the editor (select "setup", click Run) to create the sheets and approve permissions. */
+// ---- Assignments and Attempts (Question Bank migration, step 5).  Step 6 sends each assignment's attempts to its owner's own Sheet.
+function assignmentsSheet() { return sheet("Assignments", ["Id", "Title", "Abbreviation", "Owner", "Classes", "Due (JSON)", "Items (JSON)", "Created"]); }
+function attemptsSheet() { return sheet("Attempts", ["Time", "Student", "Class", "Assignment", "Question", "Version", "Seed", "Mode", "Tier", "Correct", "Tries"]); }
+function getAssignment(id) {
+  id = String(id || ""); if (!id) return { error: "bad", message: "No assignment id." };
+  var sh = assignmentsSheet(), n = sh.getLastRow(); if (n < 2) return { assignment: null };
+  var rows = sh.getRange(2, 1, n - 1, 8).getValues();
+  for (var i = 0; i < rows.length; i++) if (String(rows[i][0]) === id) {
+    var r = rows[i], items = [], due = {};
+    try { items = JSON.parse(r[6] || "[]"); } catch (e) { items = []; } try { due = JSON.parse(r[5] || "{}"); } catch (e) { due = {}; }
+    return { assignment: { id: id, title: String(r[1]), abbr: String(r[2]), owner: String(r[3]), classes: String(r[4]).split(/\s*,\s*/).filter(String), due: due, items: items } };
+  }
+  return { assignment: null };
+}
+function logAttempts(who, rows) {
+  if (!rows.length) return { ok: true, n: 0 };
+  rows = rows.slice(0, 500);
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var sh = attemptsSheet(), vals = rows.map(function (r) {
+      return [r.t ? new Date(r.t) : new Date(), who.email, "", String(r.a || ""), String(r.q || ""), Number(r.v) || 1, String(r.seed || ""), String(r.m || ""), Number(r.tier) || 0, r.ok ? "yes" : "no", Number(r.tries) || 1];
+    });
+    sh.getRange(sh.getLastRow() + 1, 1, vals.length, vals[0].length).setValues(vals);
+  } finally { lock.releaseLock(); }
+  return { ok: true, n: rows.length };
+}
 function setup() {
   var s = SpreadsheetApp.getActiveSpreadsheet();
   if (s) PropertiesService.getScriptProperties().setProperty("SHEET_ID", s.getId());

@@ -19,7 +19,7 @@ import hashlib, os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COPIES = ("1-1a 1-1b 1-1c 1-2a 1-2b 1-2c 1-3a 1-3b 1-4a 1-4b 1-4c 1-4d 2-1a 2-1b 2-2a 2-2b 2-2c "
           "2-4a 2-4b 3-1a 3-1b 3-1c 3-1d 3-1e 3-1f 3-1g 3-3a 3-3b 3-4a 3-4b "
-          "playdata playgraph playsolve q revq2 revt1").split()
+          "a playdata playgraph playsolve q revq2 revt1").split()
 CSS_MARK, JS_MARK = "<!--ENGINE_CSS-->", "<!--ENGINE_JS-->"
 
 

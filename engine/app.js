@@ -5036,12 +5036,13 @@
     "2.2A-vertex-form": [["2.2", 1]], "2.2A-standard-form": [["2.2", 2]], "2.2C-min-max": [["2.2", 3]], "2.2C-intercept-form": [["2.2", 4]], "2.2C-compare": [["2.2", 5]],
     "2.2B-interval-notation": [["2.2", 6]], "2.2B-domain": [["2.2", 7]], "2.2B-range": [["2.2", 8]], "2.2B-increasing": [["2.2", 9]], "2.2B-decreasing": [["2.2", 10]],
     "2.2C-memorize": [["2.2", 11]], "2.2C-characteristics": [["2.2", 12]],
-    "2.4A-vertex-point": [["2.4", 1]], "2.4A-point-intercepts": [["2.4", 2]], "2.4B-quadratic-regression": [["2.4", 4]], "2.4A-3step-equations": [["2.4", 5]],
-    "2.4A-box-method": [["2.4", 6]], "2.4A-square-roots": [["2.4", 7]], "2.4B-distributing": [["2.4", 8]],
+    "2.4A-vertex-point": [["2.4", 1], ["3.1", 18, 0, "", 1]], "2.4A-point-intercepts": [["2.4", 2]], "2.4B-quadratic-regression": [["2.4", 4]], "2.4A-3step-equations": [["2.4", 5]],
+    "2.4A-box-method": [["2.4", 6], ["3.1", 15, 0, "", 1], ["3.1", 5, 0, "", 1]], "2.4A-square-roots": [["2.4", 7]], "2.4B-distributing": [["2.4", 8]],
     "3.1A-graphing": [["3.1", 1]], "3.1B-square-roots": [["3.1", 3]], "3.1C-real-life": [["3.1", 4]], "3.1D-factoring": [["3.1", 6]], "3.1E-solve-factoring": [["3.1", 7]],
     "3.1F-special-products": [["3.1", 8]], "3.1G-factor-ac": [["3.1", 9]], "3.3A-complete-square": [["3.1", 10]], "3.3B-vertex-form": [["3.1", 11]], "3.4A-quadratic-formula": [["3.1", 12]],
     "3.4B-discriminant": [["3.1", 13]], "3.1A-4step-equations": [["3.1", 14]], "3.1B-simplify-roots": [["3.1", 16]], "3.1B-square-roots-simplify": [["3.1", 17]], "3.1C-real-life-desmos": [["3.1", 19]]
   };
+  // (a fifth entry, 1, marks a copy: the same question placed in another activity, as the copies log lists; practice uses the original)
   var QID = null;
   (function () {
     var seg = decodeURIComponent(location.pathname).replace(/\/index\.html$/i, "").replace(/\/+$/, "").split("/").pop().toLowerCase();
@@ -5049,9 +5050,71 @@
     var m = /[?&]id=([^&#]*)/.exec(location.search), id = m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "", d = AN_BANK[id], P = QPLACE[id];
     if (!d || !P) { QID = ""; return; }   // (no question: the page lists the bank instead)
     QID = id;
-    BUILT["Q"] = { review: true, practice: true, key: "algebraProgress:Q:" + id, levels: [], top: 0, items: P.map(function (p) { return { q: p[3] ? p[3].replace(/ /g, "\u00a0") : "Practice", full: d.title + (p[3] ? ": " + p[3] : ""), act: p[0], lesson: p[1], subx: !!p[2] }; }) };
+    BUILT["Q"] = { review: true, practice: true, key: "algebraProgress:Q:" + id, levels: [], top: 0, items: P.filter(function (p) { return !p[4]; }).map(function (p) { return { q: p[3] ? p[3].replace(/ /g, "\u00a0") : "Practice", full: d.title + (p[3] ? ": " + p[3] : ""), act: p[0], lesson: p[1], subx: !!p[2] }; }) };
     ACTS.push(["Q", "Practice: " + d.title, "Practice: " + d.title]);
   })();
+  // ---- Assignments: /a/?id=<assignment id> plays an assignment (step 5).  A preset is P-<activity> (P-2.4A, P-RevT1): today's activity as an assignment,
+  // made here from the activity's own exercises; any other id is a record the teacher saved, fetched from the server once and kept on the device.
+  // Record: { id, title, abbr, items: [{ q: bank id, v: which of the question's exercises (0 if it has one) }] }.  Progress is the assignment's own.
+  function qFind(a, l, sx) { for (var id in QPLACE) for (var i = 0; i < QPLACE[id].length; i++) { var p = QPLACE[id][i]; if (p[0] === a && p[1] === l && !!p[2] === !!sx) return [id, i]; } return null; }
+  function presetRec(ab) {
+    var its = [];
+    if (BUILT[ab] && BUILT[ab].review && !BUILT[ab].practice) BUILT[ab].items.forEach(function (o) { var f = qFind(o.act, o.lesson, o.subx); if (f) its.push({ q: f[0], v: f[1], name: o.q }); });
+    else if (VW[ab]) VW[ab].ls.forEach(function (k) { var a = VW[ab].base, f = qFind(a, a === "1.4D" ? (k === "s" ? 2 : +k) : +k, k === "s"); if (f) its.push({ q: f[0], v: f[1] }); });
+    else return null;
+    var t = (ACTS.filter(function (x) { return x[0] === ab; })[0] || [ab, ab, ab])[1];
+    return { id: "P-" + ab, title: t, abbr: ab, items: its, preset: true };
+  }
+  var AID = null, AWAIT = null;
+  (function () {
+    var seg = decodeURIComponent(location.pathname).replace(/\/index\.html$/i, "").replace(/\/+$/, "").split("/").pop().toLowerCase();
+    if (seg !== "a") return;
+    var m = /[?&]id=([^&#]*)/.exec(location.search), id = m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "", rec = null;
+    if (/^P-/.test(id)) rec = presetRec(id.slice(2));
+    else if (id) { try { rec = JSON.parse(localStorage.getItem("an.asg." + id) || "null"); } catch (e) { rec = null; } if (!rec) AWAIT = id; }
+    if (!rec || !rec.items || !rec.items.length) { AID = ""; return; }
+    AID = rec.id;
+    var its = rec.items.filter(function (it) { return QPLACE[it.q] && AN_BANK[it.q]; });
+    BUILT["A"] = { review: true, asg: rec.id, abbr: rec.abbr || rec.id, key: "algebraProgress:A:" + rec.id, levels: [], top: 0, items: its.map(function (it, i) {
+      var p = QPLACE[it.q][it.v || 0], d = AN_BANK[it.q], nm = it.name || ("Q" + (i + 1)); return { q: nm, full: d.title + (p[3] ? ": " + p[3] : ""), act: p[0], lesson: p[1], subx: !!p[2], qid: it.q }; }) };
+    ACTS.push(["A", rec.title, rec.title]);
+  })();
+  // an assignment still to fetch (or none): a quiet page over the app until it arrives
+  function aWait() {
+    var ov = document.createElement("div"); ov.id = "aWait"; ov.style.cssText = "position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#fff;font:1.1rem system-ui,sans-serif;color:#1B2433;padding:1rem;text-align:center";
+    ov.textContent = AWAIT ? "Loading the assignment…" : "No assignment here. Open the link your teacher posted in Google Classroom."; document.body.appendChild(ov);
+    if (!AWAIT) return;
+    var tries = 0;
+    (function go() {
+      if (!(window.AN && AN.enabled && AN.api && AN.user)) { if (++tries < 60) { setTimeout(go, 500); return; } ov.textContent = "Sign in to open this assignment."; return; }
+      AN.api("assignment", { id: AWAIT }).then(function (r) { return r.json ? r.json() : r; }).then(function (r) {
+        if (r && r.assignment) { try { localStorage.setItem("an.asg." + AWAIT, JSON.stringify(r.assignment)); } catch (e) { } location.reload(); }
+        else ov.textContent = "That assignment was not found. Check the link, or ask your teacher.";
+      }).catch(function () { ov.textContent = "The assignment could not be loaded. Check the connection and reload the page."; });
+    })();
+  }
+  // ---- Attempts: each finished problem of an assignment (or of practice) is one row for the teacher's Sheet: time, assignment, question id, version,
+  // seed, mode, tier, correct, tries.  Rows wait on the device (an.attempts) and go to the server in a batch when the student is signed in.
+  var ATT_SEEN = [];
+  function attSig() { var pb = pq() && typeof m3Cur === "function" ? m3Cur() : null; return [progKey(), revI, mode, pq() ? QZ.pi + ":" + JSON.stringify(QZ.order) + ":" + (pb && pb.seed || JSON.stringify(QZ.tr && QZ.tr[QZ.pi] || "")) : (EXP && EXP.seed) || JSON.stringify(orig)].join("|"); }
+  function logAttempt(ok) {
+    if (!rev || !BUILT[rev] || !(BUILT[rev].asg || BUILT[rev].practice) || mode === "create" || mode === "demo") return;
+    var sig = attSig(); if (ATT_SEEN.indexOf(sig) >= 0) return; ATT_SEEN.push(sig); if (ATT_SEEN.length > 60) ATT_SEEN.shift();
+    var it = BUILT[rev].items[revI] || {}, qid = it.qid || QID, d = AN_BANK[qid] || {}, pb = pq() && typeof m3Cur === "function" ? m3Cur() : null;
+    var row = { t: new Date().toISOString(), a: BUILT[rev].asg || "practice", q: qid, v: d.version || 1, seed: (pb && pb.seed) || (EXP && EXP.seed) || "", m: mode, tier: pq() ? Math.min(QZ.pi || 0, 2) : 0, ok: !!ok, tries: 1 + (pq() ? (QZ.wrong || 0) : (EQW || 0)) };
+    var Q = []; try { Q = JSON.parse(localStorage.getItem("an.attempts") || "[]"); } catch (e) { Q = []; } Q.push(row); if (Q.length > 500) Q = Q.slice(-500);
+    try { localStorage.setItem("an.attempts", JSON.stringify(Q)); } catch (e) { }
+    attFlush();
+  }
+  var attBusy = false;
+  function attFlush() {
+    if (attBusy || !(window.AN && AN.enabled && AN.api && AN.user)) return;
+    var Q = []; try { Q = JSON.parse(localStorage.getItem("an.attempts") || "[]"); } catch (e) { Q = []; } if (!Q.length) return;
+    attBusy = true;
+    AN.api("attempts", { rows: Q }, { keepalive: true }).then(function (r) { return r.json ? r.json() : r; }).then(function (r) {
+      if (r && r.ok) { var now = []; try { now = JSON.parse(localStorage.getItem("an.attempts") || "[]"); } catch (e) { } try { localStorage.setItem("an.attempts", JSON.stringify(now.slice(Q.length))); } catch (e) { } }
+    }).catch(function () { }).then(function () { attBusy = false; });
+  }
   // /q/ with no question: every bank question, by section, each a link to practise it
   function qIndex() {
     var by = {}; Object.keys(QPLACE).forEach(function (id) { var d = AN_BANK[id]; if (!d) return; var sec = id.split("-")[0]; (by[sec] = by[sec] || []).push([id, d.title]); });
@@ -5242,6 +5305,7 @@
   // while paused earns nothing (1.4: the demo is still running when the problem is solved; 1.1: the whole demo script has played out)
   function demoCredit() { return quiz() ? !!PG.demoFin : !!(DM4.run && !DM4.paused) || locked; }   // a finished demo, or the student took over a paused demo and solved it correctly alone
   function tally(quiet) {
+    logAttempt(!(EQW > 0) && !(pq() && QZ && QZ.wrong > 0));   // (an assignment's or practice's finished problem: one row for the teacher's Sheet)
     if (!quiz() && BUILT[act] && ((BUILT[act].sub && !BUILT[act].solver) || svL()) && mode !== "create" && mode !== "demo" && EQW > 0) {   // the equation pane: any error message along the way means no Progress for this problem
       if (!counted) { counted = true; var npT = mode === "demo" ? "No Progress for this demo: there were error messages along the way." : "No Progress for this problem: there were error messages along the way. Try another with none.", npM = !$("exBox").hidden ? $("exNote") : $("ansMsg") && $("ansMsg").offsetParent ? $("ansMsg") : null; if (npM && npM.id === "exNote" && $("exMsg").className === "ok") $("exMsg").textContent = "";   /* (no cheer when there were errors) */
         if (npM) { npM.classList.add("bad"); npM.textContent = npT; } else note(npT); }   // (in red, below the equation)
@@ -9871,7 +9935,7 @@ var ESPIC = {
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { pqMsg(""); }
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
-        QZ.step = 4; if (QZ.ww) QZ.ww.fin = true; var last = QZ.pi === QZ.order.length - 1; if (act === "2.1") c21Save();
+        QZ.step = 4; if (QZ.ww) QZ.ww.fin = true; if (QZ.wrong > 0) logAttempt(false);   /* (a problem with errors earns nothing, but is still an attempt) */ var last = QZ.pi === QZ.order.length - 1; if (act === "2.1") c21Save();
         var c2Err = QZ.wrong > 0;   // any error message in this round (in Demo, this problem) means no Progress for it
         if (!QZ.custom && mode !== "create" && mode !== "demo" && !c2Err && !ivL()) { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
         pqMsg(mode === "solo" ? cheer() : est() || wf() || m3() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last && QZ.order.length > 1 ? (QZ.order.length === 3 ? "You have finished all three!" : "You have finished all four!") : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
@@ -10041,7 +10105,7 @@ var ESPIC = {
   function shortOf(id) { return id === "1.4D" ? "1.4 Algebra" : id; }
   function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
   function buildActs() {
-    $("actLbl").textContent = soon ? soon : welcome ? "Choose an activity" : rev ? (BUILT[rev].practice ? "Practice" : rev) : view ? view : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
+    $("actLbl").textContent = soon ? soon : welcome ? "Choose an activity" : rev ? (BUILT[rev].practice ? "Practice" : BUILT[rev].asg ? BUILT[rev].abbr : rev) : view ? view : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
     var here = soon || rev || view || act; if (fixedAct) document.title = fullTitle(here) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(here));
     $("actList").innerHTML = ACTS.map(function (a) {
       var ok = !!BUILT[a[0]] || !!VW[a[0]], sel = (!welcome || !!soon) && a[0] === here;
@@ -15536,8 +15600,10 @@ var ESPIC = {
         out[v[0]] = ex;
       });
       var T = rd("algebraProgress:time"); Object.keys(T).forEach(function (id) { if (out[id] || (BUILT[id] && BUILT[id].review)) out["_t:" + id] = +T[id] || 0; }); var D0 = rd("algebraProgress:done"); Object.keys(D0).forEach(function (id) { if (out[id] || (BUILT[id] && BUILT[id].review)) out["_d:" + id] = +D0[id] || 0; });   // (when each activity first reached 5 stars)   // when each activity last changed (a number: the Sheet script passes it by)
-      Object.keys(BUILT).forEach(function (id) { if (!BUILT[id].review || BUILT[id].practice) return; rev = id; var rl = revLevels(), ex = {}; prog = rd(BUILT[id].key); BUILT[id].items.forEach(function (it, i) { ex[it.q || ("Item " + (i + 1))] = best(rl, i); }); out[id] = ex; });   // every review (RevT1, RevQ2)
+      Object.keys(BUILT).forEach(function (id) { if (!BUILT[id].review || BUILT[id].practice || BUILT[id].asg) return; rev = id; var rl = revLevels(), ex = {}; prog = rd(BUILT[id].key); BUILT[id].items.forEach(function (it, i) { ex[it.q || ("Item " + (i + 1))] = best(rl, i); }); out[id] = ex; });   // every review (RevT1, RevQ2)
     } catch (e) { } finally { prog = keep; rev = r0; }
     return out;
   };
   if (QID === "") qIndex();   // (/q/ with no question: the list of the bank)
+  if (AID === "") aWait();   // (/a/ with an assignment still to fetch, or none)
+  setTimeout(attFlush, 4000);   // (rows left from an earlier visit go once sign-in is back)

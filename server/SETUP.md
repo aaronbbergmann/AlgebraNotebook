@@ -37,3 +37,9 @@ The Apps Script runs as abergmann@sch.org, so it sees that account's Classroom c
 6. On the Class progress page, click **Sync**, choose the classes, then **Sync**.
 
 If the classes list says it can't reach Google Classroom, step 2 or 4 is missing. If the sch.org Google Workspace admin has turned off Classroom API access for third-party apps, the admin needs to allow it (Admin console > Apps > Google Workspace > Classroom > Data access).
+
+## 5. Assignments and Attempts (Question Bank migration, step 5)
+`/a/?id=…` plays an assignment, and every finished problem of an assignment or of practice (`/q/?id=…`) is logged. Until the server is updated, the rows wait on each student's device (nothing is lost), and preset assignments (`/a/?id=P-2.4A`, `P-RevT1`, …) work without it.
+1. Open the Apps Script project **Algebra Notebook Server**. Replace `Code.gs` with `server/Code.gs` from this repo, and save.
+2. Deploy > Manage deployments > edit (pencil) > Version: **New version** > Deploy. The /exec address stays the same.
+3. Nothing else: the **Assignments** and **Attempts** tabs are made in the Progress Sheet the first time they are used. Attempts gets one row per finished problem (time, student, class, assignment, question, version, seed, mode, tier, correct, tries). Assignments is filled by the builder (step 6); a row typed by hand (Id, Title, Abbreviation, Owner, Classes, Due as JSON, Items as JSON like `[{"q":"2.4A-vertex-point"}]`) opens at `/a/?id=<Id>`.
