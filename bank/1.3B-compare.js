@@ -11,7 +11,7 @@
   writeRounds: 3,
   showWork: "GUESS",
   patterns: {"solo": "Submit"},
-  version: 2,   // 2: step commands name the step only (no mechanics instructions)
+  version: 3,   // 3: Show work shortened (math in place of sentences)
   build: function () {
     function m3Make2(tier) {
       for (var t = 0; t < 800; t++) {
@@ -63,8 +63,8 @@
         ];
         pb.csteps = pb.isteps;
         pb.ex = nT + "'s rate is " + (y1 - y0) + " ÷ " + (r1 - r0) + " = " + mT + ", and its table starts at <i>b</i> = " + bT + ", so " + m3Eq(mT, bT) + ". " + (mT > mQ ? nT : nQ) + " has the greater rate. The plans are equal when " + m3Co(mh) + "x + " + bh + " = " + m3Co(ml) + "x + " + bl + ", so " + d + "x = " + e + " and <i>x</i> = " + xs + " " + sc.xu + ", when each costs $" + ystar + ".";
-        pb.guess = { G: [["Table for " + nT + ": " + gqM("(" + r0 + ", " + y0 + ")") + " and " + gqM("(" + r1 + ", " + y1 + ")") + " (" + sc.xu + ", dollars)"], [nQ + ": " + gqM(m3Eq(mQ, bQ))]],
-          U: [[nT + ": " + gqM("m = ?") + ", " + gqM("b = ?")], [gqM("x = ?") + " " + sc.xu + " and " + gqM("y = ?") + " dollars, when the plans cost the same"]],
+        pb.guess = { G: [[nT + ": " + gqM("(" + r0 + ", " + y0 + ")") + ", " + gqM("(" + r1 + ", " + y1 + ")")], [nQ + ": " + gqM(m3Eq(mQ, bQ))]],
+          U: [[nT + ": " + gqM("m = ?") + ", " + gqM("b = ?")], [gqM("x = ?") + ", " + gqM("y = ?") + " when the costs are equal"]],
           E: [[gqM("m = (y₂ − y₁) ÷ (x₂ − x₁)")], [gqM("y = mx + b")], ["same cost: " + gqM("y") + " of " + nT + " = " + gqM("y") + " of " + nQ]],
           S1: [[gqM("m = (" + y1 + " − " + y0 + ") ÷ (" + r1 + " − " + r0 + ")"), ["rise", "run", "m"]], [gqM(y0 + " = " + mT + "(" + r0 + ") + b"), ["b"]], [gqM(m3Co(mh) + "x + " + bh + " = " + m3Co(ml) + "x + " + bl), ["e"]], [gqM("y = " + mh + "(" + xs + ") + " + bh), ["y"]]],
           S2: [[gqM("m = " + (y1 - y0) + " ÷ " + (r1 - r0) + " = " + mT), ["m"]], [gqM("b = " + y0 + " − " + (mT * r0) + " = " + bT), ["b"]], [nT + ": " + gqM(m3Eq(mT, bT)), ["eq"]], [gqM(m3Co(d) + "x = " + e), ["d"]], [gqM("x = " + e + " ÷ " + d + " = " + xs) + " " + sc.xu, ["x"]], [gqM("y = " + ystar) + " dollars", ["y"]]],

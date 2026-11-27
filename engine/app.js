@@ -4798,7 +4798,7 @@
   // any other record of steps (equation exercises, graphing, writing functions, word problems with steps, 2.1): the first step is the question; the
   // answer is the one saved when it was solved (w.ans), or else the last step of a finished problem; the graph goes in Work
   function stepQwa(w, pic) {
-    var st = w.steps || [], fin = !!(w.ans || w.fin) && st.length > 1, useLast = !w.ans && fin;
+    var st = (w.steps || []).filter(function (x, i) { return !(pic && x.tbl && i); }), fin = !!(w.ans || w.fin) && st.length > 1, useLast = !w.ans && fin;
     var mid = st.slice(1, useLast ? st.length - 1 : st.length), lastH = useLast ? workHTML([st[st.length - 1]]) : "";
     var W = []; if (mid.length) W.push([workHTML(mid), null]); if (pic) W.push(["<div class=\"wpic\" style=\"display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start\">" + pic + "</div>", null]);
     return { qwa: { Q: [[st.length ? workHTML(st.slice(0, 1)) : "", null]].concat(w.unk ? [[w.unk, null]] : []), W: W, A: w.ans ? [[wkMath(w.ans), null]] : useLast ? [[lastH, null]] : [] } };
@@ -7838,7 +7838,12 @@ var ESPIC = {
     var c = JSON.parse(s.hist.pop()), h = s.hist; if (QZ.ww && c.wwn < QZ.ww.steps.length) QZ.ww.steps.length = c.wwn; delete c.wwn;
     Object.keys(c).forEach(function (k) { s[k] = c[k]; }); s.hist = h; s.drag = null; s.hov = null; if (s.tool !== "pt") s.tool = null; vfnKey = ""; vfnTbKey = ""; pqMsg(""); vfnSync();
   }
-  function vfnLine(t) { if (QZ.ww) QZ.ww.steps.push({ eqs: [t], cls: "cg" }); }
+  // Show work, kept short: a row of the table is flagged (the table drawn under the graph shows it), and short assignments share a line (h = 0, k = -5)
+  function vfnLine(t, tbl) {
+    if (!QZ.ww) return; var W = QZ.ww.steps, l = W[W.length - 1], sh = /^[a-z] = [^,]{1,8}$/;
+    if (!tbl && l && !l.tbl && sh.test(t) && l.eqs[0].split(", ").every(function (x) { return sh.test(x); }) && l.eqs[0].split(", ").length < 3) { l.eqs = [l.eqs[0] + ", " + t]; return; }
+    W.push(tbl ? { eqs: [t], cls: "cg", tbl: 1 } : { eqs: [t], cls: "cg" });
+  }
   function vfnBad(msg, f) { QZ.wrong++; var t = f ? ansAdd(msg, typeof f === "string" && f.charAt(0) === "=" ? f.slice(1) : vfnAnsTx(f)) : msg; if (vfnTA()) { t += " Press Try another for a new problem."; vfnTaSet(); } pqMsg(t); }
   // "Try Another" questioning (2.2C Intercept Form, Calculate): a wrong box, once the student moves away from it (or presses Return), shows the right answer,
   // and a plum-red Try another button where Next sits gives a new problem
@@ -8179,7 +8184,7 @@ var ESPIC = {
     vfnPush(); s.gs[r] = (s.gs[r] || 0) + 1; pqMsg("");
     if (s.gs[r] >= vfnNSt()) {
       var x = vfnRX(r), chain = []; for (var k = 0; k <= vfnNSt(); k++) chain.push(vfnSqStep(x, k));
-      s.gy[r] = true; s.gt[r] = String(vfnF(x)); vfnLine("f(" + nf(x) + ") = " + chain.join(" = "));
+      s.gy[r] = true; s.gt[r] = String(vfnF(x)); vfnLine("f(" + nf(x) + ") = " + chain.join(" = "), 1);
       vfnTb(); vfnFly(r);
       if (VFN_XS.every(function (d, i) { return s.gy[i]; })) vfnNext(""); else vfnSync();
       return;
@@ -8308,7 +8313,7 @@ var ESPIC = {
     var rc = k.split(":"), want = vfnTbAns(+rc[0], +rc[1]), v = m3Num(s.tb[k] || "");
     if (!isNaN(v) && Math.abs(v - want) < 1e-9) {
       vfnPush(); s.tbok[k] = true; pqMsg("");
-      var r = +rc[0], q = vfnRowPt(r); if (q) vfnLine("(" + nf(q[0]) + ", " + nf(q[1]) + ") from x = " + nf(VFN_XS[r]));
+      var r = +rc[0], q = vfnRowPt(r); if (q) vfnLine("(" + nf(q[0]) + ", " + nf(q[1]) + ") from x = " + nf(VFN_XS[r]), 1);
       var col = +rc[1], nx = null, best = 99; VFN_XS.forEach(function (x2, r2) { var z = r2 + ":" + col, dd = Math.abs(r2 - r); if (!s.tbok[z] && dd < best) { best = dd; nx = z; } }); if (!nx) nx = vfnTbCells().filter(function (z) { return !s.tbok[z] && (s.tadd || {})[+z.split(":")[1]]; })[0];   // (the nearest empty cell in the same column)
       vfnAll(); if (nx && !pgRun) { var e = document.querySelector("[data-vtb=\"" + nx + "\"]"); if (e) e.focus(); }
       return;
@@ -8324,8 +8329,8 @@ var ESPIC = {
     var s = vfnSt(); if (s.gx || QZ.step >= 4) return;
     if (mode === "calculate" ? !(vfnVx() ? s.wok.h : s.wok.xv) : vfnSid() !== "drag") return;
     vfnPush(); s.gx = true; vfnTbKey = "";
-    if (mode === "calculate") { vfnLine("table: x = " + nf(vfnP().h) + " in the centre row"); pqMsg(""); vfnSync(); var e = document.querySelector("[data-vfy=\"0\"]"); if (e && !pgRun) e.focus(); return; }
-    vfnNext("x = −b/(2a) = " + nf(vfnP().h) + ", the centre row of the table");
+    if (mode === "calculate") { vfnLine("centre row x = " + nf(vfnP().h)); pqMsg(""); vfnSync(); var e = document.querySelector("[data-vfy=\"0\"]"); if (e && !pgRun) e.focus(); return; }
+    vfnNext("x = −b/(2a) = " + nf(vfnP().h));
   }
   // Standard Form, Sequence and Demo: clicking a row's expression works it out (the value slides into the y column)
   // Intercept Form: p or q dragged from the equation into the x column (the smaller in row 2, the larger in row 4); with both in, the column fills in
@@ -8371,7 +8376,7 @@ var ESPIC = {
     if (s.rx && s.rx[o] === v && p.p1 !== p.q1) { vfnBad("That intercept is already in the table. Drag the other one."); vfnTb(); return; }
     vfnPush(); s.dx = s.dx || {}; s.dx[r] = true; s.rx = s.rx || {}; s.rx[r] = v; pqMsg("");
     if (s.dx[1] && s.dx[3]) {
-      vfnTbKey = ""; var line = "x-intercepts " + nf(s.rx[1]) + " and " + nf(s.rx[3]) + " in rows 2 and 4";
+      vfnTbKey = ""; var line = "x-intercepts " + nf(s.rx[1]) + ", " + nf(s.rx[3]);
       if (mode === "calculate") { vfnLine(line); vfnSync(); setTimeout(function () { var e = document.querySelector("#vfnTb [data-vfxi]"); if (e && !pgRun) e.focus(); }, 0); return; }
       vfnNext(line); setTimeout(function () { var e = document.querySelector("#vfnTb [data-vfxi]"); if (e && !pgRun) e.focus(); }, 0); return;
     }
@@ -8394,7 +8399,7 @@ var ESPIC = {
   })();
   function vfnRowClick(r) {
     var s = vfnSt(); if (QZ.step >= 4 || vfnSid() !== "tbl" || s.gy[r]) return;
-    vfnPush(); s.gy[r] = true; var x = vfnRX(r); vfnLine("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x)));
+    vfnPush(); s.gy[r] = true; var x = vfnRX(r); vfnLine("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x)), 1);
     var e = document.querySelector("[data-vfr=\"" + r + "\"]"), t = document.querySelector("[data-vfyv=\"" + r + "\"]");
     if (e && t && !DN) { var a = e.getBoundingClientRect(), b = t.getBoundingClientRect(), g = document.createElement("div"); g.className = "vfnFly"; g.textContent = nf(vfnF(x)); g.style.left = (a.left + a.width / 2) + "px"; g.style.top = (a.top + a.height / 2) + "px"; document.body.appendChild(g); requestAnimationFrame(function () { g.style.left = (b.left + b.width / 2) + "px"; g.style.top = (b.top + b.height / 2) + "px"; }); setTimeout(function () { g.remove(); }, 420); }
     if (VFN_XS.every(function (d, i) { return s.gy[i]; })) vfnNext(""); else { pqMsg(""); vfnSync(); }
@@ -8404,7 +8409,7 @@ var ESPIC = {
     var s = vfnSt(); if (QZ.step >= 4 || s.gy[r]) return; s.wbad["g" + r] = false;
     var x = vfnRX(+r), v = m3Num(s.gt[r] || "");
     if (!isNaN(v) && Math.abs(v - vfnF(x)) < 1e-9) {
-      vfnPush(); s.gy[r] = true; s.gs[r] = VFN_STEPS; vfnLine("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x))); pqMsg("");
+      vfnPush(); s.gy[r] = true; s.gs[r] = VFN_STEPS; vfnLine("f(" + nf(x) + ") = " + vfnExpr(x) + " = " + nf(vfnF(x)), 1); pqMsg("");
       var nx = null, best = 99; VFN_XS.forEach(function (d, i) { if (!s.gy[i] && Math.abs(i - +r) < best) { best = Math.abs(i - +r); nx = i; } }); vfnAll();
       if (nx != null && !pgRun) { var e = document.querySelector("[data-vfy=\"" + nx + "\"]"); if (e) e.focus(); }
       return;
@@ -9639,7 +9644,7 @@ var ESPIC = {
     if (grN()) {
       var p = grnP(), r = grnSt(), H = function (x) { return p.a * x * x + p.b * x + p.c; };
       eq(c21Plain(m3Cur().head));
-      txt("The new path must land " + Math.abs(p.D) + " feet " + (p.D > 0 ? "farther" : "closer") + ", at x = " + p.N + ".");
+      txt("lands " + Math.abs(p.D) + " ft " + (p.D > 0 ? "farther" : "closer") + ": x = " + p.N);
       if (mode === "solo") {
         if (String(r.w.f || "").replace(/^h\(x\)=?/i, "").trim()) eq(String(r.w.f).replace(/-/g, "−").replace(/\^2/g, "²"));
         r.pts.forEach(function (q) { var fn = grnCF(q.c), y; try { y = fn && fn(q.x); } catch (e) { y = NaN; } if (isFinite(y)) eq(q.c + "(" + nf(q.x) + ") = " + nf(Math.round(y * 100) / 100)); });
@@ -9647,7 +9652,7 @@ var ESPIC = {
         return st;
       }
       r.pts.forEach(function (q) { var y = q.c === "h" ? H(q.x) : H(q.x) + r.k; eq(q.c + "(" + nf(q.x) + ") = " + nf(Math.round(y * 100) / 100)); });
-      if (r.k) txt("Moved " + (r.k > 0 ? "up " : "down ") + Math.abs(r.k) + " feet: c = " + nf(p.c) + (r.k > 0 ? " + " : " − ") + Math.abs(r.k) + " = " + nf(p.c + r.k) + ".");
+      if (r.k) eq("c = " + nf(p.c) + (r.k > 0 ? " + " : " − ") + Math.abs(r.k) + " = " + nf(p.c + r.k));
       eq(c21Plain(c2Sf(p.a, p.b, p.c + r.k, "g(x)")[0]) + (r.ok ? "  ✓" : ""), "cf");
       return st;
     }
@@ -9657,13 +9662,13 @@ var ESPIC = {
       if (mode === "solo") {
         var W = g.w, any = false;
         [["a", W.a], ["h", W.h], ["k", W.k]].forEach(function (q) { if (String(q[1]).trim()) { eq(q[0] + " = " + String(q[1]).replace(/-/g, "−") + (g.wok[q[0]] ? "  ✓" : "")); any = true; } });
-        if (String(W.v).trim()) eq("vertex " + String(W.v).replace(/-/g, "−") + (g.wok.v ? "  ✓" : ""));
+        if (String(W.v).trim()) eq("vertex " + String(W.v).replace(/-/g, "−") + (g.wok.v ? "  ✓" : ""));   // (g(x) last: it is the answer)
         if (String(W.e).trim()) eq("g(x) = " + String(W.e).replace(/^g\(x\)=?/i, "").replace(/-/g, "−").replace(/\^2/g, "²") + (g.wok.e ? "  ✓" : ""), "cg");
         return st;
       }
       eq("a = " + gwnAT(g.a) + ",  h = " + nf(g.h) + ",  k = " + nf(g.k));
-      eq(c21Plain(gwnEq(g.a, g.h, g.k)) + (g.ok ? "  ✓" : ""), "cg");
       eq("vertex (" + nf(g.h) + ", " + nf(g.k) + ")");
+      eq(c21Plain(gwnEq(g.a, g.h, g.k)) + (g.ok ? "  ✓" : ""), "cg");   // (g(x) last: it is the answer)
       return st;
     }
     if (gd2() && QZ.tr && QZ.tr[QZ.pi]) {   // Translations, Reflections and Stretches (and Create): g, the table's points, the description, the graphs
@@ -9671,10 +9676,10 @@ var ESPIC = {
       var pts = [];
       if (ptAvail && ptAvail()) ptRows().forEach(function (q) { if (ptRowDone(q)) { var pp = ptPoint(q); pts.push("(" + nf(pp[0]) + ", " + nf(pp[1]) + ")"); } });
       if (!pts.length) TB.rows().forEach(function (q) { if (q.done && isFinite(q.xv) && isFinite(q.yv)) pts.push("(" + nf(q.xv) + ", " + nf(q.yv) + ")"); });
-      if (pts.length) txt("Points of g from the table: " + pts.join(", "));
-      var d = $("pgDescTx").value.trim(); if (d) txt("Description: " + d + (PG.dOK ? "  ✓" : ""));
-      if (PG.pdone) txt("Parent graph f(x) = x² drawn  ✓");
-      if (PG.show.graph) txt("Graph of g drawn  ✓");
+      if (pts.length) eq("points of g: " + pts.join(", "));
+      if (PG.pdone) eq("f(x) = x² graphed");
+      if (PG.show.graph) eq("g graphed");
+      var d = $("pgDescTx").value.trim(); if (d) txt(d + (PG.dOK ? "  ✓" : ""));   // (the description last: it is the answer)
       return st;
     }
     return st;

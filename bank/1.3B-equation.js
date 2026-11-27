@@ -11,7 +11,7 @@
   writeRounds: 3,
   showWork: "GUESS",
   patterns: {"solo": "Submit"},
-  version: 2,   // 2: step commands name the step only (no mechanics instructions)
+  version: 3,   // 3: Show work shortened (math in place of sentences)
   build: function () {
     function m3Make1(tier) {
       for (var t = 0; t < 800; t++) {
@@ -85,11 +85,11 @@
         ];
         pb.ex = "The line crosses the <i>y</i>-axis at " + b + ", so <i>b</i> = " + b + ". From (0, " + b + ") to (" + x2 + ", " + y2 + ") the rise is " + m3F(y2 - b) + " and the run is " + x2 + ", so the slope is " + m3F(m) + ". The equation is " + m3Eq(m, b) + ". " + mean + " To find <i>x</i> when <i>y</i> = " + T + ", solve " + T + " = " + m3Co(m) + "x + " + b + ": <i>x</i> = " + k + ".";
         var mc1 = m3Co(m);
-        pb.guess = { G: [[gqM("(0, " + b + ")") + " the <i>y</i>-intercept, from the graph (" + sc.yu + ")"], [gqM("(" + x2 + ", " + y2 + ")") + " another point on the line"], [gqM("y = " + T) + " " + sc.yu]],
-          U: [[gqM("m = ?") + " the slope"], [gqM("x = ?") + " " + sc.xu + ", when " + gqM("y = " + T)]],
+        pb.guess = { G: [[gqM("(0, " + b + ")") + " <i>y</i>-intercept"], [gqM("(" + x2 + ", " + y2 + ")") + " on the line"], [gqM("y = " + T) + " " + sc.yu]],
+          U: [[gqM("m = ?")], [gqM("x = ?") + " " + sc.xu + ", when " + gqM("y = " + T)]],
           E: [[gqM("m = (y₂ − y₁) ÷ (x₂ − x₁)")], [gqM("y = mx + b")]],
           S1: [[gqM("m = (" + y2 + " − " + b + ") ÷ (" + x2 + " − 0)"), ["rise", "riseT", "rr"]], [gqM(T + " = " + mc1 + "x + " + b), ["sub", "x"]]],
-          S2: [[gqM("m = " + m3F(y2 - b) + " ÷ " + x2 + " = " + m3F(m)), ["m"]], [gqM(m3Eq(m, b)), ["eq", "eqd"]], [gqM(T + " − " + b + " = " + mc1 + "x"), ["sub"]], [gqM(m3F(T - b) + " = " + mc1 + "x"), ["sub"]], [gqM("x = " + m3F(T - b) + " ÷ " + (m < 0 ? "(" + m3F(m) + ")" : m3F(m)) + " = " + k) + " " + sc.xu, ["x"]]],
+          S2: [[gqM("m = " + m3F(y2 - b) + " ÷ " + x2 + " = " + m3F(m)), ["m"]], [gqM(m3Eq(m, b)), ["eq", "eqd"]], [gqM(m3F(T - b) + " = " + mc1 + "x"), ["sub"]], [gqM("x = " + m3F(T - b) + " ÷ " + (m < 0 ? "(" + m3F(m) + ")" : m3F(m)) + " = " + k) + " " + sc.xu, ["x"]]],
           A: [[gqM("x = " + k) + " " + sc.xu + ": when the " + sc.yn.toLowerCase() + " is " + T + " " + sc.yu + ", " + sc.xn.toLowerCase() + " is " + k + " " + sc.xu + ".", ["x"]]] };
         return pb;
       }

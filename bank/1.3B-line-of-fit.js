@@ -11,7 +11,7 @@
   writeRounds: 3,
   showWork: "GUESS",
   patterns: {"solo": "Submit"},
-  version: 1,
+  version: 2,   // 2: Show work shortened (math in place of sentences)
   build: function () {
     function m3Make3(tier) {
       var D = m3Data(tier), sc = D.sc, m = D.m, b = D.b, X = m3Pick([9, 10]), dots = [1, 3, 5, 7, 9].map(function (x, i) { return { x: x, y: b + m * x, i: i }; });
@@ -35,8 +35,8 @@
       ];
       pb.ex = "The points go " + (pos ? "up" : "down") + ", a " + (pos ? "positive" : "negative") + " correlation. Two points on the line give rise ÷ run = " + m3F(m) + ", and the line crosses the <i>y</i>-axis at " + b + ", so " + m3Eq(m, b) + ". At <i>x</i> = " + X + ", <i>y</i> = " + m3F(est) + ".";
       var gP = function (x) { return x.p || null; };
-      pb.guess = { G: [[function (x) { var q = gP(x); return q ? "two points on the line of fit: " + gqM("(" + q[0].x + ", " + q[0].y + ")") + " and " + gqM("(" + q[1].x + ", " + q[1].y + ")") : "two points on the line of fit (you choose them)"; }], [gqM("x = " + X) + " (" + sc.xn.toLowerCase() + ")"]],
-        U: [[gqM("m = ?") + ", " + gqM("b = ?")], [gqM("y = ?") + " (" + sc.yn.toLowerCase() + ") when " + gqM("x = " + X)]],
+      pb.guess = { G: [[function (x) { var q = gP(x); return q ? "on the line: " + gqM("(" + q[0].x + ", " + q[0].y + ")") + ", " + gqM("(" + q[1].x + ", " + q[1].y + ")") : "two points on the line (you choose)"; }], [gqM("x = " + X) + " (" + sc.xn.toLowerCase() + ")"]],
+        U: [[gqM("m = ?") + ", " + gqM("b = ?")], [gqM("y = ?") + " when " + gqM("x = " + X)]],
         E: [[gqM("m = (y₂ − y₁) ÷ (x₂ − x₁)")], [gqM("y = mx + b")]],
         S1: [[function (x) { var q = gP(x); return q ? gqM("m = (" + q[1].y + " − " + q[0].y + ") ÷ (" + q[1].x + " − " + q[0].x + ")") : ""; }, ["rise", "m"]], [function (x) { var q = gP(x); return q ? gqM(q[0].y + " = " + m3F(m) + "(" + q[0].x + ") + b") : ""; }, ["b"]], [gqM("y = " + m3Co(m) + "(" + X + ") " + (b < 0 ? "− " : "+ ") + Math.abs(b)), ["est"]]],
         S2: [[gqM("m = " + m3F(m)), ["m"]], [gqM("b = " + b), ["b"]], [gqM(m3Eq(m, b)), ["eq"]], [gqM("y = " + m3F(est)), ["est"]]],

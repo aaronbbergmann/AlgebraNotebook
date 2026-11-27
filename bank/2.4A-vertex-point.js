@@ -3,7 +3,7 @@
 // graphs the parabola in Desmos and answers a question about a third point.  Used by 2.4A and 3.1C.
 (window.AN_BANK || (window.AN_BANK = {}))["2.4A-vertex-point"] = {
   id: "2.4A-vertex-point",
-  version: 2,   // 2: step commands name the step only (no mechanics instructions)
+  version: 3,   // 3: Show work shortened: Solve keeps one line per operation (41 = 400a + 57, -16 = 400a, a = -0.04)
   title: "Vertex and a Point",
   section: "2.4", example: 1,
   skills: ["vertex form", "substitution", "solve for a", "Desmos graphing"],
@@ -115,7 +115,7 @@
         U: [[gqM("a = ?")], [V.qt === "y" ? gqM("y = ?") + " feet, when " + gqM("x = " + c2F(V.Xq)) : gqM("x = ?") + " feet, when " + gqM("y = " + c2F(V.Yq))]],
         E: [[gqM("y = a(x − h)^2 + k"), function (x, dn) { return dn.frm || dn.sh || (x.sb && (x.sb.h || x.sb.k || x.sb.x || x.sb.y)); }]],
         S1: [[gqM(sub0), function (x) { var b = x.sb || {}; return b.h && b.k && b.x && b.y; }], [gqM((V.qt === "y" ? "y" : c2F(V.Yq)) + " = " + c2F(ar) + "(" + (V.qt === "y" ? c2F(V.Xq) : "x") + " − " + h + ")^2 + " + k), ["ans"]]],
-        S2: [[gqM(c2F(V.Y0) + " = a(" + dTx + ")^2 + " + k), gV(1)], [gqM(c2F(V.Y0) + " = " + V.D + "a + " + k), gV(2)], [gqM(c2F(V.Y0) + " − " + k + " = " + V.D + "a"), gV(3)], [gqM(c2F(R) + " = " + V.D + "a"), gV(4)], [gqM("a = " + c2F(R) + " ÷ " + V.D), gV(5)], [gqM("a " + aTx), gV(6)], [Ftx.replace(/\b([a-z])\b/g, "<i>$1</i>"), gV(6)],
+        S2: [[gqM(c2F(V.Y0) + " = " + V.D + "a + " + k), gV(2)], [gqM(c2F(R) + " = " + V.D + "a"), gV(4)], [gqM("a " + aTx), gV(6)], [Ftx.replace(/\b([a-z])\b/g, "<i>$1</i>"), gV(6)],
           [gqM((V.qt === "y" ? "y " : "x ") + gD + c2F(V.ans)) + " feet (from the graph in Desmos)", ["ans"]]],
         A: [[V.qt === "y" ? "At " + c2F(V.Xq) + " feet from the start, the height is " + c2F(V.ans) + " feet." : V.qt === "xt" ? "The path is " + c2F(V.Yq) + " feet high, on its way down, " + c2F(V.ans) + " feet from the start." : "The path would reach the ground " + c2F(V.ans) + " feet from the start.", ["ans"]]] };
       return pb;

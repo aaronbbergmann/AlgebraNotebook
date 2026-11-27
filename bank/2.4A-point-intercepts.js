@@ -13,7 +13,7 @@
   writeRounds: 1,
   showWork: "GUESS",
   patterns: {"sequence": "Try Another", "calculate": "Try Another", "solo": "Submit"},
-  version: 2,   // 2: step commands name the step only (no mechanics instructions)
+  version: 3,   // 3: Show work shortened: Solve keeps one line per operation
   build: function () {
     var C2S242 = [
       { pic: "temp", up: true, u: "°C", xu: "hours", s: "A meteorologist models tomorrow's temperature with a parabola. Here " + c2X + " is the number of hours after midnight and " + c2Y + " is the temperature in degrees Celsius.",
@@ -114,7 +114,7 @@
         U: [[gqM("a = ?")], [isH ? gqM("h = ?") + " " + xu + ", the " + c2X.replace(/<[^>]+>/g, "") + "-coordinate of the vertex" : gqM("k = ?") + " " + u + ", the " + c2Y.replace(/<[^>]+>/g, "") + "-coordinate of the vertex"]],
         E: [[gqM("y = a(x − p)(x − q)"), function (x, dn) { return dn.frm || dn.sp || (x.sb && (x.sb.p || x.sb.q || x.sb.x || x.sb.y)); }]],
         S1: [[gqM(sub0), function (x) { var b = x.sb || {}; return b.p && b.q && b.x && b.y; }]],
-        S2: [[gqM(N(V.Y0) + " = a(" + N(V.d1) + ")(" + N(V.X0) + " − " + q + ")"), gV(1)], [gqM(N(V.Y0) + " = a(" + N(V.d1) + ")(" + N(V.d2) + ")"), gV(2)], [gqM(N(V.Y0) + " = " + N(V.D) + "a"), gV(3)], [gqM("a = " + N(V.Y0) + " ÷ " + Pn(V.D)), gV(5)], [gqM("a " + aTx), gV(6)], [gqM(Ftx), gV(6)],
+        S2: [[gqM(N(V.Y0) + " = a(" + N(V.d1) + ")(" + N(V.d2) + ")"), gV(2)], [gqM(N(V.Y0) + " = " + N(V.D) + "a"), gV(3)], [gqM("a " + aTx), gV(6)], [gqM(Ftx), gV(6)],
           [gqM("vertex (h, k) " + gD + "(" + N(h) + ", " + N(k) + ")") + " (from the graph in Desmos)", ["ans"]]],
         A: [[stmt, ["ans"]]] };
       return pb;
