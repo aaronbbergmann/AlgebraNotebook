@@ -5169,7 +5169,7 @@
   // ---- Step 8, the switch-over (off until the migration check passes): every activity page and review opens its preset assignment
   // instead (/2-4a/?ex=intercepts -> /a/?id=P-2.4A&ex=q2), and the dashboard links to the presets.  To switch over, set SWITCH to true.
   // (For a test in one browser only: localStorage "an.switch" = "1".)
-  var SWITCH = false;
+  var SWITCH = true;
   function switchedOn() { if (SWITCH) return true; try { return localStorage.getItem("an.switch") === "1"; } catch (e) { return false; } }
   (function () {
     if (!switchedOn() || !fixedAct) return;
@@ -10143,6 +10143,7 @@ var ESPIC = {
   function buildLessons() {
     if (rev) {   // a review: the menu lists its items
       $("lesson").innerHTML = BUILT[rev].items.map(function (o, i) { var src = vwOf(o.act, o.subx ? "s" : o.act === "1.4D" && o.lesson === 4 ? "4" : o.lesson); var kk = o.subx ? "s" : String(o.lesson), B0 = BUILT[o.act], nm = o.act === "1.4D" || !B0.lessons ? exShort(o.act, kk) : B0.lessons[+kk - 1] || exShort(o.act, kk); return "<option value=\"" + i + "\" title=\"" + o.full + (src ? " (from " + src + " > " + exShort(o.act, kk) + ")" : "") + "\" data-short=\"" + revAbbr(rev, i) + "\" data-full=\"" + nm + "\">" + revAbbr(rev, i) + "</option>"; }).join("");   // (the open menu lists each question by its exercise's name in the original activity; Q1, Q2, ... is its abbreviation) $("lesson").value = String(revI);
+      $("lesson").value = String(revI);   // (the question in hand: ?ex= may open a later one)
       document.body.classList.toggle("solver", !!BUILT[act].solver); document.body.classList.toggle("svEx", svL()); valsPlace(); buildModes(); return;
     }
     if (lesson > topLesson()) lesson = topLesson();
