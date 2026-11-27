@@ -92,7 +92,7 @@
       var seen = {}; rows.forEach(function (r) { Object.keys(r.detail || {}).forEach(function (a) { if (a.charAt(0) !== "_") seen[a] = 1; }); });
       due = j.due || {}; Object.keys(due).forEach(function (a) { seen[a] = 1; }); ORDER.forEach(function (a) { seen[a] = 1; });   // (every activity has a column, so a due date can be set before anyone starts it)
       return AN.api("listAssignments").catch(function () { return { assignments: [] }; }).then(function (k) {
-        ASG = {}; (k.assignments || []).forEach(function (a) { ASG["A:" + a.id] = a; seen["A:" + a.id] = 1; if (a.due && a.due.all) due["A:" + a.id] = a.due.all; });
+        ASG = {}; (k.assignments || []).forEach(function (a) { ASG["A:" + a.id] = a; seen["A:" + a.id] = 1; var dd = a.due || {}, ks = Object.keys(dd).filter(function (k) { return k !== "all" && k !== "mine"; }).map(function (k) { return dd[k]; }).sort(); if (dd.all || ks.length) due["A:" + a.id] = dd.all || ks[0]; });
         var isA = function (a) { return a.indexOf("A:") === 0; }, aT = function (a) { return ASG[a] && ASG[a].created || ""; };
         acts = ORDER.filter(function (a) { return seen[a]; }).concat(Object.keys(seen).filter(function (a) { return ORDER.indexOf(a) < 0 && !isA(a); }).sort())
           .concat(Object.keys(seen).filter(isA).sort(function (x, y) { return aT(y) < aT(x) ? -1 : aT(y) > aT(x) ? 1 : 0; }));   // (assignments last, newest first)
@@ -122,8 +122,12 @@
   function dueText(v, wd) { var p = parseDue(v); if (!p) return ""; var s = p.mo + "/" + p.d; if (wd) s = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date(Date.UTC(p.y, p.mo - 1, p.d)).getUTCDay()] + " " + s; if (p.h != null) s += " " + ((p.h + 11) % 12 + 1) + ":" + pad(p.mi) + " " + (p.h < 12 ? "AM" : "PM"); return s; }
   // late: a due date is set, and 5 stars were not earned by that date and time (when they were earned: saved with the progress; older saves: the last change)
   function dueEnd(a) { return dueMs(due[a]); }
+  function dueFor(r, a) {   // an assignment's due date for this student's own class (the builder sets one per class), else the one for every class
+    if (a.indexOf("A:") === 0 && ASG[a] && ASG[a].due) { var d = ASG[a].due, c = (r.classes || []).filter(function (x) { return d[x]; })[0]; if (c) return dueMs(d[c]); }
+    return dueEnd(a);
+  }
   function late(r, a) {
-    var end = dueEnd(a); if (!end) return false; var d = r.detail || {}, p = stars(d[a]) || 0;
+    var end = dueFor(r, a); if (!end) return false; var d = r.detail || {}, p = stars(d[a]) || 0;
     if (p >= 50) { var t = +d["_d:" + a] || +d["_t:" + a] || Date.parse(r.saved) || 0; return t > end; }
     return Date.now() > end;
   }

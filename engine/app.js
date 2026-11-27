@@ -15585,7 +15585,7 @@ var ESPIC = {
     });
     Object.keys(S).forEach(function (k) {   // (assignments the student has opened: their own rows, opening at /a/)
       if (k.indexOf("A:") !== 0 || /^A:P-/.test(k)) return; var id = k.slice(2), rec = asgRecOf(id), ex = S[k]; if (!rec) return;
-      var ps = Object.keys(ex).map(function (n) { return +ex[n] || 0; }), s10 = starsOf(ps), dv = rec.due && rec.due.all, due = dueT(dv), fin = s10 >= 50, late = due != null && (fin ? (done[k] || 0) > due : Date.now() > due);
+      var ps = Object.keys(ex).map(function (n) { return +ex[n] || 0; }), s10 = starsOf(ps), dv = rec.due && (rec.due.mine || rec.due.all), due = dueT(dv), fin = s10 >= 50, late = due != null && (fin ? (done[k] || 0) > due : Date.now() > due);
       rows.push({ id: rec.abbr || id, title: rec.title, href: "a/?id=" + encodeURIComponent(id), s10: s10, due: due, dueTx: dv || "", fin: fin, late: late, started: ps.some(function (p) { return p > 0; }), ex: ex, n: rows.length, items: asgItems(rec) });
     });
     rows.sort(function (p, q) { var a = p.fin ? 2 : p.due != null ? 0 : 1, b = q.fin ? 2 : q.due != null ? 0 : 1; return a - b || (a === 0 ? p.due - q.due : 0) || p.n - q.n; });

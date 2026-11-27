@@ -48,3 +48,11 @@ If the classes list says it can't reach Google Classroom, step 2 or 4 is missing
 
 ## 6. The assignment builder (Question Bank migration, step 6)
 `teacher/build/` (the "Build an assignment" link on Class progress) lets a teacher choose bank questions, set a title, abbreviation and due date, and save; saving gives the student link `/a/?id=…`. It needs the server actions saveAssignment, listAssignments and deleteAssignment: replace `Code.gs` with `server/Code.gs` and publish a new version of **"Use this one: Sign-in, progress, Assignments and Attempts"** (as in section 5). Saved assignments are rows in the Assignments tab; only their owner can edit or delete them.
+
+## 7. Classes, Calendar and grades (step 6)
+The builder posts each assignment in your chosen Google Classroom classes (an assignment out of 5 points, with the link and that class's due date), picks due dates from your class meetings in Calendar, and grades go back to Classroom every morning at 5 once a class's due date has passed (or at once, from Send grades). This needs three new permissions (Classroom coursework, Calendar read-only, and the morning timer):
+1. In the Apps Script project, replace `Code.gs` with `server/Code.gs`, and `appsscript.json` with `server/appsscript.json` (keep your own `timeZone` line if it differs). Save both.
+2. Choose **setup** in the toolbar > **Run**, and approve the new permissions. This also sets the morning timer.
+3. Publish a new version of **"Use this one: Sign-in, progress, Assignments and Attempts"** (Manage deployments > pencil > New version > Deploy).
+4. On Class progress, click **Sync** and choose your classes again: this records who is in which class (each student's own due date).
+5. In the builder, type each class's calendar course code (as in your class calendar events, like HAlg2-D2) and click **Find class times**.

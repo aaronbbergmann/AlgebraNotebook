@@ -34,6 +34,8 @@
   .empty { color: var(--muted); padding: 8px 0; }
   .msg { padding: 8px 12px; border-radius: 8px; margin: 8px 0; } .msg.ok { background: #e7f4e4; } .msg.bad { background: #fbebeb; color: #8a1c1c; }
   .link { display: flex; gap: 6px; } .link input { flex: 1; }
+  .cl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; padding: 6px 0; border-bottom: 1px solid var(--line); align-items: center; }
+  .cl .ctl { grid-column: 2; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; } .cl .ctl input.code { width: 9rem; }
   table.mine { width: 100%; border-collapse: collapse; } table.mine td, table.mine th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; } table.mine th { color: var(--muted); font-weight: 600; }
   .topbar { min-height: 22px; }
 </style>
@@ -60,8 +62,10 @@
       <div class="field"><label for="title">Title</label><input id="title" placeholder="Modeling with Quadratic Functions"></div>
       <div class="row2">
         <div class="field"><label for="abbr">Abbreviation</label><input id="abbr" placeholder="2.4A"><span class="h">Its short name, used once.</span></div>
-        <div class="field"><label for="due">Due</label><input id="due" type="datetime-local"></div>
+        <div class="field"><label for="due">Due (every class)</label><input id="due" type="datetime-local"><span class="h">A class's own date below wins.</span></div>
       </div>
+      <div class="field"><label>Classes</label><div id="cls"><div class="empty">Loading your classes…</div></div>
+        <label style="font-weight:400;display:flex;gap:6px;align-items:center;margin-top:4px"><input type="checkbox" id="post" checked> Post it in Google Classroom (an assignment out of 5 points, with the link and each class's due date)</label></div>
       <div class="field"><label>Questions</label><ol class="items" id="items"></ol></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pri" id="save">Save</button><button id="clear">New</button></div>
       <div id="out" aria-live="polite"></div>
@@ -77,7 +81,7 @@
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  var B = window.AN_BANK || {}, P = window.AN_QPLACE || {}, cur = { id: "", items: [] }, MINE = [];
+  var B = window.AN_BANK || {}, P = window.AN_QPLACE || {}, cur = { id: "", items: [], cls: {}, due: {} }, MINE = [], CLS = [];
   var SITE = location.href.replace(/teacher\/build\/.*$/, "");
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function sec(id) { return id.split("-")[0]; }
@@ -125,7 +129,9 @@
     drawItems();
   });
   function load(a) {
-    cur = { id: a ? a.id : "", items: a ? (a.items || []).map(function (it) { return { q: it.q, v: it.v || 0 }; }) : [] };
+    cur = { id: a ? a.id : "", items: a ? (a.items || []).map(function (it) { return { q: it.q, v: it.v || 0 }; }) : [], cls: {}, due: {} };
+    if (a) { (a.classes || []).forEach(function (c) { cur.cls[c] = true; }); Object.keys(a.due || {}).forEach(function (k) { if (k !== "all" && k !== "mine") cur.due[k] = a.due[k]; }); }
+    drawCls();
     $("title").value = a ? a.title : ""; $("abbr").value = a ? a.abbr : ""; $("due").value = a && a.due && a.due.all ? a.due.all : "";
     drawItems(); say(a ? "Editing " + esc(a.abbr) + ". Save keeps the same link." : "", true);
   }
@@ -134,29 +140,60 @@
   function linkOf(id) { return SITE + "a/?id=" + encodeURIComponent(id); }
   $("save").addEventListener("click", function () {
     if (!canSave()) { say("Sign in as a teacher to save."); return; }
-    var rec = { id: cur.id || undefined, title: $("title").value.trim(), abbr: $("abbr").value.trim(), due: $("due").value ? { all: $("due").value } : {}, items: cur.items };
+    var due = {}; if ($("due").value) due.all = $("due").value; Object.keys(cur.due).forEach(function (c) { if (cur.cls[c] && cur.due[c]) due[c] = cur.due[c]; });
+    var rec = { id: cur.id || undefined, title: $("title").value.trim(), abbr: $("abbr").value.trim(), due: due, items: cur.items, classes: Object.keys(cur.cls).filter(function (c) { return cur.cls[c]; }), post: $("post").checked };
     if (!rec.title) { say("Give the assignment a title."); return; } if (!rec.abbr) { say("Give the assignment an abbreviation (like 2.4A)."); return; } if (!rec.items.length) { say("Add at least one question."); return; }
     $("save").disabled = true; $("save").textContent = "Saving…";
     AN.api("saveAssignment", { assignment: rec }).then(function (j) {
       cur.id = j.assignment.id; drawItems();
-      say("Saved. The link for your students:<div class=\"link\" style=\"margin-top:6px\"><input readonly value=\"" + esc(linkOf(cur.id)) + "\" aria-label=\"Student link\"><button id=\"cp\">Copy</button></div>", true);
+      var w = (j.warnings || []).length ? "<div style=\"margin-top:6px;color:#8a1c1c\">Google Classroom: " + j.warnings.map(esc).join("<br>") + "</div>" : (j.assignment.posted || []).length ? "<div style=\"margin-top:6px\">Posted in Google Classroom.</div>" : "";
+      say("Saved. The link for your students:<div class=\"link\" style=\"margin-top:6px\"><input readonly value=\"" + esc(linkOf(cur.id)) + "\" aria-label=\"Student link\"><button id=\"cp\">Copy</button></div>" + w, true);
       loadMine();
     }).catch(function (e) { say(esc(e.message || "Could not save.")); }).then(function () { $("save").disabled = false; $("save").textContent = "Save"; });
   });
   $("out").addEventListener("click", function (e) { if (e.target.id === "cp") { var i = $("out").querySelector("input"); i.select(); try { navigator.clipboard.writeText(i.value); } catch (er) { document.execCommand("copy"); } e.target.textContent = "Copied"; } });
 
+  // ---- classes: each synced class, its calendar course code (its meetings come from your calendars) and its due date
+  function fmtT(t) { var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(t || ""); if (!m) return t; var d = new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]); return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }) + " " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }); }
+  function drawCls() {
+    if (!CLS.length) { $("cls").innerHTML = "<div class=\"empty\">No classes yet: on Class progress, click Sync and choose your Google Classroom classes.</div>"; return; }
+    var now = new Date(), pad = function (n) { return (n < 10 ? "0" : "") + n; }, nowT = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate()) + "T" + pad(now.getHours()) + ":" + pad(now.getMinutes());
+    $("cls").innerHTML = CLS.map(function (c) {
+      var on = !!cur.cls[c.id], d = cur.due[c.id] || "", ms = (c.meetings || []).filter(function (t) { return t >= nowT || t === d; });
+      var pick = ms.length ? "<select data-due=\"" + esc(c.id) + "\" aria-label=\"Due date for " + esc(c.name) + "\"><option value=\"\">Due: as above</option>" + ms.map(function (t) { return "<option value=\"" + t + "\"" + (t === d ? " selected" : "") + ">" + esc(fmtT(t)) + "</option>"; }).join("") + "</select>"
+        : "<input type=\"datetime-local\" data-due=\"" + esc(c.id) + "\" value=\"" + esc(d) + "\" aria-label=\"Due date for " + esc(c.name) + "\">";
+      return "<div class=\"cl\"><input type=\"checkbox\" data-c=\"" + esc(c.id) + "\"" + (on ? " checked" : "") + " aria-label=\"" + esc(c.name) + "\"><b>" + esc(c.name) + "</b><div class=\"ctl\">" + pick +
+        "<input class=\"code\" data-code=\"" + esc(c.id) + "\" value=\"" + esc(c.code || "") + "\" placeholder=\"Calendar code\" aria-label=\"Calendar course code for " + esc(c.name) + "\" title=\"The course code in your class calendar events, like HAlg2-D2: its meetings fill the due-date menu\"><button data-find=\"" + esc(c.id) + "\">Find class times</button>" +
+        (c.code && !(c.meetings || []).length ? "<span class=\"h\">No meetings found for " + esc(c.code) + ".</span>" : "") + "</div></div>";
+    }).join("");
+  }
+  $("cls").addEventListener("change", function (e) { var t = e.target; if (t.dataset.c) cur.cls[t.dataset.c] = t.checked; if (t.dataset.due) { cur.due[t.dataset.due] = t.value; if (t.value) { cur.cls[t.dataset.due] = true; drawCls(); } } });
+  $("cls").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-find]"); if (!b) return; var id = b.getAttribute("data-find"), code = $("cls").querySelector("[data-code=\"" + id + "\"]").value.trim();
+    b.disabled = true; b.textContent = "Looking…";
+    AN.api("setCode", { id: id, code: code }).then(function (j) { CLS.forEach(function (c) { if (c.id === id) { c.code = code; c.meetings = j.meetings || []; } }); drawCls(); }).catch(function (er) { b.disabled = false; b.textContent = "Find class times"; say(esc(er.message || "Could not read the calendar.")); });
+  });
+  function loadClasses() {
+    if (!canSave()) { $("cls").innerHTML = "<div class=\"empty\">Sign in as a teacher to choose classes.</div>"; return; }
+    AN.api("classes").then(function (j) { CLS = j.classes || []; drawCls(); }).catch(function (e) { $("cls").innerHTML = "<div class=\"msg bad\">" + esc(e.message || "Could not load your classes.") + "</div>"; });
+  }
+
   // ---- my assignments
   function drawMine() {
     if (!MINE.length) { $("mine").innerHTML = "<div class=\"empty\">None yet.</div>"; return; }
     $("mine").innerHTML = "<table class=\"mine\"><thead><tr><th>Abbr.</th><th>Title</th><th>Due</th><th></th></tr></thead><tbody>" + MINE.map(function (a, i) {
-      return "<tr><td><b>" + esc(a.abbr) + "</b></td><td>" + esc(a.title) + "<div class=\"sub\">" + (a.items || []).length + " questions</div></td><td>" + esc(a.due && a.due.all ? a.due.all.replace("T", " ") : "") + "</td>" +
-        "<td style=\"white-space:nowrap\"><button data-ed=\"" + i + "\">Edit</button> <button data-ln=\"" + i + "\">Copy link</button> <button data-del=\"" + i + "\">Delete</button></td></tr>";
+      return "<tr><td><b>" + esc(a.abbr) + "</b></td><td>" + esc(a.title) + "<div class=\"sub\">" + (a.items || []).length + " questions</div></td><td>" + esc((function (d) { var v = d.all || Object.keys(d).filter(function (k) { return k !== "mine"; }).map(function (k) { return d[k]; }).sort()[0]; return v ? fmtT(v) + (!d.all && Object.keys(d).length > 1 ? " (first class)" : "") : ""; })(a.due || {})) + "</td>" +
+        "<td style=\"white-space:nowrap\"><button data-ed=\"" + i + "\">Edit</button> <button data-ln=\"" + i + "\">Copy link</button> " + ((a.posted || []).length ? "<button data-gr=\"" + i + "\" title=\"Send each student's stars to Google Classroom now\">Send grades</button> " : "") + "<button data-del=\"" + i + "\">Delete</button></td></tr>";
     }).join("") + "</tbody></table>";
   }
   $("mine").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
     if (b.hasAttribute("data-ed")) { load(MINE[+b.getAttribute("data-ed")]); window.scrollTo(0, 0); }
     else if (b.hasAttribute("data-ln")) { var u = linkOf(MINE[+b.getAttribute("data-ln")].id); try { navigator.clipboard.writeText(u); } catch (er) { } b.textContent = "Copied"; }
+    else if (b.hasAttribute("data-gr")) {
+      var g = MINE[+b.getAttribute("data-gr")]; b.disabled = true; b.textContent = "Sending…";
+      AN.api("sendGrades", { id: g.id }).then(function (j) { b.textContent = j.sent + " sent"; if ((j.warnings || []).length) alert("Google Classroom: " + j.warnings.join("\n")); }).catch(function (er) { b.disabled = false; b.textContent = "Send grades"; alert(er.message || "Could not send the grades."); });
+    }
     else if (b.hasAttribute("data-del")) {
       var a = MINE[+b.getAttribute("data-del")]; if (!confirm("Delete " + a.abbr + "? Students' saved work stays, but the link stops working.")) return;
       AN.api("deleteAssignment", { id: a.id }).then(function () { if (cur.id === a.id) load(null); loadMine(); }).catch(function (er) { alert(er.message || "Could not delete."); });
@@ -166,7 +203,7 @@
     if (!canSave()) { $("mine").innerHTML = "<div class=\"empty\">" + (window.AN && AN.enabled && AN.user && !AN.user.teacher ? "This page is for teachers." : "Sign in as a teacher to see your assignments.") + "</div>"; return; }
     AN.api("listAssignments").then(function (j) { MINE = (j.assignments || []).slice().reverse(); drawMine(); }).catch(function (e) { $("mine").innerHTML = "<div class=\"msg bad\">" + esc(e.message || "Could not load your assignments.") + "</div>"; });
   }
-  drawBank(); drawItems(); loadMine();
+  drawBank(); drawItems(); loadMine(); loadClasses();
 })();
 </script>
 </body>
