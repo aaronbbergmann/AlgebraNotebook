@@ -5025,6 +5025,42 @@
     { q: "Q5", full: "Question 5 (Intercept Form): a(x \u2212 p)(x \u2212 q): a, p and q, the table and the graph", act: "2.2", lesson: 4 },
     { q: "Q6", full: "Question 6 (Golf Paths): graph two paths in Desmos: how far each travels before it lands and how high it goes", act: "2.2", lesson: 5 }
   ] };
+  // ---- Practice: /q/?id=<bank id> plays one bank question (Question Bank migration, step 5).  It is a review with the question's own items (where the
+  // question runs: its section and exercise number), with progress of its own, kept apart from every activity's stars.  /q/ alone lists the bank.
+  var QPLACE = {
+    "1.1A-parents": [["1.1", 1]], "1.1A-graph-describe": [["1.1", 2]], "1.1B-estimate": [["1.1", 3]],
+    "1.2-write-transformations": [["1.2", 1, 0, "Translations"], ["1.2", 3, 0, "Stretches"], ["1.2", 2, 0, "Reflections"], ["1.2", 4, 0, "Combining"], ["1.2", 5, 0, "Profit"]],
+    "1.3B-equation": [["1.3", 1]], "1.3B-compare": [["1.3", 2]], "1.3B-line-of-fit": [["1.3", 3]], "1.3B-best-fit": [["1.3", 4]],
+    "1.4A-graphing": [["1.4D", 4]], "1.4B-one-variable": [["1.4D", 1]], "1.4B-substitution": [["1.4D", 2, 1]], "1.4C-2x2-systems": [["1.4D", 2]], "1.4D-3x3-systems": [["1.4D", 3]],
+    "2.1A-graph-transformations": [["2.1", 1, 0, "Translations"], ["2.1", 2, 0, "Reflect & Stretch"], ["2.1", 3, 0, "Write g"]], "2.1B-real-life": [["2.1", 4]],
+    "2.2A-vertex-form": [["2.2", 1]], "2.2A-standard-form": [["2.2", 2]], "2.2C-min-max": [["2.2", 3]], "2.2C-intercept-form": [["2.2", 4]], "2.2C-compare": [["2.2", 5]],
+    "2.2B-interval-notation": [["2.2", 6]], "2.2B-domain": [["2.2", 7]], "2.2B-range": [["2.2", 8]], "2.2B-increasing": [["2.2", 9]], "2.2B-decreasing": [["2.2", 10]],
+    "2.2C-memorize": [["2.2", 11]], "2.2C-characteristics": [["2.2", 12]],
+    "2.4A-vertex-point": [["2.4", 1]], "2.4A-point-intercepts": [["2.4", 2]], "2.4B-quadratic-regression": [["2.4", 4]], "2.4A-3step-equations": [["2.4", 5]],
+    "2.4A-box-method": [["2.4", 6]], "2.4A-square-roots": [["2.4", 7]], "2.4B-distributing": [["2.4", 8]],
+    "3.1A-graphing": [["3.1", 1]], "3.1B-square-roots": [["3.1", 3]], "3.1C-real-life": [["3.1", 4]], "3.1D-factoring": [["3.1", 6]], "3.1E-solve-factoring": [["3.1", 7]],
+    "3.1F-special-products": [["3.1", 8]], "3.1G-factor-ac": [["3.1", 9]], "3.3A-complete-square": [["3.1", 10]], "3.3B-vertex-form": [["3.1", 11]], "3.4A-quadratic-formula": [["3.1", 12]],
+    "3.4B-discriminant": [["3.1", 13]], "3.1A-4step-equations": [["3.1", 14]], "3.1B-simplify-roots": [["3.1", 16]], "3.1B-square-roots-simplify": [["3.1", 17]], "3.1C-real-life-desmos": [["3.1", 19]]
+  };
+  var QID = null;
+  (function () {
+    var seg = decodeURIComponent(location.pathname).replace(/\/index\.html$/i, "").replace(/\/+$/, "").split("/").pop().toLowerCase();
+    if (seg !== "q") return;
+    var m = /[?&]id=([^&#]*)/.exec(location.search), id = m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "", d = AN_BANK[id], P = QPLACE[id];
+    if (!d || !P) { QID = ""; return; }   // (no question: the page lists the bank instead)
+    QID = id;
+    BUILT["Q"] = { review: true, practice: true, key: "algebraProgress:Q:" + id, levels: [], top: 0, items: P.map(function (p) { return { q: p[3] ? p[3].replace(/ /g, "\u00a0") : "Practice", full: d.title + (p[3] ? ": " + p[3] : ""), act: p[0], lesson: p[1], subx: !!p[2] }; }) };
+    ACTS.push(["Q", "Practice: " + d.title, "Practice: " + d.title]);
+  })();
+  // /q/ with no question: every bank question, by section, each a link to practise it
+  function qIndex() {
+    var by = {}; Object.keys(QPLACE).forEach(function (id) { var d = AN_BANK[id]; if (!d) return; var sec = id.split("-")[0]; (by[sec] = by[sec] || []).push([id, d.title]); });
+    var h = "<main style=\"max-width:44rem;margin:2rem auto;padding:0 1rem;font:1rem system-ui,sans-serif;color:#1B2433\"><h1 style=\"font-size:1.6rem\">Practice: the question bank</h1><p style=\"color:#4B5563\">Pick a question to practise. Practice keeps its own stars; it never changes an assignment.</p>";
+    Object.keys(by).sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); }).forEach(function (sec) {
+      h += "<h2 style=\"font-size:1.1rem;margin:1.2rem 0 .3rem\">" + sec + "</h2><ul style=\"margin:0;padding-left:1.2rem\">" + by[sec].map(function (q) { return "<li><a href=\"?id=" + encodeURIComponent(q[0]) + "\">" + q[1] + "</a></li>"; }).join("") + "</ul>";
+    });
+    document.title = "Practice"; var ov = document.createElement("div"); ov.id = "qIndex"; ov.style.cssText = "position:fixed;inset:0;z-index:9999;overflow:auto;background:#fff"; ov.innerHTML = h + "</main>"; document.body.appendChild(ov);   // (over the page: the engine underneath keeps running quietly)
+  }
   var rev = null, revI = 0;
   var act = "1.4D";
   // each activity also lives at its own address: …/algebranotebook/1-4b/ opens that activity and stays there
@@ -10005,7 +10041,7 @@ var ESPIC = {
   function shortOf(id) { return id === "1.4D" ? "1.4 Algebra" : id; }
   function fullTitle(id) { var a = ACTS.filter(function (x) { return x[0] === id; })[0]; return a[2] || a[0] + " " + a[1]; }
   function buildActs() {
-    $("actLbl").textContent = soon ? soon : welcome ? "Choose an activity" : rev ? rev : view ? view : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
+    $("actLbl").textContent = soon ? soon : welcome ? "Choose an activity" : rev ? (BUILT[rev].practice ? "Practice" : rev) : view ? view : act === "1.4D" ? "1.4" : shortOf(act); $("actBtn").classList.remove("fixed"); $("actBtn").title = "Activity";
     var here = soon || rev || view || act; if (fixedAct) document.title = fullTitle(here) + " | AlgebraNotebook"; $("actBtn").setAttribute("aria-label", "Activity: " + fullTitle(here));
     $("actList").innerHTML = ACTS.map(function (a) {
       var ok = !!BUILT[a[0]] || !!VW[a[0]], sel = (!welcome || !!soon) && a[0] === here;
@@ -15500,7 +15536,8 @@ var ESPIC = {
         out[v[0]] = ex;
       });
       var T = rd("algebraProgress:time"); Object.keys(T).forEach(function (id) { if (out[id] || (BUILT[id] && BUILT[id].review)) out["_t:" + id] = +T[id] || 0; }); var D0 = rd("algebraProgress:done"); Object.keys(D0).forEach(function (id) { if (out[id] || (BUILT[id] && BUILT[id].review)) out["_d:" + id] = +D0[id] || 0; });   // (when each activity first reached 5 stars)   // when each activity last changed (a number: the Sheet script passes it by)
-      Object.keys(BUILT).forEach(function (id) { if (!BUILT[id].review) return; rev = id; var rl = revLevels(), ex = {}; prog = rd(BUILT[id].key); BUILT[id].items.forEach(function (it, i) { ex[it.q || ("Item " + (i + 1))] = best(rl, i); }); out[id] = ex; });   // every review (RevT1, RevQ2)
+      Object.keys(BUILT).forEach(function (id) { if (!BUILT[id].review || BUILT[id].practice) return; rev = id; var rl = revLevels(), ex = {}; prog = rd(BUILT[id].key); BUILT[id].items.forEach(function (it, i) { ex[it.q || ("Item " + (i + 1))] = best(rl, i); }); out[id] = ex; });   // every review (RevT1, RevQ2)
     } catch (e) { } finally { prog = keep; rev = r0; }
     return out;
   };
+  if (QID === "") qIndex();   // (/q/ with no question: the list of the bank)
