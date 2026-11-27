@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>(function(){var p=location.pathname.replace(/index\.html$/i,"").replace(/\/+$/,"").split("/").pop().toLowerCase();document.write('<script src="'+(p===""||p==="algebranotebook"?"":"../")+'auth.js"><\/script>')})()</script>
+<script src="gc.js"></script>
 <title>Class Progress</title>
 <link rel="icon" href="../favicon.ico" sizes="any">
 <style>
@@ -57,7 +58,7 @@
   <h1>Class Progress</h1>
   <span class="sub" id="sub"></span>
   <a href="build/" style="color:#2d70b3">Build an assignment</a>
-  <div class="tools"><input type="search" id="q" placeholder="Find a student" aria-label="Find a student"><span class="chk" role="group" aria-label="Show activities"><label><input type="checkbox" data-f="1"> Ch1</label><label><input type="checkbox" data-f="2"> Ch2</label><label><input type="checkbox" data-f="3"> Ch3</label><label><input type="checkbox" data-f="A"> Assignments</label><label><input type="checkbox" data-f="recent"> Recent</label></span><button id="gc">Sync with Google Classroom</button><button id="csv">Download CSV</button><button id="tch" title="Admin only: the teachers who use Algebra Notebook, each with their own Progress Sheet">Teachers</button><button id="mig" title="Step 7 of the Question Bank migration: compare the dated snapshot with the preset assignments">Migration check</button><button id="ref">Refresh</button></div>
+  <div class="tools"><input type="search" id="q" placeholder="Find a student" aria-label="Find a student"><span class="chk" role="group" aria-label="Show activities"><label><input type="checkbox" data-f="1"> Ch1</label><label><input type="checkbox" data-f="2"> Ch2</label><label><input type="checkbox" data-f="3"> Ch3</label><label><input type="checkbox" data-f="A"> Assignments</label><label><input type="checkbox" data-f="recent"> Recent</label></span><button id="gc">Sync with Google Classroom</button><button id="csv">Download CSV</button><button id="gsend" hidden title="Send every student's stars to Google Classroom, for your assignments past their due date">Send grades to Classroom</button><button id="tch" title="Admin only: the teachers who use Algebra Notebook, each with their own Progress Sheet">Teachers</button><button id="mig" title="Step 7 of the Question Bank migration: compare the dated snapshot with the preset assignments">Migration check</button><button id="ref">Refresh</button></div>
 </header>
 <div class="note" id="note" hidden role="status"></div>
 <div class="wrap" id="wrap"><div class="msg">Loading…</div></div>
@@ -241,9 +242,10 @@
   $("wrap").addEventListener("scroll", placeDue); window.addEventListener("scroll", placeDue);
   function alertBar(t) { var m = $("note"); m.textContent = t; m.hidden = false; clearTimeout(alertBar.t); alertBar.t = setTimeout(function () { m.hidden = true; }, 8000); }
   // Google Classroom: choose the classes, then the student list is made to match them
+  var OWNER = true; GC.whoami().then(function (w) { OWNER = w.owner !== false; $("tch").hidden = !OWNER; $("gsend").hidden = OWNER; });   // (another teacher: Classroom runs in this browser, as them)
   $("gc").addEventListener("click", function () {
     var D = $("gcDlg"), L = $("gcList"); L.innerHTML = "Loading your classes…"; $("gcGo").disabled = true; D.hidden = false;
-    AN.api("courses").then(function (j) {
+    (OWNER ? AN.api("courses") : GC.courses().then(function (cs) { return { courses: cs, last: [] }; })).then(function (j) {
       var cs = j.courses || [], last = j.last || [];
       if (!cs.length) { L.textContent = "No active Google Classroom classes were found where you are a teacher."; return; }
       L.innerHTML = cs.map(function (c) { return "<label><input type=\"checkbox\" value=\"" + esc(c.id) + "\"" + (last.indexOf(c.id) >= 0 || cs.length === 1 ? " checked" : "") + "> " + esc(c.name) + "</label>"; }).join("");
@@ -255,7 +257,7 @@
     var ids = [].map.call(document.querySelectorAll("#gcList input:checked"), function (c) { return c.value; });
     if (!ids.length) { $("gcList").insertAdjacentHTML("beforeend", "<div class=\"gcErr\">Choose at least one class.</div>"); return; }
     $("gcGo").disabled = true; $("gcGo").textContent = "Syncing…";
-    AN.api("syncClassroom", { courseIds: ids }).then(function (j) {
+    (OWNER ? AN.api("syncClassroom", { courseIds: ids }) : Promise.all(ids.map(function (id) { return GC.roster(id).then(function (r) { var lb = $("gcList").querySelector("input[value=\"" + id + "\"]"); r.id = id; r.name = lb ? lb.parentNode.textContent.trim() : id; return r; }); })).then(function (cls) { return AN.api("syncRoster", { classes: cls }); })).then(function (j) {
       $("gcDlg").hidden = true; $("gcGo").textContent = "Sync";
       alertBar("Synced with Google Classroom: " + j.students + " students in the class" + (j.added ? ", " + j.added + " added" : "") + (j.removed ? ", " + j.removed + " removed from the list (their saved work is kept)" : "") + ".");
       load();
@@ -263,6 +265,15 @@
   });
   [].forEach.call(document.querySelectorAll(".chk input"), function (c) { try { c.checked = localStorage.getItem("an:tf:" + c.dataset.f) === "1"; } catch (e) { } c.addEventListener("change", function () { try { localStorage.setItem("an:tf:" + c.dataset.f, c.checked ? "1" : "0"); } catch (e) { } draw(); }); });
   $("ref").addEventListener("click", load);
+  // another teacher's grades: from this browser, for each of their assignments posted in Classroom and past its due date
+  $("gsend").addEventListener("click", function () {
+    var b = $("gsend"), ids = Object.keys(ASG).filter(function (a) { return (ASG[a].posted || []).length; }).map(function (a) { return ASG[a].id; }), sent = 0, warn = [];
+    if (!ids.length) { alertBar("None of your assignments is posted in Google Classroom yet."); return; }
+    b.disabled = true; b.textContent = "Sending…";
+    ids.reduce(function (p, id) { return p.then(function () { return GC.sendGrades(id, true).then(function (r) { sent += r.sent; warn = warn.concat(r.warnings); }); }); }, Promise.resolve())
+      .then(function () { alertBar(sent + " grades sent to Google Classroom" + (warn.length ? ". Google Classroom: " + warn.join("; ") : ".")); }).catch(function (e) { alertBar(e.message || "The grades didn't go."); })
+      .then(function () { b.disabled = false; b.textContent = "Send grades to Classroom"; });
+  });
   // Teachers (the Admin only): each teacher has their own Progress Sheet, made in the Admin's Drive and shared with them as editor
   $("tch").addEventListener("click", function () {
     var bg = document.createElement("div"); bg.className = "dlgBg"; bg.innerHTML = "<div class=\"dlg\" role=\"dialog\" aria-labelledby=\"tcT\"><h2 id=\"tcT\">Teachers</h2><div id=\"tcL\" style=\"margin-bottom:12px\">Loading…</div>" +

@@ -22,7 +22,7 @@ var DOMAIN = "sch.org";                   // only this Google Workspace domain m
 var TEACHERS = ["abergmann@sch.org"];     // may open the class progress page
 var SESSION_DAYS = 90;
 var CHUNK = 45000;
-var TACTS = ["roster", "setDue", "courses", "syncClassroom", "saveAssignment", "listAssignments", "deleteAssignment", "classes", "setCode", "sendGrades", "migrationCheck", "addTeacher", "listTeachers"];                        // a cell holds at most 50,000 characters
+var TACTS = ["roster", "setDue", "courses", "syncClassroom", "saveAssignment", "listAssignments", "deleteAssignment", "classes", "setCode", "sendGrades", "migrationCheck", "addTeacher", "listTeachers", "syncRoster", "setPosts", "gradesFor"];                        // a cell holds at most 50,000 characters
 
 function doPost(e) {
   var req;
@@ -35,6 +35,7 @@ function doPost(e) {
     if (req.action === "save") return out(save(who, req.data, req.summary));
     if (req.action === "signout") { endSession(req.session); return out({ ok: true }); }
     if (req.action === "due") return out({ due: dueDates() });
+    if (req.action === "whoami") return out({ email: who.email, teacher: isTeacher(who.email), owner: isOwner(who.email) });   // (step 6: another teacher's Classroom runs in their browser)
     if (req.action === "assignment") return out(getAssignment(req.id, who));   // (step 5: /a/?id= fetches its record once)
     if (req.action === "attempts") return out(logAttempts(who, req.rows || []));   // (step 5: finished problems, in batches)   // (any signed-in student: the welcome page opens the activity due next)
     if (TACTS.indexOf(req.action) >= 0) {   // teacher actions: on the teacher's own Sheet (yours: this one)
@@ -59,6 +60,9 @@ function teacherAction(req, who) {
     if (req.action === "setDue") return (setDue(req.act, req.date));
     if (req.action === "courses") return (courses(who.email));
     if (req.action === "syncClassroom") return (syncClassroom(req.courseIds || [], who));
+    if (req.action === "syncRoster") return (syncClassroom((req.classes || []).map(function (c) { return String(c.id); }), who, req.classes || []));   // (another teacher: the classes their browser read from Classroom)
+    if (req.action === "setPosts") return (setPosts(req.id, req.posts || {}));
+    if (req.action === "gradesFor") return (gradesFor(req.id));
   return { error: "bad", message: "Unknown action." };
 }
 function doGet() { return out({ ok: true, service: "Algebra Notebook" }); }
@@ -274,12 +278,14 @@ function people(courseId, kind) {
 }
 // The Students sheet is made to match the chosen classes: students who are not in them leave the list (their saved work stays in the Data sheet,
 // so nothing is lost if they come back), and students who are in them but have not signed in yet are added.  The classes' teachers may open this page.
-function syncClassroom(ids, who) {
+function syncClassroom(ids, who, given) {
   if (!ids.length) return { error: "bad", message: "Choose at least one class." };
   var want = {}, teach = {};
   var noEmail = 0;
   var byClass = {};
-  ids.forEach(function (id) { var ss = people(id, "s"); noEmail += ss.noEmail || 0; byClass[id] = ss.map(function (p) { return p.email; }); ss.forEach(function (p) { want[p.email] = p.name; }); people(id, "t").forEach(function (p) { teach[p.email] = 1; }); });
+  if (given) given.forEach(function (c) { var id = String(c.id); byClass[id] = []; if (c.name) putSetting("cname:" + id, String(c.name));   // (another teacher's browser read these from Classroom)
+    (c.students || []).forEach(function (p) { var e = String(p.email || "").toLowerCase(); if (!e) { noEmail++; return; } byClass[id].push(e); want[e] = p.name || e; }); (c.teachers || []).forEach(function (t) { teach[String(t).toLowerCase()] = 1; }); });
+  else ids.forEach(function (id) { var ss = people(id, "s"); noEmail += ss.noEmail || 0; byClass[id] = ss.map(function (p) { return p.email; }); ss.forEach(function (p) { want[p.email] = p.name; }); people(id, "t").forEach(function (p) { teach[p.email] = 1; }); });
   // Classroom leaves out email addresses without the classroom.profile.emails permission (appsscript.json): then nothing is changed, rather than every student leaving the list
   if (noEmail) return { error: "server", message: "Google Classroom didn't share " + noEmail + " students' email addresses, so nothing was changed. The Apps Script needs the classroom.profile.emails permission: see server/SETUP.md." };
   var added = 0, removed = 0, lock = LockService.getScriptLock(); lock.waitLock(30000);
@@ -344,7 +350,7 @@ function logAttempts0(who, rows) {
 function asgRows() { var sh = assignmentsSheet(), n = sh.getLastRow(); return { sh: sh, rows: n < 2 ? [] : sh.getRange(2, 1, n - 1, 9).getValues() }; }
 function asgRec(r) { var items = [], due = {}; try { items = JSON.parse(r[6] || "[]"); } catch (e) { } try { due = JSON.parse(r[5] || "{}"); } catch (e) { }
   var posts = {}; try { posts = JSON.parse(r[8] || "{}"); } catch (e) { }
-  return { id: String(r[0]), title: String(r[1]), abbr: String(r[2]), owner: String(r[3]), classes: String(r[4]).split(/\s*,\s*/).filter(String), due: due, items: items, created: r[7] instanceof Date ? r[7].toISOString() : String(r[7] || ""), posted: Object.keys(posts) }; }
+  return { id: String(r[0]), title: String(r[1]), abbr: String(r[2]), owner: String(r[3]), classes: String(r[4]).split(/\s*,\s*/).filter(String), due: due, items: items, created: r[7] instanceof Date ? r[7].toISOString() : String(r[7] || ""), posted: Object.keys(posts), posts: posts }; }
 function listAssignments(who) {
   var me = String(who.email).toLowerCase();
   return { assignments: asgRows().rows.filter(function (r) { return String(r[3]).toLowerCase() === me; }).map(asgRec) };
@@ -374,7 +380,7 @@ function saveAssignment(who, a) {
   } finally { lock.releaseLock(); }
   // Google Classroom: a post in each chosen class (an assignment out of 5 points, the link, that class's due date); an edit updates the post
   var warn = [];
-  if (a.post !== false && cls.length) {
+  if (a.post !== false && cls.length && !BOOK) {   // (another teacher's browser posts, then sends the posts back: setPosts)
     cls.forEach(function (c) {
       try {
         var body = { title: abbr + ": " + title, description: "Open it in Algebra Notebook. Your stars are your grade (5 stars = 5 points).", workType: "ASSIGNMENT", state: "PUBLISHED", maxPoints: 5,
@@ -394,7 +400,7 @@ function deleteAssignment(who, id) {
   for (var i = 0; i < A.rows.length; i++) if (String(A.rows[i][0]) === String(id)) {
     if (String(A.rows[i][3]).toLowerCase() !== me) return { error: "forbidden", message: "That assignment belongs to another teacher." };
     var posts = {}, warn = []; try { posts = JSON.parse(A.rows[i][8] || "{}"); } catch (e) { }
-    Object.keys(posts).forEach(function (c) { try { Classroom.Courses.CourseWork.remove(c, posts[c]); } catch (e) { warn.push(className(c) + ": " + String(e && e.message || e)); } });   // (its Classroom posts go too)
+    if (!BOOK) Object.keys(posts).forEach(function (c) { try { Classroom.Courses.CourseWork.remove(c, posts[c]); } catch (e) { warn.push(className(c) + ": " + String(e && e.message || e)); } });   // (its Classroom posts go too)
     A.sh.deleteRow(i + 2); try { indexPut(id, ""); } catch (e) { } return { ok: true, warnings: warn };
   }
   return { error: "bad", message: "That assignment was not found." };
@@ -407,12 +413,13 @@ function studentClasses() {   // email -> the synced classes the student is in
   return o;
 }
 function className(id) {
+  if (BOOK) return getSetting("cname:" + id) || id;   // (another teacher: the name their browser saved at Sync)
   var c = CacheService.getScriptCache(), hit = c.get("cname:" + id); if (hit) return hit;
   var n = id; try { var co = Classroom.Courses.get(id); n = co.name + (co.section ? " (" + co.section + ")" : ""); } catch (e) { }
   c.put("cname:" + id, n, 21600); return n;
 }
 function meetings(code) {   // the class's meetings in the next 5 months, from the calendars shared with you: "yyyy-MM-ddTHH:mm" (New York time)
-  if (!code) return [];
+  if (!code || BOOK) return [];   // (another teacher: their browser reads their calendars)
   var c = CacheService.getScriptCache(), hit = c.get("meet:" + code); if (hit) return JSON.parse(hit);
   var from = new Date(Date.now() - 864e5), to = new Date(Date.now() + 150 * 864e5), seen = {}, out = [], tz = Session.getScriptTimeZone();
   CalendarApp.getAllCalendars().forEach(function (cal) {
@@ -457,8 +464,25 @@ function sendGrades(id, force) {   // the grades of one assignment, to each clas
   });
   return { ok: true, sent: sent, warnings: warn };
 }
+function setPosts(id, posts) {   // another teacher's browser posted the assignment in Classroom: keep each class's post id
+  var A = asgRows(); for (var i = 0; i < A.rows.length; i++) if (String(A.rows[i][0]) === String(id)) {
+    var cur = {}; try { cur = JSON.parse(A.rows[i][8] || "{}"); } catch (e) { } Object.keys(posts).forEach(function (c) { if (posts[c]) cur[c] = String(posts[c]); else delete cur[c]; });
+    A.sh.getRange(i + 2, 9).setValue(JSON.stringify(cur)); return { ok: true, posts: cur };
+  }
+  return { error: "bad", message: "That assignment was not found." };
+}
+function gradesFor(id) {   // each class's post, due date and every student's grade (for another teacher's browser to send)
+  var A = asgRows(), r = A.rows.filter(function (x) { return String(x[0]) === String(id); })[0]; if (!r) return { error: "bad", message: "That assignment was not found." };
+  var rec = asgRec(r), det = detailsOf(book()), out = [];
+  Object.keys(rec.posts || {}).forEach(function (c) {
+    var dd = classroomDue(rec.due[c] || rec.due.all), dueAt = dd ? dd.at.getTime() : 0, g = {};
+    Object.keys(det).forEach(function (e) { var v = gradeOf(det[e], "A:" + id, dueAt); if (v != null) g[e] = v; });
+    out.push({ course: c, work: rec.posts[c], due: dueAt, passed: !!dueAt && Date.now() >= dueAt, grades: g });
+  });
+  return { ok: true, classes: out };
+}
 function dailyGrades() {   // the timer: every posted assignment whose due date has passed in a class sends that class's grades again (later work counts, late)
-  dailyGrades0(); Object.keys(teacherMap()).forEach(function (t) { try { asTeacher(t, dailyGrades0); } catch (e) { } });
+  dailyGrades0();   // (your classes; another teacher's grades go from their browser when they open Class progress)
 }
 function dailyGrades0() {
   asgRows().rows.forEach(function (r) { var p = {}; try { p = JSON.parse(r[8] || "{}"); } catch (e) { } if (Object.keys(p).length) { try { sendGrades(String(r[0]), false); } catch (e) { } } });

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="../../auth.js"></script>
+<script src="../gc.js"></script>
 <title>Assignment Builder</title>
 <link rel="icon" href="../../favicon.ico" sizes="any">
 <style>
@@ -81,6 +82,8 @@
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
+  var OWNER = true; if (window.GC) GC.whoami().then(function (w) { OWNER = w.owner !== false; });   // (another teacher: Classroom and Calendar run in this browser, as them)
+  function gcFirst() { return OWNER || !window.GC ? Promise.resolve() : GC.ready(); }
   var B = window.AN_BANK || {}, P = window.AN_QPLACE || {}, cur = { id: "", items: [], cls: {}, due: {} }, MINE = [], CLS = [];
   var SITE = location.href.replace(/teacher\/build\/.*$/, "");
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -144,7 +147,13 @@
     var rec = { id: cur.id || undefined, title: $("title").value.trim(), abbr: $("abbr").value.trim(), due: due, items: cur.items, classes: Object.keys(cur.cls).filter(function (c) { return cur.cls[c]; }), post: $("post").checked };
     if (!rec.title) { say("Give the assignment a title."); return; } if (!rec.abbr) { say("Give the assignment an abbreviation (like 2.4A)."); return; } if (!rec.items.length) { say("Add at least one question."); return; }
     $("save").disabled = true; $("save").textContent = "Saving…";
-    AN.api("saveAssignment", { assignment: rec }).then(function (j) {
+    var wantPost = rec.post && rec.classes.length && !OWNER;
+    (wantPost ? gcFirst() : Promise.resolve()).then(function () { return AN.api("saveAssignment", { assignment: rec }); }).then(function (j) {
+      if (!wantPost) return j;
+      var a = j.assignment, posts = {}, warn = [];
+      return rec.classes.reduce(function (p, c) { return p.then(function () { return GC.post(c, (a.posts || {})[c], a, linkOf(a.id)).then(function (wid) { posts[c] = wid; }).catch(function (e) { warn.push(e.message || String(e)); }); }); }, Promise.resolve())
+        .then(function () { return Object.keys(posts).length ? AN.api("setPosts", { id: a.id, posts: posts }) : null; }).then(function () { a.posted = Object.keys(posts); j.warnings = warn; return j; });
+    }).then(function (j) {
       cur.id = j.assignment.id; drawItems();
       var w = (j.warnings || []).length ? "<div style=\"margin-top:6px;color:#8a1c1c\">Google Classroom: " + j.warnings.map(esc).join("<br>") + "</div>" : (j.assignment.posted || []).length ? "<div style=\"margin-top:6px\">Posted in Google Classroom.</div>" : "";
       say("Saved. The link for your students:<div class=\"link\" style=\"margin-top:6px\"><input readonly value=\"" + esc(linkOf(cur.id)) + "\" aria-label=\"Student link\"><button id=\"cp\">Copy</button></div>" + w, true);
@@ -171,7 +180,7 @@
   $("cls").addEventListener("click", function (e) {
     var b = e.target.closest("[data-find]"); if (!b) return; var id = b.getAttribute("data-find"), code = $("cls").querySelector("[data-code=\"" + id + "\"]").value.trim();
     b.disabled = true; b.textContent = "Looking…";
-    AN.api("setCode", { id: id, code: code }).then(function (j) { CLS.forEach(function (c) { if (c.id === id) { c.code = code; c.meetings = j.meetings || []; } }); drawCls(); }).catch(function (er) { b.disabled = false; b.textContent = "Find class times"; say(esc(er.message || "Could not read the calendar.")); });
+    gcFirst().then(function () { return AN.api("setCode", { id: id, code: code }); }).then(function (j) { return OWNER ? j : GC.meetings(code).then(function (m) { return { meetings: m }; }); }).then(function (j) { CLS.forEach(function (c) { if (c.id === id) { c.code = code; c.meetings = j.meetings || []; } }); drawCls(); }).catch(function (er) { b.disabled = false; b.textContent = "Find class times"; say(esc(er.message || "Could not read the calendar.")); });
   });
   function loadClasses() {
     if (!canSave()) { $("cls").innerHTML = "<div class=\"empty\">Sign in as a teacher to choose classes.</div>"; return; }
@@ -192,11 +201,11 @@
     else if (b.hasAttribute("data-ln")) { var u = linkOf(MINE[+b.getAttribute("data-ln")].id); try { navigator.clipboard.writeText(u); } catch (er) { } b.textContent = "Copied"; }
     else if (b.hasAttribute("data-gr")) {
       var g = MINE[+b.getAttribute("data-gr")]; b.disabled = true; b.textContent = "Sending…";
-      AN.api("sendGrades", { id: g.id }).then(function (j) { b.textContent = j.sent + " sent"; if ((j.warnings || []).length) alert("Google Classroom: " + j.warnings.join("\n")); }).catch(function (er) { b.disabled = false; b.textContent = "Send grades"; alert(er.message || "Could not send the grades."); });
+      (OWNER ? AN.api("sendGrades", { id: g.id }) : GC.ready().then(function () { return GC.sendGrades(g.id, false); })).then(function (j) { b.textContent = j.sent + " sent"; if ((j.warnings || []).length) alert("Google Classroom: " + j.warnings.join("\n")); }).catch(function (er) { b.disabled = false; b.textContent = "Send grades"; alert(er.message || "Could not send the grades."); });
     }
     else if (b.hasAttribute("data-del")) {
       var a = MINE[+b.getAttribute("data-del")]; if (!confirm("Delete " + a.abbr + "? " + ((a.posted || []).length ? "Its post in Google Classroom is deleted too (with its grades there). " : "") + "Students' saved work stays, but the link stops working.")) return;
-      AN.api("deleteAssignment", { id: a.id }).then(function (j) { if ((j.warnings || []).length) alert("Google Classroom: " + j.warnings.join("\n")); if (cur.id === a.id) load(null); loadMine(); }).catch(function (er) { alert(er.message || "Could not delete."); });
+      (OWNER ? Promise.resolve() : GC.ready().then(function () { return Promise.all(Object.keys(a.posts || {}).map(function (c) { return GC.remove(c, a.posts[c]).catch(function () { }); })); })).then(function () { return AN.api("deleteAssignment", { id: a.id }); }).then(function (j) { if ((j.warnings || []).length) alert("Google Classroom: " + j.warnings.join("\n")); if (cur.id === a.id) load(null); loadMine(); }).catch(function (er) { alert(er.message || "Could not delete."); });
     }
   });
   function loadMine() {
