@@ -94,9 +94,22 @@
       due = j.due || {}; Object.keys(due).forEach(function (a) { seen[a] = 1; }); ORDER.forEach(function (a) { seen[a] = 1; });   // (every activity has a column, so a due date can be set before anyone starts it)
       return AN.api("listAssignments").catch(function () { return { assignments: [] }; }).then(function (k) {
         ASG = {}; (k.assignments || []).forEach(function (a) { ASG["A:" + a.id] = a; seen["A:" + a.id] = 1; var dd = a.due || {}, ks = Object.keys(dd).filter(function (k) { return k !== "all" && k !== "mine"; }).map(function (k) { return dd[k]; }).sort(); if (dd.all || ks.length) due["A:" + a.id] = dd.all || ks[0]; });
+        // a converted activity (P-2.4A, saved in the builder): one column, the assignment's. Each question's stars are the better of the assignment's and the
+        // activity's (its exercises in the same order), so students who have not opened the site since the switch still show their stars
+        Object.keys(ASG).forEach(function (pa) {
+          if (pa.indexOf("A:P-") !== 0) return; var ac = pa.slice(4), num = function (x, y) { return parseInt(x, 10) - parseInt(y, 10); };
+          rows.forEach(function (r) {
+            var d = r.detail || (r.detail = {}), old = d[ac]; if (!old) return;
+            var cur = d[pa] || {}, ck = Object.keys(cur).sort(num), ok = Object.keys(old), m = {};
+            for (var i = 0; i < Math.max(ck.length, ok.length); i++) m[ck[i] || ((i + 1) + ". " + ok[i])] = Math.max(+cur[ck[i]] || 0, +old[ok[i]] || 0);
+            d[pa] = m; ["_d:", "_t:"].forEach(function (p) { if (d[p + ac] && !d[p + pa]) d[p + pa] = d[p + ac]; });
+          });
+          delete seen[ac];
+        });
         var isA = function (a) { return a.indexOf("A:") === 0; }, aT = function (a) { return ASG[a] && ASG[a].created || ""; };
-        acts = ORDER.filter(function (a) { return seen[a]; }).concat(Object.keys(seen).filter(function (a) { return ORDER.indexOf(a) < 0 && !isA(a); }).sort())
-          .concat(Object.keys(seen).filter(isA).sort(function (x, y) { return aT(y) < aT(x) ? -1 : aT(y) > aT(x) ? 1 : 0; }));   // (assignments last, newest first)
+        var ORD = ORDER.map(function (a) { return ASG["A:P-" + a] ? "A:P-" + a : a; });   // (a converted activity keeps its place in the order)
+        acts = ORD.filter(function (a) { return seen[a]; }).concat(Object.keys(seen).filter(function (a) { return ORDER.indexOf(a) < 0 && !isA(a); }).sort())
+          .concat(Object.keys(seen).filter(function (a) { return isA(a) && ORD.indexOf(a) < 0; }).sort(function (x, y) { return aT(y) < aT(x) ? -1 : aT(y) > aT(x) ? 1 : 0; }));   // (assignments last, newest first)
         $("sub").textContent = rows.length + " student" + (rows.length === 1 ? "" : "s");
         draw();
       });
@@ -143,7 +156,7 @@
   }
   function shown() {
     var on = {}; [].forEach.call(document.querySelectorAll(".chk input"), function (c) { on[c.dataset.f] = c.checked; });
-    var L = acts.filter(function (a) { var isA = a.indexOf("A:") === 0; return !(on["1"] || on["2"] || on["3"] || on.A) || (isA ? on.A : on[chap(a)]); });
+    var L = acts.filter(function (a) { var isA = a.indexOf("A:") === 0; return !(on["1"] || on["2"] || on["3"] || on.A) || (isA && a.indexOf("A:P-") !== 0 ? on.A : on[chap(a.replace(/^A:P-/, ""))]); });   // (a converted activity is in its chapter)
     if (on.recent) L = L.map(function (a) { return [a, changed(a)]; }).filter(function (x) { return x[1] > 0; }).sort(function (x, y) { return y[1] - x[1]; }).slice(0, 3).map(function (x) { return x[0]; }).sort(function (x, y) { return acts.indexOf(x) - acts.indexOf(y); });
     return L;
   }

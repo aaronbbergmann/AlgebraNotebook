@@ -22,7 +22,7 @@ var DOMAIN = "sch.org";                   // only this Google Workspace domain m
 var TEACHERS = ["abergmann@sch.org"];     // may open the class progress page
 var SESSION_DAYS = 90;
 var CHUNK = 45000;
-var TACTS = ["roster", "setDue", "courses", "syncClassroom", "saveAssignment", "listAssignments", "deleteAssignment", "classes", "setCode", "sendGrades", "migrationCheck", "addTeacher", "listTeachers", "syncRoster", "setPosts", "gradesFor"];                        // a cell holds at most 50,000 characters
+var TACTS = ["roster", "setDue", "courses", "syncClassroom", "saveAssignment", "listAssignments", "deleteAssignment", "classes", "setCode", "sendGrades", "migrationCheck", "addTeacher", "listTeachers", "syncRoster", "setPosts", "gradesFor", "convertActivities"];                        // a cell holds at most 50,000 characters
 
 function doPost(e) {
   var req;
@@ -63,6 +63,7 @@ function teacherAction(req, who) {
     if (req.action === "syncRoster") return (syncClassroom((req.classes || []).map(function (c) { return String(c.id); }), who, req.classes || []));   // (another teacher: the classes their browser read from Classroom)
     if (req.action === "setPosts") return (setPosts(req.id, req.posts || {}));
     if (req.action === "gradesFor") return (gradesFor(req.id));
+    if (req.action === "convertActivities") return (convertActivities(who, req.list || []));   // (after step 8: each activity becomes a saved assignment)
   return { error: "bad", message: "Unknown action." };
 }
 function doGet() { return out({ ok: true, service: "Algebra Notebook" }); }
@@ -357,7 +358,7 @@ function listAssignments(who) {
 }
 function saveAssignment(who, a) {
   var me = String(who.email).toLowerCase(), title = String(a.title || "").trim(), abbr = String(a.abbr || "").trim();
-  var items = (a.items || []).filter(function (it) { return it && typeof it.q === "string" && it.q; }).map(function (it) { var o = { q: it.q }; if (+it.v) o.v = +it.v; return o; });
+  var items = (a.items || []).filter(function (it) { return it && typeof it.q === "string" && it.q; }).map(function (it) { var o = { q: it.q }; if (+it.v) o.v = +it.v; if (it.name) o.name = String(it.name).slice(0, 60); return o; });   // (name: a review's own question names, "Q6 Substitution")
   if (!title) return { error: "bad", message: "Give the assignment a title." };
   if (!abbr) return { error: "bad", message: "Give the assignment an abbreviation (like 2.4A)." };
   if (!items.length) return { error: "bad", message: "Add at least one question." };
@@ -369,7 +370,8 @@ function saveAssignment(who, a) {
       if (id && String(rows[i][0]) === id) { if (!mine) return { error: "forbidden", message: "That assignment belongs to another teacher." }; at = i; }
       else if (mine && String(rows[i][2]).toLowerCase() === abbr.toLowerCase()) return { error: "bad", message: "You already have an assignment called " + abbr + ". Each abbreviation is used once." };
     }
-    if (at < 0) {   // a new id: A-<date>-<abbreviation>, with a number added if it is taken
+    if (at < 0 && /^P-[A-Za-z0-9.]+$/.test(id) && a.convert && isOwner(me) && !BOOK) { }   // (a converted activity keeps its preset's id, P-2.4A: students' stars and the old links carry on)
+    else if (at < 0) {   // a new id: A-<date>-<abbreviation>, with a number added if it is taken
       var base = "A-" + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MMdd") + "-" + abbr.replace(/[^A-Za-z0-9]+/g, ""), n = 1; id = base;
       var ids = rows.map(function (r) { return String(r[0]); }); while (ids.indexOf(id) >= 0) id = base + "-" + (++n);
     }
@@ -393,7 +395,23 @@ function saveAssignment(who, a) {
     assignmentsSheet().getRange(at + 2, 9).setValue(JSON.stringify(posts)); row[8] = JSON.stringify(posts);
   }
   try { indexPut(id, me); } catch (e) { }   // (whose assignment it is: students' work on it goes to this teacher's Sheet)
+  if (/^P-/.test(id) && !BOOK) { try { var dv = due.all || Object.keys(due).map(function (k) { return due[k]; }).sort()[0] || ""; putSetting("due:" + id.slice(2), dv); } catch (e) { } }   // (a converted activity: its due date also stays where the student home page reads it before the assignment is opened)
   return { ok: true, assignment: asgRec(row), warnings: warn };
+}
+// ---- Converting the activities (after step 8): each activity (1.1A ... 3.1C, with RevT1 and RevQ2) becomes a saved assignment with its preset's id,
+// so students' stars, the old links and the dashboard carry on, and it can be edited in the builder. Its due date is the activity's (Settings, due:<abbreviation>).
+// No Classroom posts. An activity already converted is left as it is.
+function convertActivities(who, list) {
+  if (BOOK || !isOwner(who.email)) return { error: "forbidden", message: "Only the Admin converts the activities." };
+  var dues = dueDates(), have = {}, made = [], had = [], warn = [];
+  asgRows().rows.forEach(function (r) { have[String(r[0])] = 1; });
+  (list || []).slice(0, 60).forEach(function (a) {
+    var id = String(a && a.id || ""); if (!/^P-[A-Za-z0-9.]+$/.test(id)) return;
+    if (have[id]) { had.push(id); return; }
+    var ab = id.slice(2), r = saveAssignment(who, { id: id, convert: true, title: a.title, abbr: a.abbr || ab, items: a.items, due: dues[ab] ? { all: dues[ab] } : {}, classes: [], post: false });
+    if (r.error) warn.push(ab + ": " + r.message); else made.push(id);
+  });
+  return { ok: true, made: made, had: had, warnings: warn };
 }
 function deleteAssignment(who, id) {
   var me = String(who.email).toLowerCase(), A = asgRows();

@@ -5056,7 +5056,14 @@
     return (rec.items || []).filter(function (it) { return QPLACE[it.q] && AN_BANK[it.q]; }).map(function (it, i) {
       var p = QPLACE[it.q][it.v || 0], d = AN_BANK[it.q], nm = it.name || ("Q" + (i + 1)); return { q: nm, full: d.title + (p[3] ? ": " + p[3] : ""), act: p[0], lesson: p[1], subx: !!p[2], qid: it.q }; });
   }
-  function asgRecOf(id) { if (/^P-/.test(id)) return presetRec(id.slice(2)); try { return JSON.parse(localStorage.getItem("an.asg." + id) || "null"); } catch (e) { return null; } }
+  // a converted activity (saved by the teacher in the builder, keeping its preset's id): the saved record (its questions and due date), kept on the device
+  // once fetched; until then, and if it is deleted, the preset as built here. A review's rule for levels (like) always comes from the preset
+  function presetOf(ab) {
+    var p = presetRec(ab), c = null; try { c = JSON.parse(localStorage.getItem("an.asg.P-" + ab) || "null"); } catch (e) { }
+    if (!c || !c.items || !c.items.length) return p;
+    c.preset = true; c.like = p ? p.like : undefined; c.id = "P-" + ab; return c;
+  }
+  function asgRecOf(id) { if (/^P-/.test(id)) return presetOf(id.slice(2)); try { return JSON.parse(localStorage.getItem("an.asg." + id) || "null"); } catch (e) { return null; } }
   // View as student (/a/?id=...&as=student): a teacher meets the assignment as a student does (the mode ladder in order), with Reset progress
   var VIEWAS = /[?&]as=student\b/.test(location.search);
   function presetMirror() {
@@ -5074,18 +5081,30 @@
     });
     if (td) try { localStorage.setItem("algebraProgress:time", JSON.stringify(T)); localStorage.setItem("algebraProgress:done", JSON.stringify(D)); } catch (e) { }
   }
-  var AID = null, AWAIT = null;
+  var AID = null, AWAIT = null, PREF = null;
   (function () {
     var seg = decodeURIComponent(location.pathname).replace(/\/index\.html$/i, "").replace(/\/+$/, "").split("/").pop().toLowerCase();
     if (seg !== "a") return;
     var m = /[?&]id=([^&#]*)/.exec(location.search), id = m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "", rec = null;
-    if (/^P-/.test(id)) rec = presetRec(id.slice(2));
+    if (/^P-/.test(id)) { rec = presetOf(id.slice(2)); PREF = id; }
     else if (id) { try { rec = JSON.parse(localStorage.getItem("an.asg." + id) || "null"); } catch (e) { rec = null; } if (!rec) AWAIT = id; }
     if (!rec || !rec.items || !rec.items.length) { AID = ""; return; }
     AID = rec.id;
     BUILT["A"] = { review: true, asg: rec.id, like: rec.like, abbr: rec.abbr || rec.id, key: "algebraProgress:A:" + rec.id, levels: [], top: 0, items: asgItems(rec) };
     ACTS.push(["A", rec.title, rec.title]);
   })();
+  // a converted activity: its saved record is fetched quietly and kept; the page reloads only if its questions changed
+  function aRefresh() {
+    if (!PREF) return; var tries = 0;
+    (function go() {
+      if (!(window.AN && AN.enabled && AN.api && AN.user)) { if (++tries < 60) setTimeout(go, 1000); return; }
+      var k = "an.asg." + PREF, before = JSON.stringify((asgRecOf(PREF) || {}).items || []);
+      AN.api("assignment", { id: PREF }).then(function (r) { return r.json ? r.json() : r; }).then(function (r) {
+        try { if (r && r.assignment && r.assignment.items && r.assignment.items.length) localStorage.setItem(k, JSON.stringify(r.assignment)); else if (r && "assignment" in r) localStorage.removeItem(k); } catch (e) { }
+        if (JSON.stringify((asgRecOf(PREF) || {}).items || []) !== before && !(m3() && QZ && QZ.step > 0)) location.reload();
+      }).catch(function () { });
+    })();
+  }
   // an assignment still to fetch (or none): a quiet page over the app until it arrives
   function aWait() {
     var ov = document.createElement("div"); ov.id = "aWait"; ov.style.cssText = "position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#fff;font:1.1rem system-ui,sans-serif;color:#1B2433;padding:1rem;text-align:center";
@@ -15646,8 +15665,11 @@ var ESPIC = {
     ACTS.forEach(function (a) {
       var id = a[0], ex = S[id]; if (!ex || (!VW[id] && !(BUILT[id] && BUILT[id].review)) || (BUILT[id] && (BUILT[id].practice || BUILT[id].asg))) return;
       var ps = Object.keys(ex).map(function (k) { return +ex[k] || 0; }); if (!ps.length) return;
-      var s10 = starsOf(ps), due = dueT(D[id]), fin = s10 >= 50, late = due != null && (fin ? (done[id] || 0) > due : Date.now() > due);
-      rows.push({ id: id, title: (VW[id] && VW[id].title) || a[1], href: switchedOn() ? "a/?id=" + encodeURIComponent("P-" + id) : null, s10: s10, due: due, dueTx: D[id] || "", fin: fin, late: late, started: ps.some(function (p) { return p > 0; }), ex: ex, n: rows.length });
+      var pk = "A:P-" + id, px = S[pk], pp = px ? Object.keys(px).map(function (k) { return +px[k] || 0; }) : [];   // (since the switch, the work is on the preset assignment: its stars, never fewer than the activity's)
+      if (pp.length && starsOf(pp) >= starsOf(ps)) { ex = px; ps = pp; }
+      var pr = switchedOn() ? asgRecOf("P-" + id) : null, dv = (pr && pr.due && (pr.due.mine || pr.due.all)) || D[id];
+      var s10 = starsOf(ps), due = dueT(dv), fin = s10 >= 50, late = due != null && (fin ? (done[pk] || done[id] || 0) > due : Date.now() > due);
+      rows.push({ id: id, title: (pr && pr.title) || (VW[id] && VW[id].title) || a[1], href: switchedOn() ? "a/?id=" + encodeURIComponent("P-" + id) : null, s10: s10, due: due, dueTx: dv || "", fin: fin, late: late, started: ps.some(function (p) { return p > 0; }), ex: ex, n: rows.length });
     });
     Object.keys(S).forEach(function (k) {   // (assignments the student has opened: their own rows, opening at /a/)
       if (k.indexOf("A:") !== 0 || /^A:P-/.test(k)) return; var id = k.slice(2), rec = asgRecOf(id), ex = S[k]; if (!rec) return;
@@ -15721,7 +15743,7 @@ var ESPIC = {
     return out;
   };
   if (QID === "") qIndex();   // (/q/ with no question: the list of the bank)
-  if (AID === "") aWait();   // (/a/ with an assignment still to fetch, or none)
+  if (AID === "") aWait(); else if (PREF) setTimeout(aRefresh, 2500);   // (/a/ with an assignment still to fetch, or none)
   setTimeout(attFlush, 4000);   // (rows left from an earlier visit go once sign-in is back)
   try { dashRender(JSON.parse(localStorage.getItem("an:due") || "{}")); } catch (e) { }   // (the home page: the student dashboard)
   // View as student: the teacher's Reset progress (their own stars and levels for this assignment, never a student's)
