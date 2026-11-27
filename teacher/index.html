@@ -57,7 +57,7 @@
   <h1>Class Progress</h1>
   <span class="sub" id="sub"></span>
   <a href="build/" style="color:#2d70b3">Build an assignment</a>
-  <div class="tools"><input type="search" id="q" placeholder="Find a student" aria-label="Find a student"><span class="chk" role="group" aria-label="Show activities"><label><input type="checkbox" data-f="1"> Ch1</label><label><input type="checkbox" data-f="2"> Ch2</label><label><input type="checkbox" data-f="3"> Ch3</label><label><input type="checkbox" data-f="recent"> Recent</label></span><button id="gc">Sync with Google Classroom</button><button id="csv">Download CSV</button><button id="ref">Refresh</button></div>
+  <div class="tools"><input type="search" id="q" placeholder="Find a student" aria-label="Find a student"><span class="chk" role="group" aria-label="Show activities"><label><input type="checkbox" data-f="1"> Ch1</label><label><input type="checkbox" data-f="2"> Ch2</label><label><input type="checkbox" data-f="3"> Ch3</label><label><input type="checkbox" data-f="A"> Assignments</label><label><input type="checkbox" data-f="recent"> Recent</label></span><button id="gc">Sync with Google Classroom</button><button id="csv">Download CSV</button><button id="ref">Refresh</button></div>
 </header>
 <div class="note" id="note" hidden role="status"></div>
 <div class="wrap" id="wrap"><div class="msg">Loading…</div></div>
@@ -79,6 +79,8 @@
   function when(iso) { if (!iso) return "never"; var d = new Date(iso), m = (Date.now() - d) / 6e4; if (m < 2) return "just now"; if (m < 60) return Math.round(m) + " min ago"; if (m < 1440) return Math.round(m / 60) + " h ago"; return d.toLocaleDateString(); }
   function msg(t) { $("wrap").innerHTML = '<div class="msg">' + esc(t) + "</div>"; }
 
+  var ASG = {}, OPENA = null;   // the teacher's assignments by column (A:<id>), and the assignment whose questions are shown
+  function aName(a) { return ASG[a] ? ASG[a].abbr : a.replace(/^A:/, ""); }
   function load() {
     if (!window.AN || !AN.enabled) return msg("Google sign-in is not switched on yet (auth.js needs its client ID and server address).");
     if (!AN.user) return;                        // the sign-in screen is showing
@@ -89,9 +91,14 @@
       rows = (j.students || []).filter(function (r) { return String(r.email || "").toLowerCase() !== me; });   // (the teacher's own progress is not a student's)
       var seen = {}; rows.forEach(function (r) { Object.keys(r.detail || {}).forEach(function (a) { if (a.charAt(0) !== "_") seen[a] = 1; }); });
       due = j.due || {}; Object.keys(due).forEach(function (a) { seen[a] = 1; }); ORDER.forEach(function (a) { seen[a] = 1; });   // (every activity has a column, so a due date can be set before anyone starts it)
-      acts = ORDER.filter(function (a) { return seen[a]; }).concat(Object.keys(seen).filter(function (a) { return ORDER.indexOf(a) < 0; }).sort());
-      $("sub").textContent = rows.length + " student" + (rows.length === 1 ? "" : "s");
-      draw();
+      return AN.api("listAssignments").catch(function () { return { assignments: [] }; }).then(function (k) {
+        ASG = {}; (k.assignments || []).forEach(function (a) { ASG["A:" + a.id] = a; seen["A:" + a.id] = 1; if (a.due && a.due.all) due["A:" + a.id] = a.due.all; });
+        var isA = function (a) { return a.indexOf("A:") === 0; }, aT = function (a) { return ASG[a] && ASG[a].created || ""; };
+        acts = ORDER.filter(function (a) { return seen[a]; }).concat(Object.keys(seen).filter(function (a) { return ORDER.indexOf(a) < 0 && !isA(a); }).sort())
+          .concat(Object.keys(seen).filter(isA).sort(function (x, y) { return aT(y) < aT(x) ? -1 : aT(y) > aT(x) ? 1 : 0; }));   // (assignments last, newest first)
+        $("sub").textContent = rows.length + " student" + (rows.length === 1 ? "" : "s");
+        draw();
+      });
     }).catch(function (e) { msg(e.message || "Could not load the class."); });
   }
   // sorted by last name (then first name); a student with no name sorts by email
@@ -131,19 +138,35 @@
   }
   function shown() {
     var on = {}; [].forEach.call(document.querySelectorAll(".chk input"), function (c) { on[c.dataset.f] = c.checked; });
-    var L = acts.filter(function (a) { return !(on["1"] || on["2"] || on["3"]) || on[chap(a)]; });
+    var L = acts.filter(function (a) { var isA = a.indexOf("A:") === 0; return !(on["1"] || on["2"] || on["3"] || on.A) || (isA ? on.A : on[chap(a)]); });
     if (on.recent) L = L.map(function (a) { return [a, changed(a)]; }).filter(function (x) { return x[1] > 0; }).sort(function (x, y) { return y[1] - x[1]; }).slice(0, 3).map(function (x) { return x[0]; }).sort(function (x, y) { return acts.indexOf(x) - acts.indexOf(y); });
     return L;
   }
   function slug(a) { return String(a).toLowerCase().replace(/\./g, "-").replace(/\s+/g, ""); }
+  function qNames(a) { var o = {}; rows.forEach(function (r) { Object.keys((r.detail || {})[a] || {}).forEach(function (n) { o[n] = 1; }); }); return Object.keys(o).sort(function (x, y) { return parseInt(x, 10) - parseInt(y, 10); }); }
+  function drawA() {   // one assignment: a column per question, each cell that question's stars (a finished question is 5.0)
+    var a = OPENA, rec = ASG[a] || {}, id = a.slice(2), qs = qNames(a), q = $("q").value.trim().toLowerCase(), site = location.href.replace(/teacher\/.*$/, "");
+    var list = rows.filter(function (r) { return !q || (r.name + " " + r.email).toLowerCase().indexOf(q) >= 0; }).sort(function (x, y) { return lastFirst(x) < lastFirst(y) ? -1 : 1; });
+    var h = "<div style=\"padding:10px 12px;display:flex;gap:14px;flex-wrap:wrap;align-items:baseline;border-bottom:1px solid var(--line)\"><a href=\"#\" id=\"backA\">← All assignments</a><b>" + esc(rec.abbr || id) + "</b><span class=\"sub\">" + esc(rec.title || "") + (due[a] ? " · due " + esc(dueText(due[a], true)) : "") + "</span>" +
+      "<a href=\"" + esc(site + "a/?id=" + encodeURIComponent(id) + "&as=student") + "\" target=\"_blank\" rel=\"noopener\">View as student</a><a href=\"" + esc(site + "teacher/build/") + "\">Edit in the builder</a></div>";
+    if (!qs.length) { $("wrap").innerHTML = h + "<div class=\"msg\">No student has started this assignment yet.</div>"; return; }
+    h += "<table><thead><tr><th>Student</th><th>Overall</th>" + qs.map(function (n) { return "<th class=\"ac\" title=\"" + esc(n) + "\">" + esc(n.length > 28 ? n.slice(0, 27) + "…" : n) + "</th>"; }).join("") + "</tr></thead><tbody>";
+    list.forEach(function (r) {
+      var ex = (r.detail || {})[a] || {}, p = stars(ex), L = late(r, a);
+      h += "<tr><td><div>" + esc(r.name || r.email) + "</div><div class=\"email\">" + esc(r.email) + "</div></td><td class=\"p" + (L ? " late" : p === 50 ? " full" : "") + "\"><span class=\"pc\">" + (p == null && !L ? "–" : st1(L ? grade(r, a) : p) + (L ? "L" : "")) + "</span></td>" +
+        qs.map(function (n) { var v = ex[n]; return v == null || !(+v > 0) ? "<td class=\"p none\">–</td>" : "<td class=\"p" + (+v >= 100 ? " full" : "") + "\"><span class=\"pc\">" + st1(Math.floor(+v / 2)) + "</span></td>"; }).join("") + "</tr>";
+    });
+    $("wrap").innerHTML = h + "</tbody></table>";
+  }
   function draw() {
+    if (OPENA) return drawA();
     var q = $("q").value.trim().toLowerCase(), acts = shown();
     var list = rows.filter(function (r) { return !q || (r.name + " " + r.email).toLowerCase().indexOf(q) >= 0; })
       .sort(function (a, b) { var x = val(a, sortBy), y = val(b, sortBy); return (x < y ? -1 : x > y ? 1 : 0) * dir; });
     if (!rows.length) return msg("No students have signed in yet.");
     var arrow = function (k) { return sortBy === k ? (dir > 0 ? " ▲" : " ▼") : ""; };
     var h = "<table><thead><tr><th data-k=\"name\">Student" + arrow("name") + "</th><th data-k=\"saved\">Last saved" + arrow("saved") + "</th>";
-    acts.forEach(function (a) { var on = sortBy === a; h += "<th class=\"ac\"><a class=\"act\" href=\"../" + esc(slug(a)) + "/\" title=\"Open " + esc(a) + "\">" + esc(a) + "</a><button type=\"button\" class=\"sort" + (on ? " on" : "") + "\" data-k=\"" + esc(a) + "\" aria-label=\"Sort by " + esc(a) + " progress\">" + (on ? (dir > 0 ? "▲" : "▼") : "↕") + "</button><button type=\"button\" class=\"dueL" + (due[a] ? " set" : "") + "\" data-due=\"" + esc(a) + "\" aria-haspopup=\"listbox\" title=\"" + (due[a] ? "Due " + esc(dueText(due[a], true)) + ": without 5 stars by then, progress shows L" : "Choose a due date: without 5 stars by then, progress shows L") + "\">Due" + (due[a] ? " " + esc(dueText(due[a])) : "") + "</button></th>"; });
+    acts.forEach(function (a) { var on = sortBy === a, isA = a.indexOf("A:") === 0; h += "<th class=\"ac\">" + (isA ? "<a class=\"act asg\" href=\"#\" data-asg=\"" + esc(a) + "\" title=\"" + esc(ASG[a] ? ASG[a].title + ": open its questions" : "Open its questions") + "\">" + esc(aName(a)) + "</a>" : "<a class=\"act\" href=\"../" + esc(slug(a)) + "/\" title=\"Open " + esc(a) + "\">" + esc(a) + "</a>") + "<button type=\"button\" class=\"sort" + (on ? " on" : "") + "\" data-k=\"" + esc(a) + "\" aria-label=\"Sort by " + esc(a) + " progress\">" + (on ? (dir > 0 ? "▲" : "▼") : "↕") + "</button>" + (isA ? "<span class=\"dueL\" style=\"text-decoration:none;cursor:default\" title=\"Set in the builder\">" + (due[a] ? "Due " + esc(dueText(due[a])) : "No due date") + "</span>" : "<button type=\"button\" class=\"dueL" + (due[a] ? " set" : "") + "\" data-due=\"" + esc(a) + "\" aria-haspopup=\"listbox\" title=\"" + (due[a] ? "Due " + esc(dueText(due[a], true)) + ": without 5 stars by then, progress shows L" : "Choose a due date: without 5 stars by then, progress shows L") + "\">Due" + (due[a] ? " " + esc(dueText(due[a])) : "") + "</button>") + "</th>"; });
     h += "</tr></thead><tbody>";
     list.forEach(function (r) {
       var isOpen = openRow === r.email;
@@ -166,6 +189,8 @@
     $("wrap").innerHTML = h + "</tbody></table>";
   }
   $("wrap").addEventListener("click", function (e) {
+    var oa = e.target.closest("a[data-asg]"); if (oa) { e.preventDefault(); OPENA = oa.dataset.asg; return draw(); }   // (an assignment opens its questions)
+    if (e.target.id === "backA") { e.preventDefault(); OPENA = null; return draw(); }
     if (e.target.closest("a.act")) return;   // (the activity name opens the activity)
     var dl = e.target.closest("button.dueL"); if (dl) return openDue(dl);
     var th = e.target.closest("button.sort") || e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; if (sortBy === k) dir = -dir; else { sortBy = k; dir = k === "name" ? 1 : -1; } return draw(); }

@@ -5052,6 +5052,13 @@
     var t = (ACTS.filter(function (x) { return x[0] === ab; })[0] || [ab, ab, ab])[1];
     return { id: "P-" + ab, title: t, abbr: ab, items: its, preset: true };
   }
+  function asgItems(rec) {   // an assignment record's questions as review items (where each runs)
+    return (rec.items || []).filter(function (it) { return QPLACE[it.q] && AN_BANK[it.q]; }).map(function (it, i) {
+      var p = QPLACE[it.q][it.v || 0], d = AN_BANK[it.q], nm = it.name || ("Q" + (i + 1)); return { q: nm, full: d.title + (p[3] ? ": " + p[3] : ""), act: p[0], lesson: p[1], subx: !!p[2], qid: it.q }; });
+  }
+  function asgRecOf(id) { if (/^P-/.test(id)) return presetRec(id.slice(2)); try { return JSON.parse(localStorage.getItem("an.asg." + id) || "null"); } catch (e) { return null; } }
+  // View as student (/a/?id=...&as=student): a teacher meets the assignment as a student does (the mode ladder in order), with Reset progress
+  var VIEWAS = /[?&]as=student\b/.test(location.search);
   var AID = null, AWAIT = null;
   (function () {
     var seg = decodeURIComponent(location.pathname).replace(/\/index\.html$/i, "").replace(/\/+$/, "").split("/").pop().toLowerCase();
@@ -5061,9 +5068,7 @@
     else if (id) { try { rec = JSON.parse(localStorage.getItem("an.asg." + id) || "null"); } catch (e) { rec = null; } if (!rec) AWAIT = id; }
     if (!rec || !rec.items || !rec.items.length) { AID = ""; return; }
     AID = rec.id;
-    var its = rec.items.filter(function (it) { return QPLACE[it.q] && AN_BANK[it.q]; });
-    BUILT["A"] = { review: true, asg: rec.id, abbr: rec.abbr || rec.id, key: "algebraProgress:A:" + rec.id, levels: [], top: 0, items: its.map(function (it, i) {
-      var p = QPLACE[it.q][it.v || 0], d = AN_BANK[it.q], nm = it.name || ("Q" + (i + 1)); return { q: nm, full: d.title + (p[3] ? ": " + p[3] : ""), act: p[0], lesson: p[1], subx: !!p[2], qid: it.q }; }) };
+    BUILT["A"] = { review: true, asg: rec.id, abbr: rec.abbr || rec.id, key: "algebraProgress:A:" + rec.id, levels: [], top: 0, items: asgItems(rec) };
     ACTS.push(["A", rec.title, rec.title]);
   })();
   // an assignment still to fetch (or none): a quiet page over the app until it arrives
@@ -5209,7 +5214,8 @@
       var D = JSON.parse(localStorage.getItem("algebraProgress:done") || "{}") || {}; if (!D[c.id] && stars10() >= 50) { D[c.id] = Date.now(); localStorage.setItem("algebraProgress:done", JSON.stringify(D)); }
     } catch (e) { } finally { rev = sv.rev; act = sv.act; view = sv.view; LEVELS = sv.LEVELS; prog = sv.prog; }
   }
-  function saveProg() { try {   /* (stars are not shared between copies: origMirror is no longer called) */ var k = progKey(), v = JSON.stringify(prog); if (localStorage.getItem(k) !== v) { var T = JSON.parse(localStorage.getItem("algebraProgress:time") || "{}") || {}; T[rev || view || act] = Date.now(); localStorage.setItem("algebraProgress:time", JSON.stringify(T)); } localStorage.setItem(k, v); var id0 = rev || view || act, D = JSON.parse(localStorage.getItem("algebraProgress:done") || "{}") || {}; if (!D[id0] && stars10() >= 50) { D[id0] = Date.now(); localStorage.setItem("algebraProgress:done", JSON.stringify(D)); } } catch (e) {} }   // (and when each activity first reached 5 stars, for due dates)   // (and when each activity last changed, for the teacher's "Recent")
+  function curId() { var B = rev && BUILT[rev]; return B && B.asg ? "A:" + B.asg : B && B.practice ? "Q:" + QID : rev || view || act; }   // (the id its times and finish are kept under)
+  function saveProg() { try {   /* (stars are not shared between copies: origMirror is no longer called) */ var k = progKey(), v = JSON.stringify(prog); if (localStorage.getItem(k) !== v) { var T = JSON.parse(localStorage.getItem("algebraProgress:time") || "{}") || {}; T[curId()] = Date.now(); localStorage.setItem("algebraProgress:time", JSON.stringify(T)); } localStorage.setItem(k, v); var id0 = curId(), D = JSON.parse(localStorage.getItem("algebraProgress:done") || "{}") || {}; if (!D[id0] && stars10() >= 50) { D[id0] = Date.now(); localStorage.setItem("algebraProgress:done", JSON.stringify(D)); } } catch (e) {} }   // (and when each activity first reached 5 stars, for due dates)   // (and when each activity last changed, for the teacher's "Recent")
   function lvDone(l) {
     // a problem finished in a mode (1.1, 1.2) earns that mode's first level and every level below it at once; the later rounds need whole rounds
     if (!(l[4] > 1)) for (var m0 = MORD.indexOf(l[1]); m0 < 4; m0++) if (prog[l[0] + ":" + MORD[m0] + ":p"]) return true;
@@ -15237,7 +15243,7 @@ var ESPIC = {
     try { return copyCtxs().some(function (c) { try { prog = JSON.parse(localStorage.getItem(c.key) || "{}") || {}; } catch (e) { prog = {}; } return lvDone([c.k, m, 0, "", 1]); }); }
     catch (e) { return false; } finally { prog = keep; }
   }   // (a review question: finished in its original activity counts too)
-  function isTeacher() { try { return !!(window.AN && AN.user && AN.user.teacher); } catch (e) { return false; } }
+  function isTeacher() { if (VIEWAS) return false; try { return !!(window.AN && AN.user && AN.user.teacher); } catch (e) { return false; } }   // (View as student: a teacher meets the ladder as a student does)
   // A review question whose exercise was already finished (100%) in its original activity is open in every mode; the review still keeps its own progress
   function origDone(it) {
     try {
@@ -15282,7 +15288,7 @@ var ESPIC = {
     window.addEventListener(ty, function (e) {
       if (!e.isTrusted || !dgOn()) return; var t = e.target; if (!t || !t.closest) return;
       if (t.closest("#pgDemo,#dmBtn")) { if (ty === "click") { DG.go = true; dgArrow(false); } return; }
-      if (t.closest(".ctl-sel,#actList,#prog,#party,#lockTip,#anGate,#anChip") || !dgBtn()) return;
+      if (t.closest(".ctl-sel,#actList,#prog,#party,#lockTip,#anGate,#anChip,#asReset") || !dgBtn()) return;
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
       if (ty === "pointerdown" || (ty === "click" && e.detail === 0)) dgArrow(true);
     }, { capture: true, passive: false });
@@ -15577,6 +15583,11 @@ var ESPIC = {
       var s10 = starsOf(ps), due = dueT(D[id]), fin = s10 >= 50, late = due != null && (fin ? (done[id] || 0) > due : Date.now() > due);
       rows.push({ id: id, title: (VW[id] && VW[id].title) || a[1], s10: s10, due: due, dueTx: D[id] || "", fin: fin, late: late, started: ps.some(function (p) { return p > 0; }), ex: ex, n: rows.length });
     });
+    Object.keys(S).forEach(function (k) {   // (assignments the student has opened: their own rows, opening at /a/)
+      if (k.indexOf("A:") !== 0 || /^A:P-/.test(k)) return; var id = k.slice(2), rec = asgRecOf(id), ex = S[k]; if (!rec) return;
+      var ps = Object.keys(ex).map(function (n) { return +ex[n] || 0; }), s10 = starsOf(ps), dv = rec.due && rec.due.all, due = dueT(dv), fin = s10 >= 50, late = due != null && (fin ? (done[k] || 0) > due : Date.now() > due);
+      rows.push({ id: rec.abbr || id, title: rec.title, href: "a/?id=" + encodeURIComponent(id), s10: s10, due: due, dueTx: dv || "", fin: fin, late: late, started: ps.some(function (p) { return p > 0; }), ex: ex, n: rows.length, items: asgItems(rec) });
+    });
     rows.sort(function (p, q) { var a = p.fin ? 2 : p.due != null ? 0 : 1, b = q.fin ? 2 : q.due != null ? 0 : 1; return a - b || (a === 0 ? p.due - q.due : 0) || p.n - q.n; });
     return rows;
   }
@@ -15586,7 +15597,7 @@ var ESPIC = {
       var keys = VW[r.id] ? VW[r.id].ls : null, names = Object.keys(r.ex);
       names.forEach(function (nm, i) {
         var f = null; if (keys) { var a = VW[r.id].base, k = keys[i]; f = qFind(a, a === "1.4D" ? (k === "s" ? 2 : +k) : +k, k === "s"); }
-        else if (BUILT[r.id] && BUILT[r.id].items && BUILT[r.id].items[i]) { var o = BUILT[r.id].items[i]; f = qFind(o.act, o.lesson, o.subx); }
+        else if ((r.items || (BUILT[r.id] && BUILT[r.id].items) || [])[i]) { var o = (r.items || BUILT[r.id].items)[i]; f = qFind(o.act, o.lesson, o.subx); }
         if (!f || !AN_BANK[f[0]] || !(+r.ex[nm] > 0)) return;   // (only exercises begun: a skill not yet met is neither a strength nor a weakness)
         (AN_BANK[f[0]].skills || []).forEach(function (t) { var e = sk[t] || (sk[t] = { t: t, sum: 0, n: 0, q: f[0] }); e.sum += +r.ex[nm] || 0; e.n++; });
       });
@@ -15599,12 +15610,12 @@ var ESPIC = {
     var nxt = dueNext(D || {}), today = rows.filter(function (r) { return r.id === nxt; })[0] || rows.filter(function (r) { return !r.fin && r.started; })[0] || rows.filter(function (r) { return !r.fin; })[0];
     var nDone = rows.filter(function (r) { return r.fin; }).length, nLate = rows.filter(function (r) { return r.late; }).length, avg = rows.length ? rows.reduce(function (t, r) { return t + r.s10; }, 0) / rows.length / 10 : 0;
     var h = "<div class=\"dash\" style=\"max-width:46rem;margin:0 auto;padding:1rem;text-align:left;font:1rem system-ui,sans-serif\"><div class=\"wsmall\">Welcome to</div><div class=\"wbig\" style=\"margin-bottom:1rem\">Algebra Notebook</div>";
-    if (today) h += "<a class=\"dashToday\" href=\"" + pre + slugOf(today.id) + "/\" style=\"display:block;padding:1rem 1.2rem;border-radius:14px;background:#8E2465;color:#fff;text-decoration:none;margin-bottom:1rem\"><div style=\"font-size:.85rem;opacity:.85\">" + (today.id === nxt ? "Due next" : "Keep going") + "</div><div style=\"font-size:1.35rem;font-weight:700\">" + today.id + " · " + today.title + "</div><div style=\"margin-top:.3rem\">" + (today.due != null ? "Due " + fmt(today.due) + " · " : "") + starsHTML(today.s10, 18) + " " + starTxt(today.s10) + "</div></a>";
+    if (today) h += "<a class=\"dashToday\" href=\"" + pre + (today.href || slugOf(today.id) + "/") + "\" style=\"display:block;padding:1rem 1.2rem;border-radius:14px;background:#8E2465;color:#fff;text-decoration:none;margin-bottom:1rem\"><div style=\"font-size:.85rem;opacity:.85\">" + (today.id === nxt ? "Due next" : "Keep going") + "</div><div style=\"font-size:1.35rem;font-weight:700\">" + today.id + " · " + today.title + "</div><div style=\"margin-top:.3rem\">" + (today.due != null ? "Due " + fmt(today.due) + " · " : "") + starsHTML(today.s10, 18) + " " + starTxt(today.s10) + "</div></a>";
     h += "<div class=\"dashSum\" style=\"color:#4B5563;margin:.2rem 0 .8rem\">" + nDone + " of " + rows.length + " assignments done · " + avg.toFixed(1) + " stars average" + (nLate ? " · " + nLate + " late" : "") + "</div>";
     h += "<table class=\"dashT\" style=\"width:100%;border-collapse:collapse\"><thead><tr style=\"text-align:left;color:#4B5563;font-size:.85rem\"><th style=\"padding:.3rem\"></th><th style=\"padding:.3rem\">Assignment</th><th style=\"padding:.3rem\">Due</th><th style=\"padding:.3rem\">Stars</th><th style=\"padding:.3rem\">Status</th></tr></thead><tbody>";
     rows.forEach(function (r) {
       var st = r.fin ? (r.late ? "Done, late" : "Done") : r.late ? "Late" : r.started ? "In progress" : "Not started";
-      h += "<tr style=\"border-top:1px solid #DDE1E7\"><td style=\"padding:.4rem .3rem;font-weight:700\"><a href=\"" + pre + slugOf(r.id) + "/\">" + r.id + "</a></td><td style=\"padding:.4rem .3rem\"><a href=\"" + pre + slugOf(r.id) + "/\" style=\"color:inherit\">" + r.title + "</a></td><td style=\"padding:.4rem .3rem;white-space:nowrap\">" + fmt(r.due) + "</td><td style=\"padding:.4rem .3rem;white-space:nowrap\">" + starTxt(r.s10) + (r.late && r.fin ? "L" : "") + "</td><td style=\"padding:.4rem .3rem;white-space:nowrap\">" + st + "</td></tr>";
+      h += "<tr style=\"border-top:1px solid #DDE1E7\"><td style=\"padding:.4rem .3rem;font-weight:700\"><a href=\"" + pre + (r.href || slugOf(r.id) + "/") + "\">" + r.id + "</a></td><td style=\"padding:.4rem .3rem\"><a href=\"" + pre + (r.href || slugOf(r.id) + "/") + "\" style=\"color:inherit\">" + r.title + "</a></td><td style=\"padding:.4rem .3rem;white-space:nowrap\">" + fmt(r.due) + "</td><td style=\"padding:.4rem .3rem;white-space:nowrap\">" + starTxt(r.s10) + (r.late && r.fin ? "L" : "") + "</td><td style=\"padding:.4rem .3rem;white-space:nowrap\">" + st + "</td></tr>";
     });
     h += "</tbody></table>";
     var sk = dashSkills(rows).filter(function (e) { return e.n; }), strong = sk.filter(function (e) { return e.p >= 80; }).sort(function (a, b) { return b.p - a.p; }).slice(0, 5), weak = sk.filter(function (e) { return e.p < 80; }).sort(function (a, b) { return a.p - b.p; }).slice(0, 5);
@@ -15632,6 +15643,13 @@ var ESPIC = {
         out[v[0]] = ex;
       });
       var T = rd("algebraProgress:time"); Object.keys(T).forEach(function (id) { if (out[id] || (BUILT[id] && BUILT[id].review)) out["_t:" + id] = +T[id] || 0; }); var D0 = rd("algebraProgress:done"); Object.keys(D0).forEach(function (id) { if (out[id] || (BUILT[id] && BUILT[id].review)) out["_d:" + id] = +D0[id] || 0; });   // (when each activity first reached 5 stars)   // when each activity last changed (a number: the Sheet script passes it by)
+      Object.keys(localStorage).forEach(function (k) {   // (assignments: A:<id>, each question "1. Title" with its percent, as the activities)
+        if (k.indexOf("algebraProgress:A:") !== 0) return; var id = k.slice(18), rec = asgRecOf(id); if (!rec) return;
+        BUILT["SUMA"] = { review: true, levels: [], top: 0, items: asgItems(rec) }; rev = "SUMA"; var rl = revLevels(), ex = {}; prog = rd(k);
+        BUILT.SUMA.items.forEach(function (it, i) { ex[(i + 1) + ". " + (it.full || it.q)] = best(rl, i); }); out["A:" + id] = ex;
+        if (T["A:" + id]) out["_t:A:" + id] = +T["A:" + id]; if (D0["A:" + id]) out["_d:A:" + id] = +D0["A:" + id];
+      });
+      delete BUILT.SUMA;
       Object.keys(BUILT).forEach(function (id) { if (!BUILT[id].review || BUILT[id].practice || BUILT[id].asg) return; rev = id; var rl = revLevels(), ex = {}; prog = rd(BUILT[id].key); BUILT[id].items.forEach(function (it, i) { ex[it.q || ("Item " + (i + 1))] = best(rl, i); }); out[id] = ex; });   // every review (RevT1, RevQ2)
     } catch (e) { } finally { prog = keep; rev = r0; }
     return out;
@@ -15640,3 +15658,21 @@ var ESPIC = {
   if (AID === "") aWait();   // (/a/ with an assignment still to fetch, or none)
   setTimeout(attFlush, 4000);   // (rows left from an earlier visit go once sign-in is back)
   try { dashRender(JSON.parse(localStorage.getItem("an:due") || "{}")); } catch (e) { }   // (the home page: the student dashboard)
+  // View as student: the teacher's Reset progress (their own stars and levels for this assignment, never a student's)
+  (function () {
+    if (!VIEWAS || !rev || !BUILT[rev] || !BUILT[rev].asg) return;
+    var go = function () {
+      if (!(window.AN && AN.user && AN.user.teacher) || $("asReset")) return;
+      var b = document.createElement("button"); b.id = "asReset"; b.type = "button"; b.textContent = "Reset progress";
+      b.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:50;font:600 .9rem system-ui,sans-serif;padding:.45em 1em;border:2px solid #8E2465;color:#8E2465;background:#fff;border-radius:999px;cursor:pointer";
+      b.title = "Teachers only: clear your own stars and levels for this assignment";
+      b.addEventListener("click", function () {
+        if (!confirm("Reset your progress on " + BUILT[rev].abbr + "? Your own stars and levels for it are cleared. No student's work changes.")) return;
+        try { localStorage.setItem(BUILT[rev].key, "{}"); ["algebraProgress:time", "algebraProgress:done"].forEach(function (k) { var o = JSON.parse(localStorage.getItem(k) || "{}") || {}; delete o["A:" + BUILT[rev].asg]; localStorage.setItem(k, JSON.stringify(o)); }); } catch (e) { }
+        setTimeout(function () { location.reload(); }, 2600);   // (after the save to the server)
+        b.disabled = true; b.textContent = "Resetting…";
+      });
+      document.body.appendChild(b);
+    };
+    go(); setTimeout(go, 1500); setTimeout(go, 4000);   // (once sign-in is known)
+  })();
