@@ -15,13 +15,36 @@ fetches the new files after each change.
   python3 tools/build_pages.py --check    exit 1 if any page is out of date
   python3 tools/build_pages.py --split    one time only: make engine/ from 2-4a/index.html
 """
-import hashlib, os, re, sys
+import hashlib, json, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COPIES = ("1-1a 1-1b 1-1c 1-2a 1-2b 1-2c 1-3a 1-3b 1-4a 1-4b 1-4c 1-4d 2-1a 2-1b 2-2a 2-2b 2-2c "
           "2-4a 2-4b 3-1a 3-1b 3-1c 3-1d 3-1e 3-1f 3-1g 3-3a 3-3b 3-4a 3-4b "
           "a playdata playgraph playsolve q revq2 revt1").split()
 CSS_MARK, JS_MARK = "<!--ENGINE_CSS-->", "<!--ENGINE_JS-->"
+# The activities 1.1A to 3.1C (with RevT1 and RevQ2) are assignments now (P-<abbreviation>, saved by the server: server/Code.gs, CONVERTED). Their folders
+# are only redirects, so old links still work: tools/redirects.json maps each old ?ex= to the assignment and question that has it now (a fixed table).
+REDIRECTS = json.loads(open(os.path.join(ROOT, "tools/redirects.json"), encoding="utf-8").read())
+STUB = r"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>%(title)s | AlgebraNotebook</title>
+<link rel="icon" href="../favicon.ico"><meta name="robots" content="noindex">
+<script>
+// %(title)s is an assignment now: this page sends old links on to it (and an old ?ex= to the same question)
+(function () {
+  var to = %(to)s, ex = %(ex)s, m = /[?&]ex=([^&#]*)/.exec(location.search), w = "";
+  try { w = m ? decodeURIComponent(m[1].replace(/\+/g, " ")).replace(/\u00d7|&times;/g, "x").toLowerCase().replace(/&amp;|&/g, " ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") : ""; } catch (e) { }
+  var t = ex[w] || (to ? [to, ""] : null);
+  location.replace(t ? "../a/?id=" + encodeURIComponent(t[0]) + (t[1] ? "&ex=" + t[1] : "") + location.hash : "../");
+})();
+</script></head>
+<body style="font:1rem system-ui,sans-serif;padding:2rem"><p>%(title)s is an assignment now. <a href="%(href)s">Open it</a>.</p></body></html>
+"""
+
+
+def stub(r):
+    href = "../a/?id=" + r["to"] if r["to"] else "../"
+    esc = lambda t: t.replace("&", "&amp;").replace("<", "&lt;")
+    return STUB % {"title": esc(r["title"]), "to": json.dumps(r["to"] or None), "ex": json.dumps(r["ex"], separators=(",", ":")), "href": href}
 
 
 def rd(p):
@@ -68,7 +91,7 @@ def pages():
             out[name] = p
         else:
             for d in COPIES:
-                out[d + "/index.html"] = p
+                out[d + "/index.html"] = stub(REDIRECTS[d]) if d in REDIRECTS else p
     # the assignment builder (teacher/build/): its own page, with every bank file (step 6)
     if os.path.exists(os.path.join(ROOT, "engine/build.html")):
         out["teacher/build/index.html"] = rd("engine/build.html").replace("<!--BANK_JS-->", "".join('<script src="../../bank/%s?v=%s"></script>' % (f, v) for f in bank))

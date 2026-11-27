@@ -1,0 +1,836 @@
+{
+ "1-1a": {
+  "title": "1.1A Parent Functions and Transformations",
+  "to": "P-1.1A",
+  "ex": {
+   "parents": [
+    "P-1.1A",
+    "q1"
+   ],
+   "graph-describe": [
+    "P-1.1A",
+    "q2"
+   ],
+   "estimate": [
+    "P-1.1B",
+    "q1"
+   ]
+  }
+ },
+ "1-1b": {
+  "title": "1.1B Parent Functions and Transformations: Desmos",
+  "to": "P-1.1B",
+  "ex": {
+   "parents": [
+    "P-1.1A",
+    "q1"
+   ],
+   "graph-describe": [
+    "P-1.1A",
+    "q2"
+   ],
+   "estimate": [
+    "P-1.1B",
+    "q1"
+   ]
+  }
+ },
+ "1-1c": {
+  "title": "1.1C Parent Functions and Transformations: Shrink Stretch",
+  "to": "",
+  "ex": {}
+ },
+ "1-2a": {
+  "title": "1.2A Transformations of Linear and Absolute Value Functions",
+  "to": "P-1.2A",
+  "ex": {
+   "translations": [
+    "P-1.2A",
+    "q1"
+   ],
+   "reflections": [
+    "P-1.2B",
+    "q1"
+   ],
+   "stretches": [
+    "P-1.2A",
+    "q2"
+   ],
+   "combining": [
+    "P-1.2C",
+    "q1"
+   ],
+   "profit": [
+    "P-1.2C",
+    "q2"
+   ]
+  }
+ },
+ "1-2b": {
+  "title": "1.2B Transformations of Linear and AbsVal Functions: Reflections",
+  "to": "P-1.2B",
+  "ex": {
+   "translations": [
+    "P-1.2A",
+    "q1"
+   ],
+   "reflections": [
+    "P-1.2B",
+    "q1"
+   ],
+   "stretches": [
+    "P-1.2A",
+    "q2"
+   ],
+   "combining": [
+    "P-1.2C",
+    "q1"
+   ],
+   "profit": [
+    "P-1.2C",
+    "q2"
+   ]
+  }
+ },
+ "1-2c": {
+  "title": "1.2C Transformations of Linear and AbsVal Functions: Combinations",
+  "to": "P-1.2C",
+  "ex": {
+   "translations": [
+    "P-1.2A",
+    "q1"
+   ],
+   "reflections": [
+    "P-1.2B",
+    "q1"
+   ],
+   "stretches": [
+    "P-1.2A",
+    "q2"
+   ],
+   "combining": [
+    "P-1.2C",
+    "q1"
+   ],
+   "profit": [
+    "P-1.2C",
+    "q2"
+   ]
+  }
+ },
+ "1-3a": {
+  "title": "1.3A Modeling with Linear Functions",
+  "to": "",
+  "ex": {}
+ },
+ "1-3b": {
+  "title": "1.3B Modeling with Linear Functions (Day 2)",
+  "to": "P-1.3B",
+  "ex": {
+   "equation": [
+    "P-1.3B",
+    "q1"
+   ],
+   "compare": [
+    "P-1.3B",
+    "q2"
+   ],
+   "line-of-fit": [
+    "P-1.3B",
+    "q3"
+   ],
+   "best-fit": [
+    "P-1.3B",
+    "q4"
+   ]
+  }
+ },
+ "1-4a": {
+  "title": "1.4A Solve Linear Systems: Graphing",
+  "to": "P-1.4A",
+  "ex": {
+   "graphing": [
+    "P-1.4A",
+    "q1"
+   ],
+   "one-variable": [
+    "P-1.4B",
+    "q1"
+   ],
+   "substitution": [
+    "P-1.4B",
+    "q2"
+   ],
+   "2x2-systems": [
+    "P-1.4C",
+    "q1"
+   ],
+   "3x3-systems": [
+    "P-1.4D",
+    "q1"
+   ]
+  }
+ },
+ "1-4b": {
+  "title": "1.4B Solve Linear Systems Algebraically (Substitution)",
+  "to": "P-1.4B",
+  "ex": {
+   "graphing": [
+    "P-1.4A",
+    "q1"
+   ],
+   "one-variable": [
+    "P-1.4B",
+    "q1"
+   ],
+   "substitution": [
+    "P-1.4B",
+    "q2"
+   ],
+   "2x2-systems": [
+    "P-1.4C",
+    "q1"
+   ],
+   "3x3-systems": [
+    "P-1.4D",
+    "q1"
+   ]
+  }
+ },
+ "1-4c": {
+  "title": "1.4C Solve Linear Systems Algebraically (Elimination)",
+  "to": "P-1.4C",
+  "ex": {
+   "graphing": [
+    "P-1.4A",
+    "q1"
+   ],
+   "one-variable": [
+    "P-1.4B",
+    "q1"
+   ],
+   "substitution": [
+    "P-1.4B",
+    "q2"
+   ],
+   "2x2-systems": [
+    "P-1.4C",
+    "q1"
+   ],
+   "3x3-systems": [
+    "P-1.4D",
+    "q1"
+   ]
+  }
+ },
+ "1-4d": {
+  "title": "1.4D Solve Systems of Linear Equations in 3 Variables",
+  "to": "P-1.4D",
+  "ex": {
+   "graphing": [
+    "P-1.4A",
+    "q1"
+   ],
+   "one-variable": [
+    "P-1.4B",
+    "q1"
+   ],
+   "substitution": [
+    "P-1.4B",
+    "q2"
+   ],
+   "2x2-systems": [
+    "P-1.4C",
+    "q1"
+   ],
+   "3x3-systems": [
+    "P-1.4D",
+    "q1"
+   ]
+  }
+ },
+ "revt1": {
+  "title": "Review for Chapter 1 Test",
+  "to": "P-RevT1",
+  "ex": {
+   "q1-families": [
+    "P-RevT1",
+    "q1-families"
+   ],
+   "q2-solutions": [
+    "P-RevT1",
+    "q2-solutions"
+   ],
+   "q3-graph": [
+    "P-RevT1",
+    "q3-graph"
+   ],
+   "q4-rule": [
+    "P-RevT1",
+    "q4-rule"
+   ],
+   "q5-line": [
+    "P-RevT1",
+    "q5-line"
+   ],
+   "q6-graphing": [
+    "P-RevT1",
+    "q6-graphing"
+   ],
+   "q6-substitution": [
+    "P-RevT1",
+    "q6-substitution"
+   ],
+   "q6-elimination": [
+    "P-RevT1",
+    "q6-elimination"
+   ],
+   "q7-three-variables": [
+    "P-RevT1",
+    "q7-three-variables"
+   ],
+   "q8-word-problem": [
+    "P-RevT1",
+    "q8-word-problem"
+   ]
+  }
+ },
+ "2-1a": {
+  "title": "2.1A Transformations of Quadratic Functions",
+  "to": "P-2.1A",
+  "ex": {
+   "translations": [
+    "P-2.1A",
+    "q1"
+   ],
+   "reflect-stretch": [
+    "P-2.1A",
+    "q2"
+   ],
+   "write-g": [
+    "P-2.1B",
+    "q1"
+   ],
+   "real-life": [
+    "P-2.1B",
+    "q2"
+   ]
+  }
+ },
+ "2-1b": {
+  "title": "2.1B Transformations of Quadratic Functions: Trans to Func",
+  "to": "P-2.1B",
+  "ex": {
+   "translations": [
+    "P-2.1A",
+    "q1"
+   ],
+   "reflect-stretch": [
+    "P-2.1A",
+    "q2"
+   ],
+   "write-g": [
+    "P-2.1B",
+    "q1"
+   ],
+   "real-life": [
+    "P-2.1B",
+    "q2"
+   ]
+  }
+ },
+ "2-2a": {
+  "title": "2.2A Characteristics of Quadratic Functions",
+  "to": "P-2.2A",
+  "ex": {
+   "vertex-form": [
+    "P-2.2A",
+    "q1"
+   ],
+   "standard-form": [
+    "P-2.2A",
+    "q2"
+   ],
+   "min-max": [
+    "P-2.2C",
+    "q2"
+   ],
+   "intercept-form": [
+    "P-2.2C",
+    "q4"
+   ],
+   "compare": [
+    "P-2.2C",
+    "q5"
+   ],
+   "interval": [
+    "P-2.2B",
+    "q1"
+   ],
+   "domain": [
+    "P-2.2B",
+    "q2"
+   ],
+   "range": [
+    "P-2.2B",
+    "q3"
+   ],
+   "increasing": [
+    "P-2.2B",
+    "q4"
+   ],
+   "decreasing": [
+    "P-2.2B",
+    "q5"
+   ],
+   "memorize": [
+    "P-2.2C",
+    "q1"
+   ],
+   "characteristics": [
+    "P-2.2C",
+    "q3"
+   ]
+  }
+ },
+ "2-2b": {
+  "title": "2.2B Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing",
+  "to": "P-2.2B",
+  "ex": {
+   "vertex-form": [
+    "P-2.2A",
+    "q1"
+   ],
+   "standard-form": [
+    "P-2.2A",
+    "q2"
+   ],
+   "min-max": [
+    "P-2.2C",
+    "q2"
+   ],
+   "intercept-form": [
+    "P-2.2C",
+    "q4"
+   ],
+   "compare": [
+    "P-2.2C",
+    "q5"
+   ],
+   "interval": [
+    "P-2.2B",
+    "q1"
+   ],
+   "domain": [
+    "P-2.2B",
+    "q2"
+   ],
+   "range": [
+    "P-2.2B",
+    "q3"
+   ],
+   "increasing": [
+    "P-2.2B",
+    "q4"
+   ],
+   "decreasing": [
+    "P-2.2B",
+    "q5"
+   ],
+   "memorize": [
+    "P-2.2C",
+    "q1"
+   ],
+   "characteristics": [
+    "P-2.2C",
+    "q3"
+   ]
+  }
+ },
+ "2-2c": {
+  "title": "2.2C Characteristics of Quadratic Functions: Intercept Form",
+  "to": "P-2.2C",
+  "ex": {
+   "vertex-form": [
+    "P-2.2A",
+    "q1"
+   ],
+   "standard-form": [
+    "P-2.2A",
+    "q2"
+   ],
+   "min-max": [
+    "P-2.2C",
+    "q2"
+   ],
+   "intercept-form": [
+    "P-2.2C",
+    "q4"
+   ],
+   "compare": [
+    "P-2.2C",
+    "q5"
+   ],
+   "interval": [
+    "P-2.2B",
+    "q1"
+   ],
+   "domain": [
+    "P-2.2B",
+    "q2"
+   ],
+   "range": [
+    "P-2.2B",
+    "q3"
+   ],
+   "increasing": [
+    "P-2.2B",
+    "q4"
+   ],
+   "decreasing": [
+    "P-2.2B",
+    "q5"
+   ],
+   "memorize": [
+    "P-2.2C",
+    "q1"
+   ],
+   "characteristics": [
+    "P-2.2C",
+    "q3"
+   ]
+  }
+ },
+ "revq2": {
+  "title": "Review for 2.1-2.2 Quiz",
+  "to": "P-RevQ2",
+  "ex": {
+   "q1": [
+    "P-RevQ2",
+    "q1"
+   ],
+   "q2": [
+    "P-RevQ2",
+    "q2"
+   ],
+   "q3": [
+    "P-RevQ2",
+    "q3"
+   ],
+   "q4": [
+    "P-RevQ2",
+    "q4"
+   ],
+   "q5": [
+    "P-RevQ2",
+    "q5"
+   ],
+   "q6": [
+    "P-RevQ2",
+    "q6"
+   ]
+  }
+ },
+ "2-4a": {
+  "title": "2.4A Modeling with Quadratic Functions",
+  "to": "P-2.4A",
+  "ex": {
+   "vertex-point": [
+    "P-2.4A",
+    "q1"
+   ],
+   "intercepts": [
+    "P-2.4A",
+    "q2"
+   ],
+   "regression": [
+    "P-2.4B",
+    "q1"
+   ],
+   "3-step-equations": [
+    "P-2.4A",
+    "q3"
+   ],
+   "box-method": [
+    "P-2.4A",
+    "q4"
+   ],
+   "square-roots": [
+    "P-2.4A",
+    "q5"
+   ],
+   "distributing": [
+    "P-2.4B",
+    "q3"
+   ]
+  }
+ },
+ "2-4b": {
+  "title": "2.4B Modeling with Quadratic Functions (Day 2)",
+  "to": "P-2.4B",
+  "ex": {
+   "vertex-point": [
+    "P-2.4A",
+    "q1"
+   ],
+   "intercepts": [
+    "P-2.4A",
+    "q2"
+   ],
+   "regression": [
+    "P-2.4B",
+    "q1"
+   ],
+   "3-step-equations": [
+    "P-2.4B",
+    "q2"
+   ],
+   "box-method": [
+    "P-2.4A",
+    "q4"
+   ],
+   "square-roots": [
+    "P-2.4A",
+    "q5"
+   ],
+   "distributing": [
+    "P-2.4B",
+    "q3"
+   ]
+  }
+ },
+ "3-1a": {
+  "title": "3.1A Solving Quadratic Equations: Graphing",
+  "to": "P-3.1A",
+  "ex": {
+   "graphing": [
+    "P-3.1A",
+    "q1"
+   ],
+   "square-roots": [
+    "P-3.1B",
+    "q2"
+   ],
+   "real-life": [
+    "P-3.1C",
+    "q1"
+   ],
+   "box-method": [
+    "P-3.1D",
+    "q1"
+   ],
+   "factoring": [
+    "P-3.1D",
+    "q2"
+   ],
+   "solve-by-factoring": [
+    "P-3.1E",
+    "q1"
+   ],
+   "special-products": [
+    "P-3.1F",
+    "q1"
+   ],
+   "factor-ax-bx-c": [
+    "P-3.1G",
+    "q1"
+   ],
+   "complete-the-square": [
+    "P-3.3A",
+    "q1"
+   ],
+   "vertex-form": [
+    "P-3.3B",
+    "q1"
+   ],
+   "quadratic-formula": [
+    "P-3.4A",
+    "q1"
+   ],
+   "discriminant": [
+    "P-3.4B",
+    "q1"
+   ],
+   "4-step-equations": [
+    "P-3.1A",
+    "q2"
+   ],
+   "binomials": [
+    "P-3.1A",
+    "q3"
+   ],
+   "simplify-roots": [
+    "P-3.1B",
+    "q1"
+   ],
+   "square-roots-simplify": [
+    "P-3.1B",
+    "q3"
+   ],
+   "vertex-point": [
+    "P-3.1C",
+    "q5"
+   ],
+   "real-life-desmos": [
+    "P-3.1C",
+    "q2"
+   ]
+  }
+ },
+ "3-1b": {
+  "title": "3.1B Solving Quadratic Equations: Square Roots",
+  "to": "P-3.1B",
+  "ex": {
+   "graphing": [
+    "P-3.1A",
+    "q1"
+   ],
+   "square-roots": [
+    "P-3.1B",
+    "q2"
+   ],
+   "real-life": [
+    "P-3.1C",
+    "q1"
+   ],
+   "box-method": [
+    "P-3.1D",
+    "q1"
+   ],
+   "factoring": [
+    "P-3.1D",
+    "q2"
+   ],
+   "solve-by-factoring": [
+    "P-3.1E",
+    "q1"
+   ],
+   "special-products": [
+    "P-3.1F",
+    "q1"
+   ],
+   "factor-ax-bx-c": [
+    "P-3.1G",
+    "q1"
+   ],
+   "complete-the-square": [
+    "P-3.3A",
+    "q1"
+   ],
+   "vertex-form": [
+    "P-3.3B",
+    "q1"
+   ],
+   "quadratic-formula": [
+    "P-3.4A",
+    "q1"
+   ],
+   "discriminant": [
+    "P-3.4B",
+    "q1"
+   ],
+   "4-step-equations": [
+    "P-3.1A",
+    "q2"
+   ],
+   "binomials": [
+    "P-3.1B",
+    "q4"
+   ],
+   "simplify-roots": [
+    "P-3.1B",
+    "q1"
+   ],
+   "square-roots-simplify": [
+    "P-3.1B",
+    "q3"
+   ],
+   "vertex-point": [
+    "P-3.1C",
+    "q5"
+   ],
+   "real-life-desmos": [
+    "P-3.1C",
+    "q2"
+   ]
+  }
+ },
+ "3-1c": {
+  "title": "3.1C Solving Quadratic Equations: Real Life",
+  "to": "P-3.1C",
+  "ex": {
+   "graphing": [
+    "P-3.1A",
+    "q1"
+   ],
+   "square-roots": [
+    "P-3.1B",
+    "q2"
+   ],
+   "real-life": [
+    "P-3.1C",
+    "q1"
+   ],
+   "box-method": [
+    "P-3.1D",
+    "q1"
+   ],
+   "factoring": [
+    "P-3.1D",
+    "q2"
+   ],
+   "solve-by-factoring": [
+    "P-3.1E",
+    "q1"
+   ],
+   "special-products": [
+    "P-3.1F",
+    "q1"
+   ],
+   "factor-ax-bx-c": [
+    "P-3.1G",
+    "q1"
+   ],
+   "complete-the-square": [
+    "P-3.3A",
+    "q1"
+   ],
+   "vertex-form": [
+    "P-3.3B",
+    "q1"
+   ],
+   "quadratic-formula": [
+    "P-3.4A",
+    "q1"
+   ],
+   "discriminant": [
+    "P-3.4B",
+    "q1"
+   ],
+   "4-step-equations": [
+    "P-3.1A",
+    "q2"
+   ],
+   "binomials": [
+    "P-3.1C",
+    "q4"
+   ],
+   "simplify-roots": [
+    "P-3.1B",
+    "q1"
+   ],
+   "square-roots-simplify": [
+    "P-3.1C",
+    "q3"
+   ],
+   "vertex-point": [
+    "P-3.1C",
+    "q5"
+   ],
+   "real-life-desmos": [
+    "P-3.1C",
+    "q2"
+   ]
+  }
+ }
+}

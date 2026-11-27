@@ -22,7 +22,7 @@ var DOMAIN = "sch.org";                   // only this Google Workspace domain m
 var TEACHERS = ["abergmann@sch.org"];     // may open the class progress page
 var SESSION_DAYS = 90;
 var CHUNK = 45000;
-var TACTS = ["roster", "setDue", "courses", "syncClassroom", "saveAssignment", "listAssignments", "deleteAssignment", "classes", "setCode", "sendGrades", "migrationCheck", "addTeacher", "listTeachers", "syncRoster", "setPosts", "gradesFor", "convertActivities"];                        // a cell holds at most 50,000 characters
+var TACTS = ["roster", "setDue", "courses", "syncClassroom", "saveAssignment", "listAssignments", "deleteAssignment", "classes", "setCode", "sendGrades", "migrationCheck", "addTeacher", "listTeachers", "syncRoster", "setPosts", "gradesFor"];                        // a cell holds at most 50,000 characters
 
 function doPost(e) {
   var req;
@@ -31,6 +31,7 @@ function doPost(e) {
     if (req.action === "signin") return out(signin(req.credential));
     var who = sessionEmail(req.session);
     if (!who) return out({ error: "auth", message: "Please sign in again." });
+    try { ensureConverted(); } catch (err) { }   // (once: the activities 1.1A to 3.1C become assignments)
     if (req.action === "load") return out(load(who));
     if (req.action === "save") return out(save(who, req.data, req.summary));
     if (req.action === "signout") { endSession(req.session); return out({ ok: true }); }
@@ -63,7 +64,6 @@ function teacherAction(req, who) {
     if (req.action === "syncRoster") return (syncClassroom((req.classes || []).map(function (c) { return String(c.id); }), who, req.classes || []));   // (another teacher: the classes their browser read from Classroom)
     if (req.action === "setPosts") return (setPosts(req.id, req.posts || {}));
     if (req.action === "gradesFor") return (gradesFor(req.id));
-    if (req.action === "convertActivities") return (convertActivities(who, req.list || []));   // (after step 8: each activity becomes a saved assignment)
   return { error: "bad", message: "Unknown action." };
 }
 function doGet() { return out({ ok: true, service: "Algebra Notebook" }); }
@@ -398,20 +398,22 @@ function saveAssignment(who, a) {
   if (/^P-/.test(id) && !BOOK) { try { var dv = due.all || Object.keys(due).map(function (k) { return due[k]; }).sort()[0] || ""; putSetting("due:" + id.slice(2), dv); } catch (e) { } }   // (a converted activity: its due date also stays where the student home page reads it before the assignment is opened)
   return { ok: true, assignment: asgRec(row), warnings: warn };
 }
-// ---- Converting the activities (after step 8): each activity (1.1A ... 3.1C, with RevT1 and RevQ2) becomes a saved assignment with its preset's id,
-// so students' stars, the old links and the dashboard carry on, and it can be edited in the builder. Its due date is the activity's (Settings, due:<abbreviation>).
-// No Classroom posts. An activity already converted is left as it is.
-function convertActivities(who, list) {
-  if (BOOK || !isOwner(who.email)) return { error: "forbidden", message: "Only the Admin converts the activities." };
-  var dues = dueDates(), have = {}, made = [], had = [], warn = [];
+// ---- The activities 1.1A to 3.1C as assignments (after step 8): each activity (with RevT1 and RevQ2; 1.1C and 1.3A had no questions) is written into
+// your Assignments tab the first time this server runs, keeping its preset's id (P-2.4A) so the students' stars and the old links carry on, with the
+// activity's questions in order and its due date (Settings, due:<abbreviation>). Nothing is posted to Classroom. Each is then edited, posted or deleted in
+// the builder like any other assignment. An id already in the tab is left alone (two first requests at once just write the same row twice); "converted:1" in Settings marks it done.
+var CONVERTED = [{"id":"P-1.1A","abbr":"1.1A","title":"Parent Functions and Transformations","items":[{"q":"1.1A-parents"},{"q":"1.1A-graph-describe"}]},{"id":"P-1.1B","abbr":"1.1B","title":"Parent Functions and Transformations: Desmos","items":[{"q":"1.1B-estimate"}]},{"id":"P-1.2A","abbr":"1.2A","title":"Transformations of Linear and Absolute Value Functions","items":[{"q":"1.2-write-transformations"},{"q":"1.2-write-transformations","v":1}]},{"id":"P-1.2B","abbr":"1.2B","title":"Transformations of Linear and AbsVal Functions: Reflections","items":[{"q":"1.2-write-transformations","v":2}]},{"id":"P-1.2C","abbr":"1.2C","title":"Transformations of Linear and AbsVal Functions: Combinations","items":[{"q":"1.2-write-transformations","v":3},{"q":"1.2-write-transformations","v":4}]},{"id":"P-1.3B","abbr":"1.3B","title":"Modeling with Linear Functions (Day 2)","items":[{"q":"1.3B-equation"},{"q":"1.3B-compare"},{"q":"1.3B-line-of-fit"},{"q":"1.3B-best-fit"}]},{"id":"P-1.4A","abbr":"1.4A","title":"Solve Linear Systems: Graphing","items":[{"q":"1.4A-graphing"}]},{"id":"P-1.4B","abbr":"1.4B","title":"Solve Linear Systems Algebraically (Substitution)","items":[{"q":"1.4B-one-variable"},{"q":"1.4B-substitution"}]},{"id":"P-1.4C","abbr":"1.4C","title":"Solve Linear Systems Algebraically (Elimination)","items":[{"q":"1.4C-2x2-systems"}]},{"id":"P-1.4D","abbr":"1.4D","title":"Solve Systems of Linear Equations in 3 Variables","items":[{"q":"1.4D-3x3-systems"}]},{"id":"P-RevT1","abbr":"RevT1","title":"Review for Chapter 1 Test","items":[{"q":"1.1A-parents","name":"Q1 Families"},{"q":"1.4C-2x2-systems","name":"Q2 Solutions"},{"q":"1.1A-graph-describe","name":"Q3 Graph"},{"q":"1.2-write-transformations","v":3,"name":"Q4 Rule"},{"q":"1.3B-equation","name":"Q5 Line"},{"q":"1.4A-graphing","name":"Q6 Graphing"},{"q":"1.4B-substitution","name":"Q6 Substitution"},{"q":"1.4C-2x2-systems","name":"Q6 Elimination"},{"q":"1.4D-3x3-systems","name":"Q7 Three Variables"},{"q":"1.4A-graphing","name":"Q8 Word Problem"}]},{"id":"P-2.1A","abbr":"2.1A","title":"Transformations of Quadratic Functions","items":[{"q":"2.1A-graph-transformations"},{"q":"2.1A-graph-transformations","v":1}]},{"id":"P-2.1B","abbr":"2.1B","title":"Transformations of Quadratic Functions: Trans to Func","items":[{"q":"2.1A-graph-transformations","v":2},{"q":"2.1B-real-life"}]},{"id":"P-2.2A","abbr":"2.2A","title":"Characteristics of Quadratic Functions","items":[{"q":"2.2A-vertex-form"},{"q":"2.2A-standard-form"}]},{"id":"P-2.2B","abbr":"2.2B","title":"Characteristics of Quadratic Functions: Domain, Range, Increasing, Decreasing","items":[{"q":"2.2B-interval-notation"},{"q":"2.2B-domain"},{"q":"2.2B-range"},{"q":"2.2B-increasing"},{"q":"2.2B-decreasing"}]},{"id":"P-2.2C","abbr":"2.2C","title":"Characteristics of Quadratic Functions: Intercept Form","items":[{"q":"2.2C-memorize"},{"q":"2.2C-min-max"},{"q":"2.2C-characteristics"},{"q":"2.2C-intercept-form"},{"q":"2.2C-compare"}]},{"id":"P-RevQ2","abbr":"RevQ2","title":"Review for 2.1-2.2 Quiz","items":[{"q":"2.2A-standard-form","name":"Q1"},{"q":"2.2C-min-max","name":"Q2"},{"q":"2.2A-vertex-form","name":"Q3"},{"q":"2.2C-characteristics","name":"Q4"},{"q":"2.2C-intercept-form","name":"Q5"},{"q":"2.2C-compare","name":"Q6"}]},{"id":"P-2.4A","abbr":"2.4A","title":"Modeling with Quadratic Functions","items":[{"q":"2.4A-vertex-point"},{"q":"2.4A-point-intercepts"},{"q":"2.4A-3step-equations"},{"q":"2.4A-box-method"},{"q":"2.4A-square-roots"}]},{"id":"P-2.4B","abbr":"2.4B","title":"Modeling with Quadratic Functions (Day 2)","items":[{"q":"2.4B-quadratic-regression"},{"q":"2.4A-3step-equations"},{"q":"2.4B-distributing"}]},{"id":"P-3.1A","abbr":"3.1A","title":"Solving Quadratic Equations: Graphing","items":[{"q":"3.1A-graphing"},{"q":"3.1A-4step-equations"},{"q":"2.4A-box-method","v":1}]},{"id":"P-3.1B","abbr":"3.1B","title":"Solving Quadratic Equations: Square Roots","items":[{"q":"3.1B-simplify-roots"},{"q":"3.1B-square-roots"},{"q":"3.1B-square-roots-simplify"},{"q":"2.4A-box-method","v":1}]},{"id":"P-3.1C","abbr":"3.1C","title":"Solving Quadratic Equations: Real Life","items":[{"q":"3.1C-real-life"},{"q":"3.1C-real-life-desmos"},{"q":"3.1B-square-roots-simplify"},{"q":"2.4A-box-method","v":1},{"q":"2.4A-vertex-point","v":1}]}];
+function ensureConverted() {
+  var c = CacheService.getScriptCache(); if (c.get("converted1")) return;
+  if (getSetting("converted:1")) { c.put("converted1", "1", 21600); return; }
+  var me = { email: TEACHERS[0] }, dues = dueDates(), have = {}, warn = [];
   asgRows().rows.forEach(function (r) { have[String(r[0])] = 1; });
-  (list || []).slice(0, 60).forEach(function (a) {
-    var id = String(a && a.id || ""); if (!/^P-[A-Za-z0-9.]+$/.test(id)) return;
-    if (have[id]) { had.push(id); return; }
-    var ab = id.slice(2), r = saveAssignment(who, { id: id, convert: true, title: a.title, abbr: a.abbr || ab, items: a.items, due: dues[ab] ? { all: dues[ab] } : {}, classes: [], post: false });
-    if (r.error) warn.push(ab + ": " + r.message); else made.push(id);
+  CONVERTED.forEach(function (a) {
+    if (have[a.id]) return; var ab = a.id.slice(2);
+    var r = saveAssignment(me, { id: a.id, convert: true, title: a.title, abbr: a.abbr, items: a.items, due: dues[ab] ? { all: dues[ab] } : {}, classes: [], post: false });
+    if (r.error) warn.push(ab + ": " + r.message);
   });
-  return { ok: true, made: made, had: had, warnings: warn };
+  putSetting("converted:1", new Date().toISOString() + (warn.length ? " " + warn.join(" ") : "")); c.put("converted1", "1", 21600);
 }
 function deleteAssignment(who, id) {
   var me = String(who.email).toLowerCase(), A = asgRows();
