@@ -5,6 +5,7 @@ The app lives in three files:
   engine/page.html   the page shell (head, the HTML of the page), with two markers
   engine/styles.css  the app's styles
   engine/app.js      the app's code
+  engine/build.html  the assignment builder page (teacher/build/), with the bank files at <!--BANK_JS-->
   bank/*.js          the question bank: one file per question, loaded before the engine
 Every activity folder's index.html (and the root index.html) is written from them,
 loading the styles and the code from engine/ with a version stamp, so a browser
@@ -68,6 +69,9 @@ def pages():
         else:
             for d in COPIES:
                 out[d + "/index.html"] = p
+    # the assignment builder (teacher/build/): its own page, with every bank file (step 6)
+    if os.path.exists(os.path.join(ROOT, "engine/build.html")):
+        out["teacher/build/index.html"] = rd("engine/build.html").replace("<!--BANK_JS-->", "".join('<script src="../../bank/%s?v=%s"></script>' % (f, v) for f in bank))
     return out
 
 

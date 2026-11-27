@@ -45,3 +45,6 @@ If the classes list says it can't reach Google Classroom, step 2 or 4 is missing
 1. Open the Apps Script project **Algebra Notebook Server**. Replace `Code.gs` with `server/Code.gs` from this repo, and save.
 2. Deploy > Manage deployments > edit (pencil) > Version: **New version** > Deploy. The /exec address stays the same.
 3. Nothing else: the **Assignments** and **Attempts** tabs are made in the Progress Sheet the first time they are used. Attempts gets one row per finished problem (time, student, class, assignment, question, version, seed, mode, tier, correct, tries). Assignments is filled by the builder (step 6); a row typed by hand (Id, Title, Abbreviation, Owner, Classes, Due as JSON, Items as JSON like `[{"q":"2.4A-vertex-point"}]`) opens at `/a/?id=<Id>`.
+
+## 6. The assignment builder (Question Bank migration, step 6)
+`teacher/build/` (the "Build an assignment" link on Class progress) lets a teacher choose bank questions, set a title, abbreviation and due date, and save; saving gives the student link `/a/?id=…`. It needs the server actions saveAssignment, listAssignments and deleteAssignment: replace `Code.gs` with `server/Code.gs` and publish a new version of **"Use this one: Sign-in, progress, Assignments and Attempts"** (as in section 5). Saved assignments are rows in the Assignments tab; only their owner can edit or delete them.

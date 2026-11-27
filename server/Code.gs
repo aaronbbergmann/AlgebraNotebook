@@ -36,7 +36,10 @@ function doPost(e) {
     if (req.action === "due") return out({ due: dueDates() });
     if (req.action === "assignment") return out(getAssignment(req.id));   // (step 5: /a/?id= fetches its record once)
     if (req.action === "attempts") return out(logAttempts(who, req.rows || []));   // (step 5: finished problems, in batches)   // (any signed-in student: the welcome page opens the activity due next)
-    if (["roster", "setDue", "courses", "syncClassroom"].indexOf(req.action) >= 0 && !isTeacher(who.email)) return out({ error: "forbidden", message: "Teachers only." });
+    if (["roster", "setDue", "courses", "syncClassroom", "saveAssignment", "listAssignments", "deleteAssignment"].indexOf(req.action) >= 0 && !isTeacher(who.email)) return out({ error: "forbidden", message: "Teachers only." });
+    if (req.action === "saveAssignment") return out(saveAssignment(who, req.assignment || {}));   // (step 6: the builder, teacher/build/)
+    if (req.action === "listAssignments") return out(listAssignments(who));
+    if (req.action === "deleteAssignment") return out(deleteAssignment(who, req.id));
     if (req.action === "roster") return out(roster());
     if (req.action === "setDue") return out(setDue(req.act, req.date));
     if (req.action === "courses") return out(courses(who.email));
@@ -269,6 +272,46 @@ function logAttempts(who, rows) {
     sh.getRange(sh.getLastRow() + 1, 1, vals.length, vals[0].length).setValues(vals);
   } finally { lock.releaseLock(); }
   return { ok: true, n: rows.length };
+}
+// ---- The builder (step 6): a teacher saves an assignment; its id makes the student link /a/?id=<id>
+function asgRows() { var sh = assignmentsSheet(), n = sh.getLastRow(); return { sh: sh, rows: n < 2 ? [] : sh.getRange(2, 1, n - 1, 8).getValues() }; }
+function asgRec(r) { var items = [], due = {}; try { items = JSON.parse(r[6] || "[]"); } catch (e) { } try { due = JSON.parse(r[5] || "{}"); } catch (e) { }
+  return { id: String(r[0]), title: String(r[1]), abbr: String(r[2]), owner: String(r[3]), classes: String(r[4]).split(/\s*,\s*/).filter(String), due: due, items: items, created: r[7] instanceof Date ? r[7].toISOString() : String(r[7] || "") }; }
+function listAssignments(who) {
+  var me = String(who.email).toLowerCase();
+  return { assignments: asgRows().rows.filter(function (r) { return String(r[3]).toLowerCase() === me; }).map(asgRec) };
+}
+function saveAssignment(who, a) {
+  var me = String(who.email).toLowerCase(), title = String(a.title || "").trim(), abbr = String(a.abbr || "").trim();
+  var items = (a.items || []).filter(function (it) { return it && typeof it.q === "string" && it.q; }).map(function (it) { var o = { q: it.q }; if (+it.v) o.v = +it.v; return o; });
+  if (!title) return { error: "bad", message: "Give the assignment a title." };
+  if (!abbr) return { error: "bad", message: "Give the assignment an abbreviation (like 2.4A)." };
+  if (!items.length) return { error: "bad", message: "Add at least one question." };
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var A = asgRows(), rows = A.rows, at = -1, id = String(a.id || "");
+    for (var i = 0; i < rows.length; i++) {
+      var mine = String(rows[i][3]).toLowerCase() === me;
+      if (id && String(rows[i][0]) === id) { if (!mine) return { error: "forbidden", message: "That assignment belongs to another teacher." }; at = i; }
+      else if (mine && String(rows[i][2]).toLowerCase() === abbr.toLowerCase()) return { error: "bad", message: "You already have an assignment called " + abbr + ". Each abbreviation is used once." };
+    }
+    if (at < 0) {   // a new id: A-<date>-<abbreviation>, with a number added if it is taken
+      var base = "A-" + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MMdd") + "-" + abbr.replace(/[^A-Za-z0-9]+/g, ""), n = 1; id = base;
+      var ids = rows.map(function (r) { return String(r[0]); }); while (ids.indexOf(id) >= 0) id = base + "-" + (++n);
+    }
+    var due = a.due && typeof a.due === "object" ? a.due : (a.due ? { all: String(a.due) } : {});
+    var row = [id, title, abbr, me, (a.classes || []).join(", "), JSON.stringify(due), JSON.stringify(items), at >= 0 ? rows[at][7] : new Date()];
+    if (at >= 0) A.sh.getRange(at + 2, 1, 1, 8).setValues([row]); else A.sh.getRange(A.sh.getLastRow() + 1, 1, 1, 8).setValues([row]);
+    return { ok: true, assignment: asgRec(row) };
+  } finally { lock.releaseLock(); }
+}
+function deleteAssignment(who, id) {
+  var me = String(who.email).toLowerCase(), A = asgRows();
+  for (var i = 0; i < A.rows.length; i++) if (String(A.rows[i][0]) === String(id)) {
+    if (String(A.rows[i][3]).toLowerCase() !== me) return { error: "forbidden", message: "That assignment belongs to another teacher." };
+    A.sh.deleteRow(i + 2); return { ok: true };
+  }
+  return { error: "bad", message: "That assignment was not found." };
 }
 function setup() {
   var s = SpreadsheetApp.getActiveSpreadsheet();
