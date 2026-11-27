@@ -57,7 +57,7 @@
   <h1>Class Progress</h1>
   <span class="sub" id="sub"></span>
   <a href="build/" style="color:#2d70b3">Build an assignment</a>
-  <div class="tools"><input type="search" id="q" placeholder="Find a student" aria-label="Find a student"><span class="chk" role="group" aria-label="Show activities"><label><input type="checkbox" data-f="1"> Ch1</label><label><input type="checkbox" data-f="2"> Ch2</label><label><input type="checkbox" data-f="3"> Ch3</label><label><input type="checkbox" data-f="A"> Assignments</label><label><input type="checkbox" data-f="recent"> Recent</label></span><button id="gc">Sync with Google Classroom</button><button id="csv">Download CSV</button><button id="mig" title="Step 7 of the Question Bank migration: compare the dated snapshot with the preset assignments">Migration check</button><button id="ref">Refresh</button></div>
+  <div class="tools"><input type="search" id="q" placeholder="Find a student" aria-label="Find a student"><span class="chk" role="group" aria-label="Show activities"><label><input type="checkbox" data-f="1"> Ch1</label><label><input type="checkbox" data-f="2"> Ch2</label><label><input type="checkbox" data-f="3"> Ch3</label><label><input type="checkbox" data-f="A"> Assignments</label><label><input type="checkbox" data-f="recent"> Recent</label></span><button id="gc">Sync with Google Classroom</button><button id="csv">Download CSV</button><button id="tch" title="Admin only: the teachers who use Algebra Notebook, each with their own Progress Sheet">Teachers</button><button id="mig" title="Step 7 of the Question Bank migration: compare the dated snapshot with the preset assignments">Migration check</button><button id="ref">Refresh</button></div>
 </header>
 <div class="note" id="note" hidden role="status"></div>
 <div class="wrap" id="wrap"><div class="msg">Loading…</div></div>
@@ -263,6 +263,22 @@
   });
   [].forEach.call(document.querySelectorAll(".chk input"), function (c) { try { c.checked = localStorage.getItem("an:tf:" + c.dataset.f) === "1"; } catch (e) { } c.addEventListener("change", function () { try { localStorage.setItem("an:tf:" + c.dataset.f, c.checked ? "1" : "0"); } catch (e) { } draw(); }); });
   $("ref").addEventListener("click", load);
+  // Teachers (the Admin only): each teacher has their own Progress Sheet, made in the Admin's Drive and shared with them as editor
+  $("tch").addEventListener("click", function () {
+    var bg = document.createElement("div"); bg.className = "dlgBg"; bg.innerHTML = "<div class=\"dlg\" role=\"dialog\" aria-labelledby=\"tcT\"><h2 id=\"tcT\">Teachers</h2><div id=\"tcL\" style=\"margin-bottom:12px\">Loading…</div>" +
+      "<p>Add a teacher: they get their own Progress Sheet (in your Drive, shared with them as editor). Their students and assignments go there.</p>" +
+      "<div style=\"display:grid;gap:8px;margin-bottom:12px\"><input id=\"tcE\" placeholder=\"School email\" aria-label=\"Teacher's school email\"><input id=\"tcN\" placeholder=\"Name\" aria-label=\"Teacher's name\"></div><div id=\"tcM\"></div>" +
+      "<div class=\"dlgB\"><button id=\"tcX\">Close</button><button class=\"pri\" id=\"tcA\">Add teacher</button></div></div>";
+    document.body.appendChild(bg);
+    var list = function () { AN.api("listTeachers").then(function (j) { var t = j.teachers || []; $("tcL").innerHTML = t.length ? t.map(function (x) { return "<div>" + esc(x.name || x.email) + " · " + esc(x.email) + " · <a href=\"https://docs.google.com/spreadsheets/d/" + esc(x.sheet) + "/edit\" target=\"_blank\" rel=\"noopener\">their Sheet</a></div>"; }).join("") : "<div class=\"sub\">No other teachers yet.</div>"; }).catch(function (e) { $("tcL").textContent = e.message || "Could not load the teachers."; $("tcA").disabled = true; }); };
+    list();
+    $("tcX").addEventListener("click", function () { bg.remove(); });
+    $("tcA").addEventListener("click", function () {
+      var b = $("tcA"); b.disabled = true; b.textContent = "Adding…"; $("tcM").textContent = "";
+      AN.api("addTeacher", { email: $("tcE").value.trim(), name: $("tcN").value.trim() }).then(function (j) { $("tcM").innerHTML = "Added. Their Sheet: <a href=\"" + esc(j.url) + "\" target=\"_blank\" rel=\"noopener\">open</a>. Send them the site link: they sign in and see Class progress and the builder."; $("tcE").value = ""; $("tcN").value = ""; list(); })
+        .catch(function (e) { $("tcM").innerHTML = "<span class=\"gcErr\">" + esc(e.message || "Could not add the teacher.") + "</span>"; }).then(function () { b.disabled = false; b.textContent = "Add teacher"; });
+    });
+  });
   // the migration check (step 7): the snapshot's activity stars against each student's preset assignments now
   $("mig").addEventListener("click", function () {
     var link = prompt("Paste the link of the dated copy of the Progress Sheet (the snapshot):"); if (!link) return;

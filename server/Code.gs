@@ -21,7 +21,8 @@ var SHEET_ID = "1HryFKwRUEdEqvbsTO52QCFk07JIp1gBzzlBbiFl-7kk";   // the progress
 var DOMAIN = "sch.org";                   // only this Google Workspace domain may sign in
 var TEACHERS = ["abergmann@sch.org"];     // may open the class progress page
 var SESSION_DAYS = 90;
-var CHUNK = 45000;                        // a cell holds at most 50,000 characters
+var CHUNK = 45000;
+var TACTS = ["roster", "setDue", "courses", "syncClassroom", "saveAssignment", "listAssignments", "deleteAssignment", "classes", "setCode", "sendGrades", "migrationCheck", "addTeacher", "listTeachers"];                        // a cell holds at most 50,000 characters
 
 function doPost(e) {
   var req;
@@ -36,30 +37,72 @@ function doPost(e) {
     if (req.action === "due") return out({ due: dueDates() });
     if (req.action === "assignment") return out(getAssignment(req.id, who));   // (step 5: /a/?id= fetches its record once)
     if (req.action === "attempts") return out(logAttempts(who, req.rows || []));   // (step 5: finished problems, in batches)   // (any signed-in student: the welcome page opens the activity due next)
-    if (["roster", "setDue", "courses", "syncClassroom", "saveAssignment", "listAssignments", "deleteAssignment", "classes", "setCode", "sendGrades", "migrationCheck"].indexOf(req.action) >= 0 && !isTeacher(who.email)) return out({ error: "forbidden", message: "Teachers only." });
-    if (req.action === "saveAssignment") return out(saveAssignment(who, req.assignment || {}));   // (step 6: the builder, teacher/build/)
-    if (req.action === "listAssignments") return out(listAssignments(who));
-    if (req.action === "deleteAssignment") return out(deleteAssignment(who, req.id));
-    if (req.action === "classes") return out(classes());   // (step 6: the synced classes, with their meetings from Calendar)
-    if (req.action === "setCode") return out(setCode(req.id, req.code));
-    if (req.action === "sendGrades") return out(sendGrades(req.id, true));
-    if (req.action === "migrationCheck") return out(migrationCheck(req.snapshot));   // (step 7: the snapshot's activity stars against the presets now)
-    if (req.action === "roster") return out(roster());
-    if (req.action === "setDue") return out(setDue(req.act, req.date));
-    if (req.action === "courses") return out(courses(who.email));
-    if (req.action === "syncClassroom") return out(syncClassroom(req.courseIds || []));
+    if (TACTS.indexOf(req.action) >= 0) {   // teacher actions: on the teacher's own Sheet (yours: this one)
+      if (!isTeacher(who.email)) return out({ error: "forbidden", message: "Teachers only." });
+      if (req.action === "addTeacher" || req.action === "listTeachers") { if (!isOwner(who.email)) return out({ error: "forbidden", message: "Only the Admin can add teachers." }); return out(req.action === "addTeacher" ? addTeacher(req.email, req.name) : listTeachers()); }
+      return out(asTeacher(who.email, function () { return teacherAction(req, who); }));
+    }
     return out({ error: "bad", message: "Unknown action." });
   } catch (err) {
     return out({ error: "server", message: String(err && err.message || err) });
   }
 }
+function teacherAction(req, who) {
+    if (req.action === "saveAssignment") return (saveAssignment(who, req.assignment || {}));   // (step 6: the builder, teacher/build/)
+    if (req.action === "listAssignments") return (listAssignments(who));
+    if (req.action === "deleteAssignment") return (deleteAssignment(who, req.id));
+    if (req.action === "classes") return (classes());   // (step 6: the synced classes, with their meetings from Calendar)
+    if (req.action === "setCode") return (setCode(req.id, req.code));
+    if (req.action === "sendGrades") return (sendGrades(req.id, true));
+    if (req.action === "migrationCheck") return (migrationCheck(req.snapshot));   // (step 7: the snapshot's activity stars against the presets now)
+    if (req.action === "roster") return (roster());
+    if (req.action === "setDue") return (setDue(req.act, req.date));
+    if (req.action === "courses") return (courses(who.email));
+    if (req.action === "syncClassroom") return (syncClassroom(req.courseIds || [], who));
+  return { error: "bad", message: "Unknown action." };
+}
 function doGet() { return out({ ok: true, service: "Algebra Notebook" }); }
 function out(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
-function isTeacher(email) { var e = String(email).toLowerCase(); return TEACHERS.map(function (t) { return t.toLowerCase(); }).indexOf(e) >= 0 || classTeachers().indexOf(e) >= 0; }
+function isTeacher(email) { var e = String(email).toLowerCase(); return isOwner(e) || classTeachers().indexOf(e) >= 0 || !!teacherSheetId(e); }
+function isOwner(email) { var e = String(email).toLowerCase(); return TEACHERS.map(function (t) { return t.toLowerCase(); }).indexOf(e) >= 0; }   // (the Admin: this Sheet is theirs)
+// ---- More teachers (step 6): this Sheet is the hub (only you have it): Teachers (each teacher's own Sheet), Rosters (who is whose student) and
+// Assignment Index (whose each assignment is).  A teacher's own Sheet holds their Students, Assignments, Attempts and Settings.
+function hubSheet(name, header) { var b = home(), sh = b.getSheetByName(name); if (!sh) { sh = b.insertSheet(name); sh.appendRow(header); sh.setFrozenRows(1); sh.getRange(1, 1, 1, header.length).setFontWeight("bold"); } return sh; }
+function teachersTab() { return hubSheet("Teachers", ["Email", "Name", "Sheet id", "Added"]); }
+function rostersTab() { return hubSheet("Rosters", ["Student", "Teacher", "Class"]); }
+function indexTab() { return hubSheet("Assignment Index", ["Assignment", "Owner"]); }
+function tabRows(sh, w) { var n = sh.getLastRow(); return n < 2 ? [] : sh.getRange(2, 1, n - 1, w).getValues(); }
+function teacherMap() {   // email -> their own Sheet id (cached ten minutes)
+  var c = CacheService.getScriptCache(), hit = c.get("tmap"); if (hit) return JSON.parse(hit);
+  var o = {}; try { tabRows(teachersTab(), 3).forEach(function (r) { if (r[0] && r[2]) o[String(r[0]).toLowerCase()] = String(r[2]); }); } catch (e) { }
+  c.put("tmap", JSON.stringify(o), 600); return o;
+}
+function teacherSheetId(email) { return teacherMap()[String(email).toLowerCase()] || ""; }
+function asTeacher(email, fn) {   // run fn on the teacher's own Sheet (yours, if they are you or have none)
+  var id = isOwner(email) ? "" : teacherSheetId(email); if (!id) return fn();
+  var keep = BOOK; BOOK = SpreadsheetApp.openById(id); try { return fn(); } finally { BOOK = keep; }
+}
+function ownerOf(asgId) { var r = tabRows(indexTab(), 2).filter(function (x) { return String(x[0]) === String(asgId); })[0]; return r ? String(r[1]).toLowerCase() : ""; }
+function indexPut(asgId, owner) { var sh = indexTab(), rows = tabRows(sh, 2); for (var i = 0; i < rows.length; i++) if (String(rows[i][0]) === String(asgId)) { if (!owner) sh.deleteRow(i + 2); else sh.getRange(i + 2, 2).setValue(owner); return; } if (owner) sh.appendRow([asgId, owner]); }
+function teachersOf(student) { var e = String(student).toLowerCase(), o = {}; tabRows(rostersTab(), 2).forEach(function (r) { if (String(r[0]).toLowerCase() === e && r[1]) o[String(r[1]).toLowerCase()] = 1; }); return Object.keys(o); }
+function listTeachers() { return { teachers: tabRows(teachersTab(), 4).map(function (r) { return { email: String(r[0]), name: String(r[1]), sheet: String(r[2]), added: r[3] instanceof Date ? r[3].toISOString() : String(r[3] || "") }; }) }; }
+function addTeacher(email, name) {   // a new teacher: their own Progress Sheet (in your Drive, shared with them as editor) and a row in Teachers
+  email = String(email || "").trim().toLowerCase(); name = String(name || "").trim();
+  if (!/^[^@\s]+@[^@\s]+$/.test(email)) return { error: "bad", message: "Type the teacher's school email address." };
+  if (DOMAIN && email.split("@")[1] !== DOMAIN) return { error: "bad", message: "Only " + DOMAIN + " accounts can be teachers." };
+  if (teacherSheetId(email) || isOwner(email)) return { error: "bad", message: email + " is already a teacher." };
+  var ss = SpreadsheetApp.create("Algebra Notebook Progress – " + (name || email));
+  var keep = BOOK; BOOK = ss; try { students(); settings(); assignmentsSheet(); attemptsSheet(); var s1 = ss.getSheetByName("Sheet1"); if (s1 && ss.getSheets().length > 1) ss.deleteSheet(s1); } finally { BOOK = keep; }
+  ss.addEditor(email);
+  teachersTab().appendRow([email, name, ss.getId(), new Date()]); CacheService.getScriptCache().remove("tmap");
+  return { ok: true, sheet: ss.getId(), url: ss.getUrl() };
+}
 function classTeachers() { var c = CacheService.getScriptCache(), hit = c.get("teachers"); if (hit != null) return JSON.parse(hit); var v = []; try { v = JSON.parse(getSetting("teachers") || "[]"); } catch (e) { } c.put("teachers", JSON.stringify(v), 600); return v; }
 
 // ---- sheets ----
-function book() {
+var BOOK = null;   // the Sheet a teacher action works on (that teacher's own); otherwise yours
+function book() { return BOOK || home(); }
+function home() {
   var s = null; try { s = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) { }
   if (!s) { var id = SHEET_ID || PropertiesService.getScriptProperties().getProperty("SHEET_ID"); s = SpreadsheetApp.openById(id); }
   return s;
@@ -157,8 +200,15 @@ function save(who, data, summary) {
     var st = students(), r2 = findRow(st, who.email);
     if (!r2) { st.appendRow([who.email, who.name, now]); r2 = findRow(st, who.email); }
     st.getRange(r2, 3).setValue(now);
-    if (summary && typeof summary === "object") writeSummary(st, r2, summary);
+    if (summary && typeof summary === "object") { var own = {}; Object.keys(summary).forEach(function (k) { var m = /^(?:_[td]:)?A:(.+)$/.exec(k), o = m && !/^P-/.test(m[1]) ? ownerOf(m[1]) : ""; if (!o || isOwner(o)) own[k] = summary[k]; }); writeSummary(st, r2, own); }   // (here: activities, presets and your own assignments; another teacher's go to their Sheet)
   } finally { lock.releaseLock(); }
+  if (summary && typeof summary === "object") teachersOf(who.email).forEach(function (t) {
+    if (isOwner(t) || !teacherSheetId(t)) return;
+    try { asTeacher(t, function () {
+      var mine = {}; Object.keys(summary).forEach(function (k) { var m = /^(?:_[td]:)?A:(.+)$/.exec(k); if (!m || /^P-/.test(m[1]) || ownerOf(m[1]) === t) mine[k] = summary[k]; });   // (activities and presets; of the assignments, only this teacher's)
+      var ts = students(), rr = findRow(ts, who.email); if (!rr) { ts.appendRow([who.email, who.name, now]); rr = findRow(ts, who.email); } ts.getRange(rr, 3).setValue(now); writeSummary(ts, rr, mine);
+    }); } catch (e) { }
+  });
   return { ok: true, updated: now };
 }
 // Students sheet: one column per activity with its stars (a finished activity is 5.0, split over its exercises in tenths, larger shares first;
@@ -224,7 +274,7 @@ function people(courseId, kind) {
 }
 // The Students sheet is made to match the chosen classes: students who are not in them leave the list (their saved work stays in the Data sheet,
 // so nothing is lost if they come back), and students who are in them but have not signed in yet are added.  The classes' teachers may open this page.
-function syncClassroom(ids) {
+function syncClassroom(ids, who) {
   if (!ids.length) return { error: "bad", message: "Choose at least one class." };
   var want = {}, teach = {};
   var noEmail = 0;
@@ -245,7 +295,10 @@ function syncClassroom(ids) {
     }
     Object.keys(want).forEach(function (e) { if (!have[e]) { st.appendRow([e, want[e], ""]); added++; } });
     putSetting("courses", JSON.stringify(ids));
-    Object.keys(byClass).forEach(function (id) { putSetting("roster:" + id, JSON.stringify(byClass[id])); });   // (who is in which class: each student's own due date)
+    Object.keys(byClass).forEach(function (id) { putSetting("roster:" + id, JSON.stringify(byClass[id])); });
+    if (who) { var me = String(who.email).toLowerCase(), R = rostersTab(), rr = tabRows(R, 3);   // (the hub's Rosters: this teacher's students, by class)
+      for (var q = rr.length - 1; q >= 0; q--) if (String(rr[q][1]).toLowerCase() === me) R.deleteRow(q + 2);
+      var add = []; Object.keys(byClass).forEach(function (id) { byClass[id].forEach(function (e) { add.push([e, me, id]); }); }); if (add.length) R.getRange(R.getLastRow() + 1, 1, add.length, 3).setValues(add); }   // (who is in which class: each student's own due date)
     putSetting("teachers", JSON.stringify(Object.keys(teach)));
     CacheService.getScriptCache().remove("teachers");
   } finally { lock.releaseLock(); }
@@ -256,7 +309,8 @@ function syncClassroom(ids) {
 // ---- Assignments and Attempts (Question Bank migration, step 5).  Step 6 sends each assignment's attempts to its owner's own Sheet.
 function assignmentsSheet() { var sh = sheet("Assignments", ["Id", "Title", "Abbreviation", "Owner", "Classes", "Due (JSON)", "Items (JSON)", "Created", "Classroom (JSON)"]); if (sh.getRange(1, 9).getValue() !== "Classroom (JSON)") sh.getRange(1, 9).setValue("Classroom (JSON)").setFontWeight("bold"); return sh; }
 function attemptsSheet() { return sheet("Attempts", ["Time", "Student", "Class", "Assignment", "Question", "Version", "Seed", "Mode", "Tier", "Correct", "Tries"]); }
-function getAssignment(id, who) {
+function getAssignment(id, who) { var o = ""; try { o = ownerOf(id); } catch (e) { } return o ? asTeacher(o, function () { return getAssignment0(id, who); }) : getAssignment0(id, who); }
+function getAssignment0(id, who) {
   id = String(id || ""); if (!id) return { error: "bad", message: "No assignment id." };
   var sh = assignmentsSheet(), n = sh.getLastRow(); if (n < 2) return { assignment: null };
   var rows = sh.getRange(2, 1, n - 1, 8).getValues();
@@ -270,6 +324,11 @@ function getAssignment(id, who) {
   return { assignment: null };
 }
 function logAttempts(who, rows) {
+  var by = {}; (rows || []).slice(0, 500).forEach(function (r) { var a = String(r && r.a || ""), o = /^A-/.test(a) ? ownerOf(a) : ""; (by[o] = by[o] || []).push(r); });
+  var n = 0; Object.keys(by).forEach(function (o) { var res = o ? asTeacher(o, function () { return logAttempts0(who, by[o]); }) : logAttempts0(who, by[o]); n += res.n || 0; });
+  return { ok: true, n: n };
+}
+function logAttempts0(who, rows) {
   if (!rows.length) return { ok: true, n: 0 };
   rows = rows.slice(0, 500);
   var lock = LockService.getScriptLock(); lock.waitLock(20000);
@@ -327,6 +386,7 @@ function saveAssignment(who, a) {
     });
     assignmentsSheet().getRange(at + 2, 9).setValue(JSON.stringify(posts)); row[8] = JSON.stringify(posts);
   }
+  try { indexPut(id, me); } catch (e) { }   // (whose assignment it is: students' work on it goes to this teacher's Sheet)
   return { ok: true, assignment: asgRec(row), warnings: warn };
 }
 function deleteAssignment(who, id) {
@@ -335,7 +395,7 @@ function deleteAssignment(who, id) {
     if (String(A.rows[i][3]).toLowerCase() !== me) return { error: "forbidden", message: "That assignment belongs to another teacher." };
     var posts = {}, warn = []; try { posts = JSON.parse(A.rows[i][8] || "{}"); } catch (e) { }
     Object.keys(posts).forEach(function (c) { try { Classroom.Courses.CourseWork.remove(c, posts[c]); } catch (e) { warn.push(className(c) + ": " + String(e && e.message || e)); } });   // (its Classroom posts go too)
-    A.sh.deleteRow(i + 2); return { ok: true, warnings: warn };
+    A.sh.deleteRow(i + 2); try { indexPut(id, ""); } catch (e) { } return { ok: true, warnings: warn };
   }
   return { error: "bad", message: "That assignment was not found." };
 }
@@ -398,6 +458,9 @@ function sendGrades(id, force) {   // the grades of one assignment, to each clas
   return { ok: true, sent: sent, warnings: warn };
 }
 function dailyGrades() {   // the timer: every posted assignment whose due date has passed in a class sends that class's grades again (later work counts, late)
+  dailyGrades0(); Object.keys(teacherMap()).forEach(function (t) { try { asTeacher(t, dailyGrades0); } catch (e) { } });
+}
+function dailyGrades0() {
   asgRows().rows.forEach(function (r) { var p = {}; try { p = JSON.parse(r[8] || "{}"); } catch (e) { } if (Object.keys(p).length) { try { sendGrades(String(r[0]), false); } catch (e) { } } });
 }
 function setupTimer() { ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === "dailyGrades") ScriptApp.deleteTrigger(t); }); ScriptApp.newTrigger("dailyGrades").timeBased().everyDays(1).atHour(5).create(); }
