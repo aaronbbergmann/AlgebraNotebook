@@ -5101,7 +5101,7 @@
     if (!rev || !BUILT[rev] || !(BUILT[rev].asg || BUILT[rev].practice) || mode === "create" || mode === "demo") return;
     var sig = attSig(); if (ATT_SEEN.indexOf(sig) >= 0) return; ATT_SEEN.push(sig); if (ATT_SEEN.length > 60) ATT_SEEN.shift();
     var it = BUILT[rev].items[revI] || {}, qid = it.qid || QID, d = AN_BANK[qid] || {}, pb = pq() && typeof m3Cur === "function" ? m3Cur() : null;
-    var row = { t: new Date().toISOString(), a: BUILT[rev].asg || "practice", q: qid, v: d.version || 1, seed: (pb && pb.seed) || (EXP && EXP.seed) || "", m: mode, tier: pq() ? Math.min(QZ.pi || 0, 2) : 0, ok: !!ok, tries: 1 + (pq() ? (QZ.wrong || 0) : (EQW || 0)) };
+    var row = { t: new Date().toISOString(), a: BUILT[rev].asg || "practice", q: qid, v: d.version || 1, seed: (pb && pb.seed) || (EXP && EXP.seed) || "", m: mode, tier: pq() ? Math.min(QZ.pi || 0, 2) : 0, ok: !!ok, tries: Math.max(1, (pq() ? (QZ.wrong || 0) : (EQW || 0)) + (ok ? 1 : 0)) };   // (each error is a try, and so is the right answer that ends it)
     var Q = []; try { Q = JSON.parse(localStorage.getItem("an.attempts") || "[]"); } catch (e) { Q = []; } Q.push(row); if (Q.length > 500) Q = Q.slice(-500);
     try { localStorage.setItem("an.attempts", JSON.stringify(Q)); } catch (e) { }
     attFlush();
