@@ -9775,7 +9775,7 @@ var ESPIC = {
   })();
   // ---- 2.1 Show work: the work on each problem, written out (every exercise and mode). Finished problems are kept for the session; the one in hand is shown as it stands.
   var C21W = [];
-  function c21On() { return pq() && act === "2.1" && !!QZ && !!QZ.order; }
+  function c21On() { return pq() && (act === "2.1" || (act === "1.1" && (lesson === 1 || lesson === 2))) && !!QZ && !!QZ.order; }   // (1.1A Parents and Graph & Describe, with their RevT1 copies, keep the same record)
   function c21Plain(h) { return String(h || "").replace(/<span class="fr"><span>([^<]*)<\/span><span>([^<]*)<\/span><\/span>/g, "($1/$2)").replace(/<sup>2<\/sup>/g, "²").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
   function c21Steps() {
     var st = [], txt = function (t) { st.push({ txt: true, eqs: [t] }); }, eq = function (e, cls) { st.push({ eqs: [e], cls: cls || "" }); };
@@ -9807,6 +9807,30 @@ var ESPIC = {
       eq("a = " + gwnAT(g.a) + ",  h = " + nf(g.h) + ",  k = " + nf(g.k));
       eq("vertex (" + nf(g.h) + ", " + nf(g.k) + ")");
       eq(c21Plain(gwnEq(g.a, g.h, g.k)) + (g.ok ? "  ✓" : ""), "cg");   // (g(x) last: it is the answer)
+      return st;
+    }
+    if (act === "1.1" && QZ.order && QZ.order.length) {   // 1.1A: Memorizing Parents (lesson 1) and Graph & Describe (lesson 2)
+      var pf = PG.fam, pe = "f(x) = " + QEQ[pf].replace("^2", "²"), fin = QZ.step >= 4, rows = [];
+      TB.rows().forEach(function (q) { var qx = TB.x(q), qy = TB.y(q); if (q.done && isFinite(qx) && isFinite(qy)) rows.push("(" + nf(qx) + ", " + nf(qy) + ")"); });
+      var SH = ["a horizontal line through (0, 1)", "a line through (0, 0) with slope 1", "a V with its vertex at (0, 0)", "a U (a parabola) with its vertex at (0, 0)"];
+      if (lesson === 1) {
+        txt("Parent " + (QZ.pi + 1) + " of 4: the " + QFAM[pf] + " family. Its equation, table and graph?");
+        if (PG.show.eq) eq(pe, "cf");
+        if (rows.length) eq("points: " + rows.join(", "));
+        if (PG.shape && shapeOK(PG.shape)) txt("graphed: " + SH[pf]);
+        if (fin) txt("The " + QFAM[pf] + " parent is " + pe + ", " + SH[pf] + ".");   // (the answer)
+        return st;
+      }
+      var gq = c21Plain(eqHTML()); gq = gq.indexOf("=") >= 0 ? gq : "g(x) = " + gq;
+      eq(gq, "cg"); txt("Graph g and its parent, fill in the table, and describe the translation.");
+      if (PG.pdone) eq(pe + " graphed (the " + QFAM[pf] + " parent)", "cf");
+      var gp = [];
+      if (ptAvail && ptAvail()) ptRows().forEach(function (q) { if (ptRowDone(q)) { var pp = ptPoint(q); gp.push("(" + nf(pp[0]) + ", " + nf(pp[1]) + ")"); } });
+      if (!gp.length) gp = rows;
+      if (gp.length) eq("points of g: " + gp.join(", "));
+      if (PG.show.graph) txt("g graphed");
+      var dd = $("pgDescTx").value.trim();
+      if (dd) txt(dd + (PG.dOK ? "  ✓" : "")); else if (fin && PG.dOK) txt(c21Plain(descHTML().replace(/<br>/g, "; ")));   // (the description last: it is the answer)
       return st;
     }
     if (gd2() && QZ.tr && QZ.tr[QZ.pi]) {   // Translations, Reflections and Stretches (and Create): g, the table's points, the description, the graphs
@@ -9969,7 +9993,7 @@ var ESPIC = {
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { pqMsg(""); }
       if (!est() && !gwN() && ok.graph && !PG.show.graph) { var tg = document.querySelector(".tog[data-part=graph]"); if (tg) tg.click(); }   // a right graph is checked on the spot: the check mark, and the true curve
       if (ok.eq && ok.table && ok.graph && ok.parent && ok.desc) {
-        QZ.step = 4; if (QZ.ww) QZ.ww.fin = true; if (QZ.wrong > 0) logAttempt(false);   /* (a problem with errors earns nothing, but is still an attempt) */ var last = QZ.pi === QZ.order.length - 1; if (act === "2.1") c21Save();
+        QZ.step = 4; if (QZ.ww) QZ.ww.fin = true; if (QZ.wrong > 0) logAttempt(false);   /* (a problem with errors earns nothing, but is still an attempt) */ var last = QZ.pi === QZ.order.length - 1; c21Save();
         var c2Err = QZ.wrong > 0;   // any error message in this round (in Demo, this problem) means no Progress for it
         if (!QZ.custom && mode !== "create" && mode !== "demo" && !c2Err && !ivL()) { var pk = LK() + ":" + mode + ":p"; if (!prog[pk]) { prog[pk] = 1; saveProg(); updProg(); } }   // one finished problem already earns this mode's first level, and all the levels below it
         pqMsg(mode === "solo" ? cheer() : est() || wf() || m3() ? (last && QZ.order.length > 1 ? "You have finished all three!" : "Well done!") : gd() ? (last && QZ.order.length > 1 ? (QZ.order.length === 3 ? "You have finished all three!" : "You have finished all four!") : "Well done!") : last ? "You have all four parents!" : "That's the " + QFAM[qFam()] + " parent!", "ok");
