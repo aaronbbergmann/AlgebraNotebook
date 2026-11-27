@@ -36,6 +36,8 @@ Folders that are not activity pages (`1-1`, `1-2`, `2-1`, `2-4`, `1-1play`, `pla
 - Seeds: every problem made by the 2.x / 3.1 word-problem engine has `pb.seed`; `withSeed(seed, fn)` makes the same problem again. All randomness goes through `rnd()` (never `Math.random()` in a generator).
 - Converting a question: record problems from fixed seeds first (old code), move it, and check the same seeds give identical problems; only the intended changes may differ.
 
+No file or folder name may start with `_`: GitHub Pages does not publish them (the site then misses the file). `bank/place.js` holds where each bank question runs (read by the engine and the builder, `teacher/build/`, which tools/build_pages.py writes from `engine/build.html`).
+
 Syntax check before a commit: `node --check engine/app.js` (and each changed file in `bank/`).
 
 ## Copies log
