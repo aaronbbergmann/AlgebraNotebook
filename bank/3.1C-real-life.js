@@ -11,7 +11,7 @@
   writeRounds: 1,
   showWork: "GUESS",
   patterns: {"solo": "Submit"},
-  version: 1,
+  version: 2,   // 2: supplemental text (rounding) in its one place, the smaller line just below the step
   build: function () {
     // 3.1C the dropped object: h(t) = −16t² + s₀ in the centre pane.  The student drags the place it lands ("the ground": h = 0) onto h(t) and the height onto s₀,
     // then undoes the operations in order, as in Play Solve: drag + s₀ across the =, click the subtraction, drag −16 across (it divides), click the fraction bar,
@@ -47,8 +47,8 @@
       var o2 = ws("o2", "vop", "Divide.", { op: "o2", after: opA("o2", 4), hint: ["A fraction bar means divide.", "Click the bar between −" + s0 + " and −16."] });
       var c2 = ws("c2", "num", "Work it out.", { pre: "−" + s0 + " ÷ (−16) =", ans: n, tol: Number.isInteger(n) ? 1e-9 : 0.0051, after: setS(4), hint: ["A negative divided by a negative is positive.", "−" + s0 + " ÷ (−16) = " + n + "."] });
       var ex = ws("ex", "vex", "Undo the exponent.", { after: setS(5), hint: ["The square root undoes the square.", "Drag the 2 across the = sign. It becomes ±√."] });
-      var o3 = ws("o3", "vop", "Take the square root." + (sq ? "" : " Round to the nearest tenth."), { op: "o3", after: opA("o3", 6), hint: [sq ? "What number times itself is " + n + "?" : "√" + n + " is between " + Math.floor(r) + " and " + Math.ceil(r) + ".", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
-      var c3 = ws("c3", "num", "Work it out.", { pre: "√" + n + " " + (sq ? "=" : "≈"), post: sq ? "" : "(to the nearest tenth)", ans: sq ? r : Tr, tol: sq ? 1e-9 : 0.051, after: setS(6), hint: [sq ? "What number times itself is " + n + "?" : "Use a calculator, then round.", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
+      var o3 = ws("o3", "vop", "Take the square root." + (sq ? "" : "<span class=\"supp\">Round to the nearest tenth.</span>"), { op: "o3", after: opA("o3", 6), hint: [sq ? "What number times itself is " + n + "?" : "√" + n + " is between " + Math.floor(r) + " and " + Math.ceil(r) + ".", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
+      var c3 = ws("c3", "num", "Work it out." + (sq ? "" : "<span class=\"supp\">Round to the nearest tenth.</span>"), { pre: "√" + n + " " + (sq ? "=" : "≈"), post: "", ans: sq ? r : Tr, tol: sq ? 1e-9 : 0.051, after: setS(6), hint: [sq ? "What number times itself is " + n + "?" : "Use a calculator, then round.", "√" + n + " " + (sq ? "= " + r : "≈ " + c2F(Tr)) + "."] });
       var ng = ws("ng", "pick", "Which solution answers the question?", { opts: m3Sh([{ t: sq ? "t = " + r : "t ≈ " + c2F(Tr), ok: true }, { t: sq ? "t = −" + r : "t ≈ −" + c2F(Tr), ok: false, why: "A time cannot be negative." }]), after: setS(7), hint: ["Time is counted forward from the drop.", "A time cannot be negative: keep the positive solution."] });
       var ans = { id: "ans", lab: "Time", ask: "How long does it take to hit " + place + "?", pre: sq ? "<i>t</i> =" : "<i>t</i> ≈", post: "s", ans: sq ? r : Tr, tol: sq ? 1e-9 : 0.051,
         nums: [n, c2R(s0 / 16 / 2, 1), c2R(r * 2, 1)].filter(function (v, j, A) { return Math.abs(v - Tr) > 0.06 && A.indexOf(v) === j; }),

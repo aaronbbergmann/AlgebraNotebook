@@ -3,7 +3,7 @@
 // graphs the parabola in Desmos and answers a question about a third point.  Used by 2.4A and 3.1C.
 (window.AN_BANK || (window.AN_BANK = {}))["2.4A-vertex-point"] = {
   id: "2.4A-vertex-point",
-  version: 3,   // 3: Show work shortened: Solve keeps one line per operation (41 = 400a + 57, -16 = 400a, a = -0.04)
+  version: 4,   // 4: supplemental text (rounding) in its one place, the smaller line just below the step
   title: "Vertex and a Point",
   section: "2.4", example: 1,
   skills: ["vertex form", "substitution", "solve for a", "Desmos graphing"],
@@ -92,8 +92,8 @@
       var o3 = ws("o3", "vop", "Combine " + c2F(V.Y0) + " − " + k + ".", { op: "o3", after: opA("o3", 4), wl: c2F(R) + " = " + V.D + "a", hint: ["Combine the numbers on the left.", "Click the − between " + c2F(V.Y0) + " and " + k + "."] });
       var c3 = ws("c3", "num", "Work it out.", { pre: c2F(V.Y0) + " − " + k + " =", ans: R, after: setS(4), wl: "", hint: ["Subtract.", c2F(V.Y0) + " − " + k + " = " + c2F(R) + "."] });
       var dv = ws("dv", "vdv", "Undo the multiplication.", { after: setS(5), wl: c2F(R) + "/" + V.D + " = a", hint: [V.D + " multiplies a. Undo it by dividing.", "Drag " + V.D + " across the = sign."] });
-      var o4 = ws("o4", "vop", "Divide." + (V.ap ? " Round to the nearest hundredth." : ""), { op: "o4", dfr: [R, V.D], after: opA("o4", 6), wl: "a " + aTx, hint: ["A fraction bar means divide.", "Click the bar between " + c2F(R) + " and " + V.D + "."] });
-      var c4 = ws("c4", "num", "Work it out.", { pre: c2F(R) + " ÷ " + V.D + " =", post: V.ap ? "(to the nearest hundredth)" : "", ans: V.a, tol: V.ap ? 0.005 + 1e-9 : 1e-9, after: setS(6), wl: "", hint: ["Divide." + (V.ap ? " Round to the nearest hundredth." : ""), c2F(R) + " ÷ " + V.D + " " + aTx + "."] });
+      var o4 = ws("o4", "vop", "Divide." + (V.ap ? "<span class=\"supp\">Round to the nearest hundredth.</span>" : ""), { op: "o4", dfr: [R, V.D], after: opA("o4", 6), wl: "a " + aTx, hint: ["A fraction bar means divide.", "Click the bar between " + c2F(R) + " and " + V.D + "."] });
+      var c4 = ws("c4", "num", "Work it out." + (V.ap ? "<span class=\"supp\">Round to the nearest hundredth.</span>" : ""), { pre: c2F(R) + " ÷ " + V.D + " =", post: "", ans: V.a, tol: V.ap ? 0.005 + 1e-9 : 1e-9, after: setS(6), wl: "", hint: ["Divide." + (V.ap ? " Round to the nearest hundredth." : ""), c2F(R) + " ÷ " + V.D + " " + aTx + "."] });
       var gr = { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph " + E[0] + " in Desmos.", line: "graphed " + Ftx + " in Desmos", hint: ["Type the equation on the first line of Desmos.", "Type " + E[1] + "."] };
       var ansA = function () { return q; };
       var isY = V.qt === "y", aTx2 = (V.qt === "xi" && !Number.isInteger(V.ans) ? "about " : "") + c2F(V.ans);

@@ -13,7 +13,7 @@
   writeRounds: 1,
   showWork: "GUESS",
   patterns: {"sequence": "Try Another", "calculate": "Try Another", "solo": "Submit"},
-  version: 3,   // 3: Show work shortened: Solve keeps one line per operation
+  version: 4,   // 4: supplemental text (rounding) in its one place, the smaller line just below the step
   build: function () {
     var C2S242 = [
       { pic: "temp", up: true, u: "°C", xu: "hours", s: "A meteorologist models tomorrow's temperature with a parabola. Here " + c2X + " is the number of hours after midnight and " + c2Y + " is the temperature in degrees Celsius.",
@@ -91,8 +91,8 @@
       var o3 = ws("o3", "vop", "Multiply.", { op: "o3", after: opA("o3", 3), wl: N(V.Y0) + " = " + N(V.D) + "a", hint: ["The two numbers in parentheses multiply.", "Click (" + N(V.d1) + ")(" + N(V.d2) + ")."] });
       var c3 = ws("c3", "num", "Work it out.", { pre: "(" + N(V.d1) + ")(" + N(V.d2) + ") =", ans: V.D, after: setS(3), wl: "", hint: ["Multiply the two numbers.", "(" + N(V.d1) + ")(" + N(V.d2) + ") = " + N(V.D) + "."], wrong: function (v) { return v === -V.D ? "Check the sign: " + (V.D < 0 ? "a positive times a negative is negative." : "two negatives (or two positives) make a positive.") : ""; } });
       var dv = ws("dv", "vdv", "Undo the multiplication.", { after: setS(5), wl: N(V.Y0) + "/" + Pn(V.D) + " = a", hint: [N(V.D) + " multiplies a. Undo it by dividing.", "Drag " + N(V.D) + " across the = sign."] });
-      var o4 = ws("o4", "vop", "Divide." + (V.ap ? " Round to the nearest hundredth." : ""), { op: "o4", dfr: [V.Y0, V.D], after: opA("o4", 6), wl: "a " + aTx, hint: ["A fraction bar means divide.", "Click the bar between " + N(V.Y0) + " and " + N(V.D) + "."] });
-      var c4 = ws("c4", "num", "Work it out.", { pre: N(V.Y0) + " ÷ " + Pn(V.D) + " =", post: V.ap ? "(to the nearest hundredth)" : "", ans: V.a, tol: V.ap ? 0.005 + 1e-9 : 1e-9, after: setS(6), wl: "", hint: ["Divide." + (V.ap ? " Round to the nearest hundredth." : ""), N(V.Y0) + " ÷ " + Pn(V.D) + " " + aTx + "."] });
+      var o4 = ws("o4", "vop", "Divide." + (V.ap ? "<span class=\"supp\">Round to the nearest hundredth.</span>" : ""), { op: "o4", dfr: [V.Y0, V.D], after: opA("o4", 6), wl: "a " + aTx, hint: ["A fraction bar means divide.", "Click the bar between " + N(V.Y0) + " and " + N(V.D) + "."] });
+      var c4 = ws("c4", "num", "Work it out." + (V.ap ? "<span class=\"supp\">Round to the nearest hundredth.</span>" : ""), { pre: N(V.Y0) + " ÷ " + Pn(V.D) + " =", post: "", ans: V.a, tol: V.ap ? 0.005 + 1e-9 : 1e-9, after: setS(6), wl: "", hint: ["Divide." + (V.ap ? " Round to the nearest hundredth." : ""), N(V.Y0) + " ÷ " + Pn(V.D) + " " + aTx + "."] });
       var gr = { id: "gr", fine: 1, lab: "Graph", type: "dsm", ask: "Graph " + E[0] + " in Desmos.", line: "graphed " + Ftx + " in Desmos", hint: ["Type the equation on the first line of Desmos.", "Type " + E[1] + "."] };
       var isH = V.qt === "h";
       var ansA = function () { return qtx; };
