@@ -4100,11 +4100,7 @@
     // the pane shows one number before and one after the variable: use a free place, and the two numbers join when both are taken
     var sIdx = nq.ks.findIndex(function (z) { return z.v === "s"; }), pIdx = nq.ks.findIndex(function (z) { return z.v === "p"; });
     if (sIdx < 0) nq.ks.push({ v: "s", k: k }); else if (pIdx < 0) nq.ks.push({ v: "p", k: k }); else { nq.ks[sIdx].k = add(nq.ks[sIdx].k, k); if (!nq.ks[sIdx].k.n) nq.ks.splice(sIdx, 1); }
-    if (mode === "calculate" && !ready && !cqPane()) {   // (Play Solve and 1.4 One Variable: nothing to work out yet; the numbers are combined next, each asked as it is)
-      var want = { a: nq.a, b: nq.b, e: nq.e, c: nq.c, rel: nq.rel }; nq.ks.forEach(function (z) { want.c = add(want.c, neg(z.k)); });
-      runCalc([{ q: (k.n > 0 ? "Add " + sg(k) : "Subtract " + sg(neg(k))) + (k.n > 0 ? " to" : " from") + " both sides of the " + eqName(i, ws.length) + ". Type the new equation:", eq: want }], [i], function () { addEqAll(i, k, true); });
-      return;
-    }
+    // (Calculate asks only arithmetic, one number at a time: nothing to work out yet; the numbers are combined next, each asked as it is)
     snap(); ws[i] = nq; mulNote = "!" + (k.n > 0 ? "+ " + sg(k) : "\u2212 " + sg(neg(k))); done(i);
   }
   function mulEq(i, k, ready, dv) {   // dv: the divisor, when the equation is divided (k is then its reciprocal)
@@ -4115,17 +4111,11 @@
     if (q.flip) nq.flip = true;
     if (q.rel) nq.rel = k.n < 0 ? relRev(q.rel) : q.rel;   // multiplying or dividing by a negative number turns the sign around
     if (q.rel && k.n < 0) relTurned = true;
-    if (mode === "calculate" && !ready && cqPane()) {   // Play Solve and 1.4 One Variable: each number times k, one at a time ("3 \u00b7 2 =", "10 \u00b7 2 =")
+    if (mode === "calculate" && !ready) {   // Calculate: each number times k, one at a time ("3 \u00b7 2 =", "10 \u00b7 2 ="), in every exercise
       var sym = dv ? " \u00f7 " + wrap(dv) + " =" : " \u00b7 " + wrap(k) + " =", its = [];
       [q.a, q.b, q.e].forEach(function (v) { if (v && v.n && !(Math.abs(v.n) === 1 && v.d === 1)) its.push({ q: wrap(v) + sym, num: mul(v, k) }); });   // (x alone needs no question)
       q.ks.map(function (z) { return z.k; }).concat([q.c]).forEach(function (v) { if (v && v.n) its.push({ q: wrap(v) + sym, num: mul(v, k) }); });
       if (its.length) { runCalc(its, [i], function () { mulEq(i, k, true, dv); }); return; }
-    }
-    if (mode === "calculate" && !ready) {
-      var want = { a: nq.a, b: nq.b, e: nq.e, c: nq.c, rel: nq.rel };   // the typed equation is compared with its numbers gathered on one side
-      nq.ks.forEach(function (z) { want.c = add(want.c, neg(z.k)); });
-      runCalc([{ q: (dv ? "Divide the " + eqName(i, ws.length) + " by " + wrap(dv) : "Multiply the " + eqName(i, ws.length) + " by " + wrap(k)) + ". Type the new equation:", eq: want }], [i], function () { mulEq(i, k, true, dv); });
-      return;
     }
     snap(); ws[i] = nq; mulNote = dv ? "!\u00f7 " + wrap(dv) : wrap(k); done(i);
     if (q.rel && k.n < 0) note((dv ? "Dividing" : "Multiplying") + " both sides by a negative number turns the sign around: " + qRel(q) + " becomes " + qRel(nq) + ".");
@@ -4137,8 +4127,8 @@
     var s = { a: add(A.a, B.a), b: add(A.b, B.b), e: add(A.e, B.e), ks: A.ks.concat(B.ks), c: add(A.c, B.c) };
     // in Calculate mode the student types the sum
     if (mode === "calculate" && !ready && !A.ks.length && !B.ks.length && !A.raw && !B.raw) {
-      runCalc([{ q: "Add the " + eqName(f, ws.length) + " and the " + eqName(t, ws.length) + ". Type the new equation:", eq: s }], [f, t], function () { addEq(f, t, true); });
-      return;
+      var sits = []; allV().concat(["c"]).forEach(function (v) { var c = v === "c" ? "c" : CK[v], p = A[c], q = B[c]; if (p && q && p.n && q.n) sits.push({ q: sg(p) + " + " + wrap(q) + " =", num: add(p, q) }); });   // (each sum, one at a time: 3 + (-2) =)
+      if (sits.length) { runCalc(sits, [f, t], function () { addEq(f, t, true); }); return; }
     }
     if (lesson === 3 && sys.length < 2) {
       var n = allV().filter(function (v) { return s[CK[v]].n; }).length;
@@ -6224,7 +6214,11 @@
   function subDist(i, side, idx, ready) {
     if (locked) return; var q = cp(ws[i]), g = q[side][idx]; if (!g || g.k !== "g") return;
     var out = g.in.map(function (t) { return T(mul(t.c, g.c), t.v); });
-    if (mode === "calculate" && !ready) { subAsk(i, "Distribute " + plain(termHTML(g, true)) + ":", "e.g. 8x-24", exprCheck(out), function () { subDist(i, side, idx, true); }); return; }
+    if (mode === "calculate" && !ready) {   // Calculate asks only arithmetic, one number at a time: each product (4 · (−6) =); x times the number needs no question
+      var asks = g.in.filter(function (t) { return !(t.v && Math.abs(t.c.n) === 1 && t.c.d === 1); }).map(function (t) { return { q: sg(g.c) + " · " + wrap(t.c), want: mul(t.c, g.c) }; });
+      (function ask(j) { if (j >= asks.length) { subDist(i, side, idx, true); return; } subAsk(i, "Calculate " + asks[j].q + ":", "e.g. 8", numCheck(asks[j].want), function () { ask(j + 1); }); })(0);
+      return;
+    }
     snap(); q[side].splice.apply(q[side], [idx, 1].concat(out)); q[side] = fixSide(q[side]); ws[i] = q; subDone(i);
   }
   function subComb(i, side, a, b, ready) {
@@ -6233,7 +6227,7 @@
     if (a > b) { var t0 = a; a = b; b = t0; A = q[side][a]; B = q[side][b]; }
     var sum = T(add(A.c, B.c), A.v);
     if (mode === "calculate" && !ready) {
-      subAsk(i, "Combine " + plain(termHTML(A, true) + " " + (B.c.n < 0 ? "−" : "+") + " " + termHTML(B, false)) + ":", A.v ? "e.g. 11" + A.v : "e.g. 3", exprCheck([sum]), function () { subComb(i, side, a, b, true); }); return;
+      subAsk(i, "Calculate " + sg(A.c) + " + " + wrap(B.c) + ":", "e.g. 11", numCheck(add(A.c, B.c)), function () { subComb(i, side, a, b, true); }); return;   // (one number: the coefficients added)
     }
     snap(); q[side][a] = sum; q[side].splice(b, 1); q[side] = fixSide(q[side]); ws[i] = q; subDone(i);
   }
@@ -11654,13 +11648,13 @@ var ESPIC = {
     if (p.rf === "x") {
       var body = wfRuleF(p), cH = wfStr(p) ? wfScH(p) : "−";
       S.push({ m: "\u0001" + cH + "(" + body + ")\u0002", t: "", kind: "sub", q: null });
-      S.push({ m: g, t: wfStr(p) ? "Multiply to take away the parentheses." : "Take away the parentheses.", kind: "paren", q: { lab: cH + "(" + body + ")", g: true, ask: wfStr(p) ? "Multiply to take away the parentheses." : "Take away the parentheses." } });
+      S.push({ m: g, t: wfStr(p) ? "Multiply to take away the parentheses." : "Take away the parentheses.", kind: "paren", q: null });   // (Calculate asks only arithmetic: a sign rewrite is done on the click, as in Sequence)
     } else if (p.fam === 1) {
       S.push({ m: wfCo(a) + "\u0001(−" + wfX + ")\u0002" + (p.fk ? wfSg(p.fk) : ""), t: "", kind: "sub", q: null });
-      S.push({ m: g, t: "Take away the parentheses.", kind: "paren", q: { lab: wfCo(a) + "(−" + wfX + ")", fn: -a, dh: 0, ask: "Take away the parentheses." } });
+      S.push({ m: g, t: "Take away the parentheses.", kind: "paren", q: null });
     } else {
       S.push({ m: wfCo(a) + wfBar(p.fam, "\u0003−" + wfX + (p.fh ? wfSg(-p.fh) : "") + "\u0004") + (p.fk ? wfSg(p.fk) : ""), t: "", kind: "sub", q: null });
-      S.push({ m: g, t: "Rewrite " + wfVN(p.fam) + " without the negative on x.", kind: "inner", q: { lab: wfBar(p.fam, "−" + wfX + (p.fh ? wfSg(-p.fh) : "")), abs: p.fh, fam: p.fam, ask: "Rewrite " + wfVN(p.fam) + " so x is not negative." } });
+      S.push({ m: g, t: "Rewrite " + wfVN(p.fam) + " without the negative on x.", kind: "inner", q: null });
     }
     S.forEach(function (st) { st.h = st.m.replace(/[\u0001-\u0006]/g, ""); });
     return S;
@@ -11678,7 +11672,7 @@ var ESPIC = {
       if (dh) {
         ren("\u0001" + wfCo(a) + "(" + xs + ")\u0002");
         var c1 = -a * dh; cons = [c1].concat(cons);
-        ren(wfCo(a) + wfX, "Take away the parentheses.", "paren", a === 1 ? null : { lab: wfCo(a) + "(" + xs + ")", fn: a, dh: dh });
+        ren(wfCo(a) + wfX, "Take away the parentheses.", "paren", a === 1 ? null : { lab: nf(a) + " · " + (-dh < 0 ? "(−" + nf(dh) + ")" : nf(-dh)), ans: c1, ask: "Multiply." });   // (Calculate: the one product, 2 · (−3) =)
       } else ren(wfCo(a) + wfX);
     } else if (dh && p.fh) {
       var hs = p.fh + dh;
@@ -11941,7 +11935,7 @@ var ESPIC = {
     } else if (st.q.abs !== undefined) {   // |-x - h| written as |x + h|
       var sa = true; for (var xa = -3; xa <= 3; xa++) { var va; try { va = f(xa); } catch (e5) { sa = false; break; } if (!(Math.abs(va - wfVE(st.q.fam || 2, xa + st.q.abs, xa)) < 1e-9)) { sa = false; break; } }
       ok = sa && !/(\||\()\s*[-−]\s*x/.test(raw); if (sa && !ok) msg = "That is right, but x is still negative inside.";
-    } else if (st.kind === "paren") {
+    } else if (st.kind === "paren" && st.q.ans === undefined) {
       var same = true; for (var x = -3; x <= 3; x++) { var v; try { v = f(x); } catch (e2) { same = false; break; } if (!(Math.abs(v - st.q.fn * (x - st.q.dh)) < 1e-9)) { same = false; break; } }
       ok = same && !/[()]/.test(raw); if (same && !ok) msg = "That is right, but the parentheses are still there.";
     } else { var v0; try { v0 = f(0); } catch (e3) { v0 = NaN; } ok = !/x/i.test(raw) && Math.abs(v0 - st.q.ans) < 1e-9; }
