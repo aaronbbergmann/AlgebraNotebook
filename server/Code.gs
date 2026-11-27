@@ -36,13 +36,14 @@ function doPost(e) {
     if (req.action === "due") return out({ due: dueDates() });
     if (req.action === "assignment") return out(getAssignment(req.id, who));   // (step 5: /a/?id= fetches its record once)
     if (req.action === "attempts") return out(logAttempts(who, req.rows || []));   // (step 5: finished problems, in batches)   // (any signed-in student: the welcome page opens the activity due next)
-    if (["roster", "setDue", "courses", "syncClassroom", "saveAssignment", "listAssignments", "deleteAssignment", "classes", "setCode", "sendGrades"].indexOf(req.action) >= 0 && !isTeacher(who.email)) return out({ error: "forbidden", message: "Teachers only." });
+    if (["roster", "setDue", "courses", "syncClassroom", "saveAssignment", "listAssignments", "deleteAssignment", "classes", "setCode", "sendGrades", "migrationCheck"].indexOf(req.action) >= 0 && !isTeacher(who.email)) return out({ error: "forbidden", message: "Teachers only." });
     if (req.action === "saveAssignment") return out(saveAssignment(who, req.assignment || {}));   // (step 6: the builder, teacher/build/)
     if (req.action === "listAssignments") return out(listAssignments(who));
     if (req.action === "deleteAssignment") return out(deleteAssignment(who, req.id));
     if (req.action === "classes") return out(classes());   // (step 6: the synced classes, with their meetings from Calendar)
     if (req.action === "setCode") return out(setCode(req.id, req.code));
     if (req.action === "sendGrades") return out(sendGrades(req.id, true));
+    if (req.action === "migrationCheck") return out(migrationCheck(req.snapshot));   // (step 7: the snapshot's activity stars against the presets now)
     if (req.action === "roster") return out(roster());
     if (req.action === "setDue") return out(setDue(req.act, req.date));
     if (req.action === "courses") return out(courses(who.email));
@@ -400,6 +401,32 @@ function dailyGrades() {   // the timer: every posted assignment whose due date 
   asgRows().rows.forEach(function (r) { var p = {}; try { p = JSON.parse(r[8] || "{}"); } catch (e) { } if (Object.keys(p).length) { try { sendGrades(String(r[0]), false); } catch (e) { } } });
 }
 function setupTimer() { ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === "dailyGrades") ScriptApp.deleteTrigger(t); }); ScriptApp.newTrigger("dailyGrades").timeBased().everyDays(1).atHour(5).create(); }
+// ---- Migration check, students half (step 7): every student's stars in each activity in the dated snapshot of this Sheet (step 6) against the
+// stars of its preset assignment P-<activity> now.  A preset may be higher (work done since) but never lower.  A student whose browser has not
+// opened the app since the presets came (so has not sent them yet) is counted apart, not as a difference.
+function starTenths(ex) { var n = Object.keys(ex || {}); if (!n.length) return 0; var b = Math.floor(50 / n.length), r = 50 - b * n.length, t = 0; n.forEach(function (k, i) { t += Math.floor((Number(ex[k]) || 0) * (b + (i < r ? 1 : 0)) / 100 + 1e-9); }); return t; }
+function detailsOf(ss) {
+  var st = ss.getSheetByName("Students"); if (!st || st.getLastRow() < 2) return {};
+  var w = st.getLastColumn(), head = st.getRange(1, 1, 1, w).getValues()[0], dc = head.indexOf("Detail (JSON)"), o = {}; if (dc < 0) return o;
+  st.getRange(2, 1, st.getLastRow() - 1, w).getValues().forEach(function (v) { var d = {}; try { d = JSON.parse(v[dc] || "{}"); } catch (e) { } if (v[0]) o[String(v[0]).toLowerCase()] = d; });
+  return o;
+}
+function migrationCheck(snapshot) {
+  var m = /[-\w]{25,}/.exec(String(snapshot || "")); if (!m) return { error: "bad", message: "Paste the link (or the id) of the dated copy of the Progress Sheet." };
+  var snap; try { snap = SpreadsheetApp.openById(m[0]); } catch (e) { return { error: "bad", message: "That Sheet could not be opened: " + String(e && e.message || e) }; }
+  var before = detailsOf(snap), now = detailsOf(book()), diffs = [], waiting = [], checked = 0;
+  Object.keys(before).forEach(function (email) {
+    if (isTeacher(email)) return;
+    var b = before[email], n = now[email] || {}, any = Object.keys(n).some(function (k) { return k.indexOf("A:P-") === 0; });
+    Object.keys(b).forEach(function (act) {
+      if (act.charAt(0) === "_" || act.indexOf("A:") === 0) return;
+      var was = starTenths(b[act]); if (!was) return; checked++;
+      if (!any) { if (waiting.indexOf(email) < 0) waiting.push(email); return; }
+      var is = starTenths(n["A:P-" + act]); if (is < was) diffs.push({ student: email, activity: act, snapshot: was / 10, preset: is / 10 });
+    });
+  });
+  return { ok: true, snapshotName: snap.getName(), students: Object.keys(before).length, checked: checked, differences: diffs, waiting: waiting };
+}
 function setup() {
   var s = SpreadsheetApp.getActiveSpreadsheet();
   if (s) PropertiesService.getScriptProperties().setProperty("SHEET_ID", s.getId());

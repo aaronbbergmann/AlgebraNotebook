@@ -38,6 +38,8 @@ Folders that are not activity pages (`1-1`, `1-2`, `2-1`, `2-4`, `1-1play`, `pla
 
 No file or folder name may start with `_`: GitHub Pages does not publish them (the site then misses the file). `bank/place.js` holds where each bank question runs (read by the engine and the builder, `teacher/build/`, which tools/build_pages.py writes from `engine/build.html`).
 
+Preset assignments (`/a/?id=P-<activity>`) must match their activities: `node tools/check_presets.js` (run it after any change to levels, exercises or bank/place.js).
+
 Syntax check before a commit: `node --check engine/app.js` (and each changed file in `bank/`).
 
 ## Copies log

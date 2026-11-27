@@ -56,3 +56,6 @@ The builder posts each assignment in your chosen Google Classroom classes (an as
 3. Publish a new version of **"Use this one: Sign-in, progress, Assignments and Attempts"** (Manage deployments > pencil > New version > Deploy).
 4. On Class progress, click **Sync** and choose your classes again: this records who is in which class (each student's own due date).
 5. In the builder, type each class's calendar course code (as in your class calendar events, like HAlg2-D2) and click **Find class times**.
+
+## 8. The migration check (step 7)
+Class progress has a **Migration check** button: paste the link of the dated copy of the Progress Sheet (the snapshot made at a quiet time, step 6) and it lists every student whose preset assignment has fewer stars than the snapshot's activity (there should be none), and the students whose presets haven't reached the server yet (they come the next time each signs in). It needs the current `server/Code.gs` (replace Code.gs, then publish a new version of the deployment the website uses, as in section 5; no new permissions). The activities half runs from the repo: `node tools/check_presets.js`.

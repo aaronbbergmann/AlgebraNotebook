@@ -57,7 +57,7 @@
   <h1>Class Progress</h1>
   <span class="sub" id="sub"></span>
   <a href="build/" style="color:#2d70b3">Build an assignment</a>
-  <div class="tools"><input type="search" id="q" placeholder="Find a student" aria-label="Find a student"><span class="chk" role="group" aria-label="Show activities"><label><input type="checkbox" data-f="1"> Ch1</label><label><input type="checkbox" data-f="2"> Ch2</label><label><input type="checkbox" data-f="3"> Ch3</label><label><input type="checkbox" data-f="A"> Assignments</label><label><input type="checkbox" data-f="recent"> Recent</label></span><button id="gc">Sync with Google Classroom</button><button id="csv">Download CSV</button><button id="ref">Refresh</button></div>
+  <div class="tools"><input type="search" id="q" placeholder="Find a student" aria-label="Find a student"><span class="chk" role="group" aria-label="Show activities"><label><input type="checkbox" data-f="1"> Ch1</label><label><input type="checkbox" data-f="2"> Ch2</label><label><input type="checkbox" data-f="3"> Ch3</label><label><input type="checkbox" data-f="A"> Assignments</label><label><input type="checkbox" data-f="recent"> Recent</label></span><button id="gc">Sync with Google Classroom</button><button id="csv">Download CSV</button><button id="mig" title="Step 7 of the Question Bank migration: compare the dated snapshot with the preset assignments">Migration check</button><button id="ref">Refresh</button></div>
 </header>
 <div class="note" id="note" hidden role="status"></div>
 <div class="wrap" id="wrap"><div class="msg">Loading…</div></div>
@@ -263,6 +263,17 @@
   });
   [].forEach.call(document.querySelectorAll(".chk input"), function (c) { try { c.checked = localStorage.getItem("an:tf:" + c.dataset.f) === "1"; } catch (e) { } c.addEventListener("change", function () { try { localStorage.setItem("an:tf:" + c.dataset.f, c.checked ? "1" : "0"); } catch (e) { } draw(); }); });
   $("ref").addEventListener("click", load);
+  // the migration check (step 7): the snapshot's activity stars against each student's preset assignments now
+  $("mig").addEventListener("click", function () {
+    var link = prompt("Paste the link of the dated copy of the Progress Sheet (the snapshot):"); if (!link) return;
+    var m = $("note"); m.hidden = false; m.textContent = "Checking every student…"; clearTimeout(alertBar.t);
+    AN.api("migrationCheck", { snapshot: link }).then(function (j) {
+      var d = j.differences || [], w = j.waiting || [];
+      m.innerHTML = "<b>Migration check against " + esc(j.snapshotName) + ":</b> " + j.students + " students, " + j.checked + " activities with stars. " +
+        (d.length ? "<b style=\"color:#8a1c1c\">" + d.length + " differences</b> (a preset below the snapshot):<br>" + d.map(function (x) { return esc(x.student) + " · " + esc(x.activity) + ": snapshot " + x.snapshot.toFixed(1) + ", preset " + x.preset.toFixed(1); }).join("<br>") : "<b>No differences</b>: every preset has at least the snapshot's stars.") +
+        (w.length ? "<br>" + w.length + " students haven't opened the app since the presets came, so their presets aren't on the server yet (they come the next time each signs in): " + w.map(esc).join(", ") : "");
+    }).catch(function (e) { m.textContent = e.message || "The check didn't finish."; });
+  });
   $("csv").addEventListener("click", function () {
     var cols = ["Name", "Email", "Last saved"], lines = [];
     acts.forEach(function (a) { var names = {}; rows.forEach(function (r) { Object.keys((r.detail || {})[a] || {}).forEach(function (n) { names[n] = 1; }); }); Object.keys(names).forEach(function (n) { cols.push(a + " " + n); }); });   // (each exercise's stars earned)
