@@ -15577,13 +15577,58 @@ var ESPIC = {
     });
     return best;
   }
-  function dueOpen(D) {
-    if (!welcome || fixedAct || soon || /[?&]ex=/.test(location.search)) return;   // (only the home page itself)
-    var id = dueNext(D); if (!id) return;
-    if (hub) location.replace(slugOf(id) + "/"); else setActivity(id);   // (replace: Back does not return to the home page, which would open it again)
+  // ---- The student dashboard (Question Bank migration, step 5): the home page lists today's assignment, every assignment with its stars (from the
+  // same stars as everywhere else), a summary line, and the skills that are strong and those to practise next (the bank's skill tags).  Until the
+  // builder (step 6), the assignments are today's activities and reviews.
+  function dueT(v) { var m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/.exec(v || ""); return !m ? null : m[4] == null ? new Date(+m[1], m[2] - 1, +m[3], 23, 59, 59).getTime() : new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]).getTime(); }
+  function dashRows(D) {
+    var S = {}, done = {}; try { S = window.AN_summary() || {}; } catch (e) { } try { done = JSON.parse(localStorage.getItem("algebraProgress:done") || "{}") || {}; } catch (e) { }
+    var rows = [];
+    ACTS.forEach(function (a) {
+      var id = a[0], ex = S[id]; if (!ex || (!VW[id] && !(BUILT[id] && BUILT[id].review)) || (BUILT[id] && (BUILT[id].practice || BUILT[id].asg))) return;
+      var ps = Object.keys(ex).map(function (k) { return +ex[k] || 0; }); if (!ps.length) return;
+      var s10 = starsOf(ps), due = dueT(D[id]), fin = s10 >= 50, late = due != null && (fin ? (done[id] || 0) > due : Date.now() > due);
+      rows.push({ id: id, title: (VW[id] && VW[id].title) || a[1], s10: s10, due: due, dueTx: D[id] || "", fin: fin, late: late, started: ps.some(function (p) { return p > 0; }), ex: ex, n: rows.length });
+    });
+    rows.sort(function (p, q) { var a = p.fin ? 2 : p.due != null ? 0 : 1, b = q.fin ? 2 : q.due != null ? 0 : 1; return a - b || (a === 0 ? p.due - q.due : 0) || p.n - q.n; });
+    return rows;
   }
-  try { dueOpen(JSON.parse(localStorage.getItem("an:due") || "{}")); } catch (e) { }
-  window.addEventListener("an:due", function (e) { dueOpen(e.detail); });
+  function dashSkills(rows) {   // each skill tag: the average percent of the exercises that use it (through the bank question each exercise runs)
+    var sk = {};
+    rows.forEach(function (r) {
+      var keys = VW[r.id] ? VW[r.id].ls : null, names = Object.keys(r.ex);
+      names.forEach(function (nm, i) {
+        var f = null; if (keys) { var a = VW[r.id].base, k = keys[i]; f = qFind(a, a === "1.4D" ? (k === "s" ? 2 : +k) : +k, k === "s"); }
+        else if (BUILT[r.id] && BUILT[r.id].items && BUILT[r.id].items[i]) { var o = BUILT[r.id].items[i]; f = qFind(o.act, o.lesson, o.subx); }
+        if (!f || !AN_BANK[f[0]] || !(+r.ex[nm] > 0)) return;   // (only exercises begun: a skill not yet met is neither a strength nor a weakness)
+        (AN_BANK[f[0]].skills || []).forEach(function (t) { var e = sk[t] || (sk[t] = { t: t, sum: 0, n: 0, q: f[0] }); e.sum += +r.ex[nm] || 0; e.n++; });
+      });
+    });
+    return Object.keys(sk).map(function (t) { var e = sk[t]; e.p = e.sum / e.n; return e; });
+  }
+  function dashRender(D) {
+    var W = $("welcome"); if (!W || !welcome || fixedAct || soon) return;
+    var rows = dashRows(D || {}), pre = fixedAct ? "../" : "", fmt = function (t) { return t == null ? "" : new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" }); };
+    var nxt = dueNext(D || {}), today = rows.filter(function (r) { return r.id === nxt; })[0] || rows.filter(function (r) { return !r.fin && r.started; })[0] || rows.filter(function (r) { return !r.fin; })[0];
+    var nDone = rows.filter(function (r) { return r.fin; }).length, nLate = rows.filter(function (r) { return r.late; }).length, avg = rows.length ? rows.reduce(function (t, r) { return t + r.s10; }, 0) / rows.length / 10 : 0;
+    var h = "<div class=\"dash\" style=\"max-width:46rem;margin:0 auto;padding:1rem;text-align:left;font:1rem system-ui,sans-serif\"><div class=\"wsmall\">Welcome to</div><div class=\"wbig\" style=\"margin-bottom:1rem\">Algebra Notebook</div>";
+    if (today) h += "<a class=\"dashToday\" href=\"" + pre + slugOf(today.id) + "/\" style=\"display:block;padding:1rem 1.2rem;border-radius:14px;background:#8E2465;color:#fff;text-decoration:none;margin-bottom:1rem\"><div style=\"font-size:.85rem;opacity:.85\">" + (today.id === nxt ? "Due next" : "Keep going") + "</div><div style=\"font-size:1.35rem;font-weight:700\">" + today.id + " · " + today.title + "</div><div style=\"margin-top:.3rem\">" + (today.due != null ? "Due " + fmt(today.due) + " · " : "") + starsHTML(today.s10, 18) + " " + starTxt(today.s10) + "</div></a>";
+    h += "<div class=\"dashSum\" style=\"color:#4B5563;margin:.2rem 0 .8rem\">" + nDone + " of " + rows.length + " assignments done · " + avg.toFixed(1) + " stars average" + (nLate ? " · " + nLate + " late" : "") + "</div>";
+    h += "<table class=\"dashT\" style=\"width:100%;border-collapse:collapse\"><thead><tr style=\"text-align:left;color:#4B5563;font-size:.85rem\"><th style=\"padding:.3rem\"></th><th style=\"padding:.3rem\">Assignment</th><th style=\"padding:.3rem\">Due</th><th style=\"padding:.3rem\">Stars</th><th style=\"padding:.3rem\">Status</th></tr></thead><tbody>";
+    rows.forEach(function (r) {
+      var st = r.fin ? (r.late ? "Done, late" : "Done") : r.late ? "Late" : r.started ? "In progress" : "Not started";
+      h += "<tr style=\"border-top:1px solid #DDE1E7\"><td style=\"padding:.4rem .3rem;font-weight:700\"><a href=\"" + pre + slugOf(r.id) + "/\">" + r.id + "</a></td><td style=\"padding:.4rem .3rem\"><a href=\"" + pre + slugOf(r.id) + "/\" style=\"color:inherit\">" + r.title + "</a></td><td style=\"padding:.4rem .3rem;white-space:nowrap\">" + fmt(r.due) + "</td><td style=\"padding:.4rem .3rem;white-space:nowrap\">" + starTxt(r.s10) + (r.late && r.fin ? "L" : "") + "</td><td style=\"padding:.4rem .3rem;white-space:nowrap\">" + st + "</td></tr>";
+    });
+    h += "</tbody></table>";
+    var sk = dashSkills(rows).filter(function (e) { return e.n; }), strong = sk.filter(function (e) { return e.p >= 80; }).sort(function (a, b) { return b.p - a.p; }).slice(0, 5), weak = sk.filter(function (e) { return e.p < 80; }).sort(function (a, b) { return a.p - b.p; }).slice(0, 5);
+    if (strong.length || weak.length) {
+      h += "<div class=\"dashSk\" style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem;margin-top:1.2rem\">";
+      h += "<div><div style=\"font-weight:700;margin-bottom:.3rem\">Strengths</div>" + (strong.length ? strong.map(function (e) { return "<div>" + e.t + " · " + starTxt(Math.floor(e.p / 2)) + "</div>"; }).join("") : "<div style=\"color:#4B5563\">Finish an exercise to see your strengths.</div>") + "</div>";
+      h += "<div><div style=\"font-weight:700;margin-bottom:.3rem\">Practice next</div>" + weak.map(function (e) { return "<div><a href=\"" + pre + "q/?id=" + encodeURIComponent(e.q) + "\">" + e.t + "</a> · " + starTxt(Math.floor(e.p / 2)) + "</div>"; }).join("") + "</div></div>";
+    }
+    W.innerHTML = h + "<div style=\"margin-top:1.2rem;font-size:.9rem\"><a href=\"" + pre + "q/\">Practice any question in the bank</a></div></div>";
+  }
+  window.addEventListener("an:due", function (e) { dashRender(e.detail); });
   // for the sign-in sync (auth.js): every built activity's exercises and the percent each has earned, from what this browser has saved
   window.AN_summary = function () {
     var out = {}, keep = prog, r0 = rev, N14 = { "4": "Graphing", "1": "One Variable", s: "Substitution", "2": "2x2", "3": "3x3" };
@@ -15607,3 +15652,4 @@ var ESPIC = {
   if (QID === "") qIndex();   // (/q/ with no question: the list of the bank)
   if (AID === "") aWait();   // (/a/ with an assignment still to fetch, or none)
   setTimeout(attFlush, 4000);   // (rows left from an earlier visit go once sign-in is back)
+  try { dashRender(JSON.parse(localStorage.getItem("an:due") || "{}")); } catch (e) { }   // (the home page: the student dashboard)
