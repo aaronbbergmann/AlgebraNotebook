@@ -5166,6 +5166,22 @@
     if (fixedAct && BUILT[fixedAct] && BUILT[fixedAct].review) { rev = fixedAct; var it0 = BUILT[rev].items[0]; act = it0.act; lesson = it0.lesson; subx = !!it0.subx; }   // a review page starts on its first item
     if (!soon) exBoot();   // ?ex=write-g opens that exercise
   })();
+  // ---- Step 8, the switch-over (off until the migration check passes): every activity page and review opens its preset assignment
+  // instead (/2-4a/?ex=intercepts -> /a/?id=P-2.4A&ex=q2), and the dashboard links to the presets.  To switch over, set SWITCH to true.
+  // (For a test in one browser only: localStorage "an.switch" = "1".)
+  var SWITCH = false;
+  function switchedOn() { if (SWITCH) return true; try { return localStorage.getItem("an.switch") === "1"; } catch (e) { return false; } }
+  (function () {
+    if (!switchedOn() || !fixedAct) return;
+    var ab = VW[fixedAct] && VW[fixedAct].ls.length ? fixedAct : BUILT[fixedAct] && BUILT[fixedAct].review && !BUILT[fixedAct].practice && !BUILT[fixedAct].asg ? fixedAct : null; if (!ab) return;
+    var m = /[?&]ex=([^&#]*)/.exec(location.search), want = null, i = -1; try { want = m ? exSlug(decodeURIComponent(m[1].replace(/\+/g, " "))) : null; } catch (e) { }
+    if (want) {   // the exercise asked for, wherever it now lives (old links such as …/1-4d/?ex=graphing: 1.4A)
+      if (rev) { i = BUILT[rev].items.map(function (o) { return exSlug(o.q); }).indexOf(want); }
+      else { var hit = exList(true).filter(function (e) { return e[1] === want; })[0]; if (hit) { if (VW[ab].ls.indexOf(hit[0]) < 0) { var to = vwOf(VW[ab].base, hit[0]); if (to && VW[to].ls.length) ab = to; } i = VW[ab].ls.indexOf(hit[0]); } }
+    }
+    var rec = presetRec(ab); if (!rec) return; var its = asgItems(rec);
+    location.replace("../a/?id=" + encodeURIComponent("P-" + ab) + (its[i] ? "&ex=" + exSlug(its[i].q) : "") + location.hash);
+  })();
   // with no activity in the address, show the welcome page until one is chosen
   var welcome = !fixedAct || !!soon, hub = /github\.io$/i.test(location.hostname);
   var LEVELS = levelsNow(), MORD = ["demo", "sequence", "calculate", "solo"];
@@ -15606,7 +15622,7 @@ var ESPIC = {
       var id = a[0], ex = S[id]; if (!ex || (!VW[id] && !(BUILT[id] && BUILT[id].review)) || (BUILT[id] && (BUILT[id].practice || BUILT[id].asg))) return;
       var ps = Object.keys(ex).map(function (k) { return +ex[k] || 0; }); if (!ps.length) return;
       var s10 = starsOf(ps), due = dueT(D[id]), fin = s10 >= 50, late = due != null && (fin ? (done[id] || 0) > due : Date.now() > due);
-      rows.push({ id: id, title: (VW[id] && VW[id].title) || a[1], s10: s10, due: due, dueTx: D[id] || "", fin: fin, late: late, started: ps.some(function (p) { return p > 0; }), ex: ex, n: rows.length });
+      rows.push({ id: id, title: (VW[id] && VW[id].title) || a[1], href: switchedOn() ? "a/?id=" + encodeURIComponent("P-" + id) : null, s10: s10, due: due, dueTx: D[id] || "", fin: fin, late: late, started: ps.some(function (p) { return p > 0; }), ex: ex, n: rows.length });
     });
     Object.keys(S).forEach(function (k) {   // (assignments the student has opened: their own rows, opening at /a/)
       if (k.indexOf("A:") !== 0 || /^A:P-/.test(k)) return; var id = k.slice(2), rec = asgRecOf(id), ex = S[k]; if (!rec) return;
