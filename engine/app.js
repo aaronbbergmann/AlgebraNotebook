@@ -5050,7 +5050,7 @@
     else if (VW[ab]) VW[ab].ls.forEach(function (k) { var a = VW[ab].base, f = qFind(a, a === "1.4D" ? (k === "s" ? 2 : +k) : +k, k === "s"); if (f) its.push({ q: f[0], v: f[1] }); });
     else return null;
     var t = (ACTS.filter(function (x) { return x[0] === ab; })[0] || [ab, ab, ab])[1];
-    return { id: "P-" + ab, title: t, abbr: ab, items: its, preset: true };
+    return { id: "P-" + ab, title: t, abbr: ab, items: its, preset: true, like: BUILT[ab] && BUILT[ab].review ? ab : undefined };
   }
   function asgItems(rec) {   // an assignment record's questions as review items (where each runs)
     return (rec.items || []).filter(function (it) { return QPLACE[it.q] && AN_BANK[it.q]; }).map(function (it, i) {
@@ -5059,6 +5059,21 @@
   function asgRecOf(id) { if (/^P-/.test(id)) return presetRec(id.slice(2)); try { return JSON.parse(localStorage.getItem("an.asg." + id) || "null"); } catch (e) { return null; } }
   // View as student (/a/?id=...&as=student): a teacher meets the assignment as a student does (the mode ladder in order), with Reset progress
   var VIEWAS = /[?&]as=student\b/.test(location.search);
+  function presetMirror() {
+    var rd = function (k) { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } }, skip = rd("an.mirrorSkip"), T = rd("algebraProgress:time"), D = rd("algebraProgress:done"), td = false;
+    var srcs = VIEWS.filter(function (v) { return v[2].length; }).map(function (v) { return { ab: v[0], key: vwKey(v[0]), map: v[2].map(function (k) { return v[1] === "1.4D" ? (k === "s" ? "4" : k === "4" ? "g" : k) : String(k); }) }; });
+    ["RevT1", "RevQ2"].forEach(function (r) { if (BUILT[r]) srcs.push({ ab: r, key: BUILT[r].key, map: BUILT[r].items.map(function (o, i) { return String(i); }) }); });
+    srcs.forEach(function (sc) {
+      var id = "P-" + sc.ab; if (skip[id]) return;
+      var P = rd(sc.key); if (!Object.keys(P).length) return;
+      var tk = "algebraProgress:A:" + id, A = rd(tk), ch = false;
+      Object.keys(P).forEach(function (k) { var c = k.indexOf(":"), i = sc.map.indexOf(k.slice(0, c)); if (c < 0 || i < 0 || typeof P[k] !== "number") return; var nk = i + k.slice(c); if (!(A[nk] >= P[k])) { A[nk] = P[k]; ch = true; } });
+      if (ch) try { localStorage.setItem(tk, JSON.stringify(A)); } catch (e) { }
+      if (T[sc.ab] && !(T["A:" + id] >= T[sc.ab])) { T["A:" + id] = T[sc.ab]; td = true; }
+      if (D[sc.ab] && !D["A:" + id]) { D["A:" + id] = D[sc.ab]; td = true; }
+    });
+    if (td) try { localStorage.setItem("algebraProgress:time", JSON.stringify(T)); localStorage.setItem("algebraProgress:done", JSON.stringify(D)); } catch (e) { }
+  }
   var AID = null, AWAIT = null;
   (function () {
     var seg = decodeURIComponent(location.pathname).replace(/\/index\.html$/i, "").replace(/\/+$/, "").split("/").pop().toLowerCase();
@@ -5068,7 +5083,7 @@
     else if (id) { try { rec = JSON.parse(localStorage.getItem("an.asg." + id) || "null"); } catch (e) { rec = null; } if (!rec) AWAIT = id; }
     if (!rec || !rec.items || !rec.items.length) { AID = ""; return; }
     AID = rec.id;
-    BUILT["A"] = { review: true, asg: rec.id, abbr: rec.abbr || rec.id, key: "algebraProgress:A:" + rec.id, levels: [], top: 0, items: asgItems(rec) };
+    BUILT["A"] = { review: true, asg: rec.id, like: rec.like, abbr: rec.abbr || rec.id, key: "algebraProgress:A:" + rec.id, levels: [], top: 0, items: asgItems(rec) };
     ACTS.push(["A", rec.title, rec.title]);
   })();
   // an assignment still to fetch (or none): a quiet page over the app until it arrives
@@ -5138,6 +5153,7 @@
     } catch (e) { }
   }
   vwMigrate();
+  try { presetMirror(); } catch (e) { }   // (preset assignments follow the activities: step 6)
   (function () {
     var seg = decodeURIComponent(location.pathname).replace(/\/index\.html$/i, "").replace(/\/+$/, "").split("/").pop().toLowerCase();
     for (var vid in VW) if (slugOf(vid) === seg) fixedAct = vid;
@@ -5155,11 +5171,20 @@
   var LEVELS = levelsNow(), MORD = ["demo", "sequence", "calculate", "solo"];
   function topLesson() { return BUILT[act].top; }
   // RevT1 keeps its own progress: every item has its own levels (from the modes of the exercise it runs), stored under the review's key by item number
+  function exLevels(it) {   // the levels an exercise has in its own activity: [mode, percent, label, rounds]
+    if (it.act === "1.4D") return it.lesson === 4 && !it.subx ? [["demo", 10, "Demo Mode"], ["sequence", 25, "Sequence Mode"], ["calculate", 40, "Calculate Mode"], ["solo", 55, "Write Mode"], ["solo", 80, "Write Mode, 2nd round", 2], ["solo", 100, "Write Mode, 3rd round", 3]]
+      : [["demo", 10, "Demo Mode"], ["sequence", 25, "Sequence Mode"], ["calculate", 40, "Calculate Mode"], ["solo", 70, "Write Mode"], ["solo", 100, "Write Mode, 2nd round", 2]];
+    return (BUILT[it.act].levels || []).filter(function (l) { return String(l[0]) === String(it.lesson); }).map(function (l) { return l.slice(1); });
+  }
   function revLevels() {
-    var out = [], nm = { demo: "Demo", sequence: "Sequence", calculate: "Calculate", solo: "Write" };
+    var out = [], nm = { demo: "Demo", sequence: "Sequence", calculate: "Calculate", solo: "Write" }, R = BUILT[rev].like || rev;
+    if (BUILT[rev].asg && !BUILT[rev].like) {   // an assignment: each question earns its stars as in its own activity (the same modes, values and Write rounds)
+      var ok = true; BUILT[rev].items.forEach(function (it, i) { var L = exLevels(it); if (!L.length) ok = false; L.forEach(function (l) { out.push([i].concat(l)); }); });
+      if (ok) return out; out = [];
+    }
     BUILT[rev].items.forEach(function (it, i) {
       var B = BUILT[it.act];
-      if (rev === "RevQ2") {   // (RevQ2 follows its originals' own levels: the same modes, values and number of Write rounds, kept up to date with them)
+      if (R === "RevQ2") {   // (RevQ2 follows its originals' own levels: the same modes, values and number of Write rounds, kept up to date with them)
         var OL = (B.levels || []).filter(function (l) { return String(l[0]) === String(it.lesson); });
         if (it.act === "2.1") { [["demo", 10, "Demo Mode"], ["sequence", 25, "Sequence Mode"], ["calculate", 40, "Calculate Mode"], ["solo", 100, "Write Mode"]].forEach(function (l) { out.push([i, l[0], l[1], l[2]]); }); return; }   // (RevQ2's 2.1 questions: one problem in each mode)
         if (OL.length) { OL.forEach(function (l) { out.push(l[4] ? [i, l[1], l[2], l[3], l[4]] : [i, l[1], l[2], l[3]]); }); return; }
@@ -15637,7 +15662,7 @@ var ESPIC = {
         if (!v[2].length) return;
         var b = v[1], B = BUILT[b], ks = v[2].map(function (k) { return b === "1.4D" ? (k === "s" ? 4 : k === "4" ? "g" : +k) : +k; }), lv = [], ex = {};
         if (b !== "1.4D") lv = B.levels.filter(function (l) { return ks.indexOf(l[0]) >= 0; });
-        else ks.forEach(function (k) { [["demo", 10], ["sequence", 25], ["calculate", 40], ["solo", 55], ["solo", 80, "", 2], ["solo", 100, "", 3]].forEach(function (x) { lv.push([k, x[0], x[1], x[2] || "", x[3]]); }); });
+        else ks.forEach(function (k) { (k === "g" ? [["demo", 10], ["sequence", 25], ["calculate", 40], ["solo", 55], ["solo", 80, "", 2], ["solo", 100, "", 3]] : [["demo", 10], ["sequence", 25], ["calculate", 40], ["solo", 70], ["solo", 100, "", 2]]).forEach(function (x) { lv.push([k, x[0], x[1], x[2] || "", x[3]]); }); });   // (as the activity shows them: the equation exercises have two rounds of Write)
         prog = rd(vwKey(v[0]));
         v[2].forEach(function (k, i) { ex[b === "1.4D" ? N14[k] : (B.short && B.short[+k - 1]) || (B.lessons && B.lessons[+k - 1]) || ("Exercise " + k)] = best(lv, ks[i]); });
         out[v[0]] = ex;
@@ -15645,7 +15670,7 @@ var ESPIC = {
       var T = rd("algebraProgress:time"); Object.keys(T).forEach(function (id) { if (out[id] || (BUILT[id] && BUILT[id].review)) out["_t:" + id] = +T[id] || 0; }); var D0 = rd("algebraProgress:done"); Object.keys(D0).forEach(function (id) { if (out[id] || (BUILT[id] && BUILT[id].review)) out["_d:" + id] = +D0[id] || 0; });   // (when each activity first reached 5 stars)   // when each activity last changed (a number: the Sheet script passes it by)
       Object.keys(localStorage).forEach(function (k) {   // (assignments: A:<id>, each question "1. Title" with its percent, as the activities)
         if (k.indexOf("algebraProgress:A:") !== 0) return; var id = k.slice(18), rec = asgRecOf(id); if (!rec) return;
-        BUILT["SUMA"] = { review: true, levels: [], top: 0, items: asgItems(rec) }; rev = "SUMA"; var rl = revLevels(), ex = {}; prog = rd(k);
+        BUILT["SUMA"] = { review: true, asg: id, like: rec.like, levels: [], top: 0, items: asgItems(rec) }; rev = "SUMA"; var rl = revLevels(), ex = {}; prog = rd(k);
         BUILT.SUMA.items.forEach(function (it, i) { ex[(i + 1) + ". " + (it.full || it.q)] = best(rl, i); }); out["A:" + id] = ex;
         if (T["A:" + id]) out["_t:A:" + id] = +T["A:" + id]; if (D0["A:" + id]) out["_d:A:" + id] = +D0["A:" + id];
       });
@@ -15668,7 +15693,7 @@ var ESPIC = {
       b.title = "Teachers only: clear your own stars and levels for this assignment";
       b.addEventListener("click", function () {
         if (!confirm("Reset your progress on " + BUILT[rev].abbr + "? Your own stars and levels for it are cleared. No student's work changes.")) return;
-        try { localStorage.setItem(BUILT[rev].key, "{}"); ["algebraProgress:time", "algebraProgress:done"].forEach(function (k) { var o = JSON.parse(localStorage.getItem(k) || "{}") || {}; delete o["A:" + BUILT[rev].asg]; localStorage.setItem(k, JSON.stringify(o)); }); } catch (e) { }
+        try { var sk = JSON.parse(localStorage.getItem("an.mirrorSkip") || "{}") || {}; sk[BUILT[rev].asg] = 1; localStorage.setItem("an.mirrorSkip", JSON.stringify(sk)); localStorage.setItem(BUILT[rev].key, "{}"); ["algebraProgress:time", "algebraProgress:done"].forEach(function (k) { var o = JSON.parse(localStorage.getItem(k) || "{}") || {}; delete o["A:" + BUILT[rev].asg]; localStorage.setItem(k, JSON.stringify(o)); }); } catch (e) { }
         setTimeout(function () { location.reload(); }, 2600);   // (after the save to the server)
         b.disabled = true; b.textContent = "Resetting…";
       });
