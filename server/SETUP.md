@@ -2,7 +2,7 @@
 
 **Status: on since 2026-11-03.** Sheet "Algebra Notebook Progress" (abergmann@sch.org's Drive), Apps Script project "Algebra Notebook Server" (standalone, opens the Sheet by SHEET_ID; deployment "Sign-in and progress", Execute as Me, Anyone), Google Cloud project "AlgebraNotebook" (consent screen Internal, web client "Algebra Notebook website", origin https://aaronbbergmann.github.io). To change the server: edit the script, save, Deploy > Manage deployments > Edit > New version > Deploy (the /exec address stays the same).
 
-**The deployment the website uses** is the one whose Deployment ID starts with **AKfycbzgC-1EJrwb2k** (the address in `auth.js`); in Manage deployments it is listed as "Untitled". When you publish a change, select that one, click the pencil, choose New version, Deploy. The project also has other active deployments ("Assignments and Attempts", and an "Untitled" starting AKfycbx7) that nothing uses; they can be archived.
+**The deployment the website uses** is named **"Use this one: Sign-in, progress, Assignments and Attempts"** (Deployment ID starting AKfycbzgC-1EJrwb2k, the address in `auth.js`). When you publish a change, select that one in Manage deployments, click the pencil, choose New version, Deploy. (The other deployments were archived on 2026-11-27.)
 
 Sign-in stays off (the site works exactly as before) when either value in `auth.js` is empty.
 
