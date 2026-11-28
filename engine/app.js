@@ -1340,12 +1340,12 @@
   }
   function rdLeft(t) { return !!t.mf || t.k === "r" && (!!t.f || (t.r.d === 1 && t.r.n > 1 && (isSq(t.r.n) || radSq(t.r.n).s > 1))); }   // a square root that can still be simplified
   function rdCreate() {
-    var q = rdIn($("crIn").value), err = $("crErr");
+    var q = rdIn(crSrc()), err = crErrEl();
     if (typeof q === "string") { err.textContent = q; return; }
     if (!isSq(q.n) && radSq(q.n).s === 1) { err.textContent = "\u221a" + q.n + " is already simplified: no perfect square (other than 1) divides " + q.n + ". Try one like \u221a200, \u221a72 or 3\u221a12."; return; }
     var r = [{ k: "r", n: mk(q.c), r: mk(q.n) }];
-    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, rad: true }; SOL.fresh = false;
-    $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your square root is in. Choose how you want to work on it.");
+    EXP = { src: crSrc(), orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, rad: true }; SOL.fresh = false;
+    if (DE_DRY) return; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your square root is in. Choose how you want to work on it.");
   }
   function exRadSimp(i, pick, k) {   // click a square root in the expression (a split one: the root clicked)
     if (locked || busy || !EXP || EXP.ask) return;
@@ -1354,15 +1354,15 @@
     rfClick(t, k, pick, function () { return document.querySelector('#exRow .exT[data-i="' + i + '"] .exRad' + (t.f ? '[data-rf="' + k + '"]' : "")); }, function (u, msg) { var it = EXP.items.slice(); it[i] = u; exSet(it, msg); });
   }
   function exCreate() {
-    if (/\u221a|sqrt/i.test($("crIn").value)) { rdCreate(); return; }
-    var r = exParse($("crIn").value), err = $("crErr");
+    if (/\u221a|sqrt/i.test(crSrc())) { rdCreate(); return; }
+    var r = exParse(crSrc()), err = crErrEl();
     if (typeof r === "string") { err.textContent = r; return; }
-    var fac = false, lit = false, lr = exFin(r) ? litFacTerms($("crIn").value) : null;   // a sum with letters (ax + ab) is read with the letters as coefficients
+    var fac = false, lit = false, lr = exFin(r) ? litFacTerms(crSrc()) : null;   // a sum with letters (ax + ab) is read with the letters as coefficients
     if (lr) { r = lr; fac = true; lit = true; } else fac = exFin(r) && facAll(r) >= 2;
     if (exFin(r) && !fac && !grTri(r) && !fmFits(r)) { err.textContent = "That one is already simplified. Type an expression with parentheses or like terms, like 3(x+2)-4x+5, or a sum with a common factor to take out, like 3x+9 or ax+ab."; return; }
     var gpx = !fac && !lit && (!!grAny(r) || !!fmFits(r));   // four terms that factor by grouping (x^2 + 5x + 3x + 15), or a trinomial to split first (x^2 + 8x + 15)
-    EXP = { src: $("crIn").value, orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, fac: fac, lit: lit, grp: gpx }; SOL.lvl = lit ? 6 : exLevel(r); SOL.fresh = false;
-    $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your expression is in. Choose how you want to work on it.");
+    EXP = { src: crSrc(), orig: JSON.parse(JSON.stringify(r)), items: r, ask: null, fac: fac, lit: lit, grp: gpx }; SOL.lvl = lit ? 6 : exLevel(r); SOL.fresh = false;
+    if (DE_DRY) return; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your expression is in. Choose how you want to work on it.");
   }
 
   // ---- Playground: Equation Solver: equations with the variable on both sides (3x = x + 2), solved as typed ----
@@ -2592,10 +2592,10 @@
     spec.vk = vs[0]; return spec;
   }
   function cmpCreate(err) {
-    var sp = cmpParse($("crIn").value); if (!sp) return false; if (typeof sp === "string") { err.textContent = sp; return true; }
-    EXP = { eq: true, src: $("crIn").value, ask: null, vk: sp.vk, L: [], R: [], rel: "<", zp: null }; cmpSetup(sp);
+    var sp = cmpParse(crSrc()); if (!sp) return false; if (typeof sp === "string") { err.textContent = sp; return true; }
+    EXP = { eq: true, src: crSrc(), ask: null, vk: sp.vk, L: [], R: [], rel: "<", zp: null }; cmpSetup(sp);
     SOL.lvl = rung("eq", function (r) { return r.cmp === (sp.join === "or" ? 3 : sp.c3 && sp.c3.M.some(function (t) { return t.k === "x" && t.n.n < 0; }) ? 2 : 1); }); SOL.fresh = false;
-    $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your compound inequality is in. Choose how you want to work on it.");
+    if (DE_DRY) return true; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your compound inequality is in. Choose how you want to work on it.");
     return true;
   }
   function eqCmp(n) {   // a variant: 1 -3 < x + 2 ≤ 5, 4 ≤ 3x - 2 < 13; 2 a negative number in front of x: -5 < 3 - 2x ≤ 7; 3 "or": 2x - 1 < 3 or x + 4 > 9
@@ -2683,9 +2683,9 @@
     if (a.rest.concat(a.O).some(function (t) { return t.k !== "c"; })) { err.textContent = "Keep x inside the absolute value, with only numbers outside it, like |2x-3|+4=11."; return; }
     var ti = exTot(a.g.items); if (Object.keys(ti).some(function (k) { return k && k !== "x"; }) || !ti.x || !ti.x.n || a.g.items.some(function (t) { return t.k === "g"; })) { err.textContent = "Inside the bars, use x to the first power, like |2x-3|."; return; }
     if (!a.g.m.n) { err.textContent = "That absolute value is multiplied by 0."; return; }
-    EXP = { eq: true, av: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: rel }, L: L, R: R, rel: rel, ask: null, vk: "x", zpq: false, zp: null };
+    EXP = { eq: true, av: true, src: crSrc(), orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: rel }, L: L, R: R, rel: rel, ask: null, vk: "x", zpq: false, zp: null };
     SOL.lvl = ladderEq(L, R, rel); SOL.fresh = false;
-    $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
+    if (DE_DRY) return; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
   }
   function eqSolution(L, R, rel) {   // { kind, x, rel, c } from the equation as first typed (x rel c once the variable has a side to itself)
     if (litAny(L.concat(R))) { var ls = litSolution(L, R); return ls; }
@@ -3332,11 +3332,11 @@
     return all.some(function (t) { return t.k === "g"; }) ? 3 : all.some(function (t) { return t.k === "x" && t.n.d > 1; }) ? 4 : all.some(function (t) { return t.n && t.n.n < 0; }) ? 2 : L.some(function (t) { return t.k === "c"; }) && R.some(function (t) { return t.k === "c"; }) ? 1 : 0;
   }
   function eqCreate() {
-    var s = $("crIn").value.toLowerCase().replace(/−/g, "-"), sr = splitRel(s), p = sr ? [sr.l, sr.r] : [], rel = sr ? sr.rel : "=", err = $("crErr");
+    var s = crSrc().toLowerCase().replace(/−/g, "-"), sr = splitRel(s), p = sr ? [sr.l, sr.r] : [], rel = sr ? sr.rel : "=", err = crErrEl();
     if (cmpCreate(err)) return;   // -3 < 2x + 1 <= 7, or 2x - 1 < 3 or x + 4 > 9
     if (p.length !== 2 || !p[0].trim() || !p[1].trim()) { err.textContent = "Type an equation with one = sign (or < > ≥ ≤), like 3x=x+2 or 2x+1<x+6."; return; }
     if (/\|/.test(s)) { eqCreateAbs(s, rel, err); return; }
-    if (s.replace(/\s+/g, "").replace(/\u00b2/g, "^2") === "ax^2+bx+c=0") { EXP = { eq: true, src: $("crIn").value, ask: null }; qfSetup(); SOL.lvl = LADDER.length - 1; SOL.fresh = false; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("The general quadratic equation: derive the quadratic formula."); return; }   // the derivation
+    if (s.replace(/\s+/g, "").replace(/\u00b2/g, "^2") === "ax^2+bx+c=0") { EXP = { eq: true, src: crSrc(), ask: null }; qfSetup(); SOL.lvl = LADDER.length - 1; SOL.fresh = false; if (DE_DRY) return; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("The general quadratic equation: derive the quadratic formula."); return; }   // the derivation
     if (/[a-wyz]/.test(s)) { eqCreateLit(p, rel, err); return; }
     exKeepU = true; exDenOK = false; var L, R; try { L = exParse(p[0]); R = exParse(p[1]); } finally { exKeepU = false; exDenOK = true; }
     if (typeof L === "string" || typeof R === "string") { err.textContent = typeof L === "string" ? L : R; return; }
@@ -3347,9 +3347,9 @@
       else if (L.length === 1 && L[0].k === "c" && !L[0].n.n && grAny(R)) { var sw3 = L; L = R; R = sw3; gq = true; }
     }
     if (gq) {
-      EXP = { eq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: (grAny(L) || { l: "x" }).l, grq: true, zpq: false, zp: null };
+      EXP = { eq: true, src: crSrc(), orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: (grAny(L) || { l: "x" }).l, grq: true, zpq: false, zp: null };
       SOL.lvl = ladderEq(L, R, "="); SOL.fresh = false;
-      $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
+      if (DE_DRY) return; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
       return;
     }
     var zq = zpOf(L, R) || zpOf(R, L);
@@ -3362,32 +3362,32 @@
     if (rel === "=" && !zq && L.concat(R).some(function (t) { return t.k === "g" && t.b; }) && !sqgOf(L, R)) {   // x(x + 3) = 10, (x - 2)(x + 3) = 6, (x + 1)^2 = 2x + 5: multiply out, write in standard form, then factor (or complete the square)
       if (L.concat(R).some(function (t) { return t.k === "g" && t.c; })) { err.textContent = "Three sets of parentheses can be solved when the other side is 0, like (x - 1)(x + 2)(x - 3) = 0."; return; }
       var rq = qdRoots(L, R); if (!rq) { err.textContent = "Multiplied out, the x\u00b2 terms cancel. Type an equation that still has x\u00b2 in it, like x(x + 3) = 10."; return; }
-      EXP = { eq: true, qd: true, sf: sfOK(rq), src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x", zpq: false, zp: null };
+      EXP = { eq: true, qd: true, sf: sfOK(rq), src: crSrc(), orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x", zpq: false, zp: null };
       SOL.lvl = ladderEq(L, R, "="); SOL.fresh = false;
-      $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
+      if (DE_DRY) return; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
       return;
     }
     if (rel === "=" && qdOf(L, R) && vs.length === 2) {   // x^2 + 6x = 7: complete the square (or factor, when one side is 0)
-      EXP = { eq: true, qd: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: vs.filter(function (v) { return !/\^/.test(v); })[0], zpq: false, zp: null };
+      EXP = { eq: true, qd: true, src: crSrc(), orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: vs.filter(function (v) { return !/\^/.test(v); })[0], zpq: false, zp: null };
       SOL.lvl = ladderEq(L, R, "="); SOL.fresh = false;
-      $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
+      if (DE_DRY) return; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
       return;
     }
     if (vs.length === 1 && vs[0] === "x^2") {   // x^2 = 9, 3x^2 - 12 = 0: the exponent is dragged across the = (a square root)
       if (rel !== "=") { err.textContent = "Use an equals sign with x², like x² = 9."; return; }
       var sv = sqVal(L, R); if (!sv) { err.textContent = "The x^2 terms cancel each other. Type an equation that can be solved for x."; return; }
 
-      EXP = { eq: true, sq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x", zpq: false, zp: null };
+      EXP = { eq: true, sq: true, src: crSrc(), orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x", zpq: false, zp: null };
       SOL.lvl = ladderEq(L, R, "="); SOL.fresh = false;
-      $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
+      if (DE_DRY) return; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
       return;
     }
     if (vs.length > 1 || /[\^]/.test(s.replace(/\)\^2/g, ")")) || vs.some(function (v) { return /\^/.test(v); })) { err.textContent = "Use one variable, to the first power, like 3x=x+2 (or x² = 9)."; return; }
     var keep = EXP; EXP = { eq: true, L: L, R: R, rel: rel, ask: null }; var k = eqKind();
     if (k) { EXP = keep; err.textContent = "That one is already solved. Type an equation that still needs work."; return; }
-    EXP = { eq: true, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: rel }, L: L, R: R, rel: rel, ask: null, vk: vs[0], zpq: !!zq, zp: null, dvq: !!(rel === "=" && dvOK(L, R)) };
+    EXP = { eq: true, src: crSrc(), orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: rel }, L: L, R: R, rel: rel, ask: null, vk: vs[0], zpq: !!zq, zp: null, dvq: !!(rel === "=" && dvOK(L, R)) };
     SOL.lvl = ladderEq(L, R, rel); SOL.fresh = false;
-    $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
+    if (DE_DRY) return; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
   }
   function eqCreateLit(p, rel, err) {   // letters as coefficients: solve for x, like ax + b = c, a(x + b) = c, ax + cx = b
     if (rel !== "=") { err.textContent = "With letters, use an equals sign: a letter could be positive or negative, so an inequality can't be solved."; return; }
@@ -3401,9 +3401,9 @@
     } else if (L.concat(R).some(function (t) { return t.k === "g"; })) { err.textContent = "With x² and letters, type the terms without parentheses, like ax² + bx + c = 0."; return; }
     var keep = EXP; EXP = { eq: true, lit: true, L: L, R: R, rel: "=", ask: null }; var k = eqKind();
     if (k) { EXP = keep; err.textContent = "That one is already solved. Type an equation that still needs work."; return; }
-    EXP = { eq: true, lit: true, quad: quad, src: $("crIn").value, orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x" };
+    EXP = { eq: true, lit: true, quad: quad, src: crSrc(), orig: { L: JSON.parse(JSON.stringify(L)), R: JSON.parse(JSON.stringify(R)), rel: "=" }, L: L, R: R, rel: "=", ask: null, vk: "x" };
     SOL.lvl = quad ? SOL.lvl : ladderEq(L, R, "="); SOL.fresh = false;
-    $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
+    if (DE_DRY) return; $("creator").hidden = true; $("answer").hidden = true; showPick($("creator").parentNode); note("Your equation is in. Choose how you want to work on it.");
   }
   function eqWanted(s) {   // is this typed equation one for this module? (the variable on both sides, or a variable inside parentheses)
     if (cmpParse(s)) return true;   // a compound inequality
@@ -3420,6 +3420,38 @@
     var re = /(\d+)\/(\d+)(?![\d.\/(])/g, m, t = String(s).replace(/\s+/g, "").replace(/\u2212/g, "-");
     while ((m = re.exec(t))) { var n = +m[1], d = +m[2], j = m.index; if (d > 1 && n % d && gcd(n, d) > 1 && !/[\d.\/]$/.test(t.slice(0, j))) return true; }
     return false;
+  }
+  // ==== THE DRAG EQUATION (migration/drag-equation/PLAN.md). Every solve-by-dragging problem (an equation, an inequality, a system, or an expression with
+  // no "=") is an instance: a string. deParse reads one with Create's readers (the same code a student's typed problem goes through), deText writes the
+  // problem back as that string. An instance can end with "; " and a goal or method for Demo and Hint ("x^2+6x+5=0 ; complete the square"); the equations
+  // of a system are separated by commas ("2x + y = 5, x - y = 1").
+  var DE_SRC = null, DE_DRY = false, DE_ERR = { textContent: "" }, DE_ROWS = [];
+  function crSrc() { return DE_SRC != null ? DE_SRC : $("crIn").value; }   // (Create's readers: the typed text, or an instance being read)
+  function crErrEl() { return DE_DRY ? DE_ERR : $("crErr"); }
+  function deParse(str) {   // an instance -> { exp, lvl, goal } (the main solver), { rows, goal } (row equations and systems), or { error }
+    var m = /^([^;]*?)\s*;\s*(.+)$/.exec(String(str)), body = m ? m[1] : String(str), goal = m ? m[2].trim().toLowerCase() : "";
+    var keep = { EXP: EXP, lvl: SOL.lvl, fresh: SOL.fresh }, out = null;
+    DE_DRY = true; DE_ERR.textContent = ""; DE_ROWS = []; EXP = null;
+    try {
+      var parts = body.split(/\s*,\s*(?=[^,]*[=<>\u2264\u2265])/);   // (a comma between equations; never one inside an answer)
+      if (parts.length > 1) { parts.forEach(function (q) { DE_SRC = q; if (!DE_ERR.textContent) crAdd0(); }); }
+      else { DE_SRC = body; if (!hasRelCh(body)) exCreate(); else if (eqWanted(body)) eqCreate(); else crAdd0(); }
+      out = DE_ERR.textContent ? { error: DE_ERR.textContent } : EXP ? { exp: EXP, lvl: SOL.lvl, goal: goal } : DE_ROWS.length ? { rows: DE_ROWS.slice(), goal: goal } : { error: "Nothing was read." };
+    } catch (e) { out = { error: String(e && e.message || e) }; }
+    finally { EXP = keep.EXP; SOL.lvl = keep.lvl; SOL.fresh = keep.fresh; DE_SRC = null; DE_DRY = false; DE_ROWS = []; }
+    return out;
+  }
+  function crAdd0() { var r = parseAny(crSrc()); if (typeof r === "string") DE_ERR.textContent = r; else DE_ROWS.push(r); }   // (a row equation)
+  function deText(E, rows) {   // the problem as its instance string: the main solver's problem E (EXP), or rows (the row equations)
+    var sy = function (its) { return exSay(its).replace(/\u2212/g, "-").replace(/\)(\d*[a-z](?:\^\d+)?)(?![a-z(\/])/g, ")($1)"); };   // ((x + 2)x is written (x + 2)(x), which reads back the same)
+    if (rows) return rows.map(function (q) { return fmt(q, false).replace(/\u2212/g, "-"); }).join(", ");
+    if (!E) return "";
+    if (!E.eq) return sy(E.orig);
+    if (E.orig && E.orig.qf) return "ax^2 + bx + c = 0";
+    var o = E.orig, c = o && o.cmp;
+    if (c && c.c3) return sy(c.c3.A) + " " + c.c3.r1 + " " + sy(c.c3.M) + " " + c.c3.r2 + " " + sy(c.c3.B);
+    if (c) return c.parts.map(function (q) { return sy(q.L) + " " + q.rel + " " + sy(q.R); }).join(" or ");
+    return sy(o.L) + " " + (o.rel || "=") + " " + sy(o.R);
   }
   function uClean(arr) { arr.forEach(function (t) { if (t.u && !((t.k === "c" || t.k === "x") && !hasS(t) && Math.abs(t.u.n) * t.n.d === Math.abs(t.n.n) * t.u.d && t.u.d > 1)) delete t.u; }); }
 
@@ -6183,10 +6215,11 @@
     $("crIn").value = ""; $("crErr").textContent = ""; $("crIn").focus();
   }
   function crAdd() {
-    if (BUILT[act].solver && lesson === 1 && !hasRelCh($("crIn").value)) { exCreate(); return; }
-    if (BUILT[act].solver && lesson === 1 && eqWanted($("crIn").value)) { eqCreate(); return; }
-    var r = parseAny($("crIn").value), err = $("crErr");
+    if (BUILT[act].solver && lesson === 1 && !hasRelCh(crSrc())) { exCreate(); return; }
+    if (BUILT[act].solver && lesson === 1 && eqWanted(crSrc())) { eqCreate(); return; }
+    var r = parseAny(crSrc()), err = crErrEl();
     if (typeof r === "string") { err.textContent = r; return; }
+    if (DE_DRY) { DE_ROWS.push(r); return; }
     var E = orig.concat([r]);
     orig = E; ws = wsFromOrig(); steps = [{ eqs: orig.map(function (q) { return fmt(q, dv()); }) }]; workCreate();
     render(-1); updUndo();
