@@ -68,7 +68,19 @@ problems are assembled by hand in 21 places; each level has its own generator.
 |---|---|---|
 | Rules from the screen: each problem's string read back by Create's readers; the level only names a goal | all | 5 instances changed, each traced to a decision below |
 | Divide-first switched off everywhere | 12 | rung 15's Demo now distributes first |
-| Quadratic Formula button whenever x² is on the screen | 8 | rungs 63, 78, 3.1F, 3.4A |
+| Quadratic Formula button whenever x² is on the screen | 8 | rungs 63, 71–74, 78, 3.1B, 3.1C, 3.1F, 3.4A |
+| A level can name "divide first" (Play Solve's 1.2 rung keeps its lesson); "factor" steers Demo to factor whatever the default | 10, 12 | rungs 10, 63, 3.1F: the same Demo as before |
+| While factoring, terms keep every move (dragging one down still opens the square) | 8 | grouping rungs 61, 66: the same Demo as before |
+| A product = 0: dropping one factor onto the other multiplies them (the box) | 9 | tools/de_tests/moves.js |
+| x² alone: the exponent can always be dragged across | 7 | moves.js (factoring rung 63) |
+| Letters: dragging a coefficient divides every term; the box takes letters (a(x + 2), 2(x + a)), in Sequence and Calculate | 5, 6 | moves.js, box_letters.js |
+| x on both sides with letters: the smaller onto the larger | 13 | moves.js |
+
+Full record after these (switch on): 30 instances changed, every one traced to a decision (new moves offered: 48 runs; the Quadratic Formula
+button: 21; letters into the box: rungs 29, 31; smaller onto larger with letters: rung 28). Switch off: identical to before.
+
+Bugs fixed on the way (they would have shown once letters reached the box): multiplying terms lost their letters (2 · a gave 2);
+Calculate's check ignored letters on an x term (2x would have passed for 2ax).
 
 With the switch off the record is identical to before (134 instances). The 9 graphing and data questions (RevT1 Q1, Q3–Q6, Q10, 2.4B Regression,
 3.1A Graphing, 3.1C Desmos) are not drag equations and were taken out of the record.

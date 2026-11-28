@@ -780,7 +780,7 @@
   }
   function exSame(a, b) { var ks = {}; Object.keys(a).concat(Object.keys(b)).forEach(function (k) { ks[k] = 1; }); return Object.keys(ks).every(function (k) { return same(a[k] || mk(0), b[k] || mk(0)); }); }
   function vMulStr(a, b) { var f = {}; [a || "", b || ""].forEach(function (v) { v.replace(/([a-z])(?:\^(\d+))?/g, function (_, l, e) { f[l] = (f[l] || 0) + (e ? +e : 1); }); }); return Object.keys(f).sort().map(function (l) { return l + (f[l] > 1 ? "^" + f[l] : ""); }).join(""); }
-  function tMul(t, u) { var n = mul(t.n, u.n); if (t.k === "c" && u.k === "c") return { k: "c", n: n }; return { k: "x", v: vMulStr(t.k === "x" ? t.v || "x" : "", u.k === "x" ? u.v || "x" : ""), n: n }; }
+  function tMul(t, u) { var n = mul(t.n, u.n), r = t.k === "c" && u.k === "c" ? { k: "c", n: n } : { k: "x", v: vMulStr(t.k === "x" ? t.v || "x" : "", u.k === "x" ? u.v || "x" : ""), n: n }; if (t.s || u.s) { var ls = sMul(t.s, u.s, 1); if (sSig(ls)) r.s = ls; } return r; }   // (letters as coefficients multiply too: 2 · a = 2a)
   function totMul(A, B) { var o = {}; Object.keys(A).forEach(function (ka) { Object.keys(B).forEach(function (kb) { var k = vMulStr(ka, kb); o[k] = add(o[k] || mk(0), mul(A[ka], B[kb])); }); }); return o; }
   function exDist(g) {
     if (g.b) { var out = []; g.items.forEach(function (a) { g.b.forEach(function (b) { var t = tMul(a, b); t.n = mul(t.n, g.m); out.push(t); }); }); return out; }   // two sets of parentheses: every term times every term, row by row
@@ -937,9 +937,10 @@
   var BX = null;
   // (Play Solve too: every product to multiply out, in an expression or an equation, goes through the box: (x − 2)(x + 5), 3(x − 1) as a 1 × 2 box, bigger ones too)
   function bxFac(g) {   // the two factors whose terms label the box: [left, top]
-    if (!g || g.k !== "g" || g.c || g.pw || g.abs || g.pm || g.ov || (g.m.s && sSig(g.m.s))) return null;
-    var F = g.b ? (same(g.m, mk(1)) ? [g.items, g.b] : null) : same(g.m, mk(1)) ? null : [[{ k: "c", n: g.m }], g.items];
-    if (!F || F[0].length * F[1].length > 16 || F.some(function (f) { return f.some(function (t) { return (t.k !== "c" && t.k !== "x") || hasS(t) || t.co || t.u || t.ov; }); })) return null;
+    var ms = g && g.m && g.m.s && sSig(g.m.s);   // (a letter in front, a(x + 2): the Drag Equation puts it in the box too)
+    if (!g || g.k !== "g" || g.c || g.pw || g.abs || g.pm || g.ov || (ms && (!deOn() || g.b))) return null;
+    var F = g.b ? (same(g.m, mk(1)) ? [g.items, g.b] : null) : same(g.m, mk(1)) && !ms ? null : [[ms ? { k: "c", n: mk(g.m.n, g.m.d), s: JSON.parse(JSON.stringify(g.m.s)) } : { k: "c", n: g.m }], g.items];
+    if (!F || F[0].length * F[1].length > 16 || F.some(function (f) { return f.some(function (t) { return (t.k !== "c" && t.k !== "x") || (hasS(t) && !deOn()) || t.co || t.u || t.ov; }); })) return null;   // (the Drag Equation, decision 5: letters go in the box too)
     return F;
   }
   function bxWk(g, rows, cols) {   // Show work: the box, drawn above the step it makes (rows and columns: the student's own layout, when there is one)
@@ -947,7 +948,7 @@
     R.forEach(function (r) { C.forEach(function (c) { cells.push(exSay(exDist({ k: "g", m: mk(1), items: [r], b: [c] }))); }); });
     wkBox = { rf: R.map(function (t) { return exSay([t]); }), cf: C.map(function (t) { return exSay([t]); }), cells: cells };
   }
-  function bxOnT(g) { return !!(EXP && !SIM && BUILT[act] && BUILT[act].solver && mode !== "solo" && mode !== "create" && !EXP.lit && !(EXP.eq && EXP.zp) && bxFac(g)); }
+  function bxOnT(g) { return !!(EXP && !SIM && BUILT[act] && BUILT[act].solver && mode !== "solo" && mode !== "create" && (deOn() || !EXP.lit) && !(EXP.eq && EXP.zp) && bxFac(g)); }
   function bxOn(i) { return !!(EXP && !EXP.eq && bxOnT(EXP.items[i])); }
   function bxT(t) { return "<span>" + (t.n.n < 0 ? "−" : "") + exTerm(t) + "</span>"; }
   function bxBin(b) { var f = BX.bins[b]; return f.length === 1 ? exSay(f) : exSay([{ k: "g", m: mk(1), items: f }]); }
@@ -974,7 +975,7 @@
   function bxRow() {   // while the box is open, each term of the factors in the expression is picked up on its own
     if (!BX || BX.done) return; var te = bxEl(); if (!te) return;
     var used = {}; Object.keys(BX.slot).forEach(function (q) { used[BX.slot[q].b + ":" + BX.slot[q].k] = 1; });
-    var chip = function (b, k) { var t = BX.bins[b][k], one = BX.bins[b].length === 1 && !BX.g.b; return "<span class=\"bxChip" + (used[b + ":" + k] ? " used" : "") + "\" data-b=\"" + b + "\" data-k=\"" + k + "\" title=\"Drag me to a spot outside the box\">" + (one ? exFr(mk(Math.abs(t.n.n), t.n.d)) : k ? "<span class=\"exOp\">" + (t.n.n < 0 ? "−" : "+") + "</span>" + exTerm(t) : bxT(t)) + "</span>"; };
+    var chip = function (b, k) { var t = BX.bins[b][k], one = BX.bins[b].length === 1 && !BX.g.b; return "<span class=\"bxChip" + (used[b + ":" + k] ? " used" : "") + "\" data-b=\"" + b + "\" data-k=\"" + k + "\" title=\"Drag me to a spot outside the box\">" + (one ? (hasS(t) ? exTerm({ k: "c", n: mk(Math.abs(t.n.n), t.n.d), s: t.s }) : exFr(mk(Math.abs(t.n.n), t.n.d))) : k ? "<span class=\"exOp\">" + (t.n.n < 0 ? "−" : "+") + "</span>" + exTerm(t) : bxT(t)) + "</span>"; };
     var par = function (b) { var h = ""; for (var k = 0; k < BX.bins[b].length; k++) h += chip(b, k); return "<span class=\"exG\">(" + h + ")</span>"; };
     te.innerHTML = BX.g.b ? par(0) + par(1) : chip(0, 0) + par(1); te.classList.remove("grab");   // (a number in front: its sign stays where it is, outside)
     [].forEach.call(te.querySelectorAll(".bxChip"), function (c) { c.addEventListener("pointerdown", function (e) { e.stopPropagation(); if ((EXP && EXP.ask) || c.classList.contains("used")) return; drag(e, c, null, function (t) { bxDrop(+c.dataset.b, +c.dataset.k, t.dataset.slot); }, "bx:"); }); });
@@ -1423,7 +1424,7 @@
       }
       [".exG", ".exH", ".exJ"].forEach(function (sel, fi) {
         var pe = el.querySelector(":scope > " + sel); if (!pe) return; pe.dataset.drop = "zpf:" + fi;
-        pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, pe, function () { note("Drag this factor up or down: if two numbers multiply to make 0, one of them has to be 0."); }, function (t2) { var f2 = (t2.dataset.drop || "").split(":"); if (f2[0] === "zpf" && +f2[1] !== fi && t2.closest(".exT") === el && zpSquare(EXP[el.dataset.s || "L"][+el.dataset.i])) eqPw(el.dataset.s || "L", +el.dataset.i, true); }, ["zp:", "zpf:"], null, function (t, ev) { var o = out(ev); if (o) zpSplit(fi, o === 1, idx); }); });
+        pe.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, pe, function () { note("Drag this factor up or down: if two numbers multiply to make 0, one of them has to be 0."); }, function (t2) { var f2 = (t2.dataset.drop || "").split(":"); if (f2[0] === "zpf" && +f2[1] !== fi && t2.closest(".exT") === el) { var zt = EXP[el.dataset.s || "L"][+el.dataset.i]; if (zpSquare(zt)) eqPw(el.dataset.s || "L", +el.dataset.i, true); else if (deOn() && zt.b && !zt.c) eqDistribute(el.dataset.s || "L", +el.dataset.i); } }, ["zp:", "zpf:"], null, function (t, ev) { var o = out(ev); if (o) zpSplit(fi, o === 1, idx); }); });
       });
     });
   }
@@ -2749,11 +2750,11 @@
     if (!locked && !un && !fin && !rad) { R.querySelector(".exEq").addEventListener("click", mulAsk); R.onclick = function (e) { if (e.target === R) mulAsk(); }; } else R.onclick = null;
     if (live && un) { eqOpWire(R, idx); zpWire(R, idx); return; }
     var uWire = function () { [].forEach.call(R.querySelectorAll(".exT"), function (el) { var S = el.dataset.s, i = +el.dataset.i, t = EXP[S] && EXP[S][i]; if (!t || !t.u || el.classList.contains("exU")) return; el.classList.add("grab", "exU"); el.title = "Click the fraction to simplify"; el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqFrSimp(S, i); }); }); };   // a fraction not yet simplified (8/2 after dividing both sides by 2) is clicked to simplify it, whatever else the equation is doing
-    if (live && gq) { grWire(R); uWire(); return; }
+    if (live && gq && !deOn()) { grWire(R); uWire(); return; }   // (the Drag Equation, decision 8: terms keep every move while factoring; dragging one down still opens the square)
     if (!live) return;
     var dropOf = function (S, i) { return function (t) { if (t.dataset.drop === "eq=") eqDrop(S, i, eqOther(S), -1); else { var p = t.dataset.drop.split(":"); eqDrop(S, i, p[1], +p[2]); } }; };
     eqOpWire(R, idx);
-    if (EXP.sq && !EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.mf; })) [].forEach.call(R.querySelectorAll(".exT sup"), function (sp) {   /* (fractions on screen do not stop it: 2/2 w² = 162/2) */   // the exponent of x^2 is dragged across the = and becomes a square root
+    if ((EXP.sq || deOn()) && !EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.mf; })) [].forEach.call(R.querySelectorAll(".exT sup"), function (sp) {   /* (fractions on screen do not stop it: 2/2 w² = 162/2) */   // the exponent of x^2 is dragged across the = and becomes a square root
       sp.classList.add("exExp"); sp.title = "Drag the exponent across the = to take the square root"; sp._eqEl = R.querySelector(".exEq");
       sp._cross = function (on) { if (on) sp.style.width = sp.getBoundingClientRect().width + "px"; else sp.style.width = ""; sp.textContent = on ? "\u221a" : "2"; sp.classList.toggle("exSqrt", on); };
       sp.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, sp, function () { note("Drag the 2 across the = and it becomes a square root."); }, function () { eqRoot(); }, ["et:", "eq="]); });
@@ -2789,7 +2790,7 @@
       }
       if (mEl && gEl) {
         gEl.dataset.drop = "exg:" + S + ":" + i; exNegMark(mEl, S + ":" + i);
-        if (!EXP.lit && !t.m.s) {   // dragging the number in front across the = divides every term on both sides by it: a ÷ appears in front of it as it crosses
+        if ((deOn() || !EXP.lit) && !t.m.s) {   // dragging the number in front across the = divides every term on both sides by it: a ÷ appears in front of it as it crosses
           var m0 = mEl.textContent, mD = t.ov ? "\u00b7" + t.m.d : "\u00f7" + (t.m.n < 0 ? "(\u2212" + exFr(mk(Math.abs(t.m.n), t.m.d)) + ")" : exFr(t.m));
           mEl._eqEl = R.querySelector(".exEq"); mEl._cross = function (on) { if (on) { var w0 = mEl.getBoundingClientRect().width; mEl.style.display = "inline-block"; mEl.style.width = w0 + "px"; mEl.style.whiteSpace = "nowrap"; } else { mEl.style.display = mEl.style.width = mEl.style.whiteSpace = ""; } mEl.textContent = on ? mD : m0; };   // the row must not shift under the pointer while the \u00f7 is added mEl._flyText = mD;
           mEl._hotAll = function (on, t2) { var dd = on && t2 ? t2.dataset.drop || "" : "", far = dd === "eq=" || ((dd.indexOf("et:") === 0 || dd.indexOf("exg:") === 0) && dd.split(":")[1] !== S); [].forEach.call(R.querySelectorAll(".exT, .exEq, .exOp"), function (x) { if (x !== mEl) x.classList.toggle("drop", far); }); };
@@ -2839,7 +2840,7 @@
     if (b.want && mode === "calculate") { b.anim = anim; eqAsk({ kind: "term", b: b }, b.label + " ="); return; }
     eqGo(b.N, b.msg, anim);
   }
-  function dvHandle(t) { return t.k === "x" && !t.u && !hasS(t) && !t.co && !t.ov && !t.lc && !t.w && !t.pm && t.n.d === 1 && Math.abs(t.n.n) > 1 && !EXP.lit; }   // a whole-number coefficient that can be dragged across the =
+  function dvHandle(t) { return t.k === "x" && !t.u && !hasS(t) && !t.co && !t.ov && !t.lc && !t.w && !t.pm && t.n.d === 1 && Math.abs(t.n.n) > 1 && (deOn() || !EXP.lit); }   // a whole-number coefficient that can be dragged across the =
   // The Multiplication (Division) Property of Equality: divide every term on both sides by a. Whole numbers become fractions the student simplifies by clicking them
   // (ca + b = p - q becomes a + b/c = p/c - q/c). The same as clicking the = and choosing ÷. S, i: the term whose coefficient was dragged (its coefficient becomes 1), or -1.
   function eqDivAll(S, i, a, ready) {
@@ -3020,8 +3021,10 @@
   }
   function cqOK(k) {
     var raw = $("askIn").value, w = k.want, r = exParse(raw), ok = false, fm = /(\d+)\/(\d+)/.exec(raw); if (!raw.trim()) return;   // (Return in an empty box: nothing yet)
-    if (typeof r !== "string" && r.length === 1 && r[0].k !== "g") ok = w.n.n === 0 ? r[0].n.n === 0 : exKey(r[0]) === exKey(w) && same(r[0].n, w.n);
+    var sOf = function (t) { return hasS(t) ? sSig(t.s) : ""; };   // (the letters of a term must match too: 2x is not 2ax)
+    if (typeof r !== "string" && r.length === 1 && r[0].k !== "g") ok = w.n.n === 0 ? r[0].n.n === 0 : exKey(r[0]) === exKey(w) && same(r[0].n, w.n) && sOf(r[0]) === sOf(w);
     if (!ok && w.k === "c") { var v = numVal(raw); ok = !!(v && v.length === 1 && Math.abs(v[0] - w.n.n / w.n.d) < 1e-9); }
+    if (!ok && hasS(w)) { var lt = litTerms(raw.replace(/\u2212/g, "-"), EXP.vk || "x", false); if (lt && typeof lt !== "string" && lt.length === 1 && lt[0].k !== "g") { r = lt; ok = exKey(lt[0]) === exKey(w) && same(lt[0].n, w.n) && sOf(lt[0]) === sOf(w); } }   // (letters as coefficients: 2 · a = 2a)
     if (ok && fm && gcd(+fm[1], +fm[2]) > 1) { $("askErr").textContent = "That fraction can still be simplified."; $("askIn").select(); return; }
     if (!ok) { EQW++; eqwTa(); $("askErr").textContent = typeof r === "string" && !numVal(raw) ? (w.k === "x" ? "Type a term, like 6x." : "Type a number, like 6 or 3/2.") : "Not quite. The answer is " + exSay([w]) + ".";   /* (the right answer, with Try another) */ $("askIn").select(); return; }
     closeAsk(false); EXP.ask = null; k.go();
@@ -3270,7 +3273,7 @@
     var xi = function (S) { return EXP[S].findIndex(function (t) { return t.k === "x"; }); }, ci = function (S) { return EXP[S].findIndex(function (t) { return t.k === "c"; }); };
     var xl = xi("L"), xr = xi("R");
     if (xl >= 0 && xr >= 0) {   // x on both sides: move the smaller x term onto the larger, so the x that is left is positive
-      var big = EXP.lit || EXP.L[xl].n.n * EXP.R[xr].n.d - EXP.R[xr].n.n * EXP.L[xl].n.d > 0, from = big ? "R" : "L", to = big ? "L" : "R", fi = big ? xr : xl, ti = big ? xl : xr;
+      var big = (EXP.lit && !deOn()) || EXP.L[xl].n.n * EXP.R[xr].n.d - EXP.R[xr].n.n * EXP.L[xl].n.d > 0, from = big ? "R" : "L", to = big ? "L" : "R", fi = big ? xr : xl, ti = big ? xl : xr;
       return { mv: ['.exT[data-s="' + from + '"][data-i="' + fi + '"]', '.exT[data-s="' + to + '"][data-i="' + ti + '"]'], cap: "Combine the x terms.", run: function () { var b = eqBuild(from, fi, to, ti); eqSet(b.N, b.msg); } };
     }
     var xs = xl >= 0 ? "L" : "R", os = eqOther(xs), cx = ci(xs);
@@ -3448,7 +3451,7 @@
   function deOn() { if (DE_ON) return true; try { return localStorage.getItem("an.de") === "1"; } catch (e) { return false; } }
   var DE_EQF = ["zpq", "grq", "quq", "sq", "av", "lit", "dvq", "qd", "sf", "quad"], DE_EXF = ["fac", "lit", "grp", "rad"];
   function deGoalOf(E) {   // the goal a level's old switches stood for (until its instances carry their own)
-    if (E.eq) return E.quq ? "quadratic formula" : E.qd && !E.sf && !E.grq ? "complete the square" : E.grq || E.sf ? "factor" : E.sq ? "square root" : "";
+    if (E.eq) return E.quq ? "quadratic formula" : E.qd && !E.sf && !E.grq ? "complete the square" : E.grq || E.sf ? "factor" : E.sq ? "square root" : E.dvq && !E.src ? "divide first" : "";   // (divide first: Play Solve's 1.2 rung; a typed problem follows decision 12)
     return E.fac || E.grp ? "factor" : E.rad ? "" : "simplify";
   }
   function deQuad() { return EXP.L.concat(EXP.R).some(function (t) { return (t.k === "x" && /\^2/.test(t.v || "")) || (t.k === "g" && (t.pw || t.b)); }); }   // (decision 8: a quadratic on the screen offers every tool, the Quadratic Formula too)
@@ -3462,7 +3465,8 @@
     if (EXP.eq) {
       if (g === "complete the square") { EXP.qd = true; EXP.grq = false; EXP.sf = false; }
       else if (g === "quadratic formula") { EXP.quq = true; EXP.grq = false; }
-      else if (g === "factor") { if (!EXP.grq && EXP.qd) EXP.sf = true; }
+      else if (g === "factor") { var z0 = EXP.R.length === 1 && EXP.R[0].k === "c" && !EXP.R[0].n.n; if (z0 && (grAny(EXP.L) || fmFits(EXP.L))) EXP.grq = true; else if (!EXP.grq && EXP.qd) EXP.sf = true; }
+      else if (g === "divide first") EXP.dvq = true;
       else if (g === "square root") EXP.sq = true;
     } else if (g === "factor") EXP.fac = EXP.fac || !EXP.grp; else if (g === "simplify") { EXP.fac = false; EXP.grp = false; }
   }
