@@ -23,7 +23,7 @@ A change to the engine reaches every instance. The rules depend only on what is 
 | 3 | `DragEquation` entry point taking a string; pattern notation; Play Solve's ladder as strings in one bank file (no behaviour change) | Done 2026-11-28 |
 | 4 | Remove the per-level switches, one rule at a time, compared with the record after each | Done 2026-11-28 (main solver; 1–4 in step 5) |
 | 5 | Row equations onto the engine: Play Solve's first 14 rungs, 1.4 One Variable, then Substitution, 2×2, 3×3 | Done 2026-11-28 |
-| 6 | The word problems' built-in solvers (2.4A Vertex & Point and Intercepts, 3.1C Real Life, 3.1A) become instances | Next |
+| 6 | The word problems' built-in solvers (2.4A Vertex & Point and Intercepts, 3.1C Real Life, 3.1A) become instances | In progress (3.1A left) |
 | 7 | Delete the old code and generators; CLAUDE.md and the copies log; the whole record again | Not started |
 
 The site keeps working after every step; new behaviour stays behind a switch until it matches the record.
@@ -61,6 +61,18 @@ problems are assembled by hand in 21 places; each level has its own generator.
   generator (60 problems each, sorted by Play Solve's classifier): all 100 match (a rare kind can make one fail now and then; re-run).
 - Variety the notation does not reproduce exactly (accepted for now): absolute value never on the right side; letter rungs use 6–8 fixed letter sets;
   some side-swap and term-order weights approximate; e1–e4 and e7 never use y; 51 always writes the ">" part first.
+
+## Step 6: progress
+
+- The engine learned a number expression next to the variable (the teacher chose "teach the engine"): `a(0 − 20)²`, `a(10 − 2)(10 − 18)`.
+  The term keeps its true coefficient and a display note; clicking works it out in order (inside the parentheses, the exponent, multiplying),
+  Calculate asks each number, the Demo does it first. Written in a string as `x(0 - 20)^2`.
+- Word problems hand their equation to the Drag Equation once its letters are in (2.4A Vertex & Point and Point & x-Intercepts, 3.1C Real Life
+  and 3.1C's copy of Vertex & Point): the word problem pauses, the Drag Equation solves (written in x, shown with a or t; 3.1C with the square
+  root and ±), then the word problem's own solving steps (and Calculate's typed arithmetic between them) are marked done, so Show work keeps its
+  lines, and it carries on (writing the function, Desmos, the answer). Sequence, Calculate and Demo.
+- Checked: switch on, exactly these 4 instances changed, every Demo finishes; switch off, as before. Tests: tools/de_tests/wordproblem_*.js.
+- Next in step 6: 3.1A Graphing's own term-dragging (until one side is 0) as an instance with the goal "standard form".
 
 ## Step 5: progress
 

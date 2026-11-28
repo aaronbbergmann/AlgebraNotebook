@@ -650,7 +650,7 @@
   function kNeg(k) { var r = mk(-k.n, k.d); if (k.s) r.s = k.s; return r; }
   function kInv(k) { var r = mk(k.d, k.n); if (k.s) r.s = sMul({}, k.s, -1); return r; }
   function kSay(k) { return k.s ? exSay([{ k: "c", n: mk(k.n, k.d), s: k.s }]) : sg(k); }
-  function exKey(t) { return t.k === "g" ? null : t.k === "r" ? "r" + t.r.n + "/" + t.r.d : t.k === "q" ? "q" : t.k === "c" ? (hasS(t) ? "#" + sSig(t.s) : "") : (t.v || "x") + (EXP && !EXP.eq && hasS(t) ? "#" + sSig(t.s) : ""); }   // (in an expression 2x/a and 3x/a are alike, 2x and 2x/a are not)   // what a term is "of": "", "x", "y^2", "xy", "#b" (letters in a number; every x term is alike, ax and cx too) ...
+  function exKey(t) { return t.ce ? "ce:" + JSON.stringify(t.ce) : t.k === "g" ? null : t.k === "r" ? "r" + t.r.n + "/" + t.r.d : t.k === "q" ? "q" : t.k === "c" ? (hasS(t) ? "#" + sSig(t.s) : "") : (t.v || "x") + (EXP && !EXP.eq && hasS(t) ? "#" + sSig(t.s) : ""); }   // (in an expression 2x/a and 3x/a are alike, 2x and 2x/a are not)   // what a term is "of": "", "x", "y^2", "xy", "#b" (letters in a number; every x term is alike, ax and cx too) ...
   // ---- adding fractions with unlike denominators (Play Solve): tap the + in 1/2 + 1/3 and each fraction is multiplied by a fraction equal to 1, 1/2 ⋅ 3/3 + 1/3 ⋅ 2/2;
   // click each ⋅ to multiply (3/6 + 2/6), then click the + to add (5/6). A term may carry lc (the k of k/k waiting to be multiplied) and w ({ n, d }: the fraction as written, 3/6, not yet reduced)
   function fdOK(t) { return !!t && (t.k === "c" || t.k === "x") && !hasS(t) && !t.u && !t.pm; }
@@ -818,6 +818,7 @@
     var top = (t.mf ? mfH + "<span class=\"exRfDot\"> \u00b7 </span>" : a === 1 ? "" : a) + root; return pm + (d > 1 && !t.mf ? "<span class=\"fr\"><span>" + top + "</span><span>" + d + "</span></span>" : top);
   }
   function exTerm(t, inner) {   // the term without its sign
+    if (t.ce && t.k === "x") return ceHtml(t);   // (the Drag Equation: a number expression next to the variable, a(0 − 20)²)
     if (t.u && t.k === "c") return Math.abs(t.u.n) + "/" + t.u.d;   // a fraction that has not been simplified yet: 6/4
     if (t.k === "g" && t.abs) { var am = mk(Math.abs(t.m.n), t.m.d); return (am.n === 1 && am.d === 1 ? "" : "<span class=\"exM\">" + exFr(am) + "</span>") + "<span class=\"exG exAbs\"><span class=\"avBar\" title=\"Tap a bar to open the absolute value\">|</span>" + exHtml(t.items) + "<span class=\"avBar\" title=\"Tap a bar to open the absolute value\">|</span></span>"; }   // |2x − 3|
     if (t.k === "g" && t.pm) return "<span class=\"exPm\" title=\"Click \u00b1 to split it into two equations\">\u00b1</span><span class=\"exG\">" + (t.items.length === 1 ? exHtml(t.items) : parW(exHtml(t.items))) + "</span>";   // ±(2x − 3), after a bar was tapped
@@ -836,7 +837,7 @@
     return t.k === "x" ? (a.n === 1 && a.d === 1 ? "" : a.d === 1 ? "<span class=\"exK\" title=\"Drag me onto another term to factor out a number they share\">" + a.n + "</span>" : exFr(a)) + exVarHtml(t.v || "x") : exFr(a);
   }
   function exHtml(its) {
-    return its.map(function (t, i) { var ng = (t.k === "g" ? t.m.n : t.n.n) < 0; return (i ? "<span class=\"exOp\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "") + exTerm(t); }).join("");
+    return its.map(function (t, i) { var ng = tNeg(t); return (i ? "<span class=\"exOp\">" + (ng ? "−" : "+") + "</span>" : ng ? "<span class=\"exOp\">−</span>" : "") + exTerm(t); }).join("");
   }
   function exSay(its) {   // plain text, for the log and the prompts
     if (its.length === 1 && its[0].k !== "g" && its[0].n.n === 0) return "0";
@@ -2705,6 +2706,7 @@
   }
   function eqDivReady() {   // one side is just one x-term with a coefficient: dragging the coefficient over divides every term on the other side by it (a number, or other terms with x in them)
     var sd = ["L", "R"];
+    if (EXP.L.concat(EXP.R).some(function (t) { return t.ce; })) return null;   // (a number expression next to the variable is worked out first)
     if (EXP.lit) {
       for (var w = 0; w < 2; w++) {
         var A = EXP[sd[w]], B = EXP[sd[1 - w]];
@@ -2719,7 +2721,7 @@
     var its = EXP[S];
     if (locked && EXP.lit && its.length > 1) { var gr = litGroup(its); if (gr) return "<span class=\"exT\" data-s=\"" + S + "\" data-i=\"0\"><span class=\"fr\"><span>" + exHtml(gr.nums) + "</span><span>" + litHtml(gr.den) + "</span></span></span>"; }
     return its.map(function (t, i) {
-      var ng = (t.k === "g" ? t.m.n : t.n.n) < 0;
+      var ng = tNeg(t);
       var op = i ? "<span class=\"exOp" + (live && exLike(its[i - 1], t) && !its[i - 1].lc && !t.lc ? " exOpc\" title=\"Click to combine like terms" : "") + "\" data-op=\"" + S + i + "\">" + (ng ? "−" : "+") + "</span>" : ng && !(dv && dv.S === S) ? "<span class=\"exOp\">−</span>" : "";   // the minus sign of the term being divided by belongs to its handle, so the whole −1 lights up and moves
       var body = live && !(dv && dv.S === S) && dvHandle(t) ? "<span class=\"exCo exCoA\" title=\"Drag me across the = to divide both sides\">" + Math.abs(t.n.n) + "</span>" + exVarHtml(t.v || "x") : dv && dv.S === S && !t.u ? (function () { var a = mk(Math.abs(t.n.n), t.n.d); return "<span class=\"exCo\" title=\"Drag me to the other side to divide\">" + (ng && !i ? "−" : "") + (hasS(t) ? litHtml(t, true) : a.n === 1 && a.d === 1 && ng && !i ? "" : exFr(a)) + "</span>" + exVarHtml(t.v || "x"); })() : exTerm(t);
       return op + "<span class=\"exT" + (live ? " grab" : "") + (t.k === "g" && !t.abs && live && !EXP.zpq ? " pend" : "") + (hot && hot.indexOf(S + i) >= 0 ? " hot" : "") + "\" data-s=\"" + S + "\" data-i=\"" + i + "\" data-drop=\"et:" + S + ":" + i + "\">" + body + "</span>";
@@ -2750,12 +2752,13 @@
     var mulAsk = function () { if (EXP.ask || locked) return; if (idx >= 0 && EXP.zp && idx !== EXP.zp.act) { zpFocus(idx); eqRender(); } eqMulAsk(); };
     if (!locked && !un && !fin && !rad) { R.querySelector(".exEq").addEventListener("click", mulAsk); R.onclick = function (e) { if (e.target === R) mulAsk(); }; } else R.onclick = null;
     if (live && un) { eqOpWire(R, idx); zpWire(R, idx); return; }
+    if (live) [].forEach.call(R.querySelectorAll(".exT .ceF"), function (el) { var te = el.closest(".exT"), S = te.dataset.s, i = +te.dataset.i; el.classList.add("grab"); el.title = "Click to work it out"; el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; ceClick(S, i); }); });   // (a number expression next to the variable: the order of operations, one click a step)
     var uWire = function () { [].forEach.call(R.querySelectorAll(".exT"), function (el) { var S = el.dataset.s, i = +el.dataset.i, t = EXP[S] && EXP[S][i]; if (!t || !t.u || el.classList.contains("exU")) return; el.classList.add("grab", "exU"); el.title = "Click the fraction to simplify"; el.addEventListener("click", function (e) { e.stopPropagation(); if (EXP.ask) return; if (idx >= 0) zpFocus(idx); eqFrSimp(S, i); }); }); };   // a fraction not yet simplified (8/2 after dividing both sides by 2) is clicked to simplify it, whatever else the equation is doing
     if (live && gq && !deOn()) { grWire(R); uWire(); return; }   // (the Drag Equation, decision 8: terms keep every move while factoring; dragging one down still opens the square)
     if (!live) return;
     var dropOf = function (S, i) { return function (t) { if (t.dataset.drop === "eq=") eqDrop(S, i, eqOther(S), -1); else { var p = t.dataset.drop.split(":"); eqDrop(S, i, p[1], +p[2]); } }; };
     eqOpWire(R, idx);
-    if ((EXP.sq || deOn()) && !EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.mf; })) [].forEach.call(R.querySelectorAll(".exT sup"), function (sp) {   /* (fractions on screen do not stop it: 2/2 w² = 162/2) */   // the exponent of x^2 is dragged across the = and becomes a square root
+    if ((EXP.sq || deOn()) && !EXP.L.concat(EXP.R).some(function (t) { return t.k === "r" || t.pm || t.mf; })) [].forEach.call(R.querySelectorAll(".exT sup:not(.cePw)"), function (sp) {   /* (fractions on screen do not stop it: 2/2 w² = 162/2) */   // the exponent of x^2 is dragged across the = and becomes a square root
       sp.classList.add("exExp"); sp.title = "Drag the exponent across the = to take the square root"; sp._eqEl = R.querySelector(".exEq");
       sp._cross = function (on) { if (on) sp.style.width = sp.getBoundingClientRect().width + "px"; else sp.style.width = ""; sp.textContent = on ? "\u221a" : "2"; sp.classList.toggle("exSqrt", on); };
       sp.addEventListener("pointerdown", function (e) { e.stopPropagation(); if (EXP.ask) return; zdr(idx, e, sp, function () { note("Drag the 2 across the = and it becomes a square root."); }, function () { eqRoot(); }, ["et:", "eq="]); });
@@ -2841,7 +2844,7 @@
     if (b.want && mode === "calculate") { b.anim = anim; eqAsk({ kind: "term", b: b }, b.label + " ="); return; }
     eqGo(b.N, b.msg, anim);
   }
-  function dvHandle(t) { return t.k === "x" && !t.u && !hasS(t) && !t.co && !t.ov && !t.lc && !t.w && !t.pm && t.n.d === 1 && Math.abs(t.n.n) > 1 && (deOn() || !EXP.lit); }   // a whole-number coefficient that can be dragged across the =
+  function dvHandle(t) { return t.k === "x" && !t.u && !t.ce && !hasS(t) && !t.co && !t.ov && !t.lc && !t.w && !t.pm && t.n.d === 1 && Math.abs(t.n.n) > 1 && (deOn() || !EXP.lit); }   // a whole-number coefficient that can be dragged across the =
   // The Multiplication (Division) Property of Equality: divide every term on both sides by a. Whole numbers become fractions the student simplifies by clicking them
   // (ca + b = p - q becomes a + b/c = p/c - q/c). The same as clicking the = and choosing ÷. S, i: the term whose coefficient was dragged (its coefficient becomes 1), or -1.
   function eqDivAll(S, i, a, ready) {
@@ -3129,6 +3132,7 @@
   }
   function eqEnd(kind, asked) {
     if (DE_SYS && kind === "one" && !SIM) { setTimeout(deSysBack, 600); return; }   // (a system's equation: back to the system)
+    if (DE_WP && !SIM && (kind === "one" || kind === "set") && !(EXP.zp && EXP.zp.done.filter(function (d) { return !d; }).length > 1)) { setTimeout(deWpBack, 900); return; }   // (a word problem's equation: back to the word problem; with ±, once both are solved)
     if (SIM === null && mode === "solo" && EXP && EXP.eq) wkSim();
     if ((kind === "none" || kind === "inf") && !asked && mode !== "solo") { kindAsk(kind, exLines()[0], function () { eqEnd(kind, true); }); eqRender(); return; }
     if (EXP.zp) {
@@ -3237,6 +3241,7 @@
     }, ms);
   }
   function eqNextStep() {
+    for (var cq = 0; cq < 2; cq++) { var cS = cq ? "R" : "L", cI = EXP[cS].findIndex(function (t) { return t.ce; }); if (cI >= 0) { var cst = ceNext(EXP[cS][cI]); if (cst) return (function (S2, I2) { return { tap: '.exT[data-s="' + S2 + '"][data-i="' + I2 + '"] .ceF', cap: cst.cap, run: function () { ceClick(S2, I2); } }; })(cS, cI); } }   // (a(0 − 20)²: the order of operations first)
     if (EXP.qf) return qfDemoStep();
     if (EXP.qu) return quDemoStep();
     var sides = ["L", "R"], q, i, j, S;
@@ -3437,12 +3442,14 @@
   function crErrEl() { return DE_DRY ? DE_ERR : $("crErr"); }
   function deParse(str, opt) {   // an instance -> { exp, lvl, goal } (the main solver), { rows, goal } (row equations and systems), or { error }; opt.main: one equation always into the main solver
     var m = /^([^;]*?)\s*;\s*(.+)$/.exec(String(str)), body = m ? m[1] : String(str), goal = m ? m[2].trim().toLowerCase() : "";
+    var cn = ceParse(body); body = cn.text;   // (a(0 − 20)²: read as 400a, the expression kept as a display note)
     var keep = { EXP: EXP, lvl: SOL.lvl, fresh: SOL.fresh }, out = null;
     DE_DRY = true; DE_ERR.textContent = ""; DE_ROWS = []; EXP = null;
     try {
       var parts = body.split(/\s*,\s*(?=[^,]*[=<>\u2264\u2265])/);   // (a comma between equations; never one inside an answer)
       if (parts.length > 1) { parts.forEach(function (q) { DE_SRC = q; if (!DE_ERR.textContent) crAdd0(); }); }
       else { DE_SRC = body; if (!hasRelCh(body)) exCreate(); else if (eqWanted(body) || (opt && opt.main)) eqCreate(); else crAdd0(); }
+      if (EXP && EXP.eq && cn.notes.length) ceAttach(EXP, cn.notes);
       out = DE_ERR.textContent ? { error: DE_ERR.textContent } : EXP ? { exp: EXP, lvl: SOL.lvl, goal: goal } : DE_ROWS.length ? { rows: DE_ROWS.slice(), goal: goal } : { error: "Nothing was read." };
     } catch (e) { out = { error: String(e && e.message || e) }; }
     finally { EXP = keep.EXP; SOL.lvl = keep.lvl; SOL.fresh = keep.fresh; DE_SRC = null; DE_DRY = false; DE_ROWS = []; }
@@ -3500,6 +3507,29 @@
     else { if (q && val) { var n = { a: mk(0), b: mk(0), e: mk(0), ks: [], c: val }; n[CK[K.v]] = mk(1); ws[K.i] = n; } $("wsEl").style.display = ""; done(K.i); }
     if (mode === "demo" && !locked && !DE_SYS) { DM4.run = true; DM4.paused = false; dmUI("playing"); peekNext(); dm4Go(900); }   // (the system's Demo carries on)
   }
+  // ---- Step 6: a word problem's equation (2.4A Vertex & Point, Point & x-Intercepts, 3.1C Real Life). Once its letters are in, the word problem
+  // pauses and the Drag Equation solves the equation (the order of operations and the solving); then the word problem's own solving steps are
+  // marked done (Show work keeps its lines) and it carries on with writing the function, Desmos and the answer.
+  var DE_WP = null, DE_WPSKIP = false, DE_WPT = /^v(op|mv|dv|ex)$/;
+  function deWpReady() { var st = m3Step(); return deOn() && !DE_WP && !DE_WPSKIP && pq() && m3() && mode !== "solo" && !!st && DE_WPT.test(st.type); }
+  function deWpGo() {
+    var L = m3L(), wl = ""; for (var j = QZ.m3i - 1; j >= 0; j--) if (L[j] && L[j].type === "vsub" && L[j].wl) { wl = L[j].wl; break; }
+    if (!wl && $("vpEq")) wl = $("vpEq").innerHTML.replace(/<sup[^>]*>2<\/sup>/g, "^2");   // (3.1C: the equation as the work area shows it, 0 = −16t² + 137)
+    var t0 = m3Plain(wl).replace(/\u00b2/g, "^2").replace(/\u2212/g, "-").replace(/&nbsp;/g, " "), lt = (t0.match(/[a-z]/) || ["a"])[0], t = t0.replace(new RegExp(lt, "g"), "x");
+    var r = deParse(t, { main: true }); if (!r.exp) return false;
+    var cls = ["quiz", "play", "pq"].filter(function (c) { return document.body.classList.contains(c); });
+    DE_WP = { cls: cls, lt: lt, ex: L.slice(QZ.m3i).some(function (q) { return q.type === "vex"; }) };
+    document.body.classList.remove("quiz", "play", "pq"); EXP = r.exp; EXP.goal = DE_WP.ex ? "square root" : ""; SV = lt; exBegin();
+    $("exNote").textContent = ($("pgQt") ? $("pgQt").innerText.replace(/\s+/g, " ").slice(0, 220) : "") + "   Solve for " + lt + ".";
+    if (mode === "demo") { DM4.run = true; DM4.paused = false; dmUI("playing"); exDemoStep(900); }
+    return true;
+  }
+  function deWpBack() {
+    clearTimeout(DM4.t); handHide(); var K = DE_WP; DE_WP = null; EXP = null; exHide(); $("exNote").textContent = "";
+    K.cls.forEach(function (c) { document.body.classList.add(c); }); locked = false;
+    DE_WPSKIP = true; try { var st; while ((st = m3Step()) && (DE_WPT.test(st.type) || (st.type === "num" && /^c\d$/.test(st.id || "")))) m3Accept(st, st.type === "num" ? String(m3V(st.ans)) : ""); } finally { DE_WPSKIP = false; }   // (Calculate's typed arithmetic between them was asked by the Drag Equation)
+    drawPlay(); pqPanel();
+  }
   function crAdd0() { var r = parseAny(crSrc()); if (typeof r === "string") DE_ERR.textContent = r; else DE_ROWS.push(r); }   // (a row equation)
   function deText(E, rows) {   // the problem as its instance string: the main solver's problem E (EXP), or rows (the row equations)
     var sy = function (its) { return exSay(its).replace(/\u2212/g, "-").replace(/\)(\d*[a-z](?:\^\d+)?)(?![a-z(\/])/g, ")($1)"); };   // ((x + 2)x is written (x + 2)(x), which reads back the same)
@@ -3512,6 +3542,45 @@
     if (c) return c.parts.map(function (q) { return sy(q.L) + " " + q.rel + " " + sy(q.R); }).join(" or ");
     return sy(o.L) + " " + (o.rel || "=") + " " + sy(o.R);
   }
+  // ---- A number expression next to the variable (the word problems' order of operations, step 6): a(0 − 20)², a(10 − 2)(10 − 18).
+  // The term keeps its true coefficient (n: 400) and a display note, ce = { k: the number in front, f: [{ it: [numbers], pw }] }, so every
+  // calculation stays right; clicking works the note out in order (inside the parentheses, the exponent, the multiplying) until it is gone.
+  function tNeg(t) { return t.ce ? t.ce.k.n < 0 : (t.k === "g" ? t.m.n : t.n.n) < 0; }
+  function ceVal(c) { var v = mk(Math.abs(c.k.n), c.k.d); c.f.forEach(function (f) { var s0 = f.it.reduce(function (a, b) { return add(a, b); }, mk(0)), p = f.pw ? mul(s0, s0) : s0; v = mul(v, p); }); return c.k.n < 0 ? neg(v) : v; }
+  function ceHtml(t) {
+    var c = t.ce, k = mk(Math.abs(c.k.n), c.k.d), h = (k.n === 1 && k.d === 1 ? "" : exFr(k)) + exVarHtml(t.v || "x");
+    c.f.forEach(function (f, fi) { var inner = f.it.map(function (q, j) { var a = exFr(mk(Math.abs(q.n), q.d)); return j ? " " + (q.n < 0 ? "\u2212" : "+") + " " + a : (q.n < 0 ? "\u2212" : "") + a; }).join("");
+      h += "<span class=\"ceF\" data-cef=\"" + fi + "\">(" + inner + ")" + (f.pw ? "<sup class=\"cePw\">2</sup>" : "") + "</span>"; });
+    return h;
+  }
+  function ceNext(t) {   // the next step in the order of operations: { cap, label, want, apply(term) }
+    var c = t.ce, fs = c.f, i, sq = function (q) { return q.n < 0 ? "(" + exFr(q).replace("-", "\u2212") + ")" : exFr(q); };
+    for (i = 0; i < fs.length; i++) if (fs[i].it.length > 1) { var s0 = fs[i].it.reduce(function (a, b) { return add(a, b); }, mk(0)), lab = fs[i].it.map(function (q, j) { return j ? (q.n < 0 ? " \u2212 " : " + ") + exFr(mk(Math.abs(q.n), q.d)) : exFr(q).replace("-", "\u2212"); }).join("") + " =";
+      return (function (fi) { return { cap: "Simplify inside the parentheses.", label: lab, want: s0, apply: function (u) { u.ce.f[fi].it = [s0]; } }; })(i); }
+    for (i = 0; i < fs.length; i++) if (fs[i].pw) { var b0 = fs[i].it[0], p0 = mul(b0, b0);
+      return (function (fi) { return { cap: "Square " + sq(b0) + ".", label: sq(b0) + "\u00b2 =", want: p0, apply: function (u) { u.ce.f[fi] = { it: [p0] }; } }; })(i); }
+    if (fs.length > 1) { var pr = fs.reduce(function (a, f) { return mul(a, f.it[0]); }, mk(1));
+      return { cap: "Multiply.", label: fs.map(function (f) { return sq(f.it[0]); }).join(" \u00b7 ") + " =", want: pr, apply: function (u) { u.ce.f = [{ it: [pr] }]; } }; }
+    return null;
+  }
+  function ceDone(u) { if (u.ce && u.ce.f.length === 1 && u.ce.f[0].it.length === 1 && !u.ce.f[0].pw) delete u.ce; }   // (a single number left: the term is just 400a)
+  function ceClick(S, i) {   // a click on the expression: its next step (Calculate asks the number first)
+    if (locked || busy || EXP.ask) return; var t = EXP[S][i]; if (!t || !t.ce) return; var st = ceNext(t); if (!st) return;
+    var go = function () { var N = eqClone(), u = N[S][i]; st.apply(u); ceDone(u); eqSet(N, st.cap.replace(/\.$/, "") + ": " + st.label + " " + exFr(st.want).replace("-", "\u2212") + "."); };
+    if (mode === "calculate") { eqAsk({ kind: "cq", want: { k: "c", n: st.want }, go: go }, st.label); $("askIn").placeholder = "e.g. 400"; return; }
+    go();
+  }
+  function ceParse(text) {   // x(0 - 20)^2, x(10 - 2)(10 - 18): the expressions, each replaced by its value so the readers take the equation
+    var notes = [];
+    var t2 = String(text).replace(/(-?\s*\d*(?:\/\d+)?)\s*x((?:\s*\((?:\s*-?\s*\d+(?:\.\d+)?(?:\/\d+)?\s*[-+])*\s*-?\s*\d+(?:\.\d+)?(?:\/\d+)?\s*\)(?:\^2)?)+)/g, function (all, kq, fx) {
+      var fs = [], re = /\(([^()]*)\)(\^2)?/g, m; while ((m = re.exec(fx))) { var it = (m[1].replace(/\s+/g, "").match(/[-+]?\d+(?:\.\d+)?(?:\/\d+)?/g) || []).map(function (z) { return parse(z.replace(/^\+/, "")); }); fs.push({ it: it, pw: m[2] ? 2 : 0 }); }
+      var ks = kq.replace(/\s+/g, ""), k = ks === "" ? mk(1) : ks === "-" ? mk(-1) : parse(ks), c = { k: k, f: fs }, v = ceVal(c);
+      notes.push({ v: v, c: c }); return (v.n < 0 ? "-" : "") + exFr(mk(Math.abs(v.n), v.d)) + "x";
+    });
+    return { text: t2.replace(/--/g, "+").replace(/\+\s*-/g, "-"), notes: notes };
+  }
+  function ceAttach(E, notes) { notes.forEach(function (nt) { ["L", "R"].some(function (S) { var t = (E.orig[S] || []).filter(function (u) { return u.k === "x" && !u.ce && same(u.n, nt.v); })[0]; if (t) { t.ce = nt.c; return true; } return false; }); }); }
+  function ceText(t) { var c = t.ce, k = mk(Math.abs(c.k.n), c.k.d); return (k.n === 1 && k.d === 1 ? "" : exFr(k)) + "x" + c.f.map(function (f) { return "(" + f.it.map(function (q, j) { return (j ? (q.n < 0 ? " - " : " + ") + exFr(mk(Math.abs(q.n), q.d)) : exFr(q)); }).join("") + ")" + (f.pw ? "^2" : ""); }).join(""); }
   // ---- Pattern strings: an instance that makes a new random problem each time (the Drag Equation's notation; migration/drag-equation/PLAN.md).
   //   [2..9] a whole number from 2 to 9 (0 only when the range starts or ends at 0)   [±2..9] with a random sign   [a=±2..9] and named a
   //   {r=±1..12} a named number that is not shown   {a*(r+b)+c} a number worked out from the named ones   {? gcd(a,b)=1} redraw until it holds
@@ -3840,7 +3909,7 @@
     15: { bin: 1 },
     17: AN_BANK["3.1B-square-roots-simplify"].solve   // 3.1B Square Roots: Simplify: bank/3.1B-square-roots-simplify.js
   };
-  function svL() { return (act === "2.4" && lesson >= 5) || (act === "3.1" && !!C3SV[lesson]) || (act === "1.4D" && lesson === 1 && !subx && deOn()) || !!DE_SYS; }   // (and a system's one-variable equation, while the Drag Equation solves it)   // (1.4 One Variable: the Drag Equation, step 5)
+  function svL() { return (act === "2.4" && lesson >= 5) || (act === "3.1" && !!C3SV[lesson]) || (act === "1.4D" && lesson === 1 && !subx && deOn()) || !!DE_SYS || !!DE_WP; }   // (and a system's one-variable equation, or a word problem's equation, while the Drag Equation solves it)   // (1.4 One Variable: the Drag Equation, step 5)
   function svAct() { return act === "2.4" || act === "3.1" || (act === "1.4D" && deOn()); }   // (a section whose exercises switch between the quiz engine and the Play Solve engine)
   function c3Make() {   // a Chapter 3 problem: the Demo opens on the first (simplest) kind, every other mode on any kind
     var c = C3SV[lesson], cl = function (o) { return JSON.parse(JSON.stringify(o)); };
@@ -12550,6 +12619,7 @@ var ESPIC = {
     else { QZ.m3l.push(line); if (QZ.ww) QZ.ww.steps.push({ eqs: [m3Plain(line)], cls: "cg" }); }
     QZ.m3i++; if (QZ.m3i >= m3Len()) { QZ.m3done = true; if (QZ.ww) QZ.ww.fin = true; }
     QZ.hn = 0; pqMsg(""); drawPlay(); pqPanel();
+    if (deWpReady()) deWpGo();   // (step 6: the Drag Equation solves the word problem's equation)
   }
   function m3Bad(el, msg) { if (m3CB() && m3Step() && !m3Step().fine) { if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } m3Miss(m3Step(), msg); return; } QZ.wrong++; if (el) { el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad"); } pqMsg(m3Plain(ansAdd(msg || "Not quite. Try again.", el ? m3AnsTx(m3Step()) : ""))); }
   function m3Try(el, enter) {
