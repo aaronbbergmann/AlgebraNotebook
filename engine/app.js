@@ -2730,6 +2730,7 @@
   function eqRender(hot) {
     if (EXP && EXP.eq) { fdClean(EXP.L); fdClean(EXP.R); uClean(EXP.L || []); uClean(EXP.R || []); if (EXP.zp) EXP.zp.eqs.forEach(function (q) { uClean(q.L || []); uClean(q.R || []); }); }
     eqRender0(hot); if (BX && !BX.done && BX.eq) bxRow(); exWork();
+    if (DE_WP && DE_WP.c3 && !DE_WP.fin && EXP && EXP.eq && [EXP.L, EXP.R].some(function (A) { return A.length === 1 && A[0].k === "c" && !A[0].n.n; })) { DE_WP.fin = true; setTimeout(deWpBack, 900); }   // (3.1A: one side is 0, the goal reached)
     var g = EXP && EXP.eq && !EXP.zp ? EXP.rel : null;
     if (g && EXP.relPrev && EXP.relPrevO === EXP.orig && relRev(EXP.relPrev) === g && g !== EXP.relPrev) EXP.relAt = Date.now();   // the inequality sign turns over
     if (g && EXP.relAt && Date.now() - EXP.relAt < 850) relTurn($("exRow").querySelector(".exEq"), Date.now() - EXP.relAt);
@@ -3477,6 +3478,7 @@
       else if (g === "quadratic formula") { EXP.quq = true; EXP.grq = false; }
       else if (g === "factor") { var z0 = EXP.R.length === 1 && EXP.R[0].k === "c" && !EXP.R[0].n.n; if (z0 && (grAny(EXP.L) || fmFits(EXP.L))) EXP.grq = true; else if (!EXP.grq && EXP.qd) EXP.sf = true; }
       else if (g === "divide first") EXP.dvq = true;
+      else if (g === "standard form") { EXP.sf = true; EXP.grq = false; EXP.qd = false; EXP.quq = false; EXP.sq = false; }
       else if (g === "square root") EXP.sq = true;
     } else if (g === "factor") EXP.fac = EXP.fac || !EXP.grp; else if (g === "simplify") { EXP.fac = false; EXP.grp = false; }
   }
@@ -3510,26 +3512,30 @@
   // ---- Step 6: a word problem's equation (2.4A Vertex & Point, Point & x-Intercepts, 3.1C Real Life). Once its letters are in, the word problem
   // pauses and the Drag Equation solves the equation (the order of operations and the solving); then the word problem's own solving steps are
   // marked done (Show work keeps its lines) and it carries on with writing the function, Desmos and the answer.
-  var DE_WP = null, DE_WPSKIP = false, DE_WPT = /^v(op|mv|dv|ex)$/;
+  var DE_WP = null, DE_WPSKIP = false, DE_WPT = /^(v(op|mv|dv|ex)|c3mv)$/;   // (c3mv: 3.1A Graphing, the terms moved until one side is 0)
   function deWpReady() { var st = m3Step(); return deOn() && !DE_WP && !DE_WPSKIP && pq() && m3() && mode !== "solo" && !!st && DE_WPT.test(st.type); }
   function deWpGo() {
-    var L = m3L(), wl = ""; for (var j = QZ.m3i - 1; j >= 0; j--) if (L[j] && L[j].type === "vsub" && L[j].wl) { wl = L[j].wl; break; }
+    var L = m3L(), wl = "", c3 = m3Step().type === "c3mv"; for (var j = QZ.m3i - 1; j >= 0; j--) if (L[j] && L[j].type === "vsub" && L[j].wl) { wl = L[j].wl; break; }
+    if (c3) { var xs = c3MvSt(), tx = function (A) { return A.length ? A.map(function (u, i) { var v = u.d === 2 ? "x^2" : u.d === 1 ? "x" : "", a = Math.abs(u.c); return (i ? (u.c < 0 ? " - " : " + ") : (u.c < 0 ? "-" : "")) + (v && a === 1 ? "" : a) + v; }).join("") : "0"; }; wl = tx(xs.c3L) + " = " + tx(xs.c3R); }   // (3.1A: x^2 - 6x = -10)
     if (!wl && $("vpEq")) wl = $("vpEq").innerHTML.replace(/<sup[^>]*>2<\/sup>/g, "^2");   // (3.1C: the equation as the work area shows it, 0 = −16t² + 137)
     var t0 = m3Plain(wl).replace(/\u00b2/g, "^2").replace(/\u2212/g, "-").replace(/&nbsp;/g, " "), lt = (t0.match(/[a-z]/) || ["a"])[0], t = t0.replace(new RegExp(lt, "g"), "x");
     var r = deParse(t, { main: true }); if (!r.exp) return false;
     var cls = ["quiz", "play", "pq"].filter(function (c) { return document.body.classList.contains(c); });
-    DE_WP = { cls: cls, lt: lt, ex: L.slice(QZ.m3i).some(function (q) { return q.type === "vex"; }) };
-    document.body.classList.remove("quiz", "play", "pq"); EXP = r.exp; EXP.goal = DE_WP.ex ? "square root" : ""; SV = lt; exBegin();
+    DE_WP = { cls: cls, lt: lt, c3: c3, ex: L.slice(QZ.m3i).some(function (q) { return q.type === "vex"; }) };
+    document.body.classList.remove("quiz", "play", "pq"); EXP = r.exp; EXP.goal = c3 ? "standard form" : DE_WP.ex ? "square root" : ""; SV = lt; exBegin();
     $("exNote").textContent = ($("pgQt") ? $("pgQt").innerText.replace(/\s+/g, " ").slice(0, 220) : "") + "   Solve for " + lt + ".";
     if (mode === "demo") { DM4.run = true; DM4.paused = false; dmUI("playing"); exDemoStep(900); }
     return true;
   }
   function deWpBack() {
-    clearTimeout(DM4.t); handHide(); var K = DE_WP; DE_WP = null; EXP = null; exHide(); $("exNote").textContent = "";
+    clearTimeout(DM4.t); handHide(); var K = DE_WP;
+    if (K.c3 && EXP) { var xs2 = c3MvSt(), cv = function (A) { return A.filter(function (u) { return !(u.k === "c" && !u.n.n); }).map(function (u) { return { c: u.n.n / u.n.d, d: u.k === "x" ? (/\^2/.test(u.v || "") ? 2 : 1) : 0 }; }); }; xs2.c3L = cv(EXP.L); xs2.c3R = cv(EXP.R); }   // (3.1A: its work area shows the equation in standard form)
+    DE_WP = null; EXP = null; exHide(); $("exNote").textContent = "";
     K.cls.forEach(function (c) { document.body.classList.add(c); }); locked = false;
     DE_WPSKIP = true; try { var st; while ((st = m3Step()) && (DE_WPT.test(st.type) || (st.type === "num" && /^c\d$/.test(st.id || "")))) m3Accept(st, st.type === "num" ? String(m3V(st.ans)) : ""); } finally { DE_WPSKIP = false; }   // (Calculate's typed arithmetic between them was asked by the Drag Equation)
     drawPlay(); pqPanel();
   }
+  function deCancel() { clearTimeout(DM4.t); handHide(); if (DE_WP) DE_WP.cls.forEach(function (c) { document.body.classList.add(c); }); DE_WP = null; DE_SYS = null; EXP = null; exHide(); $("exNote").textContent = ""; document.body.classList.remove("svEx"); }
   function crAdd0() { var r = parseAny(crSrc()); if (typeof r === "string") DE_ERR.textContent = r; else DE_ROWS.push(r); }   // (a row equation)
   function deText(E, rows) {   // the problem as its instance string: the main solver's problem E (EXP), or rows (the row equations)
     var sy = function (its) { return exSay(its).replace(/\u2212/g, "-").replace(/\)(\d*[a-z](?:\^\d+)?)(?![a-z(\/])/g, ")($1)"); };   // ((x + 2)x is written (x + 2)(x), which reads back the same)
@@ -6009,6 +6015,7 @@
   function resumeMode() { try { if (!ladOn()) return "demo"; var L = ladder(); for (var i = 0; i < L.length; i++) if (!modeFin(L[i])) return L[i]; return L[L.length - 1] || "demo"; } catch (e) { return "demo"; } }
 
   function newProblem() {
+    if (DE_WP || DE_SYS) deCancel();   // (a new problem while the Drag Equation had a word problem's or a system's equation: that hand-off ends)
     document.body.classList.remove("swErr");   // (a wrong Write Submit turned Show work plum red; a new problem starts plain)
     nlHide(); fmHide(); if ($("quBtn")) $("quBtn").hidden = true; hideKind(); d3Hide(); $("eqSubRow").hidden = true;
     if (quiz()) { $("next").hidden = true; $("nxHard").hidden = true; $("again").hidden = true; qzStart(); return; }   // (nothing left over from the activity we came from)
@@ -7527,6 +7534,7 @@ var ESPIC = {
     if (wf()) wfPG();
     if (m3()) m3PG();
     TB.targets = []; QZ.step = 0; QZ.hn = 0; pqMsg("");
+    setTimeout(function () { if (mode !== "demo" && deWpReady()) deWpGo(); }, 60);   // (in Demo, the word problem's Demo hands over when it gets there)   // (a word problem whose first step is the Drag Equation's: 3.1A Graphing)
   }
   // ---- 1.1, second exercise: Graph & Describe.  g(x) is a translation of the parent; the student graphs both, fills in the table and describes the move ----
   function gd() { return pq() && ((act === "1.1" && lesson === 2) || gd2()); }
@@ -15216,7 +15224,9 @@ var ESPIC = {
       var m3Tap = function (el, f, then) { if (!el) { then(); return; } handGo(ctr(el), 650); pgWait(850, function () { handTap(); f(); pgWait(800, then); }); };
       var m3Do = function (n) {
         var st = m3Step(); if (!st) { n(); return; }
-        var t = st.type || "num"; cap(m3QC() ? "" : m3Say(st.ask)); if (m3QC() && !document.querySelector("#pgQt .m3QC")) $("pgQt").innerHTML = m3Q();   // (questions in the centre pane are asked only there)
+        var t = st.type || "num";
+        if (DE_WP || (DE_WPT.test(t) && deWpReady() && deWpGo())) { (function w() { if (pgRun !== run) return; if (DE_WP) { pgWait(500, w); return; } m3Do(n); })(); return; }   // (the Drag Equation has the equation: the word problem's Demo waits, then carries on)
+        cap(m3QC() ? "" : m3Say(st.ask)); if (m3QC() && !document.querySelector("#pgQt .m3QC")) $("pgQt").innerHTML = m3Q();   // (questions in the centre pane are asked only there)
         var P1 = m3Cur();
         if (st.dfr && mode === "demo" && !QZ.m3x.dA) { pgWait(1200, function () { if (pgRun === run) vpDsmDiv(st, run, function () { if (pgRun === run) m3Do(n); }); }); return; }   // (2.4A: the division for a, on a new line of Desmos first)
         if (/^v(sub|op|mv|dv|ex)$/.test(t)) { pgWait(1300, function () { if (pgRun === run) vpDemo(st, run, n); }); return; }

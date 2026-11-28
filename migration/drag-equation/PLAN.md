@@ -23,8 +23,8 @@ A change to the engine reaches every instance. The rules depend only on what is 
 | 3 | `DragEquation` entry point taking a string; pattern notation; Play Solve's ladder as strings in one bank file (no behaviour change) | Done 2026-11-28 |
 | 4 | Remove the per-level switches, one rule at a time, compared with the record after each | Done 2026-11-28 (main solver; 1–4 in step 5) |
 | 5 | Row equations onto the engine: Play Solve's first 14 rungs, 1.4 One Variable, then Substitution, 2×2, 3×3 | Done 2026-11-28 |
-| 6 | The word problems' built-in solvers (2.4A Vertex & Point and Intercepts, 3.1C Real Life, 3.1A) become instances | In progress (3.1A left) |
-| 7 | Delete the old code and generators; CLAUDE.md and the copies log; the whole record again | Not started |
+| 6 | The word problems' built-in solvers (2.4A Vertex & Point and Intercepts, 3.1C Real Life, 3.1A) become instances | Done 2026-11-28 |
+| 7 | Delete the old code and generators; CLAUDE.md and the copies log; the whole record again | Next |
 
 The site keeps working after every step; new behaviour stays behind a switch until it matches the record.
 
@@ -72,7 +72,11 @@ problems are assembled by hand in 21 places; each level has its own generator.
   root and ±), then the word problem's own solving steps (and Calculate's typed arithmetic between them) are marked done, so Show work keeps its
   lines, and it carries on (writing the function, Desmos, the answer). Sequence, Calculate and Demo.
 - Checked: switch on, exactly these 4 instances changed, every Demo finishes; switch off, as before. Tests: tools/de_tests/wordproblem_*.js.
-- Next in step 6: 3.1A Graphing's own term-dragging (until one side is 0) as an instance with the goal "standard form".
+- 3.1A Graphing's own term-dragging is a Drag Equation instance with the goal "standard form": the Demo moves the terms to standard form and
+  the engine stops once one side is 0; the word problem's work area takes that equation back for its graph (Sequence, Calculate, Demo; in Demo
+  the word problem's own Demo hands over when it reaches the step and waits). tools/de_tests/graphing_*.js (3.1A is not in the record).
+- A new problem (a mode change, Try another) while the Drag Equation holds a word problem's or a system's equation ends that hand-off.
+Step 6 done 2026-11-28.
 
 ## Step 5: progress
 
@@ -165,6 +169,7 @@ The full inventory of every switch is in `switches.md` (16 conflicts, C1–C16, 
 ## Log
 
 - 2026-11-28: plan agreed; recorder written and checked (two runs give identical records).
+- 2026-11-28: step 6 done: word problems (2.4A, 3.1C, 3.1A) hand their equations to the Drag Equation.
 - 2026-11-28: step 5b done: systems hand each one-variable equation to the Drag Equation.
 - 2026-11-28: step 5a done: single row equations solved in the main solver (decisions 1–4).
 - 2026-11-28: step 4 done for the main solver (decisions 5–15 behind DE_ON; two bugs fixed for everyone).
