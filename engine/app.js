@@ -1227,6 +1227,7 @@
     if (BUILT[act].solver) $("stT").textContent = svTitle();
     wkBox = null; orig = [parseOne("x=0")]; ws = []; sys = []; sysV = []; hist = []; ops = 0; vals = {}; result = null; locked = false; colMin = []; steps = []; up = null; counted = false; credited = false; ansTouched = false;
     if (EXP.eq) { EXP.L = JSON.parse(JSON.stringify(EXP.orig.L)); EXP.R = JSON.parse(JSON.stringify(EXP.orig.R)); EXP.rel = EXP.orig.rel || "="; } else EXP.items = JSON.parse(JSON.stringify(EXP.orig));
+    if (deOn()) deRules();   // (the Drag Equation: rules from the screen)
     EXP.ask = null; EXP.zp = null; EXP.negSq = false; if (EXP.grq) EXP.zpq = false; if (EXP.eq) { EXP.cmp = null; EXP.c3 = null; if (EXP.orig.cmp) cmpInit(); if (EXP.orig.qf) EXP.qf = { k: 0 }; EXP.qu = null; } logEl.innerHTML = ""; DM4.brk = false;
     $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
     $("top").style.display = "none"; $("vals").style.display = "none"; $("creator").hidden = true; $("answer").hidden = true; $("wsEl").style.display = "none";
@@ -3440,6 +3441,28 @@
     } catch (e) { out = { error: String(e && e.message || e) }; }
     finally { EXP = keep.EXP; SOL.lvl = keep.lvl; SOL.fresh = keep.fresh; DE_SRC = null; DE_DRY = false; DE_ROWS = []; }
     return out;
+  }
+  // ---- Step 4: the Drag Equation's rules, worked out from what is on the screen (and the instance's goal), never from the level. Behind DE_ON until
+  // the migration is finished (one browser: localStorage "an.de" = "1").
+  var DE_ON = false;
+  function deOn() { if (DE_ON) return true; try { return localStorage.getItem("an.de") === "1"; } catch (e) { return false; } }
+  var DE_EQF = ["zpq", "grq", "quq", "sq", "av", "lit", "dvq", "qd", "sf", "quad"], DE_EXF = ["fac", "lit", "grp", "rad"];
+  function deGoalOf(E) {   // the goal a level's old switches stood for (until its instances carry their own)
+    if (E.eq) return E.quq ? "quadratic formula" : E.qd && !E.sf && !E.grq ? "complete the square" : E.grq || E.sf ? "factor" : E.sq ? "square root" : "";
+    return E.fac || E.grp ? "factor" : E.rad ? "" : "simplify";
+  }
+  function deRules() {   // a problem starts: every rule from its content (Create's readers), then the goal steers Demo and Hint
+    if (!EXP || !EXP.orig || (EXP.eq && (EXP.orig.qf || EXP.orig.cmp))) return;
+    if (EXP.goal == null) EXP.goal = deGoalOf(EXP);
+    var r = deParse(deText(EXP)); if (!r.exp || !!r.exp.eq !== !!EXP.eq) return;
+    (EXP.eq ? DE_EQF : DE_EXF).forEach(function (f) { EXP[f] = !!r.exp[f]; });
+    var g = EXP.goal;
+    if (EXP.eq) {
+      if (g === "complete the square") { EXP.qd = true; EXP.grq = false; EXP.sf = false; }
+      else if (g === "quadratic formula") { EXP.quq = true; EXP.grq = false; }
+      else if (g === "factor") { if (!EXP.grq && EXP.qd) EXP.sf = true; }
+      else if (g === "square root") EXP.sq = true;
+    } else if (g === "factor") EXP.fac = EXP.fac || !EXP.grp; else if (g === "simplify") { EXP.fac = false; EXP.grp = false; }
   }
   function crAdd0() { var r = parseAny(crSrc()); if (typeof r === "string") DE_ERR.textContent = r; else DE_ROWS.push(r); }   // (a row equation)
   function deText(E, rows) {   // the problem as its instance string: the main solver's problem E (EXP), or rows (the row equations)

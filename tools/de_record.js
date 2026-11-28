@@ -2,10 +2,10 @@
 // and each seed: the problem, every settled state of its Demo, and the moves offered (elements that take a click or a drag) at each state.
 //   node tools/de_record.js migration/drag-equation/before.json [filter]   (filter: part of an instance id, such as PS-rung-1 or A-1.4C)
 const { chromium } = require('playwright'); const fs = require('fs');
-const OUT = process.argv[2] || 'record.json', FILTER = process.argv[3] || '';
+const ARGS = process.argv.slice(2).filter(a => a[0] !== '-'), OUT = ARGS[0] || 'record.json', FILTER = ARGS[1] || '';
 const INIT = `(() => { let s = 1; window.__seed = n => { s = n >>> 0 || 1; }; Math.random = () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return (s >>> 0) / 4294967296; };
   const ae = EventTarget.prototype.addEventListener; EventTarget.prototype.addEventListener = function (t, f, o) { try { if (this.nodeType === 1 && (t === 'pointerdown' || t === 'click')) this.dataset.evt = (this.dataset.evt || '') + t[0]; } catch (e) {} return ae.call(this, t, f, o); }; })();`;
-const SEEDS = [11, 22, 33];
+const SEEDS = [11, 22, 33], DE = process.argv.includes('--de');   // --de: with the Drag Equation's rules switched on (localStorage an.de)
 const ROOT = 'file://' + require('path').join(__dirname, '..') + '/';
 (async () => {
   const b = await chromium.launch(), out = {};
@@ -22,7 +22,7 @@ const ROOT = 'file://' + require('path').join(__dirname, '..') + '/';
   asg.forEach(a => a.its.forEach((it, i) => inst.push({ id: 'A-' + a.ab + '-q' + (i + 1), kind: 'asg', ab: a.ab, n: i, spec: it.qid + ' (' + it.act + '/' + it.lesson + (it.subx ? ' sub' : '') + ')' })));
   const todo = inst.filter(x => !FILTER || x.id.indexOf(FILTER) >= 0);
   const pg = await b.newPage({ viewport: { width: 1400, height: 900 } }); let errs = []; pg.on('pageerror', e => errs.push(e.message.slice(0, 160)));
-  await pg.addInitScript(INIT); await pg.clock.install();
+  await pg.addInitScript(INIT); if (DE) await pg.addInitScript(() => { try { localStorage.setItem('an.de', '1'); } catch (e) {} }); await pg.clock.install();
   await pg.route(/^https?:/, r => r.abort()); await pg.route(/auth\.js$/, r => r.fulfill({ body: '', contentType: 'text/javascript' }));
   const run = async ms => { try { await pg.clock.runFor(ms); } catch (e) { errs.push('timer: ' + String(e.message).split('\n')[0].slice(0, 160)); } };
   const snap = () => pg.evaluate(() => {
