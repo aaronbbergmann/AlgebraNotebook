@@ -52,7 +52,7 @@ const ROOT = 'file://' + require('path').join(__dirname, '..') + '/';
       const first = await snap();
       await pg.evaluate(() => { const d = $("dmBtn"); if (d && d.offsetParent) d.click(); else { const p = $("pgDemo"); if (p && p.offsetParent) p.click(); } });
       const seq = [first]; let n = 0;
-      for (; n < 400; n++) { await run(400); const s = await snap(); if (s.settled && seq[seq.length - 1].t !== s.t) seq.push(s); if (await pg.evaluate(() => locked || (typeof QZ !== 'undefined' && QZ && QZ.step >= 4))) { await run(400); const z = await snap(); if (seq[seq.length - 1].t !== z.t) seq.push(z); break; } }
+      for (; n < 400; n++) { await run(400); if (await pg.evaluate(() => typeof DM4 !== 'undefined' && DM4.run && DM4.paused && !busy && $('dmBtn').offsetParent && /Resume/.test($('dmBtn').textContent))) { seq.push({ t: '[the Demo paused itself; Resume pressed]', mv: '' }); await pg.evaluate(() => $('dmBtn').click()); continue; } const s = await snap(); if (s.settled && seq[seq.length - 1].t !== s.t) seq.push(s); if (await pg.evaluate(() => locked || (typeof QZ !== 'undefined' && QZ && QZ.step >= 4))) { await run(400); const z = await snap(); if (seq[seq.length - 1].t !== z.t) seq.push(z); break; } }
       out[x.id].runs.push({ seed: sd, problem: first.t, states: seq.map(s => s.t), moves: seq.map(s => s.mv), finished: n < 400, errors: [...new Set(errs)] });
     }
     const r0 = out[x.id].runs[0]; process.stdout.write(x.id + ' ' + r0.states.length + ' states' + (out[x.id].runs.every(r => r.finished) ? '' : ' UNFINISHED') + (out[x.id].runs.some(r => r.errors.length) ? ' ERR' : '') + ' | ' + r0.problem.slice(0, 50) + '\n');

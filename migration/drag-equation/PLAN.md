@@ -18,8 +18,8 @@ A change to the engine reaches every instance. The rules depend only on what is 
 
 | # | Step | Status |
 |---|---|---|
-| 1 | Record the "before": every instance, 3 fixed seeds, its problem, each settled Demo state and the moves offered at each | In progress |
-| 2 | Rulebook: every per-level switch listed; where the same thing on screen follows different rules, a conflict table for the teacher | Not started |
+| 1 | Record the "before": every instance, 3 fixed seeds, its problem, each settled Demo state and the moves offered at each | Done 2026-11-28 |
+| 2 | Rulebook: every per-level switch listed; where the same thing on screen follows different rules, a conflict table for the teacher | In progress |
 | 3 | `DragEquation` entry point taking a string; pattern notation; Play Solve's ladder as strings in one bank file (no behaviour change) | Not started |
 | 4 | Remove the per-level switches, one rule at a time, compared with the record after each | Not started |
 | 5 | Row equations onto the engine: Play Solve's first 14 rungs, 1.4 One Variable, then Substitution, 2×2, 3×3 | Not started |
@@ -44,6 +44,16 @@ problems are assembled by hand in 21 places; each level has its own generator.
 - Recorder: `tools/de_record.js` (Playwright, a fake clock and a seeded Math.random, so a run is exact and repeatable).
 - Output: `migration/drag-equation/before.json` (one entry per instance: spec, and per seed the problem, the Demo's states, the moves offered).
 
+- What it holds: 143 instances (82 Play Solve rungs, 18 expression levels, 43 assignment questions that solve by dragging: 1.4B–D, 2.4A–B,
+  3.1A–3.4B, RevT1), 3 seeds each, 429 runs. 426 Demos finish; 3 do not (below).
+
+## Bugs found on the way (fixed by the new engine, or earlier if you ask)
+
+| Where | What happens |
+|---|---|
+| Play Solve rungs 75–77 (completing the square), when it leads to ±√1 | The Demo stops at `z − 3 = ±√1`: it says "√1 is already simplified" and never goes on |
+
 ## Log
 
 - 2026-11-28: plan agreed; recorder written and checked (two runs give identical records).
+- 2026-11-28: step 1 done: before.json recorded (the 3×3 Demos pause themselves once; the recorder presses Resume).
