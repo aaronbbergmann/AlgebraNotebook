@@ -196,10 +196,11 @@
   var lastDeg = false;
   function degOK() { return !lastDeg && (prog[LK() + ":" + mode + ":one"] || 0) >= 1; }
   function makeProblem() {
-    if (SUB()) return bankQ("1.4B-substitution").generate(mode === "demo" ? 1 : 0);
+    if (SUB()) { var ps = dePat("1.4B-substitution", true); if (ps) return ps; return bankQ("1.4B-substitution").generate(mode === "demo" ? 1 : 0); }
     if (lesson === 1 && BUILT[act].solver) { SOL.fresh = false; var st0 = LADDER[SOL.lvl] || {}; if (st0.one) return solverOne(); return st0.e === "pane" && st0.lv != null ? (st0.ineq ? paneIneq(st0.lv, mode === "demo") : solverEq(st0.lv, mode === "demo")) : solverEq(0, mode === "demo"); }
     if (lesson === 1) return bankQ("1.4B-one-variable").generate();
     var dm = mode === "demo" ? curDm : 0;
+    var pS = mode !== "create" ? dePat(lesson === 3 ? "1.4D-3x3-systems" : "1.4C-2x2-systems", true) : null; if (pS) { lastDeg = classify(pS) !== "one"; return pS; }   // (the Drag Equation: the system's pattern string, with its no-solution and infinitely-many cases)
     if (!dm && mode !== "create" && degOK() && RNG() < 0.2) { lastDeg = true; return generateDeg(RNG() < 0.5 ? "inf" : "none"); }
     lastDeg = false;
     return lesson === 3 ? bankQ("1.4D-3x3-systems").generate(dm) : bankQ("1.4C-2x2-systems").generate(0, dm);
@@ -3536,6 +3537,12 @@
     drawPlay(); pqPanel();
   }
   function deCancel() { clearTimeout(DM4.t); handHide(); if (DE_WP) DE_WP.cls.forEach(function (c) { document.body.classList.add(c); }); DE_WP = null; DE_SYS = null; EXP = null; exHide(); $("exNote").textContent = ""; document.body.classList.remove("svEx"); }
+  function dePat(id, rows) {   // a bank question's own pattern string (step 7b): a problem for the main solver, or (rows) a system's row equations
+    var d = AN_BANK[id]; if (!deOn() || !d || !d.pattern) return null;
+    var t = dePattern(d.pattern), r = deParse(t, rows ? null : { main: true });
+    if (rows) { if (!r.rows) return null; var parts = t.replace(/\s*;.*$/, "").split(/\s*,\s*/); r.rows.forEach(function (q, i) { if (/^\s*y\s*=/.test(parts[i] || "")) q.sol = "y"; else if (/^\s*x\s*=/.test(parts[i] || "")) q.sol = "x"; }); return r.rows; }   // (Substitution: an equation already solved for y)
+    if (!r.exp) return null; r.exp.goal = r.goal || null; return r.exp;
+  }
   function dePlay(ex, dl) {   // Play Solve's next problem from its pattern string: a rung of the ladder, or (ex) an expression level
     var B = AN_BANK["play-solve"]; if (!B) return false;
     var i = ex ? Math.max(0, Math.min(EXLAD.length - 1, Math.max(0, EXLAD.indexOf(SOL.lvl)) + dl)) : SOL.lvl, pat = ex ? B.expr[i] : B.ladder[i]; if (!pat) return false;
@@ -3927,6 +3934,7 @@
   function c3Make() {   // a Chapter 3 problem: the Demo opens on the first (simplest) kind, every other mode on any kind
     var c = C3SV[lesson], cl = function (o) { return JSON.parse(JSON.stringify(o)); };
     if (c.rad || c.box || c.bin) return false;   // (made like 2.4's Square Roots and Box Method)
+    if (c.sqh || c.lin4) { var p31 = dePat(c.sqh ? "3.1B-square-roots-simplify" : "3.1A-4step-equations"); if (p31) { SV = "x"; EXP = p31; EXP.svk = lesson; return true; } }   // (the Drag Equation: the bank question's pattern string)
     if (c.sqh) {   // a square root equation whose solutions need simplifying: x² = 32, 3x² = 75 → ±5... (never a perfect square), x² − 7 = 41, (x − 3)² = 12
       var gh = bankQ("3.1B-square-roots-simplify").generate(), Lh = gh.L, Rh = gh.R, grp = gh.grp;   // (the bank question)
       SV = "x";
@@ -3951,8 +3959,10 @@
   function svMake() { var sd = newSeed(); withSeed(sd, svMake0); if (EXP) EXP.seed = sd; }   // (every problem has a seed: Question Bank, Seeds)
   function svMake0() {
     var cl = function (o) { return JSON.parse(JSON.stringify(o)); }; SV = "x"; distHide(); fmHide(); grHide();
-    if (act === "1.4D") { var r14 = deParse(deText(null, bankQ("1.4B-one-variable").generate()), { main: true }); EXP = r14.exp || null; if (EXP) { EXP.goal = ""; EXP.svk = lesson; } return; }   // (1.4 One Variable on the Drag Equation: its bank question, as a string)
+    if (act === "1.4D") { var p14 = dePat("1.4B-one-variable"); if (p14) { EXP = p14; EXP.svk = lesson; return; } var r14 = deParse(deText(null, bankQ("1.4B-one-variable").generate()), { main: true }); EXP = r14.exp || null; if (EXP) { EXP.goal = ""; EXP.svk = lesson; } return; }   // (1.4 One Variable on the Drag Equation: its bank question, as a string)
     var lesson0 = lesson; if (act === "3.1") { if (c3Make()) return; act = "2.4"; lesson = C3SV[lesson0].rad ? 7 : C3SV[lesson0].bin ? 6 : rnd(3) ? 6 : 8; try { svMake0(); } finally { act = "3.1"; lesson = lesson0; } if (EXP) EXP.svk = lesson; return; }   // (Chapter 3; 3.1B's square roots and 3.1D's box made as 2.4's)
+    var bid = lesson === 5 ? "2.4A-3step-equations" : lesson === 8 ? "2.4B-distributing" : lesson === 6 ? "2.4A-box-method" : "2.4A-square-roots", pB = dePat(bid);
+    if (pB) { EXP = pB; EXP.svk = lesson; return; }   // (the Drag Equation: the bank question's pattern string)
     if (lesson === 5) {   // 3-step linear equations: the bank question 2.4A-3step-equations
       var g = bankQ("2.4A-3step-equations").generate();
       EXP = { eq: true, ask: null, vk: "x", L: g.L, R: g.R, rel: "=", cmp: null, c3: null, qf: null, qu: null, grUser: false, quq: false, lit: false, quad: false, av: false, sq: false, dvq: false, zpq: false, grq: false, qd: false, sf: false, zp: null, src: "", svk: 5 };
