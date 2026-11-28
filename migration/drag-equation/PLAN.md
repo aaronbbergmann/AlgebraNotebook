@@ -21,8 +21,8 @@ A change to the engine reaches every instance. The rules depend only on what is 
 | 1 | Record the "before": every instance, 3 fixed seeds, its problem, each settled Demo state and the moves offered at each | Done 2026-11-28 |
 | 2 | Rulebook: every per-level switch listed; where the same thing on screen follows different rules, a conflict table for the teacher | Done 2026-11-28 (all A) |
 | 3 | `DragEquation` entry point taking a string; pattern notation; Play Solve's ladder as strings in one bank file (no behaviour change) | Done 2026-11-28 |
-| 4 | Remove the per-level switches, one rule at a time, compared with the record after each | In progress |
-| 5 | Row equations onto the engine: Play Solve's first 14 rungs, 1.4 One Variable, then Substitution, 2×2, 3×3 | Not started |
+| 4 | Remove the per-level switches, one rule at a time, compared with the record after each | Done 2026-11-28 (main solver; 1–4 in step 5) |
+| 5 | Row equations onto the engine: Play Solve's first 14 rungs, 1.4 One Variable, then Substitution, 2×2, 3×3 | Next |
 | 6 | The word problems' built-in solvers (2.4A Vertex & Point and Intercepts, 3.1C Real Life, 3.1A) become instances | Not started |
 | 7 | Delete the old code and generators; CLAUDE.md and the copies log; the whole record again | Not started |
 
@@ -76,6 +76,14 @@ problems are assembled by hand in 21 places; each level has its own generator.
 | Letters: dragging a coefficient divides every term; the box takes letters (a(x + 2), 2(x + a)), in Sequence and Calculate | 5, 6 | moves.js, box_letters.js |
 | x on both sides with letters: the smaller onto the larger | 13 | moves.js |
 
+| Calculate with letters: one term at a time (adding: nothing asked, as with numbers; multiplying and dividing by a letter: each term) | 14 | tools/de_tests/calculate_letters.js; dividing by a sum like (a + b) still types the new equation (its answer is not one number) |
+| One answer box everywhere; a quadratic takes its set of answers ("4, -1/2"); tries still follow the place (assignment: one, Play Solve: unlimited) | 15 | tools/de_tests/one_box.js |
+| Bug: √1 is now 1 (the Demo stopped at ±√1) | — | for everyone: rungs 75–77 seed 22 now finish |
+| Bug: undoing a ± split turns split mode off (the Quadratic Formula button came back hidden) | — | for everyone: tools/de_tests/undo_split.js |
+
+Step 4 is done for the main solver. Decisions 1–4 (dragging terms across the =, the x term, the coefficient, clicking the =) are about the row
+equations, so they are done in step 5, when the row equations move onto this engine.
+
 Full record after these (switch on): 30 instances changed, every one traced to a decision (new moves offered: 48 runs; the Quadratic Formula
 button: 21; letters into the box: rungs 29, 31; smaller onto larger with letters: rung 28). Switch off: identical to before.
 
@@ -121,12 +129,13 @@ The full inventory of every switch is in `switches.md` (16 conflicts, C1–C16, 
 
 | Where | What happens |
 |---|---|
-| Play Solve rungs 75–77 (completing the square), when it leads to ±√1 | The Demo stops at `z − 3 = ±√1`: it says "√1 is already simplified" and never goes on |
-| After splitting x + 3 = ±4 and pressing Undo (3.3A, rungs with (x − h)²) | Probably: the split stays switched on, so the Quadratic Formula button stays hidden (from reading the code; C14) |
+| Play Solve rungs 75–77 (completing the square), when it leads to ±√1 | Fixed 2026-11-28: the Demo stopped at `z − 3 = ±√1` ("√1 is already simplified") |
+| After splitting x + 3 = ±4 and pressing Undo (3.3A, rungs with (x − h)²) | Fixed 2026-11-28 (confirmed first): split mode stayed on, so the Quadratic Formula button stayed hidden |
 
 ## Log
 
 - 2026-11-28: plan agreed; recorder written and checked (two runs give identical records).
+- 2026-11-28: step 4 done for the main solver (decisions 5–15 behind DE_ON; two bugs fixed for everyone).
 - 2026-11-28: step 3 done: all 100 Play Solve patterns match their old generators.
 - 2026-11-28: step 3 (first half): deParse/deText and the round-trip proof (369 identical).
 - 2026-11-28: step 2 done: the teacher chose A for all 15 decisions.

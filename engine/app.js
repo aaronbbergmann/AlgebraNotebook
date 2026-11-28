@@ -1233,9 +1233,9 @@
     $("again").hidden = true; $("next").hidden = true; $("next").disabled = false; $("hint").hidden = true;
     $("top").style.display = "none"; $("vals").style.display = "none"; $("creator").hidden = true; $("answer").hidden = true; $("wsEl").style.display = "none";
     $("exBox").hidden = false; $("exSolo").hidden = mode !== "solo"; $("exMsg").textContent = ""; $("exSoloIn").value = "";
-    var two = !!(EXP.eq && !eqIneq() && svWr() && /x\^2|"pw":true|"b":\[/.test(JSON.stringify(EXP.orig || {})));   // (a quadratic equation: up to two solutions, a box for each)
+    var two = !deOn() && !!(EXP.eq && !eqIneq() && svWr() && /x\^2|"pw":true|"b":\[/.test(JSON.stringify(EXP.orig || {})));   // (the Drag Equation, decision 15: one box everywhere, which takes "3, -2")   // (a quadratic equation: up to two solutions, a box for each)
     $("exSolo2").hidden = !two; if (two) { $("exSolo2").firstElementChild.textContent = (EXP.vk || "x") + " ="; $("exSoloIn2").value = ""; $("exSoloIn2").placeholder = "the other, if any"; }
-    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : EXP.grp ? "Answer:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.cmp ? (EXP.cmp.join === "or" ? "e.g. x < -1 or x > 4" : "e.g. -2 < x <= 3") : EXP.av && eqIneq() ? "e.g. -2 < x < 4 or x < -2 or x > 4" : EXP.zpq || EXP.grq ? "e.g. 3, -2" : EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
+    $("exSolo").firstElementChild.textContent = EXP.eq ? (eqIneq() ? "Answer:" : (EXP.vk || "x") + " =") : EXP.fac ? "Factored:" : EXP.grp ? "Answer:" : "Simplified:"; $("exSoloIn").placeholder = EXP.eq ? (EXP.cmp ? (EXP.cmp.join === "or" ? "e.g. x < -1 or x > 4" : "e.g. -2 < x <= 3") : EXP.av && eqIneq() ? "e.g. -2 < x < 4 or x < -2 or x > 4" : EXP.zpq || EXP.grq || (deOn() && /x\^2|"pw":true|"b":\[/.test(JSON.stringify(EXP.orig || {}))) ? "e.g. 3, -2" : EXP.lit ? "e.g. b/a" : eqIneq() ? "e.g. x < 3 or no solution" : "e.g. 3 or no solution") : "";
     exRender(); updUndo();
     if (EXP.eq) {
       if (mode === "demo") { dmUI("idle"); dmCap(BUILT[act].solver ? "" : "Press Start Demo to watch this equation solved."); }
@@ -2413,7 +2413,7 @@
   function rfClick(t, k, pick, elOf, apply) {   // root k of the term t (its only root, unless it is split) was clicked: apply(new term, message)
     var fs = t.f ? t.f.slice() : [t.r.n], f = fs[k];
     if (f == null) return;
-    if (isSq(f)) {   // a perfect square: its root becomes a number in front
+    if (isSq(f) || f === 1) {   // a perfect square: its root becomes a number in front (√1 = 1 too: the Demo used to stop at ±√1)
       var rt = Math.round(Math.sqrt(f)), nf = fs.slice(); nf.splice(k, 1); var u = rfMk(t, mul(t.n, mk(rt)), nf);
       if (t.mf || !same(mk(Math.abs(t.n.n), t.n.d), mk(1))) u.mf = (t.mf ? t.mf.slice() : [mk(Math.abs(t.n.n), t.n.d)]).concat([mk(rt)]);   // 3√100 · √2 becomes 3 · 10 · √2: the multiplying is its own step
       var go = function () { apply(u, "√" + f + " = " + rt + (fs.length > 1 || !same(t.n, mk(1)) ? ", so " + exSay([t]).replace(/^±/, "") + " = " + exSay([u]).replace(/^±/, "") : "") + "." + (u.mf ? " Now multiply." : rdLeft(u) ? " Now " + (u.f && isSq(u.f[rfNext(u.f)]) ? "take the square root of the perfect square." : "simplify the square root: a perfect square still divides " + (u.f ? u.f[rfNext(u.f)] : u.r.n) + ".") : "")); };
@@ -2929,6 +2929,7 @@
       else N2[s.O].forEach(function (u) { u.n = mul(u.n, inv(P[0].n)); if (u.co) u.co = u.co.map(function (c0) { return { n: c0.n, s: sMul(c0.s || {}, P[0].s, -1) }; }); else { var ns = sMul(u.s || {}, P[0].s, -1); if (sSig(ns)) u.s = ns; else delete u.s; } });
       t2.n = mk(1); delete t2.s; delete t2.co;
       var msg2 = "Divide both sides by " + say + ".";
+      if (mode === "calculate" && deOn() && P.length === 1) { var qD = []; EXP[s.O].forEach(function (u0, j0) { var w0 = N2[s.O][j0]; if (!u0.co) qD.push({ label: exSay([u0]) + " \u00f7 " + say + " =", want: w0 }); }); if (qD.length === EXP[s.O].length) { cqRun(qD, N2, msg2); return; } }   // (decision 14: one quotient at a time)
       if (mode === "calculate") { eqAsk({ kind: "mulq", b: { N: N2, msg: msg2 } }, msg2.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. x = b/a"; return; }
       eqSet(N2, msg2); return;
     }
@@ -2963,7 +2964,7 @@
     var N = eqClone(), mkT = function () { return terms.map(function (t) { var c = JSON.parse(JSON.stringify(t)); if (sg < 0) c.n = mk(-c.n.n, c.n.d); return c; }); };
     N.L = N.L.concat(mkT()); N.R = N.R.concat(mkT());
     var say = exSay(terms), msg = (sg > 0 ? "Add " : "Subtract ") + (terms.length > 1 ? "(" + say + ")" : say) + (sg > 0 ? " to" : " from") + " both sides.";
-    if (mode === "calculate" && !ready && cqLit()) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 3x + 2 = x + 6"; return; }
+    if (mode === "calculate" && !ready && cqLit() && !deOn()) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 3x + 2 = x + 6"; return; }
     eqSet(N, msg);
   }
   function eqMulTerm(u, ready) {   // multiply both sides by one term that has the variable in it, like -4x: every number becomes an x term, every x term an x^2 term
@@ -2975,13 +2976,13 @@
       if (r.k === "x") r.v = t.k === "x" && u.k === "x" ? vMul(t.v || "x", u.v || "x") : (t.k === "x" ? t.v || "x" : u.v || "x");
       if (t.co) r.co = t.co.map(function (c) { return { n: c.n, s: sMul(c.s || {}, u.s || {}, 1) }; });
       else { var ns = sMul(t.s || {}, u.s || {}, 1); if (sSig(ns)) r.s = ns; }
-      if (!t0.co && !hasS(t0) && !hasS(r)) qsT.push({ label: exSay([t0]) + " \u00b7 " + (u.n.n < 0 ? "(" + exSay([u]) + ")" : exSay([u])) + " =", want: r });
+      if (!t0.co && (deOn() || (!hasS(t0) && !hasS(r)))) qsT.push({ label: exSay([t0]) + " \u00b7 " + (u.n.n < 0 ? "(" + exSay([u]) + ")" : exSay([u])) + " =", want: r });
       side[i] = r;
     }); });
     if (bad) { note("Multiply out the parentheses first, then multiply both sides by " + exSay([u]) + "."); return; }
     N.L = eqNorm(N.L); N.R = eqNorm(N.R);
     var msg = "Multiply both sides by " + exSay([u]) + ".";
-    if (mode === "calculate" && !ready && !cqLit()) { cqRun(qsT, N, msg); return; }
+    if (mode === "calculate" && !ready && (deOn() || !cqLit())) { cqRun(qsT, N, msg); return; }
     if (mode === "calculate" && !ready) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 6x = 3x + 12"; return; }
     eqSet(N, msg);
   }
@@ -3007,8 +3008,8 @@
     var qs = [];
     EXP.L.concat(EXP.R).forEach(function (t) {
       if (t.k === "g") { if (t.ov || t.abs || t.pm || t.b || (t.m.s && sSig(t.m.s)) || same(t.m, mk(1)) || same(t.m, mk(-1))) return; var nm = mul(t.m, fac); if (same(nm, mk(1)) || same(nm, mk(-1))) return; qs.push({ label: cqN(t.m) + " " + sym + " =", want: { k: "c", n: nm } }); return; }
-      if ((t.k !== "c" && t.k !== "x") || hasS(t) || t.co || t.pm) return;
-      var w = { k: t.k, n: mul(t.n, fac) }; if (t.k === "x") w.v = t.v || "x"; if (same(w.n, t.n)) return;
+      if ((t.k !== "c" && t.k !== "x") || (hasS(t) && !deOn()) || t.co || t.pm) return;
+      var w = { k: t.k, n: mul(t.n, fac) }; if (t.k === "x") w.v = t.v || "x"; if (hasS(t)) w.s = JSON.parse(JSON.stringify(t.s)); if (same(w.n, t.n)) return;   // (decision 14: letters are asked one term at a time too)
       qs.push({ label: exSay([t]) + " " + sym + " =", want: w });
     });
     return qs;
@@ -3038,14 +3039,14 @@
     N.L = eqNorm(N.L); N.R = eqNorm(N.R);
     var msg = dv ? "Divide both sides by " + kSay(dv) + "." : "Multiply both sides by " + kSay(k) + ".";
     if (k.n < 0 && N.rel !== "=") { N.rel = relRev(N.rel); msg += " A negative number turns the sign around: " + EXP.rel + " becomes " + N.rel + "."; }
-    if (mode === "calculate" && !ready && !cqLit() && !k.s) { cqRun(cqScale(k, dv ? "\u00f7 " + cqN(dv) : "\u00b7 " + cqN(k)), N, msg); return; }
+    if (mode === "calculate" && !ready && (deOn() || !cqLit()) && !k.s) { cqRun(cqScale(k, dv ? "\u00f7 " + cqN(dv) : "\u00b7 " + cqN(k)), N, msg); return; }
     if (mode === "calculate" && !ready) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 6x = 3x + 12"; return; }
     eqSet(N, msg);
   }
   function eqAddAll(k, ready) {   // the same number on both sides (it joins the terms already there)
     var N = eqClone(), ta = function () { var t = { k: "c", n: mk(k.n, k.d) }; if (k.s) t.s = k.s; return t; }; N.L.push(ta()); N.R.push(ta());
     var msg = (k.n > 0 ? "Add " + kSay(k) + " to" : "Subtract " + kSay(kNeg(k)) + " from") + " both sides.";
-    if (mode === "calculate" && !ready && (cqLit() || k.s)) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 3x + 2 = x + 6"; return; }
+    if (mode === "calculate" && !ready && (k.s || (cqLit() && !deOn()))) { eqAsk({ kind: "mulq", b: { N: N, msg: msg } }, msg.replace(/\.$/, "") + ". Type the new equation:"); $("askIn").placeholder = "e.g. 3x + 2 = x + 6"; return; }
     eqSet(N, msg);
   }
   function eqAsk(info, label) {
@@ -3149,7 +3150,7 @@
   function eqUndo() {
     nlHide();
     distHide();
-    hideKind(); var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; EXP.c3 = h.c3 || null; if (EXP.cmp) EXP.zpq = !!EXP.zp; if (EXP.qf && h.qk != null) EXP.qf.k = h.qk; if ("qu" in h) EXP.qu = h.qu || null; if (EXP.grq) EXP.zpq = !!(EXP.zp || zpOf(EXP.L, EXP.R)); else if (EXP.sq || EXP.av) EXP.zpq = !!EXP.zp; locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();
+    hideKind(); var h = JSON.parse(hist.pop()); EXP.L = h.L; EXP.R = h.R; EXP.rel = h.rel || "="; EXP.zp = h.z || null; EXP.c3 = h.c3 || null; if (EXP.cmp) EXP.zpq = !!EXP.zp; if (EXP.qf && h.qk != null) EXP.qf.k = h.qk; if ("qu" in h) EXP.qu = h.qu || null; if (EXP.grq) EXP.zpq = !!(EXP.zp || zpOf(EXP.L, EXP.R)); else if (EXP.sq || EXP.av) EXP.zpq = !!EXP.zp; else if (!EXP.cmp) EXP.zpq = !!(EXP.zp || zpOf(EXP.L, EXP.R) || zpOf(EXP.R, EXP.L)); locked = false; $("next").hidden = true; $("again").hidden = true; closeAsk(false); clearLog(); eqRender(); updUndo();   // (zpq: any other problem's split mode follows the screen; it used to stay on after undoing a ± split)
   }
   function eqCheckSolo() {
     if (EXP.cmp) {   // a compound inequality: -2 < x ≤ 3, x < -1 or x > 4, no solution, all real numbers
@@ -3185,7 +3186,7 @@
       }
     }
     if (EXP.qf) { var mq = $("exMsg"), tq = $("exSoloIn").value.replace(/^\s*x\s*=/i, ""); if (!qfSame(tq, "(-b\u00b1\u221a(b^2-4ac))/(2a)")) { mq.className = "bad"; mq.textContent = "Not quite. Type the formula, like (-b +- sqrt(b²-4ac))/(2a)."; return; } EXP.qf.k = QFS.length - 1; $("exSolo").hidden = true; qfEnd(); return; }
-    var sgW = !EXP.zpq && !EXP.grq && !EXP.sq && !EXP.av && (EXP.qd ? qdRoots(EXP.orig.L, EXP.orig.R) : sqgRoots(EXP.orig.L, EXP.orig.R));
+    var sgW = !EXP.zpq && !EXP.grq && !EXP.sq && !EXP.av && (EXP.qd ? qdRoots(EXP.orig.L, EXP.orig.R) : deOn() ? qdRoots(EXP.orig.L, EXP.orig.R) || sqgRoots(EXP.orig.L, EXP.orig.R) : sqgRoots(EXP.orig.L, EXP.orig.R));   // (the Drag Equation: any quadratic is answered with its set of solutions)
     if (EXP.zpq || EXP.grq || EXP.sq || EXP.av || sgW) {   // the answers are a set: "3, -2", "x = 3 or x = -2"
       var mz = $("exMsg"), g0 = EXP.grq || EXP.sq || EXP.av || sgW ? null : zpOf(EXP.orig.L, EXP.orig.R), vz = EXP.vk || "x", want = sgW ? sgW : EXP.av ? avRoots(EXP.orig.L, EXP.orig.R) : EXP.grq ? (grAny(EXP.orig.L) ? grRoots(grAny(EXP.orig.L)) : fmRoots(fmFits(EXP.orig.L))) : EXP.sq ? (function () { var sv = sqVal(EXP.orig.L, EXP.orig.R); if (sv.q.n < 0) return []; return sv.q.n ? [rootT(mk(0), mk(1), sv.q, 1), rootT(mk(0), mk(1), sv.q, -1)] : [mk(0)]; })() : zpRoots(g0, vz), tz = $("exSoloIn").value.toLowerCase().replace(/\u2212/g, "-").replace(/\s+/g, ""), parts = tz.split(/,|;|or|and/).filter(function (u) { return u; }), got = []; ansTouched = true;
       tz = tz.replace(new RegExp("^" + vz + "="), ""); parts = tz.split(/,|;|or|and/).filter(function (u) { return u; });   // numbers, fractions, square roots and ± (3 ± √2) all read as numbers
