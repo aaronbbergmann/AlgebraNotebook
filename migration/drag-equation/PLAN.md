@@ -22,7 +22,7 @@ A change to the engine reaches every instance. The rules depend only on what is 
 | 2 | Rulebook: every per-level switch listed; where the same thing on screen follows different rules, a conflict table for the teacher | Done 2026-11-28 (all A) |
 | 3 | `DragEquation` entry point taking a string; pattern notation; Play Solve's ladder as strings in one bank file (no behaviour change) | Done 2026-11-28 |
 | 4 | Remove the per-level switches, one rule at a time, compared with the record after each | Done 2026-11-28 (main solver; 1–4 in step 5) |
-| 5 | Row equations onto the engine: Play Solve's first 14 rungs, 1.4 One Variable, then Substitution, 2×2, 3×3 | Next |
+| 5 | Row equations onto the engine: Play Solve's first 14 rungs, 1.4 One Variable, then Substitution, 2×2, 3×3 | 5a done 2026-11-28; 5b (systems) next |
 | 6 | The word problems' built-in solvers (2.4A Vertex & Point and Intercepts, 3.1C Real Life, 3.1A) become instances | Not started |
 | 7 | Delete the old code and generators; CLAUDE.md and the copies log; the whole record again | Not started |
 
@@ -61,6 +61,16 @@ problems are assembled by hand in 21 places; each level has its own generator.
   generator (60 problems each, sorted by Play Solve's classifier): all 100 match (a rare kind can make one fail now and then; re-run).
 - Variety the notation does not reproduce exactly (accepted for now): absolute value never on the right side; letter rungs use 6–8 fixed letter sets;
   some side-swap and term-order weights approximate; e1–e4 and e7 never use y; 51 always writes the ">" part first.
+
+## Step 5: progress
+
+5a, single equations (done 2026-11-28, behind the switch): Play Solve's 14 row-equation rungs and 1.4 One Variable are solved in the main
+solver (each problem written as its string and read with `deParse(…, { main: true })`). That carries out decisions 1–4, which chose the main
+solver's way: a term lands as its own term, an x term can cross the =, the coefficient divides every term at any time, and = offers + − × ÷.
+Checked: with the switch on, exactly these 15 instances changed (every Demo finishes, no errors); with it off, the record is as before.
+1.4 One Variable takes its rules from Chapters 2.4 and 3.1 exercises (svL), so moving to Substitution and back works (tools/de_tests/one_variable.js).
+
+5b, systems (next): 2×2 elimination, Substitution and 3×3 into the main solver, which until now has solved one equation at a time.
 
 ## Step 4: progress
 
@@ -135,6 +145,7 @@ The full inventory of every switch is in `switches.md` (16 conflicts, C1–C16, 
 ## Log
 
 - 2026-11-28: plan agreed; recorder written and checked (two runs give identical records).
+- 2026-11-28: step 5a done: single row equations solved in the main solver (decisions 1–4).
 - 2026-11-28: step 4 done for the main solver (decisions 5–15 behind DE_ON; two bugs fixed for everyone).
 - 2026-11-28: step 3 done: all 100 Play Solve patterns match their old generators.
 - 2026-11-28: step 3 (first half): deParse/deText and the round-trip proof (369 identical).

@@ -3433,14 +3433,14 @@
   var DE_SRC = null, DE_DRY = false, DE_ERR = { textContent: "" }, DE_ROWS = [];
   function crSrc() { return DE_SRC != null ? DE_SRC : $("crIn").value; }   // (Create's readers: the typed text, or an instance being read)
   function crErrEl() { return DE_DRY ? DE_ERR : $("crErr"); }
-  function deParse(str) {   // an instance -> { exp, lvl, goal } (the main solver), { rows, goal } (row equations and systems), or { error }
+  function deParse(str, opt) {   // an instance -> { exp, lvl, goal } (the main solver), { rows, goal } (row equations and systems), or { error }; opt.main: one equation always into the main solver
     var m = /^([^;]*?)\s*;\s*(.+)$/.exec(String(str)), body = m ? m[1] : String(str), goal = m ? m[2].trim().toLowerCase() : "";
     var keep = { EXP: EXP, lvl: SOL.lvl, fresh: SOL.fresh }, out = null;
     DE_DRY = true; DE_ERR.textContent = ""; DE_ROWS = []; EXP = null;
     try {
       var parts = body.split(/\s*,\s*(?=[^,]*[=<>\u2264\u2265])/);   // (a comma between equations; never one inside an answer)
       if (parts.length > 1) { parts.forEach(function (q) { DE_SRC = q; if (!DE_ERR.textContent) crAdd0(); }); }
-      else { DE_SRC = body; if (!hasRelCh(body)) exCreate(); else if (eqWanted(body)) eqCreate(); else crAdd0(); }
+      else { DE_SRC = body; if (!hasRelCh(body)) exCreate(); else if (eqWanted(body) || (opt && opt.main)) eqCreate(); else crAdd0(); }
       out = DE_ERR.textContent ? { error: DE_ERR.textContent } : EXP ? { exp: EXP, lvl: SOL.lvl, goal: goal } : DE_ROWS.length ? { rows: DE_ROWS.slice(), goal: goal } : { error: "Nothing was read." };
     } catch (e) { out = { error: String(e && e.message || e) }; }
     finally { EXP = keep.EXP; SOL.lvl = keep.lvl; SOL.fresh = keep.fresh; DE_SRC = null; DE_DRY = false; DE_ROWS = []; }
@@ -3811,8 +3811,8 @@
     15: { bin: 1 },
     17: AN_BANK["3.1B-square-roots-simplify"].solve   // 3.1B Square Roots: Simplify: bank/3.1B-square-roots-simplify.js
   };
-  function svL() { return (act === "2.4" && lesson >= 5) || (act === "3.1" && !!C3SV[lesson]); }
-  function svAct() { return act === "2.4" || act === "3.1"; }   // (a section whose exercises switch between the quiz engine and the Play Solve engine)
+  function svL() { return (act === "2.4" && lesson >= 5) || (act === "3.1" && !!C3SV[lesson]) || (act === "1.4D" && lesson === 1 && !subx && deOn()); }   // (1.4 One Variable: the Drag Equation, step 5)
+  function svAct() { return act === "2.4" || act === "3.1" || (act === "1.4D" && deOn()); }   // (a section whose exercises switch between the quiz engine and the Play Solve engine)
   function c3Make() {   // a Chapter 3 problem: the Demo opens on the first (simplest) kind, every other mode on any kind
     var c = C3SV[lesson], cl = function (o) { return JSON.parse(JSON.stringify(o)); };
     if (c.rad || c.box || c.bin) return false;   // (made like 2.4's Square Roots and Box Method)
@@ -3838,6 +3838,7 @@
   function svMake() { var sd = newSeed(); withSeed(sd, svMake0); if (EXP) EXP.seed = sd; }   // (every problem has a seed: Question Bank, Seeds)
   function svMake0() {
     var cl = function (o) { return JSON.parse(JSON.stringify(o)); }; SV = "x"; distHide(); fmHide(); grHide();
+    if (act === "1.4D") { var r14 = deParse(deText(null, bankQ("1.4B-one-variable").generate()), { main: true }); EXP = r14.exp || null; if (EXP) { EXP.goal = ""; EXP.svk = lesson; } return; }   // (1.4 One Variable on the Drag Equation: its bank question, as a string)
     var lesson0 = lesson; if (act === "3.1") { if (c3Make()) return; act = "2.4"; lesson = C3SV[lesson0].rad ? 7 : C3SV[lesson0].bin ? 6 : rnd(3) ? 6 : 8; try { svMake0(); } finally { act = "3.1"; lesson = lesson0; } if (EXP) EXP.svk = lesson; return; }   // (Chapter 3; 3.1B's square roots and 3.1D's box made as 2.4's)
     if (lesson === 5) {   // 3-step linear equations: the bank question 2.4A-3step-equations
       var g = bankQ("2.4A-3step-equations").generate();
@@ -3855,7 +3856,8 @@
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
       if (st.e === "eq") solverEqBuild(st);
-      else { EXP = null; useCustom = st.one ? solverOne() : st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); if (st.one && st.ineq) useCustom[0].rel = eqPickRel(); }
+      else { EXP = null; useCustom = st.one ? solverOne() : st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); if (st.one && st.ineq) useCustom[0].rel = eqPickRel();
+        if (deOn()) { var dr = deParse(deText(null, useCustom), { main: true }); if (dr.exp) { EXP = dr.exp; EXP.goal = ""; useCustom = null; SV = svRand(); } } }   // (the Drag Equation, step 5: a row equation is solved in the main solver)
     }
     $("modePick").hidden = true;
     if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); }
@@ -5093,7 +5095,8 @@
   Object.defineProperty(BUILT["2.4"], "quiz", { get: function () { return !svL(); }, configurable: true });
   Object.defineProperty(BUILT["3.1"], "quiz", { get: function () { return !svL(); }, configurable: true });
   Object.defineProperty(BUILT["3.1"], "solver", { get: function () { return svL(); }, configurable: true });   // (Chapter 3: the equation and expression exercises run on the Play Solve engine)
-  Object.defineProperty(BUILT["2.4"], "solver", { get: function () { return svL(); }, configurable: true });   // 2.4A (Vertex and a Point, Point and x-Intercepts): one round of Write
+  Object.defineProperty(BUILT["2.4"], "solver", { get: function () { return svL(); }, configurable: true });
+  Object.defineProperty(BUILT["1.4D"], "solver", { get: function () { return svL(); }, configurable: true });   // (1.4 One Variable on the Drag Equation, with the switch on)   // 2.4A (Vertex and a Point, Point and x-Intercepts): one round of Write
   BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return l[0] < 6; }).concat([[11, "demo", 20, "Demo Mode"], [11, "sequence", 50, "Sequence Mode"], [11, "calculate", 100, "Calculate Mode"], [12, "demo", 10, "Demo Mode"], [12, "sequence", 25, "Sequence Mode"], [12, "calculate", 40, "Calculate Mode"], [12, "solo", 70, "Write Mode"], [12, "solo", 100, "Write Mode, 2nd round", 2]]);   // (2.2C Characteristics: Write has the Calculate boxes, checked on Submit)   // (2.2C Memorize: a card sort in Demo and Sequence; Calculate is a quiz)
   // 2.2C (Min & Max, Intercept Form, Compare): two rounds of Write, not three (Write 70, Write 2nd round 100)
   BUILT["2.2"].levels = BUILT["2.2"].levels.filter(function (l) { return !([3, 4, 5].indexOf(l[0]) >= 0 && l[1] === "solo" && l[4] === 3); }).map(function (l) { return [3, 4, 5].indexOf(l[0]) >= 0 && l[1] === "solo" ? (l[4] === 2 ? [l[0], "solo", 100, "Write Mode, 2nd round", 2] : [l[0], "solo", 70, "Write Mode"]) : l; });
@@ -5440,7 +5443,7 @@
   function exShort(b, k) { var B = BUILT[b]; if (b === "1.4D") return k === "s" ? "Substitution" : LNAME[k === "4" ? 4 : +k]; return (B.short && B.short[+k - 1]) || B.lessons[+k - 1]; }
   // 2.4: moving between a word problem (the quiz engine, Desmos) and an equation or expression exercise (the solver) swaps the whole screen over;
   // both the exercise menu and the Next exercise button come through here
-  function svSwap(sv0) { if (svAct() && sv0 !== svL()) { EXP = null; up = null; if (svL()) { leaveQuiz(); var W0 = $("wfSteps"); W0.hidden = true; W0.innerHTML = ""; m3wKey = ""; $("pgQmsg").textContent = ""; document.body.classList.remove("vpDrag");   /* (no questions left over from the word problem in the side panel) */ document.body.classList.add("solver", "svEx"); } else { exHide(); document.body.classList.remove("solver", "svEx"); qzShow(); } } }
+  function svSwap(sv0) { if (svAct() && sv0 !== svL()) { EXP = null; up = null; if (svL()) { leaveQuiz(); var W0 = $("wfSteps"); W0.hidden = true; W0.innerHTML = ""; m3wKey = ""; $("pgQmsg").textContent = ""; document.body.classList.remove("vpDrag");   /* (no questions left over from the word problem in the side panel) */ document.body.classList.add("solver", "svEx"); } else { exHide(); document.body.classList.remove("solver", "svEx"); if (act !== "1.4D") qzShow(); } } }   // (1.4: the other lessons are row equations, not the quiz engine)
   function vwNext() {
     var ls = VW[view].ls, i = ls.indexOf(vwK()); if (i < 0) return null;
     if (i < ls.length - 1) { var k = ls[i + 1]; return { name: exShort(act, k), go: function () { msSave(); var sv0 = svL(); vwSet(k); $("lesson").value = k; svSwap(sv0); gdCustom = null; wfCustom = null; c2Custom = null; useCustom = null; buildModes(); carryOff = true; try { setMode(resumeMode()); } finally { carryOff = false; } } }; }
