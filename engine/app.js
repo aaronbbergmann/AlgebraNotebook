@@ -940,6 +940,7 @@
     var ms = g && g.m && g.m.s && sSig(g.m.s);   // (a letter in front, a(x + 2): the Drag Equation puts it in the box too)
     if (!g || g.k !== "g" || g.c || g.pw || g.abs || g.pm || g.ov || (ms && (!deOn() || g.b))) return null;
     var F = g.b ? (same(g.m, mk(1)) ? [g.items, g.b] : null) : same(g.m, mk(1)) && !ms ? null : [[ms ? { k: "c", n: mk(g.m.n, g.m.d), s: JSON.parse(JSON.stringify(g.m.s)) } : { k: "c", n: g.m }], g.items];
+    if (F && F[0].length === 1 && F[1].length === 1 && F[0][0].k === "c" && F[1][0].k === "c") return null;   // (one number times one number, 3(4): no box, it is just multiplied)
     if (!F || F[0].length * F[1].length > 16 || F.some(function (f) { return f.some(function (t) { return (t.k !== "c" && t.k !== "x") || (hasS(t) && !deOn()) || t.co || t.u || t.ov; }); })) return null;   // (the Drag Equation, decision 5: letters go in the box too)
     return F;
   }
@@ -3127,6 +3128,7 @@
     if (ok) { keep.steps.length = 0; sim.forEach(function (x) { keep.steps.push(x); }); } steps = keep.steps;
   }
   function eqEnd(kind, asked) {
+    if (DE_SYS && kind === "one" && !SIM) { setTimeout(deSysBack, 600); return; }   // (a system's equation: back to the system)
     if (SIM === null && mode === "solo" && EXP && EXP.eq) wkSim();
     if ((kind === "none" || kind === "inf") && !asked && mode !== "solo") { kindAsk(kind, exLines()[0], function () { eqEnd(kind, true); }); eqRender(); return; }
     if (EXP.zp) {
@@ -3459,7 +3461,7 @@
   function deRules() {   // a problem starts: every rule from its content (Create's readers), then the goal steers Demo and Hint
     if (!EXP || !EXP.orig || (EXP.eq && (EXP.orig.qf || EXP.orig.cmp))) return;
     if (EXP.goal == null) EXP.goal = deGoalOf(EXP);
-    var r = deParse(deText(EXP)); if (!r.exp || !!r.exp.eq !== !!EXP.eq) return;
+    var r = deParse(deText(EXP), { main: true }); if (!r.exp || !!r.exp.eq !== !!EXP.eq) return;   // (main: a plain linear equation is read into the main solver too)
     (EXP.eq ? DE_EQF : DE_EXF).forEach(function (f) { EXP[f] = !!r.exp[f]; });
     if (EXP.eq) EXP.dvq = false;   // (decision 12: Demo distributes first, never divides every term first)
     var g = EXP.goal;
@@ -3470,6 +3472,33 @@
       else if (g === "divide first") EXP.dvq = true;
       else if (g === "square root") EXP.sq = true;
     } else if (g === "factor") EXP.fac = EXP.fac || !EXP.grp; else if (g === "simplify") { EXP.fac = false; EXP.grp = false; }
+  }
+  // ---- Step 5b: a system is a thin layer over the Drag Equation. The system's own moves (multiply an equation, add two equations, put a known value
+  // in) stay where they are; when a row comes down to one equation in one variable, the system pauses (its state is kept) and the Drag Equation
+  // solves that equation with its rules; the value then goes back to the system, which carries on.
+  var DE_SYS = null;
+  function deSysRow() {   // a row of the workspace that is one equation in one variable, ready for the Drag Equation
+    if (!deOn() || !(BUILT[act] && BUILT[act].sub) || lesson < 2 || DE_SYS || locked) return -1;
+    if (SUB()) return ws.findIndex(function (q) { if (isSolved(q)) return false; var vs = {}; q.L.concat(q.R).forEach(function (t) { if (t.k === "t" && t.v) vs[t.v] = 1; if (t.k === "g") t.in.forEach(function (u) { if (u.v) vs[u.v] = 1; }); }); return Object.keys(vs).length === 1; });   // (Substitution: a row down to one variable)
+    return ws.findIndex(function (q) { return !valName(q) && allV().filter(function (n) { return q[CK[n]].n; }).length === 1; });   // (a row waiting for its arithmetic, −3x + (−12)(−4) = 60, too)   // (a value just put in, −3(4) − 2y = −20, is the Drag Equation's to simplify too)
+  }
+  function deSysGo(i) {
+    var q = ws[i], sb = SUB(), v = sb ? (function () { var o = null; q.L.concat(q.R).forEach(function (t) { if (t.k === "t" && t.v) o = t.v; if (t.k === "g") t.in.forEach(function (u) { if (u.v) o = u.v; }); }); return o; })() : allV().filter(function (n) { return q[CK[n]].n; })[0], keep = { sub: sb, ws: ws, orig: orig, sys: sys, sysV: sysV, vals: vals, steps: steps, hist: hist, ops: ops, colMin: colMin, elimInfo: elimInfo, i: i, v: v, sysLines: lines() };
+    var t = (sb ? fmtSub(q) : fmt(q, false)).replace(/\u2212/g, "-").replace(new RegExp("(^|[^a-z])" + v + "(?![a-z])", "g"), "$1x").replace(/\((-?\d+(?:\/\d+)?)\)\(/g, "$1("), r = deParse(t, { main: true });   // ((-2)(-5), a value put in, reads as -2(-5)) if (!r.exp) return false;   // (the engine works in x and shows the system's letter: 10y = 30)
+    DE_SYS = keep; EXP = r.exp; EXP.goal = ""; EXP.svk = lesson; SV = v; exBegin();
+    if (mode === "demo") { DM4.run = true; DM4.paused = false; dmUI("playing"); exDemoStep(900); }   // (the Demo carries on, in the Drag Equation)
+    $("exNote").textContent = "The system: " + keep.sysLines.filter(function (l) { return !/=\s*$/.test(l); }).slice(0, 3).join(",   ") + ".   Now solve for " + v + ".";
+    return true;
+  }
+  function deSysBack() {   // the equation is solved: its value goes back to the system
+    clearTimeout(DM4.t); handHide();
+    var K = DE_SYS, so = eqSolution(EXP.orig.L, EXP.orig.R, EXP.orig.rel || "="), val = so && so.x;
+    DE_SYS = null; EXP = null; exHide(); document.body.classList.remove("solver", "svEx"); $("exNote").textContent = "";
+    ws = K.ws; orig = K.orig; sys = K.sys; sysV = K.sysV; vals = K.vals; steps = K.steps; hist = K.hist; ops = K.ops; colMin = K.colMin; elimInfo = K.elimInfo; locked = false;
+    var q = ws[K.i];
+    if (K.sub) { if (q && val) ws[K.i] = { L: [T(mk(1), K.v)], R: [T(val)] }; $("wsEl").style.display = ""; subDone(K.i); }
+    else { if (q && val) { var n = { a: mk(0), b: mk(0), e: mk(0), ks: [], c: val }; n[CK[K.v]] = mk(1); ws[K.i] = n; } $("wsEl").style.display = ""; done(K.i); }
+    if (mode === "demo" && !locked && !DE_SYS) { DM4.run = true; DM4.paused = false; dmUI("playing"); peekNext(); dm4Go(900); }   // (the system's Demo carries on)
   }
   function crAdd0() { var r = parseAny(crSrc()); if (typeof r === "string") DE_ERR.textContent = r; else DE_ROWS.push(r); }   // (a row equation)
   function deText(E, rows) {   // the problem as its instance string: the main solver's problem E (EXP), or rows (the row equations)
@@ -3811,7 +3840,7 @@
     15: { bin: 1 },
     17: AN_BANK["3.1B-square-roots-simplify"].solve   // 3.1B Square Roots: Simplify: bank/3.1B-square-roots-simplify.js
   };
-  function svL() { return (act === "2.4" && lesson >= 5) || (act === "3.1" && !!C3SV[lesson]) || (act === "1.4D" && lesson === 1 && !subx && deOn()); }   // (1.4 One Variable: the Drag Equation, step 5)
+  function svL() { return (act === "2.4" && lesson >= 5) || (act === "3.1" && !!C3SV[lesson]) || (act === "1.4D" && lesson === 1 && !subx && deOn()) || !!DE_SYS; }   // (and a system's one-variable equation, while the Drag Equation solves it)   // (1.4 One Variable: the Drag Equation, step 5)
   function svAct() { return act === "2.4" || act === "3.1" || (act === "1.4D" && deOn()); }   // (a section whose exercises switch between the quiz engine and the Play Solve engine)
   function c3Make() {   // a Chapter 3 problem: the Demo opens on the first (simplest) kind, every other mode on any kind
     var c = C3SV[lesson], cl = function (o) { return JSON.parse(JSON.stringify(o)); };
@@ -4108,7 +4137,9 @@
       if (cl === "one") note("Those equations only repeated each other, so nothing new appeared. Press Undo and try a different move.");
       else { report(cl, dead); return; }
     }
-    if (allV().every(function (n) { return vals[n]; })) { locked = true; updUndo(); head(); onSolved(); } else { head(); if (mode === "demo" && !busy) peekNext(); }
+    if (allV().every(function (n) { return vals[n]; })) { locked = true; updUndo(); head(); onSolved(); return; }
+    var dsr = deSysRow(); if (dsr >= 0 && mode !== "solo" && deSysGo(dsr)) return;   // (step 5b: the Drag Equation solves a one-variable row)
+    head(); if (mode === "demo" && !busy) peekNext();
   }
   // everything cancelled: 0 = 0 (infinitely many solutions) or 0 = a number that isn't 0 (no solution)
   function report(cl, row, asked) {
@@ -4714,14 +4745,14 @@
     clearTimeout(DM4.t);
     DM4.t = setTimeout(function () {
       if (KQ && DM4.run && !DM4.paused && mode === "demo") { kindDemo(); return; }
-      if (!DM4.run || DM4.paused || busy || locked || quiz() || mode !== "demo") return;
+      if (!DM4.run || DM4.paused || busy || locked || quiz() || mode !== "demo" || DE_SYS) return;   // (a system's equation in the Drag Equation: the system's Demo waits)
       if (calc) return;
       peekNext(); if (pend) demoStep();
     }, ms || 0);
   }
   // a step has just finished
   function dm4After() {
-    if (quiz() || mode !== "demo") return;
+    if (quiz() || mode !== "demo" || DE_SYS) return;
     if (DM4.endReq) { dm4Reset(); dmUI("idle"); newProblem(); return; }
     if (!DM4.run) return;
     if (KQ) { kindDemo(); return; }
@@ -4755,7 +4786,7 @@
 
 
   function demoStep() {
-    if (busy || locked) return;
+    if (busy || locked || DE_SYS) return;
     var s = pend; if (!s) return;
     if (s[0].indexOf("s_") === 0) { subDemoStep(s); return; }
     busy = true; $("next").disabled = true; if (DM4.run) dmCap(stepLabel(s));
@@ -6297,7 +6328,7 @@
   }
 
   // the demo button names the step it is about to do
-  function peekNext() { pend = locked ? null : nextStep(); markElim(); logExplain(); }
+  function peekNext() { if (DE_SYS) return; pend = locked ? null : nextStep(); markElim(); logExplain(); }
   // why the next step makes sense (the demo's Explain button)
   function explain(s) {
     if (s[0].indexOf("s_") === 0) return subExplain(s);
@@ -6555,7 +6586,9 @@
         : "Every variable cancelled and we got " + sg(l) + " = " + sg(r) + ". That can never be true, so this system has no solution.");
       onSolved(); return;
     }
-    if (allV().every(function (n) { return vals[n]; })) { locked = true; updUndo(); onSolved(); } else if (mode === "demo" && !busy) peekNext();
+    if (allV().every(function (n) { return vals[n]; })) { locked = true; updUndo(); onSolved(); return; }
+    var dsr = deSysRow(); if (dsr >= 0 && mode !== "solo" && deSysGo(dsr)) return;   // (step 5b: the Drag Equation solves a row down to one variable)
+    if (mode === "demo" && !busy) peekNext();
   }
 
   // ---- drawing ----
@@ -6692,7 +6725,7 @@
     return "Drag the " + s[1] + " at the bottom up onto the " + s[1] + " in " + fmtSub(toExpr(orig[s[3]])) + ".";
   }
   function subDemoStep(s) {
-    busy = true; $("next").disabled = true; if (DM4.run) dmCap(stepLabel(s));
+    if (DE_SYS) return; busy = true; $("next").disabled = true; if (DM4.run) dmCap(stepLabel(s));
     function release(ms) { setTimeout(function () { busy = false; $("next").disabled = false; peekNext(); dm4After(); }, ms || 0); setTimeout(handHide, (ms || 0) + 350); }
     var t = s[0], i = s[1];
     if (t === "s_subst") {

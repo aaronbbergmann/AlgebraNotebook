@@ -22,8 +22,8 @@ A change to the engine reaches every instance. The rules depend only on what is 
 | 2 | Rulebook: every per-level switch listed; where the same thing on screen follows different rules, a conflict table for the teacher | Done 2026-11-28 (all A) |
 | 3 | `DragEquation` entry point taking a string; pattern notation; Play Solve's ladder as strings in one bank file (no behaviour change) | Done 2026-11-28 |
 | 4 | Remove the per-level switches, one rule at a time, compared with the record after each | Done 2026-11-28 (main solver; 1–4 in step 5) |
-| 5 | Row equations onto the engine: Play Solve's first 14 rungs, 1.4 One Variable, then Substitution, 2×2, 3×3 | 5a done 2026-11-28; 5b (systems) next |
-| 6 | The word problems' built-in solvers (2.4A Vertex & Point and Intercepts, 3.1C Real Life, 3.1A) become instances | Not started |
+| 5 | Row equations onto the engine: Play Solve's first 14 rungs, 1.4 One Variable, then Substitution, 2×2, 3×3 | Done 2026-11-28 |
+| 6 | The word problems' built-in solvers (2.4A Vertex & Point and Intercepts, 3.1C Real Life, 3.1A) become instances | Next |
 | 7 | Delete the old code and generators; CLAUDE.md and the copies log; the whole record again | Not started |
 
 The site keeps working after every step; new behaviour stays behind a switch until it matches the record.
@@ -70,7 +70,15 @@ solver's way: a term lands as its own term, an x term can cross the =, the coeff
 Checked: with the switch on, exactly these 15 instances changed (every Demo finishes, no errors); with it off, the record is as before.
 1.4 One Variable takes its rules from Chapters 2.4 and 3.1 exercises (svL), so moving to Substitution and back works (tools/de_tests/one_variable.js).
 
-5b, systems (next): 2×2 elimination, Substitution and 3×3 into the main solver, which until now has solved one equation at a time.
+5b, systems (done 2026-11-28, behind the switch; the teacher chose "a system built on Drag Equations"): a system is a thin layer, its own
+moves (multiply an equation, add two equations, put a known value or y = … in) unchanged. When a row comes down to one equation in one variable,
+the system pauses (its state kept) and the Drag Equation solves that equation with its rules (written in x, shown with the system's letter);
+the value goes back and the system carries on. Works for 2×2 elimination, the 3×3 (both stages) and Substitution, in Sequence, Demo (the
+Demo hands over and takes back) and Calculate (the Drag Equation asks each step's arithmetic). Write still types each new equation, as before.
+Also: a product of two numbers, 3(4), is multiplied without the box (the box is for multiplying into parentheses).
+Fixed on the way: deRules read a plain linear equation into the row equations, so its rules were not worked out (a Demo could divide first).
+Checked: switch on, exactly the 7 system instances changed (1.4B Substitution, 1.4C, 1.4D and their RevT1 copies), every Demo finishes, no
+errors; switch off, as before. Tests: tools/de_tests/systems_*.js.
 
 ## Step 4: progress
 
@@ -145,6 +153,7 @@ The full inventory of every switch is in `switches.md` (16 conflicts, C1–C16, 
 ## Log
 
 - 2026-11-28: plan agreed; recorder written and checked (two runs give identical records).
+- 2026-11-28: step 5b done: systems hand each one-variable equation to the Drag Equation.
 - 2026-11-28: step 5a done: single row equations solved in the main solver (decisions 1–4).
 - 2026-11-28: step 4 done for the main solver (decisions 5–15 behind DE_ON; two bugs fixed for everyone).
 - 2026-11-28: step 3 done: all 100 Play Solve patterns match their old generators.
