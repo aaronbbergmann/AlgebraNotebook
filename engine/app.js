@@ -3453,6 +3453,40 @@
     if (c) return c.parts.map(function (q) { return sy(q.L) + " " + q.rel + " " + sy(q.R); }).join(" or ");
     return sy(o.L) + " " + (o.rel || "=") + " " + sy(o.R);
   }
+  // ---- Pattern strings: an instance that makes a new random problem each time (the Drag Equation's notation; migration/drag-equation/PLAN.md).
+  //   [2..9] a whole number from 2 to 9 (0 only when the range starts or ends at 0)   [±2..9] with a random sign   [a=±2..9] and named a
+  //   {r=±1..12} a named number that is not shown   {a*(r+b)+c} a number worked out from the named ones   {? gcd(a,b)=1} redraw until it holds
+  //   [<|≤|>|≥] one of these   <3x | [b] | [c]x> these terms in a random order (joined with +)
+  // Signs come out right: "x + -5" is written "x - 5", "1x" is "x", "-1(" is "-(". Every draw goes through rnd(), so a seed makes the same problem again.
+  function dePattern(pat) {
+    var body = String(pat), goal = "", m = /^([^;]*?)\s*;\s*(.+)$/.exec(body); if (m) { body = m[1]; goal = m[2]; }
+    var H = { gcd: function (a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = a % b; a = b; b = t; } return a; }, abs: Math.abs, int: function (v) { return Math.abs(v - Math.round(v)) < 1e-9; },
+      sq: function (v) { var r = Math.round(Math.sqrt(v)); return v >= 0 && r * r === v; }, sgn: function (v) { return v < 0 ? -1 : v > 0 ? 1 : 0; }, min: Math.min, max: Math.max };
+    var draw = function (spec) {   // "±2..9", "-9..9", "2,3,4"
+      spec = spec.trim(); if (/,/.test(spec)) { var L = spec.split(",").map(Number); return L[rnd(L.length)]; }
+      var pm = /^±/.test(spec), r = /^(-?\d+)\.\.(-?\d+)$/.exec(spec.replace(/^±/, "")); if (!r) throw new Error("pattern: bad range " + spec);
+      var lo = +r[1], hi = +r[2], zero = lo === 0 || hi === 0, v;
+      do { v = lo + rnd(hi - lo + 1); } while (!v && !zero);
+      return pm && rnd(2) ? -v : v;
+    };
+    var ev = function (expr, V) { var ks = Object.keys(V), hs = Object.keys(H); return Function.apply(null, ks.concat(hs, ["return (" + expr.replace(/(^|[^=!<>])=(?!=)/g, "$1==") + ");"])).apply(null, ks.map(function (k) { return V[k]; }).concat(hs.map(function (k) { return H[k]; }))); };
+    var num = function (v) { if (H.int(v)) return String(Math.round(v)); for (var d = 2; d <= 200; d++) if (H.int(v * d)) { var n = Math.round(v * d), g = H.gcd(n, d); return (n / g) + "/" + (d / g); } return String(+v.toFixed(4)); };
+    for (var tries = 0; tries < 500; tries++) {
+      var V = {}, ok = true;
+      body.replace(/\{\s*([a-z]\w*)\s*=\s*([^}]+)\}|\[\s*([a-z]\w*)\s*=\s*([^\]]+)\]/g, function (_, n1, s1, n2, s2) { V[n1 || n2] = draw(s1 || s2); return _; });   // (every named number first)
+      body.replace(/\{\s*\?([^}]+)\}/g, function (_, c) { if (ok && !ev(c, V)) ok = false; return _; }); if (!ok) continue;
+      var out = body.replace(/\{\s*\?[^}]*\}/g, "").replace(/\{\s*[a-z]\w*\s*=[^}]*\}/g, "")
+        .replace(/\[\s*([a-z]\w*)\s*=[^\]]*\]/g, function (_, n) { return num(V[n]); })
+        .replace(/\[([^\]]*)\]/g, function (_, s) { if (/\.\.|^[\d,\s±-]+$/.test(s) && !/\|/.test(s)) return num(draw(s)); var o = s.split("|"); return o[rnd(o.length)].trim(); })
+        .replace(/\{([^}]*)\}/g, function (_, e) { var v = ev(e, V); if (!isFinite(v)) { ok = false; return "0"; } return num(v); });
+      if (!ok) continue;
+      out = out.replace(/<([^<>]*)>/g, function (_, g) { var it = g.split("|").map(function (t) { return t.trim(); }); for (var i = it.length - 1; i > 0; i--) { var j = rnd(i + 1), t = it[i]; it[i] = it[j]; it[j] = t; } return it.join(" + "); });
+      out = out.replace(/\+\s*-\s*/g, "- ").replace(/-\s*-\s*/g, "+ ").replace(/([=<>≤≥(]\s*)\+\s*/g, "$1").replace(/^\s*\+\s*/, "")
+        .replace(/(^|[^\d\/.])1(?=[a-z(|])/g, "$1").replace(/\s+/g, " ").trim();
+      return out + (goal ? " ; " + goal : "");
+    }
+    throw new Error("pattern: no problem found for " + pat);
+  }
   function uClean(arr) { arr.forEach(function (t) { if (t.u && !((t.k === "c" || t.k === "x") && !hasS(t) && Math.abs(t.u.n) * t.n.d === Math.abs(t.n.n) * t.u.d && t.u.d > 1)) delete t.u; }); }
 
   // ---- Playground: Equation Solver: Next / Harder / Try another ----
