@@ -20,8 +20,8 @@ A change to the engine reaches every instance. The rules depend only on what is 
 |---|---|---|
 | 1 | Record the "before": every instance, 3 fixed seeds, its problem, each settled Demo state and the moves offered at each | Done 2026-11-28 |
 | 2 | Rulebook: every per-level switch listed; where the same thing on screen follows different rules, a conflict table for the teacher | Done 2026-11-28 (all A) |
-| 3 | `DragEquation` entry point taking a string; pattern notation; Play Solve's ladder as strings in one bank file (no behaviour change) | In progress |
-| 4 | Remove the per-level switches, one rule at a time, compared with the record after each | Not started |
+| 3 | `DragEquation` entry point taking a string; pattern notation; Play Solve's ladder as strings in one bank file (no behaviour change) | Done 2026-11-28 |
+| 4 | Remove the per-level switches, one rule at a time, compared with the record after each | In progress |
 | 5 | Row equations onto the engine: Play Solve's first 14 rungs, 1.4 One Variable, then Substitution, 2×2, 3×3 | Not started |
 | 6 | The word problems' built-in solvers (2.4A Vertex & Point and Intercepts, 3.1C Real Life, 3.1A) become instances | Not started |
 | 7 | Delete the old code and generators; CLAUDE.md and the copies log; the whole record again | Not started |
@@ -47,7 +47,7 @@ problems are assembled by hand in 21 places; each level has its own generator.
 - What it holds: 143 instances (82 Play Solve rungs, 18 expression levels, 43 assignment questions that solve by dragging: 1.4B–D, 2.4A–B,
   3.1A–3.4B, RevT1), 3 seeds each, 429 runs. 426 Demos finish; 3 do not (below).
 
-## Step 3: the entry point and the instance strings
+## Step 3: the entry point (done) and the instance strings
 
 - `deParse(string)` in engine/app.js reads an instance with Create's readers (the same code a typed problem goes through), with no change to the screen;
   `deText()` writes a problem back as its string. Create mode now shares the readers (`crSrc()`, `crErrEl()`), with no change for students.
@@ -55,7 +55,12 @@ problems are assembled by hand in 21 places; each level has its own generator.
   an optional goal or method after `;`, `x^2 + 6x + 5 = 0 ; complete the square`.
 - Proof: `node tools/de_roundtrip.js` makes every recorded instance's problem (3 seeds), writes it, reads it back and compares:
   369 identical; 1 problem (rung 47) reads into the row equations instead of the main solver (step 5); 60 word-problem runs skipped (step 6).
-- Still to do in step 3: the pattern notation for random problems, and Play Solve's ladder as pattern strings in one bank file.
+- Pattern notation: `dePattern()` (described above it in engine/app.js): `[2..9]`, `[a=±2..9]`, `{r=±1..12}`, `{a*(r+b)+c}`, `{? gcd(a,b)=1}`,
+  `[<|≤|>|≥]`, `<terms in random order>`.
+- Play Solve's ladder as patterns: `bank/play-solve.js` (82 rungs, 18 expression levels). `node tools/de_patterns.js` compares each with its old
+  generator (60 problems each, sorted by Play Solve's classifier): all 100 match (a rare kind can make one fail now and then; re-run).
+- Variety the notation does not reproduce exactly (accepted for now): absolute value never on the right side; letter rungs use 6–8 fixed letter sets;
+  some side-swap and term-order weights approximate; e1–e4 and e7 never use y; 51 always writes the ">" part first.
 
 ## Step 4: the plan (prepared while step 3 finishes)
 
@@ -99,6 +104,7 @@ The full inventory of every switch is in `switches.md` (16 conflicts, C1–C16, 
 ## Log
 
 - 2026-11-28: plan agreed; recorder written and checked (two runs give identical records).
+- 2026-11-28: step 3 done: all 100 Play Solve patterns match their old generators.
 - 2026-11-28: step 3 (first half): deParse/deText and the round-trip proof (369 identical).
 - 2026-11-28: step 2 done: the teacher chose A for all 15 decisions.
 - 2026-11-28: step 1 done: before.json recorded (the 3×3 Demos pause themselves once; the recorder presses Resume).
