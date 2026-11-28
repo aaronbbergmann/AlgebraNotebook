@@ -24,7 +24,7 @@ A change to the engine reaches every instance. The rules depend only on what is 
 | 4 | Remove the per-level switches, one rule at a time, compared with the record after each | Done 2026-11-28 (main solver; 1–4 in step 5) |
 | 5 | Row equations onto the engine: Play Solve's first 14 rungs, 1.4 One Variable, then Substitution, 2×2, 3×3 | Done 2026-11-28 |
 | 6 | The word problems' built-in solvers (2.4A Vertex & Point and Intercepts, 3.1C Real Life, 3.1A) become instances | Done 2026-11-28 |
-| 7 | Delete the old code and generators; CLAUDE.md and the copies log; the whole record again | Next |
+| 7 | Delete the old code and generators; CLAUDE.md and the copies log; the whole record again | In progress (7a done) |
 
 The site keeps working after every step; new behaviour stays behind a switch until it matches the record.
 
@@ -61,6 +61,17 @@ problems are assembled by hand in 21 places; each level has its own generator.
   generator (60 problems each, sorted by Play Solve's classifier): all 100 match (a rare kind can make one fail now and then; re-run).
 - Variety the notation does not reproduce exactly (accepted for now): absolute value never on the right side; letter rungs use 6–8 fixed letter sets;
   some side-swap and term-order weights approximate; e1–e4 and e7 never use y; 51 always writes the ">" part first.
+
+## Step 7: progress
+
+7a (done 2026-11-28, behind the switch): Play Solve makes every problem from its pattern string (bank/play-solve.js, version 2, which now
+carries the goal words: divide first, factor, square root, complete the square, quadratic formula; expressions: factor or simplify), and the
+Chapter 3 exercises that draw on Play Solve's rungs and expression levels use the same strings. Checked: all 300 Play Solve runs and every
+Chapter 3 exercise finish their Demo with no errors; the goals steer the Demo (rung 76 completes the square although its trinomial factors).
+
+7b (next): the exercises' own generators (1.4B One Variable, 2.4A 3-Step, 3.1A 4-Step, 3.1B Square Roots: Simplify, the box, distributing and
+square-root expressions, the systems) become pattern strings in their bank files.
+7c: with the teacher's go-ahead, the switch on for students. 7d: delete the old code, CLAUDE.md, the final record.
 
 ## Step 6: progress
 

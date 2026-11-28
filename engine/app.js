@@ -3536,6 +3536,13 @@
     drawPlay(); pqPanel();
   }
   function deCancel() { clearTimeout(DM4.t); handHide(); if (DE_WP) DE_WP.cls.forEach(function (c) { document.body.classList.add(c); }); DE_WP = null; DE_SYS = null; EXP = null; exHide(); $("exNote").textContent = ""; document.body.classList.remove("svEx"); }
+  function dePlay(ex, dl) {   // Play Solve's next problem from its pattern string: a rung of the ladder, or (ex) an expression level
+    var B = AN_BANK["play-solve"]; if (!B) return false;
+    var i = ex ? Math.max(0, Math.min(EXLAD.length - 1, Math.max(0, EXLAD.indexOf(SOL.lvl)) + dl)) : SOL.lvl, pat = ex ? B.expr[i] : B.ladder[i]; if (!pat) return false;
+    var r = deParse(dePattern(pat), { main: true }); if (!r.exp) return false;
+    if (ex) SOL.lvl = EXLAD[i];
+    EXP = r.exp; EXP.goal = r.goal || null; useCustom = null; SV = ex || (LADDER[SOL.lvl] || {}).lit || EXP.orig.qf ? "x" : svRand(); return true;
+  }
   function crAdd0() { var r = parseAny(crSrc()); if (typeof r === "string") DE_ERR.textContent = r; else DE_ROWS.push(r); }   // (a row equation)
   function deText(E, rows) {   // the problem as its instance string: the main solver's problem E (EXP), or rows (the row equations)
     var sy = function (its) { return exSay(its).replace(/\u2212/g, "-").replace(/\)(\d*[a-z](?:\^\d+)?)(?![a-z(\/])/g, ")($1)"); };   // ((x + 2)x is written (x + 2)(x), which reads back the same)
@@ -3932,8 +3939,10 @@
       EXP = { eq: true, ask: null, vk: "x", L: L4, R: R4, rel: "=", cmp: null, c3: null, qf: null, qu: null, grUser: false, quq: false, lit: false, quad: false, av: false, sq: false, dvq: false, zpq: false, grq: false, qd: false, sf: false, zp: null, src: "", svk: lesson };
       EXP.orig = { L: cl(L4), R: cl(R4), rel: "=" }; return true;
     }
+    if (c.ex && deOn() && AN_BANK["play-solve"]) { var lv0 = mode === "demo" ? c.ex[0] : c.ex[rnd(c.ex.length)], ep0 = EXLAD.indexOf(lv0), pe = ep0 >= 0 ? deParse(dePattern(AN_BANK["play-solve"].expr[ep0]), { main: true }) : {}; if (pe.exp) { SV = "x"; EXP = pe.exp; EXP.goal = pe.goal || null; EXP.svk = lesson; return true; } }   // (the Drag Equation: the expression level's pattern string)
     if (c.ex) { var lv = mode === "demo" ? c.ex[0] : c.ex[rnd(c.ex.length)], it = exGen(lv); SV = "x"; EXP = { src: "", orig: cl(it), items: it, ask: null, fac: lv === 5 || lv === 6, lit: lv === 6, grp: lv === 10 || lv >= 13, rad: false, svk: lesson }; return true; }
     var f = mode === "demo" ? c.eq[0] : c.eq[rnd(c.eq.length)], st = LADDER[rung("eq", f)]; SV = svRand();
+    if (deOn() && AN_BANK["play-solve"]) { var pr = deParse(dePattern(AN_BANK["play-solve"].ladder[rung("eq", f)]), { main: true }); if (pr.exp) { EXP = pr.exp; EXP.goal = pr.goal || null; EXP.svk = lesson; return true; } }   // (the Drag Equation: the rung's pattern string)
     EXP = { eq: true, ask: null, vk: "x", L: [], R: [], rel: "=", cmp: null, c3: null, qf: null, qu: null, grUser: false, quq: !!st.qu, lit: false, quad: false, av: false, sq: !!st.sq, dvq: false, zpq: !!st.zp, grq: !!st.grp || !!st.fm, qd: !!st.cs || !!st.sf || !!st.qu, sf: !!st.sf, zp: null, svk: lesson };
     var g = st.qu ? quGen(st.qu) : st.cs ? qdGen(st.cs) : st.sqg ? eqSqgGen() : st.fm ? { L: fmGen(st.fm), R: [{ k: "c", n: mk(0) }] } : null;
     if (!g) { var keep = SOL.lvl; SOL.lvl = LADDER.indexOf(st); var em = EXP; EXP = null; solverEqBuild(st); SOL.lvl = keep; if (!EXP || !EXP.L || !EXP.L.length) { EXP = em; return c3Make(); } EXP.svk = lesson; return true; }
@@ -3955,9 +3964,11 @@
   function solverGo(dl, m) {
     if (svL()) { SOL.fresh = false; svMake(); $("modePick").hidden = true; if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); } return; }   // (2.4A exercises 5 to 7: a new problem of the same kind)
     SOL.fresh = false; SOL.keep = true;
-    if (EXP && !EXP.eq) { SV = "x"; var ep = EXLAD.indexOf(SOL.lvl); if (ep < 0) ep = 0; SOL.lvl = EXLAD[Math.max(0, Math.min(EXLAD.length - 1, ep + dl))]; var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10 || SOL.lvl >= 13; fmHide(); }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
+    if (EXP && !EXP.eq && deOn() && dePlay(true, dl)) { }   // (the Drag Equation, step 7: Play Solve's expression levels are pattern strings, bank/play-solve.js)
+    else if (EXP && !EXP.eq) { SV = "x"; var ep = EXLAD.indexOf(SOL.lvl); if (ep < 0) ep = 0; SOL.lvl = EXLAD[Math.max(0, Math.min(EXLAD.length - 1, ep + dl))]; var it = exGen(SOL.lvl); EXP.orig = JSON.parse(JSON.stringify(it)); EXP.items = it; EXP.src = ""; EXP.fac = SOL.lvl === 5 || SOL.lvl === 6; EXP.lit = SOL.lvl === 6; EXP.grp = SOL.lvl === 10 || SOL.lvl >= 13; fmHide(); }   // expressions have their own eleven levels (5 is factoring, 6 is factoring with letters, 7 is two binomials, 8 is bigger products up to 4 x 4, 9 is three sets of parentheses, 10 is factoring by grouping)
     else {
       SOL.lvl = Math.max(0, Math.min(LADDER.length - 1, SOL.lvl + dl)); var st = LADDER[SOL.lvl];
+      if (deOn() && dePlay(false, 0)) { $("modePick").hidden = true; if (m !== mode) setMode(m); else { dm4Reset(); newProblem(); } return; }   // (the Drag Equation, step 7: each rung is a pattern string, bank/play-solve.js)
       SV = st.e === "eq" && st.lit ? "x" : svRand();   // equations with letters for coefficients keep x
       if (st.e === "eq") solverEqBuild(st);
       else { EXP = null; useCustom = st.one ? solverOne() : st.ineq ? paneIneq(st.lv, m === "demo") : solverEq(st.lv, m === "demo"); if (st.one && st.ineq) useCustom[0].rel = eqPickRel();
