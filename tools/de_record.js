@@ -20,7 +20,8 @@ const ROOT = 'file://' + require('path').join(__dirname, '..') + '/';
   meta.rungs.forEach((r, i) => inst.push({ id: 'PS-rung-' + String(i).padStart(2, '0'), kind: 'rung', i, spec: r }));
   meta.exlad.forEach((lv, i) => inst.push({ id: 'PS-expr-' + String(i).padStart(2, '0'), kind: 'expr', lv, spec: 'exGen(' + lv + ')' }));
   asg.forEach(a => a.its.forEach((it, i) => inst.push({ id: 'A-' + a.ab + '-q' + (i + 1), kind: 'asg', ab: a.ab, n: i, spec: it.qid + ' (' + it.act + '/' + it.lesson + (it.subx ? ' sub' : '') + ')' })));
-  const todo = inst.filter(x => !FILTER || x.id.indexOf(FILTER) >= 0);
+  const SKIP = ['A-RevT1-q1', 'A-RevT1-q3', 'A-RevT1-q4', 'A-RevT1-q5', 'A-RevT1-q6', 'A-RevT1-q10', 'A-2.4B-q1', 'A-3.1A-q1', 'A-3.1C-q2'];   // (graphing and data questions: not drag equations)
+  const todo = inst.filter(x => SKIP.indexOf(x.id) < 0 && (!FILTER || x.id.indexOf(FILTER) >= 0));
   const pg = await b.newPage({ viewport: { width: 1400, height: 900 } }); let errs = []; pg.on('pageerror', e => errs.push(e.message.slice(0, 160)));
   await pg.addInitScript(INIT); if (DE) await pg.addInitScript(() => { try { localStorage.setItem('an.de', '1'); } catch (e) {} }); await pg.clock.install();
   await pg.route(/^https?:/, r => r.abort()); await pg.route(/auth\.js$/, r => r.fulfill({ body: '', contentType: 'text/javascript' }));

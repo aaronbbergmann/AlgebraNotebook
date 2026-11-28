@@ -62,6 +62,17 @@ problems are assembled by hand in 21 places; each level has its own generator.
 - Variety the notation does not reproduce exactly (accepted for now): absolute value never on the right side; letter rungs use 6–8 fixed letter sets;
   some side-swap and term-order weights approximate; e1–e4 and e7 never use y; 51 always writes the ">" part first.
 
+## Step 4: progress
+
+| Change | Decision | Checked (record with the switch on vs before) |
+|---|---|---|
+| Rules from the screen: each problem's string read back by Create's readers; the level only names a goal | all | 5 instances changed, each traced to a decision below |
+| Divide-first switched off everywhere | 12 | rung 15's Demo now distributes first |
+| Quadratic Formula button whenever x² is on the screen | 8 | rungs 63, 78, 3.1F, 3.4A |
+
+With the switch off the record is identical to before (134 instances). The 9 graphing and data questions (RevT1 Q1, Q3–Q6, Q10, 2.4B Regression,
+3.1A Graphing, 3.1C Desmos) are not drag equations and were taken out of the record.
+
 ## Step 4: the plan (prepared while step 3 finishes)
 
 - One function works out every rule from what is on the screen and the instance's goal word; no level sets a rule any more.

@@ -1505,7 +1505,7 @@
   }
   function quBtnUpd() {
     var b = $("quBtn"); if (!b) return;
-    b.hidden = !(EXP && EXP.eq && (EXP.qd || EXP.grq) && !EXP.qu && !EXP.qf && !EXP.zp && !EXP.zpq && !locked && (mode === "sequence" || mode === "calculate" || mode === "demo"));
+    b.hidden = !(EXP && EXP.eq && (deOn() ? deQuad() : (EXP.qd || EXP.grq)) && !EXP.qu && !EXP.qf && !EXP.zp && !EXP.zpq && !locked && (mode === "sequence" || mode === "calculate" || mode === "demo"));
   }
   function quNs(n) { return (n < 0 ? "−" : "") + Math.abs(n); }
   function quPn(n) { return n < 0 ? "(" + quNs(n) + ")" : quNs(n); }
@@ -3451,11 +3451,13 @@
     if (E.eq) return E.quq ? "quadratic formula" : E.qd && !E.sf && !E.grq ? "complete the square" : E.grq || E.sf ? "factor" : E.sq ? "square root" : "";
     return E.fac || E.grp ? "factor" : E.rad ? "" : "simplify";
   }
+  function deQuad() { return EXP.L.concat(EXP.R).some(function (t) { return (t.k === "x" && /\^2/.test(t.v || "")) || (t.k === "g" && (t.pw || t.b)); }); }   // (decision 8: a quadratic on the screen offers every tool, the Quadratic Formula too)
   function deRules() {   // a problem starts: every rule from its content (Create's readers), then the goal steers Demo and Hint
     if (!EXP || !EXP.orig || (EXP.eq && (EXP.orig.qf || EXP.orig.cmp))) return;
     if (EXP.goal == null) EXP.goal = deGoalOf(EXP);
     var r = deParse(deText(EXP)); if (!r.exp || !!r.exp.eq !== !!EXP.eq) return;
     (EXP.eq ? DE_EQF : DE_EXF).forEach(function (f) { EXP[f] = !!r.exp[f]; });
+    if (EXP.eq) EXP.dvq = false;   // (decision 12: Demo distributes first, never divides every term first)
     var g = EXP.goal;
     if (EXP.eq) {
       if (g === "complete the square") { EXP.qd = true; EXP.grq = false; EXP.sf = false; }
