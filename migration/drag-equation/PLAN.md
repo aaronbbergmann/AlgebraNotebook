@@ -47,11 +47,34 @@ problems are assembled by hand in 21 places; each level has its own generator.
 - What it holds: 143 instances (82 Play Solve rungs, 18 expression levels, 43 assignment questions that solve by dragging: 1.4B–D, 2.4A–B,
   3.1A–3.4B, RevT1), 3 seeds each, 429 runs. 426 Demos finish; 3 do not (below).
 
+## Step 2: the rule conflicts (awaiting the teacher's choices)
+
+The full inventory of every switch is in `switches.md` (16 conflicts, C1–C16, with line numbers). As decisions:
+
+| # | On the screen | Option A | Option B | Recommended | Chosen |
+|---|---|---|---|---|---|
+| 1 | A term dragged across the = | It lands as its own term; the student combines it (main solver) | It combines on landing (row equations) | A | |
+| 2 | An x term dragged across the = | Allowed everywhere | Only in Play Solve's first levels | A | |
+| 3 | The number in front of x dragged across the = | Allowed any time: every term on both sides is divided, fractions left to simplify | Only once the x term is alone on its side | A | |
+| 4 | Clicking the = | + − × ÷ everywhere (systems keep dragging one equation onto another to add) | 1.4 keeps "Multiply by" only | A | |
+| 5 | A number times parentheses | The box everywhere (letters and substitution too); Calculate asks each cell | Instant in some places | A | |
+| 6 | Letters as coefficients (ax + b = c) | The same moves as numbers | Keep today's limits (no coefficient drag, no box) | A | |
+| 7 | x² alone on its side (x² = 49) | The exponent can always be dragged across (square root) | Only in square-root levels | A | |
+| 8 | A quadratic = 0 | Every tool always there: the box (drag a term down), the Quadratic Formula button, completing the square, moving terms | Each level shows only its own tool | A | |
+| 9 | A product = 0, (x + 2)(x − 3) = 0 | Split it, or multiply it out (both allowed) | Split only | A | |
+| 10 | More than one way to solve (x² − 49 = 0; x² + 6x + 5 = 0) | The instance string names the method for Demo and Hint, e.g. `x^2+6x+5=0 ; complete the square`; every move stays allowed | One fixed order everywhere (factor if it factors, else the formula) | A | |
+| 11 | When an expression is finished (6x + 9) | The instance string names the goal: `6x+9 ; factor` or `; simplify` | Fixed by level | A | |
+| 12 | Divisible parentheses, 2(x + 1) = 4x + 6: Demo's first step | Distribute first | Divide every term first | A | |
+| 13 | Demo's order for a linear equation | One order: distribute, combine, x terms to one side (smaller onto larger, letters too), numbers to the other side, divide | Per engine | A | |
+| 14 | Calculate's questions | One number at a time everywhere (also when dividing by a whole number, with letters, in systems) | Some ask the whole new equation, some nothing | A | |
+| 15 | Write's answer | One box everywhere taking any answer ("3, −2", "no solution"); tries follow the place (assignment: one try; Play Solve: unlimited) | A box per answer in exercises, one box in Play Solve | A | |
+
 ## Bugs found on the way (fixed by the new engine, or earlier if you ask)
 
 | Where | What happens |
 |---|---|
 | Play Solve rungs 75–77 (completing the square), when it leads to ±√1 | The Demo stops at `z − 3 = ±√1`: it says "√1 is already simplified" and never goes on |
+| After splitting x + 3 = ±4 and pressing Undo (3.3A, rungs with (x − h)²) | Probably: the split stays switched on, so the Quadratic Formula button stays hidden (from reading the code; C14) |
 
 ## Log
 
