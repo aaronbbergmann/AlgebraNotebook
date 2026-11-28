@@ -3482,7 +3482,7 @@
       if (!ok) continue;
       out = out.replace(/<([^<>]*)>/g, function (_, g) { var it = g.split("|").map(function (t) { return t.trim(); }); for (var i = it.length - 1; i > 0; i--) { var j = rnd(i + 1), t = it[i]; it[i] = it[j]; it[j] = t; } return it.join(" + "); });
       out = out.replace(/\+\s*-\s*/g, "- ").replace(/-\s*-\s*/g, "+ ").replace(/([=<>≤≥(]\s*)\+\s*/g, "$1").replace(/^\s*\+\s*/, "")
-        .replace(/(^|[^\d\/.])1(?=[a-z(|])/g, "$1").replace(/\s+/g, " ").trim();
+        .replace(/(^|[^\d\/.])1(?=[a-z(])/g, "$1").replace(/(^|[\s=<>\u2264\u2265(+-])1\|(?=[^|]*[a-z][^|]*\|)/g, "$1|").replace(/\s+/g, " ").trim();
       return out + (goal ? " ; " + goal : "");
     }
     throw new Error("pattern: no problem found for " + pat);
