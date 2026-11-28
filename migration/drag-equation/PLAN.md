@@ -57,6 +57,16 @@ problems are assembled by hand in 21 places; each level has its own generator.
   369 identical; 1 problem (rung 47) reads into the row equations instead of the main solver (step 5); 60 word-problem runs skipped (step 6).
 - Still to do in step 3: the pattern notation for random problems, and Play Solve's ladder as pattern strings in one bank file.
 
+## Step 4: the plan (prepared while step 3 finishes)
+
+- One function works out every rule from what is on the screen and the instance's goal word; no level sets a rule any more.
+- With no goal word, the method for Demo and Hint is what Create already infers from the content (factor a trinomial that factors, square roots for
+  x² = 49, complete the square for x² + 6x = 7, ...); a goal word overrides it.
+- The A choices then remove gates: letters limits (5, 6), factoring-only wiring (8), the zero-product lock (9), divide-first (12), the letters
+  exception in Demo's order (13); Calculate one number at a time (14); one answer box (15).
+- After each change: `node tools/de_record.js after.json`, then `node tools/de_diff.js migration/drag-equation/before.json after.json -v`;
+  only the chosen differences may appear.
+
 ## Step 2: the rule conflicts (settled 2026-11-28: all A)
 
 The full inventory of every switch is in `switches.md` (16 conflicts, C1–C16, with line numbers). As decisions:
